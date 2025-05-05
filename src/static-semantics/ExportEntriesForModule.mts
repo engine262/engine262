@@ -1,9 +1,9 @@
-import { JSStringValue, NullValue, Value } from '../value.mts';
+import { NullValue, Value } from '../value.mts';
 import { OutOfRange, isArray } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { StringValue, type ExportEntry } from './all.mts';
+import { StringValue, type ExportEntry, type ModuleRequestRecord } from './all.mts';
 
-export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: JSStringValue | NullValue): ExportEntry[] {
+export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: ModuleRequestRecord | NullValue): ExportEntry[] {
   if (isArray(node)) {
     const specs: ExportEntry[] = [];
     node.forEach((n) => {

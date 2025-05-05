@@ -12,7 +12,6 @@ uint8array-base64 = uint8array-base64
 -RegExp.escape
 -arraybuffer-transfer
 -explicit-resource-management
--import-attributes
 -import-defer
 -iterator-sequencing
 -json-parse-with-source

@@ -1,7 +1,9 @@
 import { JSStringValue, NullValue, Value } from '../value.mts';
 import { OutOfRange, isArray } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { BoundNames, ModuleRequests, ExportEntriesForModule } from './all.mts';
+import {
+  BoundNames, ModuleRequests, ExportEntriesForModule, type ModuleRequestRecord,
+} from './all.mts';
 
 export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEntry[] {
   if (isArray(node)) {
@@ -22,9 +24,9 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
     case 'ExportDeclaration':
       switch (true) {
         case !!node.ExportFromClause && !!node.FromClause: {
-          // `export` ExportFromClause FromClause `;`
+          // `export` ExportFromClause FromClause WithClause? `;`
           // 1. Let module be the sole element of ModuleRequests of FromClause.
-          const module = ModuleRequests(node.FromClause)[0];
+          const module = ModuleRequests(node)[0];
           // 2. Return ExportEntriesForModule(ExportFromClause, module).
           return ExportEntriesForModule(node.ExportFromClause, module);
         }
@@ -120,7 +122,7 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
 }
 
 export interface ExportEntry {
-  readonly ModuleRequest: JSStringValue | NullValue;
+  readonly ModuleRequest: ModuleRequestRecord | NullValue;
   readonly ImportName: JSStringValue | NullValue | 'all' | 'all-but-default';
   readonly LocalName: JSStringValue | NullValue;
   readonly ExportName: JSStringValue | NullValue;

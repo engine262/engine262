@@ -25,9 +25,11 @@ import {
   PromiseCapabilityRecord,
   Realm,
 } from './all.mts';
-import type {
-  Arguments, PlainEvaluator, ScriptRecord, SourceTextModuleRecord, ValueCompletion,
-  ValueEvaluator,
+import {
+  HostGetSupportedImportAttributes,
+  ModuleRequestsEqual,
+  type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord, type ValueCompletion,
+  type ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -61,18 +63,25 @@ export function InnerModuleLoading(state: GraphLoadingState, module: AbstractMod
     const requestedModulesCout = module.RequestedModules.length;
     // c. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] + requestedModulesCount.
     state.PendingModules += requestedModulesCout;
-    // d. For each String required of module.[[RequestedModules]], do
-    for (const required of module.RequestedModules) {
-      // i. If module.[[LoadedModules]] contains a Record whose [[Specifier]] is required, then
-      //    1. Let record be that Record.
-      const record = getRecordWithSpecifier(module.LoadedModules, required);
-      if (record !== undefined) {
-        // 2. Perform InnerModuleLoading(state, record.[[Module]]).
-        ContinueModuleLoading(state, NormalCompletion(record.Module));
-        // ii. Else,
+    // d. For each ModuleRequest Record request of module.[[RequestedModules]], do
+    for (const request of module.RequestedModules) {
+      // i. If AllImportAttributesSupported(request.[[Attributes]]) is false, then
+      const invalidAttributeKey = AllImportAttributesSupported(request.Attributes);
+      if (invalidAttributeKey) {
+        // 1. Let error be ThrowCompletion(a newly created SyntaxError object).
+        const error = surroundingAgent.Throw('SyntaxError', 'UnsupportedImportAttribute', invalidAttributeKey);
+        // 2. Perform ContinueModuleLoading(state, error).
+        ContinueModuleLoading(state, error);
       } else {
-        // 1. Perform HostLoadImportedModule(module, required, state.[[HostDefined]], state).
-        HostLoadImportedModule(module, required, state.HostDefined, state);
+        // ii. Else if module.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, request) is true, then
+        const record = getRecordWithSpecifier(module.LoadedModules, request);
+        if (record !== undefined) {
+          // 1. Perform InnerModuleLoading(state, record.[[Module]]).
+          InnerModuleLoading(state, record.Module);
+        } else { // iii. Else,
+          // 1. Perform HostLoadImportedModule(module, request, state.[[HostDefined]], state).
+          HostLoadImportedModule(module, request, state.HostDefined, state);
+        }
       }
 
       // iii. If state.[[IsLoading]] is false, return unused.
@@ -361,35 +370,32 @@ function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) 
   }
 }
 
-function getRecordWithSpecifier(loadedModules: CyclicModuleRecord['LoadedModules'], specifier: JSStringValue) {
-  for (const record of loadedModules) {
-    if (record.Specifier.stringValue() === specifier.stringValue()) {
-      return record;
-    }
-  }
-  return undefined;
+function getRecordWithSpecifier(loadedModules: CyclicModuleRecord['LoadedModules'], request: ModuleRequestRecord) {
+  const records = loadedModules.filter((r) => ModuleRequestsEqual(r, request));
+  Assert(records.length <= 1);
+  return records.length === 1 ? records[0] : undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-GetImportedModule */
-export function GetImportedModule(referrer: CyclicModuleRecord, specifier: JSStringValue) {
-  const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+export function GetImportedModule(referrer: CyclicModuleRecord, request: ModuleRequestRecord) {
+  const record = getRecordWithSpecifier(referrer.LoadedModules, request);
   Assert(record !== undefined);
   return record.Module;
 }
 
 /** https://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
-export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, specifier: JSStringValue, result: PlainCompletion<AbstractModuleRecord>, state: GraphLoadingState | PromiseCapabilityRecord) {
+export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, moduleRequest: ModuleRequestRecord, result: PlainCompletion<AbstractModuleRecord>, state: GraphLoadingState | PromiseCapabilityRecord) {
   result = EnsureCompletion(result);
   // 1. If result is a normal completion, then
   if (result.Type === 'normal') {
-    // a. If referrer.[[LoadedModules]] contains a Record whose [[Specifier]] is specifier, then
-    const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+    // a. If referrer.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, moduleRequest) is true, then
+    const record = getRecordWithSpecifier(referrer.LoadedModules, moduleRequest);
     if (record !== undefined) {
       // i. Assert: That Record's [[Module]] is result.[[Value]].
       Assert(record.Module === result.Value);
-    } else {
-      // b. Else, append the Record { [[Specifier]]: specifier, [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
-      referrer.LoadedModules.push({ Specifier: specifier, Module: result.Value });
+    } else { // b. Else,
+      //  i. Append the LoadedModuleRequest Record { [[Specifier]]: moduleRequest.[[Specifier]], [[Attributes]]: moduleRequest.[[Attributes]], [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+      referrer.LoadedModules.push({ Specifier: moduleRequest.Specifier, Attributes: moduleRequest.Attributes, Module: result.Value });
     }
   }
 
@@ -404,6 +410,21 @@ export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModul
   }
 
   // 4. Return unused.
+}
+
+/** https://tc39.es/ecma262/#sec-AllImportAttributesSupported */
+export function AllImportAttributesSupported(attributes: readonly ImportAttributeRecord[]) {
+  // Note: This function is meant to return a boolean. Instead, we return:
+  // - instead of *false*, the key of the unsupported attribute
+  // - instead of *true*, undefined
+
+  const supported: readonly string[] = HostGetSupportedImportAttributes();
+  for (const attribute of attributes) {
+    if (!supported.includes(attribute.Key.stringValue())) {
+      return attribute.Key;
+    }
+  }
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-getmodulenamespace */
