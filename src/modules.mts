@@ -44,7 +44,7 @@ import type { ParseNode } from './parser/ParseNode.mts';
 import type {
   ImportAttributeRecord,
   ModuleRequestRecord,
-  PlainCompletion, PromiseObject, ValueCompletion,
+  PlainCompletion, PromiseObject,
 } from '#self';
 
 // https://tc39.es/ecma262/#loadedmodulerequest-record
@@ -652,14 +652,13 @@ export type SyntheticModuleRecordInit = AbstractModuleInit & Pick<SyntheticModul
 export class SyntheticModuleRecord extends AbstractModuleRecord {
   override LoadRequestedModules(): PromiseObject {
     const promise = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-    const Error = surroundingAgent.Throw('SyntaxError', 'CouldNotResolveModule', '');
-    IfAbruptRejectPromise(Error, promise);
+    X(Call(promise.Resolve, Value.undefined, [Value.undefined]));
     return promise.Promise;
   }
 
   readonly ExportNames: readonly JSStringValue[];
 
-  readonly EvaluationSteps: (module: SyntheticModuleRecord) => ValueEvaluator | ValueCompletion | void;
+  readonly EvaluationSteps: (module: SyntheticModuleRecord) => PlainEvaluator | Completion<unknown> | void;
 
   constructor(init: SyntheticModuleRecordInit) {
     super(init);
@@ -729,18 +728,24 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     moduleContext.PrivateEnvironment = Value.null;
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
-    // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
-    let result = module.EvaluationSteps(module);
+    // 9. Let steps be module.[[EvaluationSteps]].
+    const steps = module.EvaluationSteps;
+    // 10. Let result be Completion(steps(module)).
+    let result = steps(module);
     if (result && 'next' in result) {
       result = yield* result;
     }
-    // 10. Suspend moduleContext and remove it from the execution context stack.
-    // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
+    // 11. Suspend moduleContext and remove it from the execution context stack.
+    // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(moduleContext);
-    // 12. Return Completion(result).
-    // TODO(ts): According to the new spec, this should return a Promise now.
-    // @ts-expect-error
-    return Completion(result);
+    // 13. Let pc be ! NewPromiseCapability(%Promise%).
+    const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    // 14. IfAbruptRejectPromise(result, pc).
+    IfAbruptRejectPromise(result, pc);
+    // 15. Perform ! Call(pc.[[Resolve]], undefined, « undefined »).
+    X(Call(pc.Resolve, Value.undefined, [Value.undefined]));
+    // 16. Return pc.[[Promise]].
+    return pc.Promise;
   }
 
   * SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator {

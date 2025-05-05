@@ -26,10 +26,10 @@ import {
   Realm,
 } from './all.mts';
 import {
+  Completion,
   HostGetSupportedImportAttributes,
   ModuleRequestsEqual,
-  type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord, type ValueCompletion,
-  type ValueEvaluator,
+  type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -457,7 +457,7 @@ export function GetModuleNamespace(module: AbstractModuleRecord): ObjectValue {
   return namespace;
 }
 
-export function CreateSyntheticModule(exportNames: readonly JSStringValue[], evaluationSteps: (record: SyntheticModuleRecord) => ValueEvaluator | ValueCompletion | void, realm: Realm, hostDefined: ModuleRecordHostDefined) {
+export function CreateSyntheticModule(exportNames: readonly JSStringValue[], evaluationSteps: (record: SyntheticModuleRecord) => PlainEvaluator | Completion<unknown>, realm: Realm, hostDefined: ModuleRecordHostDefined) {
   // 1. Return Synthetic Module Record {
   //      [[Realm]]: realm,
   //      [[Environment]]: undefined,
@@ -479,10 +479,10 @@ export function CreateSyntheticModule(exportNames: readonly JSStringValue[], eva
 /** https://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
 export function CreateDefaultExportSyntheticModule(defaultExport: Value, realm: Realm, hostDefined: ModuleRecordHostDefined) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
-  const closure = function* closure(module: SyntheticModuleRecord): ValueEvaluator {
+  const closure = function* closure(module: SyntheticModuleRecord): PlainEvaluator {
     // a. Return module.SetSyntheticExport("default", defaultExport).
     Q(yield* module.SetSyntheticExport(Value('default'), defaultExport));
-    return Value.undefined;
+    return NormalCompletion(undefined);
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
   return CreateSyntheticModule([Value('default')], closure, realm, hostDefined);
