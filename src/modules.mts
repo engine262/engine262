@@ -42,9 +42,17 @@ import {
 } from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type {
-  LoadedModuleRequestRecord, PlainCompletion, PromiseObject,
-  ValueCompletion,
+  ImportAttributeRecord,
+  ModuleRequestRecord,
+  PlainCompletion, PromiseObject, ValueCompletion,
 } from '#self';
+
+// https://tc39.es/ecma262/#loadedmodulerequest-record
+export interface LoadedModuleRequestRecord {
+  readonly Specifier: JSStringValue;
+  readonly Attributes: ImportAttributeRecord[];
+  readonly Module: AbstractModuleRecord
+}
 
 // #resolvedbinding-record
 export class ResolvedBindingRecord {
@@ -127,7 +135,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
 
   DFSAncestorIndex: number | undefined;
 
-  readonly RequestedModules: readonly JSStringValue[];
+  readonly RequestedModules: readonly ModuleRequestRecord[];
 
   readonly LoadedModules: LoadedModuleRequestRecord[];
 
@@ -352,7 +360,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 8. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
       // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-      const requestedModule = GetImportedModule(module, e.ModuleRequest as JSStringValue);
+      const requestedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
       // b. Let starNames be requestedModule.GetExportedNames(exportStarSet).
       const starNames = requestedModule.GetExportedNames(exportStarSet);
       // c. For each element n of starNames, do
@@ -408,7 +416,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-        const importedModule = GetImportedModule(module, e.ModuleRequest as JSStringValue);
+        const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
         // ii. If e.[[ImportName]] is ~all~, then
         if (e.ImportName === 'all') {
           // 1. Assert: module does not provide the direct binding for this export
@@ -436,7 +444,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
       // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-      const importedModule = GetImportedModule(module, e.ModuleRequest as JSStringValue);
+      const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
       // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
       const resolution = importedModule.ResolveExport(exportName, resolveSet);
       // c. If resolution is "ambiguous", return "ambiguous".
@@ -495,7 +503,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
     for (const ie of module.ImportEntries) {
       // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
-      const importedModule = GetImportedModule(module, ie.ModuleRequest as JSStringValue);
+      const importedModule = GetImportedModule(module, ie.ModuleRequest);
       // b. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
         // i. Let namespace be GetModuleNamespace(importedModule).

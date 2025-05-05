@@ -2,7 +2,56 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import type { JSStringValue } from '../value.mts';
 import { StringValue } from './all.mts';
 
-export function ModuleRequests(node: ParseNode): JSStringValue[] {
+// https://tc39.es/ecma262/#modulerequest-record
+export interface ModuleRequestRecord {
+  readonly Specifier: JSStringValue;
+  readonly Attributes: ImportAttributeRecord[];
+}
+
+// https://tc39.es/ecma262/#importattribute-record
+export interface ImportAttributeRecord {
+  readonly Key: JSStringValue;
+  readonly Value: JSStringValue;
+}
+
+function stringsEqual(left: JSStringValue, right: JSStringValue) {
+  return left === right || left.stringValue() === right.stringValue();
+}
+
+// https://tc39.es/ecma262/#sec-ModuleRequestsEqual
+export function ModuleRequestsEqual(left: ModuleRequestRecord, right: ModuleRequestRecord) {
+  if (!stringsEqual(left.Specifier, right.Specifier)) {
+    return false;
+  }
+  const leftAttrs = left.Attributes;
+  const rightAttrs = right.Attributes;
+  const leftAttrsCount = leftAttrs.length;
+  const rightAttrsCount = rightAttrs.length;
+  if (leftAttrsCount !== rightAttrsCount) {
+    return false;
+  }
+  for (const l of leftAttrs) {
+    if (!rightAttrs.some((r) => stringsEqual(l.Key, r.Key) && stringsEqual(l.Value, r.Value))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// https://tc39.es/ecma262/#sec-withclausetoattributes
+function WithClauseToAttributes(node: ParseNode.WithClause): ImportAttributeRecord[] {
+  const attributes: ImportAttributeRecord[] = [];
+  for (const attribute of node.WithEntries) {
+    attributes.push({
+      Key: StringValue(attribute.AttributeKey),
+      Value: StringValue(attribute.AttributeValue),
+    });
+  }
+  attributes.sort((a, b) => (a.Key.value < b.Key.value ? -1 : 1));
+  return attributes;
+}
+
+export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
   switch (node.type) {
     case 'Module':
       if (node.ModuleBody) {
@@ -10,24 +59,36 @@ export function ModuleRequests(node: ParseNode): JSStringValue[] {
       }
       return [];
     case 'ModuleBody': {
-      const moduleNames: JSStringValue[] = [];
+      const requests: ModuleRequestRecord[] = [];
       for (const item of node.ModuleItemList) {
-        moduleNames.push(...ModuleRequests(item));
+        const additionalRequests = ModuleRequests(item);
+        for (const mr of additionalRequests) {
+          if (!requests.some((r) => ModuleRequestsEqual(r, mr))) {
+            requests.push(mr);
+          }
+        }
       }
-      return moduleNames;
+      return requests;
     }
     case 'ImportDeclaration':
       if (node.FromClause) {
-        return ModuleRequests(node.FromClause);
+        const specifier = StringValue(node.FromClause);
+        const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+        return [{ Specifier: specifier, Attributes: attributes }];
       }
-      return [StringValue(node.ModuleSpecifier!)];
+      if (node.ModuleSpecifier) {
+        const specifier = StringValue(node.ModuleSpecifier);
+        const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+        return [{ Specifier: specifier, Attributes: attributes }];
+      }
+      throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
     case 'ExportDeclaration':
       if (node.FromClause) {
-        return ModuleRequests(node.FromClause);
+        const specifier = StringValue(node.FromClause);
+        const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+        return [{ Specifier: specifier, Attributes: attributes }];
       }
       return [];
-    case 'StringLiteral':
-      return [StringValue(node)];
     default:
       return [];
   }

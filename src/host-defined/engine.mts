@@ -1,4 +1,4 @@
-import { JSStringValue, NullValue, Value } from '../value.mts';
+import { NullValue, Value } from '../value.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -27,6 +27,7 @@ import {
   AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, skipDebugger, type Arguments, type AsyncGeneratorObject, type ErrorType, type ValueCompletion, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
   ManagedRealm,
   SourceTextModuleRecord,
+  type ModuleRequestRecord,
 } from '../index.mts';
 import * as messages from '../messages.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -498,13 +499,19 @@ export function HostHasSourceTextAvailable(func: FunctionObject) {
   return Value.true;
 }
 
+export function HostGetSupportedImportAttributes(): readonly string[] {
+  // TODO: Allow hosts to customize this.
+  return [];
+}
+
 // #sec-HostLoadImportedModule
-export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, specifier: JSStringValue, hostDefined: ModuleRecordHostDefined | undefined, payload: GraphLoadingState | PromiseCapabilityRecord) {
+export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: GraphLoadingState | PromiseCapabilityRecord) {
   if (surroundingAgent.hostDefinedOptions.loadImportedModule) {
     const executionContext = surroundingAgent.runningExecutionContext;
     let result: PlainCompletion<AbstractModuleRecord> | undefined;
     let sync = true;
-    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, specifier.stringValue(), hostDefined, (res) => {
+    // TODO: Actually pass the attributes here :)
+    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, moduleRequest.Specifier.stringValue(), hostDefined, (res) => {
       result = res;
       if (!sync) {
         // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
@@ -512,7 +519,7 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
         surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
           result = EnsureCompletion(result);
           Assert(!!result && (result.Type === 'normal' || result.Type === 'throw'));
-          FinishLoadingImportedModule(referrer, specifier, result, payload);
+          FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
         });
         surroundingAgent.executionContextStack.pop(executionContext);
         runJobQueue();
@@ -522,10 +529,10 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
     if (result !== undefined) {
       result = EnsureCompletion(result);
       Assert(result.Type === 'normal' || result.Type === 'throw');
-      FinishLoadingImportedModule(referrer, specifier, result, payload);
+      FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
     }
   } else {
-    FinishLoadingImportedModule(referrer, specifier, surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier), payload);
+    FinishLoadingImportedModule(referrer, moduleRequest, surroundingAgent.Throw('Error', 'CouldNotResolveModule', moduleRequest.Specifier), payload);
   }
 }
 
