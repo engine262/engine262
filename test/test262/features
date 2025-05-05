@@ -28,7 +28,6 @@ uint8array-base64 = uint8array-base64
 -caller
 -SharedArrayBuffer
 -tail-call-optimization
--json-modules
 -Temporal
 -resizable-arraybuffer
 -regexp-v-flag

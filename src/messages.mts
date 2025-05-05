@@ -175,6 +175,7 @@ export const UnableToFreeze = (o: ObjectValue) => `Unable to freeze object ${i(o
 export const UnableToPreventExtensions = (o: ObjectValue) => `Unable to prevent extensions on object ${i(o)}`;
 export const UnknownPrivateName = (o: ObjectValue, p: PrivateName) => `${i(p)} does not exist on object ${i(o)}`;
 export const UnsupportedImportAttribute = (key: JSStringValue) => `Unsupported import attribute ${i(key)}`;
+export const UnsupportedModuleType = (type: string) => `Unsupported module type ${i(type)} (only "json" is supported)`;
 export const UnterminatedComment = () => 'Missing */ after comment';
 export const UnterminatedRegExp = () => 'Missing / after RegExp literal';
 export const UnterminatedString = () => 'Missing \' or " after string literal';
