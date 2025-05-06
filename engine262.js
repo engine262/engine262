@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 f7aac74928e432c39847108b2c4e6d9701fbde22
+ * engine262 0.0.1 39dc86fcb903a6a35734c2ccbf2c68f66f17c03b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -3398,6 +3398,46 @@
   }
   FlagText.section = 'https://tc39.es/ecma262/#sec-static-semantics-flagtext';
 
+  // https://tc39.es/ecma262/#modulerequest-record
+
+  // https://tc39.es/ecma262/#importattribute-record
+
+  function stringsEqual(left, right) {
+    return left === right || left.stringValue() === right.stringValue();
+  }
+
+  // https://tc39.es/ecma262/#sec-ModuleRequestsEqual
+  function ModuleRequestsEqual(left, right) {
+    if (!stringsEqual(left.Specifier, right.Specifier)) {
+      return false;
+    }
+    const leftAttrs = left.Attributes;
+    const rightAttrs = right.Attributes;
+    const leftAttrsCount = leftAttrs.length;
+    const rightAttrsCount = rightAttrs.length;
+    if (leftAttrsCount !== rightAttrsCount) {
+      return false;
+    }
+    for (const l of leftAttrs) {
+      if (!rightAttrs.some(r => stringsEqual(l.Key, r.Key) && stringsEqual(l.Value, r.Value))) {
+        return false;
+      }
+    }
+    return true;
+  }
+  ModuleRequestsEqual.section = 'https://tc39.es/ecma262/#sec-ModuleRequestsEqual'; // https://tc39.es/ecma262/#sec-withclausetoattributes
+  function WithClauseToAttributes(node) {
+    const attributes = [];
+    for (const attribute of node.WithEntries) {
+      attributes.push({
+        Key: StringValue(attribute.AttributeKey),
+        Value: StringValue(attribute.AttributeValue)
+      });
+    }
+    attributes.sort((a, b) => a.Key.value < b.Key.value ? -1 : 1);
+    return attributes;
+  }
+  WithClauseToAttributes.section = 'https://tc39.es/ecma262/#sec-withclausetoattributes';
   function ModuleRequests(node) {
     switch (node.type) {
       case 'Module':
@@ -3407,24 +3447,45 @@
         return [];
       case 'ModuleBody':
         {
-          const moduleNames = [];
+          const requests = [];
           for (const item of node.ModuleItemList) {
-            moduleNames.push(...ModuleRequests(item));
+            const additionalRequests = ModuleRequests(item);
+            for (const mr of additionalRequests) {
+              if (!requests.some(r => ModuleRequestsEqual(r, mr))) {
+                requests.push(mr);
+              }
+            }
           }
-          return moduleNames;
+          return requests;
         }
       case 'ImportDeclaration':
         if (node.FromClause) {
-          return ModuleRequests(node.FromClause);
+          const specifier = StringValue(node.FromClause);
+          const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+          return [{
+            Specifier: specifier,
+            Attributes: attributes
+          }];
         }
-        return [StringValue(node.ModuleSpecifier)];
+        if (node.ModuleSpecifier) {
+          const specifier = StringValue(node.ModuleSpecifier);
+          const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+          return [{
+            Specifier: specifier,
+            Attributes: attributes
+          }];
+        }
+        throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
       case 'ExportDeclaration':
         if (node.FromClause) {
-          return ModuleRequests(node.FromClause);
+          const specifier = StringValue(node.FromClause);
+          const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+          return [{
+            Specifier: specifier,
+            Attributes: attributes
+          }];
         }
         return [];
-      case 'StringLiteral':
-        return [StringValue(node)];
       default:
         return [];
     }
@@ -3448,7 +3509,7 @@
       case 'ImportDeclaration':
         if (node.FromClause) {
           // 1. Let module be the sole element of ModuleRequests of FromClause.
-          const module = ModuleRequests(node.FromClause)[0];
+          const module = ModuleRequests(node)[0];
           // 2. Return ImportEntriesForModule of ImportClause with argument module.
           return ImportEntriesForModule(node.ImportClause, module);
         }
@@ -3478,9 +3539,9 @@
         switch (true) {
           case !!node.ExportFromClause && !!node.FromClause:
             {
-              // `export` ExportFromClause FromClause `;`
+              // `export` ExportFromClause FromClause WithClause? `;`
               // 1. Let module be the sole element of ModuleRequests of FromClause.
-              const module = ModuleRequests(node.FromClause)[0];
+              const module = ModuleRequests(node)[0];
               // 2. Return ExportEntriesForModule(ExportFromClause, module).
               return ExportEntriesForModule(node.ExportFromClause, module);
             }
@@ -5482,6 +5543,8 @@
     }
   }
 
+  // https://tc39.es/ecma262/#loadedmodulerequest-record
+
   // #resolvedbinding-record
   class ResolvedBindingRecord {
     Module;
@@ -6149,16 +6212,16 @@
       /* node:coverage ignore next */
       if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
       const promise = _temp16;
-      let Error = exports.surroundingAgent.Throw('SyntaxError', 'CouldNotResolveModule', '');
-      /* IfAbruptRejectPromise */
-      /* node:coverage disable */
-      if (Error instanceof AbruptCompletion) {
-        const callRejectCompletion = skipDebugger(Call(promise.Reject, Value.undefined, [Error.Value]));
-        if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
-        return promise.Promise;
-      }
-      if (Error instanceof Completion) Error = Error.Value;
-      /* node:coverage enable */
+      /* X */
+      let _temp17 = Call(promise.Resolve, Value.undefined, [Value.undefined]);
+      /* node:coverage ignore next */
+      if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
+      /* node:coverage ignore next */
+      if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! Call(promise.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+        cause: _temp17
+      });
+      /* node:coverage ignore next */
+      if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
       return promise.Promise;
     }
     ExportNames;
@@ -6206,26 +6269,26 @@
       // 5. For each exportName in module.[[ExportNames]],
       for (const exportName of module.ExportNames) {
         /* X */
-        let _temp17 = env.CreateMutableBinding(exportName, Value.false);
-        /* node:coverage ignore next */
-        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
-        /* node:coverage ignore next */
-        if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(exportName, Value.false) returned an abrupt completion", {
-          cause: _temp17
-        });
-        /* node:coverage ignore next */
-        if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
-        // b. Perform ! env.InitializeBinding(exportName, undefined).
-        /* X */
-        let _temp18 = env.InitializeBinding(exportName, Value.undefined);
+        let _temp18 = env.CreateMutableBinding(exportName, Value.false);
         /* node:coverage ignore next */
         if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
         /* node:coverage ignore next */
-        if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(exportName, Value.undefined) returned an abrupt completion", {
+        if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(exportName, Value.false) returned an abrupt completion", {
           cause: _temp18
         });
         /* node:coverage ignore next */
         if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+        // b. Perform ! env.InitializeBinding(exportName, undefined).
+        /* X */
+        let _temp19 = env.InitializeBinding(exportName, Value.undefined);
+        /* node:coverage ignore next */
+        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
+        /* node:coverage ignore next */
+        if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(exportName, Value.undefined) returned an abrupt completion", {
+          cause: _temp19
+        });
+        /* node:coverage ignore next */
+        if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
       }
       // 8. Return undefined.
       return undefined;
@@ -6250,18 +6313,50 @@
       moduleContext.PrivateEnvironment = Value.null;
       // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
       exports.surroundingAgent.executionContextStack.push(moduleContext);
-      // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
-      let result = module.EvaluationSteps(module);
+      // 9. Let steps be module.[[EvaluationSteps]].
+      const steps = module.EvaluationSteps;
+      // 10. Let result be Completion(steps(module)).
+      let result = steps(module);
       if (result && 'next' in result) {
         result = yield* result;
       }
-      // 10. Suspend moduleContext and remove it from the execution context stack.
-      // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
+      // 11. Suspend moduleContext and remove it from the execution context stack.
+      // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
       exports.surroundingAgent.executionContextStack.pop(moduleContext);
-      // 12. Return Completion(result).
-      // TODO(ts): According to the new spec, this should return a Promise now.
-      // @ts-expect-error
-      return Completion(result);
+      // 13. Let pc be ! NewPromiseCapability(%Promise%).
+      /* X */
+      let _temp20 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+      /* node:coverage ignore next */
+      if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+      /* node:coverage ignore next */
+      if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+        cause: _temp20
+      });
+      /* node:coverage ignore next */
+      if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+      const pc = _temp20;
+      // 14. IfAbruptRejectPromise(result, pc).
+      /* IfAbruptRejectPromise */
+      /* node:coverage disable */
+      if (result instanceof AbruptCompletion) {
+        const callRejectCompletion = skipDebugger(Call(pc.Reject, Value.undefined, [result.Value]));
+        if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+        return pc.Promise;
+      }
+      if (result instanceof Completion) result = result.Value;
+      /* node:coverage enable */
+      /* X */
+      let _temp21 = Call(pc.Resolve, Value.undefined, [Value.undefined]);
+      /* node:coverage ignore next */
+      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+      /* node:coverage ignore next */
+      if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! Call(pc.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+        cause: _temp21
+      });
+      /* node:coverage ignore next */
+      if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+      // 16. Return pc.[[Promise]].
+      return pc.Promise;
     }
     *SetSyntheticExport(name, value) {
       const module = this;
@@ -8489,9 +8584,7 @@
 
   /** https://tc39.es/ecma262/#sec-import-calls */
   // ImportCall : `import` `(` AssignmentExpression `)`
-  function* Evaluate_ImportCall({
-    AssignmentExpression
-  }) {
+  function* Evaluate_ImportCall(ImportCall) {
     /* ReturnIfAbrupt */
     let _temp = exports.surroundingAgent.debugger_cannotPreview;
     /* node:coverage ignore next */
@@ -8500,7 +8593,14 @@
     if (_temp instanceof AbruptCompletion) return _temp;
     /* node:coverage ignore next */
     if (_temp instanceof Completion) _temp = _temp.Value;
-    // 1. Let referrer be ! GetActiveScriptOrModule().
+    if (ImportCall.OptionsExpression) {
+      return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression);
+    }
+    return yield* EvaluateImportCall(ImportCall.AssignmentExpression);
+  }
+  Evaluate_ImportCall.section = 'https://tc39.es/ecma262/#sec-import-calls';
+  /** https://tc39.es/ecma262/#sec-evaluate-import-call */
+  function* EvaluateImportCall(specifiersExpression, optionsExpression) {
     /* X */
     let _temp2 = GetActiveScriptOrModule();
     /* node:coverage ignore next */
@@ -8511,42 +8611,67 @@
     });
     /* node:coverage ignore next */
     if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    // 1. Let referrer be ! GetActiveScriptOrModule().
     let referrer = _temp2;
     // 2. If referrer is null, set referrer to the current Realm Record.
     if (referrer instanceof NullValue) {
       referrer = exports.surroundingAgent.currentRealmRecord;
     }
-    // 3. Let argRef be the result of evaluating AssignmentExpression.
+    // 3. Let specifierRef be ? Evaluation of AssignmentExpression.
     /* ReturnIfAbrupt */
-    let _temp3 = yield* Evaluate(AssignmentExpression);
+    let _temp3 = yield* Evaluate(specifiersExpression);
     /* node:coverage ignore next */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* node:coverage ignore next */
     if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-    const argRef = _temp3;
-    // 4. Let specifier be ? GetValue(argRef).
+    const specifierRef = _temp3;
+    // 4. Let specifier be ? GetValue(specifierRef).
     /* ReturnIfAbrupt */
-    let _temp4 = yield* GetValue(argRef);
+    let _temp4 = yield* GetValue(specifierRef);
     /* node:coverage ignore next */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* node:coverage ignore next */
     if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
     const specifier = _temp4;
-    // 5. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    let options;
+    // 5. If optionsExpression is present, then
+    if (optionsExpression) {
+      /* ReturnIfAbrupt */
+      let _temp5 = yield* Evaluate(optionsExpression);
+      /* node:coverage ignore next */
+      if (_temp5 instanceof AbruptCompletion) return _temp5;
+      /* node:coverage ignore next */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      // a. Let optionsRef be ? Evaluation of optionsExpression.
+      const optionsRef = _temp5;
+      // b. Let options be ? GetValue(optionsRef).
+      /* ReturnIfAbrupt */
+      let _temp6 = yield* GetValue(optionsRef);
+      /* node:coverage ignore next */
+      if (_temp6 instanceof AbruptCompletion) return _temp6;
+      /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      options = _temp6;
+    } else {
+      // 6. Else,
+      // a. Let options be undefined.
+      options = Value.undefined;
+    }
+    // 7. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     /* X */
-    let _temp5 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+    let _temp7 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
     /* node:coverage ignore next */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
     /* node:coverage ignore next */
-    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
-      cause: _temp5
+    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+      cause: _temp7
     });
     /* node:coverage ignore next */
-    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-    const promiseCapability = _temp5;
-    // 6. Let specifierString be ToString(specifier).
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    const promiseCapability = _temp7;
+    // 8. Let specifierString be ToString(specifier).
     let specifierString = yield* ToString(specifier);
-    // 7. IfAbruptRejectPromise(specifierString, promiseCapability).
+    // 9. IfAbruptRejectPromise(specifierString, promiseCapability).
     /* IfAbruptRejectPromise */
     /* node:coverage disable */
     if (specifierString instanceof AbruptCompletion) {
@@ -8555,12 +8680,137 @@
       return promiseCapability.Promise;
     }
     if (specifierString instanceof Completion) specifierString = specifierString.Value;
-    // 8. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
-    HostLoadImportedModule(referrer, specifierString, undefined, promiseCapability);
+    // 10. Let attributes nw a new empty List.
+    const attributes = [];
+    // 11. If options is not undefined, then
+    if (options !== Value.undefined) {
+      // a. If options is not an Object, then
+      if (!(options instanceof ObjectValue)) {
+        /* X */
+        let _temp8 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAnObject', options).Value]);
+        /* node:coverage ignore next */
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+        /* node:coverage ignore next */
+        if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! Call(promiseCapability.Reject, Value.undefined, [\n        surroundingAgent.Throw('TypeError', 'NotAnObject', options).Value,\n      ]) returned an abrupt completion", {
+          cause: _temp8
+        });
+        /* node:coverage ignore next */
+        if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+        // ii. Return promiseCapability.[[Promise]].
+        return promiseCapability.Promise;
+      }
+      // b. Let attributesObj be Completion(Get(options, "with")).
+      let attributesObj = yield* Get(options, Value('with'));
+      // c. IfAbruptRejectPromise(attributesObj, promiseCapability).
+      /* IfAbruptRejectPromise */
+      /* node:coverage disable */
+      if (attributesObj instanceof AbruptCompletion) {
+        const callRejectCompletion = skipDebugger(Call(promiseCapability.Reject, Value.undefined, [attributesObj.Value]));
+        if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+        return promiseCapability.Promise;
+      }
+      if (attributesObj instanceof Completion) attributesObj = attributesObj.Value;
+      // d. If attributesObj is not undefined, then
+      if (attributesObj !== Value.undefined) {
+        // i. If attributesObj is not an Object, then
+        if (!(attributesObj instanceof ObjectValue)) {
+          /* X */
+          let _temp9 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAnObject', attributesObj).Value]);
+          /* node:coverage ignore next */
+          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+          /* node:coverage ignore next */
+          if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! Call(promiseCapability.Reject, Value.undefined, [\n          surroundingAgent.Throw('TypeError', 'NotAnObject', attributesObj).Value,\n        ]) returned an abrupt completion", {
+            cause: _temp9
+          });
+          /* node:coverage ignore next */
+          if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+          // 2. Return promiseCapability.[[Promise]].
+          return promiseCapability.Promise;
+        }
+        // ii. Let entries be Completion(EnumerableOwnProperties(attributesObj, key+value)).
+        let entries = yield* EnumerableOwnPropertyNames(attributesObj, 'key+value');
+        // iii. IfAbruptRejectPromise(entries, promiseCapability).
+        /* IfAbruptRejectPromise */
+        /* node:coverage disable */
+        if (entries instanceof AbruptCompletion) {
+          const callRejectCompletion = skipDebugger(Call(promiseCapability.Reject, Value.undefined, [entries.Value]));
+          if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+          return promiseCapability.Promise;
+        }
+        if (entries instanceof Completion) entries = entries.Value;
+        // iv. For each element entry of entries, do
+        for (const entry of entries) {
+          /* ReturnIfAbrupt */
+          let _temp10 = yield* Get(entry, Value('0'));
+          /* node:coverage ignore next */
+          if (_temp10 instanceof AbruptCompletion) return _temp10;
+          /* node:coverage ignore next */
+          if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+          // 1. Let key be ! Get(entry, "0").
+          const key = _temp10;
+          // 2. Let value be ! Get(entry, "1").
+          /* ReturnIfAbrupt */
+          let _temp11 = yield* Get(entry, Value('1'));
+          /* node:coverage ignore next */
+          if (_temp11 instanceof AbruptCompletion) return _temp11;
+          /* node:coverage ignore next */
+          if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+          const value = _temp11;
+          // 3. If key is a String, then
+          if (key instanceof JSStringValue) {
+            // a. If value is not a String, then
+            if (!(value instanceof JSStringValue)) {
+              /* X */
+              let _temp12 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAString', value).Value]);
+              /* node:coverage ignore next */
+              if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+              /* node:coverage ignore next */
+              if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! Call(promiseCapability.Reject, Value.undefined, [\n              surroundingAgent.Throw('TypeError', 'NotAString', value).Value,\n            ]) returned an abrupt completion", {
+                cause: _temp12
+              });
+              /* node:coverage ignore next */
+              if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+              // ii. Return promiseCapability.[[Promise]].
+              return promiseCapability.Promise;
+            }
+            // b. Append the ImportAttribute Record { [[Key]]: key, [[Value]]: value } to attributes.
+            attributes.push({
+              Key: key,
+              Value: value
+            });
+          }
+        }
+        // e. If AllImportAttributesSupported(attributes) is false, then
+        const unsupportedAttributeKey = AllImportAttributesSupported(attributes);
+        if (unsupportedAttributeKey) {
+          /* X */
+          let _temp13 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'UnsupportedImportAttribute', unsupportedAttributeKey).Value]);
+          /* node:coverage ignore next */
+          if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+          /* node:coverage ignore next */
+          if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! Call(promiseCapability.Reject, Value.undefined, [\n          surroundingAgent.Throw('TypeError', 'UnsupportedImportAttribute', unsupportedAttributeKey).Value,\n        ]) returned an abrupt completion", {
+            cause: _temp13
+          });
+          /* node:coverage ignore next */
+          if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+          // ii. Return promiseCapability.[[Promise]].
+          return promiseCapability.Promise;
+        }
+        // f. Sort attributes according to the lexicographic order of their [[Key]] field, treating the value of each such field as a sequence of UTF-16 code unit values.
+        attributes.sort((a, b) => a.Key.value < b.Key.value ? -1 : 1);
+      }
+    }
+    // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
+    const moduleRequest = {
+      Specifier: specifierString,
+      Attributes: attributes
+    };
+    // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
+    HostLoadImportedModule(referrer, moduleRequest, undefined, promiseCapability);
     // 9. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
   }
-  Evaluate_ImportCall.section = 'https://tc39.es/ecma262/#sec-import-calls';
+  EvaluateImportCall.section = 'https://tc39.es/ecma262/#sec-evaluate-import-call';
 
   /** https://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation */
   //   MultiplicativeExpression :
@@ -14670,6 +14920,7 @@
   const DerivedConstructorReturnedNonObject = () => 'Derived constructors may only return object or undefined';
   const DuplicateConstructor = () => 'A class may only have one constructor';
   const DuplicateExports = () => 'Module cannot contain duplicate exports';
+  const DuplicateImportAttribute = a => `Duplicate import attribute ${i(a)}`;
   const DuplicateProto = () => 'An object literal may only have one __proto__ property';
   const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
   const GeneratorRunning = () => 'Cannot manipulate a running generator';
@@ -14785,6 +15036,8 @@
   const UnableToFreeze = o => `Unable to freeze object ${i(o)}`;
   const UnableToPreventExtensions = o => `Unable to prevent extensions on object ${i(o)}`;
   const UnknownPrivateName = (o, p) => `${i(p)} does not exist on object ${i(o)}`;
+  const UnsupportedImportAttribute = key => `Unsupported import attribute ${i(key)}`;
+  const UnsupportedModuleType = type => `Unsupported module type ${i(type)} (only "json" is supported)`;
   const UnterminatedComment = () => 'Missing */ after comment';
   const UnterminatedRegExp = () => 'Missing / after RegExp literal';
   const UnterminatedString = () => 'Missing \' or " after string literal';
@@ -14840,6 +15093,7 @@
     DerivedConstructorReturnedNonObject: DerivedConstructorReturnedNonObject,
     DuplicateConstructor: DuplicateConstructor,
     DuplicateExports: DuplicateExports,
+    DuplicateImportAttribute: DuplicateImportAttribute,
     DuplicateProto: DuplicateProto,
     FunctionDeclarationStatement: FunctionDeclarationStatement,
     GeneratorRunning: GeneratorRunning,
@@ -14961,6 +15215,8 @@
     UnexpectedReservedWordStrict: UnexpectedReservedWordStrict,
     UnexpectedToken: UnexpectedToken,
     UnknownPrivateName: UnknownPrivateName,
+    UnsupportedImportAttribute: UnsupportedImportAttribute,
+    UnsupportedModuleType: UnsupportedModuleType,
     UnterminatedComment: UnterminatedComment,
     UnterminatedRegExp: UnterminatedRegExp,
     UnterminatedString: UnterminatedString,
@@ -17340,6 +17596,10 @@
               }
               this.expect(Token.LPAREN);
               node.AssignmentExpression = this.parseAssignmentExpression();
+              if (this.eat(Token.COMMA) && !this.test(Token.RPAREN)) {
+                node.OptionsExpression = this.parseAssignmentExpression();
+                this.eat(Token.COMMA);
+              }
               this.expect(Token.RPAREN);
               result = this.finishNode(node, 'ImportCall');
             }
@@ -19162,8 +19422,8 @@
 
   class ModuleParser extends StatementParser {
     // ImportDeclaration :
-    //   `import` ImportClause FromClause `;`
-    //   `import` ModuleSpecifier `;`
+    //   `import` ImportClause FromClause WithClause? `;`
+    //   `import` ModuleSpecifier WithClause? `;`
     parseImportDeclaration() {
       if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
         // `import` `(`
@@ -19178,6 +19438,9 @@
         node.ImportClause = this.parseImportClause();
         this.scope.declare(node.ImportClause, 'import');
         node.FromClause = this.parseFromClause();
+      }
+      if (this.test(Token.WITH)) {
+        node.WithClause = this.parseWithClause();
       }
       this.semicolon();
       return this.finishNode(node, 'ImportDeclaration');
@@ -19337,6 +19600,9 @@
               if (this.test('from')) {
                 node.ExportFromClause = NamedExports;
                 node.FromClause = this.parseFromClause();
+                if (this.test(Token.WITH)) {
+                  node.WithClause = this.parseWithClause();
+                }
               } else {
                 NamedExports.ExportsList.forEach(n => {
                   if (n.localName.type === 'StringLiteral') {
@@ -19359,6 +19625,9 @@
               }
               node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
               node.FromClause = this.parseFromClause();
+              if (this.test(Token.WITH)) {
+                node.WithClause = this.parseWithClause();
+              }
               this.semicolon();
               break;
             }
@@ -19430,6 +19699,39 @@
     parseFromClause() {
       this.expect('from');
       return this.parseStringLiteral();
+    }
+
+    // WithClause :
+    //   `with` `{` `}`
+    //   `with` `{` WithEntries `,`? `}`
+    parseWithClause() {
+      const node = this.startNode();
+      this.expect(Token.WITH);
+      this.expect(Token.LBRACE);
+      const seenKeys = new Set();
+      const WithEntries = [];
+      while (!this.eat(Token.RBRACE)) {
+        const entry = this.parseWithEntry();
+        const key = StringValue(entry.AttributeKey).value;
+        if (seenKeys.has(key)) {
+          this.raiseEarly('DuplicateImportAttribute', entry, key);
+        }
+        seenKeys.add(key);
+        WithEntries.push(entry);
+        if (this.eat(Token.RBRACE)) {
+          break;
+        }
+        this.expect(Token.COMMA);
+      }
+      node.WithEntries = WithEntries;
+      return this.finishNode(node, 'WithClause');
+    }
+    parseWithEntry() {
+      const node = this.startNode();
+      node.AttributeKey = this.test(Token.STRING) ? this.parseStringLiteral() : this.parseIdentifierName();
+      this.expect(Token.COLON);
+      node.AttributeValue = this.parseStringLiteral();
+      return this.finishNode(node, 'WithEntry');
     }
   }
 
@@ -25709,14 +26011,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return Value.true;
   }
+  function HostGetSupportedImportAttributes() {
+    if (exports.surroundingAgent.hostDefinedOptions.supportedImportAttributes) {
+      return exports.surroundingAgent.hostDefinedOptions.supportedImportAttributes;
+    }
+    return [];
+  }
 
   // #sec-HostLoadImportedModule
-  function HostLoadImportedModule(referrer, specifier, hostDefined, payload) {
+  function HostLoadImportedModule(referrer, moduleRequest, hostDefined, payload) {
     if (exports.surroundingAgent.hostDefinedOptions.loadImportedModule) {
       const executionContext = exports.surroundingAgent.runningExecutionContext;
       let result;
       let sync = true;
-      exports.surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, specifier.stringValue(), hostDefined, res => {
+      const attributes = new Map(moduleRequest.Attributes.map(({
+        Key,
+        Value
+      }) => [Key.stringValue(), Value.stringValue()]));
+      exports.surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, moduleRequest.Specifier.stringValue(), attributes, hostDefined, res => {
         result = res;
         if (!sync) {
           // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
@@ -25724,7 +26036,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           exports.surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
             result = EnsureCompletion(result);
             Assert(!!result && (result.Type === 'normal' || result.Type === 'throw'), "!!result && (result.Type === 'normal' || result.Type === 'throw')");
-            FinishLoadingImportedModule(referrer, specifier, result, payload);
+            FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
           });
           exports.surroundingAgent.executionContextStack.pop(executionContext);
           runJobQueue();
@@ -25734,10 +26046,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (result !== undefined) {
         result = EnsureCompletion(result);
         Assert(result.Type === 'normal' || result.Type === 'throw', "result.Type === 'normal' || result.Type === 'throw'");
-        FinishLoadingImportedModule(referrer, specifier, result, payload);
+        FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
       }
     } else {
-      FinishLoadingImportedModule(referrer, specifier, exports.surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier), payload);
+      FinishLoadingImportedModule(referrer, moduleRequest, exports.surroundingAgent.Throw('Error', 'CouldNotResolveModule', moduleRequest.Specifier), payload);
     }
   }
   HostLoadImportedModule.section = 'https://tc39.es/ecma262/#sec-HostLoadImportedModule';
@@ -31081,18 +31393,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const requestedModulesCout = module.RequestedModules.length;
       // c. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] + requestedModulesCount.
       state.PendingModules += requestedModulesCout;
-      // d. For each String required of module.[[RequestedModules]], do
-      for (const required of module.RequestedModules) {
-        // i. If module.[[LoadedModules]] contains a Record whose [[Specifier]] is required, then
-        //    1. Let record be that Record.
-        const record = getRecordWithSpecifier(module.LoadedModules, required);
-        if (record !== undefined) {
-          // 2. Perform InnerModuleLoading(state, record.[[Module]]).
-          ContinueModuleLoading(state, NormalCompletion(record.Module));
-          // ii. Else,
+      // d. For each ModuleRequest Record request of module.[[RequestedModules]], do
+      for (const request of module.RequestedModules) {
+        // i. If AllImportAttributesSupported(request.[[Attributes]]) is false, then
+        const invalidAttributeKey = AllImportAttributesSupported(request.Attributes);
+        if (invalidAttributeKey) {
+          // 1. Let error be ThrowCompletion(a newly created SyntaxError object).
+          const error = exports.surroundingAgent.Throw('SyntaxError', 'UnsupportedImportAttribute', invalidAttributeKey);
+          // 2. Perform ContinueModuleLoading(state, error).
+          ContinueModuleLoading(state, error);
         } else {
-          // 1. Perform HostLoadImportedModule(module, required, state.[[HostDefined]], state).
-          HostLoadImportedModule(module, required, state.HostDefined, state);
+          // ii. Else if module.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, request) is true, then
+          const record = getRecordWithSpecifier(module.LoadedModules, request);
+          if (record !== undefined) {
+            // 1. Perform InnerModuleLoading(state, record.[[Module]]).
+            InnerModuleLoading(state, record.Module);
+          } else {
+            // iii. Else,
+            // 1. Perform HostLoadImportedModule(module, request, state.[[HostDefined]], state).
+            HostLoadImportedModule(module, request, state.HostDefined, state);
+          }
         }
 
         // iii. If state.[[IsLoading]] is false, return unused.
@@ -31525,36 +31845,35 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
   AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
-  function getRecordWithSpecifier(loadedModules, specifier) {
-    for (const record of loadedModules) {
-      if (record.Specifier.stringValue() === specifier.stringValue()) {
-        return record;
-      }
-    }
-    return undefined;
+  function getRecordWithSpecifier(loadedModules, request) {
+    const records = loadedModules.filter(r => ModuleRequestsEqual(r, request));
+    Assert(records.length <= 1, "records.length <= 1");
+    return records.length === 1 ? records[0] : undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-GetImportedModule */
-  function GetImportedModule(referrer, specifier) {
-    const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+  function GetImportedModule(referrer, request) {
+    const record = getRecordWithSpecifier(referrer.LoadedModules, request);
     Assert(record !== undefined, "record !== undefined");
     return record.Module;
   }
   GetImportedModule.section = 'https://tc39.es/ecma262/#sec-GetImportedModule';
   /** https://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
-  function FinishLoadingImportedModule(referrer, specifier, result, state) {
+  function FinishLoadingImportedModule(referrer, moduleRequest, result, state) {
     result = EnsureCompletion(result);
     // 1. If result is a normal completion, then
     if (result.Type === 'normal') {
-      // a. If referrer.[[LoadedModules]] contains a Record whose [[Specifier]] is specifier, then
-      const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+      // a. If referrer.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, moduleRequest) is true, then
+      const record = getRecordWithSpecifier(referrer.LoadedModules, moduleRequest);
       if (record !== undefined) {
         // i. Assert: That Record's [[Module]] is result.[[Value]].
         Assert(record.Module === result.Value, "record.Module === result.Value");
       } else {
-        // b. Else, append the Record { [[Specifier]]: specifier, [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+        // b. Else,
+        //  i. Append the LoadedModuleRequest Record { [[Specifier]]: moduleRequest.[[Specifier]], [[Attributes]]: moduleRequest.[[Attributes]], [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
         referrer.LoadedModules.push({
-          Specifier: specifier,
+          Specifier: moduleRequest.Specifier,
+          Attributes: moduleRequest.Attributes,
           Module: result.Value
         });
       }
@@ -31573,6 +31892,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Return unused.
   }
   FinishLoadingImportedModule.section = 'https://tc39.es/ecma262/#sec-FinishLoadingImportedModule';
+  /** https://tc39.es/ecma262/#sec-AllImportAttributesSupported */
+  function AllImportAttributesSupported(attributes) {
+    // Note: This function is meant to return a boolean. Instead, we return:
+    // - instead of *false*, the key of the unsupported attribute
+    // - instead of *true*, undefined
+
+    const supported = HostGetSupportedImportAttributes();
+    for (const attribute of attributes) {
+      if (!supported.includes(attribute.Key.stringValue())) {
+        return attribute.Key;
+      }
+    }
+    return undefined;
+  }
+  AllImportAttributesSupported.section = 'https://tc39.es/ecma262/#sec-AllImportAttributesSupported';
   /** https://tc39.es/ecma262/#sec-getmodulenamespace */
   function GetModuleNamespace(module) {
     // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
@@ -31632,7 +31966,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp20 instanceof AbruptCompletion) return _temp20;
       /* node:coverage ignore next */
       if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
-      return Value.undefined;
+      return NormalCompletion(undefined);
     };
     // 2. Return CreateSyntheticModule(« "default" », closure, realm)
     return CreateSyntheticModule([Value('default')], closure, realm, hostDefined);
@@ -60595,6 +60929,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.AddToKeptObjects = AddToKeptObjects;
   exports.Agent = Agent;
   exports.AgentSignifier = AgentSignifier;
+  exports.AllImportAttributesSupported = AllImportAttributesSupported;
   exports.AllocateArrayBuffer = AllocateArrayBuffer;
   exports.ApplyStringOrNumericBinaryOperator = ApplyStringOrNumericBinaryOperator;
   exports.ArgumentListEvaluation = ArgumentListEvaluation;
@@ -60838,6 +61173,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.HostEnsureCanCompileStrings = HostEnsureCanCompileStrings;
   exports.HostFinalizeImportMeta = HostFinalizeImportMeta;
   exports.HostGetImportMetaProperties = HostGetImportMetaProperties;
+  exports.HostGetSupportedImportAttributes = HostGetSupportedImportAttributes;
   exports.HostHasSourceTextAvailable = HostHasSourceTextAvailable;
   exports.HostLoadImportedModule = HostLoadImportedModule;
   exports.HostMakeJobCallback = HostMakeJobCallback;
@@ -60954,6 +61290,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ModuleNamespaceCreate = ModuleNamespaceCreate;
   exports.ModuleRecord = AbstractModuleRecord;
   exports.ModuleRequests = ModuleRequests;
+  exports.ModuleRequestsEqual = ModuleRequestsEqual;
   exports.MonthFromTime = MonthFromTime;
   exports.NamedEvaluation = NamedEvaluation;
   exports.NewPromiseCapability = NewPromiseCapability;
