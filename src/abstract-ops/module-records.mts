@@ -1,10 +1,13 @@
-import { surroundingAgent, HostLoadImportedModule, IncrementModuleAsyncEvaluationCount } from '../host-defined/engine.mts';
+import {
+  surroundingAgent, HostLoadImportedModule, IncrementModuleAsyncEvaluationCount, HostPromiseRejectionTracker,
+} from '../host-defined/engine.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
   ResolvedBindingRecord,
   AbstractModuleRecord,
   type ModuleRecordHostDefined,
+  ModuleRecord,
 } from '../modules.mts';
 import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
@@ -178,10 +181,33 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   return index;
 }
 
+/** https://tc39.es/ecma262/#sec-EvaluateModuleSync */
+function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefined> {
+  // 1. Assert: module is not a Cyclic Module Record.
+  Assert(!(module instanceof CyclicModuleRecord));
+  // 2. Let promise be module.Evaluate()./
+  const promise = yield* module.Evaluate();
+  // 3. Assert: promise.[[PromiseState]] is either fulfilled or rejected.
+  Assert(promise.PromiseState === 'fulfilled' || promise.PromiseState === 'rejected');
+  // 4. If promise.[[PromiseState]] is rejected, then
+  if (promise.PromiseState === 'rejected') {
+    // a. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
+    if (promise.PromiseIsHandled === Value.false) {
+      HostPromiseRejectionTracker(promise, 'handle');
+    }
+    // b. Set promise.[[PromiseIsHandled]] to true.
+    promise.PromiseIsHandled = Value.true;
+    // c. Return ThrowCompletion(promise.[[PromiseResult]]).
+    return ThrowCompletion(promise.PromiseResult!);
+  }
+  // 5. Return unused.
+  return undefined;
+}
+
 /** https://tc39.es/ecma262/#sec-innermoduleevaluation */
 export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: CyclicModuleRecord[], index: number): PlainEvaluator<number> {
   if (!(module instanceof CyclicModuleRecord)) {
-    Q(yield* module.Evaluate());
+    Q(yield* EvaluateModuleSync(module));
     return NormalCompletion(index);
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
