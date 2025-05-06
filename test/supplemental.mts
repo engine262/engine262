@@ -29,6 +29,10 @@ import {
   evalQ,
   unwrapCompletion,
   R,
+  AbstractModuleRecord,
+  NewPromiseCapability,
+  Call,
+  PromiseCapabilityRecord,
 } from '#self';
 
 // Features that cannot be tested by test262 should go here.
@@ -374,6 +378,72 @@ Error: owo
     calls = 0;
     realm.evaluateModule('import "test"; import "test" with {};', 'case 9');
     assert.strictEqual(calls, 1);
+  },
+  () => {
+    let evaluationPromise: PromiseObject;
+
+    class CustomModuleRecord extends AbstractModuleRecord {
+      _pc(): PromiseCapabilityRecord {
+        const it = NewPromiseCapability(this.Realm.Intrinsics['%Promise%']);
+        const completion = skipDebugger(it) as NormalCompletion<PromiseCapabilityRecord>;
+        if (completion.Type !== 'normal') {
+          throw new Error('Expected normal completion');
+        }
+        return completion.Value;
+      }
+
+      override LoadRequestedModules(): PromiseObject {
+        const pc = this._pc();
+        Call(pc.Resolve, Value.undefined, []);
+        return pc.Promise;
+      }
+
+      override Link() {}
+
+      override* Evaluate() {
+        const pc = this._pc();
+        yield* Call(pc.Reject, Value.undefined, [Value('error!')]);
+        evaluationPromise = pc.Promise;
+        return evaluationPromise;
+      }
+
+      override GetExportedNames(): readonly JSStringValue[] {
+        return [];
+      }
+
+      override ResolveExport(): never {
+        throw new Error('Not implemented');
+      }
+    }
+
+    const agent = new Agent({
+      loadImportedModule(referrer, specifier, _attributes, _hostDefined, finish) {
+        if (specifier !== 'dep') {
+          throw new Error('Invalid specifier');
+        }
+        finish(new CustomModuleRecord({
+          Realm: (referrer as AbstractModuleRecord).Realm,
+          Environment: undefined,
+          Namespace: Value.undefined,
+          HostDefined: {},
+        }));
+      },
+    });
+    setSurroundingAgent(agent);
+
+    const calls: unknown[] = [];
+
+    const realm = new ManagedRealm({
+      promiseRejectionTracker(promise, operation) {
+        calls.push([promise, operation]);
+      },
+    });
+
+    realm.evaluateModule('import "dep"', 'entrypoint');
+
+    assert(calls.length >= 2); // there is a third call, for the promise of the entrypoint
+    assert.deepStrictEqual(calls[0], [evaluationPromise!, 'reject'], "first call should be 'reject'");
+    assert.deepStrictEqual(calls[1], [evaluationPromise!, 'handle'], "second call should be 'handle'");
   },
 ].forEach((test, i) => {
   incr_total();
