@@ -1,13 +1,21 @@
 import type { ArrayBufferObject, FunctionObject } from './abstract-ops/all.mts';
+import type { InspectOptions } from './host-defined/inspect.mts';
 import type { AbstractModuleRecord } from './modules.mts';
 import type {
   BooleanValue, JSStringValue, NumberValue, ObjectValue, PropertyKeyValue,
 } from './value.mts';
 import { inspect, PrivateName, Value } from './index.mts';
 
+const INSPECT_OPTIONS = Object.freeze({
+  // @ts-expect-error https://github.com/microsoft/TypeScript/issues/38385
+  __proto__: null,
+  showProxy: false,
+  showNonEnumerable: false,
+} satisfies InspectOptions);
+
 function i(V: unknown) {
   if (V instanceof Value) {
-    return inspect(V);
+    return inspect(V, INSPECT_OPTIONS);
   }
   if (V instanceof PrivateName) {
     return `#${V.Description.stringValue()}`;
