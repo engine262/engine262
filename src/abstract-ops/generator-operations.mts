@@ -33,6 +33,8 @@ export interface GeneratorObject extends OrdinaryObject {
   GeneratorContext: ExecutionContext | null;
   readonly GeneratorBrand: JSStringValue | undefined;
   UnderlyingIterator?: IteratorRecord;
+  // NON-SPEC
+  EnclosedValue?: Value;
 }
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
@@ -283,7 +285,7 @@ export function* Yield(value: Value): YieldEvaluator {
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[]) {
+export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValue?: Value): Mutable<GeneratorObject> {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
   // 2. If extraSlots is not present, set extraSlots to a new empty List.
@@ -296,6 +298,12 @@ export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generat
   generator.GeneratorBrand = generatorBrand;
   // 6. Set generator.[[GeneratorState]] to suspended-start.
   generator.GeneratorState = 'suspendedStart';
+
+  // NON-SPEC
+  if (enclosedValue && extraSlots.includes('EnclosedValue')) {
+    generator.EnclosedValue = enclosedValue;
+  }
+
   // 7. Let callerContext be the running execution context.
   const callerContext = surroundingAgent.runningExecutionContext;
   // 8. Let calleeContext be a new execution context.

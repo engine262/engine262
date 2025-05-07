@@ -270,7 +270,7 @@ export function* IteratorToList(iteratorRecord: IteratorRecord): PlainEvaluator<
 }
 
 /** https://tc39.es/ecma262/#sec-createasyncfromsynciterator */
-export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord) {
+export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord): IteratorRecord {
   const asyncIterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
     'SyncIteratorRecord',
   ]) as Mutable<AsyncFromSyncIteratorObject>;
