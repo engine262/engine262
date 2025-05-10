@@ -2,7 +2,7 @@ import isUnicodeIDStartRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_St
 import isUnicodeIDContinueRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_Continue/regex.js';
 import isSpaceSeparatorRegex from '@unicode/unicode-16.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mts';
-import { Assert } from '../index.mts';
+import { Assert, isLeadingSurrogate, isTrailingSurrogate } from '../index.mts';
 import {
   Token,
   TokenNames,
@@ -25,12 +25,16 @@ export const isHexDigit = (c: string) => c && /[\da-f]/ui.test(c);
 const isOctalDigit = (c: string) => c && /[0-7]/u.test(c);
 const isBinaryDigit = (c: string) => (c === '0' || c === '1');
 export const isWhitespace = (c: string) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
-export const isLineTerminator = (c: string) => !!c && /[\r\n\u2028\u2029]/u.test(c);
+export const isLineTerminator = (c: string | number) => {
+  if (typeof c === 'string') {
+    return !!c && /[\r\n\u2028\u2029]/u.test(c);
+  } else {
+    return c === 8232 || c === 8233 || c === 10 || c === 13;
+  }
+};
 const isRegularExpressionFlagPart = (c: string) => c && (isUnicodeIDContinue(c) || c === '$');
 export const isIdentifierStart = (c: string) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
 export const isIdentifierPart = (c: string) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
-export const isLeadingSurrogate = (cp: number) => cp >= 0xD800 && cp <= 0xDBFF;
-export const isTrailingSurrogate = (cp: number) => cp >= 0xDC00 && cp <= 0xDFFF;
 
 const SingleCharTokens: { [key: string]: number } = {
   '__proto__': null!,
@@ -624,7 +628,6 @@ export abstract class Lexer {
 
         default:
           this.unexpected(single);
-          break;
       }
     }
 
@@ -973,7 +976,7 @@ export abstract class Lexer {
       }
       const c = this.source[this.position];
       if (isRegularExpressionFlagPart(c)
-          && 'dgimsuy'.includes(c)
+          && 'dgimsuyv'.includes(c)
           && !buffer.includes(c)) {
         this.position += 1;
         buffer += c;

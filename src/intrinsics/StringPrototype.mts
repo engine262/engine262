@@ -365,22 +365,22 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   if (!functionalReplace) {
     replaceValue = Q(yield* ToString(replaceValue));
   }
-  const pos = string.stringValue().indexOf(searchString.stringValue());
-  const matched = searchString;
-  if (pos === -1) {
+  const searchLength = searchString.stringValue().length;
+  const position = string.stringValue().indexOf(searchString.stringValue(), 0);
+  if (position === -1) {
     return string;
   }
-  let replStr;
+  const preceding = string.stringValue().slice(0, position);
+  const following = string.stringValue().slice(position + searchLength);
+  let replacement: JSStringValue;
   if (functionalReplace) {
-    const replValue = Q(yield* Call(replaceValue, Value.undefined, [matched, F(pos), string]));
-    replStr = Q(yield* ToString(replValue));
+    replacement = Q(yield* ToString(Q(yield* Call(replaceValue, Value.undefined, [searchString, F(position), string]))));
   } else {
+    Assert(replaceValue instanceof JSStringValue);
     const captures: readonly (JSStringValue | UndefinedValue)[] = [];
-    replStr = X(GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue as JSStringValue));
+    replacement = X(GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue));
   }
-  const tailPos = pos + matched.stringValue().length;
-  const newString = string.stringValue().slice(0, pos) + replStr.stringValue() + string.stringValue().slice(tailPos);
-  return Value(newString);
+  return Value(preceding + replacement.stringValue() + following);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replaceall */

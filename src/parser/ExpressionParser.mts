@@ -1155,20 +1155,25 @@ export abstract class ExpressionParser extends FunctionParser {
     this.scanRegularExpressionBody();
     const body = this.scannedValue as string; // NOTE: unsound cast
     node.RegularExpressionBody = body;
+    const flagPosition = this.position;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue as string; // NOTE: unsound cast
+    if (node.RegularExpressionFlags.includes('v') && node.RegularExpressionFlags.includes('u')) {
+      this.raise('InvalidRegExpFlags', flagPosition, 'u and v cannot be used together');
+    }
     try {
       const parse = (flags: RegExpParserContext) => {
         const p = new RegExpParser(body);
         return p.scope(flags, () => p.parsePattern());
       };
       if (node.RegularExpressionFlags.includes('u')) {
-        parse({ U: true, N: true });
+        parse({ UnicodeMode: true, NamedCaptureGroups: true });
+      } else if (node.RegularExpressionFlags.includes('v')) {
+        parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
       } else {
-        const pattern = parse({ U: false, N: false });
-        if (pattern.groupSpecifiers.size > 0) {
-          parse({ U: false, N: true });
-        }
+        // NOTE: this part is modified by Annex B (but we're not applying it for now)
+        //       NamedCaptureGroups: false breaks for RegExp /\k<a>(?<a>b)/
+        parse({ NamedCaptureGroups: true });
       }
     } catch (e) {
       if (e instanceof SyntaxError) {

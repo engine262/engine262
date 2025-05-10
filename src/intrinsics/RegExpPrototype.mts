@@ -1,6 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  BooleanValue,
   NullValue,
   JSStringValue,
   ObjectValue,
@@ -23,7 +22,6 @@ import {
   GetMatchString,
   GetStringIndex,
   IsCallable,
-  isNonNegativeInteger,
   LengthOfArrayLike,
   MakeMatchIndicesIndexPairArray,
   OrdinaryObjectCreate,
@@ -43,11 +41,12 @@ import {
   type MatchRecord,
   type OrdinaryObject,
 } from '../abstract-ops/all.mts';
-import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mts';
+import { RegExpState, GetSubstitution } from '../runtime-semantics/all.mts';
 import { CodePointAt } from '../static-semantics/all.mts';
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
 import { isRegExpObject, type RegExpObject } from './RegExp.mts';
@@ -80,198 +79,150 @@ export function* RegExpExec(R: ObjectValue, S: JSStringValue) {
 
 /** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
 export function* RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): ValueEvaluator<NullValue | OrdinaryObject> {
-  // 1. Assert: R is an initialized RegExp instance.
-  Assert('RegExpMatcher' in R);
-  // 2. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
-  // 3. Let length be the number of code units in S.
+  // Let length be the number of code units in S.
   const length = S.stringValue().length;
-  // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
   let lastIndex = MathematicalValue(Q(yield* ToLength(Q(yield* Get(R, Value('lastIndex'))))));
-  // 5. Let flags be R.[[OriginalFlags]].
   const flags = R.OriginalFlags.stringValue();
-  // 6. If flags contains "g", let global be true; else let global be false.
   const global = flags.includes('g');
-  // 7. If flags contains "y", let sticky be true; else let sticky be false.
   const sticky = flags.includes('y');
-  // 8. If flags contains "d", let hasIndices be true; else let hasIndices be false.
   const hasIndices = flags.includes('d');
-  // 9. If global is false and sticky is false, set lastIndex to 0.
   if (!global && !sticky) {
     lastIndex = 0;
   }
-  // 10. Let matcher be R.[[RegExpMatcher]].
   const matcher = R.RegExpMatcher;
-  // 11. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
-  const fullUnicode = flags.includes('u');
-  // 12. Let matchSucceeded be false.
+  const fullUnicode = flags.includes('u') || flags.includes('v');
   let matchSucceeded = false;
+  // If fullUnicode is true, let input be StringToCodePoints(S). Otherwise, let input be a List whose elements are the code units that are the elements of S.
+  const input = RegExpState.createRegExpMatchingSource(fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split(''), S.stringValue());
+
+  // used to calculate inputIndex below
+  const accumulatedInputLength: number[] = [];
+  if (fullUnicode) {
+    for (let index = 0; index < input.length; index += 1) {
+      const codePoint = input[index];
+      accumulatedInputLength[index] = (accumulatedInputLength[index - 1] ?? 0) + codePoint.length;
+    }
+  }
   let r;
-  // 13. Repeat, while matchSucceeded is false
   while (matchSucceeded === false) {
-    // a. If lastIndex > length, then
     if (lastIndex > length) {
-      // i. If global is true or sticky is true, then
       if (global || sticky) {
-        // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
         Q(yield* Set(R, Value('lastIndex'), F(+0), Value.true));
       }
-      // ii. Return null.
       return Value.null;
     }
-    // b. Let r be matcher(S, lastIndex).
-    r = matcher(S, lastIndex);
-    // c. If r is failure, then
+    // Let inputIndex be the index into input of the character that was obtained from element lastIndex of S.
+    let inputIndex;
+    if (fullUnicode) {
+      inputIndex = accumulatedInputLength.findIndex((x) => lastIndex < x);
+      if (inputIndex === -1) {
+        // lastIndex is greater than all code points
+        inputIndex = accumulatedInputLength.length;
+      }
+    } else {
+      inputIndex = lastIndex;
+    }
+
+    r = matcher(input, inputIndex);
     if (r === 'failure') {
-      // i. If sticky is true, then
       if (sticky) {
-        // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
         Q(yield* Set(R, Value('lastIndex'), F(+0), Value.true));
-        // 2. Return null.
         return Value.null;
       }
-      // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
-      lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
-    } else { // d. Else,
-      // i. Assert: r is a State.
-      Assert(r instanceof State);
-      // ii. Set matchSucceeded to true.
+      lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode);
+    } else {
+      Assert(r instanceof RegExpState);
       matchSucceeded = true;
     }
   }
-  // 14. Let e be r's endIndex value.
-  let e = (r as State).endIndex;
-  const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split('');
-  // 15. If fullUnicode is true, then
+  __ts_cast__<RegExpState>(r);
+  let e = r.endIndex;
   if (fullUnicode) {
-    // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
-    e = X(GetStringIndex(S, Input, e));
+    e = GetStringIndex(S, input, e);
   }
-  // 16. If global is true or sticky is true, then
   if (global || sticky) {
-    // a. Perform ? Set(R, "lastIndex", 𝔽(e), true).
     Q(yield* Set(R, Value('lastIndex'), F(e), Value.true));
   }
-  // 17. Let n be the number of elements in r's captures List.
-  const n = (r as State).captures.length - 1;
-  // 18. Assert: n = R.[[RegExpRecord]].[[CapturingGroupsCount]].
-  Assert(n === R.parsedPattern.capturingGroups.length);
-  // 19. Assert: n < 2^32 - 1.
+  // Let n be the number of elements in r's captures List.
+  // Note: this list is used as 1-indexed, so the 0th element is a hole and do not count as "the number of elements"
+  const n = Math.max(0, r.captures.length - 1);
+  Assert(r.captures[0] === undefined);
+  Assert(n === R.RegExpRecord.CapturingGroupsCount);
   Assert(n < (2 ** 32) - 1);
-  // 20. Let A be ! ArrayCreate(n + 1).
   const A = X(ArrayCreate(n + 1));
-  // 21. Assert: The mathematical value of A's "length" property is n + 1.
   Assert(MathematicalValue(X(Get(A, Value('length'))) as NumberValue) === n + 1);
-  // 22. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
   X(CreateDataPropertyOrThrow(A, Value('index'), F(lastIndex)));
-  // 23. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataPropertyOrThrow(A, Value('input'), S));
-  // 24. Let match be the Match Record { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
-  const match = { StartIndex: lastIndex, EndIndex: e };
-  // 25. Let indices be a new empty List.
+  const match: MatchRecord = { StartIndex: lastIndex, EndIndex: e };
   const indices: (MatchRecord | UndefinedValue)[] = [];
-  // 26. Let groupNames be a new empty List.
   const groupNames = [];
-  // 27. Append match to indices.
   indices.push(match);
-  // 28. Let matchedValue be ! GetMatchString(S, match).
-  const matchedValue = X(GetMatchString(S, match));
-  // 29. Perform ! CreateDataProperty(A, "0", matchedValue).
-  X(CreateDataPropertyOrThrow(A, Value('0'), matchedValue));
+  const matchedSubStr = GetMatchString(S, match);
+  X(CreateDataPropertyOrThrow(A, Value('0'), matchedSubStr));
   let groups;
   let hasGroups;
-  // 30. If R contains any GroupName, then
-  if (R.parsedPattern.groupSpecifiers.size > 0) {
-    // a. Let groups be OrdinaryObjectCreate(null).
+  if (R.parsedPattern.capturingGroups.filter((x) => x.GroupName).length > 0) {
     groups = OrdinaryObjectCreate(Value.null);
-    // b. Let hasGroups be true.
     hasGroups = Value.true;
-  } else { // 31. Else,
-    // a. Let groups be undefined.
+  } else {
     groups = Value.undefined;
-    // b. Let hasGroups be false.
     hasGroups = Value.false;
   }
-  // 32. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
   X(CreateDataPropertyOrThrow(A, Value('groups'), groups));
-  // 33. For each integer i such that i > 0 and i ≤ n, do
+  const matchedGroupNames: string[] = [];
   for (let i = 1; i <= n; i += 1) {
-    // a. Let captureI be ith element of r's captures List.
-    const captureI = (r as State).captures[i];
+    const captureI = r.captures[i];
     let capturedValue;
-    // e. If captureI is undefined, then
-    if (captureI instanceof UndefinedValue) {
-      // i. Let capturedValue be undefined.
+    if (!captureI) {
       capturedValue = Value.undefined;
-      // ii. Append undefined to indices.
       indices.push(Value.undefined);
-    } else { // f. Else,
-      // i. Let captureStart be captureI's startIndex.
+    } else {
       let captureStart = captureI.startIndex;
-      // ii. Let captureEnd be captureI's endIndex.
       let captureEnd = captureI.endIndex;
-      // iii. If fullUnicode is true, then
       if (fullUnicode) {
-        // 1. Set captureStart to ! GetStringIndex(S, Input, captureStart).
-        captureStart = X(GetStringIndex(S, Input, captureStart));
-        // 2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
-        captureEnd = X(GetStringIndex(S, Input, captureEnd));
+        captureStart = GetStringIndex(S, input, captureStart);
+        captureEnd = GetStringIndex(S, input, captureEnd);
       }
-      // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
-      const capture = { StartIndex: captureStart, EndIndex: captureEnd };
-      // v. Let capturedValue be ! GetMatchString(S, capture).
-      capturedValue = X(GetMatchString(S, capture));
-      // vi. Append capture to indices.
+      const capture: MatchRecord = { StartIndex: captureStart, EndIndex: captureEnd };
+      capturedValue = GetMatchString(S, capture);
       indices.push(capture);
     }
-    // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(i)), capturedValue).
     X(CreateDataPropertyOrThrow(A, X(ToString(F(i))), capturedValue));
     const i_th = i - 1;
-    // f. If the ith capture of R was defined with a GroupName, then
-    if (R.parsedPattern.capturingGroups[i_th].GroupSpecifier) {
-      // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
-      const s = Value(R.parsedPattern.capturingGroups[i_th].GroupSpecifier);
-      // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
-      X(CreateDataPropertyOrThrow(groups as ObjectValue, s, capturedValue));
-      // iii. Append s to groupNames.
-      groupNames.push(s);
+    if (R.parsedPattern.capturingGroups[i_th].GroupName) {
+      const s = Value(R.parsedPattern.capturingGroups[i_th].GroupName);
+      if (matchedGroupNames.includes(s.stringValue())) {
+        Assert(capturedValue === Value.undefined);
+        groupNames.push(Value.undefined);
+      } else {
+        if (capturedValue !== Value.undefined) {
+          matchedGroupNames.push(s.stringValue());
+        }
+        X(CreateDataPropertyOrThrow(groups as ObjectValue, s, capturedValue));
+        groupNames.push(s);
+      }
     } else {
-      // i. Append undefined to groupNames.
       groupNames.push(Value.undefined);
     }
   }
-  // 34. If hasIndices is true, then
   if (hasIndices) {
-    // a. Let indicesArray be MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups).
     const indicesArray = MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups);
-    // b. Perform ! CreateDataProperty(A, "indices", indicesArray).
     X(CreateDataPropertyOrThrow(A, Value('indices'), indicesArray));
   }
-  // 35. Return A.
   return A;
 }
 
 /** https://tc39.es/ecma262/#sec-advancestringindex */
-export function AdvanceStringIndex(S: JSStringValue, index: number, unicode: BooleanValue) {
-  // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
-  // 2. Assert: index is a non-negative integer which is ≤ 2 ** (53 - 1).
-  Assert(isNonNegativeInteger(index) && index <= (2 ** 53) - 1);
-  // 3. Assert: Type(unicode) is Boolean.
-  Assert(unicode instanceof BooleanValue);
-  // 4. If unicode is false, return index + 1.
-  if (unicode === Value.false) {
+export function AdvanceStringIndex(S: JSStringValue, index: number, unicode: boolean) {
+  Assert(index <= (2 ** 53) - 1);
+  if (!unicode) {
     return index + 1;
   }
-  // 5. Let length be the number of code units in S.
   const length = S.stringValue().length;
-  // 6. If index + 1 ≥ length, return index + 1.
   if (index + 1 >= length) {
     return index + 1;
   }
-  // 7. Let cp be ! CodePointAt(S, index).
-  const cp = X(CodePointAt(S.stringValue(), index));
-  // 8. Return index + cp.[[CodeUnitCount]].
+  const cp = CodePointAt(S.stringValue(), index);
   return index + cp.CodeUnitCount;
 }
 
@@ -315,6 +266,10 @@ function* RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallC
   const unicode = ToBoolean(Q(yield* Get(R, Value('unicode'))));
   if (unicode === Value.true) {
     result += 'u';
+  }
+  const unicodeSet = ToBoolean(Q(yield* Get(R, Value('unicodeSets'))));
+  if (unicodeSet === Value.true) {
+    result += 'v';
   }
   const sticky = ToBoolean(Q(yield* Get(R, Value('sticky'))));
   if (sticky === Value.true) {
@@ -380,7 +335,7 @@ function* RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }
     return Q(yield* RegExpExec(rx, S));
   } else { // 6. Else,
     // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-    const fullUnicode = flags.stringValue().includes('u') ? Value.true : Value.false;
+    const fullUnicode = flags.stringValue().includes('u');
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
     Q(yield* Set(rx, Value('lastIndex'), F(+0), Value.true));
     // c. Let A be ! ArrayCreate(0).
@@ -432,19 +387,9 @@ function* RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValu
   const matcher = Q(yield* Construct(C, [R, flags]));
   const lastIndex = Q(yield* ToLength(Q(yield* Get(R, Value('lastIndex')))));
   Q(yield* Set(matcher, Value('lastIndex'), lastIndex, Value.true));
-  let global;
-  if (flags.stringValue().includes('g')) {
-    global = Value.true;
-  } else {
-    global = Value.false;
-  }
-  let fullUnicode;
-  if (flags.stringValue().includes('u')) {
-    fullUnicode = Value.true;
-  } else {
-    fullUnicode = Value.false;
-  }
-  return X(CreateRegExpStringIterator(matcher, S, global, fullUnicode));
+  const global = flags.stringValue().includes('g');
+  const fullUnicode = flags.stringValue().includes('u') || flags.stringValue().includes('v');
+  return CreateRegExpStringIterator(matcher, S, global, fullUnicode);
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
@@ -484,7 +429,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
   // 9. If global is true, then
   if (global === Value.true) {
     // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-    fullUnicode = flags.stringValue().includes('u') ? Value.true : Value.false;
+    fullUnicode = flags.stringValue().includes('u');
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
     Q(yield* Set(rx, Value('lastIndex'), F(+0), Value.true));
   }
@@ -658,7 +603,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined]:
   const C = Q(yield* SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%')));
   const flagsValue = Q(yield* Get(rx, Value('flags')));
   const flags = Q(yield* ToString(flagsValue)).stringValue();
-  const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
+  const unicodeMatching = flags.includes('u');
   const newFlags = flags.includes('y') ? Value(flags) : Value(`${flags}y`);
   const splitter = Q(yield* Construct(C, [rx, newFlags]));
 
@@ -776,6 +721,16 @@ function RegExpProto_unicodeGetter(_args: Arguments, { thisValue }: FunctionCall
   return Q(RegExpHasFlag(R, cu));
 }
 
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicodeSets */
+function RegExpProto_unicodeSetsGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+  // 1. Let R be the this value.
+  const R = thisValue;
+  // 2. Let cu be the code unit 0x0076 (LATIN SMALL LETTER V).
+  const cu = 'v';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
+}
+
 export function bootstrapRegExpPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(
     realmRec,
@@ -797,6 +752,7 @@ export function bootstrapRegExpPrototype(realmRec: Realm) {
       ['test', RegExpProto_test, 1],
       ['toString', RegExpProto_toString, 0],
       ['unicode', [RegExpProto_unicodeGetter]],
+      ['unicodeSets', [RegExpProto_unicodeSetsGetter]],
     ],
     realmRec.Intrinsics['%Object.prototype%'],
   );

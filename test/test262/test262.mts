@@ -37,6 +37,10 @@ const ARGV = util.parseArgs({
     'update-failed-tests': { type: 'boolean' },
     'run-slow-tests': { type: 'boolean' },
     'run-failed-only': { type: 'boolean' },
+
+    'strict-only': { type: 'boolean' },
+    // alias for --strict-only
+    'fast': { type: 'boolean' },
   },
 });
 
@@ -227,7 +231,7 @@ for await (const file of files) {
     if (test.attrs.flags.module) {
       queueTest({ ...test, flags: 'module' });
     } else {
-      if (!test.attrs.flags.onlyStrict) {
+      if (!test.attrs.flags.onlyStrict && !ARGV.values['strict-only'] && !ARGV.values.fast) {
         queueTest(test);
       }
 

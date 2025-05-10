@@ -30,8 +30,8 @@ const rule = {
       throw new Error('No ts program found');
     }
     const checker = services.program.getTypeChecker();
-    const CompletionFile = services.program.getSourceFile(resolve(__dirname, '../../src/completion.mts'));
-    const PromiseFile = services.program.getSourceFile(resolve(__dirname, '../../src/intrinsics/Promise.mts'));
+    const CompletionFile = services.program.getSourceFile(resolve(__dirname, '../../../src/completion.mts'));
+    const PromiseFile = services.program.getSourceFile(resolve(__dirname, '../../../src/intrinsics/Promise.mts'));
     if (!CompletionFile || !PromiseFile) {
       throw new Error('Cannot load src/completion.mts or src/intrinsics/Promise.mts');
     }

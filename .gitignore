@@ -10,3 +10,4 @@ coverage
 test/test262/last-failed.log
 test/test262/last-failed-list
 **/tsconfig.tsbuildinfo
+src/unicode/*.json

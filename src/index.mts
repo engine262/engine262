@@ -10,11 +10,12 @@ export * from './modules.mts';
 export * from './host-defined/inspect.mts';
 export * from './evaluator.mts';
 
+export { captureStack } from './helpers.mts';
 export {
   Throw, type ErrorType, gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
-export { createTest262Intrinsics } from './host-defined/test262-intrinsics.mts';
+export { createTest262Intrinsics, boostTest262Harness } from './host-defined/test262-intrinsics.mts';
 export { performDevtoolsEval } from './host-defined/debugger-eval.mts';
 export {
   getHostDefinedErrorStack, skipDebugger, getCurrentStack, JSStringMap, JSStringSet, CallSite, type Mutable, PropertyKeyMap, kInternal,
