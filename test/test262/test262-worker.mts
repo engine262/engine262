@@ -17,6 +17,7 @@ import {
   JSStringValue,
   Throw,
   skipDebugger,
+  boostTest262Harness,
 } from '#self';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -80,6 +81,7 @@ function run(test: Test): WorkerToSupervisor {
         return fails(test, inspect(completion));
       }
     }
+    boostTest262Harness(realm);
 
     {
       const DONE = `

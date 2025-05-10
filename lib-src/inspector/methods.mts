@@ -4,7 +4,7 @@ import type {
   DebuggerNamespace, HeapProfilerNamespace, ProfilerNamespace, RuntimeNamespace,
 } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
-import type { InspectorContext } from './context.mts';
+import { InspectorContext } from './context.mts';
 import {
   Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
   ParseModule,
@@ -14,6 +14,7 @@ import {
   evalQ,
   Assert,
   kInternal,
+  captureStack,
 } from '#self';
 
 export const Debugger: DebuggerNamespace = {
@@ -261,8 +262,6 @@ function evaluate(options: {
       });
       if (Array.isArray(parsed)) {
         const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
-        // Note: it has to be this message to trigger devtools' line wrap.
-        e.exception!.description = 'SyntaxError: Unexpected end of input';
         resolve({ exceptionDetails: e, result: { type: 'undefined' } });
         return;
       }
@@ -304,6 +303,24 @@ function evaluate(options: {
         surroundingAgent.executionContextStack.push(stack);
       }
     }
+  }, (err): Protocol.Runtime.EvaluateResponse => {
+    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText();
+    const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
+    _context.sendEvent['Runtime.exceptionThrown']({
+      timestamp: Date.now(),
+      exceptionDetails: {
+        stackTrace: frame.length ? { callFrames: frame } : undefined,
+        text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length + 1)}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
+        columnNumber: frame[0]?.columnNumber,
+        lineNumber: frame[0]?.lineNumber,
+        scriptId: frame[0]?.scriptId,
+        url: frame[0]?.url,
+        exceptionId: 0,
+      },
+    });
+    return {
+      result: { type: 'undefined' },
+    };
   });
   return promise;
 }

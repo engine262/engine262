@@ -233,5 +233,5 @@ export type WorkerToSupervisor =
 
 export function readList(path: string) {
   const source = fs.readFileSync(path, 'utf8');
-  return source.split('\n').filter((l) => l && !l.startsWith('#') && !l.startsWith('!'));
+  return source.split('\n').filter((l) => l && !l.startsWith('#') && !l.startsWith(';')).map((x) => x.split('#')[0].split(';')[0].trim());
 }

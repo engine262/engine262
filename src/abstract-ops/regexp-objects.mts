@@ -4,7 +4,7 @@ import {
   UndefinedValue,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { Evaluate_Pattern } from '../runtime-semantics/all.mts';
+import { CompilePattern, CountLeftCapturingParensWithin, type RegExpRecord } from '../runtime-semantics/all.mts';
 import { ParsePattern } from '../parse.mts';
 import { isLineTerminator } from '../parser/Lexer.mts';
 import type { Mutable } from '../helpers.mts';
@@ -37,7 +37,7 @@ export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpOb
 
 /** https://tc39.es/ecma262/#sec-regexpinitialize */
 export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, flags: Value) {
-  let P;
+  let P: JSStringValue;
   // 1. If pattern is undefined, let P be the empty String.
   if (pattern === Value.undefined) {
     P = Value('');
@@ -52,40 +52,41 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
     F = Q(yield* ToString(flags));
   }
   const f = F.stringValue();
-  // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
-  if (/^[dgimsuy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
+  // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", "v", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
+  if (/^[dgimsuvy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
     return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
-  // 6. If F contains "u", let u be true; else let u be false.
+  const i = f.includes('i');
+  const m = f.includes('m');
+  const s = f.includes('s');
   const u = f.includes('u');
-  // 7. If u is true, then
-  //   a. Let patternText be ! UTF16DecodeString(P).
-  //   b. Let patternCharacters be a List whose elements are the code points of patternText.
-  // 8. Else,
+  const v = f.includes('v');
+
+  // 11. If u is true or v is true, then
+  //   a. Let patternText be StringToCodePoints(P).
+  // 12. Else,
   //   a. Let patternText be the result of interpreting each of P's 16-bit elements as a Unicode BMP code point. UTF-16 decoding is not applied to the elements.
-  //   b. Let patternCharacters be a List whose elements are the code unit elements of P.
-  // 9. Let parseResult be ParsePattern(patternText, u).
   const patternText = P.stringValue();
-  const parseResult = ParsePattern(patternText, u);
-  // 10. If parseResult is a non-empty List of SyntaxError objects, throw a SyntaxError exception.
+
+  const parseResult = ParsePattern(patternText, u, v);
   if (Array.isArray(parseResult)) {
     return surroundingAgent.Throw(parseResult[0], 'Raw', parseResult[0]);
   }
-  obj.parsedPattern = parseResult;
-  // 11. Assert: parseResult is a Parse Node for Pattern.
-  Assert(parseResult.type === 'Pattern');
-  // 12. Set obj.[[OriginalSource]] to P.
   obj.OriginalSource = P;
-  // 13. Set obj.[[OriginalFlags]] to F.
   obj.OriginalFlags = F;
-  // 14. Set obj.[[RegExpMatcher]] to the Abstract Closure that evaluates parseResult by
-  //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
-  //     List of SourceCharacter values and F as the flag parameters.
-  const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
-  obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
-  // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
+  const capturingGroupsCount = CountLeftCapturingParensWithin(parseResult);
+  const rer: RegExpRecord = {
+    IgnoreCase: i,
+    Multiline: m,
+    DotAll: s,
+    Unicode: u,
+    UnicodeSets: v,
+    CapturingGroupsCount: capturingGroupsCount,
+  };
+  obj.RegExpRecord = rer;
+  obj.parsedPattern = parseResult;
+  obj.RegExpMatcher = CompilePattern(parseResult, rer);
   Q(yield* Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
-  // 16. Return obj.
   return obj;
 }
 
@@ -99,11 +100,12 @@ export function* RegExpCreate(P: Value, F: Value): ValueEvaluator<RegExpObject> 
 export function EscapeRegExpPattern(P: JSStringValue, _F: Value) {
   const source = P.stringValue();
   if (source === '') {
-    return Value('(:?)');
+    return Value('(?:)');
   }
   let index = 0;
   let escaped = '';
   let inClass = false;
+  let isEscape = false;
   while (index < source.length) {
     const c = source[index];
     switch (c) {
@@ -112,24 +114,26 @@ export function EscapeRegExpPattern(P: JSStringValue, _F: Value) {
         if (isLineTerminator(source[index])) {
           // nothing
         } else {
+          isEscape = !isEscape;
           escaped += '\\';
         }
         break;
       case '/':
         index += 1;
-        if (inClass) {
+        if (inClass || isEscape) {
+          isEscape = false;
           escaped += '/';
         } else {
           escaped += '\\/';
         }
         break;
       case '[':
-        inClass = true;
+        inClass = !isEscape;
         index += 1;
         escaped += '[';
         break;
       case ']':
-        inClass = false;
+        inClass = !isEscape;
         index += 1;
         escaped += ']';
         break;
@@ -153,6 +157,9 @@ export function EscapeRegExpPattern(P: JSStringValue, _F: Value) {
         index += 1;
         escaped += c;
         break;
+    }
+    if (c !== '\\') {
+      isEscape = false;
     }
   }
   return Value(escaped);

@@ -1,9 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true,
+    "outDir": "./lib",
+    "declaration": false,
+    "sourceMap": false,
+    "declarationMap": false,
     "erasableSyntaxOnly": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": false,
+    "strict": false
   },
   "include": ["./"]
 }

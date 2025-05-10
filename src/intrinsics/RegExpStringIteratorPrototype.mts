@@ -1,9 +1,8 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  BooleanValue, JSStringValue, NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
+  JSStringValue, NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import {
-  Assert,
   CreateIteratorFromClosure,
   GeneratorResume,
   ToString,
@@ -22,13 +21,7 @@ import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
-export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, global: BooleanValue, fullUnicode: BooleanValue): ValueCompletion<GeneratorObject> {
-  // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
-  // 2. Assert: Type(global) is Boolean.
-  Assert(global instanceof BooleanValue);
-  // 3. Assert: Type(fullUnicode) is Boolean.
-  Assert(fullUnicode instanceof BooleanValue);
+export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, global: boolean, fullUnicode: boolean): ValueCompletion<GeneratorObject> {
   // 4. Let closure be a new Abstract Closure with no parameters that captures R, S, global, and fullUnicode and performs the following steps when called:
   const closure = function* closure(): ValueEvaluator {
     // a. Repeat,
@@ -40,7 +33,7 @@ export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, glo
         return Value.undefined;
       }
       // iii. If global is false, then
-      if (global === Value.false) {
+      if (!global) {
         // 1. Perform ? Yield(match).
         Q(yield* Yield(match));
         // 2. Return undefined.

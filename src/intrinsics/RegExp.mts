@@ -22,12 +22,21 @@ import {
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
+import {
+  isDecimalDigit, isLineTerminator, isWhitespace,
+} from '../parser/Lexer.mts';
+import { isAsciiLetter, isControlEscape, isSyntaxCharacter } from '../parser/RegExpParser.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { UnicodeEscape } from './JSON.mts';
+import {
+  Assert, isLeadingSurrogate, isTrailingSurrogate, StringToCodePoints, UTF16EncodeCodePoint, type CodePoint, type RegExpMatcher, type RegExpRecord,
+} from '#self';
 
 export interface RegExpObject extends OrdinaryObject {
   readonly OriginalSource: JSStringValue;
   readonly OriginalFlags: JSStringValue;
-  readonly RegExpMatcher: (str: JSStringValue, index: number) => unknown;
+  readonly RegExpMatcher: RegExpMatcher;
+  readonly RegExpRecord: RegExpRecord;
   readonly parsedPattern: ParseNode.RegExp.Pattern;
 }
 export function isRegExpObject(o: Value): o is RegExpObject {
@@ -88,6 +97,58 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
   return Q(yield* RegExpInitialize(O, P, F));
 }
 
+/** https://tc39.es/ecma262/#sec-regexp.escape */
+function* RegExp_escape([S = Value.undefined]: Arguments) {
+  if (!(S instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', S);
+  }
+  let escaped = '';
+  const cpList = StringToCodePoints(S.stringValue());
+  for (const cp of cpList) {
+    if (escaped === '' && (isDecimalDigit(String.fromCodePoint(cp)) || isAsciiLetter(cp))) {
+      const numericValue = cp;
+      const hex = numericValue.toString(16);
+      Assert(hex.length === 2);
+      escaped += `\u{005C}x${hex}`;
+    } else {
+      escaped += EncodeForRegExpEscape(cp);
+    }
+  }
+  return Value(escaped);
+}
+
+const table67: Record<number, string> = {
+  9: 't',
+  10: 'n',
+  11: 'v',
+  12: 'f',
+  13: 'r',
+};
+function EncodeForRegExpEscape(cp: CodePoint) {
+  const ch = String.fromCharCode(cp);
+  if (cp === 0x002F || isSyntaxCharacter(ch)) {
+    return `\u{005C}${UTF16EncodeCodePoint(cp)}`;
+  } else if (isControlEscape(cp)) {
+    return `\u{005C}${table67[cp]!}`;
+  }
+  const otherPunctuators = ",-=<>#&!%:;@~'`\u{0022}";
+  const toEscape = StringToCodePoints(otherPunctuators);
+  if (toEscape.includes(cp) || isWhitespace(ch) || isLineTerminator(ch) || isLeadingSurrogate(cp) || isTrailingSurrogate(cp)) {
+    const cpNum = cp;
+    if (cpNum <= 0xFF) {
+      const hex = cpNum.toString(16);
+      return `\u{005C}x${hex.padStart(2, '0')}`;
+    }
+    let escaped = '';
+    const codeUnits = UTF16EncodeCodePoint(cp);
+    for (const cu of codeUnits) {
+      escaped += UnicodeEscape(cu);
+    }
+    return escaped;
+  }
+  return UTF16EncodeCodePoint(cp);
+}
+
 /** https://tc39.es/ecma262/#sec-get-regexp-@@species */
 function RegExp_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
@@ -98,6 +159,7 @@ export function bootstrapRegExp(realmRec: Realm) {
 
   const cons = bootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [
     [wellKnownSymbols.species, [RegExp_speciesGetter]],
+    ['escape', RegExp_escape, 1],
   ]);
 
   realmRec.Intrinsics['%RegExp%'] = cons;

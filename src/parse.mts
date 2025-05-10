@@ -249,26 +249,22 @@ function isParseNode(value: unknown): value is ParseNode {
 }
 
 /** https://tc39.es/ecma262/#sec-parsepattern */
-export function ParsePattern(patternText: string, u: boolean) {
+export function ParsePattern(patternText: string, u: boolean, v: boolean) {
   const parse = (flags: RegExpParserContext) => {
-    const p = new RegExpParser(patternText);
-    return p.scope(flags, () => p.parsePattern());
-  };
-  try {
-    // 1. If u is true, then
-    if (u) {
-      // a. Parse patternText using the grammars in 21.2.1. The goal symbol for the parse is Pattern[+U, +N].
-      return parse({ U: true, N: true });
-    } else { // 2. Else
-      // a. Parse patternText using the grammars in 21.2.1. The goal symbol for the parse is Pattern[~U, ~N].
-      //    If the result of parsing contains a GroupName, reparse with the goal symbol Pattern[~U, +N] and use this result instead.
-      const pattern = parse({ U: false, N: false });
-      if (pattern.groupSpecifiers.size > 0) {
-        return parse({ U: false, N: true });
-      }
-      return pattern;
+    try {
+      const p = new RegExpParser(patternText);
+      return p.scope(flags, () => p.parsePattern());
+    } catch (e) {
+      return [handleError(e)];
     }
-  } catch (e) {
-    return [handleError(e)];
+  };
+  if (v && u) {
+    return [surroundingAgent.NewError('SyntaxError', 'RegExpFlagsCannotUseTogether', 'v', 'u')];
+  } else if (v) {
+    return parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
+  } else if (u) {
+    return parse({ UnicodeMode: true, NamedCaptureGroups: true });
+  } else {
+    return parse({ NamedCaptureGroups: true });
   }
 }

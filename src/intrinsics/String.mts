@@ -29,6 +29,7 @@ import {
 import { UTF16EncodeCodePoint } from '../static-semantics/all.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import type { CodePoint } from '#self';
 
 export interface StringObject extends ExoticObject {
   readonly StringData: JSStringValue;
@@ -84,7 +85,7 @@ function* String_fromCodePoint(codePoints: Arguments) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
     }
     // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
-    result += UTF16EncodeCodePoint(R(nextCP));
+    result += UTF16EncodeCodePoint(R(nextCP) as CodePoint);
   }
   // 3. Assert: If codePoints is empty, then result is the empty String.
   Assert(!(codePoints.length === 0) || result.length === 0);
