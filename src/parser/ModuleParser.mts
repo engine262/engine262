@@ -7,8 +7,8 @@ import type { ParseNode } from './ParseNode.mts';
 
 export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :
-  //   `import` ImportClause FromClause `;`
-  //   `import` ModuleSpecifier `;`
+  //   `import` ImportClause FromClause WithClause? `;`
+  //   `import` ModuleSpecifier WithClause? `;`
   parseImportDeclaration(): ParseNode.ImportDeclaration | ParseNode.ExpressionStatement | ParseNode.LabelledStatement {
     if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
       // `import` `(`
@@ -23,6 +23,9 @@ export abstract class ModuleParser extends StatementParser {
       node.ImportClause = this.parseImportClause();
       this.scope.declare(node.ImportClause, 'import');
       node.FromClause = this.parseFromClause();
+    }
+    if (this.test(Token.WITH)) {
+      node.WithClause = this.parseWithClause();
     }
     this.semicolon();
     return this.finishNode(node, 'ImportDeclaration');
@@ -175,6 +178,9 @@ export abstract class ModuleParser extends StatementParser {
           if (this.test('from')) {
             node.ExportFromClause = NamedExports;
             node.FromClause = this.parseFromClause();
+            if (this.test(Token.WITH)) {
+              node.WithClause = this.parseWithClause();
+            }
           } else {
             NamedExports.ExportsList.forEach((n) => {
               if (n.localName.type === 'StringLiteral') {
@@ -196,6 +202,9 @@ export abstract class ModuleParser extends StatementParser {
           }
           node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
           node.FromClause = this.parseFromClause();
+          if (this.test(Token.WITH)) {
+            node.WithClause = this.parseWithClause();
+          }
           this.semicolon();
           break;
         }
@@ -267,5 +276,44 @@ export abstract class ModuleParser extends StatementParser {
   parseFromClause(): ParseNode.FromClause {
     this.expect('from');
     return this.parseStringLiteral();
+  }
+
+  // WithClause :
+  //   `with` `{` `}`
+  //   `with` `{` WithEntries `,`? `}`
+  parseWithClause(): ParseNode.WithClause {
+    const node = this.startNode<ParseNode.WithClause>();
+    this.expect(Token.WITH);
+    this.expect(Token.LBRACE);
+
+    const seenKeys = new Set<string>();
+
+    const WithEntries = [];
+    while (!this.eat(Token.RBRACE)) {
+      const entry = this.parseWithEntry();
+
+      const key = StringValue(entry.AttributeKey).value;
+      if (seenKeys.has(key)) {
+        this.raiseEarly('DuplicateImportAttribute', entry, key);
+      }
+      seenKeys.add(key);
+
+      WithEntries.push(entry);
+      if (this.eat(Token.RBRACE)) {
+        break;
+      }
+      this.expect(Token.COMMA);
+    }
+    node.WithEntries = WithEntries;
+
+    return this.finishNode(node, 'WithClause');
+  }
+
+  parseWithEntry(): ParseNode.WithEntry {
+    const node = this.startNode<ParseNode.WithEntry>();
+    node.AttributeKey = this.test(Token.STRING) ? this.parseStringLiteral() : this.parseIdentifierName();
+    this.expect(Token.COLON);
+    node.AttributeValue = this.parseStringLiteral();
+    return this.finishNode(node, 'WithEntry');
   }
 }

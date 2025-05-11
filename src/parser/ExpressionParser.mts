@@ -576,6 +576,10 @@ export abstract class ExpressionParser extends FunctionParser {
           }
           this.expect(Token.LPAREN);
           node.AssignmentExpression = this.parseAssignmentExpression();
+          if (this.eat(Token.COMMA) && !this.test(Token.RPAREN)) {
+            node.OptionsExpression = this.parseAssignmentExpression();
+            this.eat(Token.COMMA);
+          }
           this.expect(Token.RPAREN);
           result = this.finishNode(node, 'ImportCall');
         }

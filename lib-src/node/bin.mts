@@ -101,7 +101,11 @@ if (argv.values.features === 'all') {
   features = [];
 }
 
-const agent = new Agent({ features, loadImportedModule: loadImportedModuleSync });
+const agent = new Agent({
+  features,
+  supportedImportAttributes: ['type'],
+  loadImportedModule: loadImportedModuleSync,
+});
 setSurroundingAgent(agent);
 
 const realm = new ManagedRealm({ resolverCache: new Map() });

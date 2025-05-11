@@ -5,13 +5,16 @@
 
 uint8array-base64 = uint8array-base64
 
+# Update with test262 on May 2025, to be investigated/implemented
+
+-upsert
+
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Array.fromAsync
 -Float16Array
 -Math.sumPrecise
 -arraybuffer-transfer
 -explicit-resource-management
--import-attributes
 -import-defer
 -iterator-sequencing
 -json-parse-with-source
@@ -27,7 +30,6 @@ uint8array-base64 = uint8array-base64
 -caller
 -SharedArrayBuffer
 -tail-call-optimization
--json-modules
 -Temporal
 -resizable-arraybuffer
 -decorators

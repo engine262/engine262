@@ -84,7 +84,8 @@ import { bootstrapWrapForValidIteratorPrototype } from '../intrinsics/WrapForVal
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mts';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mts';
 import {
-  AbstractModuleRecord, JSStringValue, ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ValueEvaluator, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
+  ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ValueEvaluator, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
+  type LoadedModuleRequestRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
@@ -93,11 +94,6 @@ import {
   DefinePropertyOrThrow,
   F as toNumberValue,
 } from './all.mts';
-
-export interface LoadedModuleRequestRecord {
-  readonly Specifier: JSStringValue;
-  readonly Module: AbstractModuleRecord
-}
 
 /** https://tc39.es/ecma262/#table-well-known-intrinsic-objects */
 interface Intrinsics_Table6 {
