@@ -26,11 +26,12 @@ const isOctalDigit = (c: string) => c && /[0-7]/u.test(c);
 const isBinaryDigit = (c: string) => (c === '0' || c === '1');
 export const isWhitespace = (c: string) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c: string | number) => {
+  // Line Separator (U+2028) and Paragraph Separator (U+2029)
+  // Line Feed (U+000A) and Carriage Return (U+000D)
   if (typeof c === 'string') {
     return !!c && /[\r\n\u2028\u2029]/u.test(c);
-  } else {
-    return c === 8232 || c === 8233 || c === 10 || c === 13;
   }
+  return c === 0x2028 || c === 0x2029 || c === 0xa || c === 0xd;
 };
 const isRegularExpressionFlagPart = (c: string) => c && (isUnicodeIDContinue(c) || c === '$');
 export const isIdentifierStart = (c: string) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);

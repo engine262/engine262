@@ -478,10 +478,7 @@ export class RegExpParser {
   //   RegularExpressionModifiers RegularExpressionModifier
   //
   // RegularExpressionModifier :: one of `i` `m` `s`
-  private parseAtomModifiers(): {
-    PlusModifiers: ParseNode.RegExp.RegularExpressionModifier[] | undefined;
-    MinusModifiers: ParseNode.RegExp.RegularExpressionModifier[] | undefined;
-    } {
+  private parseAtomModifiers(): Record<'PlusModifiers' | 'MinusModifiers', ParseNode.RegExp.RegularExpressionModifier[] | undefined> {
     const modifierPos = this.position;
     let modifiers: ParseNode.RegExp.RegularExpressionModifier[] | undefined;
     const result = { PlusModifiers: modifiers, MinusModifiers: modifiers };
@@ -1340,7 +1337,7 @@ export class RegExpParser {
     }
 
     // anything that can start a Character Escape
-    if ('f n r t v c 0 x u / ^ $ \\ . * + ? ( ) [ ] { } |'.split(' ').includes(nextTwo[1])) {
+    if ('fnrtvc0xu/^$\\.*+?()[]{}|'.includes(nextTwo[1])) {
       this.position += 1;
       return { type: 'ClassSetCharacter', production: 'CharacterEscape', CharacterEscape: this.scope({ UnicodeMode: true }, () => this.parseCharacterEscape()) };
     }

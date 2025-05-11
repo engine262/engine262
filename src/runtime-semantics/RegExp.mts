@@ -1042,18 +1042,18 @@ function CompileToCharSet(
         __ts_cast__<Table69_NonbinaryUnicodePropertiesCanonicalized>(p);
         const vs = node.UnicodePropertyValue;
         let v: string;
+        let A: CharSet;
         if (p === 'Script_Extensions') {
           Assert(vs in PropertyValueAliases.Script);
           // Let v be the Set containing the “short name”, “long name”, and any other aliases corresponding with value vs for property “Script” in PropertyValueAliases.txt.
           v = UnicodeMatchPropertyValue('Script', vs);
           // Return the CharSet containing all Unicode code points whose character database definition includes the property “Script_Extensions” with value having a non-empty intersection with v.
-          const A = new VirtualCharSet((ch, rer) => Unicode.characterMatchPropertyValue(ch, p, v, rer));
-          return A;
+          A = new VirtualCharSet((ch, rer) => Unicode.characterMatchPropertyValue(ch, p, v, rer));
         } else {
           v = UnicodeMatchPropertyValue(p, vs);
-        }
         // Let A be the CharSet containing all Unicode code points whose character database definition includes the property p with value v.
-        const A = new VirtualCharSet((ch, rer) => Unicode.characterMatchPropertyValue(ch, p, v, rer));
+          A = new VirtualCharSet((ch, rer) => Unicode.characterMatchPropertyValue(ch, p, v, rer));
+        }
         return MaybeSimpleCaseFolding(rer, A);
       } else {
         const s = node.LoneUnicodePropertyNameOrValue;
