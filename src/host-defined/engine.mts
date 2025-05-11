@@ -1,4 +1,4 @@
-import { JSStringValue, NullValue, Value } from '../value.mts';
+import { NullValue, Value } from '../value.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -27,6 +27,7 @@ import {
   AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, skipDebugger, type Arguments, type AsyncGeneratorObject, type ErrorType, type ValueCompletion, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
   ManagedRealm,
   SourceTextModuleRecord,
+  type ModuleRequestRecord,
 } from '../index.mts';
 import * as messages from '../messages.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -79,7 +80,8 @@ export interface AgentHostDefined {
   ensureCanCompileStrings?(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void>;
   cleanupFinalizationRegistry?(FinalizationRegistry: FinalizationRegistryObject): PlainCompletion<void>;
   features?: readonly string[];
-  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
+  supportedImportAttributes?: readonly string[];
+  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
   onDebugger?(): void;
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord, scriptId: string): void;
@@ -498,13 +500,21 @@ export function HostHasSourceTextAvailable(func: FunctionObject) {
   return Value.true;
 }
 
+export function HostGetSupportedImportAttributes(): readonly string[] {
+  if (surroundingAgent.hostDefinedOptions.supportedImportAttributes) {
+    return surroundingAgent.hostDefinedOptions.supportedImportAttributes;
+  }
+  return [];
+}
+
 // #sec-HostLoadImportedModule
-export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, specifier: JSStringValue, hostDefined: ModuleRecordHostDefined | undefined, payload: GraphLoadingState | PromiseCapabilityRecord) {
+export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: GraphLoadingState | PromiseCapabilityRecord) {
   if (surroundingAgent.hostDefinedOptions.loadImportedModule) {
     const executionContext = surroundingAgent.runningExecutionContext;
     let result: PlainCompletion<AbstractModuleRecord> | undefined;
     let sync = true;
-    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, specifier.stringValue(), hostDefined, (res) => {
+    const attributes = new Map(moduleRequest.Attributes.map(({ Key, Value }) => [Key.stringValue(), Value.stringValue()]));
+    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, moduleRequest.Specifier.stringValue(), attributes, hostDefined, (res) => {
       result = res;
       if (!sync) {
         // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
@@ -512,7 +522,7 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
         surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
           result = EnsureCompletion(result);
           Assert(!!result && (result.Type === 'normal' || result.Type === 'throw'));
-          FinishLoadingImportedModule(referrer, specifier, result, payload);
+          FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
         });
         surroundingAgent.executionContextStack.pop(executionContext);
         runJobQueue();
@@ -522,10 +532,10 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
     if (result !== undefined) {
       result = EnsureCompletion(result);
       Assert(result.Type === 'normal' || result.Type === 'throw');
-      FinishLoadingImportedModule(referrer, specifier, result, payload);
+      FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
     }
   } else {
-    FinishLoadingImportedModule(referrer, specifier, surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier), payload);
+    FinishLoadingImportedModule(referrer, moduleRequest, surroundingAgent.Throw('Error', 'CouldNotResolveModule', moduleRequest.Specifier), payload);
   }
 }
 

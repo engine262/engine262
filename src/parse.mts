@@ -1,7 +1,9 @@
 import { Parser, type ParserOptions } from './parser/Parser.mts';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
 import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
-import { SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined } from './modules.mts';
+import {
+  SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
+} from './modules.mts';
 import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   Get,
@@ -10,7 +12,6 @@ import {
   CreateDefaultExportSyntheticModule,
   Realm,
   type BuiltinFunctionObject,
-  type LoadedModuleRequestRecord,
 } from './abstract-ops/all.mts';
 import { Q, X, type PlainCompletion } from './completion.mts';
 import {
