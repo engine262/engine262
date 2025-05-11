@@ -214,10 +214,12 @@ export const Unicode = {
   },
 
   /** https://www.unicode.org/reports/tr44/#Simple_Case_Folding */
-  SimpleCaseFoldingMapping(ch: Character): Character {
-    // Note: The case foldings are omitted in the data file if they are the same as the code point itself.
-    return (unicodeCaseFoldingSimple.get(ch) || ch) as Character;
-  },
+  // TODO: scf() in spec means Simple Case Folding or Simple + Common Case Folding?
+  // https://github.com/tc39/ecma262/issues/3594
+  // SimpleCaseFoldingMapping(ch: Character): Character {
+  //   // Note: The case foldings are omitted in the data file if they are the same as the code point itself.
+  //   return (unicodeCaseFoldingSimple.get(ch) || ch) as Character;
+  // },
   SimpleOrCommonCaseFoldingMapping(ch: Character): Character | undefined {
     if (unicodeCaseFoldingCommon.has(ch)) {
       return unicodeCaseFoldingCommon.get(ch)! as Character;
@@ -225,7 +227,7 @@ export const Unicode = {
     if (unicodeCaseFoldingSimple.has(ch)) {
       return unicodeCaseFoldingSimple.get(ch)! as Character;
     }
-    return undefined;
+    return ch;
   },
   iterateCharacterByCodePoint(string: Character | ListOfCharacter) {
     return string[Symbol.iterator]() as IterableIterator<Character>;

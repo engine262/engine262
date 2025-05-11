@@ -152,22 +152,37 @@ abstract class CharSet {
   }
 
   static intersection(...sets: CharSet[]): CharSet {
-    const intersectionChars = new Set<Character>();
-
+    let intersectionChars: Set<Character>;
     const setChars = sets.filter((x) => x.chars);
-    setChars.sort((a, b) => a.chars!.size - b.chars!.size)[0]?.chars?.forEach((c) => {
-      if (setChars.every((s) => s.chars!.has(c))) {
-        intersectionChars.add(c);
-      }
-    });
+    if (setChars.length === 0) {
+      intersectionChars = new Set<Character>();
+    } else if (setChars.length === 1) {
+      intersectionChars = setChars[0].chars!;
+    } else {
+      const smallestSet = setChars.reduce((a, b) => (a.chars!.size < b.chars!.size ? a : b));
+      intersectionChars = new Set();
+      smallestSet.chars!.forEach((c) => {
+        if (setChars.every((s) => s.chars!.has(c))) {
+          intersectionChars.add(c);
+        }
+      });
+    }
 
-    const intersectionStrings = new Set<ListOfCharacter>();
+    let intersectionStrings: Set<ListOfCharacter>;
     const setStrings = sets.filter((x) => x.strings);
-    setStrings.sort((a, b) => a.strings!.size - b.strings!.size)[0]?.strings?.forEach((c) => {
-      if (setStrings.every((s) => s.strings!.has(c))) {
-        intersectionStrings.add(c);
-      }
-    });
+    if (setStrings.length === 0) {
+      intersectionStrings = new Set<ListOfCharacter>();
+    } else if (setStrings.length === 1) {
+      intersectionStrings = setStrings[0].strings!;
+    } else {
+      const smallestSet = setStrings.reduce((a, b) => (a.strings!.size < b.strings!.size ? a : b));
+      intersectionStrings = new Set();
+      smallestSet.strings!.forEach((s) => {
+        if (setStrings.every((c) => c.strings!.has(s))) {
+          intersectionStrings.add(s);
+        }
+      });
+    }
 
     let allCharTesters: CharTester[] = [];
     sets.forEach((set) => {
@@ -1051,7 +1066,7 @@ function CompileToCharSet(
           A = new VirtualCharSet((ch, rer) => Unicode.characterMatchPropertyValue(ch, p, v, rer));
         } else {
           v = UnicodeMatchPropertyValue(p, vs);
-        // Let A be the CharSet containing all Unicode code points whose character database definition includes the property p with value v.
+          // Let A be the CharSet containing all Unicode code points whose character database definition includes the property p with value v.
           A = new VirtualCharSet((ch, rer) => Unicode.characterMatchPropertyValue(ch, p, v, rer));
         }
         return MaybeSimpleCaseFolding(rer, A);
@@ -1193,7 +1208,7 @@ function WordCharacters(rer: RegExpRecord): CharSet {
 function AllCharacters(rer: RegExpRecord): VirtualCharSet {
   if (rer.UnicodeSets && rer.IgnoreCase) {
     // Return the CharSet containing all Unicode code points c that do not have a Simple Case Folding mapping (that is, scf(c)=c).
-    return new VirtualCharSet((char) => Unicode.isCharacter(char) && Unicode.SimpleCaseFoldingMapping(char) !== char);
+    return new VirtualCharSet((char) => Unicode.isCharacter(char) && Unicode.SimpleOrCommonCaseFoldingMapping(char) !== char);
   } else if (HasEitherUnicodeFlag(rer)) {
     // Return the CharSet containing all code point values.
     return new VirtualCharSet((char) => Unicode.isCharacter(char));
@@ -1208,7 +1223,10 @@ function MaybeSimpleCaseFolding(rer: RegExpRecord, A: CharSet): CharSet {
   if (!rer.UnicodeSets || !rer.IgnoreCase) {
     return A;
   }
-  const B = new VirtualCharSet((ch, rer) => {
+  const strings = A.getStrings();
+  const scfString = strings.map((s) => Array.from(Unicode.iterateCharacterByCodePoint(s)).map(Unicode.SimpleOrCommonCaseFoldingMapping).join('') as ListOfCharacter);
+
+  const scfChar: CharTester = (ch, rer) => {
     // before optimized:
     // a. Let t be an empty sequence of characters.
     // b. For each single code point cp in s, do
@@ -1220,14 +1238,14 @@ function MaybeSimpleCaseFolding(rer: RegExpRecord, A: CharSet): CharSet {
     // if scf(ch) !== ch, it means ch is impossible to appear in scf(A).
     let scf = '';
     for (const cp of Unicode.iterateCharacterByCodePoint(ch)) {
-      scf += Unicode.SimpleCaseFoldingMapping(cp);
+      scf += Unicode.SimpleOrCommonCaseFoldingMapping(cp);
     }
     if (scf !== ch) {
       return false;
     }
     return A.has(ch, rer);
-  });
-  return B;
+  };
+  return CharSet.union(ConcreteStringSet.of(scfString), new VirtualCharSet(scfChar));
 }
 
 /** https://tc39.es/ecma262/#sec-charactercomplement */
