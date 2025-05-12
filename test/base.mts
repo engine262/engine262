@@ -190,7 +190,7 @@ ${ANSI.yellow}#######################
   `);
 
   printStatusUI();
-  setInterval(() => {
+  const i = setInterval(() => {
     printStatusUI();
   }, CI ? 5000 : 100).unref();
 
@@ -199,6 +199,7 @@ ${ANSI.yellow}#######################
     printStatusLine();
     process.stdout.write('\n');
   });
+  return i;
 }
 
 

@@ -175,7 +175,8 @@ function distributeTest() {
             process.stdout.write(`  ${file}\n`);
           }
         }
-        process.exit(0);
+        clearInterval(stop);
+        workers.forEach((x) => x.kill());
       }
       return;
     }
@@ -192,7 +193,7 @@ if (ARGV.positionals.length === 0) {
   files = parsePositionals(ARGV.positionals);
 }
 
-startTestPrinter();
+const stop = startTestPrinter();
 
 const promises = [];
 for await (const file of files) {

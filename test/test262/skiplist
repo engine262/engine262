@@ -6,41 +6,8 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
-# https://github.com/tc39/ecma262/pull/1867
-language/literals/numeric/legacy-octal-integer.js
-language/literals/numeric/non-octal-decimal-integer.js
-language/literals/string/legacy-octal-escape-sequence.js
-
-# https://github.com/tc39/proposal-top-level-await/pull/159
-language/module-code/top-level-await/dfs-invariant.js
-
 # We need our own date parser
 built-ins/Date/parse/without-utc-offset.js
-
-# https://github.com/tc39/ecma262/pull/3009
-built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js
-built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js
-built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js
-built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js
-built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js
-built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js
-built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js
-built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js
-built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js
-built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js
-built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js
-built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js
-built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js
-built-ins/String/prototype/search/cstm-search-on-number-primitive.js
-built-ins/String/prototype/search/cstm-search-on-string-primitive.js
-built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js
-built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js
-built-ins/String/prototype/split/cstm-split-on-number-primitive.js
-built-ins/String/prototype/split/cstm-split-on-string-primitive.js
 
 # https://github.com/tc39/ecma262/pull/2136
 built-ins/Date/prototype/setHours/date-value-read-before-tonumber-when-date-is-invalid.js
@@ -82,7 +49,11 @@ built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
 
 # Non-strict mode
 ## LegacyOctalIntegerLiteral
+# https://github.com/tc39/ecma262/pull/1867
 staging/sm/regress/regress-441477-01.js
+language/literals/numeric/legacy-octal-integer.js
+language/literals/numeric/non-octal-decimal-integer.js
+language/literals/string/legacy-octal-escape-sequence.js
 
 # Annex B
 ## RegExp.prototype.compile
