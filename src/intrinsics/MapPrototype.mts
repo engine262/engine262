@@ -1,6 +1,7 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Call,
+  CanonicalizeKeyedCollectionKey,
   F,
   IsCallable,
   RequireInternalSlot,
@@ -125,9 +126,7 @@ function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: 
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Set key to CanonicalizeKeyedCollectionKey(key).
-  if (key instanceof NumberValue && Object.is(R(key), -0)) {
-    key = F(+0);
-  }
+  key = CanonicalizeKeyedCollectionKey(key);
   // 4. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
   const entries = M.MapData;
   for (const p of entries) {

@@ -14,6 +14,7 @@ export * from './global-object.mts';
 export * from './immutable-prototype-objects.mts';
 export * from './import-calls.mts';
 export * from './iterator-operations.mts';
+export * from './keyed-collections.mts';
 export * from './module-namespace-exotic-objects.mts';
 export * from './module-records.mts';
 export * from './notational-conventions.mts';
