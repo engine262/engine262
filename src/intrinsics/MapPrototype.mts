@@ -5,7 +5,7 @@ import {
   F,
   IsCallable,
   RequireInternalSlot,
-  SameValueZero, R,
+  SameValue, SameValueZero, R,
 } from '../abstract-ops/all.mts';
 import {
   NumberValue,
@@ -131,7 +131,7 @@ function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: 
   const entries = M.MapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       return p.Value!;
     }
   }
