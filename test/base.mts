@@ -198,6 +198,7 @@ ${ANSI.yellow}#######################
     process.stdout.write('\n');
     printStatusLine();
     process.stdout.write('\n');
+    process.exitCode = failed ? 1 : 0;
   });
   return i;
 }
