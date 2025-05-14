@@ -1,9 +1,11 @@
-import { JSStringValue, NullValue, Value } from '../value.mts';
+import { Value } from '../value.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { BoundNames, StringValue, type ImportEntry } from './all.mts';
+import {
+  BoundNames, StringValue, type ImportEntry, type ModuleRequestRecord,
+} from './all.mts';
 
-export function ImportEntriesForModule(node: ParseNode, module: JSStringValue | NullValue): ImportEntry[] {
+export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRecord): ImportEntry[] {
   switch (node.type) {
     case 'ImportClause':
       switch (true) {

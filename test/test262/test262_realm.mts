@@ -16,6 +16,7 @@ export interface CreateAgentOptions {
 export const createAgent = ({ features = [] }: CreateAgentOptions) => {
   const agent = new Agent({
     features,
+    supportedImportAttributes: ['type'],
     loadImportedModule: loadImportedModuleSync,
     onDebugger() {
       // attach an empty debugger to make sure our debugger infrastructure does not break the engine

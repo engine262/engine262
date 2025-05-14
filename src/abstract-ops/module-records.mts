@@ -1,20 +1,22 @@
-import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
+import {
+  surroundingAgent, HostLoadImportedModule, IncrementModuleAsyncEvaluationCount, HostPromiseRejectionTracker,
+} from '../host-defined/engine.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
   ResolvedBindingRecord,
   AbstractModuleRecord,
   type ModuleRecordHostDefined,
+  ModuleRecord,
 } from '../modules.mts';
 import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
 } from '../value.mts';
 import {
-  Q, X, NormalCompletion, ThrowCompletion,
+  Q, X, NormalCompletion, ThrowCompletion, AbruptCompletion,
   type PlainCompletion,
   EnsureCompletion,
-} from '../completion.mts';
-import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+} from '../completion.mjs';
 import {
   Assert,
   ModuleNamespaceCreate,
@@ -26,8 +28,11 @@ import {
   PromiseCapabilityRecord,
   Realm,
 } from './all.mts';
-import type {
-  Arguments, ScriptRecord, SourceTextModuleRecord, ValueCompletion,
+import {
+  Completion,
+  HostGetSupportedImportAttributes,
+  ModuleRequestsEqual,
+  type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -61,18 +66,25 @@ export function InnerModuleLoading(state: GraphLoadingState, module: AbstractMod
     const requestedModulesCout = module.RequestedModules.length;
     // c. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] + requestedModulesCount.
     state.PendingModules += requestedModulesCout;
-    // d. For each String required of module.[[RequestedModules]], do
-    for (const required of module.RequestedModules) {
-      // i. If module.[[LoadedModules]] contains a Record whose [[Specifier]] is required, then
-      //    1. Let record be that Record.
-      const record = getRecordWithSpecifier(module.LoadedModules, required);
-      if (record !== undefined) {
-        // 2. Perform InnerModuleLoading(state, record.[[Module]]).
-        ContinueModuleLoading(state, NormalCompletion(record.Module));
-        // ii. Else,
+    // d. For each ModuleRequest Record request of module.[[RequestedModules]], do
+    for (const request of module.RequestedModules) {
+      // i. If AllImportAttributesSupported(request.[[Attributes]]) is false, then
+      const invalidAttributeKey = AllImportAttributesSupported(request.Attributes);
+      if (invalidAttributeKey) {
+        // 1. Let error be ThrowCompletion(a newly created SyntaxError object).
+        const error = surroundingAgent.Throw('SyntaxError', 'UnsupportedImportAttribute', invalidAttributeKey);
+        // 2. Perform ContinueModuleLoading(state, error).
+        ContinueModuleLoading(state, error);
       } else {
-        // 1. Perform HostLoadImportedModule(module, required, state.[[HostDefined]], state).
-        HostLoadImportedModule(module, required, state.HostDefined, state);
+        // ii. Else if module.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, request) is true, then
+        const record = getRecordWithSpecifier(module.LoadedModules, request);
+        if (record !== undefined) {
+          // 1. Perform InnerModuleLoading(state, record.[[Module]]).
+          InnerModuleLoading(state, record.Module);
+        } else { // iii. Else,
+          // 1. Perform HostLoadImportedModule(module, request, state.[[HostDefined]], state).
+          HostLoadImportedModule(module, request, state.HostDefined, state);
+        }
       }
 
       // iii. If state.[[IsLoading]] is false, return unused.
@@ -169,14 +181,37 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   return index;
 }
 
+/** https://tc39.es/ecma262/#sec-EvaluateModuleSync */
+function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefined> {
+  // 1. Assert: module is not a Cyclic Module Record.
+  Assert(!(module instanceof CyclicModuleRecord));
+  // 2. Let promise be module.Evaluate()./
+  const promise = yield* module.Evaluate();
+  // 3. Assert: promise.[[PromiseState]] is either fulfilled or rejected.
+  Assert(promise.PromiseState === 'fulfilled' || promise.PromiseState === 'rejected');
+  // 4. If promise.[[PromiseState]] is rejected, then
+  if (promise.PromiseState === 'rejected') {
+    // a. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
+    if (promise.PromiseIsHandled === Value.false) {
+      HostPromiseRejectionTracker(promise, 'handle');
+    }
+    // b. Set promise.[[PromiseIsHandled]] to true.
+    promise.PromiseIsHandled = Value.true;
+    // c. Return ThrowCompletion(promise.[[PromiseResult]]).
+    return ThrowCompletion(promise.PromiseResult!);
+  }
+  // 5. Return unused.
+  return undefined;
+}
+
 /** https://tc39.es/ecma262/#sec-innermoduleevaluation */
 export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: CyclicModuleRecord[], index: number): PlainEvaluator<number> {
   if (!(module instanceof CyclicModuleRecord)) {
-    Q(yield* module.Evaluate());
+    Q(yield* EvaluateModuleSync(module));
     return NormalCompletion(index);
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-    if (module.EvaluationError instanceof UndefinedValue) {
+    if (module.EvaluationError === undefined) {
       return NormalCompletion(index);
     } else {
       return module.EvaluationError;
@@ -202,24 +237,26 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
       if (requiredModule.Status === 'evaluating') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex!);
       } else {
-        requiredModule = GetAsyncCycleRoot(requiredModule);
+        requiredModule = requiredModule.CycleRoot!;
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
-        if (!(requiredModule.EvaluationError instanceof UndefinedValue)) {
+        if (requiredModule.EvaluationError !== undefined) {
           return EnsureCompletion(module.EvaluationError);
         }
       }
-      if (requiredModule.AsyncEvaluating === Value.true) {
+      if (typeof requiredModule.AsyncEvaluationOrder === 'number') {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
-  if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluating = Value.true;
-  } else if (module.Async === Value.true) {
-    X(yield* ExecuteAsyncModule(module));
+  if (module.PendingAsyncDependencies > 0 || module.HasTLA === Value.true) {
+    Assert(module.AsyncEvaluationOrder === 'unset');
+    module.AsyncEvaluationOrder = IncrementModuleAsyncEvaluationCount();
+    if (module.PendingAsyncDependencies === 0) {
+      X(yield* ExecuteAsyncModule(module));
+    }
   } else {
-    Q(yield* (module as SourceTextModuleRecord).ExecuteModule());
+    Q(yield* module.ExecuteModule());
   }
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
   Assert(module.DFSAncestorIndex <= module.DFSIndex);
@@ -228,7 +265,8 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord);
-      if (requiredModule.AsyncEvaluating === Value.false) {
+      Assert(typeof requiredModule.AsyncEvaluationOrder === 'number' || requiredModule.AsyncEvaluationOrder === 'unset');
+      if (requiredModule.AsyncEvaluationOrder === 'unset') {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -236,6 +274,7 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
       if (requiredModule === module) {
         done = true;
       }
+      requiredModule.CycleRoot = module;
     }
   }
   return index;
@@ -245,145 +284,144 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
 function* ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
-  // 2. Assert: module.[[Async]] is true.
-  Assert(module.Async === Value.true);
-  // 3. Set module.[[AsyncEvaluating]] to true.
-  module.AsyncEvaluating = Value.true;
-  // 4. Let capability be ! NewPromiseCapability(%Promise%).
+  // 2. Assert: module.[[HasTLA]] is true.
+  Assert(module.HasTLA === Value.true);
+  // 3. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
+  // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
   function* fulfilledClosure() {
     // a. Perform ! AsyncModuleExecutionFulfilled(module).
     X(yield* AsyncModuleExecutionFulfilled(module));
     // b. Return undefined.
     return Value.undefined;
   }
-  // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+  // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
   const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
-  // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
+  // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
   const rejectedClosure = ([error = Value.undefined]: Arguments) => {
     // a. Perform ! AsyncModuleExecutionRejected(module, error).
     X(AsyncModuleExecutionRejected(module, error));
     // b. Return undefined.
     return Value.undefined;
   };
-  // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+  // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
   const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
-  // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
+  // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
-  // 10. Perform ! module.ExecuteModule(capability).
-  X(yield* (module as SourceTextModuleRecord).ExecuteModule(capability));
-  // 11. Return.
+  // 9. Perform ! module.ExecuteModule(capability).
+  X(yield* module.ExecuteModule(capability));
+  // 10. Return.
   return Value.undefined;
 }
 
-/** https://tc39.es/ecma262/#sec-getcycleroot */
-export function GetAsyncCycleRoot(module: CyclicModuleRecord) {
-  Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async');
-  if (module.AsyncParentModules.length === 0) {
-    return module;
-  }
-  while (module.DFSIndex! > module.DFSAncestorIndex!) {
-    Assert(module.AsyncParentModules.length > 0);
-    const nextCycleModule = module.AsyncParentModules[0];
-    Assert(nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex);
-    module = nextCycleModule;
-  }
-  Assert(module.DFSIndex === module.DFSAncestorIndex);
-  return module;
-}
-
-/** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
-function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): ValueEvaluator {
-  if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== Value.undefined);
-    return Value.undefined;
-  }
-  Assert(module.Status === 'evaluating-async');
-  Assert(module.EvaluationError === Value.undefined);
-  module.AsyncEvaluating = Value.false;
+/** https://tc39.es/ecma262/#sec-gather-available-ancestors */
+function GatherAvailableAncestors(module: CyclicModuleRecord, execList: CyclicModuleRecord[]) {
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    m.PendingAsyncDependencies! -= 1;
-    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
-      Assert(m.AsyncEvaluating === Value.true);
-      const cycleRoot = X(GetAsyncCycleRoot(m));
-      if (cycleRoot.EvaluationError !== Value.undefined) {
-        return Value.undefined;
-      }
-      if (m.Async === Value.true) {
-        X(yield* ExecuteAsyncModule(m));
-      } else {
-        const result = EnsureCompletion(yield* (m as SourceTextModuleRecord).ExecuteModule());
-        if (result instanceof NormalCompletion) {
-          X(yield* AsyncModuleExecutionFulfilled(m));
-        } else {
-          X(AsyncModuleExecutionRejected(m, result.Value));
+    if (!execList.includes(m) && m.CycleRoot!.EvaluationError === undefined) {
+      Assert(m.Status === 'evaluating-async');
+      Assert(m.EvaluationError === undefined);
+      Assert(typeof m.AsyncEvaluationOrder === 'number');
+      Assert(m.PendingAsyncDependencies! > 0);
+      m.PendingAsyncDependencies! -= 1;
+      if (m.PendingAsyncDependencies === 0) {
+        execList.push(m);
+        if (m.HasTLA === Value.false) {
+          GatherAvailableAncestors(m, execList);
         }
       }
     }
   }
-  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex);
+}
+
+/** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
+function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): PlainEvaluator {
+  if (module.Status === 'evaluated') {
+    Assert(module.EvaluationError !== undefined);
+    return;
+  }
+  Assert(module.Status === 'evaluating-async');
+  Assert(typeof module.AsyncEvaluationOrder === 'number');
+  Assert(module.EvaluationError === undefined);
+  module.AsyncEvaluationOrder = 'done';
+  module.Status = 'evaluated';
+  if (module.TopLevelCapability !== undefined) {
+    Assert(module.CycleRoot === module);
     X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
   }
-  return Value.undefined;
+
+  const execList: CyclicModuleRecord[] = [];
+  GatherAvailableAncestors(module, execList);
+  Assert(execList.every((m) => typeof m.AsyncEvaluationOrder === 'number' && m.PendingAsyncDependencies === 0 && m.EvaluationError === undefined));
+  const sortedExecList = execList.toSorted((m1, m2) => (m1.AsyncEvaluationOrder as number) - (m2.AsyncEvaluationOrder as number));
+
+  for (const m of sortedExecList) {
+    if (m.Status === 'evaluated') {
+      Assert(m.EvaluationError !== undefined);
+    } else if (m.HasTLA === Value.true) {
+      X(yield* ExecuteAsyncModule(m));
+    } else {
+      const result = yield* m.ExecuteModule();
+      if (result instanceof AbruptCompletion) {
+        X(AsyncModuleExecutionRejected(m, result.Value));
+      } else {
+        m.AsyncEvaluationOrder = 'done';
+        m.Status = 'evaluated';
+        if (m.TopLevelCapability !== undefined) {
+          Assert(m.CycleRoot === m);
+          X(Call(m.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
+        }
+      }
+    }
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
 function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) {
   if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== Value.undefined);
-    return Value.undefined;
+    Assert(module.EvaluationError !== undefined);
+    return;
   }
   Assert(module.Status === 'evaluating-async');
-  Assert(module.EvaluationError === Value.undefined);
+  Assert(typeof module.AsyncEvaluationOrder === 'number');
+  Assert(module.EvaluationError === undefined);
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluating = Value.false;
+  module.Status = 'evaluated';
+  module.AsyncEvaluationOrder = 'done';
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    X(AsyncModuleExecutionRejected(m, error));
+    AsyncModuleExecutionRejected(m, error);
   }
-  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
+  if (module.TopLevelCapability !== undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
-  return Value.undefined;
 }
 
-function getRecordWithSpecifier(loadedModules: CyclicModuleRecord['LoadedModules'], specifier: JSStringValue) {
-  for (const record of loadedModules) {
-    if (record.Specifier.stringValue() === specifier.stringValue()) {
-      return record;
-    }
-  }
-  return undefined;
+function getRecordWithSpecifier(loadedModules: CyclicModuleRecord['LoadedModules'], request: ModuleRequestRecord) {
+  const records = loadedModules.filter((r) => ModuleRequestsEqual(r, request));
+  Assert(records.length <= 1);
+  return records.length === 1 ? records[0] : undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-GetImportedModule */
-export function GetImportedModule(referrer: CyclicModuleRecord, specifier: JSStringValue) {
-  const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+export function GetImportedModule(referrer: CyclicModuleRecord, request: ModuleRequestRecord) {
+  const record = getRecordWithSpecifier(referrer.LoadedModules, request);
   Assert(record !== undefined);
   return record.Module;
 }
 
 /** https://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
-export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, specifier: JSStringValue, result: PlainCompletion<AbstractModuleRecord>, state: GraphLoadingState | PromiseCapabilityRecord) {
+export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, moduleRequest: ModuleRequestRecord, result: PlainCompletion<AbstractModuleRecord>, state: GraphLoadingState | PromiseCapabilityRecord) {
   result = EnsureCompletion(result);
   // 1. If result is a normal completion, then
   if (result.Type === 'normal') {
-    // a. If referrer.[[LoadedModules]] contains a Record whose [[Specifier]] is specifier, then
-    const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+    // a. If referrer.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, moduleRequest) is true, then
+    const record = getRecordWithSpecifier(referrer.LoadedModules, moduleRequest);
     if (record !== undefined) {
       // i. Assert: That Record's [[Module]] is result.[[Value]].
       Assert(record.Module === result.Value);
-    } else {
-      // b. Else, append the Record { [[Specifier]]: specifier, [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
-      referrer.LoadedModules.push({ Specifier: specifier, Module: result.Value });
+    } else { // b. Else,
+      //  i. Append the LoadedModuleRequest Record { [[Specifier]]: moduleRequest.[[Specifier]], [[Attributes]]: moduleRequest.[[Attributes]], [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+      referrer.LoadedModules.push({ Specifier: moduleRequest.Specifier, Attributes: moduleRequest.Attributes, Module: result.Value });
     }
   }
 
@@ -398,6 +436,21 @@ export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModul
   }
 
   // 4. Return unused.
+}
+
+/** https://tc39.es/ecma262/#sec-AllImportAttributesSupported */
+export function AllImportAttributesSupported(attributes: readonly ImportAttributeRecord[]) {
+  // Note: This function is meant to return a boolean. Instead, we return:
+  // - instead of *false*, the key of the unsupported attribute
+  // - instead of *true*, undefined
+
+  const supported: readonly string[] = HostGetSupportedImportAttributes();
+  for (const attribute of attributes) {
+    if (!supported.includes(attribute.Key.stringValue())) {
+      return attribute.Key;
+    }
+  }
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-getmodulenamespace */
@@ -430,7 +483,7 @@ export function GetModuleNamespace(module: AbstractModuleRecord): ObjectValue {
   return namespace;
 }
 
-export function CreateSyntheticModule(exportNames: readonly JSStringValue[], evaluationSteps: (record: SyntheticModuleRecord) => ValueEvaluator | ValueCompletion | void, realm: Realm, hostDefined: ModuleRecordHostDefined) {
+export function CreateSyntheticModule(exportNames: readonly JSStringValue[], evaluationSteps: (record: SyntheticModuleRecord) => PlainEvaluator | Completion<unknown>, realm: Realm, hostDefined: ModuleRecordHostDefined) {
   // 1. Return Synthetic Module Record {
   //      [[Realm]]: realm,
   //      [[Environment]]: undefined,
@@ -452,10 +505,10 @@ export function CreateSyntheticModule(exportNames: readonly JSStringValue[], eva
 /** https://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
 export function CreateDefaultExportSyntheticModule(defaultExport: Value, realm: Realm, hostDefined: ModuleRecordHostDefined) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
-  const closure = function* closure(module: SyntheticModuleRecord): ValueEvaluator {
+  const closure = function* closure(module: SyntheticModuleRecord): PlainEvaluator {
     // a. Return module.SetSyntheticExport("default", defaultExport).
     Q(yield* module.SetSyntheticExport(Value('default'), defaultExport));
-    return Value.undefined;
+    return NormalCompletion(undefined);
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
   return CreateSyntheticModule([Value('default')], closure, realm, hostDefined);

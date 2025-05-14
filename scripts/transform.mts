@@ -125,7 +125,11 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
           if (/#sec/.test(line)) {
             const section = line.split(' ').find((l) => l.includes('#sec'))!;
             const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
-            path.insertAfter(template.ast(`${name}.section = '${url}';`));
+            const result = path.insertAfter(template.ast(`${name}.section = '${url}';`));
+            if (path.node.trailingComments) {
+              result[result.length - 1].node.trailingComments = path.node.trailingComments;
+              path.node.trailingComments = null;
+            }
             return;
           }
         }
@@ -134,11 +138,11 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
   }
 
   const assertYieldStar = template.statement(`
-    /* c8 ignore if */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
   `, { preserveComments: true });
 
   const maybeSkipDebugger = template.statement(`
-    /* c8 ignore if */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) %%value%% = skipDebugger(%%value%%);
+    /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) %%value%% = skipDebugger(%%value%%);
   `, { preserveComments: true });
 
   const MACROS: Partial<Macros> = {
@@ -146,8 +150,8 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       template: template(`
       /* ReturnIfAbrupt */
       %%checkYieldStar%%
-      /* c8 ignore if */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
-      /* c8 ignore if */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+      /* node:coverage ignore next */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
+      /* node:coverage ignore next */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
       imports: ['AbruptCompletion', 'Completion', 'Assert'],
       allowAnyExpression: true,
@@ -156,8 +160,8 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       template: template(`
       /* X */
       %%checkYieldStar%%
-      /* c8 ignore if */ if (%%value%% instanceof AbruptCompletion) throw new Assert.Error(%%source%%, { cause: %%value%% });
-      /* c8 ignore if */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+      /* node:coverage ignore next */ if (%%value%% instanceof AbruptCompletion) throw new Assert.Error(%%source%%, { cause: %%value%% });
+      /* node:coverage ignore next */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
       imports: ['Assert', 'Completion', 'AbruptCompletion', 'skipDebugger'],
       allowAnyExpression: true,
@@ -165,9 +169,9 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
     IfAbruptCloseIterator: {
       template: template(`
       /* IfAbruptCloseIterator */
-      /* c8 ignore if */
+      /* node:coverage ignore next */
       if (%%value%% instanceof AbruptCompletion) return skipDebugger(IteratorClose(%%iteratorRecord%%, %%value%%));
-      /* c8 ignore if */
+      /* node:coverage ignore next */
       if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
       imports: ['IteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
@@ -175,14 +179,14 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
     IfAbruptRejectPromise: {
       template: template(`
       /* IfAbruptRejectPromise */
-      /* c8 ignore if */
+      /* node:coverage disable */
       if (%%value%% instanceof AbruptCompletion) {
-        const hygenicTemp2 = skipDebugger(Call(%%capability%%.Reject, Value.undefined, [%%value%%.Value]));
-        if (hygenicTemp2 instanceof AbruptCompletion) return hygenicTemp2;
+        const callRejectCompletion = skipDebugger(Call(%%capability%%.Reject, Value.undefined, [%%value%%.Value]));
+        if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
         return %%capability%%.Promise;
       }
-      /* c8 ignore if */
       if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+      /* node:coverage enable */
       `, { preserveComments: true }),
       imports: ['Call', 'Value', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
@@ -281,9 +285,9 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
             (binding.path.parent as t.VariableDeclaration).kind = 'let';
             statementPath.insertBefore(template(`
               /* ReturnIfAbrupt */
-              /* c8 ignore if */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
-              /* c8 ignore if */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
-              /* c8 ignore if */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+              /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
+              /* node:coverage ignore next */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
+              /* node:coverage ignore next */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
             `, { preserveComments: true })({ value: argument }));
             path.replaceWith(argument);
           } else {
@@ -353,10 +357,18 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
           path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
         }
       },
-      SwitchCase(path) {
-        const n = path.node.consequent[0];
-        if (t.isThrowStatement(n) && t.isNewExpression(n.argument) && (n.argument.callee as t.Identifier).name === 'OutOfRange') {
-          path.addComment('leading', 'c8 ignore next', false);
+      ThrowStatement(path) {
+        const arg = path.get('argument');
+        if (arg.isNewExpression()) {
+          const callee = arg.get('callee');
+          if (callee.isIdentifier() && callee.node.name === 'OutOfRange') {
+            path.addComment('leading', ' node:coverage ignore next ', false);
+
+            const { parentPath } = path;
+            if (parentPath.isSwitchCase() && parentPath.node.consequent[0] === path.node) {
+              parentPath.addComment('leading', ' node:coverage ignore next ', false);
+            }
+          }
         }
       },
       FunctionDeclaration(path) {

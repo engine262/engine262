@@ -1,7 +1,9 @@
 import { Parser, type ParserOptions } from './parser/Parser.mts';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
 import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
-import { SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined } from './modules.mts';
+import {
+  SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
+} from './modules.mts';
 import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   Get,
@@ -10,7 +12,6 @@ import {
   CreateDefaultExportSyntheticModule,
   Realm,
   type BuiltinFunctionObject,
-  type LoadedModuleRequestRecord,
 } from './abstract-ops/all.mts';
 import { Q, X, type PlainCompletion } from './completion.mts';
 import {
@@ -189,7 +190,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     Environment: undefined,
     Namespace: Value.undefined,
     Status: 'new',
-    EvaluationError: Value.undefined,
+    EvaluationError: undefined,
     HostDefined: hostDefined,
     ECMAScriptCode: body,
     Context: undefined,
@@ -200,9 +201,10 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,
     StarExportEntries: starExportEntries,
-    Async: body.hasTopLevelAwait ? Value.true : Value.false,
-    AsyncEvaluating: Value.false,
-    TopLevelCapability: Value.undefined,
+    CycleRoot: undefined,
+    HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
+    AsyncEvaluationOrder: 'unset',
+    TopLevelCapability: undefined,
     AsyncParentModules: [],
     DFSIndex: undefined,
     DFSAncestorIndex: undefined,

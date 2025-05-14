@@ -1,10 +1,19 @@
-'use strict';
-
-const { resolve } = require('node:path');
+import { resolve } from 'node:path';
+import type { Rule } from 'eslint';
+import type { ParserServices } from '@typescript-eslint/parser';
+import type { TSESTree } from '@typescript-eslint/types';
+import type * as ESTree from 'estree';
 // eslint-disable-next-line import/no-extraneous-dependencies
-const ts = require('typescript');
+import ts from 'typescript';
 
-/** @type {import('eslint').Rule.RuleModule} */
+const __dirname = import.meta.dirname;
+
+declare module 'typescript' {
+  interface Type {
+    typeArguments?: ts.Type[];
+  }
+}
+
 const rule = {
   meta: {
     messages: {
@@ -41,19 +50,18 @@ const rule = {
     return {
       // eslint-disable-next-line func-names
       "CallExpression[callee.name='Q'],[callee.name='ReturnIfAbrupt'],[callee.name='IfAbruptRejectPromise'],[callee.name='IfAbruptCloseIterator']":
-        /** @type {import('eslint').Rule.NodeListener['CallExpression']} */
-        (function (node) {
+        (function (node) { // eslint-disable-line func-names
           const firstArg = node.arguments[0];
           if (firstArg?.type === 'SpreadElement') {
             return;
           }
 
-          const containingFunction = ts.findAncestor(services.esTreeNodeToTSNodeMap.get(node), ts.isFunctionLike);
+          const containingFunction = ts.findAncestor(services.esTreeNodeToTSNodeMap.get(node as TSESTree.Node), ts.isFunctionLike);
           if (!containingFunction) {
             throw new Error('Cannot find containing function');
           }
 
-          const firstArgType = checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(firstArg));
+          const firstArgType = checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(firstArg as TSESTree.Node));
           if (firstArgType?.getSymbol() === GeneratorSymbol) {
             context.report({
               node,
@@ -95,7 +103,7 @@ const rule = {
             throw new Error('Cannot find return type');
           }
 
-          const f = /** @type {import('estree').Identifier} */ (node.callee).name;
+          const f = (node.callee as ESTree.Identifier).name;
           let ExpectedReturnType;
           // const ExpectedReturnType = f === 'IfAbruptRejectPromise' ? PromiseObjectType : AbruptCompletionType;
           if (checker.isTypeAssignableTo(AbruptCompletionType, firstArgType)) {
@@ -124,17 +132,14 @@ const rule = {
               messageId: ExpectedReturnType === AbruptCompletionType ? 'noAbruptCompletion' : 'noThrowCompletion',
             });
           }
-        }),
+        } satisfies Rule.RuleListener['CallExpression']),
     };
   },
-};
+} satisfies Rule.RuleModule;
 
-module.exports = rule;
+export default rule;
 
-/**
- * @returns {import('@typescript-eslint/parser').ParserServices}
- */
-function getParserServices(context) {
+function getParserServices(context: Rule.RuleContext): ParserServices {
   if (
     context.sourceCode.parserServices?.esTreeNodeToTSNodeMap == null
     || context.sourceCode.parserServices.tsNodeToESTreeNodeMap == null

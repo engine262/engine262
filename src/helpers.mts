@@ -260,14 +260,17 @@ export class JSStringSet {
 }
 
 export class OutOfRange extends RangeError {
+  /* node:coverage disable */
+  declare cause: unknown;
+
   detail: unknown;
 
-  /* c8 ignore next */
   constructor(fn: string, detail: unknown) {
     super(`${fn}() argument out of range`, { cause: detail });
     this.detail = detail;
   }
 }
+/* node:coverage enable */
 
 export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T {
   let steps = 0;
@@ -276,7 +279,7 @@ export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T 
     if (done) {
       return value;
     }
-    /* c8 ignore next */
+    /* node:coverage ignore next 4 */
     steps += 1;
     if (steps > maxSteps) {
       throw new RangeError('Max steps exceeded');

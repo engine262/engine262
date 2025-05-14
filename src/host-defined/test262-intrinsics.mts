@@ -20,7 +20,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       if (surroundingAgent.debugger_isPreviewing) {
         return NormalCompletion(Value.undefined);
       }
-      /* c8 ignore next */
+      /* node:coverage ignore next */
       if (test262PrintHandle) {
         if (args[0] instanceof JSStringValue) {
           test262PrintHandle(args[0].stringValue());

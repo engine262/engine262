@@ -14,7 +14,6 @@ import {
   InnerModuleLinking,
   InnerModuleLoading,
   SameValue,
-  GetAsyncCycleRoot,
   AsyncBlockStart,
   PromiseCapabilityRecord,
   GraphLoadingState,
@@ -43,9 +42,17 @@ import {
 } from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type {
-  LoadedModuleRequestRecord, PlainCompletion, PromiseObject,
-  ValueCompletion,
+  ImportAttributeRecord,
+  ModuleRequestRecord,
+  PlainCompletion, PromiseObject,
 } from '#self';
+
+// https://tc39.es/ecma262/#loadedmodulerequest-record
+export interface LoadedModuleRequestRecord {
+  readonly Specifier: JSStringValue;
+  readonly Attributes: ImportAttributeRecord[];
+  readonly Module: AbstractModuleRecord
+}
 
 // #resolvedbinding-record
 export class ResolvedBindingRecord {
@@ -116,29 +123,31 @@ export abstract class AbstractModuleRecord {
 
 export { AbstractModuleRecord as ModuleRecord };
 
-export type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSIndex' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'Async' | 'AsyncEvaluating' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
+export type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSIndex' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'CycleRoot' | 'HasTLA' | 'AsyncEvaluationOrder' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
 export type CyclicModuleRecordStatus = 'new' | 'unlinked' | 'linking' | 'linked' | 'evaluating' | 'evaluating-async' | 'evaluated';
 /** https://tc39.es/ecma262/#sec-cyclic-module-records */
 export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   Status: CyclicModuleRecordStatus;
 
-  EvaluationError: ThrowCompletion | UndefinedValue;
+  EvaluationError: ThrowCompletion | undefined;
 
   DFSIndex: number | undefined;
 
   DFSAncestorIndex: number | undefined;
 
-  readonly RequestedModules: readonly JSStringValue[];
+  readonly RequestedModules: readonly ModuleRequestRecord[];
 
   readonly LoadedModules: LoadedModuleRequestRecord[];
 
-  readonly Async: BooleanValue;
+  readonly HasTLA: BooleanValue;
 
-  AsyncEvaluating: BooleanValue;
-
-  TopLevelCapability: PromiseCapabilityRecord | UndefinedValue;
+  AsyncEvaluationOrder: 'unset' | number | 'done';
 
   AsyncParentModules: CyclicModuleRecord[];
+
+  CycleRoot: CyclicModuleRecord | undefined;
+
+  TopLevelCapability: PromiseCapabilityRecord | undefined;
 
   PendingAsyncDependencies: number | undefined;
 
@@ -150,12 +159,15 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
-    this.Async = init.Async;
-    this.AsyncEvaluating = init.AsyncEvaluating;
+    this.CycleRoot = init.CycleRoot;
+    this.HasTLA = init.HasTLA;
+    this.AsyncEvaluationOrder = init.AsyncEvaluationOrder;
     this.TopLevelCapability = init.TopLevelCapability;
     this.AsyncParentModules = init.AsyncParentModules;
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
   }
+
+  abstract ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator;
 
   /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
   LoadRequestedModules(hostDefined?: ModuleRecordHostDefined) {
@@ -212,12 +224,15 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     let module: CyclicModuleRecord = this;
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to GetAsyncCycleRoot(module).
+    // 3. If module.[[Status]] is evaluating-async or evaluated, then
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      module = GetAsyncCycleRoot(module);
+      // a. Assert: _module_.[[CycleRoot]] is not ~empty~.
+      Assert(module.CycleRoot !== undefined);
+      // b. Set _module_ to _module_.[[CycleRoot]].
+      module = module.CycleRoot!;
     }
-    // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
-    if (!(module.TopLevelCapability instanceof UndefinedValue)) {
+    // 4. If module.[[TopLevelCapability]] is not ~empty~, then
+    if (module.TopLevelCapability !== undefined) {
       // a. Return module.[[TopLevelCapability]].[[Promise]].
       return module.TopLevelCapability.Promise;
     }
@@ -235,10 +250,14 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       for (const m of stack) {
         // i. Assert: m.[[Status]] is evaluating.
         Assert(m.Status === 'evaluating');
-        // ii. Set m.[[Status]] to evaluated.
+        // ii. Assert: m.[[AsyncEvaluationOrder]] is unset.
+        Assert(m.AsyncEvaluationOrder === 'unset');
+        // iii. Set m.[[Status]] to evaluated.
         m.Status = 'evaluated';
-        // iii. Set m.[[EvaluationError]] to result.
+        // iv. Set m.[[EvaluationError]] to result.
         m.EvaluationError = result;
+        // v. Set _m_.[[CycleRoot]] to _m_.
+        m.CycleRoot = m;
       }
       // b. Assert: module.[[Status]] is evaluated and module.[[EvaluationError]] is result.
       Assert(module.Status === 'evaluated' && module.EvaluationError === result);
@@ -248,11 +267,13 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     } else { // (*TopLevelAwait) 10. Otherwise,
       // a. Assert: module.[[Status]] is evaluating-async or evaluated.
       Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated');
-      // b. Assert: module.[[EvaluationError]] is undefined.
-      Assert(module.EvaluationError === Value.undefined);
-      // c. If module.[[AsyncEvaluating]] is false, then
-      if (module.AsyncEvaluating === Value.false) {
-        // i. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
+      // b. Assert: module.[[EvaluationError]] is ~empty~.
+      Assert(module.EvaluationError === undefined);
+      // c. If module.[[Status]] is evaluated, then
+      if (module.Status === 'evaluated') {
+        // i. Assert: module.[[AsyncEvaluationOrder]] is unset.
+        Assert(module.AsyncEvaluationOrder === 'unset');
+        // ii. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
       }
       // d. Assert: stack is empty.
@@ -339,7 +360,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 8. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
       // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-      const requestedModule = GetImportedModule(module, e.ModuleRequest as JSStringValue);
+      const requestedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
       // b. Let starNames be requestedModule.GetExportedNames(exportStarSet).
       const starNames = requestedModule.GetExportedNames(exportStarSet);
       // c. For each element n of starNames, do
@@ -395,7 +416,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-        const importedModule = GetImportedModule(module, e.ModuleRequest as JSStringValue);
+        const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
         // ii. If e.[[ImportName]] is ~all~, then
         if (e.ImportName === 'all') {
           // 1. Assert: module does not provide the direct binding for this export
@@ -423,7 +444,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
       // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-      const importedModule = GetImportedModule(module, e.ModuleRequest as JSStringValue);
+      const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
       // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
       const resolution = importedModule.ResolveExport(exportName, resolveSet);
       // c. If resolution is "ambiguous", return "ambiguous".
@@ -482,7 +503,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
     for (const ie of module.ImportEntries) {
       // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
-      const importedModule = GetImportedModule(module, ie.ModuleRequest as JSStringValue);
+      const importedModule = GetImportedModule(module, ie.ModuleRequest);
       // b. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
         // i. Let namespace be GetModuleNamespace(importedModule).
@@ -598,7 +619,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 2. Suspend the currently running execution context.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context!;
-    if (module.Async === Value.false) {
+    if (module.HasTLA === Value.false) {
       Assert(capability === undefined);
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
@@ -631,14 +652,13 @@ export type SyntheticModuleRecordInit = AbstractModuleInit & Pick<SyntheticModul
 export class SyntheticModuleRecord extends AbstractModuleRecord {
   override LoadRequestedModules(): PromiseObject {
     const promise = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-    const Error = surroundingAgent.Throw('SyntaxError', 'CouldNotResolveModule', '');
-    IfAbruptRejectPromise(Error, promise);
+    X(Call(promise.Resolve, Value.undefined, [Value.undefined]));
     return promise.Promise;
   }
 
   readonly ExportNames: readonly JSStringValue[];
 
-  readonly EvaluationSteps: (module: SyntheticModuleRecord) => ValueEvaluator | ValueCompletion | void;
+  readonly EvaluationSteps: (module: SyntheticModuleRecord) => PlainEvaluator | Completion<unknown> | void;
 
   constructor(init: SyntheticModuleRecordInit) {
     super(init);
@@ -708,18 +728,24 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     moduleContext.PrivateEnvironment = Value.null;
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
-    // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
-    let result = module.EvaluationSteps(module);
+    // 9. Let steps be module.[[EvaluationSteps]].
+    const steps = module.EvaluationSteps;
+    // 10. Let result be Completion(steps(module)).
+    let result = steps(module);
     if (result && 'next' in result) {
       result = yield* result;
     }
-    // 10. Suspend moduleContext and remove it from the execution context stack.
-    // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
+    // 11. Suspend moduleContext and remove it from the execution context stack.
+    // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(moduleContext);
-    // 12. Return Completion(result).
-    // TODO(ts): According to the new spec, this should return a Promise now.
-    // @ts-expect-error
-    return Completion(result);
+    // 13. Let pc be ! NewPromiseCapability(%Promise%).
+    const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    // 14. IfAbruptRejectPromise(result, pc).
+    IfAbruptRejectPromise(result, pc);
+    // 15. Perform ! Call(pc.[[Resolve]], undefined, « undefined »).
+    X(Call(pc.Resolve, Value.undefined, [Value.undefined]));
+    // 16. Return pc.[[Promise]].
+    return pc.Promise;
   }
 
   * SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator {

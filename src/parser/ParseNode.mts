@@ -474,10 +474,12 @@ export namespace ParseNode {
   }
 
   // ImportCall :
-  //   `import` `(` AssignmentExpression `)`
+  //   `import` `(` AssignmentExpression `,`? `)`
+  //   `import` `(` AssignmentExpression `,` AssignmentExpression `,`? `)`
   export interface ImportCall extends BaseParseNode {
     readonly type: 'ImportCall';
     readonly AssignmentExpression: AssignmentExpressionOrHigher;
+    readonly OptionsExpression?: AssignmentExpressionOrHigher;
   }
 
   // Arguments :
@@ -2010,13 +2012,14 @@ export namespace ParseNode {
     | StringLiteral;
 
   // ImportDeclaration :
-  //   `import` ImportClause FromClause `;`
-  //   `import` ModuleSpecifier `;`
+  //   `import` ImportClause FromClause WithClause? `;`
+  //   `import` ModuleSpecifier WithClause? `;`
   export interface ImportDeclaration extends BaseParseNode {
     readonly type: 'ImportDeclaration';
     readonly ModuleSpecifier?: PrimaryExpression;
     readonly ImportClause?: ImportClause;
     readonly FromClause?: FromClause;
+    readonly WithClause?: WithClause;
   }
 
   // ImportClause :
@@ -2084,8 +2087,34 @@ export namespace ParseNode {
   export type ImportedBinding =
     | BindingIdentifier;
 
+  // WithClause :
+  //   `with` `{` `}`
+  //   `with` `{` WithEntries `,`? `}`
+  export interface WithClause extends BaseParseNode {
+    readonly type: 'WithClause';
+    readonly WithEntries: WithEntries;
+  }
+
+  // WithEntries :
+  //   AttributeKey `:` StringLiteral
+  //   AttributeKey `:` StringLiteral `,` WithEntries
+  export type WithEntries = readonly WithEntry[];
+  export interface WithEntry extends BaseParseNode {
+    readonly type: 'WithEntry';
+    readonly AttributeKey: AttributeKey;
+    readonly AttributeValue: StringLiteral;
+  }
+
+  // AttributeKey :
+  //   IdentifierName
+  //   StringLiteral
+  export type AttributeKey =
+    | IdentifierName
+    | StringLiteral;
+
+
   // ExportDeclaration :
-  //   `export` ExportFromClause FromClause `;`
+  //   `export` ExportFromClause FromClause WithClause? `;`
   //   `export` NamedExports `;`
   //   `export` VariableStatement
   //   `export` Declaration
@@ -2102,6 +2131,7 @@ export namespace ParseNode {
     readonly VariableStatement?: VariableStatement;
     readonly ExportFromClause?: ExportFromClauseLike;
     readonly FromClause?: FromClause;
+    readonly WithClause?: WithClause;
     readonly NamedExports?: NamedExports;
   }
 
@@ -2506,6 +2536,8 @@ export type ParseNode =
   | ParseNode.NameSpaceImport
   | ParseNode.NamedImports
   | ParseNode.ImportSpecifier
+  | ParseNode.WithClause
+  | ParseNode.WithEntry
   | ParseNode.ExportDeclaration
   | ParseNode.ExportFromClause
   | ParseNode.NamedExports
