@@ -1,7 +1,6 @@
 import {
   F, R,
-} from '../abstract-ops/all.mts';
-
+} from './all.mts';
 import {
   NumberValue, Value,
 } from '#self';
