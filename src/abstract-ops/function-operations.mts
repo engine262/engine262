@@ -90,6 +90,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
+  // NON-SPEC
   HostCapturedValues?: readonly Value[];
 }
 export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
