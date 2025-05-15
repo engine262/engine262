@@ -18,7 +18,7 @@ import {
 } from '../abstract-ops/all.mts';
 import {
   NormalCompletion,
-  Q, ThrowCompletion, X, type ValueEvaluator, type PlainCompletion,
+  Q, ThrowCompletion, X, type ValueEvaluator,
   type ValueCompletion,
 } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
@@ -27,7 +27,8 @@ import {
   NullValue, NumberValue, ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { assignProps } from './bootstrap.mts';
-import { skipDebugger } from '#self';
+import { ValidateTypedArray } from './TypedArray.mts';
+import { LengthOfArrayLike, skipDebugger, TypedArrayLength } from '#self';
 
 // Algorithms and methods shared between %Array.prototype% and
 // %TypedArray.prototype%.
@@ -157,20 +158,34 @@ export function* SortIndexedProperties(obj: ObjectValue, len: number, SortCompar
   return items;
 }
 
-export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValue, priorToEvaluatingAlgorithm: (value: Value) => void, objectToLength: (o: ObjectValue) => PlainCompletion<number>) {
+export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValue, kind: 'Array' | 'TypedArray') {
+  const Validate = kind === 'Array' ? undefined : (thisValue: Value) => ValidateTypedArray(thisValue, 'seq-cst');
+  const ToLength: (O: ObjectValue) => PlainEvaluator<number> = kind === 'Array'
+    ? function* ArrayToLength(O) {
+      return yield* LengthOfArrayLike(O);
+    }
+    : function* TypedArrayToLength(O): PlainEvaluator<number> {
+      const rec = Q(ValidateTypedArray(O, 'seq-cst'));
+      return TypedArrayLength(rec);
+    };
   /** https://tc39.es/ecma262/#sec-array.prototype.every */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
   function* ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackFn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
     }
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      const kPresent = Q(yield* HasProperty(O, Pk));
+      let kPresent;
+      if (kind === 'Array') {
+        kPresent = Q(yield* HasProperty(O, Pk));
+      } else {
+        kPresent = Value.true;
+      }
       if (kPresent === Value.true) {
         const kValue = Q(yield* Get(O, Pk));
         const testResult = ToBoolean(Q(yield* Call(callbackFn, thisArg, [kValue, F(k), O])));
@@ -186,9 +201,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.find */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
   function* ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
@@ -208,9 +223,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.findindex */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
   function* ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
@@ -230,11 +245,11 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.findlast */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
   function* ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     // Let O be ? ToObject(this value).
     const O = Q(ToObject(thisValue));
     // 2. Let len be ? LengthOfArrayLike(O).
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
@@ -263,11 +278,11 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.findlastindex */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
   function* ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     // Let O be ? ToObject(this value).
     const O = Q(ToObject(thisValue));
     // 2. Let len be ? LengthOfArrayLike(O).
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
@@ -296,16 +311,21 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.foreach */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
   function* ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      const kPresent = Q(yield* HasProperty(O, Pk));
+      let kPresent;
+      if (kind === 'Array') {
+        kPresent = Q(yield* HasProperty(O, Pk));
+      } else {
+        kPresent = Value.true;
+      }
       if (kPresent === Value.true) {
         const kValue = Q(yield* Get(O, Pk));
         Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O]));
@@ -318,9 +338,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.includes */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
   function* ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (len === 0) {
       return Value.false;
     }
@@ -351,9 +371,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.indexof */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
   function* ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (len === 0) {
       return F(-1);
     }
@@ -391,9 +411,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.join */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
   function* ArrayProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     let sep;
     if (separator instanceof UndefinedValue) {
       sep = ',';
@@ -423,9 +443,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.lastindexof */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
   function* ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (len === 0) {
       return F(-1);
     }
@@ -459,9 +479,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.reduce */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
   function* ArrayProto_reduce([callbackfn = Value.undefined, initialValue]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
@@ -476,7 +496,11 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       let kPresent = false;
       while (kPresent === false && k < len) {
         const Pk = X(ToString(F(k)));
-        kPresent = Q(yield* HasProperty(O, Pk)) === Value.true;
+        if (kind === 'Array') {
+          kPresent = Q(yield* HasProperty(O, Pk)) === Value.true;
+        } else {
+          kPresent = true;
+        }
         if (kPresent === true) {
           accumulator = Q(yield* Get(O, Pk));
         }
@@ -488,7 +512,12 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     }
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      const kPresent = Q(yield* HasProperty(O, Pk));
+      let kPresent;
+      if (kind === 'Array') {
+        kPresent = Q(yield* HasProperty(O, Pk));
+      } else {
+        kPresent = Value.true;
+      }
       if (kPresent === Value.true) {
         const kValue = Q(yield* Get(O, Pk));
         accumulator = Q(yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
@@ -501,9 +530,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.reduceright */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
   function* ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
@@ -518,7 +547,11 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       let kPresent = false;
       while (kPresent === false && k >= 0) {
         const Pk = X(ToString(F(k)));
-        kPresent = Q(yield* HasProperty(O, Pk)) === Value.true;
+        if (kind === 'Array') {
+          kPresent = Q(yield* HasProperty(O, Pk)) === Value.true;
+        } else {
+          kPresent = true;
+        }
         if (kPresent === true) {
           accumulator = Q(yield* Get(O, Pk));
         }
@@ -530,7 +563,12 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     }
     while (k >= 0) {
       const Pk = X(ToString(F(k)));
-      const kPresent = Q(yield* HasProperty(O, Pk));
+      let kPresent;
+      if (kind === 'Array') {
+        kPresent = Q(yield* HasProperty(O, Pk));
+      } else {
+        kPresent = Value.true;
+      }
       if (kPresent === Value.true) {
         const kValue = Q(yield* Get(O, Pk));
         accumulator = Q(yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
@@ -543,9 +581,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.reverse */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
   function* ArrayProto_reverse(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     const middle = Math.floor(len / 2);
     let lower = 0;
     while (lower !== middle) {
@@ -582,16 +620,21 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.some */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
   function* ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(objectToLength(O));
+    const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      const kPresent = Q(yield* HasProperty(O, Pk));
+      let kPresent;
+      if (kind === 'Array') {
+        kPresent = Q(yield* HasProperty(O, Pk));
+      } else {
+        kPresent = Value.true;
+      }
       if (kPresent === Value.true) {
         const kValue = Q(yield* Get(O, Pk));
         const testResult = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O])));
@@ -607,9 +650,9 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
   function* ArrayProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-    Q(priorToEvaluatingAlgorithm(thisValue));
+    Q(Validate?.(thisValue));
     const array = Q(ToObject(thisValue));
-    const len = Q(objectToLength(array));
+    const len = Q(yield* ToLength(array));
     const separator = ', ';
     let R = '';
     let k = 0;
