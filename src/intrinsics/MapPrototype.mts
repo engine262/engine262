@@ -154,9 +154,7 @@ function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Valu
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 4. Set key to CanonicalizeKeyedCollectionKey(key).
-  if (key instanceof NumberValue && Object.is(R(key), -0)) {
-    key = F(+0);
-  }
+  key = CanonicalizeKeyedCollectionKey(key);
   // 5. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
   const entries = M.MapData;
   for (const p of entries) {
