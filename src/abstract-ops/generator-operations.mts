@@ -34,7 +34,7 @@ export interface GeneratorObject extends OrdinaryObject {
   readonly GeneratorBrand: JSStringValue | undefined;
   UnderlyingIterator?: IteratorRecord;
   // NON-SPEC
-  EnclosedValue?: Value;
+  HostCapturedValues?: readonly Value[];
 }
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
@@ -285,7 +285,7 @@ export function* Yield(value: Value): YieldEvaluator {
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValue?: Value): Mutable<GeneratorObject> {
+export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject> {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
   // 2. If extraSlots is not present, set extraSlots to a new empty List.
@@ -300,8 +300,8 @@ export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generat
   generator.GeneratorState = 'suspendedStart';
 
   // NON-SPEC
-  if (enclosedValue && extraSlots.includes('EnclosedValue')) {
-    generator.EnclosedValue = enclosedValue;
+  if (enclosedValues && extraSlots.includes('HostCapturedValues')) {
+    generator.HostCapturedValues = enclosedValues.slice();
   }
 
   // 7. Let callerContext be the running execution context.

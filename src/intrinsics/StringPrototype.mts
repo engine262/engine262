@@ -751,12 +751,12 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
       Q(yield* Yield(resultString));
     }
     // NON-SPEC
-    generator.EnclosedValue = undefined;
+    generator.HostCapturedValues = undefined;
     // d. Return undefined.
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['EnclosedValue'], O));
+  const generator = X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]));
   return generator;
 }
 
