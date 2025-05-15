@@ -54,12 +54,12 @@ export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): Valu
       numEntries = entries.length;
     }
     // NON-SPEC
-    generator.EnclosedValue = undefined;
+    generator.HostCapturedValues = undefined;
     // e. Return undefined.
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['EnclosedValue'], set));
+  const generator = X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]));
   return generator;
 }
 

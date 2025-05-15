@@ -860,6 +860,9 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
     this.internalSlotsList.forEach((s) => {
       // @ts-ignore
       m(this[s]);
+      if (s === 'HostCapturedValues' && s in this && Array.isArray(this[s])) {
+        this[s].forEach(m);
+      }
     });
   }
 

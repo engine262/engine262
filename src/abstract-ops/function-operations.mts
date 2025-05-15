@@ -90,6 +90,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
+  HostCapturedValues?: readonly Value[];
 }
 export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
 // This file covers abstract operations defined in
@@ -565,7 +566,7 @@ function* BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: A
 }
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, isConstructor: BooleanValue = Value.false): FunctionObject {
+export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, isConstructor: BooleanValue = Value.false): BuiltinFunctionObject {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
