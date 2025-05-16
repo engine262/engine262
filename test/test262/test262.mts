@@ -37,6 +37,10 @@ const ARGV = util.parseArgs({
     'update-failed-tests': { type: 'boolean' },
     'run-slow-tests': { type: 'boolean' },
     'run-failed-only': { type: 'boolean' },
+
+    'strict-only': { type: 'boolean' },
+    // alias for --strict-only
+    'fast': { type: 'boolean' },
   },
 });
 
@@ -171,7 +175,8 @@ function distributeTest() {
             process.stdout.write(`  ${file}\n`);
           }
         }
-        process.exit(0);
+        clearInterval(stop);
+        workers.forEach((x) => x.kill());
       }
       return;
     }
@@ -188,7 +193,7 @@ if (ARGV.positionals.length === 0) {
   files = parsePositionals(ARGV.positionals);
 }
 
-startTestPrinter();
+const stop = startTestPrinter();
 
 const promises = [];
 for await (const file of files) {
@@ -227,7 +232,7 @@ for await (const file of files) {
     if (test.attrs.flags.module) {
       queueTest({ ...test, flags: 'module' });
     } else {
-      if (!test.attrs.flags.onlyStrict) {
+      if (!test.attrs.flags.onlyStrict && !ARGV.values['strict-only'] && !ARGV.values.fast) {
         queueTest(test);
       }
 

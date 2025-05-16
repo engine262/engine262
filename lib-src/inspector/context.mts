@@ -28,6 +28,7 @@ import {
   isBuiltinFunctionObject,
   isArrayBufferObject,
   DataBlock,
+  CallSite,
 } from '#self';
 
 interface InspectedRealmDescriptor {
@@ -289,7 +290,7 @@ export class InspectorContext {
   createExceptionDetails(completion: ThrowCompletion | Value, isPromise: boolean): Protocol.Runtime.ExceptionDetails {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
     const stack = getHostDefinedErrorStack(value);
-    const frames: Protocol.Runtime.CallFrame[] = stack?.map((call) => call.toCallFrame()!).filter(Boolean) || [];
+    const frames = InspectorContext.callSiteToCallFrame(stack);
     const exceptionId = this.#objectCounter;
     this.#objectCounter += 1;
     this.#exceptionMap.set(value, exceptionId);
@@ -303,6 +304,10 @@ export class InspectorContext {
       scriptId: frames[0]?.scriptId,
       url: frames[0]?.url,
     };
+  }
+
+  static callSiteToCallFrame(callSite: readonly CallSite[] | undefined): Protocol.Runtime.CallFrame[] {
+    return callSite?.map((call) => call.toCallFrame()!).filter(Boolean) || [];
   }
 
   createEvaluationResult(completion: ValueCompletion): Protocol.Runtime.EvaluateResponse {

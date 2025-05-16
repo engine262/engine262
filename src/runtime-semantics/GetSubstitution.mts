@@ -2,119 +2,89 @@ import {
   Assert,
   Get,
   ToString,
-  isNonNegativeInteger,
 } from '../abstract-ops/all.mts';
 import {
   ObjectValue, UndefinedValue, JSStringValue, Value,
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
+import { surroundingAgent } from '#self';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export function* GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacement: JSStringValue): ValueEvaluator<JSStringValue> {
-  // 1. Assert: Type(matched) is String.
-  Assert(matched instanceof JSStringValue);
-  // 2. Let matchLength be the number of code units in matched.
-  const matchLength = matched.stringValue().length;
-  // 3. Assert: Type(str) is String.
-  Assert(str instanceof JSStringValue);
-  // 4. Let stringLength be the number of code units in str.
+export function* GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacementTemplate: JSStringValue): ValueEvaluator<JSStringValue> {
   const stringLength = str.stringValue().length;
-  // 5. Assert: position is a non-negative integer.
-  Assert(isNonNegativeInteger(position));
-  // 6. Assert: position ≤ stringLength.
   Assert(position <= stringLength);
-  // 7. Assert: captures is a possibly empty List of Strings.
-  Assert(Array.isArray(captures) && captures.every((value) => value instanceof JSStringValue || value instanceof UndefinedValue));
-  // 8. Assert: Type(replacement) is String.
-  Assert(replacement instanceof JSStringValue);
-  // 9. Let tailPos be position + matchLength.
-  const tailPos = position + matchLength;
-  // 10. Let m be the number of elements in captures.
-  const m = captures.length;
-  // 11. Let result be the String value derived from replacement by copying code unit elements from replacement
-  //     to result while performing replacements as specified in Table 52. These $ replacements are done left-to-right,
-  //     and, once such a replacement is performed, the new replacement text is not subject to further replacements.
-  const replacementStr = replacement.stringValue();
-  let result = '';
-  let i = 0;
-  while (i < replacementStr.length) {
-    const currentChar = replacementStr[i];
-    if (currentChar === '$' && i < replacementStr.length - 1) {
-      const nextChar = replacementStr[i + 1];
-      if (nextChar === '$') {
-        result += '$';
-        i += 2;
-      } else if (nextChar === '&') {
-        result += matched.stringValue();
-        i += 2;
-      } else if (nextChar === '`') {
-        if (position === 0) {
-          // Replacement is the empty String
+  const result: string[] = [];
+  let templateRemainder = replacementTemplate.stringValue();
+  let ref: string;
+  let refReplacement: string;
+  while (templateRemainder.length) {
+    if (templateRemainder.startsWith('$$')) {
+      ref = '$$';
+      refReplacement = '$';
+    } else if (templateRemainder.startsWith('$`')) {
+      ref = '$`';
+      refReplacement = str.stringValue().slice(0, position);
+    } else if (templateRemainder.startsWith('$&')) {
+      ref = '$&';
+      refReplacement = matched.stringValue();
+    } else if (templateRemainder.startsWith("$'")) {
+      ref = "$'";
+      const matchLength = matched.stringValue().length;
+      const tailPos = position + matchLength;
+      refReplacement = str.stringValue().slice(Math.min(tailPos, stringLength));
+    } else if (templateRemainder.match(/^\$\d+/)) {
+      let digitCount = templateRemainder.match(/^\$\d\d/) ? 2 : 1;
+      let digits = templateRemainder.slice(1, 1 + digitCount);
+      let index = parseInt(digits, 10);
+      Assert(index >= 0 && index <= 99);
+      const captureLen = captures.length;
+      if (index > captureLen && digitCount === 2) {
+        digitCount = 1;
+        digits = digits[0];
+        index = parseInt(digits, 10);
+      }
+      ref = templateRemainder.slice(0, 1 + digitCount);
+      if (index >= 1 && index <= captureLen) {
+        const capture = captures[index - 1];
+        if (capture instanceof UndefinedValue) {
+          refReplacement = '';
         } else {
-          result += str.stringValue().substring(0, position);
-        }
-        i += 2;
-      } else if (nextChar === '\'') {
-        if (tailPos >= stringLength) {
-          // Replacement is the empty String
-        } else {
-          result += str.stringValue().substring(tailPos);
-        }
-        i += 2;
-      } else if ('123456789'.includes(nextChar) && (i === replacementStr.length - 2 || !'0123456789'.includes(replacementStr[i + 2]))) {
-        const n = Number(nextChar);
-        if (n <= m) {
-          const capture = captures[n - 1];
-          if (!(capture instanceof UndefinedValue)) {
-            result += capture.stringValue();
-          }
-        } else {
-          result += `$${nextChar}`;
-        }
-        i += 2;
-      } else if (i < replacementStr.length - 2 && '0123456789'.includes(nextChar) && '0123456789'.includes(replacementStr[i + 2])) {
-        const nextNextChar = replacementStr[i + 2];
-        const n = Number(nextChar + nextNextChar);
-        if (n !== 0 && n <= m) {
-          const capture = captures[n - 1];
-          if (!(capture instanceof UndefinedValue)) {
-            result += capture.stringValue();
-          }
-        } else {
-          result += `$${nextChar}${nextNextChar}`;
-        }
-        i += 3;
-      } else if (nextChar === '<') {
-        if (namedCaptures === Value.undefined) {
-          result += '$<';
-          i += 2;
-        } else {
-          Assert(namedCaptures instanceof ObjectValue);
-          const nextSign = replacementStr.indexOf('>', i);
-          if (nextSign === -1) {
-            result += '$<';
-            i += 2;
-          } else {
-            const groupName = Value(replacementStr.substring(i + 2, nextSign));
-            const capture = Q(yield* Get(namedCaptures, groupName));
-            if (capture === Value.undefined) {
-              // Replace the text with the empty string
-            } else {
-              result += Q(yield* ToString(capture)).stringValue();
-            }
-            i = nextSign + 1;
-          }
+          refReplacement = capture.stringValue();
         }
       } else {
-        result += '$';
-        i += 1;
+        refReplacement = ref;
+      }
+    } else if (templateRemainder.startsWith('$<')) {
+      const gtPos = templateRemainder.indexOf('>', 0);
+      if (gtPos === -1 || namedCaptures instanceof UndefinedValue) {
+        ref = '$<';
+        refReplacement = ref;
+      } else {
+        ref = templateRemainder.slice(0, gtPos + 1);
+        const groupName = templateRemainder.slice(2, gtPos);
+        Assert(namedCaptures instanceof ObjectValue);
+        const capture = Q(yield* Get(namedCaptures, Value(groupName)));
+        if (capture instanceof UndefinedValue) {
+          refReplacement = '';
+        } else {
+          refReplacement = (Q(yield* ToString(capture))).stringValue();
+        }
       }
     } else {
-      result += currentChar;
-      i += 1;
+      ref = templateRemainder[0];
+      refReplacement = ref;
     }
+    const refLength = ref.length;
+    templateRemainder = templateRemainder.slice(refLength);
+    result.push(refReplacement);
   }
-  // 12. Return result.
-  return Value(result);
+  let result_str;
+  try {
+    result_str = result.join('');
+  } catch (e) {
+    // test262/test/staging/sm/String/replace-math.js
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', 'String too long');
+  }
+  return Value(result_str);
 }

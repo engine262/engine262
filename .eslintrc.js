@@ -24,7 +24,7 @@ module.exports = {
   overrides: [
     {
       files: ['*.js'],
-      parserOptions: { sourceType: 'script', project: null },
+      parserOptions: { sourceType: 'module', project: null },
     },
     {
       files: ['src/**/*.mts'],
@@ -45,6 +45,7 @@ module.exports = {
         // checked by tsc.
         '@typescript-eslint/no-unused-vars': 'off',
         'no-redeclare': 'off',
+        'no-fallthrough': 'off',
         'import/export': 'off',
         'no-dupe-class-members': 'off',
         // false positive
