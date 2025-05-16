@@ -5,10 +5,6 @@
 
 uint8array-base64 = uint8array-base64
 
-# Update with test262 on May 2025, to be investigated/implemented
-
--upsert
-
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Array.fromAsync
 -Float16Array
