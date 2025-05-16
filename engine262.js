@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 beb5e4b61d4cc6fdeab90262f5b06c549cbc079b
+ * engine262 0.0.1 7dd57e7a4e74114f98a5865b26f29b61711a31ca
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -31154,6 +31154,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   AsyncFromSyncIteratorContinuation.section = 'https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation';
 
+  // This file covers abstract operations defined in
+  // https://tc39.es/ecma262/#sec-abstract-operations-for-keyed-collections
+
+  /** https://tc39.es/ecma262/#sec-canonicalizekeyedcollectionkey */
+  function CanonicalizeKeyedCollectionKey(key) {
+    // 1. If key is -0𝔽, return +0𝔽.
+    if (key instanceof NumberValue && Object.is(R(key), -0)) {
+      key = F(0);
+    }
+    // 2. Return key.
+    return key;
+  }
+  CanonicalizeKeyedCollectionKey.section = 'https://tc39.es/ecma262/#sec-abstract-operations-for-keyed-collections';
+
   function isModuleNamespaceObject(V) {
     return V instanceof ObjectValue && 'Module' in V;
   }
@@ -49945,8 +49959,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Value.undefined;
   }
   MapProto_get.section = 'https://tc39.es/ecma262/#sec-map.prototype.get';
-  /** https://tc39.es/ecma262/#sec-map.prototype.has */
-  function MapProto_has([key = Value.undefined], {
+  /**  https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsert */
+  function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined], {
     thisValue
   }) {
     // 1. Let M be the this value.
@@ -49960,6 +49974,101 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* node:coverage ignore next */
     if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    // 3. Set key to CanonicalizeKeyedCollectionKey(key).
+    key = CanonicalizeKeyedCollectionKey(key);
+    // 4. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
+    const entries = M.MapData;
+    for (const p of entries) {
+      // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+      if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+        return p.Value;
+      }
+    }
+    // 5. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+    const p = {
+      Key: key,
+      Value: value
+    };
+    // 6. Append p to M.[[MapData]].
+    entries.push(p);
+    // 7. Return value.
+    return value;
+  }
+  MapProto_getOrInsert.section = 'https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsert';
+  /**  https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsertComputed */
+  function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Value.undefined], {
+    thisValue
+  }) {
+    // 1. Let M be the this value.
+    const M = thisValue;
+    // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
+    /* ReturnIfAbrupt */
+    let _temp9 = RequireInternalSlot(M, 'MapData');
+    /* node:coverage ignore next */
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* node:coverage ignore next */
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    if (!IsCallable(callbackfn)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    }
+    // 4. Set key to CanonicalizeKeyedCollectionKey(key).
+    key = CanonicalizeKeyedCollectionKey(key);
+    // 5. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
+    const entries = M.MapData;
+    for (const p of entries) {
+      // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+      if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+        return p.Value;
+      }
+    }
+    // 6. Let value be ? Call(callbackfn, undefined, « key »).
+    /* ReturnIfAbrupt */
+    let _temp10 = yield* Call(callbackfn, Value.undefined, [key]);
+    /* node:coverage ignore next */
+    if (_temp10 instanceof AbruptCompletion) return _temp10;
+    /* node:coverage ignore next */
+    if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+    const value = _temp10;
+    // 7. NOTE: The Map may have been modified during execution of callbackfn.
+    // 8. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
+    for (const p of entries) {
+      // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+      if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+        // i. Set p.[[Value]] to value.
+        p.Value = value;
+        // ii. Return value.
+        return value;
+      }
+    }
+    // 9. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+    const p = {
+      Key: key,
+      Value: value
+    };
+    // 10. Append p to M.[[MapData]].
+    entries.push(p);
+    // 11. Return value.
+    return value;
+  }
+  MapProto_getOrInsertComputed.section = 'https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsertComputed';
+  /** https://tc39.es/ecma262/#sec-map.prototype.has */
+  function MapProto_has([key = Value.undefined], {
+    thisValue
+  }) {
+    // 1. Let M be the this value.
+    const M = thisValue;
+    // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
+    /* ReturnIfAbrupt */
+    let _temp11 = RequireInternalSlot(M, 'MapData');
+    /* node:coverage ignore next */
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* node:coverage ignore next */
+    if (_temp11 instanceof AbruptCompletion) return _temp11;
+    /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
     // 3. Let entries be the List that is M.[[MapData]].
     const entries = M.MapData;
     // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -49991,13 +50100,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const M = thisValue;
     // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
     /* ReturnIfAbrupt */
-    let _temp9 = RequireInternalSlot(M, 'MapData');
+    let _temp12 = RequireInternalSlot(M, 'MapData');
     /* node:coverage ignore next */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* node:coverage ignore next */
-    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* node:coverage ignore next */
-    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
     // 3. Let entries be the List that is M.[[MapData]].
     const entries = M.MapData;
     // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -50005,13 +50114,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
       if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
         /* ReturnIfAbrupt */
-        let _temp10 = exports.surroundingAgent.debugger_tryTouchDuringPreview(M);
+        let _temp13 = exports.surroundingAgent.debugger_tryTouchDuringPreview(M);
         /* node:coverage ignore next */
-        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
+        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
         /* node:coverage ignore next */
-        if (_temp10 instanceof AbruptCompletion) return _temp10;
+        if (_temp13 instanceof AbruptCompletion) return _temp13;
         /* node:coverage ignore next */
-        if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+        if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
         p.Value = value;
         // ii. Return M.
         return M;
@@ -50028,13 +50137,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
     // 7. Append p as the last element of entries.
     /* ReturnIfAbrupt */
-    let _temp11 = exports.surroundingAgent.debugger_tryTouchDuringPreview(M);
+    let _temp14 = exports.surroundingAgent.debugger_tryTouchDuringPreview(M);
     /* node:coverage ignore next */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* node:coverage ignore next */
-    if (_temp11 instanceof AbruptCompletion) return _temp11;
+    if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* node:coverage ignore next */
-    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
     entries.push(p);
     // 8. Return M.
     return M;
@@ -50048,13 +50157,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const M = thisValue;
     // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
     /* ReturnIfAbrupt */
-    let _temp12 = RequireInternalSlot(M, 'MapData');
+    let _temp15 = RequireInternalSlot(M, 'MapData');
     /* node:coverage ignore next */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* node:coverage ignore next */
-    if (_temp12 instanceof AbruptCompletion) return _temp12;
+    if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* node:coverage ignore next */
-    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
     // 3. Let entries be the List that is M.[[MapData]].
     const entries = M.MapData;
     // 4. Let count be 0.
@@ -50081,28 +50190,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   MapProto_values.section = 'https://tc39.es/ecma262/#sec-map.prototype.values';
   function bootstrapMapPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
+    const proto = bootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['getOrInsert', MapProto_getOrInsert, 2], ['getOrInsertComputed', MapProto_getOrInsertComputed, 2], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
     /* X */
-    let _temp13 = proto.GetOwnProperty(Value('entries'));
+    let _temp16 = proto.GetOwnProperty(Value('entries'));
     /* node:coverage ignore next */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
     /* node:coverage ignore next */
-    if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('entries')) returned an abrupt completion", {
-      cause: _temp13
+    if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('entries')) returned an abrupt completion", {
+      cause: _temp16
     });
     /* node:coverage ignore next */
-    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
-    const entriesFunc = _temp13;
+    if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+    const entriesFunc = _temp16;
     /* X */
-    let _temp14 = proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc);
+    let _temp17 = proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc);
     /* node:coverage ignore next */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
     /* node:coverage ignore next */
-    if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc as Descriptor) returned an abrupt completion", {
-      cause: _temp14
+    if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc as Descriptor) returned an abrupt completion", {
+      cause: _temp17
     });
     /* node:coverage ignore next */
-    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
     realmRec.Intrinsics['%Map.prototype%'] = proto;
   }
 
@@ -56030,11 +56139,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Value.undefined;
   }
   WeakMapProto_get.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.get';
-  /** https://tc39.es/ecma262/#sec-weakmap.prototype.has */
-  function WeakMapProto_has([key = Value.undefined], {
+  /** https://tc39.es/proposal-upsert/#sec-weakmap.prototype.getOrInsert */
+  function WeakMapProto_getOrInsert([key = Value.undefined, value = Value.undefined], {
     thisValue
   }) {
-    // 1. Let M be the this value.
+    // 1. Let m be the this value.
     const M = thisValue;
     // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
     /* ReturnIfAbrupt */
@@ -56045,6 +56154,105 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* node:coverage ignore next */
     if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
+    if (CanBeHeldWeakly(key) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAWeakKey', key);
+    }
+    // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    const entries = M.WeakMapData;
+    for (const p of entries) {
+      // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+      if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+        return p.Value;
+      }
+    }
+    // 5. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+    const p = {
+      Key: key,
+      Value: value
+    };
+    // 6. Append p to M.[[WeakMapData]].
+    entries.push(p);
+    // 7. Return value.
+    return value;
+  }
+  WeakMapProto_getOrInsert.section = 'https://tc39.es/proposal-upsert/#sec-weakmap.prototype.getOrInsert';
+  /**  https://tc39.es/proposal-upsert/#sec-weakmap.prototype.getOrInsertComputed */
+  function* WeakMapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Value.undefined], {
+    thisValue
+  }) {
+    // 1. Let m be the this value.
+    const M = thisValue;
+    // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
+    /* ReturnIfAbrupt */
+    let _temp5 = RequireInternalSlot(M, 'WeakMapData');
+    /* node:coverage ignore next */
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
+    if (CanBeHeldWeakly(key) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAWeakKey', key);
+    }
+    // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    if (!IsCallable(callbackfn)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    }
+    // 5. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    const entries = M.WeakMapData;
+    for (const p of entries) {
+      // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+      if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+        return p.Value;
+      }
+    }
+    // 6. Let value be ? Call(callbackfn, undefined, « key »).
+    /* ReturnIfAbrupt */
+    let _temp6 = yield* Call(callbackfn, Value.undefined, [key]);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    const value = _temp6;
+    // 7. NOTE: The Map may have been modified during execution of callbackfn.
+    // 8. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    for (const p of entries) {
+      // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+      if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+        // i. Set p.[[Value]] to value.
+        p.Value = value;
+        // ii. Return value.
+        return value;
+      }
+    }
+    // 9. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+    const p = {
+      Key: key,
+      Value: value
+    };
+    // 10. Append p to M.[[WeakMapData]].
+    entries.push(p);
+    // 11. Return value.
+    return value;
+  }
+  WeakMapProto_getOrInsertComputed.section = 'https://tc39.es/proposal-upsert/#sec-weakmap.prototype.getOrInsertComputed';
+  /** https://tc39.es/ecma262/#sec-weakmap.prototype.has */
+  function WeakMapProto_has([key = Value.undefined], {
+    thisValue
+  }) {
+    // 1. Let M be the this value.
+    const M = thisValue;
+    // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
+    /* ReturnIfAbrupt */
+    let _temp7 = RequireInternalSlot(M, 'WeakMapData');
+    /* node:coverage ignore next */
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
     // 3. If CanBeHeldWeakly(key) is false, return false.
     if (CanBeHeldWeakly(key) === Value.false) {
       return Value.false;
@@ -56069,13 +56277,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const M = thisValue;
     // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
     /* ReturnIfAbrupt */
-    let _temp5 = RequireInternalSlot(M, 'WeakMapData');
+    let _temp8 = RequireInternalSlot(M, 'WeakMapData');
     /* node:coverage ignore next */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* node:coverage ignore next */
-    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* node:coverage ignore next */
-    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
     // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
     if (CanBeHeldWeakly(key) === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
@@ -56086,13 +56294,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
       if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
         /* ReturnIfAbrupt */
-        let _temp6 = exports.surroundingAgent.debugger_tryTouchDuringPreview(M);
+        let _temp9 = exports.surroundingAgent.debugger_tryTouchDuringPreview(M);
         /* node:coverage ignore next */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
+        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
         /* node:coverage ignore next */
-        if (_temp6 instanceof AbruptCompletion) return _temp6;
+        if (_temp9 instanceof AbruptCompletion) return _temp9;
         /* node:coverage ignore next */
-        if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+        if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
         p.Value = value;
         // ii. Return M.
         return M;
@@ -56110,7 +56318,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   WeakMapProto_set.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.set';
   function bootstrapWeakMapPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['delete', WeakMapProto_delete, 1], ['get', WeakMapProto_get, 1], ['has', WeakMapProto_has, 1], ['set', WeakMapProto_set, 2]], realmRec.Intrinsics['%Object.prototype%'], 'WeakMap');
+    const proto = bootstrapPrototype(realmRec, [['delete', WeakMapProto_delete, 1], ['get', WeakMapProto_get, 1], ['getOrInsert', WeakMapProto_getOrInsert, 2], ['getOrInsertComputed', WeakMapProto_getOrInsertComputed, 2], ['has', WeakMapProto_has, 1], ['set', WeakMapProto_set, 2]], realmRec.Intrinsics['%Object.prototype%'], 'WeakMap');
     realmRec.Intrinsics['%WeakMap.prototype%'] = proto;
   }
 
@@ -61010,6 +61218,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CallSite = CallSite;
   exports.CanBeHeldWeakly = CanBeHeldWeakly;
   exports.CanonicalNumericIndexString = CanonicalNumericIndexString;
+  exports.CanonicalizeKeyedCollectionKey = CanonicalizeKeyedCollectionKey;
   exports.CharacterValue = CharacterValue;
   exports.ClassDefinitionEvaluation = ClassDefinitionEvaluation;
   exports.ClassFieldDefinitionEvaluation = ClassFieldDefinitionEvaluation;
