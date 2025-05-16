@@ -225,6 +225,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%Symbol.prototype%': ObjectValue;
   '%SyntaxError.prototype%': ObjectValue;
   '%SyntaxError%': FunctionObject;
+  '%Temporal%': ObjectValue;
   '%TypedArray.prototype%': ObjectValue;
   '%TypeError.prototype%': ObjectValue;
   '%TypeError%': FunctionObject;
