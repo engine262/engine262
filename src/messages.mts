@@ -78,6 +78,7 @@ export const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in 
 export const InvalidThis = () => 'Invalid `this` access';
 export const InvalidUnicodeEscape = () => 'Invalid unicode escape';
 export const InvalidAlphabet = () => 'Invalid alphabet';
+export const InvalidDate = () => 'Invalid date';
 export const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
 export const InvalidBase64String = () => 'Invalid base64 string';
 export const InvalidHexString = () => 'Invalid hex string';
