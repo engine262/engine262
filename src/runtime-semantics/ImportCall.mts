@@ -19,14 +19,15 @@ import { __ts_cast__ } from '../helpers.mts';
 // ImportCall : `import` `(` AssignmentExpression `)`
 export function* Evaluate_ImportCall(ImportCall: ParseNode.ImportCall): ValueEvaluator<PromiseObject> {
   Q(surroundingAgent.debugger_cannotPreview);
-  if (ImportCall.OptionsExpression) {
-    return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression);
-  }
-  return yield* EvaluateImportCall(ImportCall.AssignmentExpression);
+  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression, /* [import-defer] */ ImportCall.Phase);
 }
 
 /** https://tc39.es/ecma262/#sec-evaluate-import-call */
-function* EvaluateImportCall(specifiersExpression: ParseNode.AssignmentExpressionOrHigher, optionsExpression?: ParseNode.AssignmentExpressionOrHigher): ValueEvaluator<PromiseObject> {
+function* EvaluateImportCall(
+  specifiersExpression: ParseNode.AssignmentExpressionOrHigher,
+  optionsExpression: undefined | ParseNode.AssignmentExpressionOrHigher,
+  /* [import-defer] */ phase: 'defer' | 'evaluation',
+): ValueEvaluator<PromiseObject> {
   // 1. Let referrer be ! GetActiveScriptOrModule().
   let referrer: NullValue | AbstractModuleRecord | ScriptRecord | Realm = X(GetActiveScriptOrModule());
   // 2. If referrer is null, set referrer to the current Realm Record.
@@ -125,7 +126,7 @@ function* EvaluateImportCall(specifiersExpression: ParseNode.AssignmentExpressio
     }
   }
   // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
-  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString, Attributes: attributes };
+  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString, Attributes: attributes, /* [import-defer] */ Phase: phase };
   // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
   HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, moduleRequest, undefined, promiseCapability);
   // 9. Return promiseCapability.[[Promise]].
