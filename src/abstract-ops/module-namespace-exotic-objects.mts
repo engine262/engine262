@@ -10,12 +10,10 @@ import {
   type ObjectInternalMethods,
   UndefinedValue,
   type PropertyKeyValue,
-  NullValue,
-  BooleanValue,
   ObjectValue,
 } from '../value.mts';
 import {
-  isArray, JSStringSet, type Mutable,
+  JSStringSet, type Mutable,
 } from '../helpers.mts';
 import {
   Assert,
@@ -38,9 +36,6 @@ import {
 export interface ModuleNamespaceObject extends ExoticObject {
   readonly Module: AbstractModuleRecord;
   readonly Exports: JSStringSet;
-  readonly Prototype: NullValue;
-  // never used
-  readonly Extensible: BooleanValue;
 }
 
 export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
@@ -48,6 +43,9 @@ export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
 }
 
 const InternalMethods = {
+  * GetPrototypeOf() {
+    return Value.null;
+  },
   * SetPrototypeOf(V) {
     return Q(yield* SetImmutablePrototype(this, V));
   },
@@ -184,17 +182,15 @@ const InternalMethods = {
 
 /** https://tc39.es/ecma262/#sec-modulenamespacecreate */
 export function ModuleNamespaceCreate(module: AbstractModuleRecord, exports: readonly JSStringValue[]) {
-  // 1. Assert: module is a Module Record.
-  Assert(module instanceof AbstractModuleRecord);
-  // 2. Assert: module.[[Namespace]] is undefined.
+  // 1. Assert: module.[[Namespace]] is EMPTY.
   Assert(module.Namespace instanceof UndefinedValue);
-  // 3. Assert: exports is a List of String values.
-  Assert(isArray(exports));
-  // 4. Let internalSlotsList be the internal slots listed in Table 31.
-  const internalSlotsList = ['Module', 'Exports', 'Prototype'];
-  // 5. Let M be ! MakeBasicObject(internalSlotsList).
-  const M = X(MakeBasicObject(internalSlotsList)) as Mutable<ModuleNamespaceObject>;
+  // 2. Let internalSlotsList be the internal slots listed in Table 31.
+  const internalSlotsList = ['Module', 'Exports'];
+  // 3. Let M be MakeBasicObject(internalSlotsList).
+  const M = MakeBasicObject(internalSlotsList) as Mutable<ModuleNamespaceObject>;
+  // 4. Set M's essential internal methods to the definitions specified in 10.4.6.
   /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
+  M.GetPrototypeOf = InternalMethods.GetPrototypeOf;
   M.SetPrototypeOf = InternalMethods.SetPrototypeOf;
   M.IsExtensible = InternalMethods.IsExtensible;
   M.PreventExtensions = InternalMethods.PreventExtensions;
@@ -205,26 +201,24 @@ export function ModuleNamespaceCreate(module: AbstractModuleRecord, exports: rea
   M.Set = InternalMethods.Set;
   M.Delete = InternalMethods.Delete;
   M.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
-  // 7. Set M.[[Prototype]] to null.
-  M.Prototype = Value.null;
-  // 8. Set M.[[Module]] to module.
+  // 5. Set M.[[Module]] to module.
   M.Module = module;
-  // 9. Let sortedExports be a new List containing the same values as the list exports where the values are ordered as if an Array of the same values had been sorted using Array.prototype.sort using undefined as comparefn.
+  // 6. Let sortedExports be a List whose elements are the elements of exports, sorted according to lexicographic code unit order.
   const sortedExports = [...exports].sort((x, y) => {
     const result = X(CompareArrayElements(x, y, Value.undefined));
     return R(result);
   });
-  // 10. Set M.[[Exports]] to sortedExports.
+  // 7. Set M.[[Exports]] to sortedExports.
   M.Exports = new JSStringSet(sortedExports);
-  // 11. Create own properties of M corresponding to the definitions in 26.3.
+  // 8. Create own properties of M corresponding to the definitions in 26.3.
   M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
     Value: Value('Module'),
   }));
-  // 12. Set module.[[Namespace]] to M.
+  // 9. Set module.[[Namespace]] to M.
   (module as Mutable<AbstractModuleRecord>).Namespace = M;
-  // 13. Return M;
+  // 10. Return M.
   return M;
 }
