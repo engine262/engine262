@@ -786,6 +786,7 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
   readonly internalSlotsList: readonly string[];
 
   readonly PrivateElements: PrivateElementRecord[];
+
   readonly ConstructedBy: ObjectValue[];
 
   constructor(internalSlotsList: readonly string[]) {

@@ -181,13 +181,13 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       } else { // v. Else,
         // 1. NOTE: This branch behaves similarly to `constructor() {}`.
         // 2. Let result be ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
-        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%', ["ConstructorOf"]));
+        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%', ['ConstructorOf']));
       }
       Q(yield* InitializeInstanceElements(result, F));
       return result;
     };
     // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[IsClassConstructor]] », the current Realm Record, constructorParent).
-    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', "IsClassConstructor"], undefined, constructorParent, undefined, Value.true));
+    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', 'IsClassConstructor'], undefined, constructorParent, undefined, Value.true));
   } else { // 15. Else,
     // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
     const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));

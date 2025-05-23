@@ -288,7 +288,7 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
   // 5. If kind is base, then
   if (kind === 'base') {
     // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
-    thisArgument = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%', ["ConstructorOf"]));
+    thisArgument = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%', ['ConstructorOf']));
   }
   // 6. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
@@ -438,7 +438,7 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
 export function MakeClassConstructor(F: Mutable<FunctionObject>): void {
-  Assert("IsClassConstructor" in F);
+  Assert('IsClassConstructor' in F);
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
 }
