@@ -329,7 +329,7 @@ export class ManagedRealm extends Realm {
       }
       surroundingAgent.evaluate(sourceText.Evaluate(), (completion) => {
         if (completion instanceof NormalCompletion && completion.Value.PromiseState === 'fulfilled') {
-          result = GetModuleNamespace(sourceText);
+          result = GetModuleNamespace(sourceText, 'evaluation');
         } else {
           result = completion;
         }

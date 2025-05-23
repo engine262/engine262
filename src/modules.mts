@@ -103,14 +103,15 @@ export abstract class AbstractModuleRecord {
 
   readonly Environment: ModuleEnvironmentRecord | undefined;
 
-  readonly Namespace: ObjectValue | UndefinedValue = Value.undefined;
+  readonly Namespace: ObjectValue | undefined = undefined;
+
+  readonly DeferredNamespace: ObjectValue | undefined = undefined;
 
   readonly HostDefined: ModuleRecordHostDefined;
 
   constructor(init: AbstractModuleInit) {
     this.Realm = init.Realm;
     this.Environment = init.Environment;
-    this.Namespace = init.Namespace;
     this.HostDefined = init.HostDefined;
   }
 
@@ -118,6 +119,7 @@ export abstract class AbstractModuleRecord {
     m(this.Realm);
     m(this.Environment);
     m(this.Namespace);
+    m(this.DeferredNamespace);
   }
 }
 
@@ -219,9 +221,22 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
 
   /** https://tc39.es/ecma262/#sec-moduleevaluation */
   * Evaluate(): Evaluator<PromiseObject> {
-    // 1. Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.
-    // 2. Let module be this Cyclic Module Record.
     let module: CyclicModuleRecord = this;
+
+    if (surroundingAgent.feature('import-defer')) {
+      // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
+      Assert((function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {
+        if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
+          return list;
+        }
+        list.push(module);
+        for (const r of module.RequestedModules) {
+          getModules(GetImportedModule(module, r), list);
+        }
+        return list;
+      }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new'));
+    }
+
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
     // 3. If module.[[Status]] is evaluating-async or evaluated, then
@@ -507,7 +522,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // b. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
         // i. Let namespace be GetModuleNamespace(importedModule).
-        const namespace = GetModuleNamespace(importedModule);
+        const namespace = GetModuleNamespace(importedModule, /* [import-defer] */ ie.ModuleRequest.Phase);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
@@ -528,7 +543,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         // iii. If resolution.[[BindingName]] is ~namespace~, then
         if (resolution.BindingName === 'namespace') {
           // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
-          const namespace = GetModuleNamespace(resolution.Module);
+          const namespace = GetModuleNamespace(resolution.Module, /* [import-defer] */ 'evaluation');
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).

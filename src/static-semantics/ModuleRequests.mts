@@ -1,11 +1,13 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { JSStringValue } from '../value.mts';
 import { StringValue } from './all.mts';
+import { surroundingAgent, type LoadedModuleRequestRecord } from '#self';
 
 // https://tc39.es/ecma262/#modulerequest-record
 export interface ModuleRequestRecord {
   readonly Specifier: JSStringValue;
   readonly Attributes: ImportAttributeRecord[];
+  /* [import-defer] */ readonly Phase: 'defer' | 'evaluation';
 }
 
 // https://tc39.es/ecma262/#importattribute-record
@@ -19,7 +21,7 @@ function stringsEqual(left: JSStringValue, right: JSStringValue) {
 }
 
 // https://tc39.es/ecma262/#sec-ModuleRequestsEqual
-export function ModuleRequestsEqual(left: ModuleRequestRecord, right: ModuleRequestRecord) {
+export function ModuleRequestsEqual(left: ModuleRequestRecord | LoadedModuleRequestRecord, right: ModuleRequestRecord | LoadedModuleRequestRecord) {
   if (!stringsEqual(left.Specifier, right.Specifier)) {
     return false;
   }
@@ -63,7 +65,9 @@ export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
       for (const item of node.ModuleItemList) {
         const additionalRequests = ModuleRequests(item);
         for (const mr of additionalRequests) {
-          if (!requests.some((r) => ModuleRequestsEqual(r, mr))) {
+          if (!requests.some((r) => ModuleRequestsEqual(r, mr)
+              && (surroundingAgent.feature('import-defer') ? r.Phase === mr.Phase : true))
+          ) {
             requests.push(mr);
           }
         }
@@ -74,19 +78,19 @@ export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
       if (node.FromClause) {
         const specifier = StringValue(node.FromClause);
         const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-        return [{ Specifier: specifier, Attributes: attributes }];
+        return [{ Specifier: specifier, Attributes: attributes, /* [import-defer] */ Phase: node.Phase }];
       }
       if (node.ModuleSpecifier) {
         const specifier = StringValue(node.ModuleSpecifier);
         const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-        return [{ Specifier: specifier, Attributes: attributes }];
+        return [{ Specifier: specifier, Attributes: attributes, /* [import-defer] */ Phase: node.Phase }];
       }
       throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
     case 'ExportDeclaration':
       if (node.FromClause) {
         const specifier = StringValue(node.FromClause);
         const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-        return [{ Specifier: specifier, Attributes: attributes }];
+        return [{ Specifier: specifier, Attributes: attributes, /* [import-defer] */ Phase: 'evaluation' }];
       }
       return [];
     default:

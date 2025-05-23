@@ -215,6 +215,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%Object.prototype%': ObjectValue;
   '%Promise.prototype.then%': FunctionObject;
   '%Promise.prototype%': ObjectValue;
+  '%Promise.resolve%': FunctionObject;
   '%RangeError.prototype%': ObjectValue;
   '%RangeError%': FunctionObject;
   '%ReferenceError.prototype%': ObjectValue;

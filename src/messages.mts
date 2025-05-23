@@ -50,6 +50,7 @@ export const ConstDeclarationMissingInitializer = () => 'Missing initialization 
 export const ConstructorNonCallable = (f: Value) => `${i(f)} cannot be invoked without new`;
 export const CouldNotResolveModule = (s: JSStringValue | string) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
+/* [import-defer] */ export const DeferredModuleNotReady = (m: AbstractModuleRecord) => `Module ${m.HostDefined?.specifier ?? ''} is not ready for synchronous execution`;
 export const DeleteIdentifier = () => 'Delete of identifier in strict mode';
 export const DeletePrivateName = () => 'Private fields cannot be deleted';
 export const DateInvalidTime = () => 'Invalid time';

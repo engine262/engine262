@@ -20,7 +20,22 @@ export abstract class ModuleParser extends StatementParser {
     if (this.test(Token.STRING)) {
       node.ModuleSpecifier = this.parsePrimaryExpression();
     } else {
-      node.ImportClause = this.parseImportClause();
+      const importClause = this.parseImportClause();
+      if (
+        this.feature('import-defer')
+        && importClause.ImportedDefaultBinding?.sourceText() === 'defer'
+        && !importClause.NameSpaceImport
+        && !importClause.NamedImports
+        && !this.test('from')
+      ) {
+        node.Phase = 'defer';
+        const importClause = this.startNode<ParseNode.ImportClause>();
+        importClause.NameSpaceImport = this.parseNameSpaceImport();
+        node.ImportClause = this.finishNode(importClause, 'ImportClause');
+      } else {
+        node.Phase = 'evaluation';
+        node.ImportClause = importClause;
+      }
       this.scope.declare(node.ImportClause, 'import');
       node.FromClause = this.parseFromClause();
     }
