@@ -181,33 +181,33 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       } else { // v. Else,
         // 1. NOTE: This branch behaves similarly to `constructor() {}`.
         // 2. Let result be ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
-        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%'));
+        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%', ["ConstructorOf"]));
       }
       Q(yield* InitializeInstanceElements(result, F));
       return result;
     };
-    // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]] », the current Realm Record, constructorParent).
-    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, Value.true));
+    // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[IsClassConstructor]] », the current Realm Record, constructorParent).
+    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', "IsClassConstructor"], undefined, constructorParent, undefined, Value.true));
   } else { // 15. Else,
     // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
     const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
     // b. Let F be constructorInfo.[[Closure]].
     F = constructorInfo.Closure;
-    // c. Perform MakeClassConstructor(F).
-    MakeClassConstructor(F);
-    // d. Perform SetFunctionName(F, className).
+    // c. Perform SetFunctionName(F, className).
     SetFunctionName(F, className);
   }
   __ts_cast__<Mutable<ECMAScriptFunctionObject>>(F);
   // 16. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
-  // 17. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
+  // 17. Perform MakeClassConstructor(F).
+  MakeClassConstructor(F);
+  // 18. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  // 18. Perform CreateMethodProperty(proto, "constructor", F).
+  // 19. Perform CreateMethodProperty(proto, "constructor", F).
   X(CreateMethodProperty(proto, Value('constructor'), F));
-  // 19. If ClassBody is not present, let elements be a new empty List.
+  // 20. If ClassBody is not present, let elements be a new empty List.
   let elements: ParseNode.ClassElement[];
   if (!ClassBody) {
     elements = [];

@@ -230,6 +230,10 @@ export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScr
     // a. Perform ? DefineField(O, fieldRecord).
     Q(yield* DefineField(O, fieldRecord));
   }
+  // 5. Append constructor to O.[[ConstructedBy]].
+  O.ConstructedBy.push(constructor);
+
+  // 6. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
@@ -284,7 +288,7 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
   // 5. If kind is base, then
   if (kind === 'base') {
     // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
-    thisArgument = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%'));
+    thisArgument = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%', ["ConstructorOf"]));
   }
   // 6. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
@@ -433,8 +437,8 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
 }
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
-export function MakeClassConstructor(F: Mutable<ECMAScriptFunctionObject>): void {
-  Assert(isECMAScriptFunctionObject(F));
+export function MakeClassConstructor(F: Mutable<FunctionObject>): void {
+  Assert("IsClassConstructor" in F);
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
 }
