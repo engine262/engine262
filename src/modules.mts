@@ -271,8 +271,8 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(module.EvaluationError === undefined);
       // c. If module.[[Status]] is evaluated, then
       if (module.Status === 'evaluated') {
-        // i. Assert: module.[[AsyncEvaluationOrder]] is unset.
-        Assert(module.AsyncEvaluationOrder === 'unset');
+        // i. Assert: module.[[AsyncEvaluationOrder]] is not an integer.
+        Assert(typeof module.AsyncEvaluationOrder !== 'number');
         // ii. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
       }
