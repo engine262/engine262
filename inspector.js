@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 7dd57e7a4e74114f98a5865b26f29b61711a31ca
+ * engine262 0.0.1 e4aad250d7c1811b140e4a26e520ba6c5eb47fb6
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -771,7 +771,7 @@
     createExceptionDetails(completion, isPromise) {
       const value = completion instanceof engine262_mjs.ThrowCompletion ? completion.Value : completion;
       const stack = engine262_mjs.getHostDefinedErrorStack(value);
-      const frames = stack?.map(call => call.toCallFrame()).filter(Boolean) || [];
+      const frames = InspectorContext.callSiteToCallFrame(stack);
       const exceptionId = this.#objectCounter;
       this.#objectCounter += 1;
       this.#exceptionMap.set(value, exceptionId);
@@ -787,6 +787,9 @@
         scriptId: frames[0]?.scriptId,
         url: frames[0]?.url
       };
+    }
+    static callSiteToCallFrame(callSite) {
+      return callSite?.map(call => call.toCallFrame()).filter(Boolean) || [];
     }
     createEvaluationResult(completion) {
       completion = engine262_mjs.EnsureCompletion(completion);
@@ -1241,8 +1244,6 @@
         });
         if (Array.isArray(parsed)) {
           const e = context.createExceptionDetails(engine262_mjs.ThrowCompletion(parsed[0]), false);
-          // Note: it has to be this message to trigger devtools' line wrap.
-          e.exception.description = 'SyntaxError: Unexpected end of input';
           resolve({
             exceptionDetails: e,
             result: {
@@ -1287,6 +1288,28 @@
           engine262_mjs.surroundingAgent.executionContextStack.push(stack);
         }
       }
+    }, err => {
+      const expr = engine262_mjs.surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText();
+      const frame = InspectorContext.callSiteToCallFrame(engine262_mjs.captureStack().stack);
+      _context.sendEvent['Runtime.exceptionThrown']({
+        timestamp: Date.now(),
+        exceptionDetails: {
+          stackTrace: frame.length ? {
+            callFrames: frame
+          } : undefined,
+          text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length + 1)}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
+          columnNumber: frame[0]?.columnNumber,
+          lineNumber: frame[0]?.lineNumber,
+          scriptId: frame[0]?.scriptId,
+          url: frame[0]?.url,
+          exceptionId: 0
+        }
+      });
+      return {
+        result: {
+          type: 'undefined'
+        }
+      };
     });
     return promise;
   }
