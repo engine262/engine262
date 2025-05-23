@@ -1,10 +1,10 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   X,
-  Completion,
   NormalCompletion,
   ThrowCompletion,
   IfAbruptRejectPromise,
+  ReturnCompletion,
 } from '../completion.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import {
@@ -37,8 +37,8 @@ function* AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { t
   const state = generator.AsyncGeneratorState;
   // 6. If state is completed, then
   if (state === 'completed') {
-    // a. Let iteratorResult be ! CreateIteratorResultObject(undefined, true).
-    const iteratorResult = X(CreateIteratorResultObject(Value.undefined, Value.true));
+    // a. Let iteratorResult be CreateIteratorResultObject(undefined, true).
+    const iteratorResult = CreateIteratorResultObject(Value.undefined, Value.true);
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
     // c. Return promiseCapability.[[Promise]].
@@ -46,15 +46,15 @@ function* AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { t
   }
   // 7. Let completion be NormalCompletion(value).
   const completion = NormalCompletion(value);
-  // 8. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
-  X(AsyncGeneratorEnqueue(generator, completion, promiseCapability));
+  // 8. Perform AsyncGeneratorEnqueue(generator, completion, promiseCapability).
+  AsyncGeneratorEnqueue(generator, completion, promiseCapability);
   // 9. If state is either suspendedStart or suspendedYield, then
   if (state === 'suspendedStart' || state === 'suspendedYield') {
-    // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(yield* AsyncGeneratorResume(generator, completion));
+    // a. Perform AsyncGeneratorResume(generator, completion).
+    yield* AsyncGeneratorResume(generator, completion);
   } else { // 10. Else,
-    // a. Assert: state is either executing or awaiting-return.
-    Assert(state === 'executing' || state === 'awaiting-return');
+    // a. Assert: state is either executing or draining-queue.
+    Assert(state === 'executing' || state === 'draining-queue');
   }
   // 11. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
@@ -72,23 +72,23 @@ function* AsyncGeneratorPrototype_return([value = Value.undefined]: Arguments, {
   IfAbruptRejectPromise(result, promiseCapability);
   __ts_cast__<AsyncGeneratorObject>(generator);
   // 5. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-  const completion = new Completion({ Type: 'return', Value: value, Target: undefined });
-  // 6. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
-  X(AsyncGeneratorEnqueue(generator, completion, promiseCapability));
+  const completion = ReturnCompletion(value);
+  // 6. Perform AsyncGeneratorEnqueue(generator, completion, promiseCapability).
+  AsyncGeneratorEnqueue(generator, completion, promiseCapability);
   // 7. Let state be generator.[[AsyncGeneratorState]].
   const state = generator.AsyncGeneratorState;
   // 8. If state is either suspendedStart or completed, then
   if (state === 'suspendedStart' || state === 'completed') {
-    // a. Set generator.[[AsyncGeneratorState]] to awaiting-return.
-    generator.AsyncGeneratorState = 'awaiting-return';
-    // b. Perform ! AsyncGeneratorAwaitReturn(generator).
-    X(AsyncGeneratorAwaitReturn(generator));
+    // a. Set generator.[[AsyncGeneratorState]] to draining-queue.
+    generator.AsyncGeneratorState = 'draining-queue';
+    // b. Perform AsyncGeneratorAwaitReturn(generator).
+    yield* AsyncGeneratorAwaitReturn(generator);
   } else if (state === 'suspendedYield') { // 9. Else if state is suspendedYield, then
-    // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(yield* AsyncGeneratorResume(generator, completion));
+    // a. Perform AsyncGeneratorResume(generator, completion).
+    yield* AsyncGeneratorResume(generator, completion);
   } else { // 10. Else,
-    // a. Assert: state is either executing or awaiting-return.
-    Assert(state === 'executing' || state === 'awaiting-return');
+    // a. Assert: state is either executing or draining-queue.
+    Assert(state === 'executing' || state === 'draining-queue');
   }
   // 11. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
@@ -123,15 +123,15 @@ function* AsyncGeneratorPrototype_throw([exception = Value.undefined]: Arguments
   }
   // 8. Let completion be ThrowCompletion(exception).
   const completion = ThrowCompletion(exception);
-  // 9. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
-  X(AsyncGeneratorEnqueue(generator, completion, promiseCapability));
+  // 9. Perform AsyncGeneratorEnqueue(generator, completion, promiseCapability).
+  AsyncGeneratorEnqueue(generator, completion, promiseCapability);
   // 10. If state is suspendedYield, then
   if (state === 'suspendedYield') {
-    // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(yield* AsyncGeneratorResume(generator, completion));
+    // a. Perform AsyncGeneratorResume(generator, completion).
+    yield* AsyncGeneratorResume(generator, completion);
   } else { // 11. Else,
-    // a. Assert: state is either executing or awaiting-return.
-    Assert(state === 'executing' || state === 'awaiting-return');
+    // a. Assert: state is either executing or draining-queue.
+    Assert(state === 'executing' || state === 'draining-queue');
   }
   // 12. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;

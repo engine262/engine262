@@ -61,6 +61,7 @@ export class Parser extends LanguageParser {
 
   startNode(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished {
     this.peek();
+    const s = this.source;
     const node: ParseNode.BaseParseNode = {
       type: undefined!,
       parent: undefined,
@@ -77,7 +78,9 @@ export class Parser extends LanguageParser {
         },
       },
       strict: this.state.strict,
-      sourceText: () => this.source.slice(node.location.startIndex, node.location.endIndex),
+      get sourceText() {
+        return s.slice(node.location.startIndex, node.location.endIndex);
+      },
     };
     return node;
   }

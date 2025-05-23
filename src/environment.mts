@@ -173,7 +173,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       // b. Perform envRec.CreateMutableBinding(N, true).
       yield* envRec.CreateMutableBinding(N, Value.true);
       // c. Perform envRec.InitializeBinding(N, V).
-      envRec.InitializeBinding(N, V);
+      yield* envRec.InitializeBinding(N, V);
       // d. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
     }
@@ -533,8 +533,6 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 
   readonly DeclarativeRecord: DeclarativeEnvironmentRecord;
 
-  readonly VarNames: JSStringValue[];
-
   /** https://tc39.es/ecma262/#sec-newglobalenvironment */
   constructor(G: ObjectValue, thisValue: ObjectValue) {
     // 1. Let objRec be NewObjectEnvironment(G, false, null).
@@ -549,8 +547,6 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     this.GlobalThisValue = thisValue;
     // 6. Set env.[[DeclarativeRecord]] to dclRec.
     this.DeclarativeRecord = dclRec;
-    // 7. Set env.[[VarNames]] to a new empty List.
-    this.VarNames = [];
     // 8. Set env.[[OuterEnv]] to null.
     // 9. Return env.
   }
@@ -673,20 +669,8 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const existingProp = Q(yield* HasOwnProperty(globalObject, N));
     // 7. If existingProp is true, then
     if (existingProp === Value.true) {
-      // a. Let status be ? ObjRec.DeleteBinding(N).
-      const status = Q(yield* ObjRec.DeleteBinding(N));
-      // b. If status is true, then
-      if (status === Value.true) {
-        // i. Let varNames be envRec.[[VarNames]].
-        const varNames = envRec.VarNames;
-        // ii. If N is an element of varNames, remove that element from the varNames.
-        const i = varNames.findIndex((v) => v.stringValue() === N.stringValue());
-        if (i >= 0) {
-          varNames.splice(i, 1);
-        }
-      }
-      // c. Return status.
-      return status;
+      // a. Return ? ObjRec.DeleteBinding(N).
+      return Q(yield* ObjRec.DeleteBinding(N));
     }
     // 8. Return true.
     return Value.true;
@@ -716,20 +700,6 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     // 2. Return envRec.[[GlobalThisValue]].
     return envRec.GlobalThisValue;
-  }
-
-  /** https://tc39.es/ecma262/#sec-hasvardeclaration */
-  HasVarDeclaration(N: JSStringValue) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let varDeclaredNames be envRec.[[VarNames]].
-    const varDeclaredNames = envRec.VarNames;
-    // 3. If varDeclaredNames contains N, return true.
-    if (varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
-      return Value.true;
-    }
-    // 4. Return false.
-    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
@@ -830,13 +800,6 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       // b. Perform ? ObjRec.InitializeBinding(N, undefined).
       Q(yield* ObjRec.InitializeBinding(N, Value.undefined));
     }
-    // 7. Let varDeclaredNames be envRec.[[VarNames]].
-    const varDeclaredNames = envRec.VarNames;
-    // 8. If varDeclaredNames does not contain N, then
-    if (!varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
-      // a. Append N to varDeclaredNames.
-      varDeclaredNames.push(N);
-    }
     // return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
@@ -872,13 +835,6 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 8. Record that the binding for N in ObjRec has been initialized.
     // 9. Perform ? Set(globalObject, N, V, false).
     Q(yield* Set(globalObject, N, V, Value.false));
-    // 10. Let varDeclaredNames be envRec.[[VarNames]].
-    const varDeclaredNames = envRec.VarNames;
-    // 11. If varDeclaredNames does not contain N, then
-    if (!varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
-      // a. Append N to varDeclaredNames.
-      varDeclaredNames.push(N);
-    }
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
