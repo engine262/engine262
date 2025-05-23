@@ -35,10 +35,10 @@ export interface CalendarDateRecord {
 export interface CalendarFieldsRecord {
   readonly Era: string | undefined;
   readonly EraYear: number | undefined;
-  readonly Year: number | undefined;
+  Year: number | undefined;
   readonly Month: number | undefined;
-  readonly MonthCode: string | undefined;
-  readonly Day: number | undefined;
+  MonthCode: string | undefined;
+  Day: number | undefined;
   readonly Hour: number | undefined;
   readonly Minute: number | undefined;
   readonly Second: number | undefined;
