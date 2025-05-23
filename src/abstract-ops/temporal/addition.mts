@@ -1,7 +1,7 @@
 // Addition/Edition to the main spec.
 // Code here should move elsewhere after Temporal is merged.
 
-import type { ObjectValue, PlainEvaluator, PropertyKeyValue, Value, ValueCompletion, ValueEvaluator } from '#self';
+import { ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToNumber, UndefinedValue, Value, type PlainEvaluator, type PropertyKeyValue, type ValueCompletion, type ValueEvaluator } from '#self';
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
@@ -11,19 +11,29 @@ export interface YearWeekRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-tointegerifintegral */
-export declare function ToIntegerIfIntegral(argument: Value): PlainEvaluator<number>;
+export function* ToIntegerIfIntegral(argument: Value): PlainEvaluator<number> {
+  const number = Q(yield* ToNumber(argument));
+  if (!Number.isInteger(number.numberValue())) {
+    return surroundingAgent.Throw('RangeError', 'NotAnInteger', number);
+  }
+  return R(number);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-getoptionsobject */
-export declare function GetOptionsObject(options: Value): ValueCompletion<ObjectValue>;
+export function GetOptionsObject(options: Value) {
+  if (options instanceof UndefinedValue) {
+    return OrdinaryObjectCreate(Value.null);
+  }
+  if (options instanceof ObjectValue) {
+    return options;
+  }
+  return surroundingAgent.Throw('TypeError', 'NotAnObject', options);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-getoption */
-export declare function GetOption(
-  options: ObjectValue,
-  property: PropertyKeyValue,
-  type: "boolean" | "string",
-  values: Value[] | undefined,
-  defaultValue: "required" | Value
-): ValueEvaluator;
+export declare function GetOption<const T extends string, D extends T | undefined>(options: ObjectValue, property: PropertyKeyValue | string, type: "string", values: T[] | undefined, defaultValue: '~required~' | D): PlainEvaluator<D | T>;
+export declare function GetOption<D extends boolean | undefined>(options: ObjectValue, property: PropertyKeyValue | string, type: "boolean", values: undefined, defaultValue: '~required~' | D): PlainEvaluator<D>;
+export declare function GetOption(options: ObjectValue, property: PropertyKeyValue | string, type: "boolean" | "string", values: string[] | undefined, defaultValue: '~required~' | string | boolean | undefined): ValueEvaluator;
 
 /** https://tc39.es/proposal-temporal/#sec-getroundingmodeoption */
 export declare function GetRoundingModeOption(
@@ -42,6 +52,10 @@ export enum RoundingMode {
   HalfExpand,
   HalfTrunc,
   HalfEven
+}
+/** https://tc39.es/proposal-temporal/#table-unsigned-rounding-modes */
+export enum UnsignedRoundingMode {
+  Infinity, Zero, HalfInfinity, HalfZero, HalfEven
 }
 /** https://tc39.es/proposal-temporal/#sec-getroundingincrementoption */
 export declare function GetRoundingIncrementOption(
@@ -82,3 +96,8 @@ export declare function IsOffsetTimeZoneIdentifier(offsetString: string): boolea
 
 /** https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset */
 export declare function ParseDateTimeUTCOffset(offsetString: string): number;
+
+/** https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring */
+export function ToZeroPaddedDecimalString(n: number, minLength: number) {
+  return n.toString().padStart(minLength, '0');
+}

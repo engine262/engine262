@@ -1,4 +1,4 @@
-import type { FunctionObject, OrdinaryObject, PlainCompletion, Value, ValueEvaluator } from '#self';
+import type { FunctionObject, ObjectValue, OrdinaryObject, PlainCompletion, Value, ValueEvaluator } from '#self';
 import type { RoundingMode, TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalUnit } from '../../abstract-ops/temporal/temporal.mts';
 import type { InternalDurationRecord, TemporalDurationObject } from './Duration.mts';
@@ -13,17 +13,23 @@ export interface TemporalZonedDateTimeObject extends OrdinaryObject {
   readonly TimeZone: TimeZoneIdentifier;
   readonly Calendar: CalendarType;
 }
+export function isTemporalZonedDateTimeObject(o: ObjectValue): o is TemporalZonedDateTimeObject {
+  return 'InitializedTemporalZonedDateTime' in o;
+}
+
+export type ISODateTimeOffsetBehaviour = 'option' | 'exact' | 'wall';
+export type ISODateTimeMatchBehaviour = 'match-exactly' | 'match-minutes';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset */
-declare function InterpretISODateTimeOffset(
+export declare function InterpretISODateTimeOffset(
   isoDate: ISODateRecord,
   time: TimeRecord | 'start-of-day',
-  offsetBehaviour: 'option' | 'exact' | 'wall',
+  offsetBehaviour: ISODateTimeOffsetBehaviour,
   offsetNanoseconds: number,
   timeZone: TimeZoneIdentifier,
   disambiguation: 'earlier' | 'later' | 'compatible' | 'reject',
   offsetOption: 'ignore' | 'use' | 'prefer' | 'reject',
-  matchBehaviour: 'match-exactly' | 'match-minutes'
+  matchBehaviour: ISODateTimeMatchBehaviour
 ): PlainCompletion<bigint>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime */

@@ -1,4 +1,4 @@
-import { type Realm, Value, UndefinedValue, surroundingAgent, ReturnIfAbrupt as Q, JSStringValue, type FunctionCallContext, type Arguments, F, type OrdinaryObject, type FunctionObject, type ValueEvaluator } from '#self';
+import { type Realm, Value, UndefinedValue, surroundingAgent, ReturnIfAbrupt as Q, JSStringValue, type FunctionCallContext, type Arguments, F, type OrdinaryObject, type FunctionObject, type ValueEvaluator, ObjectValue } from '#self';
 import { bootstrapConstructor } from '../bootstrap.mts';
 import type { TemporalDurationObject } from './Duration.mts';
 import { CanonicalizeCalendar, type CalendarType } from '../../abstract-ops/temporal/calendar.mts';
@@ -9,6 +9,9 @@ export interface TemporalPlainDateObject extends OrdinaryObject {
   readonly InitializedTemporalDate: never;
   readonly ISODate: ISODateRecord;
   readonly Calendar: CalendarType;
+}
+export function isTemporalPlainDateObject(o: ObjectValue): o is TemporalPlainDateObject {
+  return 'InitializedTemporalDate' in o;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-records */
@@ -62,10 +65,10 @@ export function bootstrapTemporalPlainDate(realmRec: Realm) {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record */
-declare function CreateISODateRecord(y: number, m: number, d: number): ISODateRecord;
+export declare function CreateISODateRecord(y: number, m: number, d: number): ISODateRecord;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate */
-declare function CreateTemporalDate(isoDate: ISODateRecord, calendar: CalendarType, NewTarget?: FunctionObject): ValueEvaluator<TemporalPlainDateObject>;
+export declare function CreateTemporalDate(isoDate: ISODateRecord, calendar: CalendarType, NewTarget?: FunctionObject): ValueEvaluator<TemporalPlainDateObject>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate */
 declare function ToTemporalDate(item: Value, options?: Value): ValueEvaluator<TemporalPlainDateObject>;

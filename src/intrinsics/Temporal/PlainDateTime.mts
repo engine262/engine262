@@ -1,4 +1,4 @@
-import type { FunctionObject, OrdinaryObject, PlainCompletion, PlainEvaluator, Value, ValueEvaluator } from '#self';
+import type { FunctionObject, ObjectValue, OrdinaryObject, PlainCompletion, PlainEvaluator, Value, ValueEvaluator } from '#self';
 import type { RoundingMode } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalUnit, TimeUnit } from '../../abstract-ops/temporal/temporal.mts';
 import type { InternalDurationRecord, TemporalDurationObject } from './Duration.mts';
@@ -11,6 +11,9 @@ export interface TemporalPlainDateTimeObject extends OrdinaryObject {
   readonly InitializedTemporalDateTime: never;
   readonly ISODateTime: ISODateTimeRecord;
   readonly Calendar: CalendarType;
+}
+export function isTemporalPlainDateTimeObject(o: ObjectValue): o is TemporalPlainDateTimeObject {
+  return 'InitializedTemporalDateTime' in o;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-time-records */
@@ -29,7 +32,7 @@ declare function CombineISODateAndTimeRecord(isoDate: ISODateRecord, time: TimeR
 declare function ISODateTimeWithinLimits(isoDateTime: ISODateTimeRecord): boolean;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields */
-declare function InterpretTemporalDateTimeFields(calendar: CalendarType, fields: CalendarFieldsRecord, overflow: 'constrain' | 'reject'): PlainCompletion<ISODateTimeRecord>;
+export declare function InterpretTemporalDateTimeFields(calendar: CalendarType, fields: CalendarFieldsRecord, overflow: 'constrain' | 'reject'): PlainCompletion<ISODateTimeRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime */
 declare function ToTemporalDateTime(item: Value, options?: Value): PlainEvaluator<TemporalPlainDateTimeObject>;
