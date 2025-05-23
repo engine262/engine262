@@ -7,6 +7,12 @@ import {
   ScriptEvaluation,
   CreateNonEnumerableDataPropertyOrThrow,
   type ValueEvaluator,
+  X,
+  type NativeSteps,
+  Call,
+  Assert,
+  HasProperty,
+  Set,
 } from '#self';
 
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
@@ -91,12 +97,15 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
         }
         return Value.undefined;
       },
-      debugger: function* hostDebugger() {
+      debugger: function* hostDebugger(value = Value.undefined, callValue = Value.false): ValueEvaluator {
         if (surroundingAgent.debugger_isPreviewing) {
           return Value.undefined;
         }
         // eslint-disable-next-line no-debugger
         debugger;
+        if (callValue !== Value.false) {
+          Q(skipDebugger(Call(value, Value.undefined, [])));
+        }
         return Value.undefined;
       },
     });
@@ -110,3 +119,46 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
     };
   });
 }
+
+export function boostTest262Harness(realm: ManagedRealm) {
+  // test262/harness/regExpUtils.js
+  const key = Value('buildString');
+  realm.scope(() => {
+    if (X(HasProperty(realm.GlobalObject, key)) === Value.true) {
+      X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), Value.true));
+    }
+  });
+}
+
+const boostHarness = {
+  * buildString(argumentsList): ValueEvaluator {
+    const json = Q(yield* Call(surroundingAgent.intrinsic('%JSON.stringify%'), Value.null, [argumentsList[0]]));
+    Assert(json instanceof JSStringValue);
+    const jsonString = json.stringValue();
+
+    const { loneCodePoints, ranges } = JSON.parse(jsonString);
+
+    // #region test262/harness/regExpUtils.js
+    const CHUNK_SIZE = 10000;
+    let result = String.fromCodePoint.apply(null, loneCodePoints);
+    for (let i = 0; i < ranges.length; i += 1) {
+      const range = ranges[i];
+      const start = range[0];
+      const end = range[1];
+      const codePoints: number[] = [];
+      for (let length = 0, codePoint = start; codePoint <= end; codePoint += 1) {
+        codePoints[length] = codePoint;
+        length += 1;
+        if (length === CHUNK_SIZE) {
+          result += String.fromCodePoint.apply(null, codePoints);
+          length = 0;
+          codePoints.length = 0;
+        }
+      }
+      result += String.fromCodePoint.apply(null, codePoints);
+    }
+    // #endregion
+
+    return Value(result);
+  },
+} satisfies Record<string, NativeSteps>;

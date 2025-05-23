@@ -72,6 +72,7 @@ export const InvalidPropertyDescriptor = () => 'Invalid property descriptor. Can
 export const InvalidRadix = () => 'Radix must be between 2 and 36, inclusive';
 export const InvalidReceiver = (f: string, v: Value) => `${f} called on invalid receiver: ${i(v)}`;
 export const InvalidRegExpFlags = (f: string) => `Invalid RegExp flags: ${f}`;
+export const RegExpFlagsCannotUseTogether = (f1: string, f2: string) => `Cannot use RegExp flags ${f1} and ${f2} together`;
 export const InvalidSuperCall = () => '`super` not expected here';
 export const InvalidSuperProperty = () => '`super` not expected here';
 export const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in tagged templates';

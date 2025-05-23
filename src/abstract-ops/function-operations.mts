@@ -358,7 +358,7 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
   // 3. Let F be ! OrdinaryObjectCreate(functionPrototype, internalSlotsList).
   const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList)) as Mutable<ECMAScriptFunctionObject>;
   // 4. Set F.[[Call]] to the definition specified in 10.2.1.
-  F.Call = surroundingAgent.hostDefinedOptions.boost?.callFunction || FunctionCallSlot;
+  F.Call = FunctionCallSlot;
   // 5. Set F.[[SourceText]] to sourceText.
   F.SourceText = sourceText;
   // 6. Set F.[[FormalParameters]] to ParameterList.
@@ -409,7 +409,7 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
     // Assert(!IsConstructor(F)); but not applying type assertion
     Assert(![IsConstructor(F)][0]);
     Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false);
-    F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
+    F.Construct = FunctionConstructSlot;
   }
   (F as Mutable<ECMAScriptFunctionObject>).ConstructorKind = 'base';
   if (writablePrototype === undefined) {
