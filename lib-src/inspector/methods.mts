@@ -27,7 +27,7 @@ export const Debugger: DebuggerNamespace = {
     if (!source) {
       throw new Error('Not found');
     }
-    return { scriptSource: source.ECMAScriptCode.sourceText() };
+    return { scriptSource: source.ECMAScriptCode.sourceText };
   },
   setAsyncCallStackDepth() { },
   setBlackboxPatterns() { },
@@ -304,7 +304,7 @@ function evaluate(options: {
       }
     }
   }, (err): Protocol.Runtime.EvaluateResponse => {
-    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText();
+    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText;
     const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
     _context.sendEvent['Runtime.exceptionThrown']({
       timestamp: Date.now(),

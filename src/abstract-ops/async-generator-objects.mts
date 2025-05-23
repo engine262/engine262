@@ -2,16 +2,17 @@ import { ExecutionContext, surroundingAgent } from '../host-defined/engine.mts';
 import {
   Q, X,
   Await,
-  Completion,
   EnsureCompletion,
   NormalCompletion,
   AbruptCompletion,
   ThrowCompletion,
   type YieldCompletion,
+  ReturnCompletion,
 } from '../completion.mts';
 import { Evaluate, type PlainEvaluator, type YieldEvaluator } from '../evaluator.mts';
 import {
-  BooleanValue, JSStringValue, ObjectValue, UndefinedValue, Value, type Arguments,
+  BooleanValue, JSStringValue, ObjectValue, Value, type Arguments,
+  type NativeSteps,
 } from '../value.mts';
 import {
   resume, __ts_cast__, type Mutable,
@@ -50,7 +51,7 @@ class AsyncGeneratorRequestRecord {
 }
 
 export interface AsyncGeneratorObject extends OrdinaryObject {
-  AsyncGeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | 'awaiting-return' | UndefinedValue;
+  AsyncGeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | 'draining-queue';
   AsyncGeneratorContext: ExecutionContext;
   AsyncGeneratorQueue: AsyncGeneratorRequestRecord[];
   GeneratorBrand: JSStringValue | undefined;
@@ -58,16 +59,15 @@ export interface AsyncGeneratorObject extends OrdinaryObject {
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorstart */
 export function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBody: ParseNode.AsyncGeneratorBody | (() => YieldEvaluator)) {
-  // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
-  Assert(generator.AsyncGeneratorState === Value.undefined);
-  __ts_cast__<AsyncGeneratorObject>(generator);
+  // 1. Assert: generator.[[AsyncGeneratorState]] is 'suspendedStart'.
+  Assert(generator.AsyncGeneratorState === 'suspendedStart');
   // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
   genContext.Generator = generator;
-  // 4. Set the code evaluation state of genContext such that when evaluation
-  //    is resumed for that execution context the following steps will be performed:
-  genContext.codeEvaluationState = (function* resumer(): YieldEvaluator {
+  const closure = function* resumer(): YieldEvaluator {
+    const acGenContext = surroundingAgent.runningExecutionContext;
+    const acGenerator = acGenContext.Generator as AsyncGeneratorObject;
     // a. If generatorBody is a Parse Node, then
     //     i. Let result be the result of evaluating generatorBody.
     // b. Else,
@@ -78,36 +78,36 @@ export function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBo
       yield* typeof generatorBody === 'function'
         ? generatorBody()
         : Evaluate(generatorBody),
-    );
+    ) as YieldCompletion;
     // c. Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
     // d. Remove genContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
-    surroundingAgent.executionContextStack.pop(genContext);
+    surroundingAgent.executionContextStack.pop(acGenContext);
     // e. Set generator.[[AsyncGeneratorState]] to completed.
-    generator.AsyncGeneratorState = 'completed';
+    acGenerator.AsyncGeneratorState = 'draining-queue';
     // f. If result.[[Type]] is normal, set result to NormalCompletion(undefined).
-    if (result.Type === 'normal') {
+    if (result instanceof NormalCompletion) {
       result = NormalCompletion(Value.undefined);
     }
     // g. If result.[[Type]] is return, set result to NormalCompletion(result.[[Value]]).
-    if (result.Type === 'return') {
+    if (result instanceof ReturnCompletion) {
       result = NormalCompletion(result.Value);
     }
-    // h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
-    X(AsyncGeneratorCompleteStep(generator, result as ThrowCompletion, Value.true));
-    // i. Perform ! AsyncGeneratorDrainQueue(generator).
-    X(AsyncGeneratorDrainQueue(generator));
+    // h. Perform AsyncGeneratorCompleteStep(generator, result, true).
+    AsyncGeneratorCompleteStep(acGenerator, result, Value.true);
+    // i. Perform AsyncGeneratorDrainQueue(generator).
+    yield* AsyncGeneratorDrainQueue(acGenerator);
     // j. Return undefined.
     return Value.undefined;
-  }());
+  };
+  // 4. Set the code evaluation state of genContext such that when evaluation
+  //    is resumed for that execution context the following steps will be performed:
+  genContext.codeEvaluationState = (closure());
   // 5. Set generator.[[AsyncGeneratorContext]] to genContext.
   generator.AsyncGeneratorContext = genContext;
-  // 6. Set generator.[[AsyncGeneratorState]] to suspendedStart.
-  generator.AsyncGeneratorState = 'suspendedStart';
   // 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
   generator.AsyncGeneratorQueue = [];
   // 8. Return undefined.
-  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
@@ -158,12 +158,12 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
   // 6. Let value be completion.[[Value]].
   const value = completion.Value;
   // 7. If completion.[[Type]] is throw, then
-  if (completion.Type === 'throw') {
+  if (completion instanceof ThrowCompletion) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « value »).
     X(Call(promiseCapability.Reject, Value.undefined, [value]));
   } else { // 8. Else,
     // a. Assert: completion.[[Type]] is normal.
-    Assert(completion.Type === 'normal');
+    Assert(completion instanceof NormalCompletion);
     let iteratorResult;
     // b. If realm is present, then
     if (realm !== undefined) {
@@ -171,13 +171,13 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
       const oldRealm = surroundingAgent.runningExecutionContext.Realm;
       // ii. Set the running execution context's Realm to realm.
       surroundingAgent.runningExecutionContext.Realm = realm;
-      // iii. Let iteratorResult be ! CreateIteratorResultObject(value, done).
-      iteratorResult = X(CreateIteratorResultObject(value, done));
+      // iii. Let iteratorResult be CreateIteratorResultObject(value, done).
+      iteratorResult = CreateIteratorResultObject(value, done);
       // iv. Set the running execution context's Realm to oldRealm.
       surroundingAgent.runningExecutionContext.Realm = oldRealm;
     } else { // c. Else,
-      // i. Let iteratorResult be ! CreateIteratorResultObject(value, done).
-      iteratorResult = X(CreateIteratorResultObject(value, done));
+      // i. Let iteratorResult be CreateIteratorResultObject(value, done).
+      iteratorResult = CreateIteratorResultObject(value, done);
     }
     // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
@@ -208,19 +208,19 @@ export function* AsyncGeneratorResume(generator: AsyncGeneratorObject, completio
 /** https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption */
 function* AsyncGeneratorUnwrapYieldResumption(resumptionValue: YieldCompletion): YieldEvaluator {
   // 1. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
-  if (resumptionValue.Type !== 'return') {
-    return resumptionValue;
+  if (!(resumptionValue instanceof ReturnCompletion)) {
+    return Q(resumptionValue);
   }
   // 2. Let awaited be Await(resumptionValue.[[Value]]).
   const awaited = EnsureCompletion(yield* Await(resumptionValue.Value));
   // 3. If awaited.[[Type]] is throw, return Completion(awaited).
-  if (awaited.Type === 'throw') {
-    return awaited;
+  if (awaited instanceof ThrowCompletion) {
+    return Q(awaited);
   }
   // 4. Assert: awaited.[[Type]] is normal.
-  Assert(awaited.Type === 'normal');
+  Assert(awaited instanceof NormalCompletion);
   // 5. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: awaited.Value, Target: undefined });
+  return ReturnCompletion(awaited.Value);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratoryield */
@@ -241,8 +241,8 @@ export function* AsyncGeneratorYield(value: Value): YieldEvaluator {
   const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
   // 8. Let previousRealm be previousContext's Realm.
   const previousRealm = previousContext.Realm;
-  // 9. Perform ! AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
-  X(AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm));
+  // 9. Perform AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
+  AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm);
   // 10. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
   // 11. If queue is not empty, then
@@ -273,6 +273,7 @@ export function* AsyncGeneratorYield(value: Value): YieldEvaluator {
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */
 export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): PlainEvaluator {
+  Assert(generator.AsyncGeneratorState === 'draining-queue');
   // 1. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
   // 2. Assert: queue is not empty.
@@ -282,83 +283,67 @@ export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Pla
   // 4. Let completion be next.[[Completion]].
   const completion = next.Completion;
   // 5. Assert: completion.[[Type]] is return.
-  Assert(completion.Type === 'return');
-  // 6. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
-  const promise = Q(yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
+  Assert(completion instanceof ReturnCompletion);
+  // 6. Let promise be PromiseResolve(%Promise%, completion.[[Value]]).
+  const promiseCompletion = yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
+  if (promiseCompletion instanceof AbruptCompletion) {
+    AsyncGeneratorCompleteStep(generator, promiseCompletion, Value.true);
+    yield* AsyncGeneratorDrainQueue(generator);
+    return;
+  }
+  const promise = X(promiseCompletion);
   // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs the following steps when called:
-  const fulfilledClosure = ([value = Value.undefined]: Arguments) => {
-    // a. Set generator.[[AsyncGeneratorState]] to completed.
-    generator.AsyncGeneratorState = 'completed';
+  const fulfilledClosure: NativeSteps = function* fulfilledClosure([value = Value.undefined]: Arguments) {
+    Assert(generator.AsyncGeneratorState === 'draining-queue');
     // b. Let result be NormalCompletion(value).
     const result = NormalCompletion(value);
-    // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
-    X(AsyncGeneratorCompleteStep(generator, result, Value.true));
-    // d. Perform ! AsyncGeneratorDrainQueue(generator).
-    X(AsyncGeneratorDrainQueue(generator));
+    // c. Perform AsyncGeneratorCompleteStep(generator, result, true).
+    AsyncGeneratorCompleteStep(generator, result, Value.true);
+    // d. Perform AsyncGeneratorDrainQueue(generator).
+    yield* AsyncGeneratorDrainQueue(generator);
     // e. Return undefined.
     return Value.undefined;
   };
-  // 8. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []));
+  // 8. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
   // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs the following steps when called:
-  const rejectedClosure = ([reason = Value.undefined]: Arguments) => {
-    // a. Set generator.[[AsyncGeneratorState]] to completed.
-    generator.AsyncGeneratorState = 'completed';
+  const rejectedClosure: NativeSteps = function* rejectedClosure([reason = Value.undefined]: Arguments) {
+    Assert(generator.AsyncGeneratorState === 'draining-queue');
     // b. Let result be ThrowCompletion(reason).
     const result = ThrowCompletion(reason);
-    // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
-    X(AsyncGeneratorCompleteStep(generator, result, Value.true));
-    // d. Perform ! AsyncGeneratorDrainQueue(generator).
-    X(AsyncGeneratorDrainQueue(generator));
+    // c. Perform AsyncGeneratorCompleteStep(generator, result, true).
+    AsyncGeneratorCompleteStep(generator, result, Value.true);
+    // d. Perform AsyncGeneratorDrainQueue(generator).
+    yield* AsyncGeneratorDrainQueue(generator);
     // e. Return undefined.
     return Value.undefined;
   };
-  // 10. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, Value(''), []));
-  // 11. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
-  X(PerformPromiseThen(promise, onFulfilled, onRejected));
+  // 10. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
+  // 11. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
+  PerformPromiseThen(promise, onFulfilled, onRejected);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratordrainqueue */
-function AsyncGeneratorDrainQueue(generator: AsyncGeneratorObject) {
+function* AsyncGeneratorDrainQueue(generator: AsyncGeneratorObject) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is completed.
-  Assert(generator.AsyncGeneratorState === 'completed');
+  Assert(generator.AsyncGeneratorState === 'draining-queue');
   // 2. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
-  // 3. If queue is empty, return.
-  if (queue.length === 0) {
-    return;
-  }
-  // 4. Let done be false.
-  let done = false;
-  // 5. Repeat, while done is false,
-  while (done === false) {
-    // a. Let next be the first element of queue.
+  while (queue.length) {
     const next = queue[0];
-    // b. Let completion be next.[[Completion]].
     let completion = next.Completion;
-    // c. If completion.[[Type]] is return, then
-    if (completion.Type === 'return') {
-      // i. Set generator.[[AsyncGeneratorState]] to awaiting-return.
-      generator.AsyncGeneratorState = 'awaiting-return';
-      // ii. Perform ! AsyncGeneratorAwaitReturn(generator).
-      X(AsyncGeneratorAwaitReturn(generator));
-      // iii. Set done to true.
-      done = true;
-    } else { // d. Else,
-      // i. If completion.[[Type]] is normal, then
-      if (completion.Type === 'normal') {
-        // 1. Set completion to NormalCompletion(undefined).
+    if (completion instanceof ReturnCompletion) {
+      yield* AsyncGeneratorAwaitReturn(generator);
+      return;
+    } else {
+      if (completion instanceof NormalCompletion) {
         completion = NormalCompletion(Value.undefined);
       }
-      // ii. Perform ! AsyncGeneratorCompleteStep(generator, completion, true).
-      X(AsyncGeneratorCompleteStep(generator, completion, Value.true));
-      // iii. If queue is empty, set done to true.
-      if (queue.length === 0) {
-        done = true;
-      }
+      AsyncGeneratorCompleteStep(generator, completion, Value.true);
     }
   }
+  generator.AsyncGeneratorState = 'completed';
 }
 
 /** https://tc39.es/ecma262/#sec-createasynciteratorfromclosure */
@@ -371,10 +356,18 @@ export function CreateAsyncIteratorFromClosure(closure: () => YieldEvaluator, ge
   const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList)) as Mutable<AsyncGeneratorObject>;
   // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
   generator.GeneratorBrand = generatorBrand;
-  // 5. Set generator.[[AsyncGeneratorState]] to undefined.
-  generator.AsyncGeneratorState = Value.undefined;
-  // 6. Perform ? AsyncGeneratorStart(generator, closure, generatorBrand).
-  Q(AsyncGeneratorStart(generator, closure));
+  // 5. Set generator.[[AsyncGeneratorState]] to suspendedStart.
+  generator.AsyncGeneratorState = 'suspendedStart';
+  const callerContext = surroundingAgent.runningExecutionContext;
+  const calleeContext = new ExecutionContext();
+  calleeContext.Function = Value.null;
+  calleeContext.Realm = callerContext.Realm;
+  calleeContext.ScriptOrModule = callerContext.ScriptOrModule;
+  // 11. If callerContext is not already suspended, suspend callerContext.
+  surroundingAgent.executionContextStack.push(calleeContext);
+  // 6. Perform AsyncGeneratorStart(generator, closure, generatorBrand).
+  AsyncGeneratorStart(generator, closure);
+  surroundingAgent.executionContextStack.pop(calleeContext);
   // 7. Return generator.
   return generator;
 }

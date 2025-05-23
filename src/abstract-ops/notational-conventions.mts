@@ -27,7 +27,7 @@ export function RequireInternalSlot(O: Value, internalSlot: string): ThrowComple
 }
 
 export function sourceTextMatchedBy(node: ParseNode) {
-  return node.sourceText();
+  return node.sourceText;
 }
 
 // An ECMAScript Script syntactic unit may be processed using either unrestricted or strict mode syntax and semantics.

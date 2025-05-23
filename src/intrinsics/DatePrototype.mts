@@ -227,8 +227,8 @@ function* DateProto_setDate([date = Value.undefined]: Arguments, { thisValue }: 
 /** https://tc39.es/ecma262/#sec-date.prototype.setfullyear */
 function* DateProto_setFullYear([year = Value.undefined, month, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
-  t = t.isNaN() ? F(+0) : LocalTime(t);
   const y = Q(yield* ToNumber(year));
+  t = t.isNaN() ? F(+0) : LocalTime(t);
   let m;
   if (month !== undefined) {
     m = Q(yield* ToNumber(month));
@@ -250,24 +250,31 @@ function* DateProto_setFullYear([year = Value.undefined, month, date]: Arguments
 
 /** https://tc39.es/ecma262/#sec-date.prototype.sethours */
 function* DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const t = LocalTime(Q(thisTimeValue(thisValue)));
+  let t = Q(thisTimeValue(thisValue));
   const h = Q(yield* ToNumber(hour));
   let m;
-  if (min !== undefined) {
+  if (min) {
     m = Q(yield* ToNumber(min));
-  } else {
-    m = MinFromTime(t);
   }
   let s;
-  if (sec !== undefined) {
+  if (sec) {
     s = Q(yield* ToNumber(sec));
-  } else {
-    s = SecFromTime(t);
   }
   let milli;
   if (ms !== undefined) {
     milli = Q(yield* ToNumber(ms));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  t = LocalTime(t);
+  if (!m) {
+    m = MinFromTime(t);
+  }
+  if (!s) {
+    s = SecFromTime(t);
+  }
+  if (!milli) {
     milli = msFromTime(t);
   }
   const date = MakeDate(Day(t), MakeTime(h, m, s, milli));
@@ -279,8 +286,12 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, 
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
 function* DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const t = LocalTime(Q(thisTimeValue(thisValue)));
+  let t = Q(thisTimeValue(thisValue));
   ms = Q(yield* ToNumber(ms));
+  if (t.isNaN()) {
+    return t;
+  }
+  t = LocalTime(t);
   const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms);
   const u = TimeClip(UTC(MakeDate(Day(t), time)));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
@@ -291,21 +302,24 @@ function* DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisVal
 /** https://tc39.es/ecma262/#sec-date.prototype.setminutes */
 function* DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let t be LocalTime(? thisTimeValue(this value)).
-  const t = LocalTime(Q(thisTimeValue(thisValue)));
+  const t = Q(thisTimeValue(thisValue));
   // 2. Let m be ? ToNumber(min).
   const m = Q(yield* ToNumber(min));
   let s;
-  // 3. If sec is not present, let s be SecFromTime(t); otherwise, let s be ? ToNumber(sec).
-  if (sec !== undefined) {
+  if (sec) {
     s = Q(yield* ToNumber(sec));
-  } else {
-    s = SecFromTime(t);
   }
   let milli;
-  // 4. If ms is not present, let milli be msFromTime(t); otherwise, let milli be ? ToNumber(ms).
-  if (ms !== undefined) {
+  if (ms) {
     milli = Q(yield* ToNumber(ms));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  if (!s) {
+    s = SecFromTime(t);
+  }
+  if (!milli) {
     milli = msFromTime(t);
   }
   // 5. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
@@ -321,12 +335,17 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { th
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmonth */
 function* DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const t = LocalTime(Q(thisTimeValue(thisValue)));
+  let t = Q(thisTimeValue(thisValue));
   const m = Q(yield* ToNumber(month));
   let dt;
-  if (date !== undefined) {
+  if (date) {
     dt = Q(yield* ToNumber(date));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  t = LocalTime(t);
+  if (!dt) {
     dt = DateFromTime(t);
   }
   const newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
@@ -338,12 +357,17 @@ function* DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisV
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setseconds */
 function* DateProto_setSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const t = LocalTime(Q(thisTimeValue(thisValue)));
+  let t = Q(thisTimeValue(thisValue));
   const s = Q(yield* ToNumber(sec));
   let milli;
-  if (ms !== undefined) {
+  if (ms) {
     milli = Q(yield* ToNumber(ms));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  t = LocalTime(t);
+  if (!milli) {
     milli = msFromTime(t);
   }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
@@ -408,25 +432,31 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Argument
   const t = Q(thisTimeValue(thisValue));
   const h = Q(yield* ToNumber(hour));
   let m;
-  if (min !== undefined) {
+  if (min) {
     m = Q(yield* ToNumber(min));
-  } else {
-    m = MinFromTime(t);
   }
   let s;
-  if (sec !== undefined) {
+  if (sec) {
     s = Q(yield* ToNumber(sec));
-  } else {
-    s = SecFromTime(t);
   }
   let milli;
-  if (ms !== undefined) {
+  if (ms) {
     milli = Q(yield* ToNumber(ms));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  if (!m) {
+    m = MinFromTime(t);
+  }
+  if (!s) {
+    s = SecFromTime(t);
+  }
+  if (!milli) {
     milli = msFromTime(t);
   }
-  const newDate = MakeDate(Day(t), MakeTime(h, m, s, milli));
-  const v = TimeClip(newDate);
+  const date = MakeDate(Day(t), MakeTime(h, m, s, milli));
+  const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
   return v;
@@ -435,8 +465,11 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Argument
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
 function* DateProto_setUTCMilliseconds([ms = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const milli = Q(yield* ToNumber(ms));
-  const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
+  ms = Q(yield* ToNumber(ms));
+  if (t.isNaN()) {
+    return t;
+  }
+  const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms);
   const v = TimeClip(MakeDate(Day(t), time));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -448,15 +481,20 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms]: Arguments, {
   const t = Q(thisTimeValue(thisValue));
   const m = Q(yield* ToNumber(min));
   let s;
-  if (sec !== undefined) {
+  if (sec) {
     s = Q(yield* ToNumber(sec));
-  } else {
-    s = SecFromTime(t);
   }
   let milli;
-  if (ms !== undefined) {
+  if (ms) {
     milli = Q(yield* ToNumber(ms));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  if (!s) {
+    s = SecFromTime(t);
+  }
+  if (!milli) {
     milli = msFromTime(t);
   }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
@@ -471,9 +509,13 @@ function* DateProto_setUTCMonth([month = Value.undefined, date]: Arguments, { th
   const t = Q(thisTimeValue(thisValue));
   const m = Q(yield* ToNumber(month));
   let dt;
-  if (date !== undefined) {
+  if (date) {
     dt = Q(yield* ToNumber(date));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  if (!dt) {
     dt = DateFromTime(t);
   }
   const newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
@@ -488,9 +530,13 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { this
   const t = Q(thisTimeValue(thisValue));
   const s = Q(yield* ToNumber(sec));
   let milli;
-  if (ms !== undefined) {
+  if (ms) {
     milli = Q(yield* ToNumber(ms));
-  } else {
+  }
+  if (t.isNaN()) {
+    return t;
+  }
+  if (!milli) {
     milli = msFromTime(t);
   }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
