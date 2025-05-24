@@ -787,6 +787,7 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
 
   readonly PrivateElements: PrivateElementRecord[];
 
+  // https://tc39.es/proposal-pattern-matching/#sec-object-internal-methods-and-internal-slots
   readonly ConstructedBy: ObjectValue[];
 
   constructor(internalSlotsList: readonly string[]) {

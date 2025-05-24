@@ -181,7 +181,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       } else { // v. Else,
         // 1. NOTE: This branch behaves similarly to `constructor() {}`.
         // 2. Let result be ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
-        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%', ['ConstructorOf']));
+        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%'));
       }
       Q(yield* InitializeInstanceElements(result, F));
       return result;
