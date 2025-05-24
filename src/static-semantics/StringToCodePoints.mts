@@ -1,4 +1,3 @@
-import { X } from '../completion.mts';
 import { CodePointAt } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-stringtocodepoints */
@@ -12,7 +11,7 @@ export function StringToCodePoints(string: string) {
   // 4. Repeat, while position < size,
   while (position < size) {
     // a. Let cp be ! CodePointAt(string, position).
-    const cp = X(CodePointAt(string, position));
+    const cp = CodePointAt(string, position);
     // b. Append cp.[[CodePoint]] to codePoints.
     codePoints.push(cp.CodePoint);
     // c. Set position to position + cp.[[CodeUnitCount]].

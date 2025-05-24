@@ -1,7 +1,8 @@
 import { Assert } from '../abstract-ops/all.mts';
+import type { CodePoint } from '#self';
 
 /** https://tc39.es/ecma262/#sec-utf16encodecodepoint */
-export function UTF16EncodeCodePoint(cp: number) {
+export function UTF16EncodeCodePoint(cp: CodePoint) {
   // 1. Assert: 0 ≤ cp ≤ 0x10FFFF.
   Assert(cp >= 0 && cp <= 0x10FFFF);
   // 2. If cp ≤ 0xFFFF, return the String value consisting of the code unit whose value is cp.

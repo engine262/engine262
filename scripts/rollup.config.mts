@@ -1,7 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { hash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { babel, type RollupBabelInputPluginOptions } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
@@ -151,24 +149,14 @@ export default defineConfig([
  * Special handle of the following modules so we don't need to import the whole zlib polyfill.
  */
 function importUnicodeLib(): Plugin {
-  const [fileNameA, fileNameB] = ['@unicode/unicode-16.0.0/Case_Folding/C/symbols.js', '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js'];
-  const [hashA, hashB] = ['Y4mI6wUmO1aHLjYZkH+utkuQVxFS5HeXEDwnwoaBdzU=', 'VIOpuUn8/ZxKqIXbr1/9Fd6qJ05HW5VaUg+fsdsi72g='];
+  const canImport = ['@unicode/unicode-16.0.0/Case_Folding/C/symbols.js', '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js'];
   return {
     name: '@unicode lib import',
     async transform(code, id) {
       if (!id.includes('node_modules/@unicode')) {
         return { code, map: this.getCombinedSourcemap() };
       }
-      const isA = id.endsWith(fileNameA);
-      const isB = id.endsWith(fileNameB);
-      if (isA || isB) {
-        const fileContent = await readFile(id, 'utf8');
-        const fileHash = hash('sha256', fileContent, 'base64');
-        if (isA && fileHash !== hashA) {
-          throw new Error(`Hash mismatch for ${fileNameA}: expected ${hashA}, got ${fileHash}`);
-        } else if (isB && fileHash !== hashB) {
-          throw new Error(`Hash mismatch for ${fileNameB}: expected ${hashB}, got ${fileHash}`);
-        }
+      if (canImport.some((i) => id.endsWith(i))) {
         const module = createRequire(import.meta.url)(id) as Map<string, string>;
         const codePointsInArray = Array.from(module.entries()).map(([str, str2]) => {
           const it1 = str[Symbol.iterator]();

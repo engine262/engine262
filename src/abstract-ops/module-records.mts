@@ -240,7 +240,7 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
         requiredModule = requiredModule.CycleRoot!;
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
         if (requiredModule.EvaluationError !== undefined) {
-          return EnsureCompletion(module.EvaluationError);
+          return EnsureCompletion(requiredModule.EvaluationError);
         }
       }
       if (typeof requiredModule.AsyncEvaluationOrder === 'number') {

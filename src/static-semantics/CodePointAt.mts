@@ -1,7 +1,7 @@
 import { Assert } from '../abstract-ops/all.mts';
 import { X } from '../completion.mts';
-import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mts';
 import { UTF16SurrogatePairToCodePoint } from './all.mts';
+import { isLeadingSurrogate, isTrailingSurrogate, type CodePoint } from '#self';
 
 /** https://tc39.es/ecma262/#sec-codepointat */
 export function CodePointAt(string: string, position: number) {
@@ -17,7 +17,7 @@ export function CodePointAt(string: string, position: number) {
   if (!isLeadingSurrogate(first) && !isTrailingSurrogate(first)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
     return {
-      CodePoint: cp,
+      CodePoint: cp as CodePoint,
       CodeUnitCount: 1,
       IsUnpairedSurrogate: false,
     };
@@ -26,7 +26,7 @@ export function CodePointAt(string: string, position: number) {
   if (isTrailingSurrogate(first) || position + 1 === size) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
     return {
-      CodePoint: cp,
+      CodePoint: cp as CodePoint,
       CodeUnitCount: 1,
       IsUnpairedSurrogate: true,
     };
@@ -37,7 +37,7 @@ export function CodePointAt(string: string, position: number) {
   if (!isTrailingSurrogate(second)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
     return {
-      CodePoint: cp,
+      CodePoint: cp as CodePoint,
       CodeUnitCount: 1,
       IsUnpairedSurrogate: true,
     };
@@ -46,7 +46,7 @@ export function CodePointAt(string: string, position: number) {
   cp = X(UTF16SurrogatePairToCodePoint(first, second));
   // 10. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 2, [[IsUnpairedSurrogate]]: false }.
   return {
-    CodePoint: cp,
+    CodePoint: cp as CodePoint,
     CodeUnitCount: 2,
     IsUnpairedSurrogate: false,
   };

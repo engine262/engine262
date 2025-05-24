@@ -85,7 +85,7 @@ export function OrdinaryPreventExtensions(O: OrdinaryObject) {
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
-export function OrdinaryGetOwnProperty(O: OrdinaryObject, P: PropertyKeyValue) {
+export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue) {
   Assert(IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
@@ -110,7 +110,7 @@ export function OrdinaryGetOwnProperty(O: OrdinaryObject, P: PropertyKeyValue) {
 }
 
 // 9.1.6.1 OrdinaryDefineOwnProperty
-export function* OrdinaryDefineOwnProperty(O: OrdinaryObject, P: PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue> {
+export function* OrdinaryDefineOwnProperty(O: ObjectValue, P: PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue> {
   const current = Q(yield* O.GetOwnProperty(P));
   const extensible = Q(yield* IsExtensible(O));
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
@@ -122,7 +122,7 @@ export function IsCompatiblePropertyDescriptor(Extensible: BooleanValue, Desc: D
 }
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
-export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject | UndefinedValue, P: PropertyKeyValue | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
+export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedValue, P: PropertyKeyValue | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
   Assert(O === Value.undefined || IsPropertyKey(P));
 
   if (current === Value.undefined) {
@@ -245,7 +245,7 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject | Undefined
 }
 
 // 9.1.7.1 OrdinaryHasProperty
-export function* OrdinaryHasProperty(O: OrdinaryObject, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
+export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
   Assert(IsPropertyKey(P));
 
   const hasOwn = Q(yield* O.GetOwnProperty(P));
@@ -260,7 +260,7 @@ export function* OrdinaryHasProperty(O: OrdinaryObject, P: PropertyKeyValue): Va
 }
 
 // 9.1.8.1
-export function* OrdinaryGet(O: OrdinaryObject, P: PropertyKeyValue, Receiver: Value): ValueEvaluator {
+export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue, Receiver: Value): ValueEvaluator {
   Assert(IsPropertyKey(P));
 
   const desc = Q(yield* O.GetOwnProperty(P));
@@ -283,14 +283,14 @@ export function* OrdinaryGet(O: OrdinaryObject, P: PropertyKeyValue, Receiver: V
 }
 
 // 9.1.9.1 OrdinarySet
-export function* OrdinarySet(O: OrdinaryObject, P: PropertyKeyValue, V: Value, Receiver: Value) {
+export function* OrdinarySet(O: ObjectValue, P: PropertyKeyValue, V: Value, Receiver: Value) {
   Assert(IsPropertyKey(P));
   const ownDesc = Q(yield* O.GetOwnProperty(P));
   return yield* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
 }
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
-export function* OrdinarySetWithOwnDescriptor(O: OrdinaryObject, P: PropertyKeyValue, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue> {
+export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue> {
   Assert(IsPropertyKey(P));
 
   if (ownDesc instanceof UndefinedValue) {
@@ -338,7 +338,7 @@ export function* OrdinarySetWithOwnDescriptor(O: OrdinaryObject, P: PropertyKeyV
 }
 
 // 9.1.10.1 OrdinaryDelete
-export function* OrdinaryDelete(O: OrdinaryObject, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
+export function* OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
   Assert(IsPropertyKey(P));
   const desc = Q(yield* O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
@@ -352,7 +352,7 @@ export function* OrdinaryDelete(O: OrdinaryObject, P: PropertyKeyValue): ValueEv
 }
 
 // 9.1.11.1
-export function OrdinaryOwnPropertyKeys(O: OrdinaryObject) {
+export function OrdinaryOwnPropertyKeys(O: ObjectValue) {
   const keys: PropertyKeyValue[] = [];
 
   // For each own property key P of O that is an array index, in ascending numeric index order, do

@@ -1,4 +1,5 @@
 import type { ArrowInfo } from './Scope.mts';
+import type { Character, UnicodeCharacter } from '#self';
 
 export interface Position {
   readonly line: number;
@@ -2269,15 +2270,13 @@ export namespace ParseNode {
 /** https://tc39.es/ecma262/multipage/text-processing.html#sec-patterns */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ParseNode.RegExp {
-  // NON-SPEC
-  export type Mutable<T> = {
-    -readonly [K in keyof T]: T[K];
+  export interface NodeWithPosition {
+    readonly position: number;
   }
   export interface Pattern {
     readonly type: 'Pattern';
     readonly Disjunction: Disjunction;
-    readonly groupSpecifiers: ReadonlyMap<string, number>;
-    readonly capturingGroups: readonly Atom_Group[];
+    readonly capturingGroups: readonly { readonly GroupName: string | undefined, readonly position: number }[];
   }
   export interface Disjunction {
     readonly type: 'Disjunction';
@@ -2286,98 +2285,136 @@ export namespace ParseNode.RegExp {
   }
   export interface Alternative {
     readonly type: 'Alternative';
-    readonly Term: Term | undefined;
-    readonly Alternative: Alternative | undefined;
+    readonly Term: readonly Term[];
   }
-  export type Term = Assertion | Term_Atom;
+  export type Term = Term_Assertion | Term_Atom;
+  export interface Term_Assertion {
+    readonly type: 'Term';
+    readonly production: 'Assertion';
+    readonly Assertion: Assertion;
+  }
   export interface Term_Atom {
     readonly type: 'Term';
+    readonly production: 'Atom';
     readonly Atom: Atom;
     readonly Quantifier: Quantifier | undefined;
-    readonly capturingParenthesesBefore: number;
+    readonly leftCapturingParenthesesBefore: number;
+    readonly capturingParenthesesWithin: number;
   }
-  export interface Assertion {
+  export type Assertion = Assertion_Plain | Assertion_LookaheadOrLookbehind;
+  export interface Assertion_Plain {
     readonly type: 'Assertion';
-    readonly subtype: '^' | '$' | 'b' | 'B' | '?=' | '?!' | '?<=' | '?<!';
-    readonly Disjunction?: Disjunction | undefined;
+    readonly production: '^' | '$' | 'b' | 'B';
+  }
+  export interface Assertion_LookaheadOrLookbehind {
+    readonly type: 'Assertion';
+    readonly production: '?=' | '?!' | '?<=' | '?<!';
+    readonly Disjunction: Disjunction;
   }
   export interface Quantifier {
     readonly type: 'Quantifier';
-    readonly QuantifierPrefix: '*' | '+' | '?' | QuantifierCount | undefined;
-    readonly greedy: boolean;
+    readonly QuantifierPrefix: QuantifierPrefix;
+    readonly QuestionMark: boolean;
   }
-  export interface QuantifierCount {
+  export type QuantifierPrefix = QuantifierPrefix_Plain | QuantifierPrefix_Count;
+  export interface QuantifierPrefix_Plain {
+    readonly type: 'QuantifierPrefix';
+    readonly production: '*' | '+' | '?';
+  }
+  export interface QuantifierPrefix_Count {
+    readonly type: 'QuantifierPrefix';
+    readonly production: '{}';
     readonly DecimalDigits_a: number;
     readonly DecimalDigits_b: number | undefined;
   }
-  export type Atom = Atom_Dot | AtomEscape | Atom_Group | Atom_Rest;
+  export type Atom = Atom_PatternCharacter | Atom_Dot | Atom_AtomEscape | Atom_CharacterClass | Atom_Group | Atom_Modifier;
+  export interface Atom_PatternCharacter {
+    readonly type: 'Atom';
+    readonly production: 'PatternCharacter'
+    readonly PatternCharacter: Character;
+  }
   export interface Atom_Dot {
     readonly type: 'Atom';
-    readonly subtype: '.';
-    readonly enclosedCapturingParentheses: number;
+    readonly production: '.';
+  }
+  export interface Atom_AtomEscape {
+    readonly type: 'Atom';
+    readonly production: 'AtomEscape';
+    readonly AtomEscape: AtomEscape;
+  }
+  export interface Atom_CharacterClass {
+    readonly type: 'Atom';
+    readonly production: 'CharacterClass';
+    readonly CharacterClass: CharacterClass;
   }
   export interface Atom_Group {
     readonly type: 'Atom';
-    readonly capturingParenthesesBefore: number;
-    readonly enclosedCapturingParentheses: number;
-    readonly capturing: boolean;
+    readonly production: 'Group';
+    readonly leftCapturingParenthesesBefore: number;
     readonly GroupSpecifier: string | undefined;
-    readonly Disjunction: Disjunction | undefined;
+    readonly Disjunction: Disjunction;
   }
-  export interface Atom_Rest {
+  export interface Atom_Modifier {
     readonly type: 'Atom';
-    readonly CharacterClass?: CharacterClass | undefined;
-    readonly PatternCharacter?: string | undefined;
+    readonly production: 'Modifier';
+    readonly leftCapturingParenthesesBefore: number;
+    readonly Disjunction: Disjunction;
+    readonly AddModifiers: RegularExpressionModifiers | undefined;
+    readonly RemoveModifiers: RegularExpressionModifiers | undefined;
   }
-  export interface AtomEscape {
+  export type RegularExpressionModifier = 'i' | 'm' | 's';
+  export type RegularExpressionModifiers = readonly RegularExpressionModifier[];
+  export type AtomEscape = AtomEscape_DecimalEscape | AtomEscape_CharacterClassEscape | AtomEscape_CharacterEscape | AtomEscape_CaptureGroupName;
+  export interface AtomEscape_DecimalEscape {
     readonly type: 'AtomEscape';
-    readonly position?: number | undefined;
-    readonly GroupName?: string | undefined;
-    readonly CharacterClassEscape?: CharacterClassEscape | undefined;
-    readonly DecimalEscape?: DecimalEscape | undefined;
-    readonly CharacterEscape?: CharacterEscape | undefined;
+    readonly production: 'DecimalEscape';
+    readonly DecimalEscape: DecimalEscape;
   }
-  export interface CharacterEscape {
+  export interface AtomEscape_CharacterClassEscape {
+    readonly type: 'AtomEscape';
+    readonly production: 'CharacterClassEscape';
+    readonly CharacterClassEscape: CharacterClassEscape;
+  }
+  export interface AtomEscape_CharacterEscape {
+    readonly type: 'AtomEscape';
+    readonly production: 'CharacterEscape';
+    readonly CharacterEscape: CharacterEscape;
+  }
+  export interface AtomEscape_CaptureGroupName extends NodeWithPosition {
+    readonly type: 'AtomEscape';
+    readonly production: 'CaptureGroupName';
+    readonly GroupName: string;
+    readonly groupSpecifiersThatMatchSelf: readonly ParseNode.RegExp.Atom_Group[];
+  }
+  export type CharacterEscape = CharacterEscape_ControlEscape | CharacterEscape_AsciiLetter | CharacterEscape_0 | CharacterEscape_HexEscapeSequence | CharacterEscape_RegExpUnicodeEscapeSequence | CharacterEscape_IdentityEscape;
+  export interface CharacterEscape_ControlEscape {
     readonly type: 'CharacterEscape';
-    readonly subtype?: string | undefined;
-    readonly ControlEscape?: string | undefined;
-    readonly IdentityEscape?: string | undefined;
-    readonly ControlLetter?: string | undefined;
-    readonly HexEscapeSequence?: HexEscapeSequence | undefined;
-    readonly RegExpUnicodeEscapeSequence?: RegExpUnicodeEscapeSequence | undefined;
+    readonly production: 'ControlEscape';
+    readonly ControlEscape: 'f' | 'n' | 'r' | 't' | 'v';
   }
-  export interface DecimalEscape {
-    readonly type: 'DecimalEscape';
-    readonly position: number;
-    readonly value: number;
+  export interface CharacterEscape_AsciiLetter {
+    readonly type: 'CharacterEscape';
+    readonly production: 'AsciiLetter';
+    readonly AsciiLetter: string;
   }
-  export interface CharacterClassEscape {
-    readonly type: 'CharacterClassEscape';
-    readonly value: string;
-    readonly UnicodePropertyValueExpression?: UnicodePropertyValueExpression | undefined;
+  export interface CharacterEscape_0 {
+    readonly type: 'CharacterEscape';
+    readonly production: '0';
   }
-  export interface UnicodePropertyValueExpression {
-    readonly type: 'UnicodePropertyValueExpression';
-    readonly LoneUnicodePropertyNameOrValue?: string | undefined;
-    readonly UnicodePropertyName?: string | undefined;
-    readonly UnicodePropertyValue?: string | undefined;
+  export interface CharacterEscape_HexEscapeSequence {
+    readonly type: 'CharacterEscape';
+    readonly production: 'HexEscapeSequence';
+    readonly HexEscapeSequence: HexEscapeSequence;
   }
-  export interface CharacterClass {
-    readonly type: 'CharacterClass';
-    readonly invert: boolean;
-    readonly ClassRanges: readonly ClassRange[];
+  export interface CharacterEscape_RegExpUnicodeEscapeSequence {
+    readonly type: 'CharacterEscape';
+    readonly production: 'RegExpUnicodeEscapeSequence';
+    readonly RegExpUnicodeEscapeSequence: RegExpUnicodeEscapeSequence;
   }
-  export type ClassRange = ClassAtom | [ClassAtom, ClassAtom];
-  export type ClassAtom = ClassAtom_SourceCharacter | ClassEscape | CharacterClassEscape;
-  export interface ClassAtom_SourceCharacter {
-    readonly type: 'ClassAtom';
-    readonly SourceCharacter?: string | undefined;
-    readonly value?: '-' | undefined;
-  }
-  export interface ClassEscape {
-    readonly type: 'ClassEscape';
-    readonly value?: 'b' | '-' | undefined;
-    readonly CharacterEscape?: CharacterEscape | undefined;
+  export interface CharacterEscape_IdentityEscape {
+    readonly type: 'CharacterEscape';
+    readonly production: 'IdentityEscape';
+    readonly IdentityEscape: Character;
   }
   export interface RegExpUnicodeEscapeSequence {
     readonly type: 'RegExpUnicodeEscapeSequence';
@@ -2386,31 +2423,162 @@ export namespace ParseNode.RegExp {
     readonly HexTrailSurrogate?: number | undefined;
     readonly Hex4Digits?: number | undefined;
   }
+  export interface DecimalEscape {
+    readonly type: 'DecimalEscape';
+    readonly position: number;
+    readonly value: number;
+  }
+  export type CharacterClassEscape = CharacterClassEscape_Plain | CharacterClassEscape_UnicodePropertyValue;
+  export interface CharacterClassEscape_Plain {
+    readonly type: 'CharacterClassEscape';
+    readonly production: 'd' | 'D' | 's' | 'S' | 'w' | 'W';
+  }
+  export interface CharacterClassEscape_UnicodePropertyValue {
+    readonly type: 'CharacterClassEscape';
+    readonly production: 'p' | 'P';
+    readonly UnicodePropertyValueExpression: UnicodePropertyValueExpression;
+  }
+  export type UnicodePropertyValueExpression = UnicodePropertyValueExpression_Eq | UnicodePropertyValueExpression_Lone;
+  export interface UnicodePropertyValueExpression_Eq {
+    readonly type: 'UnicodePropertyValueExpression';
+    readonly production: '=';
+    readonly UnicodePropertyName: string;
+    readonly UnicodePropertyValue: string;
+  }
+  export interface UnicodePropertyValueExpression_Lone {
+    readonly type: 'UnicodePropertyValueExpression';
+    readonly production: 'Lone';
+    readonly LoneUnicodePropertyNameOrValue: string;
+  }
+  export interface CharacterClass {
+    readonly type: 'CharacterClass';
+    readonly invert: boolean;
+    readonly ClassContents: ClassContents;
+  }
+  export type ClassContents = ClassContents_Empty | ClassContents_NonUnicodeSetMode | ClassContents_UnicodeSetMode;
+  export interface ClassContents_Empty {
+    readonly type: 'ClassContents';
+    readonly production: 'Empty';
+  }
+  export interface ClassContents_UnicodeSetMode {
+    readonly type: 'ClassContents';
+    readonly production: 'ClassSetExpression';
+    readonly ClassSetExpression: ClassSetExpression;
+  }
+  export interface ClassContents_NonUnicodeSetMode {
+    readonly type: 'ClassContents';
+    readonly production: 'NonEmptyClassRanges';
+    readonly NonemptyClassRanges: NonEmptyClassRanges;
+  }
+  export type NonEmptyClassRanges = readonly ClassRange[];
+  /** NON-SPEC */
+  export type ClassRange = ClassAtom | readonly [start: ClassAtom, end: ClassAtom];
+  export type ClassAtom = ClassAtom_Dash | ClassAtom_SourceCharacter | ClassAtom_ClassEscape;
+  export interface ClassAtom_Dash {
+    readonly type: 'ClassAtom';
+    readonly production: '-';
+  }
+  export interface ClassAtom_SourceCharacter {
+    readonly type: 'ClassAtom';
+    readonly production: 'SourceCharacter';
+    readonly SourceCharacter: string;
+  }
+  export interface ClassAtom_ClassEscape {
+    readonly type: 'ClassAtom';
+    readonly production: 'ClassEscape';
+    readonly ClassEscape: ClassEscape;
+  }
+  export type ClassEscape = ClassEscape_Plain | ClassEscape_CharacterClassEscape | ClassEscape_CharacterEscape;
+  export interface ClassEscape_Plain {
+    readonly type: 'ClassEscape';
+    readonly production: 'b' | '-';
+  }
+  export interface ClassEscape_CharacterClassEscape {
+    readonly type: 'ClassEscape';
+    readonly production: 'CharacterClassEscape';
+    readonly CharacterClassEscape: CharacterClassEscape;
+  }
+  export interface ClassEscape_CharacterEscape {
+    readonly type: 'ClassEscape';
+    readonly production: 'CharacterEscape';
+    readonly CharacterEscape: CharacterEscape;
+  }
+  export type ClassSetExpression = ClassUnion | ClassIntersection | ClassSubtraction;
+  export interface ClassUnion {
+    readonly type: 'ClassUnion';
+    readonly union: readonly (ClassSetRange | ClassSetOperand)[];
+  }
+  export interface ClassIntersection {
+    readonly type: 'ClassIntersection';
+    readonly operands: readonly ClassSetOperand[];
+  }
+  export interface ClassSubtraction {
+    readonly type: 'ClassSubtraction';
+    readonly operands: readonly ClassSetOperand[];
+  }
+  export interface ClassSetRange {
+    readonly type: 'ClassSetRange';
+    readonly left: ClassSetCharacter;
+    readonly right: ClassSetCharacter;
+  }
+  export type ClassSetOperand = ClassSetOperand_NestedClass | ClassSetOperand_ClassStringDisjunction | ClassSetOperand_ClassSetCharacter;
+  export interface ClassSetOperand_NestedClass {
+    readonly type: 'ClassSetOperand';
+    readonly production: 'NestedClass';
+    readonly NestedClass: NestedClass;
+  }
+  export interface ClassSetOperand_ClassStringDisjunction {
+    readonly type: 'ClassSetOperand';
+    readonly production: 'ClassStringDisjunction';
+    readonly ClassStringDisjunction: ClassStringDisjunction;
+  }
+  export interface ClassSetOperand_ClassSetCharacter {
+    readonly type: 'ClassSetOperand';
+    readonly production: 'ClassSetCharacter';
+    readonly ClassSetCharacter: ClassSetCharacter;
+  }
+  export type NestedClass = NestedClass_ClassContents | NestedClass_CharacterClassEscape;
+  export interface NestedClass_ClassContents {
+    readonly type: 'NestedClass';
+    readonly production: 'ClassContents';
+    readonly ClassContents: ClassContents;
+    readonly invert: boolean;
+  }
+  export interface NestedClass_CharacterClassEscape {
+    readonly type: 'NestedClass';
+    readonly production: 'CharacterClassEscape';
+    readonly CharacterClassEscape: CharacterClassEscape;
+  }
+  export interface ClassStringDisjunction {
+    readonly type: 'ClassStringDisjunction';
+    readonly ClassString: ClassSetCharacter[][];
+  }
+  export type ClassString = string;
+
+  // For UnicodeCharacter:
+  //     [lookahead ∉ ClassSetReservedDoublePunctuator] SourceCharacter but not ClassSetSyntaxCharacter
+  //     \ ClassSetReservedPunctuator
+  //     \b
+  // For CharacterEscape:
+  //     \ CharacterEscape[+UnicodeMode]
+  export type ClassSetCharacter = ClassSetCharacter_UnicodeCharacter | ClassSetCharacter_CharacterEscape;
+  export interface ClassSetCharacter_UnicodeCharacter {
+    readonly type: 'ClassSetCharacter';
+    readonly production: 'UnicodeCharacter';
+    readonly UnicodeCharacter: UnicodeCharacter;
+  }
+  export interface ClassSetCharacter_CharacterEscape {
+    readonly type: 'ClassSetCharacter';
+    readonly production: 'CharacterEscape';
+    readonly CharacterEscape: CharacterEscape;
+  }
+
+  // Not in RegExp section
   export interface HexEscapeSequence {
     readonly type: 'HexEscapeSequence';
     readonly HexDigit_a: string;
     readonly HexDigit_b: string;
   }
-  export type RegExpParseNode =
-    | Pattern
-    | Disjunction
-    | Alternative
-    | Term_Atom
-    | Assertion
-    | Quantifier
-    | Atom_Dot
-    | AtomEscape
-    | Atom_Group
-    | Atom_Rest
-    | CharacterClass
-    | ClassAtom_SourceCharacter
-    | ClassEscape
-    | RegExpUnicodeEscapeSequence
-    | HexEscapeSequence
-    | CharacterEscape
-    | DecimalEscape
-    | CharacterClassEscape
-    | UnicodePropertyValueExpression;
 }
 
 export type ParseNode =
