@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 c321b36d986d0d8294de670c3e8ff98dd2622cef
+ * engine262 0.0.1 eacb4e2fa7f362c22d5a754ca1bf853d28e69258
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -895,7 +895,7 @@ function getDisplayObjectFromEnvironmentRecord(record) {
 }
 
 function getParsedEvent(source, id, executionContextId) {
-  const lines = source.ECMAScriptCode.sourceText().split('\n');
+  const lines = source.ECMAScriptCode.sourceText.split('\n');
   return {
     isModule: source instanceof SourceTextModuleRecord,
     scriptId: id,
@@ -927,7 +927,7 @@ const Debugger = {
       throw new Error('Not found');
     }
     return {
-      scriptSource: source.ECMAScriptCode.sourceText()
+      scriptSource: source.ECMAScriptCode.sourceText
     };
   },
   setAsyncCallStackDepth() {},
@@ -1285,7 +1285,7 @@ function evaluate(options, _context) {
       }
     }
   }, err => {
-    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText();
+    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText;
     const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
     _context.sendEvent['Runtime.exceptionThrown']({
       timestamp: Date.now(),
