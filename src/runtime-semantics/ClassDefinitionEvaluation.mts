@@ -199,6 +199,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   __ts_cast__<Mutable<ECMAScriptFunctionObject>>(F);
   // 16. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
+  // https://github.com/tc39/ecma262/pull/3212/
   // 17. Perform MakeClassConstructor(F).
   MakeClassConstructor(F);
   // 18. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
