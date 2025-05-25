@@ -193,21 +193,22 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
     // b. Let F be constructorInfo.[[Closure]].
     F = constructorInfo.Closure;
-    // c. Perform MakeClassConstructor(F).
-    MakeClassConstructor(F);
-    // d. Perform SetFunctionName(F, className).
+    // c. Perform SetFunctionName(F, className).
     SetFunctionName(F, className);
   }
   __ts_cast__<Mutable<ECMAScriptFunctionObject>>(F);
   // 16. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
-  // 17. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
+  // https://github.com/tc39/ecma262/pull/3212/
+  // 17. Perform MakeClassConstructor(F).
+  MakeClassConstructor(F);
+  // 18. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  // 18. Perform CreateMethodProperty(proto, "constructor", F).
+  // 19. Perform CreateMethodProperty(proto, "constructor", F).
   X(CreateMethodProperty(proto, Value('constructor'), F));
-  // 19. If ClassBody is not present, let elements be a new empty List.
+  // 20. If ClassBody is not present, let elements be a new empty List.
   let elements: ParseNode.ClassElement[];
   if (!ClassBody) {
     elements = [];

@@ -63,6 +63,7 @@ interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
   readonly ScriptOrModule: ScriptRecord | ModuleRecord | NullValue;
   readonly InitialName: JSStringValue | NullValue;
+  readonly IsClassConstructor: BooleanValue;
   Call(thisValue: Value, args: Arguments): ValueEvaluator;
   Construct(args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
 }
@@ -81,7 +82,6 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly Fields: readonly ClassFieldDefinitionRecord[];
   readonly PrivateMethods: readonly PrivateElementRecord[];
   readonly ClassFieldInitializerName: undefined | PropertyKeyValue | PrivateName;
-  readonly IsClassConstructor: BooleanValue;
   /**
    * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
    * This is only used in the inspector.
@@ -230,6 +230,12 @@ export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScr
     // a. Perform ? DefineField(O, fieldRecord).
     Q(yield* DefineField(O, fieldRecord));
   }
+
+  // https://tc39.es/proposal-pattern-matching/#sec-initializeinstance
+  // 5. Append constructor to O.[[ConstructedBy]].
+  O.ConstructedBy.push(constructor);
+
+  // 6. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
@@ -433,8 +439,7 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
 }
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
-export function MakeClassConstructor(F: Mutable<ECMAScriptFunctionObject>): void {
-  Assert(isECMAScriptFunctionObject(F));
+export function MakeClassConstructor(F: Mutable<FunctionObject>): void {
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
 }
@@ -581,7 +586,7 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList))) as Mutable<BuiltinFunctionObject>;
+  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName', 'IsClassConstructor'].concat(internalSlotsList))) as Mutable<BuiltinFunctionObject>;
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
@@ -597,6 +602,8 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
   func.ScriptOrModule = Value.null;
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
+  // https://github.com/tc39/ecma262/pull/3212/
+  func.IsClassConstructor = Value.false;
   // 11. Perform ! SetFunctionLength(func, length).
   X(SetFunctionLength(func, length));
   // 12. If prefix is not present, then
