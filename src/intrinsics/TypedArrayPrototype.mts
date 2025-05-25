@@ -29,7 +29,7 @@ import {
   IsValidIntegerIndex,
 } from '../abstract-ops/all.mts';
 import {
-  Q, X, type ValueEvaluator, type PlainCompletion,
+  Q, X, type ValueEvaluator,
   type ValueCompletion,
 } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
@@ -706,15 +706,7 @@ export function bootstrapTypedArrayPrototype(realmRec: Realm) {
     [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  bootstrapArrayPrototypeShared(
-    realmRec,
-    proto,
-    (thisValue) => ValidateTypedArray(thisValue, 'seq-cst'),
-    (O): PlainCompletion<number> => {
-      const rec = Q(ValidateTypedArray(O, 'seq-cst'));
-      return TypedArrayLength(rec);
-    },
-  );
+  bootstrapArrayPrototypeShared(realmRec, proto, 'TypedArray');
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
   {

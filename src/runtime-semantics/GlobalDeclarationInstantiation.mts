@@ -22,10 +22,6 @@ export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: G
   const varNames = VarDeclaredNames(script);
   // 4. For each name in lexNames, do
   for (const name of lexNames) {
-    // 1. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasVarDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
-    }
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
     if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);

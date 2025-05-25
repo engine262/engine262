@@ -30,6 +30,7 @@ module.exports = {
       files: ['src/**/*.mts'],
       rules: {
         '@engine262/safe-function-with-q': 'error',
+        '@engine262/no-floating-generator': 'error',
       },
     },
     {

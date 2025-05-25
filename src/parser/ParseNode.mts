@@ -21,7 +21,7 @@ export namespace ParseNode {
     readonly type: ParseNode['type'];
     readonly location: Location;
     readonly strict: boolean;
-    readonly sourceText: () => string;
+    readonly sourceText: string;
     readonly parent: ParseNode | undefined;
   }
 
@@ -2234,7 +2234,7 @@ export namespace ParseNode {
         end: { line: number, column: number };
       };
       strict: boolean;
-      sourceText: () => string;
+      sourceText: string;
     }
 
     // ...includes all properties of all potential types, with each property marked as optional

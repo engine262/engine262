@@ -39,7 +39,7 @@ import {
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__, skipDebugger } from '../helpers.mts';
+import { __ts_cast__ } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { assignProps } from './bootstrap.mts';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
@@ -718,14 +718,7 @@ export function bootstrapArrayPrototype(realmRec: Realm) {
     ['toReversed', ArrayProto_toReversed, 0],
   ]);
 
-  bootstrapArrayPrototypeShared(
-    realmRec,
-    proto,
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    () => { },
-    // TODO: remove skipDebugger
-    (O) => skipDebugger(LengthOfArrayLike(O)),
-  );
+  bootstrapArrayPrototypeShared(realmRec, proto, 'Array');
 
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, X(proto.GetOwnProperty(Value('values'))) as Descriptor));
 
