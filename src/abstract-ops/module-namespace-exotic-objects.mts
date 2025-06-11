@@ -40,7 +40,7 @@ import type { ModuleRecord, PlainEvaluator } from '#self';
 export interface ModuleNamespaceObject extends ExoticObject {
   readonly Module: AbstractModuleRecord;
   readonly Exports: JSStringSet;
-  /* [import-defer] */ readonly Deferred: BooleanValue;
+  /* [import-defer] */ readonly Deferred: boolean;
 }
 
 export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
@@ -201,7 +201,7 @@ const InternalMethods = {
     let exports;
     if (surroundingAgent.feature('import-defer')) {
       exports = Q(yield* GetModuleExportsList(O));
-      if (O.Deferred === BooleanValue.true && exports.has('then')) {
+      if (O.Deferred && exports.has('then')) {
         exports = [...exports].filter((x) => x.stringValue() !== 'then');
       }
     } else {
@@ -270,7 +270,7 @@ export function ModuleNamespaceCreate(
       // b. Set module.[[DeferredNamespace]] to M.
       (module as Mutable<AbstractModuleRecord>).DeferredNamespace = M;
       // c. Set M.[[Deferred]] to true.
-      M.Deferred = BooleanValue.true;
+      M.Deferred = true;
       // d. Let toStringTag be "Deferred Module".
       toStringTag = Value('Deferred Module');
     } else { // 10. Else,
@@ -279,7 +279,7 @@ export function ModuleNamespaceCreate(
       // b. Set module.[[Namespace]] to M.
       (module as Mutable<AbstractModuleRecord>).Namespace = M;
       // c. Set M.[[Deferred]] to false.
-      M.Deferred = BooleanValue.false;
+      M.Deferred = false;
       // d. Let toStringTag be "Module".
       toStringTag = Value('Module');
     }
@@ -301,7 +301,7 @@ function IsSymbolLikeNamespaceKey(P: PropertyKeyValue, ns: ModuleNamespaceObject
   if (P instanceof SymbolValue) {
     return true;
   }
-  if (ns.Deferred === BooleanValue.true && P.stringValue() === 'then') {
+  if (ns.Deferred && P.stringValue() === 'then') {
     return true;
   }
   return false;
@@ -310,7 +310,7 @@ function IsSymbolLikeNamespaceKey(P: PropertyKeyValue, ns: ModuleNamespaceObject
 /* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-GetModuleExportsList */
 function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<JSStringSet> {
-  if (O.Deferred === BooleanValue.true) {
+  if (O.Deferred) {
     const m = O.Module;
     if (ReadyForSyncExecution(m) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'DeferredModuleNotReady', m);
