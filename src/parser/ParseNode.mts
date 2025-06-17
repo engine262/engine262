@@ -479,6 +479,7 @@ export namespace ParseNode {
   //   `import` `(` AssignmentExpression `,` AssignmentExpression `,`? `)`
   export interface ImportCall extends BaseParseNode {
     readonly type: 'ImportCall';
+    readonly Phase: 'defer' | 'evaluation';
     readonly AssignmentExpression: AssignmentExpressionOrHigher;
     readonly OptionsExpression?: AssignmentExpressionOrHigher;
   }
@@ -2018,6 +2019,7 @@ export namespace ParseNode {
   export interface ImportDeclaration extends BaseParseNode {
     readonly type: 'ImportDeclaration';
     readonly ModuleSpecifier?: PrimaryExpression;
+    /* [import-defer] */ readonly Phase: 'defer' | 'evaluation';
     readonly ImportClause?: ImportClause;
     readonly FromClause?: FromClause;
     readonly WithClause?: WithClause;

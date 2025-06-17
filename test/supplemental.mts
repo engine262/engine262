@@ -404,7 +404,7 @@ Error: owo
         finish(new CustomModuleRecord({
           Realm: (referrer as AbstractModuleRecord).Realm,
           Environment: undefined,
-          Namespace: Value.undefined,
+          Namespace: undefined,
           HostDefined: {},
         }));
       },

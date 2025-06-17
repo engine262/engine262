@@ -188,7 +188,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
   const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
     Environment: undefined,
-    Namespace: Value.undefined,
+    Namespace: undefined,
     Status: 'new',
     EvaluationError: undefined,
     HostDefined: hostDefined,

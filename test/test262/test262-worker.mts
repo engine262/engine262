@@ -48,7 +48,7 @@ process.on('message', (test: SupervisorToWorker) => {
 });
 
 function run(test: Test): WorkerToSupervisor {
-  const features: string[] = [];
+  const features: string[] = ['import-defer'];
   if (test.attrs.features) {
     test.attrs.features.forEach((f) => {
       if (featureMap[f]) {

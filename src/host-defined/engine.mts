@@ -51,6 +51,11 @@ export const FEATURES = ([
     flag: 'uint8array-base64',
     url: 'https://tc39.es/proposal-arraybuffer-base64/',
   },
+  {
+    name: 'import defer',
+    flag: 'import-defer',
+    url: 'https://tc39.es/proposal-defer-import-eval/',
+  },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
