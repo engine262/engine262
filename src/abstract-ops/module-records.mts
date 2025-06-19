@@ -150,7 +150,7 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   }
   Assert(module.Status === 'unlinked');
   module.Status = 'linking';
-  module.DFSIndex = index;
+  const moduleIndex = index;
   module.DFSAncestorIndex = index;
   index += 1;
   stack.push(module);
@@ -167,8 +167,8 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   }
   Q((module as SourceTextModuleRecord).InitializeEnvironment());
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
-  Assert(module.DFSAncestorIndex <= module.DFSIndex);
-  if (module.DFSAncestorIndex === module.DFSIndex) {
+  Assert(module.DFSAncestorIndex <= moduleIndex);
+  if (module.DFSAncestorIndex === moduleIndex) {
     let done = false;
     while (done === false) {
       const requiredModule = stack.pop();
@@ -228,7 +228,7 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
   }
   Assert(module.Status === 'linked');
   module.Status = 'evaluating';
-  module.DFSIndex = index;
+  const moduleIndex = index;
   module.DFSAncestorIndex = index;
   module.PendingAsyncDependencies = 0;
   module.AsyncParentModules = [];
@@ -283,8 +283,8 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     Q(yield* module.ExecuteModule());
   }
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
-  Assert(module.DFSAncestorIndex <= module.DFSIndex);
-  if (module.DFSAncestorIndex === module.DFSIndex) {
+  Assert(module.DFSAncestorIndex <= moduleIndex);
+  if (module.DFSAncestorIndex === moduleIndex) {
     let done = false;
     while (done === false) {
       const requiredModule = stack.pop();
@@ -461,7 +461,7 @@ function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) 
     AsyncModuleExecutionRejected(m, error);
   }
   if (module.TopLevelCapability !== undefined) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex);
+    Assert(module.CycleRoot === module);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
 }
