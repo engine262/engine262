@@ -125,15 +125,13 @@ export abstract class AbstractModuleRecord {
 
 export { AbstractModuleRecord as ModuleRecord };
 
-export type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSIndex' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'CycleRoot' | 'HasTLA' | 'AsyncEvaluationOrder' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
+export type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'CycleRoot' | 'HasTLA' | 'AsyncEvaluationOrder' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
 export type CyclicModuleRecordStatus = 'new' | 'unlinked' | 'linking' | 'linked' | 'evaluating' | 'evaluating-async' | 'evaluated';
 /** https://tc39.es/ecma262/#sec-cyclic-module-records */
 export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   Status: CyclicModuleRecordStatus;
 
   EvaluationError: ThrowCompletion | undefined;
-
-  DFSIndex: number | undefined;
 
   DFSAncestorIndex: number | undefined;
 
@@ -157,7 +155,6 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     super(init);
     this.Status = init.Status;
     this.EvaluationError = init.EvaluationError;
-    this.DFSIndex = init.DFSIndex;
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
