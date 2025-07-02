@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 64391998f671b8d0134277c063a0a7cf622c129e
+ * engine262 0.0.1 7994a5e68dec0f5c466552b71f9bc89f2f844a37
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -5582,7 +5582,6 @@ class AbstractModuleRecord {
 class CyclicModuleRecord extends AbstractModuleRecord {
   Status;
   EvaluationError;
-  DFSIndex;
   DFSAncestorIndex;
   RequestedModules;
   LoadedModules;
@@ -5596,7 +5595,6 @@ class CyclicModuleRecord extends AbstractModuleRecord {
     super(init);
     this.Status = init.Status;
     this.EvaluationError = init.EvaluationError;
-    this.DFSIndex = init.DFSIndex;
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
@@ -20678,7 +20676,7 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
       indirectExportEntries.push(ee);
     }
   }
-  // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
+  // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSAncestorIndex]]: undefined }.
   const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
     Environment: undefined,
@@ -20700,7 +20698,6 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     AsyncEvaluationOrder: 'unset',
     TopLevelCapability: undefined,
     AsyncParentModules: [],
-    DFSIndex: undefined,
     DFSAncestorIndex: undefined,
     PendingAsyncDependencies: undefined
   });
@@ -32816,7 +32813,7 @@ function InnerModuleLinking(module, stack, index) {
   }
   Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
   module.Status = 'linking';
-  module.DFSIndex = index;
+  const moduleIndex = index;
   module.DFSAncestorIndex = index;
   index += 1;
   stack.push(module);
@@ -32844,8 +32841,8 @@ function InnerModuleLinking(module, stack, index) {
   /* node:coverage ignore next */
   if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
   Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
-  Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
-  if (module.DFSAncestorIndex === module.DFSIndex) {
+  Assert(module.DFSAncestorIndex <= moduleIndex, "module.DFSAncestorIndex <= moduleIndex");
+  if (module.DFSAncestorIndex === moduleIndex) {
     let done = false;
     while (done === false) {
       const requiredModule = stack.pop();
@@ -32910,7 +32907,7 @@ function* InnerModuleEvaluation(module, stack, index) {
   }
   Assert(module.Status === 'linked', "module.Status === 'linked'");
   module.Status = 'evaluating';
-  module.DFSIndex = index;
+  const moduleIndex = index;
   module.DFSAncestorIndex = index;
   module.PendingAsyncDependencies = 0;
   module.AsyncParentModules = [];
@@ -32983,8 +32980,8 @@ function* InnerModuleEvaluation(module, stack, index) {
     if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
   }
   Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
-  Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
-  if (module.DFSAncestorIndex === module.DFSIndex) {
+  Assert(module.DFSAncestorIndex <= moduleIndex, "module.DFSAncestorIndex <= moduleIndex");
+  if (module.DFSAncestorIndex === moduleIndex) {
     let done = false;
     while (done === false) {
       const requiredModule = stack.pop();
@@ -33233,7 +33230,7 @@ function AsyncModuleExecutionRejected(module, error) {
     AsyncModuleExecutionRejected(m, error);
   }
   if (module.TopLevelCapability !== undefined) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
+    Assert(module.CycleRoot === module, "module.CycleRoot === module");
     /* X */
     let _temp17 = Call(module.TopLevelCapability.Reject, Value.undefined, [error]);
     /* node:coverage ignore next */
