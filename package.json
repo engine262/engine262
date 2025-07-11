@@ -99,12 +99,12 @@
     }
   },
   "devDependencies": {
-    "@babel/code-frame": "^7.26.2",
-    "@babel/core": "^7.27.1",
-    "@babel/plugin-proposal-decorators": "^7.25.9",
-    "@babel/plugin-proposal-explicit-resource-management": "^7.25.9",
-    "@babel/preset-env": "^7.26.9",
-    "@babel/preset-typescript": "^7.26.0",
+    "@babel/code-frame": "^7.27.1",
+    "@babel/core": "^7.28.0",
+    "@babel/plugin-proposal-decorators": "^7.28.0",
+    "@babel/plugin-transform-explicit-resource-management": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-typescript": "^7.27.1",
     "@engine262/eslint-plugin": "file:test/eslint-plugin-engine262",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.2",
