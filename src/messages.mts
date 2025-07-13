@@ -38,6 +38,7 @@ export const CannotConvertDecimalToBigInt = (n: NumberValue) => `Cannot convert 
 export const CannotConvertSymbol = (t: string) => `Cannot convert a Symbol value to a ${t}`;
 export const CannotConvertToBigInt = (v: Value) => `Cannot convert ${i(v)} to a BigInt`;
 export const CannotConvertToObject = (t: 'null' | 'undefined') => `Cannot convert ${t} to object`;
+export const CannotConvertToTemporalDuration = (t: Value) => `Cannot convert ${i(t)} to Temporal.Duration`;
 export const CannotDefineProperty = (p: PropertyKeyValue) => `Cannot define property ${i(p)}`;
 export const CannotDeleteProperty = (p: PropertyKeyValue) => `Cannot delete property ${i(p)}`;
 export const CannotDeleteSuper = () => 'Cannot delete a super property';
@@ -79,6 +80,7 @@ export const InvalidThis = () => 'Invalid `this` access';
 export const InvalidUnicodeEscape = () => 'Invalid unicode escape';
 export const InvalidAlphabet = () => 'Invalid alphabet';
 export const InvalidDate = () => 'Invalid date';
+export const InvalidDuration = () => 'Invalid duration';
 export const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
 export const InvalidBase64String = () => 'Invalid base64 string';
 export const InvalidHexString = () => 'Invalid hex string';

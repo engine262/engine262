@@ -9,6 +9,8 @@ export interface TemporalInstantObject extends OrdinaryObject {
   readonly EpochNanoseconds: bigint;
 }
 
+export const nsPerDay = 8.64e13;
+
 /** https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds */
 declare function IsValidEpochNanoseconds(epochNanoseconds: bigint): boolean;
 

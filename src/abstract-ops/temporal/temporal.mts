@@ -7,16 +7,17 @@ import { CalendarISOToDate, CanonicalizeCalendar, GetTemporalCalendarIdentifierW
 import { InterpretTemporalDateTimeFields, isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
 import { ToPrimitive, ToNumber } from '#self';
+import { ParseISODateTime } from '../../parser/Temporal_ISO8601.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
 // TODO: Review
 export function ISODateToEpochDays(year: number, month: number, date: number): number {
   const resolvedYear = year + Math.floor(month / 12);
   const resolvedMonth = ((month % 12) + 12) % 12;
+  // Find a time t such that EpochTimeToEpochYear(t) = resolvedYear, EpochTimeToMonthInYear(t) = resolvedMonth, and EpochTimeToDate(t) = 1.
   let y = resolvedYear;
   let m = resolvedMonth;
-  let d = 1;
-  let days = EpochDayNumberForYear(y);
+  let t = EpochDayNumberForYear(y);
   const isLeap = MathematicalDaysInYear(y) === 366;
   const monthDays = [
     31,
@@ -25,9 +26,11 @@ export function ISODateToEpochDays(year: number, month: number, date: number): n
     31, 31, 30, 31, 30, 31,
   ];
   for (let i = 0; i < m; ++i) {
-    days += monthDays[i];
+    t += monthDays[i];
   }
-  return days + date - 1;
+  Assert(EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1);
+
+  return EpochTimeToDayNumber(t) + date - 1;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-epochdaystoepochms */
@@ -64,7 +67,7 @@ export function EpochTimeForYear(y: number): number {
 /** https://tc39.es/proposal-temporal/#sec-epochtimetoepochyear */
 // TODO: Review
 export function EpochTimeToEpochYear(t: number): number {
-  let y = 1970;
+  // EpochTimeToEpochYear(t) = the largest integral Number y (closest to +∞) such that EpochTimeForYear(y) ≤ t
   let lower = -271821;
   let upper = 275760;
   while (lower < upper) {
@@ -148,8 +151,26 @@ export enum TemporalUnit {
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export type TimeUnit = TemporalUnit.Hour | TemporalUnit.Minute | TemporalUnit.Second | TemporalUnit.Millisecond | TemporalUnit.Microsecond | TemporalUnit.Nanosecond;
 
+export function __IsTimeUnit(unit: TemporalUnit): unit is TimeUnit {
+  return (unit === TemporalUnit.Hour ||
+    unit === TemporalUnit.Minute ||
+    unit === TemporalUnit.Second ||
+    unit === TemporalUnit.Millisecond ||
+    unit === TemporalUnit.Microsecond ||
+    unit === TemporalUnit.Nanosecond
+  )
+}
+
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export type DateUnit = TemporalUnit.Year | TemporalUnit.Month | TemporalUnit.Week | TemporalUnit.Day;
+
+export function __IsDateUnit(unit: TemporalUnit): unit is DateUnit {
+  return (unit === TemporalUnit.Year ||
+    unit === TemporalUnit.Month ||
+    unit === TemporalUnit.Week ||
+    unit === TemporalUnit.Day
+  )
+}
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporaloverflowoption */
 export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator<'constrain' | 'reject'> {
@@ -361,7 +382,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   let timeZone: TimeZoneIdentifier | 'unset';
   let isoDate;
   let time;
-  let calendar: CalendarType;
+  let calendar: CalendarType | undefined;
   let offsetString;
   if (value instanceof ObjectValue) {
     if (isTemporalZonedDateTimeObject(value)) {
@@ -377,7 +398,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
     calendar = Q(yield* GetTemporalCalendarIdentifierWithISODefault(value));
     const fields = Q(yield* PrepareCalendarFields(calendar, value, ['Year', 'Month', 'MonthCode', 'Day'], ['Hour', 'Minute', 'Second', 'Millisecond', 'Microsecond', 'Nanosecond', 'OffsetString', 'TimeZone'], []));
     const result = Q(InterpretTemporalDateTimeFields(calendar, fields, 'constrain'));
-    timeZone = fields.TimeZone;
+    timeZone = fields.TimeZone as TimeZoneIdentifier;
     offsetString = fields.OffsetString;
     if (offsetString === undefined) {
       offsetBehaviour = 'wall';
@@ -388,7 +409,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
     if (!(value instanceof JSStringValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAString', value);
     }
-    const result = Q(yield* ParseISODateTime(value, ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]']));
+    const result = Q(ParseISODateTime(value.stringValue(), ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]']));
     offsetString = result.TimeZone.OffsetString;
     const annotation = result.TimeZone.TimeZoneAnnotation;
     if (!annotation) {
@@ -402,10 +423,10 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
       }
       matchBehaviour = 'match-minutes';
     }
-    calendar = result.Calendar;
-    if (!calendar) calendar = 'iso8601';
-    calendar = Q(CanonicalizeCalendar(calendar));
-    isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+    let _calendar = result.Calendar;
+    if (!_calendar) _calendar = 'iso8601';
+    calendar = Q(CanonicalizeCalendar(_calendar));
+    isoDate = CreateISODateRecord(result.Year!, result.Month, result.Day);
     time = result.Time;
   }
   if (timeZone === 'unset') {
@@ -414,7 +435,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   }
   let offsetNs;
   if (offsetBehaviour === 'option') {
-    offsetNs = ParseDateTimeUTCOffset(offsetString);
+    offsetNs = ParseDateTimeUTCOffset(offsetString!);
   } else {
     offsetNs = 0;
   }
@@ -445,7 +466,7 @@ export function LargerOfTwoTemporalUnits(u1: TemporalUnit, u2: TemporalUnit): Te
 }
 
 /** https://tc39.es/proposal-temporal/#sec-iscalendarunit */
-export function IsCalendarUnit(unit: TemporalUnit): boolean {
+export function IsCalendarUnit(unit: TemporalUnit): unit is TemporalUnit.Year | TemporalUnit.Month | TemporalUnit.Week {
   return unit === TemporalUnit.Year || unit === TemporalUnit.Month || unit === TemporalUnit.Week;
 }
 
@@ -618,7 +639,7 @@ export function* ToPositiveIntegerWithTruncation(argument: Value): PlainEvaluato
 // TODO: Review
 /** https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithtruncation */
 export function* ToIntegerWithTruncation(argument: Value): PlainEvaluator<number> {
-  const number = Q(yield* ToNumber(argument));
+  const number = Q(yield* ToNumber(argument)).numberValue();
   if (Number.isNaN(number) || number === Infinity || number === -Infinity) {
     return surroundingAgent.Throw('RangeError', 'OutOfRange', number);
   }
