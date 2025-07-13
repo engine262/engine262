@@ -22,7 +22,7 @@ export interface ISODateTimeParseRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime */
-export declare function ParseISODateTimeString(isoString: string, allowedFormats: unknown): PlainCompletion<ISODateTimeParseRecord>;
+export declare function ParseISODateTime(isoString: string, allowedFormats: unknown): PlainCompletion<ISODateTimeParseRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring */
 export declare function ParseTemporalCalendarString(isoString: string): PlainCompletion<string>;

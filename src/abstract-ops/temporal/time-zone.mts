@@ -31,7 +31,7 @@ export declare function FormatUTCOffsetNanoseconds(offsetNanoseconds: number): s
 export declare function FormatDateTimeUTCOffsetRounded(offsetNanoseconds: number): string;
 
 // https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezoneidentifier
-export declare function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value): PlainCompletion<TimeZoneIdentifier>;
+export declare function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | string): PlainCompletion<TimeZoneIdentifier>;
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
 export declare function GetOffsetNanosecondsFor(timeZone: TimeZoneIdentifier, epochNs: bigint): number;

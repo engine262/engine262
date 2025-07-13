@@ -1,7 +1,7 @@
 // Addition/Edition to the main spec.
 // Code here should move elsewhere after Temporal is merged.
 
-import { ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToNumber, UndefinedValue, Value, type PlainEvaluator, type PropertyKeyValue, type ValueCompletion, type ValueEvaluator } from '#self';
+import { ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToNumber, UndefinedValue, Value, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator } from '#self';
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */

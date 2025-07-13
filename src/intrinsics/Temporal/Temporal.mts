@@ -12,4 +12,5 @@ export function bootstrapTemporal(realmRec: Realm) {
   ], realmRec.Intrinsics['%Object.prototype%'], 'Temporal');
 
   realmRec.Intrinsics['%Temporal%'] = TemporalObject;
+  // realmRec.Intrinsics['%Temporal.Duration%'] = ;
 }
