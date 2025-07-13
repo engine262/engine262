@@ -61,7 +61,6 @@ import type {
 
 interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
-  readonly ScriptOrModule: ScriptRecord | ModuleRecord | NullValue;
   readonly InitialName: JSStringValue | NullValue;
   readonly IsClassConstructor: BooleanValue;
   Call(thisValue: Value, args: Arguments): ValueEvaluator;
@@ -511,63 +510,46 @@ export function SetFunctionLength(F: FunctionObject, length: number): void {
   })));
 }
 
+function BuiltinFunctionCall(this: BuiltinFunctionObject, thisArgument: Value, argumentsList: Arguments): ValueEvaluator {
+  return BuiltinCallOrConstruct(this, thisArgument, argumentsList, Value.undefined);
+}
 
-function nativeCall(F: BuiltinFunctionObject, argumentsList: Arguments, thisArgument?: Value, newTarget?: FunctionObject | UndefinedValue) {
-  return F.nativeFunction(argumentsList, {
-    thisValue: thisArgument || Value.undefined,
-    NewTarget: newTarget || Value.undefined,
+function BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ValueEvaluator<ObjectValue> {
+  // Assert in the BuiltinCallOrConstruct
+  return BuiltinCallOrConstruct(this, 'uninitialized', argumentsList, newTarget) as ValueEvaluator<ObjectValue>;
+}
+
+/** https://tc39.es/ecma262/#sec-builtincallorconstruct */
+function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value | 'uninitialized', argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator {
+  const calleeContext = new ExecutionContext();
+  calleeContext.Function = F;
+  const calleeRealm = F.Realm;
+  calleeContext.Realm = calleeRealm;
+  calleeContext.ScriptOrModule = Value.null;
+  surroundingAgent.executionContextStack.push(calleeContext);
+
+  const isNew = thisArgument === 'uninitialized';
+  // Perform any necessary implementation-defined initialization of calleeContext.
+  surroundingAgent.runningExecutionContext.callSite.constructCall = isNew;
+
+  let completion = F.nativeFunction(argumentsList, {
+    thisValue: thisArgument === 'uninitialized' ? Value.undefined : thisArgument,
+    NewTarget: newTarget,
   });
-  // by this notation we can keep the F.nativeFunction name in the stack trace
-  // return Reflect['apply'](F.nativeFunction, F, [argumentsList, {
+  // in case of debugging, use the following version so F.nativeFunction's name can appears in the stack trace.
+  // let completion = Reflect['apply'](F.nativeFunction, F, [argumentsList, {
   //   thisValue: thisArgument || Value.undefined,
   //   NewTarget: newTarget || Value.undefined,
   // }]);
-}
-
-function* BuiltinFunctionCall(this: BuiltinFunctionObject, thisArgument: Value, argumentsList: Arguments): ValueEvaluator {
-  const F = this;
-
-  // const callerContext = surroundingAgent.runningExecutionContext;
-  // If callerContext is not already suspended, suspend callerContext.
-  const calleeContext = new ExecutionContext();
-  calleeContext.Function = F;
-  const calleeRealm = F.Realm;
-  calleeContext.Realm = calleeRealm;
-  calleeContext.ScriptOrModule = F.ScriptOrModule;
-  // 8. Perform any necessary implementation-defined initialization of calleeContext.
-  surroundingAgent.executionContextStack.push(calleeContext);
-  let result = nativeCall(F, argumentsList, thisArgument, Value.undefined);
-  if (result && 'next' in result) {
-    result = yield* result;
+  if (completion && 'next' in completion) {
+    completion = yield* completion;
   }
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
+
   surroundingAgent.executionContextStack.pop(calleeContext);
-  return Q(result) || Value.undefined;
-}
-
-function* BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue> {
-  const F = this;
-
-  // const callerContext = surroundingAgent.runningExecutionContext;
-  // If callerContext is not already suspended, suspend callerContext.
-  const calleeContext = new ExecutionContext();
-  calleeContext.Function = F;
-  const calleeRealm = F.Realm;
-  calleeContext.Realm = calleeRealm;
-  calleeContext.ScriptOrModule = F.ScriptOrModule;
-  // 8. Perform any necessary implementation-defined initialization of calleeContext.
-  surroundingAgent.executionContextStack.push(calleeContext);
-  surroundingAgent.runningExecutionContext.callSite.constructCall = true;
-  let result = nativeCall(F, argumentsList, undefined, newTarget);
-  if (result && 'next' in result) {
-    result = yield* result;
+  const result = Q(completion) || Value.undefined;
+  if (isNew) {
+    Assert(result instanceof ObjectValue);
   }
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
-  surroundingAgent.executionContextStack.pop(calleeContext);
-  Q(result);
-  Assert(result instanceof ObjectValue);
   return result;
 }
 
@@ -598,8 +580,6 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
   func.Prototype = prototype;
   // 8. Set func.[[Extensible]] to true.
   func.Extensible = Value.true;
-  // 9. Set func.[[ScriptOrModule]] to null.
-  func.ScriptOrModule = Value.null;
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
   // https://github.com/tc39/ecma262/pull/3212/
