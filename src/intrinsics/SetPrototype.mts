@@ -17,7 +17,6 @@ import {
   CanonicalizeKeyedCollectionKey,
   IteratorStepValue,
   IteratorClose,
-  SameValue,
 } from '../abstract-ops/all.mts';
 import {
   Descriptor,
@@ -38,7 +37,8 @@ import { CreateSetIterator } from './SetIteratorPrototype.mts';
 import type { SetObject } from './Set.mts';
 import type {
   FunctionObject,
-  IteratorRecord, Mutable, PlainEvaluator,
+  Mutable,
+  PlainEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-set.prototype.add */
@@ -133,22 +133,24 @@ function* SetProto_difference([other = Value.undefined]: Arguments, { thisValue 
     a. Let thisSize be the number of elements in O.[[SetData]].
     b. Let index be 0.
     c. Repeat, while index < thisSize,
-          i. Let e be resultSetData[index].
-          ii. If e is not empty, then
-                  1. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[SetObject]], « e »)).
-                  2. If inOther is true, then
-                          a. Set resultSetData[index] to empty.
-          iii. Set index to index + 1.
+      i. Let e be resultSetData[index].
+      ii. If e is not empty, then
+        1. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[SetObject]], « e »)).
+        2. If inOther is true, then
+          a. Set resultSetData[index] to empty.
+      iii. Set index to index + 1.
     */
     const thisSize = O.SetData.length;
-    for (let index = 0; index < thisSize; index += 1) {
+    let index = 0;
+    while (index < thisSize) {
       const e = resultSetData[index];
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther.value) {
+        if (inOther === Value.true) {
           resultSetData[index] = undefined;
         }
       }
+      index += 1;
     }
   } else {
     /*
@@ -281,11 +283,13 @@ function* SetProto_intersection([other = Value.undefined]: Arguments, { thisValu
         4. Set thisSize to the number of elements in O.[[SetData]].
     */
     let thisSize = O.SetData.length;
-    for (let index = 0; index < thisSize; index += 1) {
+    let index = 0;
+    while (index < thisSize) {
       const e: Value | undefined = O.SetData[index];
+      index += 1;
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther.value && SetDataHas(resultSetData, e).value === false) {
+        if (inOther === Value.true && SetDataHas(resultSetData, e) === false) {
           resultSetData.push(e);
         }
       }
@@ -312,7 +316,7 @@ function* SetProto_intersection([other = Value.undefined]: Arguments, { thisValu
       if (next !== 'done') {
         next = CanonicalizeKeyedCollectionKey(next);
         const inThis = SetDataHas(O.SetData, next);
-        if (inThis.value && SetDataHas(resultSetData, next).value === false) {
+        if (inThis && SetDataHas(resultSetData, next) === false) {
           resultSetData.push(next);
         }
       }
@@ -361,7 +365,7 @@ function* SetProto_isDisjointFrom([other = Value.undefined]: Arguments, { thisVa
       index += 1;
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther.value) {
+        if (inOther === Value.true) {
           return BooleanValue.false;
         }
         thisSize = O.SetData.length;
@@ -382,7 +386,7 @@ function* SetProto_isDisjointFrom([other = Value.undefined]: Arguments, { thisVa
     let next: Value | 'done' | 'not-started' = 'not-started';
     while (next !== 'done') {
       next = Q(yield* IteratorStepValue(keysIter));
-      if (next !== 'done' && SetDataHas(O.SetData, next).value) {
+      if (next !== 'done' && SetDataHas(O.SetData, next)) {
         Q(yield* IteratorClose(keysIter, NormalCompletion('unused')));
         return Value.false;
       }
@@ -420,7 +424,7 @@ function* SetProto_isSubsetOf([other = Value.undefined]: Arguments, { thisValue 
     index += 1;
     if (e !== undefined) {
       const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-      if (inOther.value === false) {
+      if (inOther === Value.false) {
         return Value.false;
       }
       thisSize = O.SetData.length;
@@ -453,7 +457,7 @@ function* SetProto_isSupersetOf([other = Value.undefined]: Arguments, { thisValu
         2. Return false.
     */
     next = Q(yield* IteratorStepValue(keysIter));
-    if (next !== 'done' && SetDataHas(O.SetData, next).value === false) {
+    if (next !== 'done' && SetDataHas(O.SetData, next) === false) {
       Q(yield* IteratorClose(keysIter, NormalCompletion('unused')));
       return Value.false;
     }
@@ -497,7 +501,7 @@ function* SetProto_symmetricDifference([other = Value.undefined]: Arguments, { t
     if (next !== 'done') {
       next = CanonicalizeKeyedCollectionKey(next);
       const resultIndex: number | 'not-found' = SetDataIndex(resultSetData, next);
-      if (SetDataHas(O.SetData, next).value === true) {
+      if (SetDataHas(O.SetData, next) === true) {
         if (resultIndex !== 'not-found') {
           resultSetData[resultIndex] = undefined;
         }
@@ -539,8 +543,8 @@ function* SetProto_union([other = Value.undefined]: Arguments, { thisValue }: Fu
   // 3. Let otherRec be ? GetSetRecord(other).
   const otherRec = Q(yield* GetSetRecord(other));
 
-  // 4. Let keysIter be ? GetKeysIterator(otherRec).
-  const keysIter = Q(yield* GetKeysIterator(otherRec));
+  // 4. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
+  const keysIter = Q(yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys));
 
   // 5. Let resultSetData be a copy of O.[[SetData]].
   const resultSetData = [...O.SetData];
@@ -564,7 +568,7 @@ function* SetProto_union([other = Value.undefined]: Arguments, { thisValue }: Fu
       }
 
       // iii. If SetDataHas(resultSetData, nextValue) is false, then
-      if (SetDataHas(resultSetData, nextValue) === Value.false) {
+      if (SetDataHas(resultSetData, nextValue) === false) {
         // 1. Append nextValue to resultSetData.
         resultSetData.push(nextValue);
       }
@@ -668,46 +672,9 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   return EnsureCompletion(setRecord);
 }
 
-/** https://tc39.es/proposal-set-methods/#sec-getkeysiterator */
-function* GetKeysIterator(setRec: SetRecord): PlainEvaluator<IteratorRecord> {
-  // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
-  const keysIter = Q(yield* Call(setRec.Keys, setRec.SetObject));
-
-  // 2. If keysIter is not an Object, throw a TypeError exception.
-  if (!(keysIter instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', keysIter);
-  }
-
-  // 3. Let nextMethod be ? Get(keysIter, "next").
-  const nextMethod = Q(yield* Get(keysIter, Value('next')));
-
-  // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
-  if (!IsCallable(nextMethod)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', nextMethod);
-  }
-
-  // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
-  const iteratorRecord: IteratorRecord = {
-    Iterator: keysIter,
-    NextMethod: nextMethod,
-    Done: Value.false,
-  };
-
-  return EnsureCompletion(iteratorRecord);
-}
-
 /** https://tc39.es/ecma262/#sec-setdatahas */
-function SetDataHas(resultSetData: (Value | undefined)[], value: Value) {
-  // 1. For each element e of resultSetData, do
-  for (const e of resultSetData) {
-    // a. If e is not empty and SameValueZero(e, value) is true, return true.
-    if (e !== undefined && SameValueZero(e, value) === Value.true) {
-      return Value.true;
-    }
-  }
-
-  // 2. Return false.
-  return Value.false;
+function SetDataHas(resultSetData: (Value | undefined)[], value: Value): boolean {
+  return SetDataIndex(resultSetData, value) !== 'not-found';
 }
 
 /** https://tc39.es/ecma262/#sec-setdataindex */
@@ -725,11 +692,13 @@ function SetDataIndex(setData: (Value | undefined)[], value: Value): number | 'n
   */
   value = CanonicalizeKeyedCollectionKey(value);
   const size = setData.length;
-  for (let index = 0; index < size; index += 1) {
+  let index = 0;
+  while (index < size) {
     const e = setData[index];
-    if (e !== undefined && SameValue(e, value).value) {
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
       return index;
     }
+    index += 1;
   }
   return 'not-found';
 }
