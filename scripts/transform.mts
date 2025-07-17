@@ -163,12 +163,11 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       `, { preserveComments: true }),
       imports: ['IteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
-    IfAbruptAsyncCloseIterator: {
+    IfAbruptCloseAsyncIterator: {
       template: template(`
-      /* IfAbruptAsyncCloseIterator */
-      Assert(%%value%% instanceof CompletionRecord);
+      /* IfAbruptCloseAsyncIterator */
       /* node:coverage ignore next */
-      if (%%value%% instanceof AbruptCompletion) return skipDebugger(AsyncIteratorClose(%%iteratorRecord%%, %%value%%));
+      if (%%value%% instanceof AbruptCompletion) return yield* AsyncIteratorClose(%%iteratorRecord%%, %%value%%);
       /* node:coverage ignore next */
       if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
@@ -316,7 +315,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               (binding.path.parent as t.VariableDeclaration).kind = 'let';
               statementPath.insertBefore(macro.template({ value: argument, capability }));
               tryRemove(path);
-            } else if (macro === MACROS.IfAbruptCloseIterator) {
+            } else if (macro === MACROS.IfAbruptCloseIterator || macro === MACROS.IfAbruptCloseAsyncIterator) {
               if (!t.isIdentifier(argument)) {
                 throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
               }

@@ -21,6 +21,7 @@ import {
   Completion,
   Q, X,
   type PlainCompletion,
+  ReturnCompletion,
 } from '../completion.mts';
 import { ExpectedArgumentCount } from '../static-semantics/all.mts';
 import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mts';
@@ -54,9 +55,11 @@ import {
   Realm,
   F as toNumberValue,
   type OrdinaryObject,
+  NewPromiseCapability,
+  AsyncFunctionStart,
 } from './all.mts';
 import type {
-  AbstractModuleRecord, CanBeNativeSteps, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
+  AbstractModuleRecord, CanBeNativeSteps, FunctionCallContext, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
 } from '#self';
 
 interface BaseFunctionObject extends OrdinaryObject {
@@ -600,6 +603,30 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
 
 /** This is a helper function to define non-spec host functions. */
 CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
+
+/**
+ * @internal
+ * in https://tc39.es/proposal-array-from-async/#sec-array.fromAsync
+ * "This async method performs the following steps when called:"
+ *
+ * this function wraps the async function.
+ */
+export function asyncBuiltinFunctionPrologue(steps: NativeSteps): NativeSteps {
+  function* async(this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext) {
+    const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    const self = this;
+    yield* AsyncFunctionStart(promiseCapability, function* asyncFunctionPrologue() {
+      let result = Reflect.apply(steps, self, [args, context]);
+      if (result && 'next' in result) {
+        result = yield* result;
+      }
+      return Q(result) || ReturnCompletion(Value.undefined);
+    });
+    return ReturnCompletion(promiseCapability.Promise);
+  }
+  async.section = steps.section;
+  return async;
+}
 
 /** https://tc39.es/ecma262/#sec-preparefortailcall */
 export function PrepareForTailCall() {

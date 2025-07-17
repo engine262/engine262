@@ -51,7 +51,7 @@ import {
 } from '../value.mts';
 import { __ts_cast__, OutOfRange } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
-import { IfAbruptCloseAsyncIterator, IteratorValue } from '#self';
+import { asyncBuiltinFunctionPrologue, IfAbruptCloseAsyncIterator, IteratorValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */
 function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
@@ -399,7 +399,7 @@ export function bootstrapArray(realmRec: Realm) {
 
   const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [
     ['from', Array_from, 1],
-    ['fromAsync', Array_fromAsync, 1],
+    ['fromAsync', asyncBuiltinFunctionPrologue(Array_fromAsync), 1],
     ['isArray', Array_isArray, 1],
     ['of', Array_of, 0],
     [wellKnownSymbols.species, [Array_speciesGetter]],
