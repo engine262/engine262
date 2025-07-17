@@ -14,7 +14,6 @@ import-defer = import-defer
 -explicit-resource-management
 -iterator-sequencing
 -json-parse-with-source
--set-methods
 -source-phase-imports
 -source-phase-imports-module-source
 
