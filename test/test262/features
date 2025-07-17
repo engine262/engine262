@@ -7,7 +7,6 @@ uint8array-base64 = uint8array-base64
 import-defer = import-defer
 
 # Update with test262 on Feb 2025, to be investigated/implemented
--Array.fromAsync
 -Float16Array
 -Math.sumPrecise
 -arraybuffer-transfer
