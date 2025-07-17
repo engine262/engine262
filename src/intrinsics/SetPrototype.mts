@@ -289,7 +289,7 @@ function* SetProto_intersection([other = Value.undefined]: Arguments, { thisValu
       index += 1;
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther === Value.true && SetDataHas(resultSetData, e) === false) {
+        if (inOther === Value.true && !SetDataHas(resultSetData, e)) {
           resultSetData.push(e);
         }
       }
@@ -316,7 +316,7 @@ function* SetProto_intersection([other = Value.undefined]: Arguments, { thisValu
       if (next !== 'done') {
         next = CanonicalizeKeyedCollectionKey(next);
         const inThis = SetDataHas(O.SetData, next);
-        if (inThis && SetDataHas(resultSetData, next) === false) {
+        if (inThis && !SetDataHas(resultSetData, next)) {
           resultSetData.push(next);
         }
       }
@@ -387,7 +387,7 @@ function* SetProto_isDisjointFrom([other = Value.undefined]: Arguments, { thisVa
     while (next !== 'done') {
       next = Q(yield* IteratorStepValue(keysIter));
       if (next !== 'done' && SetDataHas(O.SetData, next)) {
-        Q(yield* IteratorClose(keysIter, NormalCompletion('unused')));
+        Q(yield* IteratorClose(keysIter, NormalCompletion(Value.undefined)));
         return Value.false;
       }
     }
@@ -457,8 +457,8 @@ function* SetProto_isSupersetOf([other = Value.undefined]: Arguments, { thisValu
         2. Return false.
     */
     next = Q(yield* IteratorStepValue(keysIter));
-    if (next !== 'done' && SetDataHas(O.SetData, next) === false) {
-      Q(yield* IteratorClose(keysIter, NormalCompletion('unused')));
+    if (next !== 'done' && !SetDataHas(O.SetData, next)) {
+      Q(yield* IteratorClose(keysIter, NormalCompletion(Value.undefined)));
       return Value.false;
     }
   }
@@ -568,7 +568,7 @@ function* SetProto_union([other = Value.undefined]: Arguments, { thisValue }: Fu
       }
 
       // iii. If SetDataHas(resultSetData, nextValue) is false, then
-      if (SetDataHas(resultSetData, nextValue) === false) {
+      if (!SetDataHas(resultSetData, nextValue)) {
         // 1. Append nextValue to resultSetData.
         resultSetData.push(nextValue);
       }
