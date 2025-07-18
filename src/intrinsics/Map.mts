@@ -2,14 +2,18 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   Call,
+  Construct,
+  CreateArrayFromList,
   Get,
   GetIterator,
+  GroupBy,
   IsCallable,
   IteratorClose,
   IteratorStepValue,
   OrdinaryCreateFromConstructor,
   Realm,
   type FunctionObject,
+  type KeyedGroupRecord,
   type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import {
@@ -23,6 +27,7 @@ import {
 import {
   IfAbruptCloseIterator,
   Q,
+  X,
   type ValueEvaluator,
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../helpers.mts';
@@ -86,6 +91,27 @@ function* MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
   return Q(yield* AddEntriesFromIterable(map, iterable, adder));
 }
 
+/** https://tc39.es/ecma262/#sec-map.groupby */
+function* Map_groupBy([items = Value.undefined, callback = Value.undefined]: Arguments): ValueEvaluator {
+  /*
+  1. Let groups be ? GroupBy(items, callback, collection).
+  2. Let map be ! Construct(%Map%).
+  3. For each Record { [[Key]], [[Elements]] } g of groups, do
+    a. Let elements be CreateArrayFromList(g.[[Elements]]).
+    b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
+    c. Append entry to map.[[MapData]].
+  4. Return map.
+  */
+  const groups: KeyedGroupRecord[] = Q(yield* GroupBy(items, callback, 'collection'));
+  const map: MapObject = X(yield* Construct(surroundingAgent.intrinsic('%Map%'))) as MapObject;
+  for (const g of groups) {
+    const elements = CreateArrayFromList(g.Elements);
+    const entry = { Key: g.Key, Value: elements };
+    map.MapData.push(entry);
+  }
+  return map;
+}
+
 /** https://tc39.es/ecma262/#sec-get-map-@@species */
 function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return the this value.
@@ -94,6 +120,7 @@ function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext)
 
 export function bootstrapMap(realmRec: Realm) {
   const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
+    ['groupBy', Map_groupBy, 2],
     [wellKnownSymbols.species, [Map_speciesGetter]],
   ]);
 

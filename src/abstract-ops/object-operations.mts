@@ -18,7 +18,7 @@ import {
   Q, X,
   type PlainCompletion,
 } from '../completion.mts';
-import { isArray } from '../helpers.mts';
+import { __ts_cast__, isArray } from '../helpers.mts';
 import { isBoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
@@ -36,6 +36,16 @@ import {
   ToString,
   isProxyExoticObject,
   F as toNumberValue, R, type FunctionObject, Realm,
+  RequireObjectCoercible,
+  GetIterator,
+  ThrowCompletion,
+  IteratorClose,
+  IteratorStepValue,
+  F,
+  IfAbruptCloseIterator,
+  type ValueCompletion,
+  ToPropertyKey,
+  CanonicalizeKeyedCollectionKey,
 } from '#self';
 
 
@@ -487,4 +497,104 @@ export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: Ob
   }
   // 6. Return unused.
   return undefined;
+}
+
+export type KeyedGroupRecord = {
+  Key: PropertyKeyValue,
+  Elements: Value[]
+};
+
+/** https://tc39.es/ecma262/#sec-add-value-to-keyed-group */
+function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue, value: Value): void {
+  /*
+    1. For each Record { [[Key]], [[Elements]] } g of groups, do
+      a. If SameValue(g.[[Key]], key) is true, then
+        i. Assert: Exactly one element of groups meets this criterion.
+        ii. Append value to g.[[Elements]].
+        iii. Return unused.
+    2. Let group be the Record { [[Key]]: key, [[Elements]]: « value » }.
+    3. Append group to groups.
+    4. Return unused.
+  */
+  for (let index = 0; index < groups.length; index += 1) {
+    const g = groups[index];
+    if (SameValue(g.Key, key) === Value.true) {
+      for (let subIndex = index + 1; subIndex < groups.length; subIndex += 1) {
+        if (subIndex === index) {
+          continue;
+        }
+        Assert(SameValue(groups[subIndex].Key, key) === Value.false);
+      }
+      g.Elements.push(value);
+      return;
+    }
+  }
+
+  const group: KeyedGroupRecord = { Key: key, Elements: [value] };
+  groups.push(group);
+}
+
+export function* GroupBy(items: Value, callback: Value, keyCoercion: 'property' | 'collection'): PlainEvaluator<KeyedGroupRecord[]> {
+  /*
+  1. Perform ? RequireObjectCoercible(items).
+  2. If IsCallable(callback) is false, throw a TypeError exception.
+  3. Let groups be a new empty List.
+  4. Let iteratorRecord be ? GetIterator(items, sync).
+  5. Let k be 0.
+  */
+  Q(RequireObjectCoercible(items));
+  if (!IsCallable(callback)) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
+  }
+  const groups: KeyedGroupRecord[] = [];
+  const iteratorRecord = Q(yield* GetIterator(items, 'sync'));
+  let k = 0;
+  const MAX_SAFE_INTEGER = (2 ** 53) - 1;
+
+  while (true) {
+    /*
+    6. Repeat,
+      a. If k ≥ 2**53 - 1, then
+        i. Let error be ThrowCompletion(a newly created TypeError object).
+        ii. Return ? IteratorClose(iteratorRecord, error).
+      b. Let next be ? IteratorStepValue(iteratorRecord).
+      c. If next is done, then
+        i. Return groups.
+      d. Let value be next.
+      e. Let key be Completion(Call(callback, undefined, « value, 𝔽(k) »)).
+      f. IfAbruptCloseIterator(key, iteratorRecord).
+      g. If keyCoercion is property, then
+        i. Set key to Completion(ToPropertyKey(key)).
+        ii. IfAbruptCloseIterator(key, iteratorRecord).
+      h. Else,
+        i. Assert: keyCoercion is collection.
+        ii. Set key to CanonicalizeKeyedCollectionKey(key).
+      i. Perform AddValueToKeyedGroup(groups, key, value).
+      j. Set k to k + 1.
+    */
+    if (k >= MAX_SAFE_INTEGER) {
+      const error = ThrowCompletion(surroundingAgent.NewError('TypeError', 'OutOfRange', k));
+      return Q(yield* IteratorClose(iteratorRecord, error));
+    }
+    const next: Value | 'done' = Q(yield* IteratorStepValue(iteratorRecord));
+    if (next === 'done') {
+      return groups;
+    }
+    const value: Value = next;
+    let key: ValueCompletion = yield* Call(callback, Value.undefined, [value, F(k)]);
+    IfAbruptCloseIterator(key, iteratorRecord);
+    __ts_cast__<Value>(key);
+
+    if (keyCoercion === 'property') {
+      key = yield* ToPropertyKey(key);
+      IfAbruptCloseIterator(key, iteratorRecord);
+    } else {
+      Assert(keyCoercion === 'collection');
+      key = CanonicalizeKeyedCollectionKey(key);
+    }
+    __ts_cast__<PropertyKeyValue>(key);
+
+    AddValueToKeyedGroup(groups, key, value);
+    k += 1;
+  }
 }

@@ -30,4 +30,3 @@ import-defer = import-defer
 -resizable-arraybuffer
 -decorators
 -ShadowRealm
--array-grouping
