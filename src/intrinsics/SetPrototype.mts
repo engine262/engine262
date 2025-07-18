@@ -387,7 +387,7 @@ function* SetProto_isDisjointFrom([other = Value.undefined]: Arguments, { thisVa
     while (next !== 'done') {
       next = Q(yield* IteratorStepValue(keysIter));
       if (next !== 'done' && SetDataHas(O.SetData, next)) {
-        Q(yield* IteratorClose(keysIter, NormalCompletion(Value.undefined)));
+        Q(yield* IteratorClose(keysIter, NormalCompletion(undefined)));
         return Value.false;
       }
     }
@@ -458,7 +458,7 @@ function* SetProto_isSupersetOf([other = Value.undefined]: Arguments, { thisValu
     */
     next = Q(yield* IteratorStepValue(keysIter));
     if (next !== 'done' && !SetDataHas(O.SetData, next)) {
-      Q(yield* IteratorClose(keysIter, NormalCompletion(Value.undefined)));
+      Q(yield* IteratorClose(keysIter, NormalCompletion(undefined)));
       return Value.false;
     }
   }
