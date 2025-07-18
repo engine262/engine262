@@ -278,7 +278,7 @@ function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefine
       const Pk: JSStringValue = X(yield* ToString(F(k)));
       let nextResult: Value = Q(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
 
-      // FIXME AssertError: completion.type === 'await-resume' (actual type = 'debugger-resume')
+      // FIXME: if nextResult is a rejected promise, at least on the first pass, we throw instead of returning a rejected promise.
       nextResult = Q(yield* Await(nextResult));
       if (!(nextResult instanceof ObjectValue)) {
         return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
