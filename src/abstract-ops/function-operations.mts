@@ -22,6 +22,7 @@ import {
   Q, X,
   type PlainCompletion,
   ReturnCompletion,
+  ThrowCompletion,
 } from '../completion.mts';
 import { ExpectedArgumentCount } from '../static-semantics/all.mts';
 import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mts';
@@ -547,6 +548,9 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
   if (completion && 'next' in completion) {
     completion = yield* completion;
   }
+  if (completion instanceof Completion) {
+    Assert(completion instanceof NormalCompletion || completion instanceof ThrowCompletion);
+  }
 
   surroundingAgent.executionContextStack.pop(calleeContext);
   const result = Q(completion) || Value.undefined;
@@ -620,9 +624,9 @@ export function asyncBuiltinFunctionPrologue(steps: NativeSteps): NativeSteps {
       if (result && 'next' in result) {
         result = yield* result;
       }
-      return Q(result) || ReturnCompletion(Value.undefined);
+      return ReturnCompletion(Q(result) || Value.undefined);
     });
-    return ReturnCompletion(promiseCapability.Promise);
+    return NormalCompletion(promiseCapability.Promise);
   }
   async.section = steps.section;
   return async;
