@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 2942ac73db0924a45c065078c5e60f665d02b741
+ * engine262 0.0.1 7650907a431de9a1ef06a31fa4957921df806467
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -14945,6 +14945,7 @@ const RegExpExecNotObject = o => `${i(o)} is not object or null`;
 const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
 const ResolutionNullOrAmbiguous = (r, n, m) => r === null ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}` : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`;
 const SizeIsNaN = () => 'size property must not be undefined, as it will be NaN';
+const SizeMustBePositiveInteger = () => 'size property must be a positive integer';
 const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 const StrictModeDelete = n => `Cannot not delete property ${i(n)}`;
 const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
@@ -15121,6 +15122,7 @@ var messages = /*#__PURE__*/Object.freeze({
   ResizableBufferInvalidMaxByteLength: ResizableBufferInvalidMaxByteLength,
   ResolutionNullOrAmbiguous: ResolutionNullOrAmbiguous,
   SizeIsNaN: SizeIsNaN,
+  SizeMustBePositiveInteger: SizeMustBePositiveInteger,
   SpeciesNotConstructor: SpeciesNotConstructor,
   StrictModeDelete: StrictModeDelete,
   StrictPoisonPill: StrictPoisonPill,
@@ -51277,6 +51279,112 @@ function SetProto_delete([value = Value.undefined], {
   return Value.false;
 }
 SetProto_delete.section = 'https://tc39.es/ecma262/#sec-set.prototype.delete';
+/** https://tc39.es/ecma262/#sec-set.prototype.difference */
+function* SetProto_difference([other = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+  /* ReturnIfAbrupt */
+  let _temp7 = RequireInternalSlot(O, 'SetData');
+  /* node:coverage ignore next */
+  if (_temp7 instanceof AbruptCompletion) return _temp7;
+  /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+
+  // 3. Let otherRec be ? GetSetRecord(other).
+  /* ReturnIfAbrupt */
+  let _temp8 = yield* GetSetRecord(other);
+  /* node:coverage ignore next */
+  if (_temp8 instanceof AbruptCompletion) return _temp8;
+  /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const otherRec = _temp8;
+
+  // 4. Let resultSetData be a copy of O.[[SetData]].
+  const resultSetData = [...O.SetData];
+
+  // 5. If SetDataSize(O.[[SetData]]) ≤ otherRec.[[Size]], then
+  if (R(SetDataSize(O.SetData)) <= otherRec.Size) {
+    /*
+    a. Let thisSize be the number of elements in O.[[SetData]].
+    b. Let index be 0.
+    c. Repeat, while index < thisSize,
+      i. Let e be resultSetData[index].
+      ii. If e is not empty, then
+        1. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[SetObject]], « e »)).
+        2. If inOther is true, then
+          a. Set resultSetData[index] to empty.
+      iii. Set index to index + 1.
+    */
+    const thisSize = O.SetData.length;
+    let index = 0;
+    while (index < thisSize) {
+      const e = resultSetData[index];
+      if (e !== undefined) {
+        /* ReturnIfAbrupt */
+        let _temp9 = yield* Call(otherRec.Has, otherRec.SetObject, [e]);
+        /* node:coverage ignore next */
+        if (_temp9 instanceof AbruptCompletion) return _temp9;
+        /* node:coverage ignore next */
+        if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+        const inOther = ToBoolean(_temp9);
+        if (inOther === Value.true) {
+          resultSetData[index] = undefined;
+        }
+      }
+      index += 1;
+    }
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp0 = yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys);
+    /* node:coverage ignore next */
+    if (_temp0 instanceof AbruptCompletion) return _temp0;
+    /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    /*
+    a. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
+    b. Let next be not-started.
+    c. Repeat, while next is not done,
+      i. Set next to ? IteratorStepValue(keysIter).
+      ii. If next is not done, then
+        1. Set next to CanonicalizeKeyedCollectionKey(next).
+        2. Let valueIndex be SetDataIndex(resultSetData, next).
+        3. If valueIndex is not not-found, then
+          a. Set resultSetData[valueIndex] to empty.
+    */
+    const keysIter = _temp0;
+    let next = 'not-started';
+    while (next !== 'done') {
+      /* ReturnIfAbrupt */
+      let _temp1 = yield* IteratorStepValue(keysIter);
+      /* node:coverage ignore next */
+      if (_temp1 instanceof AbruptCompletion) return _temp1;
+      /* node:coverage ignore next */
+      if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+      next = _temp1;
+      if (next !== 'done') {
+        next = CanonicalizeKeyedCollectionKey(next);
+        const valueIndex = SetDataIndex(resultSetData, next);
+        if (valueIndex !== 'not-found') {
+          resultSetData[valueIndex] = undefined;
+        }
+      }
+    }
+  }
+
+  /*
+    7. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+    8. Set result.[[SetData]] to resultSetData.
+    9. Return result.
+  */
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']);
+  result.SetData = resultSetData;
+  return result;
+}
+SetProto_difference.section = 'https://tc39.es/ecma262/#sec-set.prototype.difference';
 /** https://tc39.es/ecma262/#sec-set.prototype.entries */
 function SetProto_entries(_args, {
   thisValue
@@ -51295,11 +51403,11 @@ function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
   const S = thisValue;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   /* ReturnIfAbrupt */
-  let _temp7 = RequireInternalSlot(S, 'SetData');
+  let _temp10 = RequireInternalSlot(S, 'SetData');
   /* node:coverage ignore next */
-  if (_temp7 instanceof AbruptCompletion) return _temp7;
+  if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* node:coverage ignore next */
-  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
   if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
@@ -51311,11 +51419,11 @@ function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
     // a. If e is not empty, then
     if (e !== undefined) {
       /* ReturnIfAbrupt */
-      let _temp8 = yield* Call(callbackfn, thisArg, [e, e, S]);
+      let _temp11 = yield* Call(callbackfn, thisArg, [e, e, S]);
       /* node:coverage ignore next */
-      if (_temp8 instanceof AbruptCompletion) return _temp8;
+      if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* node:coverage ignore next */
-      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
     }
   }
   // 6. Return undefined.
@@ -51330,11 +51438,11 @@ function SetProto_has([value = Value.undefined], {
   const S = thisValue;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   /* ReturnIfAbrupt */
-  let _temp9 = RequireInternalSlot(S, 'SetData');
+  let _temp12 = RequireInternalSlot(S, 'SetData');
   /* node:coverage ignore next */
-  if (_temp9 instanceof AbruptCompletion) return _temp9;
+  if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* node:coverage ignore next */
-  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
   // 3. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
   // 4. Let entries be the List that is S.[[SetData]].
@@ -51356,26 +51464,412 @@ function SetProto_sizeGetter(_args, {
   const S = thisValue;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   /* ReturnIfAbrupt */
-  let _temp0 = RequireInternalSlot(S, 'SetData');
+  let _temp13 = RequireInternalSlot(S, 'SetData');
   /* node:coverage ignore next */
-  if (_temp0 instanceof AbruptCompletion) return _temp0;
+  if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* node:coverage ignore next */
-  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
   // 3. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
-  // 4. Let count be 0.
-  let count = 0;
-  // 5. For each e that is an element of entries, do
-  for (const e of entries) {
-    // a. If e is not empty, set count to count + 1
-    if (e !== undefined) {
-      count += 1;
-    }
-  }
-  // 6. Return 𝔽(count).
-  return F(count);
+  return SetDataSize(entries);
 }
 SetProto_sizeGetter.section = 'https://tc39.es/ecma262/#sec-get-set.prototype.size';
+/** https://tc39.es/ecma262/#sec-set.prototype.intersection */
+function* SetProto_intersection([other = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+  /* ReturnIfAbrupt */
+  let _temp14 = RequireInternalSlot(O, 'SetData');
+  /* node:coverage ignore next */
+  if (_temp14 instanceof AbruptCompletion) return _temp14;
+  /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+
+  // 3. Let otherRec be ? GetSetRecord(other).
+  /* ReturnIfAbrupt */
+  let _temp15 = yield* GetSetRecord(other);
+  /* node:coverage ignore next */
+  if (_temp15 instanceof AbruptCompletion) return _temp15;
+  /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const otherRec = _temp15;
+
+  // 4. Let resultSetData be a new empty List.
+  const resultSetData = [];
+  if (R(SetDataSize(O.SetData)) <= otherRec.Size) {
+    /*
+    a. Let thisSize be the number of elements in O.[[SetData]].
+    b. Let index be 0.
+    c. Repeat, while index < thisSize,
+      i. Let e be O.[[SetData]][index].
+      ii. Set index to index + 1.
+      iii. If e is not empty, then
+        1. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[SetObject]], « e »)).
+        2. If inOther is true, then
+          a. NOTE: It is possible for earlier calls to otherRec.[[Has]] to remove and re-add an element of O.[[SetData]], which can cause the same element to be visited twice during this iteration.
+          b. If SetDataHas(resultSetData, e) is false, then
+            i. Append e to resultSetData.
+        3. NOTE: The number of elements in O.[[SetData]] may have increased during execution of otherRec.[[Has]].
+        4. Set thisSize to the number of elements in O.[[SetData]].
+    */
+    let thisSize = O.SetData.length;
+    let index = 0;
+    while (index < thisSize) {
+      const e = O.SetData[index];
+      index += 1;
+      if (e !== undefined) {
+        /* ReturnIfAbrupt */
+        let _temp16 = yield* Call(otherRec.Has, otherRec.SetObject, [e]);
+        /* node:coverage ignore next */
+        if (_temp16 instanceof AbruptCompletion) return _temp16;
+        /* node:coverage ignore next */
+        if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+        const inOther = ToBoolean(_temp16);
+        if (inOther === Value.true && !SetDataHas(resultSetData, e)) {
+          resultSetData.push(e);
+        }
+      }
+      thisSize = O.SetData.length;
+    }
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp17 = yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys);
+    /* node:coverage ignore next */
+    if (_temp17 instanceof AbruptCompletion) return _temp17;
+    /* node:coverage ignore next */
+    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+    /*
+      a. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
+      b. Let next be not-started.
+      c. Repeat, while next is not done,
+        i. Set next to ? IteratorStepValue(keysIter).
+        ii. If next is not done, then
+          1. Set next to CanonicalizeKeyedCollectionKey(next).
+          2. Let inThis be SetDataHas(O.[[SetData]], next).
+          3. If inThis is true, then
+            a. NOTE: Because other is an arbitrary object, it is possible for its "keys" iterator to produce the same value more than once.
+            b. If SetDataHas(resultSetData, next) is false, then
+              i. Append next to resultSetData.
+    */
+    const keysIter = _temp17;
+    let next = 'not-started';
+    while (next !== 'done') {
+      /* ReturnIfAbrupt */
+      let _temp18 = yield* IteratorStepValue(keysIter);
+      /* node:coverage ignore next */
+      if (_temp18 instanceof AbruptCompletion) return _temp18;
+      /* node:coverage ignore next */
+      if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+      next = _temp18;
+      if (next !== 'done') {
+        next = CanonicalizeKeyedCollectionKey(next);
+        const inThis = SetDataHas(O.SetData, next);
+        if (inThis && !SetDataHas(resultSetData, next)) {
+          resultSetData.push(next);
+        }
+      }
+    }
+  }
+
+  /*
+    7. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+    8. Set result.[[SetData]] to resultSetData.
+    9. Return result.
+  */
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']);
+  result.SetData = resultSetData;
+  return result;
+}
+SetProto_intersection.section = 'https://tc39.es/ecma262/#sec-set.prototype.intersection';
+/** https://tc39.es/ecma262/#sec-set.prototype.isdisjointfrom */
+function* SetProto_isDisjointFrom([other = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+  /* ReturnIfAbrupt */
+  let _temp19 = RequireInternalSlot(O, 'SetData');
+  /* node:coverage ignore next */
+  if (_temp19 instanceof AbruptCompletion) return _temp19;
+  /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+
+  // 3. Let otherRec be ? GetSetRecord(other).
+  /* ReturnIfAbrupt */
+  let _temp20 = yield* GetSetRecord(other);
+  /* node:coverage ignore next */
+  if (_temp20 instanceof AbruptCompletion) return _temp20;
+  /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const otherRec = _temp20;
+  if (R(SetDataSize(O.SetData)) <= otherRec.Size) {
+    /*
+    a. Let thisSize be the number of elements in O.[[SetData]].
+    b. Let index be 0.
+    c. Repeat, while index < thisSize,
+      i. Let e be O.[[SetData]][index].
+      ii. Set index to index + 1.
+      iii. If e is not empty, then
+        1. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[SetObject]], « e »)).
+        2. If inOther is true, return false.
+        3. NOTE: The number of elements in O.[[SetData]] may have increased during execution of otherRec.[[Has]].
+        4. Set thisSize to the number of elements in O.[[SetData]].
+    */
+    let thisSize = O.SetData.length;
+    let index = 0;
+    while (index < thisSize) {
+      const e = O.SetData[index];
+      index += 1;
+      if (e !== undefined) {
+        /* ReturnIfAbrupt */
+        let _temp21 = yield* Call(otherRec.Has, otherRec.SetObject, [e]);
+        /* node:coverage ignore next */
+        if (_temp21 instanceof AbruptCompletion) return _temp21;
+        /* node:coverage ignore next */
+        if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+        const inOther = ToBoolean(_temp21);
+        if (inOther === Value.true) {
+          return BooleanValue.false;
+        }
+        thisSize = O.SetData.length;
+      }
+    }
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp22 = yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys);
+    /* node:coverage ignore next */
+    if (_temp22 instanceof AbruptCompletion) return _temp22;
+    /* node:coverage ignore next */
+    if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+    /*
+    a. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
+    b. Let next be not-started.
+    c. Repeat, while next is not done,
+      i. Set next to ? IteratorStepValue(keysIter).
+      ii. If next is not done, then
+        1. If SetDataHas(O.[[SetData]], next) is true, then
+          a. Perform ? IteratorClose(keysIter, NormalCompletion(unused)).
+          b. Return false.
+    */
+    const keysIter = _temp22;
+    let next = 'not-started';
+    while (next !== 'done') {
+      /* ReturnIfAbrupt */
+      let _temp23 = yield* IteratorStepValue(keysIter);
+      /* node:coverage ignore next */
+      if (_temp23 instanceof AbruptCompletion) return _temp23;
+      /* node:coverage ignore next */
+      if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+      next = _temp23;
+      if (next !== 'done' && SetDataHas(O.SetData, next)) {
+        /* ReturnIfAbrupt */
+        let _temp24 = yield* IteratorClose(keysIter, NormalCompletion(undefined));
+        /* node:coverage ignore next */
+        if (_temp24 instanceof AbruptCompletion) return _temp24;
+        /* node:coverage ignore next */
+        if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+        return Value.false;
+      }
+    }
+  }
+  return Value.true;
+}
+SetProto_isDisjointFrom.section = 'https://tc39.es/ecma262/#sec-set.prototype.isdisjointfrom';
+/** https://tc39.es/ecma262/#sec-set.prototype.issubsetof */
+function* SetProto_isSubsetOf([other = Value.undefined], {
+  thisValue
+}) {
+  const O = thisValue;
+  /* ReturnIfAbrupt */
+  let _temp25 = RequireInternalSlot(O, 'SetData');
+  /* node:coverage ignore next */
+  if (_temp25 instanceof AbruptCompletion) return _temp25;
+  /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  /* ReturnIfAbrupt */
+  let _temp26 = yield* GetSetRecord(other);
+  /* node:coverage ignore next */
+  if (_temp26 instanceof AbruptCompletion) return _temp26;
+  /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const otherRec = _temp26;
+  if (SetDataSize(O.SetData).value > otherRec.Size) {
+    return Value.false;
+  }
+  let thisSize = O.SetData.length;
+  let index = 0;
+  while (index < thisSize) {
+    /*
+    a. Let e be O.[[SetData]][index].
+    b. Set index to index + 1.
+    c. If e is not empty, then
+      i. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[SetObject]], « e »)).
+      ii. If inOther is false, return false.
+      iii. NOTE: The number of elements in O.[[SetData]] may have increased during execution of otherRec.[[Has]].
+      iv. Set thisSize to the number of elements in O.[[SetData]].
+    */
+    const e = O.SetData[index];
+    index += 1;
+    if (e !== undefined) {
+      /* ReturnIfAbrupt */
+      let _temp27 = yield* Call(otherRec.Has, otherRec.SetObject, [e]);
+      /* node:coverage ignore next */
+      if (_temp27 instanceof AbruptCompletion) return _temp27;
+      /* node:coverage ignore next */
+      if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+      const inOther = ToBoolean(_temp27);
+      if (inOther === Value.false) {
+        return Value.false;
+      }
+      thisSize = O.SetData.length;
+    }
+  }
+  return Value.true;
+}
+SetProto_isSubsetOf.section = 'https://tc39.es/ecma262/#sec-set.prototype.issubsetof';
+/** https://tc39.es/ecma262/#sec-set.prototype.issupersetof */
+function* SetProto_isSupersetOf([other = Value.undefined], {
+  thisValue
+}) {
+  const O = thisValue;
+  /* ReturnIfAbrupt */
+  let _temp28 = RequireInternalSlot(O, 'SetData');
+  /* node:coverage ignore next */
+  if (_temp28 instanceof AbruptCompletion) return _temp28;
+  /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  /* ReturnIfAbrupt */
+  let _temp29 = yield* GetSetRecord(other);
+  /* node:coverage ignore next */
+  if (_temp29 instanceof AbruptCompletion) return _temp29;
+  /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const otherRec = _temp29;
+  if (SetDataSize(O.SetData).value < otherRec.Size) {
+    return Value.false;
+  }
+  /* ReturnIfAbrupt */
+  let _temp30 = yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys);
+  /* node:coverage ignore next */
+  if (_temp30 instanceof AbruptCompletion) return _temp30;
+  /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const keysIter = _temp30;
+  let next = 'not-started';
+  while (next !== 'done') {
+    /* ReturnIfAbrupt */
+    let _temp31 = yield* IteratorStepValue(keysIter);
+    /* node:coverage ignore next */
+    if (_temp31 instanceof AbruptCompletion) return _temp31;
+    /* node:coverage ignore next */
+    if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+    /*
+    a. Set next to ? IteratorStepValue(keysIter).
+    b. If next is not done, then
+      i. If SetDataHas(O.[[SetData]], next) is false, then
+        1. Perform ? IteratorClose(keysIter, NormalCompletion(unused)).
+        2. Return false.
+    */
+    next = _temp31;
+    if (next !== 'done' && !SetDataHas(O.SetData, next)) {
+      /* ReturnIfAbrupt */
+      let _temp32 = yield* IteratorClose(keysIter, NormalCompletion(undefined));
+      /* node:coverage ignore next */
+      if (_temp32 instanceof AbruptCompletion) return _temp32;
+      /* node:coverage ignore next */
+      if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+      return Value.false;
+    }
+  }
+  return Value.true;
+}
+SetProto_isSupersetOf.section = 'https://tc39.es/ecma262/#sec-set.prototype.issupersetof';
+/** https://tc39.es/ecma262/#sec-set.prototype.symmetricdifference */
+function* SetProto_symmetricDifference([other = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+  /* ReturnIfAbrupt */
+  let _temp33 = RequireInternalSlot(O, 'SetData');
+  /* node:coverage ignore next */
+  if (_temp33 instanceof AbruptCompletion) return _temp33;
+  /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+
+  // 3. Let otherRec be ? GetSetRecord(other).
+  /* ReturnIfAbrupt */
+  let _temp34 = yield* GetSetRecord(other);
+  /* node:coverage ignore next */
+  if (_temp34 instanceof AbruptCompletion) return _temp34;
+  /* node:coverage ignore next */
+  if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  const otherRec = _temp34;
+
+  // 4. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
+  /* ReturnIfAbrupt */
+  let _temp35 = yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys);
+  /* node:coverage ignore next */
+  if (_temp35 instanceof AbruptCompletion) return _temp35;
+  /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  const keysIter = _temp35;
+  // 5. Let resultSetData be a copy of O.[[SetData]].
+  const resultSetData = [...O.SetData];
+  // 6. Let next be not-started.
+  let next = 'not-started';
+  while (next !== 'done') {
+    /* ReturnIfAbrupt */
+    let _temp36 = yield* IteratorStepValue(keysIter);
+    /* node:coverage ignore next */
+    if (_temp36 instanceof AbruptCompletion) return _temp36;
+    /* node:coverage ignore next */
+    if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+    /*
+    a. Set next to ? IteratorStepValue(keysIter).
+    b. If next is not done, then
+      i. Set next to CanonicalizeKeyedCollectionKey(next).
+      ii. Let resultIndex be SetDataIndex(resultSetData, next).
+      iii. If resultIndex is not-found, let alreadyInResult be false. Otherwise let alreadyInResult be true.
+      iv. If SetDataHas(O.[[SetData]], next) is true, then
+        1. If alreadyInResult is true, set resultSetData[resultIndex] to empty.
+      v. Else,
+        1. If alreadyInResult is false, append next to resultSetData.
+    */
+    next = _temp36;
+    if (next !== 'done') {
+      next = CanonicalizeKeyedCollectionKey(next);
+      const resultIndex = SetDataIndex(resultSetData, next);
+      if (SetDataHas(O.SetData, next) === true) {
+        if (resultIndex !== 'not-found') {
+          resultSetData[resultIndex] = undefined;
+        }
+      } else {
+        if (resultIndex === 'not-found') {
+          resultSetData.push(next);
+        }
+      }
+    }
+  }
+  /*
+  8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+  9. Set result.[[SetData]] to resultSetData.
+  10. Return result.
+  */
+
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']);
+  result.SetData = resultSetData;
+  return result;
+}
+SetProto_symmetricDifference.section = 'https://tc39.es/ecma262/#sec-set.prototype.symmetricdifference';
 /** https://tc39.es/ecma262/#sec-set.prototype.values */
 function SetProto_values(_args, {
   thisValue
@@ -51395,29 +51889,29 @@ function* SetProto_union([other = Value.undefined], {
 
   // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
   /* ReturnIfAbrupt */
-  let _temp1 = RequireInternalSlot(O, 'SetData');
+  let _temp37 = RequireInternalSlot(O, 'SetData');
   /* node:coverage ignore next */
-  if (_temp1 instanceof AbruptCompletion) return _temp1;
+  if (_temp37 instanceof AbruptCompletion) return _temp37;
   /* node:coverage ignore next */
-  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
 
   // 3. Let otherRec be ? GetSetRecord(other).
   /* ReturnIfAbrupt */
-  let _temp10 = yield* GetSetRecord(other);
+  let _temp38 = yield* GetSetRecord(other);
   /* node:coverage ignore next */
-  if (_temp10 instanceof AbruptCompletion) return _temp10;
+  if (_temp38 instanceof AbruptCompletion) return _temp38;
   /* node:coverage ignore next */
-  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
-  const otherRec = _temp10;
+  if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+  const otherRec = _temp38;
 
-  // 4. Let keysIter be ? GetKeysIterator(otherRec).
+  // 4. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
   /* ReturnIfAbrupt */
-  let _temp11 = yield* GetKeysIterator(otherRec);
+  let _temp39 = yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys);
   /* node:coverage ignore next */
-  if (_temp11 instanceof AbruptCompletion) return _temp11;
+  if (_temp39 instanceof AbruptCompletion) return _temp39;
   /* node:coverage ignore next */
-  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
-  const keysIter = _temp11;
+  if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+  const keysIter = _temp39;
 
   // 5. Let resultSetData be a copy of O.[[SetData]].
   const resultSetData = [...O.SetData];
@@ -51428,24 +51922,24 @@ function* SetProto_union([other = Value.undefined], {
   // 7. Repeat, while next is not DONE,
   while (next !== 'done') {
     /* ReturnIfAbrupt */
-    let _temp12 = yield* IteratorStep(keysIter);
+    let _temp40 = yield* IteratorStep(keysIter);
     /* node:coverage ignore next */
-    if (_temp12 instanceof AbruptCompletion) return _temp12;
+    if (_temp40 instanceof AbruptCompletion) return _temp40;
     /* node:coverage ignore next */
-    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
     // a. Set next to ? IteratorStep(keysIter).
-    next = _temp12;
+    next = _temp40;
 
     // b. If next is not DONE, then
     if (next !== 'done') {
       /* ReturnIfAbrupt */
-      let _temp13 = yield* IteratorValue(next);
+      let _temp41 = yield* IteratorValue(next);
       /* node:coverage ignore next */
-      if (_temp13 instanceof AbruptCompletion) return _temp13;
+      if (_temp41 instanceof AbruptCompletion) return _temp41;
       /* node:coverage ignore next */
-      if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+      if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
       // i. Let nextValue be ? IteratorValue(next).
-      let nextValue = _temp13;
+      let nextValue = _temp41;
 
       // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
       if (nextValue instanceof NumberValue && Object.is(R(nextValue), -0)) {
@@ -51453,7 +51947,7 @@ function* SetProto_union([other = Value.undefined], {
       }
 
       // iii. If SetDataHas(resultSetData, nextValue) is false, then
-      if (SetDataHas(resultSetData, nextValue) === Value.false) {
+      if (!SetDataHas(resultSetData, nextValue)) {
         // 1. Append nextValue to resultSetData.
         resultSetData.push(nextValue);
       }
@@ -51471,38 +51965,38 @@ function* SetProto_union([other = Value.undefined], {
 }
 SetProto_union.section = 'https://tc39.es/ecma262/#sec-set.prototype.union';
 function bootstrapSetPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0], ['union', SetProto_union, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
+  const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['difference', SetProto_difference, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['intersection', SetProto_intersection, 1], ['isDisjointFrom', SetProto_isDisjointFrom, 1], ['isSubsetOf', SetProto_isSubsetOf, 1], ['isSupersetOf', SetProto_isSupersetOf, 1], ['size', [SetProto_sizeGetter]], ['symmetricDifference', SetProto_symmetricDifference, 1], ['values', SetProto_values, 0], ['union', SetProto_union, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
   /* X */
-  let _temp14 = proto.GetOwnProperty(Value('values'));
+  let _temp42 = proto.GetOwnProperty(Value('values'));
   /* node:coverage ignore next */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) _temp42 = skipDebugger(_temp42);
   /* node:coverage ignore next */
-  if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
-    cause: _temp14
+  if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
+    cause: _temp42
   });
   /* node:coverage ignore next */
-  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
-  const valuesFunc = _temp14;
+  if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+  const valuesFunc = _temp42;
   /* X */
-  let _temp15 = proto.DefineOwnProperty(Value('keys'), valuesFunc);
+  let _temp43 = proto.DefineOwnProperty(Value('keys'), valuesFunc);
   /* node:coverage ignore next */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
+  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) _temp43 = skipDebugger(_temp43);
   /* node:coverage ignore next */
-  if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(Value('keys'), valuesFunc) returned an abrupt completion", {
-    cause: _temp15
+  if (_temp43 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(Value('keys'), valuesFunc) returned an abrupt completion", {
+    cause: _temp43
   });
   /* node:coverage ignore next */
-  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
   /* X */
-  let _temp16 = proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc);
+  let _temp44 = proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc);
   /* node:coverage ignore next */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
+  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) _temp44 = skipDebugger(_temp44);
   /* node:coverage ignore next */
-  if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc) returned an abrupt completion", {
-    cause: _temp16
+  if (_temp44 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc) returned an abrupt completion", {
+    cause: _temp44
   });
   /* node:coverage ignore next */
-  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
   realmRec.Intrinsics['%Set.prototype%'] = proto;
 }
 /** https://tc39.es/ecma262/#sec-getsetrecord */
@@ -51514,22 +52008,22 @@ function* GetSetRecord(obj) {
 
   // 2. Let rawSize be ? Get(obj, "size").
   /* ReturnIfAbrupt */
-  let _temp17 = yield* Get(obj, Value('size'));
+  let _temp45 = yield* Get(obj, Value('size'));
   /* node:coverage ignore next */
-  if (_temp17 instanceof AbruptCompletion) return _temp17;
+  if (_temp45 instanceof AbruptCompletion) return _temp45;
   /* node:coverage ignore next */
-  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
-  const rawSize = _temp17;
+  if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+  const rawSize = _temp45;
 
   // 3. Let numSize be ? ToNumber(rawSize).
   // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
   /* ReturnIfAbrupt */
-  let _temp18 = yield* ToNumber(rawSize);
+  let _temp46 = yield* ToNumber(rawSize);
   /* node:coverage ignore next */
-  if (_temp18 instanceof AbruptCompletion) return _temp18;
+  if (_temp46 instanceof AbruptCompletion) return _temp46;
   /* node:coverage ignore next */
-  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
-  const numSize = _temp18;
+  if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+  const numSize = _temp46;
 
   // 5. If numSize is NaN, throw a TypeError exception.
   if (numSize.isNaN()) {
@@ -51538,48 +52032,53 @@ function* GetSetRecord(obj) {
 
   // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
   /* X */
-  let _temp19 = ToIntegerOrInfinity(numSize);
+  let _temp47 = ToIntegerOrInfinity(numSize);
   /* node:coverage ignore next */
-  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
+  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) _temp47 = skipDebugger(_temp47);
   /* node:coverage ignore next */
-  if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(numSize) returned an abrupt completion", {
-    cause: _temp19
+  if (_temp47 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(numSize) returned an abrupt completion", {
+    cause: _temp47
   });
   /* node:coverage ignore next */
-  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
-  const intSize = _temp19;
+  if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+  const intSize = _temp47;
 
-  // 7. Let has be ? Get(obj, "has").
+  // 7. If intSize < 0, throw a RangeError exception.
+  if (intSize < 0) {
+    return surroundingAgent.Throw('RangeError', 'SizeMustBePositiveInteger');
+  }
+
+  // 8. Let has be ? Get(obj, "has").
   /* ReturnIfAbrupt */
-  let _temp20 = yield* Get(obj, Value('has'));
+  let _temp48 = yield* Get(obj, Value('has'));
   /* node:coverage ignore next */
-  if (_temp20 instanceof AbruptCompletion) return _temp20;
+  if (_temp48 instanceof AbruptCompletion) return _temp48;
   /* node:coverage ignore next */
-  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
-  const has = _temp20;
+  if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+  const has = _temp48;
 
-  // 8. If IsCallable(has) is false, throw a TypeError exception.
+  // 9. If IsCallable(has) is false, throw a TypeError exception.
   if (!IsCallable(has)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', has);
   }
 
-  // 9. Let keys be ? Get(obj, "keys").
+  // 10. Let keys be ? Get(obj, "keys").
   /* ReturnIfAbrupt */
-  let _temp21 = yield* Get(obj, Value('keys'));
+  let _temp49 = yield* Get(obj, Value('keys'));
   /* node:coverage ignore next */
-  if (_temp21 instanceof AbruptCompletion) return _temp21;
+  if (_temp49 instanceof AbruptCompletion) return _temp49;
   /* node:coverage ignore next */
-  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
-  const keys = _temp21;
+  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+  const keys = _temp49;
 
-  // 10. If IsCallable(keys) is false, throw a TypeError exception.
+  // 11. If IsCallable(keys) is false, throw a TypeError exception.
   if (!IsCallable(keys)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', keys);
   }
 
-  // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
+  // 12. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
   const setRecord = {
-    Set: obj,
+    SetObject: obj,
     Size: intSize,
     Has: has,
     Keys: keys
@@ -51587,59 +52086,48 @@ function* GetSetRecord(obj) {
   return EnsureCompletion(setRecord);
 }
 GetSetRecord.section = 'https://tc39.es/ecma262/#sec-getsetrecord';
-/** https://tc39.es/proposal-set-methods/#sec-getkeysiterator */
-function* GetKeysIterator(setRec) {
-  /* ReturnIfAbrupt */
-  let _temp22 = yield* Call(setRec.Keys, setRec.Set);
-  /* node:coverage ignore next */
-  if (_temp22 instanceof AbruptCompletion) return _temp22;
-  /* node:coverage ignore next */
-  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
-  // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
-  const keysIter = _temp22;
-
-  // 2. If keysIter is not an Object, throw a TypeError exception.
-  if (!(keysIter instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', keysIter);
-  }
-
-  // 3. Let nextMethod be ? Get(keysIter, "next").
-  /* ReturnIfAbrupt */
-  let _temp23 = yield* Get(keysIter, Value('next'));
-  /* node:coverage ignore next */
-  if (_temp23 instanceof AbruptCompletion) return _temp23;
-  /* node:coverage ignore next */
-  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
-  const nextMethod = _temp23;
-
-  // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
-  if (!IsCallable(nextMethod)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', nextMethod);
-  }
-
-  // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
-  const iteratorRecord = {
-    Iterator: keysIter,
-    NextMethod: nextMethod,
-    Done: Value.false
-  };
-  return EnsureCompletion(iteratorRecord);
-}
-GetKeysIterator.section = 'https://tc39.es/proposal-set-methods/#sec-getkeysiterator';
 /** https://tc39.es/ecma262/#sec-setdatahas */
 function SetDataHas(resultSetData, value) {
-  // 1. For each element e of resultSetData, do
-  for (const e of resultSetData) {
-    // a. If e is not empty and SameValueZero(e, value) is true, return true.
-    if (e !== undefined && SameValueZero(e, value) === Value.true) {
-      return Value.true;
-    }
-  }
-
-  // 2. Return false.
-  return Value.false;
+  return SetDataIndex(resultSetData, value) !== 'not-found';
 }
 SetDataHas.section = 'https://tc39.es/ecma262/#sec-setdatahas';
+/** https://tc39.es/ecma262/#sec-setdataindex */
+function SetDataIndex(setData, value) {
+  /*
+  1. Set value to CanonicalizeKeyedCollectionKey(value).
+  2. Let size be the number of elements in setData.
+  3. Let index be 0.
+  4. Repeat, while index < size,
+    a. Let e be setData[index].
+    b. If e is not empty and e is value, then
+      i. Return index.
+    c. Set index to index + 1.
+  5. Return not-found.
+  */
+  value = CanonicalizeKeyedCollectionKey(value);
+  const size = setData.length;
+  let index = 0;
+  while (index < size) {
+    const e = setData[index];
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+      return index;
+    }
+    index += 1;
+  }
+  return 'not-found';
+}
+SetDataIndex.section = 'https://tc39.es/ecma262/#sec-setdataindex';
+/** https://tc39.es/ecma262/#sec-setdatasize */
+function SetDataSize(setData) {
+  let count = 0;
+  for (const e of setData) {
+    if (e !== undefined) {
+      count += 1;
+    }
+  }
+  return F(count);
+}
+SetDataSize.section = 'https://tc39.es/ecma262/#sec-setdatasize';
 
 function isSetObject(value) {
   return 'SetData' in value;
