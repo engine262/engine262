@@ -154,6 +154,7 @@ export const ResolutionNullOrAmbiguous = (r: string | null, n: Value, m: Abstrac
   ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
 export const SizeIsNaN = () => 'size property must not be undefined, as it will be NaN';
+export const SizeMustBePositiveInteger = () => 'size property must be a positive integer';
 export const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 export const StrictModeDelete = (n: PropertyKeyValue) => `Cannot not delete property ${i(n)}`;
 export const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
