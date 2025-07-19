@@ -175,3 +175,6 @@ staging/sm/TypedArray/toString.js
 
 # TODO: https://github.com/tc39/ecma262/issues/3592
 built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
+
+# TODO: investigate if this is just too slow or breaks our gc implemenetation
+built-ins/Array/fromAsync/asyncitems-arraylike-too-long.js

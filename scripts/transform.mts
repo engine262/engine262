@@ -23,7 +23,7 @@ function getEnclosingConditionalExpression(path: NodePath) {
   return null;
 }
 
-type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'Value' | 'skipDebugger';
+type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger';
 
 interface State extends PluginPass {
   needed: Partial<Record<NeededNames, boolean>>;
@@ -41,6 +41,7 @@ interface Macros {
   X: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null, source: t.StringLiteral }>;
   ReturnIfAbrupt: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null }>;
   IfAbruptCloseIterator: Macro<{ value: t.Identifier, iteratorRecord: t.Identifier }>;
+  IfAbruptCloseAsyncIterator: Macro<{ value: t.Identifier, iteratorRecord: t.Identifier }>;
   IfAbruptRejectPromise: Macro<{ value: t.Identifier, capability: t.Identifier }>;
 }
 
@@ -78,6 +79,12 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
   function createImportIteratorClose() {
     return template.statement.ast`
       import { IteratorClose } from "#self";
+    `;
+  }
+
+  function createImportAsyncIteratorClose() {
+    return template.statement.ast`
+      import { AsyncIteratorClose } from "#self";
     `;
   }
 
@@ -156,6 +163,16 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       `, { preserveComments: true }),
       imports: ['IteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
+    IfAbruptCloseAsyncIterator: {
+      template: template(`
+      /* IfAbruptCloseAsyncIterator */
+      /* node:coverage ignore next */
+      if (%%value%% instanceof AbruptCompletion) return yield* AsyncIteratorClose(%%iteratorRecord%%, %%value%%);
+      /* node:coverage ignore next */
+      if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+      `, { preserveComments: true }),
+      imports: ['Assert', 'AsyncIteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
+    },
     IfAbruptRejectPromise: {
       template: template(`
       /* IfAbruptRejectPromise */
@@ -213,6 +230,9 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
           }
           if (state.needed.IteratorClose) {
             path.unshiftContainer('body', createImportIteratorClose());
+          }
+          if (state.needed.AsyncIteratorClose) {
+            path.unshiftContainer('body', createImportAsyncIteratorClose());
           }
           if (state.needed.Value) {
             path.unshiftContainer('body', createImportValue());
@@ -295,7 +315,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               (binding.path.parent as t.VariableDeclaration).kind = 'let';
               statementPath.insertBefore(macro.template({ value: argument, capability }));
               tryRemove(path);
-            } else if (macro === MACROS.IfAbruptCloseIterator) {
+            } else if (macro === MACROS.IfAbruptCloseIterator || macro === MACROS.IfAbruptCloseAsyncIterator) {
               if (!t.isIdentifier(argument)) {
                 throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
               }
