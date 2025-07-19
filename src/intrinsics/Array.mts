@@ -195,7 +195,7 @@ function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefine
   if (mapper === Value.undefined) {
     mapping = false;
   } else {
-    if (IsCallable(mapper) === false) {
+    if (!IsCallable(mapper)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
     }
     mapping = true;
