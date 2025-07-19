@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 7650907a431de9a1ef06a31fa4957921df806467
+ * engine262 0.0.1 e364cadd411735463b02f083c8227660beb63856
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -26650,6 +26650,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     throw new TypeError('IfAbruptCloseIterator() requires build');
   }
   IfAbruptCloseIterator.section = 'https://tc39.es/ecma262/#sec-ifabruptcloseiterator';
+  /** https://tc39.es/proposal-array-from-async/#sec-ifabruptcloseasynciterator */
+  function IfAbruptCloseAsyncIterator(_value, _iteratorRecord) {
+    /* node:coverage ignore next */
+    throw new TypeError('IfAbruptCloseAsyncIterator() requires build');
+  }
+  IfAbruptCloseAsyncIterator.section = 'https://tc39.es/proposal-array-from-async/#sec-ifabruptcloseasynciterator';
   /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
   function IfAbruptRejectPromise(_value, _capability) {
     /* node:coverage ignore next */
@@ -27786,7 +27792,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     asyncContext.promiseCapability = promiseCapability;
     const runningContext = exports.surroundingAgent.runningExecutionContext;
     asyncContext.codeEvaluationState = function* resumer() {
-      const result = EnsureCompletion(yield* Evaluate(asyncBody));
+      let result;
+      if (typeof asyncBody === 'function') {
+        result = EnsureCompletion(yield* asyncBody());
+      } else {
+        result = EnsureCompletion(yield* Evaluate(asyncBody));
+      }
       // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
       exports.surroundingAgent.executionContextStack.pop(asyncContext);
       if (result.Type === 'normal') {
@@ -29734,6 +29745,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (completion && 'next' in completion) {
       completion = yield* completion;
     }
+    if (completion instanceof Completion) {
+      Assert(completion instanceof NormalCompletion || completion instanceof ThrowCompletion, "completion instanceof NormalCompletion || completion instanceof ThrowCompletion");
+    }
     exports.surroundingAgent.executionContextStack.pop(calleeContext);
     /* ReturnIfAbrupt */
     /* node:coverage ignore next */
@@ -29832,6 +29846,47 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** This is a helper function to define non-spec host functions. */
   CreateBuiltinFunction.from = (steps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
 
+  /**
+   * @internal
+   * in https://tc39.es/proposal-array-from-async/#sec-array.fromAsync
+   * "This async method performs the following steps when called:"
+   *
+   * this function wraps the async function.
+   */
+  function asyncBuiltinFunctionPrologue(steps) {
+    function* async(args, context) {
+      /* X */
+      let _temp20 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+      /* node:coverage ignore next */
+      if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+      /* node:coverage ignore next */
+      if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+        cause: _temp20
+      });
+      /* node:coverage ignore next */
+      if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+      const promiseCapability = _temp20;
+      const self = this;
+      yield* AsyncFunctionStart(promiseCapability, function* asyncFunctionPrologue() {
+        let result = Reflect.apply(steps, self, [args, context]);
+        if (result && 'next' in result) {
+          result = yield* result;
+        }
+        /* ReturnIfAbrupt */
+        /* node:coverage ignore next */
+        if (result && typeof result === 'object' && 'next' in result) throw new Assert.Error('Forgot to yield* on the completion.');
+        /* node:coverage ignore next */
+        if (result instanceof AbruptCompletion) return result;
+        /* node:coverage ignore next */
+        if (result instanceof Completion) result = result.Value;
+        return ReturnCompletion(result || Value.undefined);
+      });
+      return NormalCompletion(promiseCapability.Promise);
+    }
+    async.section = steps.section;
+    return async;
+  }
+  asyncBuiltinFunctionPrologue.section = 'https://tc39.es/proposal-array-from-async/#sec-array.fromAsync';
   /** https://tc39.es/ecma262/#sec-preparefortailcall */
   function PrepareForTailCall() {
     // 1. Let leafContext be the running execution context.
@@ -29846,19 +29901,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** NON-SPEC */
   function IntrinsicsFunctionToString(F) {
     /* X */
-    let _temp20 = FunctionProto_toString([], {
+    let _temp21 = FunctionProto_toString([], {
       thisValue: F,
       NewTarget: Value.undefined
     });
     /* node:coverage ignore next */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
     /* node:coverage ignore next */
-    if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! FunctionProto_toString([], { thisValue: F, NewTarget: Value.undefined }) returned an abrupt completion", {
-      cause: _temp20
+    if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! FunctionProto_toString([], { thisValue: F, NewTarget: Value.undefined }) returned an abrupt completion", {
+      cause: _temp21
     });
     /* node:coverage ignore next */
-    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
-    return _temp20.stringValue();
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    return _temp21.stringValue();
   }
 
   /** https://tc39.es/ecma262/#sec-generator-objects */
@@ -34125,6 +34180,115 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return undefined;
   }
   SetterThatIgnoresPrototypeProperties.section = 'https://tc39.es/ecma262/#sec-SetterThatIgnoresPrototypeProperties';
+  /** https://tc39.es/ecma262/#sec-add-value-to-keyed-group */
+  function AddValueToKeyedGroup(groups, key, value) {
+    /*
+      1. For each Record { [[Key]], [[Elements]] } g of groups, do
+        a. If SameValue(g.[[Key]], key) is true, then
+          i. Assert: Exactly one element of groups meets this criterion.
+          ii. Append value to g.[[Elements]].
+          iii. Return unused.
+      2. Let group be the Record { [[Key]]: key, [[Elements]]: « value » }.
+      3. Append group to groups.
+      4. Return unused.
+    */
+    for (const g of groups) {
+      if (SameValue(g.Key, key) === Value.true) {
+        let count = 0;
+        for (const otherG of groups) {
+          if (SameValue(otherG.Key, key) === Value.true) {
+            count += 1;
+          }
+        }
+        Assert(count === 1, "count === 1");
+        g.Elements.push(value);
+        return;
+      }
+    }
+    const group = {
+      Key: key,
+      Elements: [value]
+    };
+    groups.push(group);
+  }
+  AddValueToKeyedGroup.section = 'https://tc39.es/ecma262/#sec-add-value-to-keyed-group';
+  function* GroupBy(items, callback, keyCoercion) {
+    /* ReturnIfAbrupt */
+    let _temp41 = RequireObjectCoercible(items);
+    /* node:coverage ignore next */
+    if (_temp41 instanceof AbruptCompletion) return _temp41;
+    /* node:coverage ignore next */
+    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+    if (!IsCallable(callback)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
+    }
+    const groups = [];
+    /* ReturnIfAbrupt */
+    let _temp42 = yield* GetIterator(items, 'sync');
+    /* node:coverage ignore next */
+    if (_temp42 instanceof AbruptCompletion) return _temp42;
+    /* node:coverage ignore next */
+    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+    const iteratorRecord = _temp42;
+    let k = 0;
+    const MAX_SAFE_INTEGER = 2 ** 53 - 1;
+    while (true) {
+      /*
+      6. Repeat,
+        a. If k ≥ 2**53 - 1, then
+          i. Let error be ThrowCompletion(a newly created TypeError object).
+          ii. Return ? IteratorClose(iteratorRecord, error).
+        b. Let next be ? IteratorStepValue(iteratorRecord).
+        c. If next is done, then
+          i. Return groups.
+        d. Let value be next.
+        e. Let key be Completion(Call(callback, undefined, « value, 𝔽(k) »)).
+        f. IfAbruptCloseIterator(key, iteratorRecord).
+        g. If keyCoercion is property, then
+          i. Set key to Completion(ToPropertyKey(key)).
+          ii. IfAbruptCloseIterator(key, iteratorRecord).
+        h. Else,
+          i. Assert: keyCoercion is collection.
+          ii. Set key to CanonicalizeKeyedCollectionKey(key).
+        i. Perform AddValueToKeyedGroup(groups, key, value).
+        j. Set k to k + 1.
+      */
+      if (k >= MAX_SAFE_INTEGER) {
+        const error = ThrowCompletion(exports.surroundingAgent.NewError('TypeError', 'OutOfRange', k));
+        return yield* IteratorClose(iteratorRecord, error);
+      }
+      /* ReturnIfAbrupt */
+      let _temp43 = yield* IteratorStepValue(iteratorRecord);
+      /* node:coverage ignore next */
+      if (_temp43 instanceof AbruptCompletion) return _temp43;
+      /* node:coverage ignore next */
+      if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+      const next = _temp43;
+      if (next === 'done') {
+        return groups;
+      }
+      const value = next;
+      let key = yield* Call(callback, Value.undefined, [value, F(k)]);
+      /* IfAbruptCloseIterator */
+      /* node:coverage ignore next */
+      if (key instanceof AbruptCompletion) return skipDebugger(IteratorClose(iteratorRecord, key));
+      /* node:coverage ignore next */
+      if (key instanceof Completion) key = key.Value;
+      if (keyCoercion === 'property') {
+        key = yield* ToPropertyKey(key);
+        /* IfAbruptCloseIterator */
+        /* node:coverage ignore next */
+        if (key instanceof AbruptCompletion) return skipDebugger(IteratorClose(iteratorRecord, key));
+        /* node:coverage ignore next */
+        if (key instanceof Completion) key = key.Value;
+      } else {
+        Assert(keyCoercion === 'collection', "keyCoercion === 'collection'");
+        key = CanonicalizeKeyedCollectionKey(key);
+      }
+      AddValueToKeyedGroup(groups, key, value);
+      k += 1;
+    }
+  }
 
   // TODO: ban other direct extension from ObjectValue in the linter
 
@@ -36690,6 +36854,46 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* AddEntriesFromIterable(map, iterable, adder);
   }
   MapConstructor.section = 'https://tc39.es/ecma262/#sec-map-iterable';
+  /** https://tc39.es/ecma262/#sec-map.groupby */
+  function* Map_groupBy([items = Value.undefined, callback = Value.undefined]) {
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* GroupBy(items, callback, 'collection');
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    /*
+    1. Let groups be ? GroupBy(items, callback, collection).
+    2. Let map be ! Construct(%Map%).
+    3. For each Record { [[Key]], [[Elements]] } g of groups, do
+      a. Let elements be CreateArrayFromList(g.[[Elements]]).
+      b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
+      c. Append entry to map.[[MapData]].
+    4. Return map.
+    */
+    const groups = _temp5;
+    /* X */
+    let _temp6 = Construct(exports.surroundingAgent.intrinsic('%Map%'));
+    /* node:coverage ignore next */
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! Construct(surroundingAgent.intrinsic('%Map%')) returned an abrupt completion", {
+      cause: _temp6
+    });
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    const map = _temp6;
+    for (const g of groups) {
+      const elements = CreateArrayFromList(g.Elements);
+      const entry = {
+        Key: g.Key,
+        Value: elements
+      };
+      map.MapData.push(entry);
+    }
+    return map;
+  }
+  Map_groupBy.section = 'https://tc39.es/ecma262/#sec-map.groupby';
   /** https://tc39.es/ecma262/#sec-get-map-@@species */
   function Map_speciesGetter(_args, {
     thisValue
@@ -36699,7 +36903,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   Map_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-map-@@species';
   function bootstrapMap(realmRec) {
-    const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [[wellKnownSymbols.species, [Map_speciesGetter]]]);
+    const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [['groupBy', Map_groupBy, 2], [wellKnownSymbols.species, [Map_speciesGetter]]]);
     realmRec.Intrinsics['%Map%'] = mapConstructor;
   }
 
@@ -37197,24 +37401,58 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* obj.GetPrototypeOf();
   }
   Object_getPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.getprototypeof';
-  /** https://tc39.es/ecma262/#sec-object.hasown */
-  function* Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
+  /** https://tc39.es/ecma262/#sec-object.groupby */
+  function* Object_groupBy([items = Value.undefined, callback = Value.undefined]) {
     /* ReturnIfAbrupt */
-    let _temp35 = ToObject(O);
+    let _temp35 = yield* GroupBy(items, callback, 'property');
     /* node:coverage ignore next */
     if (_temp35 instanceof AbruptCompletion) return _temp35;
     /* node:coverage ignore next */
     if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+    /*
+    1. Let groups be ? GroupBy(items, callback, property).
+    2. Let obj be OrdinaryObjectCreate(null).
+    3. For each Record { [[Key]], [[Elements]] } g of groups, do
+      a. Let elements be CreateArrayFromList(g.[[Elements]]).
+      b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
+    4. Return obj.
+    */
+    const groups = _temp35;
+    const obj = OrdinaryObjectCreate(Value.null);
+    for (const g of groups) {
+      const elements = CreateArrayFromList(g.Elements);
+      /* X */
+      let _temp36 = CreateDataPropertyOrThrow(obj, g.Key, elements);
+      /* node:coverage ignore next */
+      if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
+      /* node:coverage ignore next */
+      if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(obj, g.Key, elements) returned an abrupt completion", {
+        cause: _temp36
+      });
+      /* node:coverage ignore next */
+      if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+    }
+    return obj;
+  }
+  Object_groupBy.section = 'https://tc39.es/ecma262/#sec-object.groupby';
+  /** https://tc39.es/ecma262/#sec-object.hasown */
+  function* Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
+    /* ReturnIfAbrupt */
+    let _temp37 = ToObject(O);
+    /* node:coverage ignore next */
+    if (_temp37 instanceof AbruptCompletion) return _temp37;
+    /* node:coverage ignore next */
+    if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
     // 1. Let obj be ? ToObject(O).
-    const obj = _temp35;
+    const obj = _temp37;
     // 2. Let O be ? ToObject(this value).
     /* ReturnIfAbrupt */
-    let _temp36 = yield* ToPropertyKey(P);
+    let _temp38 = yield* ToPropertyKey(P);
     /* node:coverage ignore next */
-    if (_temp36 instanceof AbruptCompletion) return _temp36;
+    if (_temp38 instanceof AbruptCompletion) return _temp38;
     /* node:coverage ignore next */
-    if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
-    const key = _temp36;
+    if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+    const key = _temp38;
     // 3. Return ? HasOwnProperty(obj, key).
     return yield* HasOwnProperty(obj, key);
   }
@@ -37258,21 +37496,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-object.keys */
   function* Object_keys([O = Value.undefined]) {
     /* ReturnIfAbrupt */
-    let _temp37 = ToObject(O);
+    let _temp39 = ToObject(O);
     /* node:coverage ignore next */
-    if (_temp37 instanceof AbruptCompletion) return _temp37;
+    if (_temp39 instanceof AbruptCompletion) return _temp39;
     /* node:coverage ignore next */
-    if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+    if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
     // 1. Let obj be ? ToObject(O).
-    const obj = _temp37;
+    const obj = _temp39;
     // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, key).
     /* ReturnIfAbrupt */
-    let _temp38 = yield* EnumerableOwnPropertyNames(obj, 'key');
+    let _temp40 = yield* EnumerableOwnPropertyNames(obj, 'key');
     /* node:coverage ignore next */
-    if (_temp38 instanceof AbruptCompletion) return _temp38;
+    if (_temp40 instanceof AbruptCompletion) return _temp40;
     /* node:coverage ignore next */
-    if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
-    const nameList = _temp38;
+    if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+    const nameList = _temp40;
     // 3. Return CreateArrayFromList(nameList).
     return CreateArrayFromList(nameList);
   }
@@ -37285,12 +37523,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 2. Let status be ? O.[[PreventExtensions]]().
     /* ReturnIfAbrupt */
-    let _temp39 = yield* O.PreventExtensions();
+    let _temp41 = yield* O.PreventExtensions();
     /* node:coverage ignore next */
-    if (_temp39 instanceof AbruptCompletion) return _temp39;
+    if (_temp41 instanceof AbruptCompletion) return _temp41;
     /* node:coverage ignore next */
-    if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
-    const status = _temp39;
+    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+    const status = _temp41;
     // 3. If status is false, throw a TypeError exception.
     if (status === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'UnableToPreventExtensions', O);
@@ -37307,12 +37545,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 2. Let status be ? SetIntegrityLevel(O, sealed).
     /* ReturnIfAbrupt */
-    let _temp40 = yield* SetIntegrityLevel(O, 'sealed');
+    let _temp42 = yield* SetIntegrityLevel(O, 'sealed');
     /* node:coverage ignore next */
-    if (_temp40 instanceof AbruptCompletion) return _temp40;
+    if (_temp42 instanceof AbruptCompletion) return _temp42;
     /* node:coverage ignore next */
-    if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
-    const status = _temp40;
+    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+    const status = _temp42;
     // 3. If status is false, throw a TypeError exception.
     if (status === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'UnableToSeal', O);
@@ -37324,13 +37562,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-object.setprototypeof */
   function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
     /* ReturnIfAbrupt */
-    let _temp41 = RequireObjectCoercible(O);
+    let _temp43 = RequireObjectCoercible(O);
     /* node:coverage ignore next */
-    if (_temp41 instanceof AbruptCompletion) return _temp41;
+    if (_temp43 instanceof AbruptCompletion) return _temp43;
     /* node:coverage ignore next */
-    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
     // 1. Set O to ? RequireObjectCoercible(O).
-    O = _temp41;
+    O = _temp43;
     // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
     if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
       return exports.surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
@@ -37341,12 +37579,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 4. Let status be ? O.[[SetPrototypeOf]](proto).
     /* ReturnIfAbrupt */
-    let _temp42 = yield* O.SetPrototypeOf(proto);
+    let _temp44 = yield* O.SetPrototypeOf(proto);
     /* node:coverage ignore next */
-    if (_temp42 instanceof AbruptCompletion) return _temp42;
+    if (_temp44 instanceof AbruptCompletion) return _temp44;
     /* node:coverage ignore next */
-    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
-    const status = _temp42;
+    if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+    const status = _temp44;
     // 5. If status is false, throw a TypeError exception.
     if (status === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
@@ -37358,27 +37596,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-object.values */
   function* Object_values([O = Value.undefined]) {
     /* ReturnIfAbrupt */
-    let _temp43 = ToObject(O);
+    let _temp45 = ToObject(O);
     /* node:coverage ignore next */
-    if (_temp43 instanceof AbruptCompletion) return _temp43;
+    if (_temp45 instanceof AbruptCompletion) return _temp45;
     /* node:coverage ignore next */
-    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+    if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
     // 1. Let obj be ? ToObject(O).
-    const obj = _temp43;
+    const obj = _temp45;
     // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, value).
     /* ReturnIfAbrupt */
-    let _temp44 = yield* EnumerableOwnPropertyNames(obj, 'value');
+    let _temp46 = yield* EnumerableOwnPropertyNames(obj, 'value');
     /* node:coverage ignore next */
-    if (_temp44 instanceof AbruptCompletion) return _temp44;
+    if (_temp46 instanceof AbruptCompletion) return _temp46;
     /* node:coverage ignore next */
-    if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
-    const nameList = _temp44;
+    if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+    const nameList = _temp46;
     // 3. Return CreateArrayFromList(nameList).
     return CreateArrayFromList(nameList);
   }
   Object_values.section = 'https://tc39.es/ecma262/#sec-object.values';
   function bootstrapObject(realmRec) {
-    const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [['assign', Object_assign, 2], ['create', Object_create, 2], ['defineProperties', Object_defineProperties, 2], ['defineProperty', Object_defineProperty, 3], ['entries', Object_entries, 1], ['freeze', Object_freeze, 1], ['fromEntries', Object_fromEntries, 1], ['getOwnPropertyDescriptor', Object_getOwnPropertyDescriptor, 2], ['getOwnPropertyDescriptors', Object_getOwnPropertyDescriptors, 1], ['getOwnPropertyNames', Object_getOwnPropertyNames, 1], ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1], ['getPrototypeOf', Object_getPrototypeOf, 1], ['hasOwn', Object_hasOwn, 2], ['is', Object_is, 2], ['isExtensible', Object_isExtensible, 1], ['isFrozen', Object_isFrozen, 1], ['isSealed', Object_isSealed, 1], ['keys', Object_keys, 1], ['preventExtensions', Object_preventExtensions, 1], ['seal', Object_seal, 1], ['setPrototypeOf', Object_setPrototypeOf, 2], ['values', Object_values, 1]]);
+    const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [['assign', Object_assign, 2], ['create', Object_create, 2], ['defineProperties', Object_defineProperties, 2], ['defineProperty', Object_defineProperty, 3], ['entries', Object_entries, 1], ['freeze', Object_freeze, 1], ['fromEntries', Object_fromEntries, 1], ['getOwnPropertyDescriptor', Object_getOwnPropertyDescriptor, 2], ['getOwnPropertyDescriptors', Object_getOwnPropertyDescriptors, 1], ['getOwnPropertyNames', Object_getOwnPropertyNames, 1], ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1], ['getPrototypeOf', Object_getPrototypeOf, 1], ['groupBy', Object_groupBy, 2], ['hasOwn', Object_hasOwn, 2], ['is', Object_is, 2], ['isExtensible', Object_isExtensible, 1], ['isFrozen', Object_isFrozen, 1], ['isSealed', Object_isSealed, 1], ['keys', Object_keys, 1], ['preventExtensions', Object_preventExtensions, 1], ['seal', Object_seal, 1], ['setPrototypeOf', Object_setPrototypeOf, 2], ['values', Object_values, 1]]);
     realmRec.Intrinsics['%Object%'] = objectConstructor;
   }
 
@@ -41397,6 +41635,345 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
   Array_from.section = 'https://tc39.es/ecma262/#sec-array.from';
+  /** https://tc39.es/proposal-array-from-async/#sec-array.fromAsync */
+  function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined], {
+    thisValue
+  }) {
+    /* 1. Let C be the this value. */
+    const C = thisValue;
+    /*
+    2. If mapper is undefined, then
+      a. Let mapping be false.
+    3. Else,
+      a. If IsCallable(mapper) is false, throw a TypeError exception.
+      b. Let mapping be true.
+    */
+    let mapping;
+    if (mapper === Value.undefined) {
+      mapping = false;
+    } else {
+      if (!IsCallable(mapper)) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+      }
+      mapping = true;
+    }
+    /*
+    4. Let usingAsyncIterator be ? GetMethod(asyncItems, %Symbol.asyncIterator%).
+    5. If usingAsyncIterator is undefined, then
+      a. Let usingSyncIterator be ? GetMethod(asyncItems, %Symbol.iterator%).
+    */
+    /* ReturnIfAbrupt */
+    let _temp25 = yield* GetMethod(asyncItems, wellKnownSymbols.asyncIterator);
+    /* node:coverage ignore next */
+    if (_temp25 instanceof AbruptCompletion) return _temp25;
+    /* node:coverage ignore next */
+    if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+    const usingAsyncIterator = _temp25;
+    let usingSyncIterator = Value.undefined;
+    if (usingAsyncIterator === Value.undefined) {
+      /* ReturnIfAbrupt */
+      let _temp26 = yield* GetMethod(asyncItems, wellKnownSymbols.iterator);
+      /* node:coverage ignore next */
+      if (_temp26 instanceof AbruptCompletion) return _temp26;
+      /* node:coverage ignore next */
+      if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+      usingSyncIterator = _temp26;
+    }
+
+    /*
+    6. Let iteratorRecord be undefined.
+    7. If usingAsyncIterator is not undefined, then
+      a. Set iteratorRecord to ? GetIteratorFromMethod(asyncItems, usingAsyncIterator).
+    8. Else if usingSyncIterator is not undefined, then
+      a. Set iteratorRecord to CreateAsyncFromSyncIterator(? GetIteratorFromMethod(asyncItems, usingSyncIterator)).
+    */
+    let iteratorRecord;
+    if (usingAsyncIterator !== Value.undefined) {
+      /* ReturnIfAbrupt */
+      let _temp27 = yield* GetIteratorFromMethod(asyncItems, usingAsyncIterator);
+      /* node:coverage ignore next */
+      if (_temp27 instanceof AbruptCompletion) return _temp27;
+      /* node:coverage ignore next */
+      if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+      iteratorRecord = _temp27;
+    } else if (usingSyncIterator !== Value.undefined) {
+      /* ReturnIfAbrupt */
+      let _temp28 = yield* GetIteratorFromMethod(asyncItems, usingSyncIterator);
+      /* node:coverage ignore next */
+      if (_temp28 instanceof AbruptCompletion) return _temp28;
+      /* node:coverage ignore next */
+      if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+      iteratorRecord = CreateAsyncFromSyncIterator(_temp28);
+    }
+    if (iteratorRecord) {
+      // 9. If iteratorRecord is not undefined, then
+      // NOTE: This constant shows up a lot.  Can we move it to a constants file?
+      const MAX_SAFE_INTEGER = 2 ** 53 - 1;
+
+      /*
+      a. If IsConstructor(C) is true, then
+        i. Let A be ? Construct(C).
+      b. Else,
+        i. Let A be ! ArrayCreate(0).
+      c. Let k be 0.
+      */
+      let A;
+      if (IsConstructor(C)) {
+        /* ReturnIfAbrupt */
+        let _temp29 = yield* Construct(C);
+        /* node:coverage ignore next */
+        if (_temp29 instanceof AbruptCompletion) return _temp29;
+        /* node:coverage ignore next */
+        if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+        A = _temp29;
+      } else {
+        /* X */
+        let _temp30 = ArrayCreate(0);
+        /* node:coverage ignore next */
+        if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+        /* node:coverage ignore next */
+        if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! ArrayCreate(0) returned an abrupt completion", {
+          cause: _temp30
+        });
+        /* node:coverage ignore next */
+        if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+        A = _temp30;
+      }
+      let k = 0;
+      while (true) {
+        /*
+        i. If k ≥ 2**53 - 1, then
+          1. Let error be ThrowCompletion(a newly created TypeError object).
+          2. Return ? AsyncIteratorClose(iteratorRecord, error).
+        ii. Let Pk be ! ToString(𝔽(k)).
+        iii. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+        iv. Set nextResult to ? Await(nextResult).
+        v. If nextResult is not an Object, throw a TypeError exception.
+        vi. Let done be ? IteratorComplete(nextResult).
+        vii. If done is true, then
+          1. Perform ? Set(A, "length", 𝔽(k), true).
+          2. Return A.
+        viii. Let nextValue be ? IteratorValue(nextResult).
+        ix. If mapping is true, then
+          1. Let mappedValue be Completion(Call(mapper, thisArg, « nextValue, 𝔽(k) »)).
+          2. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+          3. Set mappedValue to Completion(Await(mappedValue)).
+          4. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+        x. Else,
+          1. Let mappedValue be nextValue.
+        xi. Let defineStatus be Completion(CreateDataPropertyOrThrow(A, Pk, mappedValue)).
+        xii. IfAbruptCloseAsyncIterator(defineStatus, iteratorRecord).
+        xiii. Set k to k + 1.
+        */
+        if (k > MAX_SAFE_INTEGER) {
+          const error = ThrowCompletion(exports.surroundingAgent.NewError('TypeError', 'OutOfRange', k));
+          return yield* AsyncIteratorClose(iteratorRecord, error);
+        }
+        /* X */
+        let _temp31 = yield* ToString(F(k));
+        /* node:coverage ignore next */
+        if (_temp31 instanceof AbruptCompletion) throw new Assert.Error("! yield* ToString(F(k)) returned an abrupt completion", {
+          cause: _temp31
+        });
+        /* node:coverage ignore next */
+        if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+        const Pk = _temp31;
+        /* ReturnIfAbrupt */
+        let _temp32 = yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
+        /* node:coverage ignore next */
+        if (_temp32 instanceof AbruptCompletion) return _temp32;
+        /* node:coverage ignore next */
+        if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+        let nextResult = _temp32;
+
+        // FIXME: if nextResult is a rejected promise, at least on the first pass, we throw instead of returning a rejected promise.
+        /* ReturnIfAbrupt */
+        let _temp33 = yield* Await(nextResult);
+        /* node:coverage ignore next */
+        if (_temp33 instanceof AbruptCompletion) return _temp33;
+        /* node:coverage ignore next */
+        if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+        nextResult = _temp33;
+        if (!(nextResult instanceof ObjectValue)) {
+          return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
+        }
+        /* ReturnIfAbrupt */
+        let _temp34 = yield* IteratorComplete(nextResult);
+        /* node:coverage ignore next */
+        if (_temp34 instanceof AbruptCompletion) return _temp34;
+        /* node:coverage ignore next */
+        if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+        const done = _temp34;
+        if (done === Value.true) {
+          /* ReturnIfAbrupt */
+          let _temp35 = yield* Set$1(A, Value('length'), F(k), Value.true);
+          /* node:coverage ignore next */
+          if (_temp35 instanceof AbruptCompletion) return _temp35;
+          /* node:coverage ignore next */
+          if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+          return A;
+        }
+        /* ReturnIfAbrupt */
+        let _temp36 = yield* IteratorValue(nextResult);
+        /* node:coverage ignore next */
+        if (_temp36 instanceof AbruptCompletion) return _temp36;
+        /* node:coverage ignore next */
+        if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+        const nextValue = _temp36;
+        let mappedValue;
+        if (mapping) {
+          mappedValue = yield* Call(mapper, thisArg, [nextValue, F(k)]);
+          /* IfAbruptCloseAsyncIterator */
+          /* node:coverage ignore next */
+          if (mappedValue instanceof AbruptCompletion) return yield* AsyncIteratorClose(iteratorRecord, mappedValue);
+          /* node:coverage ignore next */
+          if (mappedValue instanceof Completion) mappedValue = mappedValue.Value;
+          mappedValue = yield* Await(mappedValue);
+          /* IfAbruptCloseAsyncIterator */
+          /* node:coverage ignore next */
+          if (mappedValue instanceof AbruptCompletion) return yield* AsyncIteratorClose(iteratorRecord, mappedValue);
+          /* node:coverage ignore next */
+          if (mappedValue instanceof Completion) mappedValue = mappedValue.Value;
+        } else {
+          mappedValue = nextValue;
+        }
+        let defineStatus = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
+        /* IfAbruptCloseAsyncIterator */
+        /* node:coverage ignore next */
+        if (defineStatus instanceof AbruptCompletion) return yield* AsyncIteratorClose(iteratorRecord, defineStatus);
+        /* node:coverage ignore next */
+        if (defineStatus instanceof Completion) defineStatus = defineStatus.Value;
+        k += 1;
+      }
+    } else {
+      /* X */
+      let _temp37 = ToObject(asyncItems);
+      /* node:coverage ignore next */
+      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) _temp37 = skipDebugger(_temp37);
+      /* node:coverage ignore next */
+      if (_temp37 instanceof AbruptCompletion) throw new Assert.Error("! ToObject(asyncItems) returned an abrupt completion", {
+        cause: _temp37
+      });
+      /* node:coverage ignore next */
+      if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+      // 10. Else,
+      /*
+      a. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
+      b. Let arrayLike be ! ToObject(asyncItems).
+      c. Let len be ? LengthOfArrayLike(arrayLike).
+      d. If IsConstructor(C) is true, then
+        i. Let A be ? Construct(C, « 𝔽(len) »).
+      e. Else,
+        i. Let A be ? ArrayCreate(len).
+      f. Let k be 0.
+      g. Repeat, while k < len,
+        i. Let Pk be ! ToString(𝔽(k)).
+        ii. Let kValue be ? Get(arrayLike, Pk).
+        iii. Set kValue to ? Await(kValue).
+        iv. If mapping is true, then
+          1. Let mappedValue be ? Call(mapper, thisArg, « kValue, 𝔽(k) »).
+          2. Set mappedValue to ? Await(mappedValue).
+        v. Else,
+          1. Let mappedValue be kValue.
+        vi. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
+        vii. Set k to k + 1.
+      h. Perform ? Set(A, "length", 𝔽(len), true).
+      i. Return A.
+      */
+      const arrayLike = _temp37;
+      /* ReturnIfAbrupt */
+      let _temp38 = yield* LengthOfArrayLike(arrayLike);
+      /* node:coverage ignore next */
+      if (_temp38 instanceof AbruptCompletion) return _temp38;
+      /* node:coverage ignore next */
+      if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+      const len = _temp38;
+      let A;
+      if (IsConstructor(C)) {
+        /* ReturnIfAbrupt */
+        let _temp39 = yield* Construct(C, [F(len)]);
+        /* node:coverage ignore next */
+        if (_temp39 instanceof AbruptCompletion) return _temp39;
+        /* node:coverage ignore next */
+        if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+        A = _temp39;
+      } else {
+        /* X */
+        let _temp40 = ArrayCreate(0);
+        /* node:coverage ignore next */
+        if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) _temp40 = skipDebugger(_temp40);
+        /* node:coverage ignore next */
+        if (_temp40 instanceof AbruptCompletion) throw new Assert.Error("! ArrayCreate(0) returned an abrupt completion", {
+          cause: _temp40
+        });
+        /* node:coverage ignore next */
+        if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+        A = _temp40;
+      }
+      let k = 0;
+      while (k < len) {
+        /* X */
+        let _temp41 = ToString(F(k));
+        /* node:coverage ignore next */
+        if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
+        /* node:coverage ignore next */
+        if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
+          cause: _temp41
+        });
+        /* node:coverage ignore next */
+        if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+        const Pk = _temp41;
+        /* ReturnIfAbrupt */
+        let _temp42 = yield* Get(arrayLike, Pk);
+        /* node:coverage ignore next */
+        if (_temp42 instanceof AbruptCompletion) return _temp42;
+        /* node:coverage ignore next */
+        if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+        let kValue = _temp42;
+        /* ReturnIfAbrupt */
+        let _temp43 = yield* Await(kValue);
+        /* node:coverage ignore next */
+        if (_temp43 instanceof AbruptCompletion) return _temp43;
+        /* node:coverage ignore next */
+        if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+        kValue = _temp43;
+        let mappedValue;
+        if (mapping) {
+          /* ReturnIfAbrupt */
+          let _temp44 = yield* Call(mapper, thisArg, [kValue, F(k)]);
+          /* node:coverage ignore next */
+          if (_temp44 instanceof AbruptCompletion) return _temp44;
+          /* node:coverage ignore next */
+          if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+          mappedValue = _temp44;
+          /* ReturnIfAbrupt */
+          let _temp45 = yield* Await(mappedValue);
+          /* node:coverage ignore next */
+          if (_temp45 instanceof AbruptCompletion) return _temp45;
+          /* node:coverage ignore next */
+          if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+          mappedValue = _temp45;
+        } else {
+          mappedValue = kValue;
+        }
+        /* ReturnIfAbrupt */
+        let _temp46 = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
+        /* node:coverage ignore next */
+        if (_temp46 instanceof AbruptCompletion) return _temp46;
+        /* node:coverage ignore next */
+        if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+        k += 1;
+      }
+      /* ReturnIfAbrupt */
+      let _temp47 = yield* Set$1(A, Value('length'), F(len), Value.true);
+      /* node:coverage ignore next */
+      if (_temp47 instanceof AbruptCompletion) return _temp47;
+      /* node:coverage ignore next */
+      if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+      return A;
+    }
+  }
+  Array_fromAsync.section = 'https://tc39.es/proposal-array-from-async/#sec-array.fromAsync';
   /** https://tc39.es/ecma262/#sec-array.isarray */
   function Array_isArray([arg = Value.undefined]) {
     return IsArray(arg);
@@ -41412,49 +41989,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let A;
     if (IsConstructor(C)) {
       /* ReturnIfAbrupt */
-      let _temp25 = yield* Construct(C, [F(len)]);
+      let _temp48 = yield* Construct(C, [F(len)]);
       /* node:coverage ignore next */
-      if (_temp25 instanceof AbruptCompletion) return _temp25;
+      if (_temp48 instanceof AbruptCompletion) return _temp48;
       /* node:coverage ignore next */
-      if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
-      A = _temp25;
+      if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+      A = _temp48;
     } else {
       /* ReturnIfAbrupt */
-      let _temp26 = ArrayCreate(len);
+      let _temp49 = ArrayCreate(len);
       /* node:coverage ignore next */
-      if (_temp26 instanceof AbruptCompletion) return _temp26;
+      if (_temp49 instanceof AbruptCompletion) return _temp49;
       /* node:coverage ignore next */
-      if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
-      A = _temp26;
+      if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+      A = _temp49;
     }
     let k = 0;
     while (k < len) {
       const kValue = items[k];
       /* X */
-      let _temp27 = ToString(F(k));
+      let _temp50 = ToString(F(k));
       /* node:coverage ignore next */
-      if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) _temp27 = skipDebugger(_temp27);
+      if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) _temp50 = skipDebugger(_temp50);
       /* node:coverage ignore next */
-      if (_temp27 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
-        cause: _temp27
+      if (_temp50 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
+        cause: _temp50
       });
       /* node:coverage ignore next */
-      if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
-      const Pk = _temp27;
+      if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+      const Pk = _temp50;
       /* ReturnIfAbrupt */
-      let _temp28 = yield* CreateDataPropertyOrThrow(A, Pk, kValue);
+      let _temp51 = yield* CreateDataPropertyOrThrow(A, Pk, kValue);
       /* node:coverage ignore next */
-      if (_temp28 instanceof AbruptCompletion) return _temp28;
+      if (_temp51 instanceof AbruptCompletion) return _temp51;
       /* node:coverage ignore next */
-      if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+      if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
       k += 1;
     }
     /* ReturnIfAbrupt */
-    let _temp29 = yield* Set$1(A, Value('length'), F(len), Value.true);
+    let _temp52 = yield* Set$1(A, Value('length'), F(len), Value.true);
     /* node:coverage ignore next */
-    if (_temp29 instanceof AbruptCompletion) return _temp29;
+    if (_temp52 instanceof AbruptCompletion) return _temp52;
     /* node:coverage ignore next */
-    if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+    if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
     return A;
   }
   Array_of.section = 'https://tc39.es/ecma262/#sec-array.of';
@@ -41467,7 +42044,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   Array_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-array-@@species';
   function bootstrapArray(realmRec) {
     const proto = realmRec.Intrinsics['%Array.prototype%'];
-    const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [['from', Array_from, 1], ['isArray', Array_isArray, 1], ['of', Array_of, 0], [wellKnownSymbols.species, [Array_speciesGetter]]]);
+    const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [['from', Array_from, 1], ['fromAsync', asyncBuiltinFunctionPrologue(Array_fromAsync), 1], ['isArray', Array_isArray, 1], ['of', Array_of, 0], [wellKnownSymbols.species, [Array_speciesGetter]]]);
     realmRec.Intrinsics['%Array%'] = cons;
   }
 
@@ -61553,6 +62130,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GlobalDeclarationInstantiation = GlobalDeclarationInstantiation;
   exports.GlobalEnvironmentRecord = GlobalEnvironmentRecord;
   exports.GraphLoadingState = GraphLoadingState;
+  exports.GroupBy = GroupBy;
   exports.HasInitializer = HasInitializer;
   exports.HasName = HasName;
   exports.HasOwnProperty = HasOwnProperty;
@@ -61570,6 +62148,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.HostPromiseRejectionTracker = HostPromiseRejectionTracker;
   exports.HourFromTime = HourFromTime;
   exports.HoursPerDay = HoursPerDay;
+  exports.IfAbruptCloseAsyncIterator = IfAbruptCloseAsyncIterator;
   exports.IfAbruptCloseIterator = IfAbruptCloseIterator;
   exports.IfAbruptRejectPromise = IfAbruptRejectPromise;
   exports.ImportEntries = ImportEntries;
@@ -61850,6 +62429,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.YearFromTime = YearFromTime;
   exports.Yield = Yield;
   exports.Z = Z;
+  exports.asyncBuiltinFunctionPrologue = asyncBuiltinFunctionPrologue;
   exports.boostTest262Harness = boostTest262Harness;
   exports.captureStack = captureStack;
   exports.createTest262Intrinsics = createTest262Intrinsics;
