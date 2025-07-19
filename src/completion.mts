@@ -366,6 +366,12 @@ export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRec
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
+/** https://tc39.es/proposal-array-from-async/#sec-ifabruptcloseasynciterator */
+export function IfAbruptCloseAsyncIterator<T>(_value: T, _iteratorRecord: IteratorRecord): ReturnIfAbrupt<T> {
+  /* node:coverage ignore next */
+  throw new TypeError('IfAbruptCloseAsyncIterator() requires build');
+}
+
 /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
 export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): ReturnIfAbrupt<T> {
   /* node:coverage ignore next */
