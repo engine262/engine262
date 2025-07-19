@@ -37,6 +37,8 @@ import {
   CreateBuiltinFunction,
   Realm,
   type FunctionObject,
+  GroupBy,
+  type KeyedGroupRecord,
 } from '../abstract-ops/all.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { AddEntriesFromIterable } from './Map.mts';
@@ -293,6 +295,25 @@ function* Object_getPrototypeOf([O = Value.undefined]: Arguments): ValueEvaluato
   return Q(yield* obj.GetPrototypeOf());
 }
 
+/** https://tc39.es/ecma262/#sec-object.groupby */
+function* Object_groupBy([items = Value.undefined, callback = Value.undefined]: Arguments): ValueEvaluator {
+  /*
+  1. Let groups be ? GroupBy(items, callback, property).
+  2. Let obj be OrdinaryObjectCreate(null).
+  3. For each Record { [[Key]], [[Elements]] } g of groups, do
+    a. Let elements be CreateArrayFromList(g.[[Elements]]).
+    b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
+  4. Return obj.
+  */
+  const groups: KeyedGroupRecord[] = Q(yield* GroupBy(items, callback, 'property'));
+  const obj = OrdinaryObjectCreate(Value.null);
+  for (const g of groups) {
+    const elements = CreateArrayFromList(g.Elements);
+    X(CreateDataPropertyOrThrow(obj, g.Key, elements));
+  }
+  return obj;
+}
+
 /** https://tc39.es/ecma262/#sec-object.hasown */
 function* Object_hasOwn([O = Value.undefined, P = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let obj be ? ToObject(O).
@@ -427,6 +448,7 @@ export function bootstrapObject(realmRec: Realm) {
     ['getOwnPropertyNames', Object_getOwnPropertyNames, 1],
     ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1],
     ['getPrototypeOf', Object_getPrototypeOf, 1],
+    ['groupBy', Object_groupBy, 2],
     ['hasOwn', Object_hasOwn, 2],
     ['is', Object_is, 2],
     ['isExtensible', Object_isExtensible, 1],
