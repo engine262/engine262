@@ -309,7 +309,7 @@ function* Object_groupBy([items = Value.undefined, callback = Value.undefined]: 
   const obj = OrdinaryObjectCreate(Value.null);
   for (const g of groups) {
     const elements = CreateArrayFromList(g.Elements);
-    X(yield* CreateDataPropertyOrThrow(obj, g.Key, elements));
+    X(CreateDataPropertyOrThrow(obj, g.Key, elements));
   }
   return obj;
 }

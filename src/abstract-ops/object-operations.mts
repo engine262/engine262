@@ -516,15 +516,15 @@ function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue,
     3. Append group to groups.
     4. Return unused.
   */
-  for (let index = 0; index < groups.length; index += 1) {
-    const g = groups[index];
+  for (const g of groups) {
     if (SameValue(g.Key, key) === Value.true) {
-      for (let subIndex = index + 1; subIndex < groups.length; subIndex += 1) {
-        if (subIndex === index) {
-          continue;
+      let count = 0;
+      for (const otherG of groups) {
+        if (SameValue(otherG.Key, key) === Value.true) {
+          count += 1;
         }
-        Assert(SameValue(groups[subIndex].Key, key) === Value.false);
       }
+      Assert(count === 1);
       g.Elements.push(value);
       return;
     }

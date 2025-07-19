@@ -103,7 +103,7 @@ function* Map_groupBy([items = Value.undefined, callback = Value.undefined]: Arg
   4. Return map.
   */
   const groups: KeyedGroupRecord[] = Q(yield* GroupBy(items, callback, 'collection'));
-  const map: MapObject = X(yield* Construct(surroundingAgent.intrinsic('%Map%'))) as MapObject;
+  const map: MapObject = X(Construct(surroundingAgent.intrinsic('%Map%'))) as MapObject;
   for (const g of groups) {
     const elements = CreateArrayFromList(g.Elements);
     const entry = { Key: g.Key, Value: elements };
