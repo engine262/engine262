@@ -336,7 +336,7 @@ function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefine
 
     let A: ObjectValue;
     if (IsConstructor(C)) {
-      A = Q(yield* Construct(C));
+      A = Q(yield* Construct(C, [F(len)]));
     } else {
       A = X(ArrayCreate(0));
     }
