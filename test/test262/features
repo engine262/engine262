@@ -15,6 +15,7 @@ import-defer = import-defer
 -json-parse-with-source
 -source-phase-imports
 -source-phase-imports-module-source
+-immutable-arraybuffer
 
 # Added before Feb 2025
 
