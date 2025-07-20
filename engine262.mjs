@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 e364cadd411735463b02f083c8227660beb63856
+ * engine262 0.0.1 0d06841e095dc1370f1006317d906a2d1041d40d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -57384,8 +57384,8 @@ function* WeakRefConstructor([target = Value.undefined], {
 }
 WeakRefConstructor.section = 'https://tc39.es/ecma262/#sec-weak-ref-target';
 function bootstrapWeakRef(realmRec) {
-  const bigintConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
-  realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
+  const weakRefConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
+  realmRec.Intrinsics['%WeakRef%'] = weakRefConstructor;
 }
 
 /** https://tc39.es/ecma262/#sec-%wrapforvaliditeratorprototype%.next */
