@@ -36,7 +36,7 @@ function* WeakRefConstructor(this: FunctionObject, [target = Value.undefined]: A
 }
 
 export function bootstrapWeakRef(realmRec: Realm) {
-  const bigintConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
+  const weakRefConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
 
-  realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
+  realmRec.Intrinsics['%WeakRef%'] = weakRefConstructor;
 }
