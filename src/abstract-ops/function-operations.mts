@@ -21,6 +21,8 @@ import {
   Completion,
   Q, X,
   type PlainCompletion,
+  ReturnCompletion,
+  ThrowCompletion,
 } from '../completion.mts';
 import { ExpectedArgumentCount } from '../static-semantics/all.mts';
 import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mts';
@@ -54,15 +56,17 @@ import {
   Realm,
   F as toNumberValue,
   type OrdinaryObject,
+  NewPromiseCapability,
+  AsyncFunctionStart,
 } from './all.mts';
 import type {
-  AbstractModuleRecord, CanBeNativeSteps, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
+  AbstractModuleRecord, CanBeNativeSteps, FunctionCallContext, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
 } from '#self';
 
 interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
-  readonly ScriptOrModule: ScriptRecord | ModuleRecord | NullValue;
   readonly InitialName: JSStringValue | NullValue;
+  readonly IsClassConstructor: BooleanValue;
   Call(thisValue: Value, args: Arguments): ValueEvaluator;
   Construct(args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
 }
@@ -81,7 +85,6 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly Fields: readonly ClassFieldDefinitionRecord[];
   readonly PrivateMethods: readonly PrivateElementRecord[];
   readonly ClassFieldInitializerName: undefined | PropertyKeyValue | PrivateName;
-  readonly IsClassConstructor: BooleanValue;
   /**
    * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
    * This is only used in the inspector.
@@ -230,6 +233,12 @@ export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScr
     // a. Perform ? DefineField(O, fieldRecord).
     Q(yield* DefineField(O, fieldRecord));
   }
+
+  // https://tc39.es/proposal-pattern-matching/#sec-initializeinstance
+  // 5. Append constructor to O.[[ConstructedBy]].
+  O.ConstructedBy.push(constructor);
+
+  // 6. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
@@ -358,7 +367,7 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
   // 3. Let F be ! OrdinaryObjectCreate(functionPrototype, internalSlotsList).
   const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList)) as Mutable<ECMAScriptFunctionObject>;
   // 4. Set F.[[Call]] to the definition specified in 10.2.1.
-  F.Call = surroundingAgent.hostDefinedOptions.boost?.callFunction || FunctionCallSlot;
+  F.Call = FunctionCallSlot;
   // 5. Set F.[[SourceText]] to sourceText.
   F.SourceText = sourceText;
   // 6. Set F.[[FormalParameters]] to ParameterList.
@@ -409,7 +418,7 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
     // Assert(!IsConstructor(F)); but not applying type assertion
     Assert(![IsConstructor(F)][0]);
     Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false);
-    F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
+    F.Construct = FunctionConstructSlot;
   }
   (F as Mutable<ECMAScriptFunctionObject>).ConstructorKind = 'base';
   if (writablePrototype === undefined) {
@@ -433,8 +442,7 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
 }
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
-export function MakeClassConstructor(F: Mutable<ECMAScriptFunctionObject>): void {
-  Assert(isECMAScriptFunctionObject(F));
+export function MakeClassConstructor(F: Mutable<FunctionObject>): void {
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
 }
@@ -506,63 +514,49 @@ export function SetFunctionLength(F: FunctionObject, length: number): void {
   })));
 }
 
+function BuiltinFunctionCall(this: BuiltinFunctionObject, thisArgument: Value, argumentsList: Arguments): ValueEvaluator {
+  return BuiltinCallOrConstruct(this, thisArgument, argumentsList, Value.undefined);
+}
 
-function nativeCall(F: BuiltinFunctionObject, argumentsList: Arguments, thisArgument?: Value, newTarget?: FunctionObject | UndefinedValue) {
-  return F.nativeFunction(argumentsList, {
-    thisValue: thisArgument || Value.undefined,
-    NewTarget: newTarget || Value.undefined,
+function BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ValueEvaluator<ObjectValue> {
+  // Assert in the BuiltinCallOrConstruct
+  return BuiltinCallOrConstruct(this, 'uninitialized', argumentsList, newTarget) as ValueEvaluator<ObjectValue>;
+}
+
+/** https://tc39.es/ecma262/#sec-builtincallorconstruct */
+function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value | 'uninitialized', argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator {
+  const calleeContext = new ExecutionContext();
+  calleeContext.Function = F;
+  const calleeRealm = F.Realm;
+  calleeContext.Realm = calleeRealm;
+  calleeContext.ScriptOrModule = Value.null;
+  surroundingAgent.executionContextStack.push(calleeContext);
+
+  const isNew = thisArgument === 'uninitialized';
+  // Perform any necessary implementation-defined initialization of calleeContext.
+  surroundingAgent.runningExecutionContext.callSite.constructCall = isNew;
+
+  let completion = F.nativeFunction(argumentsList, {
+    thisValue: thisArgument === 'uninitialized' ? Value.undefined : thisArgument,
+    NewTarget: newTarget,
   });
-  // by this notation we can keep the F.nativeFunction name in the stack trace
-  // return Reflect['apply'](F.nativeFunction, F, [argumentsList, {
+  // in case of debugging, use the following version so F.nativeFunction's name can appears in the stack trace.
+  // let completion = Reflect['apply'](F.nativeFunction, F, [argumentsList, {
   //   thisValue: thisArgument || Value.undefined,
   //   NewTarget: newTarget || Value.undefined,
   // }]);
-}
-
-function* BuiltinFunctionCall(this: BuiltinFunctionObject, thisArgument: Value, argumentsList: Arguments): ValueEvaluator {
-  const F = this;
-
-  // const callerContext = surroundingAgent.runningExecutionContext;
-  // If callerContext is not already suspended, suspend callerContext.
-  const calleeContext = new ExecutionContext();
-  calleeContext.Function = F;
-  const calleeRealm = F.Realm;
-  calleeContext.Realm = calleeRealm;
-  calleeContext.ScriptOrModule = F.ScriptOrModule;
-  // 8. Perform any necessary implementation-defined initialization of calleeContext.
-  surroundingAgent.executionContextStack.push(calleeContext);
-  let result = nativeCall(F, argumentsList, thisArgument, Value.undefined);
-  if (result && 'next' in result) {
-    result = yield* result;
+  if (completion && 'next' in completion) {
+    completion = yield* completion;
   }
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
-  surroundingAgent.executionContextStack.pop(calleeContext);
-  return Q(result) || Value.undefined;
-}
-
-function* BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue> {
-  const F = this;
-
-  // const callerContext = surroundingAgent.runningExecutionContext;
-  // If callerContext is not already suspended, suspend callerContext.
-  const calleeContext = new ExecutionContext();
-  calleeContext.Function = F;
-  const calleeRealm = F.Realm;
-  calleeContext.Realm = calleeRealm;
-  calleeContext.ScriptOrModule = F.ScriptOrModule;
-  // 8. Perform any necessary implementation-defined initialization of calleeContext.
-  surroundingAgent.executionContextStack.push(calleeContext);
-  surroundingAgent.runningExecutionContext.callSite.constructCall = true;
-  let result = nativeCall(F, argumentsList, undefined, newTarget);
-  if (result && 'next' in result) {
-    result = yield* result;
+  if (completion instanceof Completion) {
+    Assert(completion instanceof NormalCompletion || completion instanceof ThrowCompletion);
   }
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
+
   surroundingAgent.executionContextStack.pop(calleeContext);
-  Q(result);
-  Assert(result instanceof ObjectValue);
+  const result = Q(completion) || Value.undefined;
+  if (isNew) {
+    Assert(result instanceof ObjectValue);
+  }
   return result;
 }
 
@@ -581,7 +575,7 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList))) as Mutable<BuiltinFunctionObject>;
+  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName', 'IsClassConstructor'].concat(internalSlotsList))) as Mutable<BuiltinFunctionObject>;
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
@@ -593,10 +587,10 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
   func.Prototype = prototype;
   // 8. Set func.[[Extensible]] to true.
   func.Extensible = Value.true;
-  // 9. Set func.[[ScriptOrModule]] to null.
-  func.ScriptOrModule = Value.null;
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
+  // https://github.com/tc39/ecma262/pull/3212/
+  func.IsClassConstructor = Value.false;
   // 11. Perform ! SetFunctionLength(func, length).
   X(SetFunctionLength(func, length));
   // 12. If prefix is not present, then
@@ -613,6 +607,30 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
 
 /** This is a helper function to define non-spec host functions. */
 CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
+
+/**
+ * @internal
+ * in https://tc39.es/proposal-array-from-async/#sec-array.fromAsync
+ * "This async method performs the following steps when called:"
+ *
+ * this function wraps the async function.
+ */
+export function asyncBuiltinFunctionPrologue(steps: NativeSteps): NativeSteps {
+  function* async(this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext) {
+    const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    const self = this;
+    yield* AsyncFunctionStart(promiseCapability, function* asyncFunctionPrologue() {
+      let result = Reflect.apply(steps, self, [args, context]);
+      if (result && 'next' in result) {
+        result = yield* result;
+      }
+      return ReturnCompletion(Q(result) || Value.undefined);
+    });
+    return NormalCompletion(promiseCapability.Promise);
+  }
+  async.section = steps.section;
+  return async;
+}
 
 /** https://tc39.es/ecma262/#sec-preparefortailcall */
 export function PrepareForTailCall() {

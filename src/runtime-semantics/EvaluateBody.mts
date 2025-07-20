@@ -114,6 +114,7 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody: ParseNode.AsyncGe
   ])) as Mutable<AsyncGeneratorObject>;
   // 3. Set generator.[[GeneratorBrand]] to empty.
   generator.GeneratorBrand = undefined;
+  generator.AsyncGeneratorState = 'suspendedStart';
   // 4. Perform ! AsyncGeneratorStart(generator, FunctionBody).
   X(AsyncGeneratorStart(generator, FunctionBody));
   // 5. Return Completion { [[Type]]: return, [[Value]]: generator, [[Target]]: empty }.

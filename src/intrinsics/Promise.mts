@@ -142,7 +142,7 @@ function* GetPromiseResolve(promiseConstructor: FunctionObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseall */
-function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
+export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -696,4 +696,5 @@ export function bootstrapPromise(realmRec: Realm) {
   })));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
+  realmRec.Intrinsics['%Promise.resolve%'] = X(Get(promiseConstructor, Value('resolve'))) as FunctionObject;
 }

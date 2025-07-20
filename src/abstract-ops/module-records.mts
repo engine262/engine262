@@ -10,7 +10,7 @@ import {
   ModuleRecord,
 } from '../modules.mts';
 import {
-  JSStringValue, ObjectValue, UndefinedValue, Value,
+  JSStringValue, ObjectValue, Value,
 } from '../value.mts';
 import {
   Q, X, NormalCompletion, ThrowCompletion, AbruptCompletion,
@@ -32,6 +32,7 @@ import {
   Completion,
   HostGetSupportedImportAttributes,
   ModuleRequestsEqual,
+  ReadyForSyncExecution,
   type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
 } from '#self';
 
@@ -149,7 +150,7 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   }
   Assert(module.Status === 'unlinked');
   module.Status = 'linking';
-  module.DFSIndex = index;
+  const moduleIndex = index;
   module.DFSAncestorIndex = index;
   index += 1;
   stack.push(module);
@@ -166,8 +167,8 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   }
   Q((module as SourceTextModuleRecord).InitializeEnvironment());
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
-  Assert(module.DFSAncestorIndex <= module.DFSIndex);
-  if (module.DFSAncestorIndex === module.DFSIndex) {
+  Assert(module.DFSAncestorIndex <= moduleIndex);
+  if (module.DFSAncestorIndex === moduleIndex) {
     let done = false;
     while (done === false) {
       const requiredModule = stack.pop();
@@ -182,9 +183,14 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
 }
 
 /** https://tc39.es/ecma262/#sec-EvaluateModuleSync */
-function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefined> {
-  // 1. Assert: module is not a Cyclic Module Record.
-  Assert(!(module instanceof CyclicModuleRecord));
+export function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefined> {
+  if (!surroundingAgent.feature('import-defer')) {
+    // 1. Assert: module is not a Cyclic Module Record.
+    Assert(!(module instanceof CyclicModuleRecord));
+  } else {
+    // 1. Assert: If module is a Cyclic Module Record, ReadyForSyncExecution(module) is true.
+    Assert(module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true);
+  }
   // 2. Let promise be module.Evaluate()./
   const promise = yield* module.Evaluate();
   // 3. Assert: promise.[[PromiseState]] is either fulfilled or rejected.
@@ -222,14 +228,32 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
   }
   Assert(module.Status === 'linked');
   module.Status = 'evaluating';
-  module.DFSIndex = index;
+  const moduleIndex = index;
   module.DFSAncestorIndex = index;
   module.PendingAsyncDependencies = 0;
   module.AsyncParentModules = [];
   index += 1;
+  let evaluationList: ModuleRecord[];
+  if (surroundingAgent.feature('import-defer')) {
+    /** https://tc39.es/proposal-defer-import-eval/#sec-innermoduleevaluation */
+    evaluationList = [];
+    for (const request of module.RequestedModules) {
+      const requiredModule = GetImportedModule(module, request);
+      if (request.Phase === 'defer') {
+        const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule);
+        for (const additionalModule of additionalModules) {
+          if (!evaluationList.includes(additionalModule)) {
+            evaluationList.push(additionalModule);
+          }
+        }
+      } else if (!evaluationList.includes(requiredModule)) {
+        evaluationList.push(requiredModule);
+      }
+    }
+  }
   stack.push(module);
-  for (const required of module.RequestedModules) {
-    let requiredModule = GetImportedModule(module, required) as CyclicModuleRecord;
+  for (const required of surroundingAgent.feature('import-defer') ? evaluationList! : module.RequestedModules) {
+    let requiredModule: ModuleRecord | CyclicModuleRecord = surroundingAgent.feature('import-defer') ? required as ModuleRecord : GetImportedModule(module, required as ModuleRequestRecord) as CyclicModuleRecord;
     index = Q(yield* InnerModuleEvaluation(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
@@ -238,14 +262,14 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex!);
       } else {
         requiredModule = requiredModule.CycleRoot!;
-        Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
-        if (requiredModule.EvaluationError !== undefined) {
-          return EnsureCompletion(module.EvaluationError);
+        Assert((requiredModule as CyclicModuleRecord).Status === 'evaluating-async' || (requiredModule as CyclicModuleRecord).Status === 'evaluated');
+        if ((requiredModule as CyclicModuleRecord).EvaluationError !== undefined) {
+          return EnsureCompletion((requiredModule as CyclicModuleRecord).EvaluationError);
         }
       }
-      if (typeof requiredModule.AsyncEvaluationOrder === 'number') {
+      if (typeof (requiredModule as CyclicModuleRecord).AsyncEvaluationOrder === 'number') {
         module.PendingAsyncDependencies += 1;
-        requiredModule.AsyncParentModules.push(module);
+        (requiredModule as CyclicModuleRecord).AsyncParentModules.push(module);
       }
     }
   }
@@ -259,8 +283,8 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     Q(yield* module.ExecuteModule());
   }
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
-  Assert(module.DFSAncestorIndex <= module.DFSIndex);
-  if (module.DFSAncestorIndex === module.DFSIndex) {
+  Assert(module.DFSAncestorIndex <= moduleIndex);
+  if (module.DFSAncestorIndex === moduleIndex) {
     let done = false;
     while (done === false) {
       const requiredModule = stack.pop();
@@ -278,6 +302,52 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     }
   }
   return index;
+}
+
+/* [import-defer] */
+/** https://tc39.es/proposal-defer-import-eval/#sec-GatherAsynchronousTransitiveDependencies  */
+export function GatherAsynchronousTransitiveDependencies(module: ModuleRecord, seen?: Set<ModuleRecord>): ModuleRecord[] {
+  // 1. If seen is not present, set seen to a new empty List.
+  seen ??= new Set();
+  // 2. Let result be a new empty List.
+  const result: ModuleRecord[] = [];
+  // 3. If seen contains module, return result.
+  if (seen.has(module)) {
+    return result;
+  }
+  // 4. Append module to seen.
+  seen.add(module);
+  // 5. If module is not a Cyclic Module Record, return result.
+  if (!(module instanceof CyclicModuleRecord)) {
+    return result;
+  }
+  // 6. If module.[[Status]] is either evaluating or evaluated, return result.
+  if (module.Status === 'evaluating' || module.Status === 'evaluated') {
+    return result;
+  }
+  // 7. If module.[[HasTLA]] is true, then
+  if (module.HasTLA === Value.true) {
+    // a. Append module to result.
+    result.push(module);
+    // b. Return result.
+    return result;
+  }
+  // 8. For each ModuleRequest Record request of module.[[RequestedModules]], do
+  for (const request of module.RequestedModules) {
+    // a. Let requiredModule be GetImportedModule(module, request).
+    const requiredModule = GetImportedModule(module, request);
+    // b. Let additionalModules be GatherAsynchronousTransitiveDependencies(requiredModule, seen).
+    const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule, seen);
+    // c. For each Module Record m of additionalModules, do
+    for (const m of additionalModules) {
+      // i. If result does not contain m, append m to result.
+      if (!result.includes(m)) {
+        result.push(m);
+      }
+    }
+  }
+  // 9. Return result.
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-execute-async-module */
@@ -391,7 +461,7 @@ function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) 
     AsyncModuleExecutionRejected(m, error);
   }
   if (module.TopLevelCapability !== undefined) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex);
+    Assert(module.CycleRoot === module);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
 }
@@ -432,7 +502,7 @@ export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModul
     // 3. Else,
   } else {
     // a. Perform ContinueDynamicImport(payload, result).
-    ContinueDynamicImport(state, result);
+    ContinueDynamicImport(state, result, /* [import-defer] */ moduleRequest.Phase);
   }
 
   // 4. Return unused.
@@ -454,15 +524,18 @@ export function AllImportAttributesSupported(attributes: readonly ImportAttribut
 }
 
 /** https://tc39.es/ecma262/#sec-getmodulenamespace */
-export function GetModuleNamespace(module: AbstractModuleRecord): ObjectValue {
+export function GetModuleNamespace(
+  module: AbstractModuleRecord,
+  /* [import-defer] */ phase: 'defer' | 'evaluation',
+): ObjectValue {
   // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
   if (module instanceof CyclicModuleRecord) {
     Assert(module.Status !== 'new' && module.Status !== 'unlinked');
   }
   // 2. Let namespace be module.[[Namespace]].
-  let namespace = module.Namespace;
+  let namespace = surroundingAgent.feature('import-defer') && phase === 'defer' ? module.DeferredNamespace : module.Namespace;
   // 3. If namespace is empty, then
-  if (namespace instanceof UndefinedValue) {
+  if (namespace === undefined) {
     // a. Let exportedNames be module.GetExportedNames().
     const exportedNames = module.GetExportedNames();
     // b. Let unambiguousNames be a new empty List.
@@ -477,7 +550,7 @@ export function GetModuleNamespace(module: AbstractModuleRecord): ObjectValue {
       }
     }
     // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).
-    namespace = ModuleNamespaceCreate(module, unambiguousNames);
+    namespace = ModuleNamespaceCreate(module, unambiguousNames, /* [import-defer] */ phase);
   }
   // 4. Return namespace.
   return namespace;
@@ -495,7 +568,7 @@ export function CreateSyntheticModule(exportNames: readonly JSStringValue[], eva
   return new SyntheticModuleRecord({
     Realm: realm,
     Environment: undefined,
-    Namespace: Value.undefined,
+    Namespace: undefined,
     HostDefined: hostDefined,
     ExportNames: exportNames,
     EvaluationSteps: evaluationSteps,

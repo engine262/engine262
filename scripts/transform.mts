@@ -1,19 +1,10 @@
-import { relative, resolve } from 'path';
 import type {
-  BabelFile, Node, NodePath,
+  Node, NodePath,
   PluginObj, PluginPass,
   types as t,
 } from '@babel/core';
 
-const IMPORT_PATH = resolve('./src/index.mts');
-
 function __ts_cast__<T>(_value: unknown): asserts _value is T { }
-
-function fileToImport(file: BabelFile, refPath: string) {
-  return relative(file.opts.filename!, refPath)
-    .replace(/\\/g, '/') // Support building on Windows
-    .replace('../', './');
-}
 
 function findParentStatementPath(path: NodePath): NodePath<t.Statement> | null {
   while (path && !path.isStatement()) {
@@ -32,7 +23,7 @@ function getEnclosingConditionalExpression(path: NodePath) {
   return null;
 }
 
-type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'Value' | 'skipDebugger';
+type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger';
 
 interface State extends PluginPass {
   needed: Partial<Record<NeededNames, boolean>>;
@@ -50,56 +41,56 @@ interface Macros {
   X: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null, source: t.StringLiteral }>;
   ReturnIfAbrupt: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null }>;
   IfAbruptCloseIterator: Macro<{ value: t.Identifier, iteratorRecord: t.Identifier }>;
+  IfAbruptCloseAsyncIterator: Macro<{ value: t.Identifier, iteratorRecord: t.Identifier }>;
   IfAbruptRejectPromise: Macro<{ value: t.Identifier, capability: t.Identifier }>;
 }
 
 export default ({ types: t, template }: typeof import('@babel/core')): PluginObj<State> => {
-  function createImportCompletion(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportCompletion() {
     return template.ast(`
-      import { Completion } from "${r}";
+      import { Completion } from "#self";
     `);
   }
 
-  function createImportSkipDebugger(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportSkipDebugger() {
     return template.ast(`
-      import { skipDebugger } from "${r}";
+      import { skipDebugger } from "#self";
     `);
   }
 
-  function createImportAbruptCompletion(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportAbruptCompletion() {
     return template.ast(`
-      import { AbruptCompletion } from "${r}";
+      import { AbruptCompletion } from "#self";
     `);
   }
 
-  function createImportAssert(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportAssert() {
     return template.ast(`
-      import { Assert } from "${r}";
+      import { Assert } from "#self";
     `);
   }
 
-  function createImportCall(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportCall() {
     return template.ast(`
-      import { Call } from "${r}";
+      import { Call } from "#self";
     `);
   }
 
-  function createImportIteratorClose(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportIteratorClose() {
     return template.statement.ast`
-      import { IteratorClose } from "${r}";
+      import { IteratorClose } from "#self";
     `;
   }
 
-  function createImportValue(file: BabelFile) {
-    const r = fileToImport(file, IMPORT_PATH);
+  function createImportAsyncIteratorClose() {
+    return template.statement.ast`
+      import { AsyncIteratorClose } from "#self";
+    `;
+  }
+
+  function createImportValue() {
     return template.ast(`
-      import { Value } from "${r}";
+      import { Value } from "#self";
     `);
   }
 
@@ -137,10 +128,6 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
     }
   }
 
-  const assertYieldStar = template.statement(`
-    /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
-  `, { preserveComments: true });
-
   const maybeSkipDebugger = template.statement(`
     /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) %%value%% = skipDebugger(%%value%%);
   `, { preserveComments: true });
@@ -176,6 +163,16 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       `, { preserveComments: true }),
       imports: ['IteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
+    IfAbruptCloseAsyncIterator: {
+      template: template(`
+      /* IfAbruptCloseAsyncIterator */
+      /* node:coverage ignore next */
+      if (%%value%% instanceof AbruptCompletion) return yield* AsyncIteratorClose(%%iteratorRecord%%, %%value%%);
+      /* node:coverage ignore next */
+      if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+      `, { preserveComments: true }),
+      imports: ['Assert', 'AsyncIteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
+    },
     IfAbruptRejectPromise: {
       template: template(`
       /* IfAbruptRejectPromise */
@@ -195,6 +192,12 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
   MACROS.ReturnIfAbrupt = MACROS.Q;
   const MACRO_NAMES = Object.keys(MACROS);
 
+  // For frequently used Record-like classes, inline them to get a better debug experience.
+  const records = {
+    NormalCompletion: template('({ __proto__: NormalCompletion.prototype, Value: %%value%% })', { preserveComments: true }),
+    ThrowCompletion: template('({ __proto__: ThrowCompletion.prototype, Value: %%value%% })', { preserveComments: true }),
+  };
+
   function tryRemove(path: NodePath<t.CallExpression>) {
     try {
       path.remove();
@@ -211,25 +214,28 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
         },
         exit(path, state) {
           if (state.needed.skipDebugger) {
-            path.unshiftContainer('body', createImportSkipDebugger(state.file));
+            path.unshiftContainer('body', createImportSkipDebugger());
           }
           if (state.needed.Completion) {
-            path.unshiftContainer('body', createImportCompletion(state.file));
+            path.unshiftContainer('body', createImportCompletion());
           }
           if (state.needed.AbruptCompletion) {
-            path.unshiftContainer('body', createImportAbruptCompletion(state.file));
+            path.unshiftContainer('body', createImportAbruptCompletion());
           }
           if (state.needed.Assert) {
-            path.unshiftContainer('body', createImportAssert(state.file));
+            path.unshiftContainer('body', createImportAssert());
           }
           if (state.needed.Call) {
-            path.unshiftContainer('body', createImportCall(state.file));
+            path.unshiftContainer('body', createImportCall());
           }
           if (state.needed.IteratorClose) {
-            path.unshiftContainer('body', createImportIteratorClose(state.file));
+            path.unshiftContainer('body', createImportIteratorClose());
+          }
+          if (state.needed.AsyncIteratorClose) {
+            path.unshiftContainer('body', createImportAsyncIteratorClose());
           }
           if (state.needed.Value) {
-            path.unshiftContainer('body', createImportValue(state.file));
+            path.unshiftContainer('body', createImportValue());
           }
         },
       },
@@ -237,6 +243,12 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
         if (!t.isIdentifier(path.node.callee)) {
           return;
         }
+
+        // if (path.node.callee?.name in records) {
+        //   const template = records[path.node.callee?.name as keyof typeof records];
+        //   path.replaceWith(template({ value: path.node.arguments[0] }));
+        //   return;
+        // }
 
         const macroName = path.node.callee.name;
         if (MACRO_NAMES.includes(macroName)) {
@@ -303,7 +315,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               (binding.path.parent as t.VariableDeclaration).kind = 'let';
               statementPath.insertBefore(macro.template({ value: argument, capability }));
               tryRemove(path);
-            } else if (macro === MACROS.IfAbruptCloseIterator) {
+            } else if (macro === MACROS.IfAbruptCloseIterator || macro === MACROS.IfAbruptCloseAsyncIterator) {
               if (!t.isIdentifier(argument)) {
                 throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
               }
@@ -343,10 +355,6 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
                 replacement.source = t.stringLiteral(`! ${path.get('arguments.0').getSource()} returned an abrupt completion`);
                 if (!t.isYieldExpression(argument, { delegate: true })) {
                   replacement.checkYieldStar = maybeSkipDebugger({ value: id });
-                }
-              } else if (macro === MACROS.Q) {
-                if (!t.isYieldExpression(argument, { delegate: true })) {
-                  replacement.checkYieldStar = assertYieldStar({ value: id });
                 }
               }
               statementPath.insertBefore(macro.template(replacement));

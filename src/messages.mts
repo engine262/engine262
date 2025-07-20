@@ -51,6 +51,7 @@ export const ConstDeclarationMissingInitializer = () => 'Missing initialization 
 export const ConstructorNonCallable = (f: Value) => `${i(f)} cannot be invoked without new`;
 export const CouldNotResolveModule = (s: JSStringValue | string) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
+/* [import-defer] */ export const DeferredModuleNotReady = (m: AbstractModuleRecord) => `Module ${m.HostDefined?.specifier ?? ''} is not ready for synchronous execution`;
 export const DeleteIdentifier = () => 'Delete of identifier in strict mode';
 export const DeletePrivateName = () => 'Private fields cannot be deleted';
 export const DateInvalidTime = () => 'Invalid time';
@@ -73,6 +74,7 @@ export const InvalidPropertyDescriptor = () => 'Invalid property descriptor. Can
 export const InvalidRadix = () => 'Radix must be between 2 and 36, inclusive';
 export const InvalidReceiver = (f: string, v: Value) => `${f} called on invalid receiver: ${i(v)}`;
 export const InvalidRegExpFlags = (f: string) => `Invalid RegExp flags: ${f}`;
+export const RegExpFlagsCannotUseTogether = (f1: string, f2: string) => `Cannot use RegExp flags ${f1} and ${f2} together`;
 export const InvalidSuperCall = () => '`super` not expected here';
 export const InvalidSuperProperty = () => '`super` not expected here';
 export const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in tagged templates';
@@ -157,6 +159,7 @@ export const ResolutionNullOrAmbiguous = (r: string | null, n: Value, m: Abstrac
   ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
 export const SizeIsNaN = () => 'size property must not be undefined, as it will be NaN';
+export const SizeMustBePositiveInteger = () => 'size property must be a positive integer';
 export const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 export const StrictModeDelete = (n: PropertyKeyValue) => `Cannot not delete property ${i(n)}`;
 export const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';

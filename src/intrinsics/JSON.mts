@@ -25,10 +25,6 @@ import {
   ToString,
 } from '../abstract-ops/all.mts';
 import {
-  isLeadingSurrogate,
-  isTrailingSurrogate,
-} from '../parser/Lexer.mts';
-import {
   UTF16EncodeCodePoint,
 } from '../static-semantics/all.mts';
 import {
@@ -38,8 +34,11 @@ import {
 import { isArray, JSStringSet, kInternal } from '../helpers.mts';
 import {
   BigIntValue, F, ParseScript, Realm, ScriptEvaluation, ThrowCompletion, skipDebugger, type Arguments,
+  type CodePoint,
   type FunctionObject,
   type PlainCompletion,
+  isLeadingSurrogate,
+  isTrailingSurrogate,
 } from '../index.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -384,7 +383,7 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
   return Value.undefined;
 }
 
-function UnicodeEscape(C: string) {
+export function UnicodeEscape(C: string) {
   const n = C.charCodeAt(0);
   Assert(n < 0xFFFF);
   return `\u005Cu${n.toString(16).padStart(4, '0')}`;
@@ -400,7 +399,7 @@ function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shado
       const unit = String.fromCodePoint(C);
       product += UnicodeEscape(unit);
     } else {
-      product += UTF16EncodeCodePoint(C);
+      product += UTF16EncodeCodePoint(C as CodePoint);
     }
   }
   product = `${product}\u0022`;

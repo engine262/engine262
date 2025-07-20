@@ -190,7 +190,7 @@ ${ANSI.yellow}#######################
   `);
 
   printStatusUI();
-  setInterval(() => {
+  const i = setInterval(() => {
     printStatusUI();
   }, CI ? 5000 : 100).unref();
 
@@ -198,7 +198,9 @@ ${ANSI.yellow}#######################
     process.stdout.write('\n');
     printStatusLine();
     process.stdout.write('\n');
+    process.exitCode = failed ? 1 : 0;
   });
+  return i;
 }
 
 
@@ -233,5 +235,5 @@ export type WorkerToSupervisor =
 
 export function readList(path: string) {
   const source = fs.readFileSync(path, 'utf8');
-  return source.split('\n').filter((l) => l && !l.startsWith('#') && !l.startsWith('!'));
+  return source.split('\n').filter((l) => l && !l.startsWith('#') && !l.startsWith(';')).map((x) => x.split('#')[0].split(';')[0].trim());
 }

@@ -6,6 +6,7 @@ import {
   ContainsArguments,
 } from '../static-semantics/all.mts';
 import type { Mutable } from '../helpers.mts';
+import type { Feature } from '../host-defined/engine.mts';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
@@ -32,6 +33,8 @@ export abstract class ExpressionParser extends FunctionParser {
   abstract parseInitializerOpt(): ParseNode.Initializer | null;
 
   abstract semicolon(): void;
+
+  abstract feature(name: Feature): boolean;
 
   // Expression :
   //   AssignmentExpression
@@ -567,22 +570,30 @@ export abstract class ExpressionParser extends FunctionParser {
       case Token.IMPORT: {
         const node = this.startNode<ParseNode.ImportMeta | ParseNode.ImportCall>();
         this.next();
-        if (this.scope.hasImportMeta() && this.eat(Token.PERIOD)) {
-          this.expect('meta');
-          result = this.finishNode(node, 'ImportMeta');
-        } else {
-          if (!allowCalls) {
+        if (this.eat(Token.PERIOD)) {
+          if (this.scope.hasImportMeta() && this.eat('meta')) {
+            result = this.finishNode(node, 'ImportMeta');
+            break;
+          }
+          if (this.feature('import-defer') && this.eat('defer')) {
+            node.Phase = 'defer';
+          } else {
             this.unexpected();
           }
-          this.expect(Token.LPAREN);
-          node.AssignmentExpression = this.parseAssignmentExpression();
-          if (this.eat(Token.COMMA) && !this.test(Token.RPAREN)) {
-            node.OptionsExpression = this.parseAssignmentExpression();
-            this.eat(Token.COMMA);
-          }
-          this.expect(Token.RPAREN);
-          result = this.finishNode(node, 'ImportCall');
+        } else {
+          node.Phase = 'evaluation';
         }
+        if (!allowCalls) {
+          this.unexpected();
+        }
+        this.expect(Token.LPAREN);
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        if (this.eat(Token.COMMA) && !this.test(Token.RPAREN)) {
+          node.OptionsExpression = this.parseAssignmentExpression();
+          this.eat(Token.COMMA);
+        }
+        this.expect(Token.RPAREN);
+        result = this.finishNode(node, 'ImportCall');
         break;
       }
       default:
@@ -1159,20 +1170,25 @@ export abstract class ExpressionParser extends FunctionParser {
     this.scanRegularExpressionBody();
     const body = this.scannedValue as string; // NOTE: unsound cast
     node.RegularExpressionBody = body;
+    const flagPosition = this.position;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue as string; // NOTE: unsound cast
+    if (node.RegularExpressionFlags.includes('v') && node.RegularExpressionFlags.includes('u')) {
+      this.raise('InvalidRegExpFlags', flagPosition, 'u and v cannot be used together');
+    }
     try {
       const parse = (flags: RegExpParserContext) => {
         const p = new RegExpParser(body);
         return p.scope(flags, () => p.parsePattern());
       };
       if (node.RegularExpressionFlags.includes('u')) {
-        parse({ U: true, N: true });
+        parse({ UnicodeMode: true, NamedCaptureGroups: true });
+      } else if (node.RegularExpressionFlags.includes('v')) {
+        parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
       } else {
-        const pattern = parse({ U: false, N: false });
-        if (pattern.groupSpecifiers.size > 0) {
-          parse({ U: false, N: true });
-        }
+        // NOTE: this part is modified by Annex B (but we're not applying it for now)
+        //       NamedCaptureGroups: false breaks for RegExp /\k<a>(?<a>b)/
+        parse({ NamedCaptureGroups: true });
       }
     } catch (e) {
       if (e instanceof SyntaxError) {

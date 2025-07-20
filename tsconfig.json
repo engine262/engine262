@@ -1,5 +1,6 @@
 {
   "references": [
+    { "path": "./test/eslint-plugin-engine262" },
     { "path": "./lib-src/node" },
     { "path": "./lib-src/inspector" },
     { "path": "./src" },

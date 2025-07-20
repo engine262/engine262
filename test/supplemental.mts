@@ -311,26 +311,6 @@ Error: owo
     );
   },
   () => {
-    const agent = new Agent();
-    setSurroundingAgent(agent);
-    const realm = new ManagedRealm();
-    realm.evaluateScript(`
-      var foo;
-      eval(\`
-        var foo;
-        var bar;
-        var deleteMe;
-      \`);
-      delete deleteMe;
-    `);
-    const varNames = new Set();
-    for (const name of realm.GlobalEnv.VarNames) {
-      assert(!varNames.has(name.stringValue()), 'Every member of `realm.[[GlobalEnv]].[[VarNames]]` should be unique.');
-      varNames.add(name.stringValue());
-    }
-    assert(!varNames.has('deleteMe'), "`realm.[[GlobalEnv]].[[VarNames]]` shouldn't have 'deleteMe'.");
-  },
-  () => {
     let attributes!: Map<string, string>;
     let calls = 0;
 
@@ -424,7 +404,7 @@ Error: owo
         finish(new CustomModuleRecord({
           Realm: (referrer as AbstractModuleRecord).Realm,
           Environment: undefined,
-          Namespace: Value.undefined,
+          Namespace: undefined,
           HostDefined: {},
         }));
       },

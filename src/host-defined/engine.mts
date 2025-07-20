@@ -31,7 +31,6 @@ import {
 } from '../index.mts';
 import * as messages from '../messages.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { RegExpObject } from '../intrinsics/RegExp.mts';
 import type { PromiseObject } from '../intrinsics/Promise.mts';
 import type { FinalizationRegistryObject } from '../intrinsics/FinalizationRegistry.mts';
 import { shouldStepOnNode } from './debugger-util.mts';
@@ -51,6 +50,11 @@ export const FEATURES = ([
     name: 'Uint8Array to/from base64 and hex',
     flag: 'uint8array-base64',
     url: 'https://tc39.es/proposal-arraybuffer-base64/',
+  },
+  {
+    name: 'import defer',
+    flag: 'import-defer',
+    url: 'https://tc39.es/proposal-defer-import-eval/',
   },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
@@ -86,12 +90,6 @@ export interface AgentHostDefined {
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord, scriptId: string): void;
   onNodeEvaluation?(node: ParseNode, realm: Realm): void;
-  boost?: {
-    evaluatePattern?(pattern: ParseNode.RegExp.Pattern): RegExpObject['RegExpMatcher'];
-    evaluateScript?(script: ScriptRecord): ValueEvaluator;
-    callFunction?(thisArgument: Value, argumentsList: Arguments): ValueEvaluator;
-    constructFunction?(this: FunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ValueEvaluator<ObjectValue>
-  }
 
   errorStackAttachNativeStack?: boolean;
 }
@@ -169,6 +167,11 @@ export class Agent {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
+    const error = this.NewError(type, template, ...templateArgs);
+    return ThrowCompletion(error);
+  }
+
+  NewError<K extends keyof typeof messages>(type: ErrorType, template: K, ...templateArgs: Parameters<typeof messages[K]>): ObjectValue {
     const message = (messages[template] as (...args: unknown[]) => string)(...templateArgs);
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     let error;
@@ -180,7 +183,7 @@ export class Agent {
     } else {
       error = X(Construct(cons, [Value(message)]));
     }
-    return ThrowCompletion(error);
+    return error;
   }
 
   queueJob(queueName: string, job: () => void) {
@@ -427,10 +430,6 @@ export class ExecutionContext {
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
 export function* ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator {
-  if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
-    return yield* surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
-  }
-
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptContext = new ExecutionContext();
   scriptContext.Function = Value.null;

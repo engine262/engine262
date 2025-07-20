@@ -1,12 +1,11 @@
 import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import {
-  ReferenceRecord, Value, type PropertyKeyValue,
+  ReferenceRecord, Value,
 } from '../value.mts';
 import {
   Assert,
   GetThisEnvironment,
   GetValue,
-  ToPropertyKey,
 } from '../abstract-ops/all.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
@@ -14,7 +13,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { FunctionEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-makesuperpropertyreference */
-function MakeSuperPropertyReference(actualThis: Value, propertyKey: PropertyKeyValue, strict: boolean) {
+function MakeSuperPropertyReference(actualThis: Value, propertyKey: Value, strict: boolean) {
   // 1. Let env be GetThisEnvironment().
   const env = GetThisEnvironment();
   // 2. Assert: env.HasSuperBinding() is true.
@@ -46,11 +45,9 @@ export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }: 
     const propertyNameReference = Q(yield* Evaluate(Expression));
     // 4. Let propertyNameReference be the result of evaluating Expression.
     const propertyNameValue = Q(yield* GetValue(propertyNameReference));
-    // 5. Let propertyNameValue be ? GetValue(propertyNameReference).
-    const propertyKey = Q(yield* ToPropertyKey(propertyNameValue));
     // 6. If the code matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
     // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-    return Q(MakeSuperPropertyReference(actualThis, propertyKey, strict));
+    return Q(MakeSuperPropertyReference(actualThis, propertyNameValue, strict));
   } else {
     // 3. Let propertyKey be StringValue of IdentifierName.
     const propertyKey = StringValue(IdentifierName!);

@@ -24,12 +24,13 @@ module.exports = {
   overrides: [
     {
       files: ['*.js'],
-      parserOptions: { sourceType: 'script', project: null },
+      parserOptions: { sourceType: 'module', project: null },
     },
     {
       files: ['src/**/*.mts'],
       rules: {
         '@engine262/safe-function-with-q': 'error',
+        '@engine262/no-floating-generator': 'error',
       },
     },
     {
@@ -45,6 +46,7 @@ module.exports = {
         // checked by tsc.
         '@typescript-eslint/no-unused-vars': 'off',
         'no-redeclare': 'off',
+        'no-fallthrough': 'off',
         'import/export': 'off',
         'no-dupe-class-members': 'off',
         // false positive

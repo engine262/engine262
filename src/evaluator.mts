@@ -1,4 +1,6 @@
-import type { PlainCompletion, YieldCompletion } from './completion.mts';
+import type {
+  NormalCompletion, PlainCompletion, ThrowCompletion, YieldCompletion,
+} from './completion.mts';
 import { surroundingAgent } from './host-defined/engine.mts';
 import { OutOfRange } from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
@@ -86,6 +88,7 @@ export type ExpressionEvaluator = Evaluator<PlainCompletion<ReferenceRecord | Va
 export type StatementEvaluator = Evaluator<PlainCompletion<void | Value> | AbruptCompletion>;
 export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
 export type YieldEvaluator = Evaluator<YieldCompletion | Value>;
+export type AsyncBuiltinSteps = () => Evaluator<Value | NormalCompletion<Value> | ThrowCompletion | ReturnCompletion>;
 export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
 
 export function Evaluate(node: ExpressionThatEvaluatedToReferenceRecord): ReferenceEvaluator

@@ -15,7 +15,9 @@ import type { StringObject } from '../intrinsics/String.mts';
 import type { SymbolObject } from '../intrinsics/Symbol.mts';
 import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
 import { surroundingAgent } from './engine.mts';
-import type { Descriptor, ValueCompletion, PromiseObject } from '#self';
+import {
+  type Descriptor, type ValueCompletion, type PromiseObject, CyclicModuleRecord,
+} from '#self';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
@@ -99,6 +101,15 @@ const INSPECTORS = {
   [[PromiseState]]: ${v.PromiseState}
   [[PromiseResult]]: ${result}
 }`;
+    }
+    if (
+      'Module' in v
+      && v.Module instanceof CyclicModuleRecord
+      && v.Module.Status === 'linked'
+      && v.Module.DeferredNamespace === v
+    ) {
+      // Do not read the namespace to avoid triggering the module evaluation.
+      return 'Deferred Module { ... }';
     }
 
     if ('Call' in v) {

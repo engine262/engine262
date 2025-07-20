@@ -20,14 +20,14 @@ import {
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import { Q, X, NormalCompletion } from '../completion.mts';
 import { JSStringSet } from '../helpers.mts';
-import type { StatementEvaluator } from '../evaluator.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import {
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
-export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
+export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject, argumentsList: Arguments): PlainEvaluator<void> {
   // 1. Let calleeContext be the running execution context.
   const calleeContext = surroundingAgent.runningExecutionContext;
   // 2. Let code be func.[[ECMAScriptCode]].
@@ -163,14 +163,16 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   }
   // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
+  let usedEnv;
   // 25. If hasDuplicates is true, then
   if (hasDuplicates) {
-    // a. Perform ? IteratorBindingInitialization for formals with iteratorRecord and undefined as arguments.
-    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined));
+    usedEnv = Value.undefined;
   } else {
-    // a. Perform ? IteratorBindingInitialization for formals with iteratorRecord and env as arguments.
-    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
+    usedEnv = env;
   }
+  // 1. NOTE: The following step cannot return a ReturnCompletion because the only way such a completion can arise in expression position is by use of |YieldExpression|, which is forbidden in parameter lists by Early Error rules in <emu-xref href="#sec-generator-function-definitions-static-semantics-early-errors"></emu-xref> and <emu-xref href="#sec-async-generator-function-definitions-static-semantics-early-errors"></emu-xref>.
+  // Perform ? IteratorBindingInitialization of _formals_ with arguments _iteratorRecord_ and _usedEnv_.
+  Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, usedEnv));
   let varEnv;
   // 27. If hasParameterExpressions is false, then
   if (hasParameterExpressions === false) {

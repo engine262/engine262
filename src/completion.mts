@@ -366,6 +366,12 @@ export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRec
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
+/** https://tc39.es/proposal-array-from-async/#sec-ifabruptcloseasynciterator */
+export function IfAbruptCloseAsyncIterator<T>(_value: T, _iteratorRecord: IteratorRecord): ReturnIfAbrupt<T> {
+  /* node:coverage ignore next */
+  throw new TypeError('IfAbruptCloseAsyncIterator() requires build');
+}
+
 /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
 export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): ReturnIfAbrupt<T> {
   /* node:coverage ignore next */
@@ -430,21 +436,21 @@ export function* Await(value: Value): ValueEvaluator {
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
   const promise = Q(yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-  const fulfilledClosure = function* fulfilledClosure([valueInner = Value.undefined]: Arguments) {
+  const fulfilledClosure = function* fulfilledClosure([v = Value.undefined]: Arguments) {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
     // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
     surroundingAgent.executionContextStack.push(asyncContext);
     // d. Resume the suspended evaluation of asyncContext using NormalCompletion(value) as the result of the operation that suspended it.
-    yield* resume(asyncContext, { type: 'await-resume', value: NormalCompletion(valueInner) });
+    yield* resume(asyncContext, { type: 'await-resume', value: NormalCompletion(v) });
     // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
     Assert(surroundingAgent.runningExecutionContext === prevContext);
     // f. Return undefined.
     return Value.undefined;
   };
-  // 4. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []));
+  // 4. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
@@ -461,8 +467,8 @@ export function* Await(value: Value): ValueEvaluator {
     // f. Return undefined.
     return Value.undefined;
   };
-  // 6. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, Value(''), []));
+  // 6. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onRejected[kAsyncContext] = asyncContext;
   // 7. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
