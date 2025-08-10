@@ -1,7 +1,7 @@
-import type { PlainCompletion, Value } from '#self';
 import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import type { TimeZoneIdentifier } from './addition.mts';
+import type { PlainCompletion, Value } from '#self';
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getavailablenamedtimezoneidentifier
 export declare function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: TimeZoneIdentifier): TimeZoneIdentifierRecord | undefined;

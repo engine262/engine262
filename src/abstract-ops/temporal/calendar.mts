@@ -1,8 +1,10 @@
-import type { ObjectValue, PlainCompletion, PlainEvaluator, Value } from '#self';
 import type { DateDurationRecord } from '../../intrinsics/Temporal/Duration.mts';
 import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import type { YearWeekRecord } from './addition.mts';
 import type { DateUnit } from './temporal.mts';
+import type {
+  ObjectValue, PlainCompletion, PlainEvaluator, Value,
+} from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-calendar-types */
 export type CalendarType = 'iso8601';

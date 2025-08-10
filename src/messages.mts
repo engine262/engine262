@@ -152,6 +152,8 @@ export const ProxyPreventExtensionsExtensible = () => '\'preventExtensions\' on 
 export const ProxySetPrototypeOfNonExtensible = () => '\'setPrototypeOf\' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target';
 export const ProxySetFrozenData = (p: PropertyKeyValue) => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable data property with a different value`;
 export const ProxySetFrozenAccessor = (p: PropertyKeyValue) => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
+export const PropertyIsRequired = (p: string) => `Property ${i(p)} is required`;
+export const PropertyCanOnlyBe = (p: string, valid: string, given: string) => `Property ${p} can only be ${valid}, but was given ${given}`;
 export const RegExpArgumentNotAllowed = (m: string) => `First argument to ${m} must not be a regular expression`;
 export const RegExpExecNotObject = (o: Value) => `${i(o)} is not object or null`;
 export const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
