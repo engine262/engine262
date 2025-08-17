@@ -30,13 +30,12 @@ import {
 
 /** https://tc39.es/ecma262/#sec-requireobjectcoercible */
 export function RequireObjectCoercible(argument: Value) {
-  if (argument instanceof UndefinedValue) {
+  if (argument === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
   }
-  if (argument instanceof NullValue) {
+  if (argument === Value.null) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
   }
-  Assert(argument instanceof ObjectValue || argument instanceof BooleanValue || argument instanceof NumberValue || argument instanceof JSStringValue || argument instanceof SymbolValue || argument instanceof BigIntValue);
   return argument;
 }
 

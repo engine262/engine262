@@ -462,10 +462,10 @@ export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
 
 /** https://tc39.es/ecma262/#sec-toobject */
 export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
-  if (argument instanceof UndefinedValue) {
+  if (argument === Value.undefined) {
     // Throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
-  } else if (argument instanceof NullValue) {
+  } else if (argument === Value.null) {
     // Throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
   } else if (argument instanceof BooleanValue) {
@@ -491,11 +491,9 @@ export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']) as Mutable<BigIntObject>;
     obj.BigIntData = argument;
     return obj;
-  } else if (argument instanceof ObjectValue) {
-    // Return argument.
-    return argument;
   }
-  throw new OutOfRange('ToObject', { argument });
+  Assert(argument instanceof ObjectValue);
+  return argument;
 }
 
 /** https://tc39.es/ecma262/#sec-topropertykey */
