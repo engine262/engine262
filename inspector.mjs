@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 33b9e33b6ef8c9d95db5aa61508e328eb95999a6
+ * engine262 0.0.1 bff529bf038d4db6a83f2e1272255805b294f257
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -680,11 +680,11 @@ class InspectorContext {
             continue;
           }
           const desc = Q(skipDebugger(p.GetOwnProperty(key)));
-          if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
-            continue;
-          }
           if (desc instanceof UndefinedValue) {
             return;
+          }
+          if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
+            continue;
           }
           const descriptor = {
             name: key instanceof JSStringValue ? key.stringValue() : SymbolDescriptiveString(key).stringValue(),

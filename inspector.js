@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 33b9e33b6ef8c9d95db5aa61508e328eb95999a6
+ * engine262 0.0.1 bff529bf038d4db6a83f2e1272255805b294f257
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -684,11 +684,11 @@
               continue;
             }
             const desc = Q(engine262_mjs.skipDebugger(p.GetOwnProperty(key)));
-            if (accessorPropertiesOnly && !engine262_mjs.IsAccessorDescriptor(desc)) {
-              continue;
-            }
             if (desc instanceof engine262_mjs.UndefinedValue) {
               return;
+            }
+            if (accessorPropertiesOnly && !engine262_mjs.IsAccessorDescriptor(desc)) {
+              continue;
             }
             const descriptor = {
               name: key instanceof engine262_mjs.JSStringValue ? key.stringValue() : engine262_mjs.SymbolDescriptiveString(key).stringValue(),

@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 33b9e33b6ef8c9d95db5aa61508e328eb95999a6
+ * engine262 0.0.1 bff529bf038d4db6a83f2e1272255805b294f257
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -461,54 +461,56 @@ const InternalMethods$5 = {
     if (P instanceof JSStringValue && P.stringValue() === 'length') {
       return yield* ArraySetLength(A, Desc);
     } else if (isArrayIndex(P)) {
-      let oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
+      let lengthDesc = OrdinaryGetOwnProperty(A, Value('length'));
+      Assert(!(lengthDesc instanceof UndefinedValue), "!(lengthDesc instanceof UndefinedValue)");
+      Assert(IsDataDescriptor(lengthDesc), "IsDataDescriptor(lengthDesc)");
+      Assert(lengthDesc.Configurable === Value.false, "lengthDesc.Configurable === Value.false");
+      const length = lengthDesc.Value;
+      Assert(length instanceof NumberValue && isNonNegativeInteger(R(length)), "length instanceof NumberValue && isNonNegativeInteger(R(length))");
       /* X */
-      let _temp = IsDataDescriptor(oldLenDesc);
+      let _temp = ToUint32(P);
       /* node:coverage ignore next */
       if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */
-      if (_temp instanceof AbruptCompletion) throw new Assert.Error("! IsDataDescriptor(oldLenDesc) returned an abrupt completion", {
+      if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(P) returned an abrupt completion", {
         cause: _temp
       });
       /* node:coverage ignore next */
       if (_temp instanceof Completion) _temp = _temp.Value;
-      Assert(_temp, "X(IsDataDescriptor(oldLenDesc))");
-      Assert(oldLenDesc.Configurable === Value.false, "oldLenDesc.Configurable === Value.false");
-      const oldLen = oldLenDesc.Value;
+      const index = _temp;
+      if (R(index) >= R(length) && lengthDesc.Writable === Value.false) {
+        return Value.false;
+      }
       /* X */
-      let _temp2 = ToUint32(P);
+      let _temp2 = OrdinaryDefineOwnProperty(A, P, Desc);
       /* node:coverage ignore next */
       if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */
-      if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(P) returned an abrupt completion", {
+      if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, P, Desc) returned an abrupt completion", {
         cause: _temp2
       });
       /* node:coverage ignore next */
       if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-      const index = _temp2;
-      if (R(index) >= R(oldLen) && oldLenDesc.Writable === Value.false) {
-        return Value.false;
-      }
-      /* X */
-      let _temp3 = OrdinaryDefineOwnProperty(A, P, Desc);
-      /* node:coverage ignore next */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-      /* node:coverage ignore next */
-      if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, P, Desc) returned an abrupt completion", {
-        cause: _temp3
-      });
-      /* node:coverage ignore next */
-      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-      const succeeded = _temp3;
+      let succeeded = _temp2;
       if (succeeded === Value.false) {
         return Value.false;
       }
-      if (R(index) >= R(oldLen)) {
-        oldLenDesc = _Descriptor({
-          ...oldLenDesc,
+      if (R(index) >= R(length)) {
+        lengthDesc = _Descriptor({
+          ...lengthDesc,
           Value: F(R(index) + 1)
         });
-        const succeeded = yield* OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+        /* X */
+        let _temp3 = OrdinaryDefineOwnProperty(A, Value('length'), lengthDesc);
+        /* node:coverage ignore next */
+        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+        /* node:coverage ignore next */
+        if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, Value('length'), lengthDesc) returned an abrupt completion", {
+          cause: _temp3
+        });
+        /* node:coverage ignore next */
+        if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+        succeeded = _temp3;
         Assert(succeeded === Value.true, "succeeded === Value.true");
       }
       return Value.true;
@@ -650,17 +652,8 @@ function* ArraySetLength(A, Desc) {
     Value: F(newLen)
   });
   const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
-  /* X */
-  let _temp10 = IsDataDescriptor(oldLenDesc);
-  /* node:coverage ignore next */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
-  /* node:coverage ignore next */
-  if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! IsDataDescriptor(oldLenDesc) returned an abrupt completion", {
-    cause: _temp10
-  });
-  /* node:coverage ignore next */
-  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
-  Assert(_temp10, "X(IsDataDescriptor(oldLenDesc))");
+  Assert(!(oldLenDesc instanceof UndefinedValue), "!(oldLenDesc instanceof UndefinedValue)");
+  Assert(IsDataDescriptor(oldLenDesc), "IsDataDescriptor(oldLenDesc)");
   Assert(oldLenDesc.Configurable === Value.false, "oldLenDesc.Configurable === Value.false");
   const oldLen = R(oldLenDesc.Value);
   if (newLen >= oldLen) {
@@ -680,16 +673,16 @@ function* ArraySetLength(A, Desc) {
     });
   }
   /* X */
-  let _temp11 = OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
+  let _temp10 = OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   /* node:coverage ignore next */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
   /* node:coverage ignore next */
-  if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc) returned an abrupt completion", {
-    cause: _temp11
+  if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc) returned an abrupt completion", {
+    cause: _temp10
   });
   /* node:coverage ignore next */
-  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
-  const succeeded = _temp11;
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const succeeded = _temp10;
   if (succeeded === Value.false) {
     return Value.false;
   }
@@ -702,30 +695,30 @@ function* ArraySetLength(A, Desc) {
   keys.sort((a, b) => Number(b.stringValue()) - Number(a.stringValue()));
   for (const P of keys) {
     /* X */
-    let _temp12 = A.Delete(P);
+    let _temp11 = A.Delete(P);
     /* node:coverage ignore next */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
     /* node:coverage ignore next */
-    if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! A.Delete(P) returned an abrupt completion", {
-      cause: _temp12
+    if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! A.Delete(P) returned an abrupt completion", {
+      cause: _temp11
     });
     /* node:coverage ignore next */
-    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
-    const deleteSucceeded = _temp12;
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    const deleteSucceeded = _temp11;
     if (deleteSucceeded === Value.false) {
       /* X */
-      let _temp13 = ToUint32(P);
+      let _temp12 = ToUint32(P);
       /* node:coverage ignore next */
-      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
       /* node:coverage ignore next */
-      if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(P) returned an abrupt completion", {
-        cause: _temp13
+      if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(P) returned an abrupt completion", {
+        cause: _temp12
       });
       /* node:coverage ignore next */
-      if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+      if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
       newLenDesc = _Descriptor({
         ...newLenDesc,
-        Value: F(R(_temp13) + 1)
+        Value: F(R(_temp12) + 1)
       });
       if (newWritable === false) {
         newLenDesc = _Descriptor({
@@ -734,15 +727,15 @@ function* ArraySetLength(A, Desc) {
         });
       }
       /* X */
-      let _temp14 = OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
+      let _temp13 = OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
       /* node:coverage ignore next */
-      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
       /* node:coverage ignore next */
-      if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc) returned an abrupt completion", {
-        cause: _temp14
+      if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc) returned an abrupt completion", {
+        cause: _temp13
       });
       /* node:coverage ignore next */
-      if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+      if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
       return Value.false;
     }
   }
@@ -761,12 +754,12 @@ function* IsConcatSpreadable(O) {
     return Value.false;
   }
   /* ReturnIfAbrupt */
-  let _temp15 = yield* Get(O, wellKnownSymbols.isConcatSpreadable);
+  let _temp14 = yield* Get(O, wellKnownSymbols.isConcatSpreadable);
   /* node:coverage ignore next */
-  if (_temp15 instanceof AbruptCompletion) return _temp15;
+  if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* node:coverage ignore next */
-  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
-  const spreadable = _temp15;
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const spreadable = _temp14;
   if (spreadable !== Value.undefined) {
     return ToBoolean(spreadable);
   }
@@ -790,19 +783,19 @@ function* CompareArrayElements(x, y, comparefn) {
   // 4. If comparefn is not undefined, then
   if (comparefn !== Value.undefined) {
     /* ReturnIfAbrupt */
-    let _temp17 = yield* Call(comparefn, Value.undefined, [x, y]);
-    /* node:coverage ignore next */
-    if (_temp17 instanceof AbruptCompletion) return _temp17;
-    /* node:coverage ignore next */
-    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
-    /* ReturnIfAbrupt */
-    let _temp16 = yield* ToNumber(_temp17);
+    let _temp16 = yield* Call(comparefn, Value.undefined, [x, y]);
     /* node:coverage ignore next */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* node:coverage ignore next */
     if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+    /* ReturnIfAbrupt */
+    let _temp15 = yield* ToNumber(_temp16);
+    /* node:coverage ignore next */
+    if (_temp15 instanceof AbruptCompletion) return _temp15;
+    /* node:coverage ignore next */
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
     // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-    const v = _temp16;
+    const v = _temp15;
     // b. If v is NaN, return +0𝔽.
     if (v.isNaN()) {
       return F(0);
@@ -812,20 +805,20 @@ function* CompareArrayElements(x, y, comparefn) {
   }
   // 5. Let xString be ? ToString(x).
   /* ReturnIfAbrupt */
-  let _temp18 = yield* ToString(x);
+  let _temp17 = yield* ToString(x);
+  /* node:coverage ignore next */
+  if (_temp17 instanceof AbruptCompletion) return _temp17;
+  /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const xString = _temp17;
+  // 6. Let yString be ? ToString(y).
+  /* ReturnIfAbrupt */
+  let _temp18 = yield* ToString(y);
   /* node:coverage ignore next */
   if (_temp18 instanceof AbruptCompletion) return _temp18;
   /* node:coverage ignore next */
   if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
-  const xString = _temp18;
-  // 6. Let yString be ? ToString(y).
-  /* ReturnIfAbrupt */
-  let _temp19 = yield* ToString(y);
-  /* node:coverage ignore next */
-  if (_temp19 instanceof AbruptCompletion) return _temp19;
-  /* node:coverage ignore next */
-  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
-  const yString = _temp19;
+  const yString = _temp18;
   // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
   const xSmaller = yield* AbstractRelationalComparison(xString, yString);
   // 8. If xSmaller is true, return -1𝔽.
@@ -862,14 +855,14 @@ function CreateArrayIterator(array, kind) {
         len = TypedArrayLength(taRecord);
       } else {
         /* ReturnIfAbrupt */
-        let _temp20 = yield* LengthOfArrayLike(array);
+        let _temp19 = yield* LengthOfArrayLike(array);
         /* node:coverage ignore next */
-        if (_temp20 instanceof AbruptCompletion) return _temp20;
+        if (_temp19 instanceof AbruptCompletion) return _temp19;
         /* node:coverage ignore next */
-        if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+        if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
         // ii. Else,
         // 1. Let len be ? LengthOfArrayLike(array).
-        len = _temp20;
+        len = _temp19;
       }
       // iii. If index ≥ len, return undefined.
       if (index >= len) {
@@ -883,26 +876,26 @@ function CreateArrayIterator(array, kind) {
         result = indexNumber;
       } else {
         /* X */
-        let _temp21 = ToString(indexNumber);
+        let _temp20 = ToString(indexNumber);
         /* node:coverage ignore next */
-        if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+        if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
         /* node:coverage ignore next */
-        if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! ToString(indexNumber) returned an abrupt completion", {
-          cause: _temp21
+        if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! ToString(indexNumber) returned an abrupt completion", {
+          cause: _temp20
         });
         /* node:coverage ignore next */
-        if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+        if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
         // v. Else,
         // 1. Let elementKey be ! ToString(indexNumber).
-        const elementKey = _temp21;
+        const elementKey = _temp20;
         // 2. Let elementValue be ? Get(array, elementKey).
         /* ReturnIfAbrupt */
-        let _temp22 = yield* Get(array, elementKey);
+        let _temp21 = yield* Get(array, elementKey);
         /* node:coverage ignore next */
-        if (_temp22 instanceof AbruptCompletion) return _temp22;
+        if (_temp21 instanceof AbruptCompletion) return _temp21;
         /* node:coverage ignore next */
-        if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
-        const elementValue = _temp22;
+        if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+        const elementValue = _temp21;
         // 3. If kind is value, perform ? Yield(elementValue).
         if (kind === 'value') {
           result = elementValue;
@@ -915,11 +908,11 @@ function CreateArrayIterator(array, kind) {
         }
       }
       /* ReturnIfAbrupt */
-      let _temp23 = yield* GeneratorYield(CreateIteratorResultObject(result, Value.false));
+      let _temp22 = yield* GeneratorYield(CreateIteratorResultObject(result, Value.false));
       /* node:coverage ignore next */
-      if (_temp23 instanceof AbruptCompletion) return _temp23;
+      if (_temp22 instanceof AbruptCompletion) return _temp22;
       /* node:coverage ignore next */
-      if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+      if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
       // vi. Set index to index + 1.
       index += 1;
     }
@@ -33723,7 +33716,7 @@ function* SetIntegrityLevel(O, level) {
       /* node:coverage ignore next */
       if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
       const currentDesc = _temp11;
-      if (currentDesc !== Value.undefined) {
+      if (!(currentDesc instanceof UndefinedValue)) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
           desc = _Descriptor({
@@ -34376,7 +34369,7 @@ function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
 IsCompatiblePropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor'; // 9.1.6.3 ValidateAndApplyPropertyDescriptor
 function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
   Assert(O === Value.undefined || IsPropertyKey(P), "O === Value.undefined || IsPropertyKey(P)");
-  if (current === Value.undefined) {
+  if (current instanceof UndefinedValue) {
     if (extensible === Value.false) {
       return Value.false;
     }
@@ -58466,9 +58459,6 @@ function R(x) {
 
 // 6.2.5.1 IsAccessorDescriptor
 function IsAccessorDescriptor(Desc) {
-  if (Desc instanceof UndefinedValue) {
-    return false;
-  }
   if (Desc.Get === undefined && Desc.Set === undefined) {
     return false;
   }
@@ -58477,9 +58467,6 @@ function IsAccessorDescriptor(Desc) {
 
 // 6.2.5.2 IsDataDescriptor
 function IsDataDescriptor(Desc) {
-  if (Desc instanceof UndefinedValue) {
-    return false;
-  }
   if (Desc.Value === undefined && Desc.Writable === undefined) {
     return false;
   }
@@ -58488,9 +58475,6 @@ function IsDataDescriptor(Desc) {
 
 // 6.2.5.3 IsGenericDescriptor
 function IsGenericDescriptor(Desc) {
-  if (Desc instanceof UndefinedValue) {
-    return false;
-  }
   if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
     return true;
   }
@@ -59807,8 +59791,8 @@ function* ToInt32(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
@@ -59832,8 +59816,8 @@ function* ToUint32(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. Return 𝔽(int32bit).
@@ -59854,8 +59838,8 @@ function* ToInt16(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
@@ -59879,8 +59863,8 @@ function* ToUint16(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. Return 𝔽(int16bit).
@@ -59901,8 +59885,8 @@ function* ToInt8(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
@@ -59926,8 +59910,8 @@ function* ToUint8(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. Return 𝔽(int8bit).
