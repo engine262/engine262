@@ -200,11 +200,11 @@ export class InspectorContext {
             continue;
           }
           const desc = Q(skipDebugger(p.GetOwnProperty(key)));
-          if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
-            continue;
-          }
           if (desc instanceof UndefinedValue) {
             return;
+          }
+          if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
+            continue;
           }
           const descriptor: Protocol.Runtime.PropertyDescriptor = {
             name: key instanceof JSStringValue

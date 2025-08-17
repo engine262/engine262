@@ -239,7 +239,7 @@ export function* SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): 
   } else if (level === 'frozen') {
     for (const k of keys) {
       const currentDesc = Q(yield* O.GetOwnProperty(k));
-      if (currentDesc !== Value.undefined) {
+      if (!(currentDesc instanceof UndefinedValue)) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
           desc = Descriptor({ Configurable: Value.false });
