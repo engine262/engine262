@@ -225,8 +225,8 @@ export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
@@ -244,8 +244,8 @@ export function* ToUint32(argument: Value): ValueEvaluator<NumberValue> {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. Return 𝔽(int32bit).
@@ -260,8 +260,8 @@ export function* ToInt16(argument: Value): ValueEvaluator<NumberValue> {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
@@ -279,8 +279,8 @@ export function* ToUint16(argument: Value): ValueEvaluator<NumberValue> {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. Return 𝔽(int16bit).
@@ -295,8 +295,8 @@ export function* ToInt8(argument: Value): ValueEvaluator<NumberValue> {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
@@ -314,8 +314,8 @@ export function* ToUint8(argument: Value): ValueEvaluator<NumberValue> {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
   }
-  // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  // 3. Let int be truncate(ℝ(number)).
+  const int = Math.trunc(number);
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. Return 𝔽(int8bit).

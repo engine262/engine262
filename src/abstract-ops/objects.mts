@@ -125,7 +125,7 @@ export function IsCompatiblePropertyDescriptor(Extensible: BooleanValue, Desc: D
 export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedValue, P: PropertyKeyValue | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
   Assert(O === Value.undefined || IsPropertyKey(P));
 
-  if (current === Value.undefined) {
+  if (current instanceof UndefinedValue) {
     if (extensible === Value.false) {
       return Value.false;
     }

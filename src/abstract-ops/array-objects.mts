@@ -48,21 +48,23 @@ const InternalMethods = {
     if (P instanceof JSStringValue && P.stringValue() === 'length') {
       return Q(yield* ArraySetLength(A, Desc));
     } else if (isArrayIndex(P)) {
-      let oldLenDesc = OrdinaryGetOwnProperty(A, Value('length')) as Descriptor;
-      Assert(X(IsDataDescriptor(oldLenDesc)));
-      Assert(oldLenDesc.Configurable === Value.false);
-      const oldLen = oldLenDesc.Value as NumberValue;
+      let lengthDesc = OrdinaryGetOwnProperty(A, Value('length'));
+      Assert(!(lengthDesc instanceof UndefinedValue));
+      Assert(IsDataDescriptor(lengthDesc));
+      Assert(lengthDesc.Configurable === Value.false);
+      const length = lengthDesc.Value;
+      Assert(length instanceof NumberValue && isNonNegativeInteger(R(length)));
       const index = X(ToUint32(P));
-      if (R(index) >= R(oldLen) && oldLenDesc.Writable === Value.false) {
+      if (R(index) >= R(length) && lengthDesc.Writable === Value.false) {
         return Value.false;
       }
-      const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
+      let succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
       if (succeeded === Value.false) {
         return Value.false;
       }
-      if (R(index) >= R(oldLen)) {
-        oldLenDesc = Descriptor({ ...oldLenDesc, Value: F(R(index) + 1) });
-        const succeeded = yield* OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+      if (R(index) >= R(length)) {
+        lengthDesc = Descriptor({ ...lengthDesc, Value: F(R(index) + 1) });
+        succeeded = X(OrdinaryDefineOwnProperty(A, Value('length'), lengthDesc));
         Assert(succeeded === Value.true);
       }
       return Value.true;
@@ -148,8 +150,9 @@ export function* ArraySetLength(A: OrdinaryObject, Desc: Descriptor): ValueEvalu
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
   newLenDesc = Descriptor({ ...Desc, Value: F(newLen) });
-  const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length')) as Descriptor;
-  Assert(X(IsDataDescriptor(oldLenDesc)));
+  const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
+  Assert(!(oldLenDesc instanceof UndefinedValue));
+  Assert(IsDataDescriptor(oldLenDesc));
   Assert(oldLenDesc.Configurable === Value.false);
   const oldLen = R(oldLenDesc.Value as NumberValue);
   if (newLen >= oldLen) {

@@ -48,11 +48,7 @@ export function R(x: unknown) {
 }
 
 // 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc: Descriptor | UndefinedValue): Desc is Descriptor & { Get: Value; Set: Value } {
-  if (Desc instanceof UndefinedValue) {
-    return false;
-  }
-
+export function IsAccessorDescriptor(Desc: Descriptor): Desc is Descriptor & { Get: Value; Set: Value } {
   if (Desc.Get === undefined && Desc.Set === undefined) {
     return false;
   }
@@ -61,11 +57,7 @@ export function IsAccessorDescriptor(Desc: Descriptor | UndefinedValue): Desc is
 }
 
 // 6.2.5.2 IsDataDescriptor
-export function IsDataDescriptor(Desc: Descriptor | UndefinedValue): Desc is Descriptor & { Value: Value; Writable: BooleanValue } {
-  if (Desc instanceof UndefinedValue) {
-    return false;
-  }
-
+export function IsDataDescriptor(Desc: Descriptor): Desc is Descriptor & { Value: Value; Writable: BooleanValue } {
   if (Desc.Value === undefined && Desc.Writable === undefined) {
     return false;
   }
@@ -74,11 +66,7 @@ export function IsDataDescriptor(Desc: Descriptor | UndefinedValue): Desc is Des
 }
 
 // 6.2.5.3 IsGenericDescriptor
-export function IsGenericDescriptor(Desc: Descriptor | UndefinedValue) {
-  if (Desc instanceof UndefinedValue) {
-    return false;
-  }
-
+export function IsGenericDescriptor(Desc: Descriptor) {
   if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
     return true;
   }
