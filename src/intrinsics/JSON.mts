@@ -39,8 +39,11 @@ import {
   type PlainCompletion,
   isLeadingSurrogate,
   isTrailingSurrogate,
+  type ParseNode,
+  type BuiltinFunctionObject,
 } from '../index.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import { Contains } from '../parser/utils.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { isBooleanObject } from './Boolean.mts';
 import { isBigIntObject } from './BigInt.mts';
@@ -557,6 +560,43 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
     ReplacerFunction, Stack: stack, Indent: indent, Gap: gap, PropertyList,
   };
   return Q(yield* SerializeJSONProperty(state, Value(''), wrapper));
+}
+
+function ShallowestContainedJSONValue(node: ParseNode): ParseNode | undefined {
+  const F = surroundingAgent.activeFunctionObject;
+  Assert((F as BuiltinFunctionObject).nativeFunction === JSON_parse);
+  const types: ParseNode['type'][] = [
+    'NullLiteral', 'BooleanLiteral', 'NumericLiteral', 'StringLiteral', 'ArrayLiteral', 'ObjectLiteral', 'UnaryExpression',
+  ];
+  let unaryExpression: ParseNode | undefined;
+  let queue = [node];
+  while (queue.length > 0) {
+    const candidate = queue.shift()!;
+    let queuedChildren = false;
+    for (const type of types) {
+      if (candidate?.type === type) {
+        if (type === 'UnaryExpression') {
+          unaryExpression = candidate;
+        } else if (type === 'NumericLiteral') {
+          // TODO: https://github.com/tc39/proposal-json-parse-with-source/issues/48 ?
+          Assert(!!unaryExpression && Contains(unaryExpression, candidate.type));
+          return unaryExpression;
+        } else {
+          return candidate;
+        }
+      }
+      if (!queuedChildren && isNonTerminal(candidate) && Contains(candidate, type)) {
+        const children = Object.values(candidate).filter((value) => 'type' in value);
+        queue = queue.concat(children);
+        queuedChildren = true;
+      }
+    }
+  }
+  return undefined;
+
+  function isNonTerminal(node: ParseNode) {
+    return Object.values(node).some((value) => 'type' in value);
+  }
 }
 
 export function bootstrapJSON(realmRec: Realm) {
