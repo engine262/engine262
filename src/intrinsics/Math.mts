@@ -103,6 +103,7 @@ function Math_random() {
   return F(result);
 }
 
+/** https://tc39.es/ecma262/#sec-math.sumprecise */
 function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator {
   Q(RequireObjectCoercible(items));
   const iteratorRecord = Q(yield* GetIterator(items, 'sync'));
