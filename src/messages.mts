@@ -102,6 +102,7 @@ export const NotAnObject = (v: Value) => `${i(v)} is not an object`;
 export const NotASymbol = (v: Value) => `${i(v)} is not a symbol`;
 export const NotAWeakKey = (v: Value) => `${i(v)} is not an object or a symbol`;
 export const NotAString = (v: Value) => `${i(v)} is not a string`;
+export const NotANumber = (v: Value) => `${i(v)} is not a number`;
 export const NotDefined = (n: PrivateName | Value | string) => `${i(n)} is not defined`;
 export const NotEnoughArguments = (numArgs: number, minArgs: number) => `${minArgs} argument${minArgs !== 1 ? 's' : ''} required, but only ${numArgs} present`;
 export const NotInitialized = (n: JSStringValue) => `${i(n)} cannot be used before initialization`;
