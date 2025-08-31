@@ -1,6 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
-import { sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import { Q, NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';

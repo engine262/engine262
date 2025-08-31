@@ -81,7 +81,7 @@ export function* RegExpExec(R: ObjectValue, S: JSStringValue) {
 export function* RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): ValueEvaluator<NullValue | OrdinaryObject> {
   // Let length be the number of code units in S.
   const length = S.stringValue().length;
-  let lastIndex = MathematicalValue(Q(yield* ToLength(Q(yield* Get(R, Value('lastIndex'))))));
+  let lastIndex = MathematicalValue(Q(yield* ToLength(X(Get(R, Value('lastIndex'))))));
   const flags = R.OriginalFlags.stringValue();
   const global = flags.includes('g');
   const sticky = flags.includes('y');
