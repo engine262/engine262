@@ -71,7 +71,7 @@ function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.Ge
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
-export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: JSStringValue | UndefinedValue, className: PropertyKeyValue | PrivateName) {
+export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: JSStringValue | UndefinedValue, className: PropertyKeyValue | PrivateName, sourceText: string) {
   const { ClassHeritage, ClassBody } = ClassTail;
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -197,6 +197,8 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     SetFunctionName(F, className);
   }
   __ts_cast__<Mutable<ECMAScriptFunctionObject>>(F);
+
+  F.SourceText = sourceText;
   // 16. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
   // https://github.com/tc39/ecma262/pull/3212/

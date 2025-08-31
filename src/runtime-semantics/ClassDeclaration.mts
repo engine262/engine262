@@ -13,20 +13,14 @@ import { InitializeBoundName, ClassDefinitionEvaluation } from './all.mts';
 //     `class` ClassTail
 export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.ClassDeclaration): ValueEvaluator {
   const { BindingIdentifier, ClassTail } = ClassDeclaration;
+  const sourceText = ClassDeclaration.sourceText;
   if (!BindingIdentifier) {
-    // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".
-    const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default')));
-    // 2. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
-    value.SourceText = sourceTextMatchedBy(ClassDeclaration);
-    // 3. Return value.
-    return value;
+    return Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default'), sourceText));
   }
   // 1. Let className be StringValue of BindingIdentifier.
   const className = StringValue(BindingIdentifier);
   // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-  const value = Q(yield* ClassDefinitionEvaluation(ClassTail, className, className));
-  // 3. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
-  value.SourceText = sourceTextMatchedBy(ClassDeclaration);
+  const value = Q(yield* ClassDefinitionEvaluation(ClassTail, className, className, sourceText));
   // 4. Let env be the running execution context's LexicalEnvironment.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 5. Perform ? InitializeBoundName(className, value, env).

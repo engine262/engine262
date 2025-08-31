@@ -104,7 +104,7 @@ export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
 /** https://tc39.es/ecma262/#sec-tail-position-calls */
 
 export function isECMAScriptFunctionObject(O: undefined | null | Value): O is ECMAScriptFunctionObject {
-  return !!O && 'SourceText' in O && typeof O.SourceText === 'string';
+  return !!O && !('nativeFunction' in O);
 }
 
 export function isBuiltinFunctionObject(O: undefined | null | Value): O is BuiltinFunctionObject {
