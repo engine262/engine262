@@ -36,7 +36,7 @@ export function RequireObjectCoercible(argument: Value) {
   if (argument === Value.null) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
   }
-  return argument;
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-isarray */

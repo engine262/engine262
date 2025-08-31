@@ -404,8 +404,8 @@ function* Object_seal([O = Value.undefined]: Arguments) {
 
 /** https://tc39.es/ecma262/#sec-object.setprototypeof */
 function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]: Arguments) {
-  // 1. Set O to ? RequireObjectCoercible(O).
-  O = Q(RequireObjectCoercible(O));
+  // 1. Perform ? RequireObjectCoercible(O).
+  Q(RequireObjectCoercible(O));
   // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
   if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');

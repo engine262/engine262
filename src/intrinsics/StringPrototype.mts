@@ -60,7 +60,8 @@ function thisStringValue(value: Value) {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.charat */
 function* StringProto_charAt([pos = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const position = Q(yield* ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
@@ -72,7 +73,8 @@ function* StringProto_charAt([pos = Value.undefined]: Arguments, { thisValue }: 
 
 /** https://tc39.es/ecma262/#sec-string.prototype.charcodeat */
 function* StringProto_charCodeAt([pos = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const position = Q(yield* ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
@@ -84,7 +86,8 @@ function* StringProto_charCodeAt([pos = Value.undefined]: Arguments, { thisValue
 
 /** https://tc39.es/ecma262/#sec-string.prototype.codepointat */
 function* StringProto_codePointAt([pos = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const position = Q(yield* ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
@@ -97,7 +100,8 @@ function* StringProto_codePointAt([pos = Value.undefined]: Arguments, { thisValu
 
 /** https://tc39.es/ecma262/#sec-string.prototype.concat */
 function* StringProto_concat(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   let R = S.stringValue();
   const _args = [...args];
@@ -111,7 +115,8 @@ function* StringProto_concat(args: Arguments, { thisValue }: FunctionCallContext
 
 /** https://tc39.es/ecma262/#sec-string.prototype.endswith */
 function* StringProto_endsWith([searchString = Value.undefined, endPosition = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
@@ -141,7 +146,8 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
 
 /** https://tc39.es/ecma262/#sec-string.prototype.includes */
 function* StringProto_includes([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
@@ -172,8 +178,8 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
 
 /** https://tc39.es/ecma262/#sec-string.prototype.indexof */
 function* StringProto_indexOf([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. Let S be ? ToString(O).
   const S = Q(yield* ToString(O));
   // 3. Let searchStr be ? ToString(searchString).
@@ -192,8 +198,8 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
 
 /** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
 function* StringProto_isWellFormed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. Let S be ? ToString(O).
   const S = Q(yield* ToString(O));
   // 3. Return IsStringWellFormedUnicode(S).
@@ -202,7 +208,8 @@ function* StringProto_isWellFormed(_args: Arguments, { thisValue }: FunctionCall
 
 /** https://tc39.es/ecma262/#sec-string.prototype.lastindexof */
 function* StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const searchStr = Q(yield* ToString(searchString)).stringValue();
   const numPos = Q(yield* ToNumber(position));
@@ -237,7 +244,8 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
 
 /** https://tc39.es/ecma262/#sec-string.prototype.localecompare */
 function* StringProto_localeCompare([that = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const That = Q(yield* ToString(that)).stringValue();
   if (S === That) {
@@ -251,7 +259,8 @@ function* StringProto_localeCompare([that = Value.undefined]: Arguments, { thisV
 
 /** https://tc39.es/ecma262/#sec-string.prototype.match */
 function* StringProto_match([regexp = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
 
   if (regexp instanceof ObjectValue) {
     const matcher = Q(yield* GetMethod(regexp, wellKnownSymbols.match));
@@ -267,8 +276,8 @@ function* StringProto_match([regexp = Value.undefined]: Arguments, { thisValue }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.matchall */
 function* StringProto_matchAll([regexp = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. If regexp is an Object, then
   if (regexp instanceof ObjectValue) {
     // a. Let isRegExp be ? IsRegExp(regexp).
@@ -302,7 +311,8 @@ function* StringProto_matchAll([regexp = Value.undefined]: Arguments, { thisValu
 
 /** https://tc39.es/ecma262/#sec-string.prototype.normalize */
 function* StringProto_normalize([form = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   if (form === Value.undefined) {
     form = Value('NFC');
@@ -319,19 +329,22 @@ function* StringProto_normalize([form = Value.undefined]: Arguments, { thisValue
 
 /** https://tc39.es/ecma262/#sec-string.prototype.padend */
 function* StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   return Q(yield* StringPad(O, maxLength, fillString, 'end'));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.padstart */
 function* StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   return Q(yield* StringPad(O, maxLength, fillString, 'start'));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.repeat */
 function* StringProto_repeat([count = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const n = Q(yield* ToIntegerOrInfinity(count));
   if (n < 0) {
@@ -352,7 +365,8 @@ function* StringProto_repeat([count = Value.undefined]: Arguments, { thisValue }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replace */
 function* StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   if (searchValue instanceof ObjectValue) {
     const replacer = Q(yield* GetMethod(searchValue, wellKnownSymbols.replace));
     if (replacer !== Value.undefined) {
@@ -385,8 +399,8 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replaceall */
 function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2.If searchValue is an Object, then
   if (searchValue instanceof ObjectValue) {
     // a. Let isRegExp be ? IsRegExp(searchValue).
@@ -473,7 +487,8 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
 
 /** https://tc39.es/ecma262/#sec-string.prototype.slice */
 function* StringProto_search([regexp = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
 
   if (regexp instanceof ObjectValue) {
     const searcher = Q(yield* GetMethod(regexp, wellKnownSymbols.search));
@@ -489,7 +504,8 @@ function* StringProto_search([regexp = Value.undefined]: Arguments, { thisValue 
 
 /** https://tc39.es/ecma262/#sec-string.prototype.slice */
 function* StringProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const len = S.length;
   const intStart = Q(yield* ToIntegerOrInfinity(start));
@@ -517,7 +533,8 @@ function* StringProto_slice([start = Value.undefined, end = Value.undefined]: Ar
 
 /** https://tc39.es/ecma262/#sec-string.prototype.split */
 function* StringProto_split([separator = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   if (separator instanceof ObjectValue) {
     const splitter = Q(yield* GetMethod(separator, wellKnownSymbols.split));
     if (splitter !== Value.undefined) {
@@ -592,7 +609,8 @@ function* SplitMatch(S: JSStringValue, q: number, R: JSStringValue) {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.startswith */
 function* StringProto_startsWith([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
@@ -617,7 +635,8 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
 
 /** https://tc39.es/ecma262/#sec-string.prototype.substring */
 function* StringProto_substring([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O)).stringValue();
   const len = S.length;
   const intStart = Q(yield* ToIntegerOrInfinity(start));
@@ -636,7 +655,8 @@ function* StringProto_substring([start = Value.undefined, end = Value.undefined]
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
 function* StringProto_toLocaleLowerCase(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const L = S.stringValue().toLocaleLowerCase();
   return Value(L);
@@ -644,7 +664,8 @@ function* StringProto_toLocaleLowerCase(_args: Arguments, { thisValue }: Functio
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
 function* StringProto_toLocaleUpperCase(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const L = S.stringValue().toLocaleUpperCase();
   return Value(L);
@@ -652,7 +673,8 @@ function* StringProto_toLocaleUpperCase(_args: Arguments, { thisValue }: Functio
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolowercase */
 function* StringProto_toLowerCase(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const L = S.stringValue().toLowerCase();
   return Value(L);
@@ -665,7 +687,8 @@ function* StringProto_toString(_args: Arguments, { thisValue }: FunctionCallCont
 
 /** https://tc39.es/ecma262/#sec-string.prototype.touppercase */
 function* StringProto_toUpperCase(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
   const L = S.stringValue().toUpperCase();
   return Value(L);
@@ -673,8 +696,8 @@ function* StringProto_toUpperCase(_args: Arguments, { thisValue }: FunctionCallC
 
 /** https://tc39.es/ecma262/#sec-string.prototype.towellformed */
 function* StringProto_toWellFormed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. Let S be ? ToString(O).
   const S = Q(yield* ToString(O));
   // 3. Let strLen be the length of S.
@@ -727,8 +750,8 @@ function* StringProto_valueOf(_args: Arguments, { thisValue }: FunctionCallConte
 
 /** https://tc39.es/ecma262/#sec-string.prototype-@@iterator */
 function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. Let s be ? ToString(O).
   const s = Q(yield* ToString(O)).stringValue();
   // 3. Let closure be a new Abstract Closure with no parameters that captures s and performs the following steps when called:
@@ -762,8 +785,8 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
 
 /** https://tc39.es/ecma262/#sec-string.prototype.at */
 function* StringProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. Let S be ? ToString(O).
   const S = Q(yield* ToString(O));
   // 3. Let len be the length of S.
