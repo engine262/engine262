@@ -64,12 +64,11 @@ function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction: ParseNode.AsyncA
 //   ClassExpression : `class` ClassTail
 function* NamedEvaluation_ClassExpression(ClassExpression: ParseNode.ClassExpression, name: PropertyKeyValue | PrivateName) {
   const { ClassTail } = ClassExpression;
+  const sourceText = ClassExpression.sourceText;
   // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
-  const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name);
+  const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name, sourceText);
   // 2. ReturnIfAbrupt(value).
   ReturnIfAbrupt(value);
-  // 3. Set value.[[SourceText]] to the source text matched by ClassExpression.
-  (value as Mutable<ECMAScriptFunctionObject>).SourceText = sourceTextMatchedBy(ClassExpression);
   // 4. Return value.
   return value;
 }
