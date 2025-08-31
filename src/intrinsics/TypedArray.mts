@@ -206,9 +206,9 @@ export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, ar
 }
 
 /** https://tc39.es/ecma262/#sec-typedarray-create-same-type */
-export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
+export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, length: number): ValueEvaluator<TypedArrayObject> {
   const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
-  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList));
+  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, [Value(length)]));
   Assert('TypedArrayName' in result && 'ContentType' in result);
   Assert(result.ContentType === exemplar.ContentType);
   return result;

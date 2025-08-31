@@ -511,7 +511,7 @@ function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { 
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  const A = Q(yield* TypedArrayCreateSameType(O, [F(len)]));
+  const A = Q(yield* TypedArrayCreateSameType(O, len));
   const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
     Assert(x instanceof NumberValue || x instanceof BigIntValue);
     Assert(y instanceof NumberValue || y instanceof BigIntValue);
@@ -645,7 +645,7 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
   if (IsValidIntegerIndex(O, F(actualIndex)) === Value.false) {
     return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
   }
-  const A = Q(yield* TypedArrayCreateSameType(O, [F(len)]));
+  const A = Q(yield* TypedArrayCreateSameType(O, len));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
@@ -665,11 +665,11 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
 function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const length = TypedArrayLength(taRecord);
-  const A = Q(yield* TypedArrayCreateSameType(O, [F(length)]));
+  const len = TypedArrayLength(taRecord);
+  const A = Q(yield* TypedArrayCreateSameType(O, len));
   let k = 0;
-  while (k < length) {
-    const from = X(ToString(F(length - k - 1)));
+  while (k < len) {
+    const from = X(ToString(F(len - k - 1)));
     const Pk = X(ToString(F(k)));
     const fromValue = X(Get(O, from));
     X(Set(A, Pk, fromValue, Value.true));
