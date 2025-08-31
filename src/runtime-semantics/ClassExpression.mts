@@ -1,5 +1,4 @@
 import { Value } from '../value.mts';
-import { sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';

@@ -1,7 +1,6 @@
 import { Value } from '../value.mts';
-import { sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import { ReturnIfAbrupt } from '../completion.mts';
-import { OutOfRange, type Mutable } from '../helpers.mts';
+import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
 import {
