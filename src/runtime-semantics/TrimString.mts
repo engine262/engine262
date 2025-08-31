@@ -4,8 +4,8 @@ import { Q, type ValueEvaluator } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-trimstring */
 export function* TrimString(string: Value, where: 'start' | 'end' | 'start+end'): ValueEvaluator<JSStringValue> {
-  const str = Q(RequireObjectCoercible(string));
-  const S = Q(yield* ToString(str)).stringValue();
+  Q(RequireObjectCoercible(string));
+  const S = Q(yield* ToString(string)).stringValue();
   let T;
   if (where === 'start') {
     T = S.trimStart();

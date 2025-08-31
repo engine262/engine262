@@ -262,8 +262,10 @@ function* ObjectProto__proto__Get(_args: Arguments, { thisValue }: FunctionCallC
 
 /** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
 function* ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be ? RequireObjectCoercible(this value).
-  const O = Q(RequireObjectCoercible(thisValue));
+  // 1. Let O be the *this* value.
+  // 2. Perform ? RequireObjectCoercible(this value).
+  const O = thisValue;
+  Q(RequireObjectCoercible(O));
   // 2. If Type(proto) is neither Object nor Null, return undefined.
   if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
     return Value.undefined;
