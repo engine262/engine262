@@ -75,7 +75,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly Environment: EnvironmentRecord;
   readonly PrivateEnvironment: PrivateEnvironmentRecord | NullValue;
   readonly FormalParameters: ParseNode.FormalParameters;
-  readonly ECMAScriptCode?: Body;
+  readonly ECMAScriptCode: Body | null;
   readonly ConstructorKind: 'base' | 'derived';
   readonly ScriptOrModule: ScriptRecord | AbstractModuleRecord;
   readonly ThisMode: 'lexical' | 'strict' | 'global';
@@ -103,8 +103,12 @@ export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
 // and
 /** https://tc39.es/ecma262/#sec-tail-position-calls */
 
+export function hasSourceTextInternalSlot(O: undefined | null | Value): O is FunctionObject & { readonly SourceText:string } {
+  return !!O && 'SourceText' in O && typeof O.SourceText === 'string';
+}
+
 export function isECMAScriptFunctionObject(O: undefined | null | Value): O is ECMAScriptFunctionObject {
-  return !!O && !('nativeFunction' in O);
+  return !!O && 'ECMAScriptCode' in O;
 }
 
 export function isBuiltinFunctionObject(O: undefined | null | Value): O is BuiltinFunctionObject {
