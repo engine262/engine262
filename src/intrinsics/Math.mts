@@ -172,7 +172,7 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
       fractional_parts.push(n - whole_num);
       whole_part_sum += BigInt(whole_num);
     });
-    const fractional_parts_as_hex = fractional_parts.map((n) => n.toString(16));
+    const fractional_parts_as_hex = fractional_parts.map((n) => n.toString(32));
 
     const fractional: number[] = [];
     for (const fractional_str of fractional_parts_as_hex) {
@@ -181,26 +181,26 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
       for (let index = prefix; index < fractional_str.length; index += 1) {
         fractional[index - prefix] ??= 0;
         if (neg) {
-          fractional[index - prefix] -= parseInt(fractional_str[index], 16);
+          fractional[index - prefix] -= parseInt(fractional_str[index], 32);
         } else {
-          fractional[index - prefix] += parseInt(fractional_str[index], 16);
+          fractional[index - prefix] += parseInt(fractional_str[index], 32);
         }
       }
     }
     for (let index = fractional.length - 1; index >= 0; index -= 1) {
       const element = fractional[index];
-      if (element >= 16) {
-        fractional[index] = element % 16;
+      if (element >= 32) {
+        fractional[index] = element % 32;
         fractional[index - 1] ??= 0;
-        fractional[index - 1] += Math.floor(element / 16);
+        fractional[index - 1] += Math.floor(element / 32);
       }
       if (element < 0) {
-        fractional[index] = 16 + element;
+        fractional[index] = 32 + element;
         fractional[index - 1] ??= 0;
         fractional[index - 1] -= 1;
       }
     }
-    const fractional_part = fractional.reduceRight((acc, digit, index) => acc + digit * 16 ** -(index + 1), 0);
+    const fractional_part = fractional.reduceRight((acc, digit, index) => acc + digit * 32 ** -(index + 1), 0);
     if (fractional[-1]) {
       whole_part_sum += BigInt(fractional[-1]);
     }
