@@ -71,7 +71,11 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
         cache?.set(resolved, m);
         finish(m);
       } catch (error) {
-        finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+        if (error instanceof ThrowCompletion) {
+          finish(error);
+        } else {
+          finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+        }
       }
     });
   };
