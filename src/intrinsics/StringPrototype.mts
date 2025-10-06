@@ -223,6 +223,9 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   const len = S.length;
   const start = Math.min(Math.max(pos, 0), len);
   const searchLen = searchStr.length;
+  if (len < searchLen) {
+    return F(-1);
+  }
   let k = start;
   while (k >= 0) {
     if (k + searchLen <= len) {
