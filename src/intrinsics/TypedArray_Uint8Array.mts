@@ -9,7 +9,7 @@ import {
   Assert, CodePointsToString, CreateDataPropertyOrThrow, EnsureCompletion, Get, GetValueFromBuffer, IsTypedArrayOutOfBounds, JSStringValue, MakeTypedArrayWithBufferWitnessRecord, NumberValue, ObjectValue, OrdinaryObjectCreate, Q, R, Realm, RequireInternalSlot, SetValueInBuffer, StringPad, surroundingAgent, ThrowCompletion, ToBoolean, TypedArrayLength, UndefinedValue, X, type ArrayBufferObject, type PlainCompletion, type ValueCompletion,
 } from '#self';
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tobase64 */
+/** https://tc39.es/ecma262/#sec-uint8array.prototype.tobase64 */
 function* Uint8Array_prototype_toBase64([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const O = thisValue;
   Q(ValidateUint8Array(O));
@@ -26,12 +26,14 @@ function* Uint8Array_prototype_toBase64([options = Value.undefined]: Arguments, 
   const toEncode = Q(GetUint8ArrayBytes(O));
   let outAscii: string;
   if (alphabet.stringValue() === 'base64') {
+    // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64 encoding specified in section 4 of RFC 4648. Padding is included if and only if omitPadding is false.
     outAscii = btoa(String.fromCharCode(...toEncode));
     if (omitPadding !== Value.false) {
       outAscii = outAscii.replace(/=/g, '');
     }
   } else {
     Assert(alphabet.stringValue() === 'base64url');
+    // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64url encoding specified in section 5 of RFC 4648. Padding is included if and only if omitPadding is false.
     outAscii = btoa(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
     if (omitPadding !== Value.false) {
       outAscii = outAscii.replace(/=/g, '');
@@ -40,7 +42,7 @@ function* Uint8Array_prototype_toBase64([options = Value.undefined]: Arguments, 
   return Value(CodePointsToString(outAscii));
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tohex */
+/** https://tc39.es/ecma262/#sec-uint8array.prototype.tohex */
 function Uint8Array_prototype_toHex(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
   Q(ValidateUint8Array(O));
@@ -55,6 +57,7 @@ function Uint8Array_prototype_toHex(_args: Arguments, { thisValue }: FunctionCal
   return Value(out);
 }
 
+/** https://tc39.es/ecma262/#sec-uint8array.frombase64 */
 function* Uint8Array_fromBase64([string, options = Value.undefined]: Arguments) {
   if (!(string instanceof JSStringValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAString', string);
@@ -88,6 +91,10 @@ function* Uint8Array_fromBase64([string, options = Value.undefined]: Arguments) 
   }
   const resultLength = result.Bytes.length;
   const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
+
+  // TODO: Assert: ta.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is the number of elements in result.[[Bytes]].
+
+  // Set the value at each index of ta.[[ViewedArrayBuffer]].[[ArrayBufferData]] to the value at the corresponding index of result.[[Bytes]].
   for (let i = 0; i < resultLength; i += 1) {
     const byte = result.Bytes[i];
     yield* SetValueInBuffer(ta.ViewedArrayBuffer as ArrayBufferObject, ta.ByteOffset + i, 'Uint8', F(byte), true, 'unordered');
@@ -95,7 +102,7 @@ function* Uint8Array_fromBase64([string, options = Value.undefined]: Arguments) 
   return ta;
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfrombase64 */
+/** https://tc39.es/ecma262/#sec-uint8array.prototype.setfrombase64 */
 function* Uint8Array_prototype_setFromBase64([string, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
   Q(ValidateUint8Array(into));
@@ -145,6 +152,7 @@ function* Uint8Array_prototype_setFromBase64([string, options = Value.undefined]
   return resultObject;
 }
 
+/** https://tc39.es/ecma262/#sec-uint8array.fromhex */
 function* Uint8Array_fromHex([string]: Arguments) {
   if (!(string instanceof JSStringValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAString', string);
@@ -155,6 +163,9 @@ function* Uint8Array_fromHex([string]: Arguments) {
   }
   const resultLength = result.Bytes.length;
   const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
+  // TODO Assert: ta.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is the number of elements in result.[[Bytes]].
+
+  // Set the value at each index of ta.[[ViewedArrayBuffer]].[[ArrayBufferData]] to the value at the corresponding index of result.[[Bytes]].
   for (let i = 0; i < resultLength; i += 1) {
     const byte = result.Bytes[i];
     yield* SetValueInBuffer(ta.ViewedArrayBuffer as ArrayBufferObject, ta.ByteOffset + i, 'Uint8', F(byte), true, 'unordered');
@@ -162,7 +173,7 @@ function* Uint8Array_fromHex([string]: Arguments) {
   return ta;
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfromhex */
+/** https://tc39.es/ecma262/#sec-uint8array.prototype.setfromhex */
 function* Uint8Array_prototype_setFromHex([string]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
   Q(ValidateUint8Array(into));
@@ -189,7 +200,7 @@ function* Uint8Array_prototype_setFromHex([string]: Arguments, { thisValue }: Fu
   return resultObject;
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-validateuint8array */
+/** https://tc39.es/ecma262/#sec-validateuint8array */
 function ValidateUint8Array(ta: Value) {
   Q(RequireInternalSlot(ta, 'TypedArrayName'));
   __ts_cast__<TypedArrayObject>(ta);
@@ -199,7 +210,7 @@ function ValidateUint8Array(ta: Value) {
   return undefined;
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-getuint8arraybytes */
+/** https://tc39.es/ecma262/#sec-getuint8arraybytes */
 function GetUint8ArrayBytes(ta: TypedArrayObject): PlainCompletion<number[]> {
   const buffer = ta.ViewedArrayBuffer;
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(ta, 'seq-cst');
@@ -220,7 +231,7 @@ function GetUint8ArrayBytes(ta: TypedArrayObject): PlainCompletion<number[]> {
   return bytes;
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-writeuint8arraybytes */
+/** https://tc39.es/ecma262/#sec-setuint8arraybytes */
 function* SetUint8ArrayBytes(into: TypedArrayObject, bytes: readonly number[]) {
   const offset = into.ByteOffset;
   const len = bytes.length;
@@ -233,7 +244,7 @@ function* SetUint8ArrayBytes(into: TypedArrayObject, bytes: readonly number[]) {
   }
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-skipasciiwhitespace */
+/** https://tc39.es/ecma262/#sec-skipasciiwhitespace */
 function SkipAsciiWhitespace(string: string, index: number) {
   const length = string.length;
   while (index < length) {
@@ -246,32 +257,35 @@ function SkipAsciiWhitespace(string: string, index: number) {
   return index;
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-decodebase64chunk */
-function DecodeBase64Chunk(chunk: string, throwOnExtraBits?: boolean): PlainCompletion<number[]> {
+/** https://tc39.es/ecma262/#sec-decodefinalbase64chunk */
+function DecodeFinalBase64Chunk(chunk: string, throwOnExtraBits: boolean): PlainCompletion<number[]> {
   const chunkLength = chunk.length;
   if (chunkLength === 2) {
     chunk += 'AA';
-  } else if (chunkLength === 3) {
-    chunk += 'A';
   } else {
-    Assert(chunkLength === 4);
+    Assert(chunkLength === 3);
+    chunk += 'A';
   }
-  const byteSequence = [...atob(chunk)].map((c) => c.charCodeAt(0));
-  const bytes = [...byteSequence];
+  const bytes = DecodeFullLengthBase64Chunk(chunk);
   if (chunkLength === 2) {
-    Assert(throwOnExtraBits !== undefined);
     if (throwOnExtraBits && bytes[1] !== 0) {
       return surroundingAgent.Throw('SyntaxError', 'InvalidBase64String');
     }
     return [bytes[0]];
-  } else if (chunkLength === 3) {
-    Assert(throwOnExtraBits !== undefined);
+  } else {
     if (throwOnExtraBits && (bytes[2] !== 0)) {
       return surroundingAgent.Throw('SyntaxError', 'InvalidBase64String');
     }
     return [bytes[0], bytes[1]];
   }
-  return bytes;
+}
+
+/** https://tc39.es/ecma262/#sec-decodefulllengthbase64chunk */
+function DecodeFullLengthBase64Chunk(chunk: string): number[] {
+  // 1. Let byteSequence be the unique sequence of 3 bytes resulting from decoding chunk as base64 (i.e., the sequence such that applying the base64 encoding specified in section 4 of RFC 4648 to byteSequence would produce chunk).
+  // 2. Return a List whose elements are the elements of byteSequence, in order.
+  const byteSequence = [...atob(chunk)].map((c) => c.charCodeAt(0));
+  return byteSequence;
 }
 
 interface Record {
@@ -279,7 +293,7 @@ interface Record {
   Bytes: number[];
   Error: undefined | Value;
 }
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64 */
+/** https://tc39.es/ecma262/#sec-frombase64 */
 function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkHandling: 'loose' | 'strict' | 'stop-before-partial', maxLength = 2 ** 53 - 1): Record {
   if (maxLength === 0) {
     return { Read: 0, Bytes: [], Error: undefined };
@@ -301,7 +315,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
             const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
             return { Read: read, Bytes: bytes, Error: error };
           }
-          bytes.push(...X(DecodeBase64Chunk(chunk, false)));
+          bytes.push(...X(DecodeFinalBase64Chunk(chunk, false)));
         } else {
           Assert(lastChunkHandling === 'strict');
           const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
@@ -341,7 +355,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
       } else {
         throwOnExtraBits = false;
       }
-      const decodeResult = EnsureCompletion(DecodeBase64Chunk(chunk, throwOnExtraBits));
+      const decodeResult = EnsureCompletion(DecodeFinalBase64Chunk(chunk, throwOnExtraBits));
       if (decodeResult instanceof ThrowCompletion) {
         return { Read: read, Bytes: bytes, Error: decodeResult.Value };
       }
@@ -369,7 +383,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
     chunk += char;
     chunkLength = chunk.length;
     if (chunkLength === 4) {
-      bytes.push(...X(DecodeBase64Chunk(chunk)));
+      bytes.push(...X(DecodeFullLengthBase64Chunk(chunk)));
       chunk = '';
       chunkLength = 0;
       read = index;
@@ -380,7 +394,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
   }
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex */
+/** https://tc39.es/ecma262/#sec-fromhex */
 function FromHex(string: string, maxLength = 2 ** 53 - 1): Record {
   const length = string.length;
   const bytes: number[] = [];
@@ -402,7 +416,7 @@ function FromHex(string: string, maxLength = 2 ** 53 - 1): Record {
   return { Read: read, Bytes: bytes, Error: undefined };
 }
 
-/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-getoptionsobject */
+/** https://tc39.es/ecma262/#sec-getoptionsobject */
 function GetOptionsObject(options: Value) {
   if (options instanceof UndefinedValue) {
     return OrdinaryObjectCreate(Value.null);
