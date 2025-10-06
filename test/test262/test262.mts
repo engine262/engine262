@@ -291,10 +291,12 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
   }
   const tries = [
     () => globby(pattern, { cwd: TEST262_TESTS, absolute: true }),
+    () => globby(`**/${pattern}/*`, { cwd: TEST262_TESTS, absolute: true }),
     () => globby(`**/${pattern}*`, { cwd: TEST262_TESTS, absolute: true }),
     () => globby(`**/${pattern}*/*`, { cwd: TEST262_TESTS, absolute: true }),
 
     () => globby(pattern, { cwd: process.cwd(), absolute: true }),
+    () => globby(`**/${pattern}/*`, { cwd: process.cwd(), absolute: true }),
     () => globby(`**/${pattern}*`, { cwd: process.cwd(), absolute: true }),
     () => globby(`**/${pattern}*/*`, { cwd: process.cwd(), absolute: true }),
   ];
