@@ -130,7 +130,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   } else {
     endIndex = Math.min(relativeEnd, len);
   }
-  const count = Math.min(endIndex - startIndex, len - targetIndex);
+  let count = Math.min(endIndex - startIndex, len - targetIndex);
   if (count > 0) {
     const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
     taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
@@ -138,9 +138,9 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
       return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
     }
     len = TypedArrayLength(taRecord);
+    count = Math.min(count, len - startIndex, len - targetIndex);
     const elementSize = TypedArrayElementSize(O);
     const byteOffset = O.ByteOffset;
-    const bufferByteLimit = (len * elementSize) + byteOffset;
     let toByteIndex = (targetIndex * elementSize) + byteOffset;
     let fromByteIndex = (startIndex * elementSize) + byteOffset;
     let countBytes = count * elementSize;
@@ -153,15 +153,11 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
       direction = 1;
     }
     while (countBytes > 0) {
-      if (fromByteIndex < bufferByteLimit && toByteIndex < bufferByteLimit) {
-        const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', true, 'unordered');
-        Q(yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, true, 'unordered'));
-        fromByteIndex += direction;
-        toByteIndex += direction;
-        countBytes -= 1;
-      } else {
-        countBytes = 0;
-      }
+      const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', true, 'unordered');
+      Q(yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, true, 'unordered'));
+      fromByteIndex += direction;
+      toByteIndex += direction;
+      countBytes -= 1;
     }
   }
   return O;
