@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 603b95de374cc32846e8b39d1f3396a89fee0e3f
+ * engine262 0.0.1 f915a64e03381af90c5b1da46f9c7cf464e68799
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -7386,7 +7386,6 @@ function* ClassElementEvaluation(node, object, enumerable) {
       throw new OutOfRange$1('ClassElementEvaluation', node);
   }
 }
-
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
 function* ClassDefinitionEvaluation(ClassTail, classBinding, className, sourceText) {
   const {
@@ -7554,13 +7553,13 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className, sourceTe
       if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
       return result;
     };
-    // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]] », the current Realm Record, constructorParent).
+    // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[PrivateMethods]], [[Fields]] », the current Realm Record, constructorParent).
     /* X */
-    let _temp8 = CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, Value.true);
+    let _temp8 = CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', 'PrivateMethods', 'Fields'], undefined, constructorParent, undefined, Value.true);
     /* node:coverage ignore next */
     if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
     /* node:coverage ignore next */
-    if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, Value.true) returned an abrupt completion", {
+    if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', 'PrivateMethods', 'Fields'], undefined, constructorParent, undefined, Value.true) returned an abrupt completion", {
       cause: _temp8
     });
     /* node:coverage ignore next */
@@ -14368,11 +14367,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     if (status instanceof AbruptCompletion) {
       // i. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-      if (iteratorKind === 'async') {
-        return yield* AsyncIteratorClose(iteratorRecord, status);
-      }
-      // iii. if iterationKind is enumerate, then
+      // ii. if iterationKind is enumerate, then
       if (iterationKind === 'enumerate') {
         // 1. Return status.
         return status;
@@ -14380,7 +14375,11 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         // iv. Else,
         // 1. Assert: iterationKind is iterate.
         Assert(iterationKind === 'iterate', "iterationKind === 'iterate'");
-        // 2 .Return ? IteratorClose(iteratorRecord, status).
+        // 2. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+        if (iteratorKind === 'async') {
+          return yield* AsyncIteratorClose(iteratorRecord, status);
+        }
+        // 3 .Return ? IteratorClose(iteratorRecord, status).
         return yield* IteratorClose(iteratorRecord, EnsureCompletion(status));
       }
     }
@@ -14390,21 +14389,21 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     // n. If LoopContinues(result, labelSet) is false, then
     if (LoopContinues(result, labelSet) === Value.false) {
+      // Set _status_ to Completion(UpdateEmpty(_result_, _V_)).
+      status = UpdateEmpty(result, V);
       // i. If iterationKind is enumerate, then
       if (iterationKind === 'enumerate') {
-        // 1. Return Completion(UpdateEmpty(result, V)).
-        return Completion(UpdateEmpty(result, V));
+        // 1. Return ? _status_.
+        return status;
       } else {
         // ii. Else,
         // 1. Assert: iterationKind is iterate.
         Assert(iterationKind === 'iterate', "iterationKind === 'iterate'");
-        // 2. Set status to UpdateEmpty(result, V).
-        status = UpdateEmpty(result, V);
-        // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+        // 2. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
         if (iteratorKind === 'async') {
           return yield* AsyncIteratorClose(iteratorRecord, status);
         }
-        // 4. Return ? IteratorClose(iteratorRecord, status).
+        // 3. Return ? IteratorClose(iteratorRecord, status).
         return yield* IteratorClose(iteratorRecord, EnsureCompletion(status));
       }
     }
@@ -21120,7 +21119,7 @@ function* Evaluate_YieldExpression({
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* node:coverage ignore next */
     if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-    let value = _temp2;
+    const value = _temp2;
     // 4. Let iteratorRecord be ? GetIterator(value, generatorKind).
     /* ReturnIfAbrupt */
     let _temp3 = yield* GetIterator(value, generatorKind);
@@ -21286,20 +21285,19 @@ function* Evaluate_YieldExpression({
         const ret = _temp13;
         // iii. If return is undefined, then
         if (ret === Value.undefined) {
-          // Set value to received.[[Value]].
-          let value = received.Value;
-          // 1. If generatorKind is async, then set received.[[Value]] to ? Await(received.[[Value]]).
+          let receivedValue = received.Value;
+          // 1. If generatorKind is async, then set receivedValue to ? Await(received.[[Value]]).
           if (generatorKind === 'async') {
             /* ReturnIfAbrupt */
-            let _temp14 = yield* Await(value);
+            let _temp14 = yield* Await(receivedValue);
             /* node:coverage ignore next */
             if (_temp14 instanceof AbruptCompletion) return _temp14;
             /* node:coverage ignore next */
             if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
-            value = _temp14;
+            receivedValue = _temp14;
           }
-          // 2. Return ReturnCompletion(value).
-          return ReturnCompletion(value);
+          // 2. Return ReturnCompletion(receivedValue).
+          return ReturnCompletion(receivedValue);
         }
         // iv. Let innerReturnResult be ? Call(return, iterator, « received.[[Value]] »).
         /* ReturnIfAbrupt */
@@ -21339,10 +21337,10 @@ function* Evaluate_YieldExpression({
           if (_temp18 instanceof AbruptCompletion) return _temp18;
           /* node:coverage ignore next */
           if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
-          // 1. Set value to ? IteratorValue(innerReturnResult).
-          value = _temp18;
+          // 1. Set returnedValue to ? IteratorValue(innerReturnResult).
+          const returnedValue = _temp18;
           // 2. Return ReturnCompletion(value).
-          return ReturnCompletion(value);
+          return ReturnCompletion(returnedValue);
         }
         // ix. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
         if (generatorKind === 'async') {
@@ -48356,6 +48354,9 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   const len = S.length;
   const start = Math.min(Math.max(pos, 0), len);
   const searchLen = searchStr.length;
+  if (len < searchLen) {
+    return F(-1);
+  }
   let k = start;
   while (k >= 0) {
     if (k + searchLen <= len) {
@@ -54360,7 +54361,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   } else {
     endIndex = Math.min(relativeEnd, len);
   }
-  const count = Math.min(endIndex - startIndex, len - targetIndex);
+  let count = Math.min(endIndex - startIndex, len - targetIndex);
   if (count > 0) {
     const buffer = O.ViewedArrayBuffer;
     taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
@@ -54368,9 +54369,9 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
       return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
     }
     len = TypedArrayLength(taRecord);
+    count = Math.min(count, len - startIndex, len - targetIndex);
     const elementSize = TypedArrayElementSize(O);
     const byteOffset = O.ByteOffset;
-    const bufferByteLimit = len * elementSize + byteOffset;
     let toByteIndex = targetIndex * elementSize + byteOffset;
     let fromByteIndex = startIndex * elementSize + byteOffset;
     let countBytes = count * elementSize;
@@ -54383,20 +54384,16 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
       direction = 1;
     }
     while (countBytes > 0) {
-      if (fromByteIndex < bufferByteLimit && toByteIndex < bufferByteLimit) {
-        const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8');
-        /* ReturnIfAbrupt */
-        let _temp8 = yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value);
-        /* node:coverage ignore next */
-        if (_temp8 instanceof AbruptCompletion) return _temp8;
-        /* node:coverage ignore next */
-        if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
-        fromByteIndex += direction;
-        toByteIndex += direction;
-        countBytes -= 1;
-      } else {
-        countBytes = 0;
-      }
+      const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8');
+      /* ReturnIfAbrupt */
+      let _temp8 = yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value);
+      /* node:coverage ignore next */
+      if (_temp8 instanceof AbruptCompletion) return _temp8;
+      /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      fromByteIndex += direction;
+      toByteIndex += direction;
+      countBytes -= 1;
     }
   }
   return O;
