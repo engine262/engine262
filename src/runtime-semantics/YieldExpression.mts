@@ -40,7 +40,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
     // 2. Let exprRef be ? Evaluation of AssignmentExpression.
     const exprRef = Q(yield* Evaluate(AssignmentExpression!));
     // 3. Let value be ? GetValue(exprRef).
-    let value = Q(yield* GetValue(exprRef));
+    const value = Q(yield* GetValue(exprRef));
     // 4. Let iteratorRecord be ? GetIterator(value, generatorKind).
     const iteratorRecord = Q(yield* GetIterator(value, generatorKind));
     // 5. Let iterator be iteratorRecord.[[Iterator]].
@@ -125,14 +125,13 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         const ret = Q(yield* GetMethod(iterator, Value('return')));
         // iii. If return is undefined, then
         if (ret === Value.undefined) {
-          // Set value to received.[[Value]].
-          let value: Value = received.Value;
-          // 1. If generatorKind is async, then set received.[[Value]] to ? Await(received.[[Value]]).
+          let receivedValue = received.Value;
+          // 1. If generatorKind is async, then set receivedValue to ? Await(received.[[Value]]).
           if (generatorKind === 'async') {
-            value = Q(yield* Await(value));
+            receivedValue = Q(yield* Await(receivedValue));
           }
-          // 2. Return ReturnCompletion(value).
-          return ReturnCompletion(value);
+          // 2. Return ReturnCompletion(receivedValue).
+          return ReturnCompletion(receivedValue);
         }
         // iv. Let innerReturnResult be ? Call(return, iterator, « received.[[Value]] »).
         let innerReturnResult: Value = Q(yield* Call(ret, iterator, [received.Value]));
@@ -148,10 +147,10 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         const done = Q(yield* IteratorComplete(innerReturnResult));
         // viii. If done is true, then
         if (done === Value.true) {
-          // 1. Set value to ? IteratorValue(innerReturnResult).
-          value = Q(yield* IteratorValue(innerReturnResult));
+          // 1. Set returnedValue to ? IteratorValue(innerReturnResult).
+          const returnedValue = Q(yield* IteratorValue(innerReturnResult));
           // 2. Return ReturnCompletion(value).
-          return ReturnCompletion(value);
+          return ReturnCompletion(returnedValue);
         }
         // ix. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
         if (generatorKind === 'async') {
