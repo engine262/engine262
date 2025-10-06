@@ -13,6 +13,7 @@ import {
   InstantiateAsyncArrowFunctionExpression,
 } from './all.mts';
 import type {
+  DefaultConstructorBuiltinFunction,
   ECMAScriptFunctionObject, FunctionDeclaration, PrivateName, PropertyKeyValue,
 } from '#self';
 
@@ -72,7 +73,7 @@ function* NamedEvaluation_ClassExpression(ClassExpression: ParseNode.ClassExpres
   return value;
 }
 
-export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ValueEvaluator<ECMAScriptFunctionObject> {
+export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ValueEvaluator<ECMAScriptFunctionObject | DefaultConstructorBuiltinFunction> {
   switch (F.type) {
     case 'FunctionExpression':
       return NamedEvaluation_FunctionExpression(F, name);

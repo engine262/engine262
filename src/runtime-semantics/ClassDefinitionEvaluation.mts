@@ -27,6 +27,7 @@ import {
   InitializeInstanceElements,
   DefineField,
   type ECMAScriptFunctionObject,
+  type BuiltinFunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   IsStatic,
@@ -68,6 +69,13 @@ function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.Ge
     default:
       throw new OutOfRange('ClassElementEvaluation', node);
   }
+}
+
+export interface DefaultConstructorBuiltinFunction extends BuiltinFunctionObject {
+  readonly PrivateMethods: ECMAScriptFunctionObject['PrivateMethods'];
+  readonly Fields: ECMAScriptFunctionObject['Fields'];
+  readonly SourceText: ECMAScriptFunctionObject['SourceText'];
+  readonly ConstructorKind: ECMAScriptFunctionObject['ConstructorKind'];
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
@@ -186,8 +194,8 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       Q(yield* InitializeInstanceElements(result, F));
       return result;
     };
-    // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]] », the current Realm Record, constructorParent).
-    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, Value.true));
+    // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[PrivateMethods]], [[Fields]] », the current Realm Record, constructorParent).
+    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', 'PrivateMethods', 'Fields'], undefined, constructorParent, undefined, Value.true));
   } else { // 15. Else,
     // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
     const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
@@ -196,7 +204,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // c. Perform SetFunctionName(F, className).
     SetFunctionName(F, className);
   }
-  __ts_cast__<Mutable<ECMAScriptFunctionObject>>(F);
+  __ts_cast__<Mutable<DefaultConstructorBuiltinFunction>>(F);
 
   F.SourceText = sourceText;
   // 16. Perform MakeConstructor(F, false, proto).

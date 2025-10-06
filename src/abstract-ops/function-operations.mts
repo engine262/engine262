@@ -60,7 +60,7 @@ import {
   AsyncFunctionStart,
 } from './all.mts';
 import type {
-  AbstractModuleRecord, CanBeNativeSteps, FunctionCallContext, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
+  AbstractModuleRecord, CanBeNativeSteps, DefaultConstructorBuiltinFunction, FunctionCallContext, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
 } from '#self';
 
 interface BaseFunctionObject extends OrdinaryObject {
@@ -222,7 +222,7 @@ export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefin
 }
 
 /** https://tc39.es/ecma262/#sec-initializeinstanceelements */
-export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScriptFunctionObject): PlainEvaluator {
+export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScriptFunctionObject | DefaultConstructorBuiltinFunction): PlainEvaluator {
   // 1. Let methods be the value of constructor.[[PrivateMethods]].
   const methods = constructor.PrivateMethods;
   // 2. For each PrivateElement method of methods, do
