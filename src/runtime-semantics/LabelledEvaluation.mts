@@ -682,18 +682,18 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
     if (status instanceof AbruptCompletion) {
       // i. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-      if (iteratorKind === 'async') {
-        return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
-      }
-      // iii. if iterationKind is enumerate, then
+      // ii. if iterationKind is enumerate, then
       if (iterationKind === 'enumerate') {
         // 1. Return status.
         return status as Completion<Value | void>;
       } else { // iv. Else,
         // 1. Assert: iterationKind is iterate.
         Assert(iterationKind === 'iterate');
-        // 2 .Return ? IteratorClose(iteratorRecord, status).
+        // 2. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+        if (iteratorKind === 'async') {
+          return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
+        }
+        // 3 .Return ? IteratorClose(iteratorRecord, status).
         return Q(yield* IteratorClose(iteratorRecord, EnsureCompletion(status)));
       }
     }
@@ -703,20 +703,20 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     // n. If LoopContinues(result, labelSet) is false, then
     if (LoopContinues(result, labelSet) === Value.false) {
+      // Set _status_ to Completion(UpdateEmpty(_result_, _V_)).
+      status = UpdateEmpty(result, V);
       // i. If iterationKind is enumerate, then
       if (iterationKind === 'enumerate') {
-        // 1. Return Completion(UpdateEmpty(result, V)).
-        return Completion(UpdateEmpty(result, V));
+        // 1. Return ? _status_.
+        return Q(status as Completion<Value | void>);
       } else { // ii. Else,
         // 1. Assert: iterationKind is iterate.
         Assert(iterationKind === 'iterate');
-        // 2. Set status to UpdateEmpty(result, V).
-        status = UpdateEmpty(result, V);
-        // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+        // 2. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
         if (iteratorKind === 'async') {
           return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
         }
-        // 4. Return ? IteratorClose(iteratorRecord, status).
+        // 3. Return ? IteratorClose(iteratorRecord, status).
         return Q(yield* IteratorClose(iteratorRecord, EnsureCompletion(status)));
       }
     }
