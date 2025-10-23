@@ -905,14 +905,15 @@ export class RegExpParser {
       const atomPos = this.position;
       const atom = this.parseClassAtom();
       if (this.eat('-')) {
-        // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is true or IsCharacterClass of the second ClassAtom is true.
-        if (atom.production === 'ClassEscape' && atom.ClassEscape.production === 'CharacterClassEscape') {
-          this.raise('Invalid class range', atomPos);
-        }
         if (this.test(']')) {
+          // [\w-] is valid (\w ++ "-")
           ranges.push(atom);
           ranges.push({ type: 'ClassAtom', production: '-' });
         } else {
+          // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is true or IsCharacterClass of the second ClassAtom is true.
+          if (atom.production === 'ClassEscape' && atom.ClassEscape.production === 'CharacterClassEscape') {
+            this.raise('Invalid class range', atomPos);
+          }
           const atom2Pos = this.position;
           const atom2 = this.parseClassAtom();
           // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is false, IsCharacterClass of the second ClassAtom is false, and the CharacterValue of the first ClassAtom is strictly greater than the CharacterValue of the second ClassAtom.
