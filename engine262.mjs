@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 f915a64e03381af90c5b1da46f9c7cf464e68799
+ * engine262 0.0.1 d209cc60e010ad1691b0dcf5cebb6ab47b67000a
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -16963,17 +16963,18 @@ class RegExpParser {
       const atomPos = this.position;
       const atom = this.parseClassAtom();
       if (this.eat('-')) {
-        // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is true or IsCharacterClass of the second ClassAtom is true.
-        if (atom.production === 'ClassEscape' && atom.ClassEscape.production === 'CharacterClassEscape') {
-          this.raise('Invalid class range', atomPos);
-        }
         if (this.test(']')) {
+          // [\w-] is valid (\w ++ "-")
           ranges.push(atom);
           ranges.push({
             type: 'ClassAtom',
             production: '-'
           });
         } else {
+          // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is true or IsCharacterClass of the second ClassAtom is true.
+          if (atom.production === 'ClassEscape' && atom.ClassEscape.production === 'CharacterClassEscape') {
+            this.raise('Invalid class range', atomPos);
+          }
           const atom2Pos = this.position;
           const atom2 = this.parseClassAtom();
           // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is false, IsCharacterClass of the second ClassAtom is false, and the CharacterValue of the first ClassAtom is strictly greater than the CharacterValue of the second ClassAtom.
