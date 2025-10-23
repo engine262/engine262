@@ -4,6 +4,7 @@
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { R as MathematicalValue } from '../spec-types.mjs';
 import { __ts_cast__ } from '../../helpers.mts';
+import { ToIntegerWithTruncation } from './temporal.mts';
 import {
   Assert,
   Get,
@@ -12,9 +13,8 @@ import {
   MakeDay,
   MakeTime,
   NumberValue,
-  ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToBoolean, ToNumber, ToString, UndefinedValue, Value, Z, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
+  ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToBoolean, ToNumber, ToString, UndefinedValue, Value, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
 } from '#self';
-import { ToIntegerWithTruncation } from './temporal.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
 export interface YearWeekRecord {
@@ -155,31 +155,37 @@ export function GetUTCEpochNanoseconds(
 export type TimeZoneIdentifier = string & { readonly TimeZoneIdentifier: never; };
 
 /** https://tc39.es/proposal-temporal/#sec-getnamedtimezoneepochnanoseconds */
-export declare function GetNamedTimeZoneEpochNanoseconds(
+export function GetNamedTimeZoneEpochNanoseconds(
   timeZoneIdentifier: TimeZoneIdentifier,
-  isoDateTime: ISODateTimeRecord
-): bigint[];
+  isoDateTime: ISODateTimeRecord,
+): bigint[] {
+  Assert(timeZoneIdentifier === 'UTC');
+  const epochNanoseconds = GetUTCEpochNanoseconds(isoDateTime);
+  return [epochNanoseconds];
+}
 
 /** https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier */
-export declare function SystemTimeZoneIdentifier(): TimeZoneIdentifier;
+export function SystemTimeZoneIdentifier(): TimeZoneIdentifier {
+  // 1. If the implementation only supports the UTC time zone, return "UTC".
+  return 'UTC' as TimeZoneIdentifier;
+  // 2. Let systemTimeZoneString be the String representing the host environment's current time zone as a time zone identifier in normalized format, either a primary time zone identifier or an offset time zone identifier.
+  // 3. Return systemTimeZoneString.
+}
 
-/** https://tc39.es/proposal-temporal/#sec-localtime-temporaledited */
+/** https://tc39.es/proposal-temporal/#sec-localtime */
 export declare function LocalTime_TemporalEdited(t: number): number;
 
-/** https://tc39.es/proposal-temporal/#sec-utc-temporaledited */
+/** https://tc39.es/proposal-temporal/#sec-utc-t */
 export declare function UTC_TemporalEdited(t: number): number;
 
 /** https://tc39.es/proposal-temporal/#sec-timestring */
 export declare function TimeString(tv: number): string;
 
-/** https://tc39.es/proposal-temporal/#sec-timezonestring-temporaledited */
+/** https://tc39.es/proposal-temporal/#sec-timezoneestring */
 export declare function TimeZoneString_TemporalEdited(tv: number): string;
 
 /** https://tc39.es/proposal-temporal/#sec-isoffsettimezoneidentifier */
 export declare function IsOffsetTimeZoneIdentifier(offsetString: string): boolean;
-
-/** https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset */
-export declare function ParseDateTimeUTCOffset(offsetString: string): number;
 
 /** https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring */
 export function ToZeroPaddedDecimalString(n: number, minLength: number) {

@@ -1,10 +1,12 @@
-import type { FunctionObject, ObjectValue, OrdinaryObject, PlainCompletion, PlainEvaluator, Value, ValueEvaluator } from '#self';
 import type { RoundingMode } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalUnit, TimeUnit } from '../../abstract-ops/temporal/temporal.mts';
+import type { CalendarFieldsRecord, CalendarType } from '../../abstract-ops/temporal/calendar.mts';
 import type { InternalDurationRecord, TemporalDurationObject } from './Duration.mts';
 import type { ISODateRecord } from './PlainDate.mts';
 import type { TimeRecord } from './PlainTime.mts';
-import type { CalendarFieldsRecord, CalendarType } from '../../abstract-ops/temporal/calendar.mts';
+import type {
+  FunctionObject, ObjectValue, OrdinaryObject, PlainCompletion, PlainEvaluator, Value, ValueEvaluator,
+} from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindatetime-instances */
 export interface TemporalPlainDateTimeObject extends OrdinaryObject {
