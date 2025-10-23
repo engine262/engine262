@@ -1,7 +1,9 @@
-import type { FunctionObject, OrdinaryObject, PlainCompletion, Value, ValueEvaluator } from '#self';
 import type { RoundingMode, TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { TimeUnit } from '../../abstract-ops/temporal/temporal.mts';
 import type { InternalDurationRecord, TemporalDurationObject, TimeDuration } from './Duration.mts';
+import type {
+  FunctionObject, OrdinaryObject, PlainCompletion, Value, ValueEvaluator,
+} from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-instant-instances */
 export interface TemporalInstantObject extends OrdinaryObject {

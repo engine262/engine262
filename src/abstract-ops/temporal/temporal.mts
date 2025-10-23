@@ -5,10 +5,10 @@ import {
   CreateTemporalZonedDateTime, InterpretISODateTimeOffset, isTemporalZonedDateTimeObject, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour, type TemporalZonedDateTimeObject,
 } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import { InterpretTemporalDateTimeFields, isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
-import { ParseISODateTime } from '../../parser/Temporal_ISO8601.mts';
+import { ParseDateTimeUTCOffset, ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { R } from '../spec-types.mjs';
 import {
-  GetOption, GetRoundingIncrementOption, GetRoundingModeOption, ParseDateTimeUTCOffset, ToZeroPaddedDecimalString, UnsignedRoundingMode, type TimeZoneIdentifier,
+  GetOption, GetRoundingIncrementOption, GetRoundingModeOption, ToZeroPaddedDecimalString, UnsignedRoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
 import { RoundingMode } from './addition.mts';
 import {

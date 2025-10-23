@@ -1,4 +1,3 @@
-import { type Realm, X, Value, ReturnIfAbrupt as Q, type Arguments, GetGlobalObject, ObjectValue, type PlainCompletion } from '#self';
 import { SystemTimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import { ToTemporalTimeZoneIdentifier, GetISODateTimeFor } from '../../abstract-ops/temporal/time-zone.mts';
 import { bootstrapPrototype } from '../bootstrap.mts';
@@ -6,6 +5,9 @@ import { CreateTemporalInstant } from './Instant.mts';
 import { CreateTemporalDateTime, type ISODateTimeRecord } from './PlainDateTime.mts';
 import { CreateTemporalTime } from './PlainTime.mts';
 import { CreateTemporalZonedDateTime } from './ZonedDateTime.mts';
+import {
+  type Realm, X, Value, ReturnIfAbrupt as Q, type Arguments, GetGlobalObject, ObjectValue, type PlainCompletion,
+} from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.timezoneid */
 function TemporalNow_timeZoneId(): Value {
@@ -21,7 +23,7 @@ function TemporalNow_instant(): Value {
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso */
 function TemporalNow_plainDateTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): Value {
   const isoDateTime = Q(SystemDateTime(temporalTimeZoneLike));
-  return X(CreateTemporalDateTime(isoDateTime, "iso8601"));
+  return X(CreateTemporalDateTime(isoDateTime, 'iso8601'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso */
@@ -33,13 +35,13 @@ function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]: 
     timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike));
   }
   const ns = SystemUTCEpochNanoseconds();
-  return X(CreateTemporalZonedDateTime(ns, timeZone, "iso8601"));
+  return X(CreateTemporalZonedDateTime(ns, timeZone, 'iso8601'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso */
 function TemporalNow_plainDateISO([temporalTimeZoneLike = Value.undefined]: Arguments): Value {
   const isoDateTime = Q(SystemDateTime(temporalTimeZoneLike));
-  return X(CreateTemporalDateTime(isoDateTime, "iso8601"));
+  return X(CreateTemporalDateTime(isoDateTime, 'iso8601'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaintimeiso */

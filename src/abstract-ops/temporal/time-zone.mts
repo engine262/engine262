@@ -68,6 +68,3 @@ export declare function GetStartOfDay(
 
 // https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
 export declare function TimeZoneEquals(one: TimeZoneIdentifier, two: TimeZoneIdentifier): boolean;
-
-// https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier
-export declare function ParseTimeZoneIdentifier(identifier: TimeZoneIdentifier): PlainCompletion<{ Name?: TimeZoneIdentifier; OffsetMinutes?: number }>;

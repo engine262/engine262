@@ -1,10 +1,12 @@
-import type { FunctionObject, ObjectValue, OrdinaryObject, PlainCompletion, Value, ValueEvaluator } from '#self';
 import type { RoundingMode, TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalUnit } from '../../abstract-ops/temporal/temporal.mts';
+import type { CalendarType } from '../../abstract-ops/temporal/calendar.mts';
 import type { InternalDurationRecord, TemporalDurationObject } from './Duration.mts';
 import type { ISODateRecord } from './PlainDate.mts';
 import type { TimeRecord } from './PlainTime.mts';
-import type { CalendarType } from '../../abstract-ops/temporal/calendar.mts';
+import type {
+  FunctionObject, ObjectValue, OrdinaryObject, PlainCompletion, Value, ValueEvaluator,
+} from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-zoneddatetime-instances */
 export interface TemporalZonedDateTimeObject extends OrdinaryObject {

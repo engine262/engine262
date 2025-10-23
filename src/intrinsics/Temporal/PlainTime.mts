@@ -1,7 +1,9 @@
-import { ObjectValue, type FunctionObject, type OrdinaryObject, type PlainCompletion, type PlainEvaluator, type Value, type ValueEvaluator } from '#self';
 import type { RoundingMode } from '../../abstract-ops/temporal/addition.mts';
 import type { TimeUnit } from '../../abstract-ops/temporal/temporal.mts';
 import type { TemporalDurationObject, TimeDuration } from './Duration.mts';
+import {
+  ObjectValue, type FunctionObject, type OrdinaryObject, type PlainCompletion, type PlainEvaluator, type Value, type ValueEvaluator,
+} from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaintime-instances */
 export interface TemporalPlainTimeObject extends OrdinaryObject {
@@ -62,7 +64,7 @@ const TemporalTimeLikeRecord = {
   Millisecond: 'millisecond',
   Microsecond: 'microsecond',
   Nanosecond: 'nanosecond',
-}
+};
 Object.freeze(TemporalTimeLikeRecord);
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timerecordtostring */
