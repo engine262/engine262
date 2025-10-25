@@ -229,7 +229,8 @@ const INSPECTORS = {
   },
 } satisfies Partial<Record<Value['type'], Inspector>>;
 
-export function inspect(value: Value | ValueCompletion) {
+// TODO: add an option to inspect so it can return string with color.
+export function inspect(value: Value | ValueCompletion): string {
   const context: InspectContext = {
     realm: surroundingAgent.currentRealmRecord,
     indent: 0,

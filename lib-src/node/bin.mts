@@ -21,11 +21,11 @@ import {
   skipDebugger,
   type ValueCompletion,
   createTest262Intrinsics,
-  ToString,
   surroundingAgent,
   ThrowCompletion,
   ValueOfNormalCompletion,
   ScriptEvaluation,
+  type PlainEvaluator,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -42,6 +42,7 @@ Options:
 
     -h, --help      Show help (this screen)
     -m, --module    Evaluate contents of input-file as a module.
+    -e, --eval      Evaluate the given string.
     --features=...  A comma separated list of features.
     --features=all  Enable all features.
     --list-features List available features.
@@ -57,6 +58,7 @@ const argv = parseArgs({
   strict: true,
   options: {
     'help': { type: 'boolean', short: 'h' },
+    'eval': { type: 'string', short: 'e' },
     'module': { type: 'boolean', short: 'm' },
     'features': { type: 'string' },
     'list-features': { type: 'boolean' },
@@ -111,22 +113,23 @@ setSurroundingAgent(agent);
 const realm = new ManagedRealm({ resolverCache: new Map() });
 // Define console.log
 {
-  const format = (args: Arguments) => evalQ(function* format(Q) {
+  const format = (function* format(args: Arguments): PlainEvaluator<string> {
     const str = [];
     for (const arg of args) {
-      str.push(Q(yield* ToString(arg)).stringValue());
+      // TODO: inspect should return a PlainEvaluator so debugger can hook in.
+      str.push(inspect(arg));
     }
     return str.join(' ');
   });
   createConsole(realm, {
-    log: (args) => {
-      process.stdout.write(`${format(args)}\n`);
+    * log(args) {
+      process.stdout.write(`${yield* format(args)}\n`);
     },
-    error: (args) => {
-      process.stderr.write(`${format(args)}\n`);
+    * error(args) {
+      process.stderr.write(`${yield* format(args)}\n`);
     },
-    debug: (args) => {
-      process.stderr.write(`${_format(...args)}\n`);
+    * debug(args) {
+      process.stderr.write(`${yield* format(args)}\n`);
     },
   });
 }
@@ -197,6 +200,8 @@ if (argv.positionals[0]) {
   process.stdin.once('end', () => {
     oneShotEval(source, process.cwd());
   });
+} else if (argv.values.eval) {
+  oneShotEval(argv.values.eval, process.cwd());
 } else {
   process.stdout.write(`${packageJson.name} v${packageJson.version}
 Please report bugs to ${packageJson.bugs.url}

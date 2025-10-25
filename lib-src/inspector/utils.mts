@@ -1,7 +1,9 @@
 import type Protocol from 'devtools-protocol';
 import { Inspector } from './index.mts';
 import {
-  CreateBuiltinFunction, CreateDataProperty, DefinePropertyOrThrow, Descriptor, NormalCompletion, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
+  CreateBuiltinFunction, CreateDataProperty, DefinePropertyOrThrow, Descriptor, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
+  type PlainEvaluator,
+  type PlainCompletion,
 } from '#self';
 
 const consoleMethods = [
@@ -25,7 +27,7 @@ const consoleMethods = [
   'timeEnd',
 ] as const;
 type ConsoleMethod = typeof consoleMethods[number];
-export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Record<ConsoleMethod, (args: Arguments) => void | NormalCompletion<void>>>) {
+export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Record<ConsoleMethod, (args: Arguments) => void | PlainCompletion<void> | PlainEvaluator<void>>>) {
   realm.scope(() => {
     const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
     skipDebugger(DefinePropertyOrThrow(
@@ -40,12 +42,16 @@ export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Rec
     ));
     consoleMethods.forEach((method) => {
       const f = CreateBuiltinFunction(
-        (args) => {
+        function* Console(args): PlainEvaluator<Value> {
           if (surroundingAgent.debugger_isPreviewing) {
             return Value.undefined;
           }
           if (defaultBehaviour[method]) {
-            const completion = (defaultBehaviour[method](args));
+            let completion = defaultBehaviour[method](args);
+            if (typeof completion === 'object' && 'next' in completion) {
+              completion = yield* completion;
+            }
+            // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
             if (completion instanceof ThrowCompletion) {
               return completion;
             }
