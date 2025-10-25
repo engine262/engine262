@@ -10,6 +10,10 @@ import {
   ToNumber,
   F, R,
   Realm,
+  RequireObjectCoercible,
+  GetIterator,
+  IteratorStepValue,
+  IteratorClose,
 } from '../abstract-ops/all.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -99,6 +103,111 @@ function Math_random() {
   return F(result);
 }
 
+/** https://tc39.es/ecma262/#sec-math.sumprecise */
+function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator {
+  Q(RequireObjectCoercible(items));
+  const iteratorRecord = Q(yield* GetIterator(items, 'sync'));
+  let state: 'minus-zero' | 'not-a-number' | 'minus-infinity' | 'plus-infinity' | 'finite' = 'minus-zero';
+  const sums: number[] = [];
+  let count = 0;
+  let next: 'not-started' | 'done' | Value = 'not-started';
+  while (next !== 'done') {
+    next = Q(yield* IteratorStepValue(iteratorRecord));
+    if (next !== 'done') {
+      if (count >= 2 ** 53 - 1) {
+        const error = surroundingAgent.Throw('RangeError', 'OutOfRange', '');
+        return Q(yield* IteratorClose(iteratorRecord, error));
+      }
+      if (!(next instanceof NumberValue)) {
+        const error = surroundingAgent.Throw('TypeError', 'NotANumber', next);
+        return Q(yield* IteratorClose(iteratorRecord, error));
+      }
+      const n = R(next);
+      if (state !== 'not-a-number') {
+        if (Number.isNaN(n)) {
+          state = 'not-a-number';
+        } else if (n === Infinity) {
+          if (state === 'minus-infinity') {
+            state = 'not-a-number';
+          } else {
+            state = 'plus-infinity';
+          }
+        } else if (n === -Infinity) {
+          if (state === 'plus-infinity') {
+            state = 'not-a-number';
+          } else {
+            state = 'minus-infinity';
+          }
+        } else if (!Object.is(n, -0) && (state === 'minus-zero' || state === 'finite')) {
+          state = 'finite';
+          sums.push(n);
+        }
+      }
+      count += 1;
+    }
+  }
+  if (state === 'not-a-number') {
+    return F(NaN);
+  }
+  if (state === 'plus-infinity') {
+    return F(Infinity);
+  }
+  if (state === 'minus-infinity') {
+    return F(-Infinity);
+  }
+  if (state === 'minus-zero') {
+    return F(-0);
+  }
+  return F(sum(sums));
+
+  function sum(items: number[]) {
+    if ('sumPrecise' in Math) {
+      // @ts-expect-error
+      return Math.sumPrecise(items);
+    }
+    const fractional_parts: number[] = [];
+    let whole_part_sum = 0n;
+    items.forEach((n) => {
+      const whole_num = Math.trunc(n);
+      fractional_parts.push(n - whole_num);
+      whole_part_sum += BigInt(whole_num);
+    });
+    const fractional_parts_as_hex = fractional_parts.map((n) => n.toString(32));
+
+    const fractional: number[] = [];
+    for (const fractional_str of fractional_parts_as_hex) {
+      const neg = fractional_str[0] === '-';
+      const prefix = neg ? 3 : 2; // -0.xxx or 0.xxx
+      for (let index = prefix; index < fractional_str.length; index += 1) {
+        fractional[index - prefix] ??= 0;
+        if (neg) {
+          fractional[index - prefix] -= parseInt(fractional_str[index], 32);
+        } else {
+          fractional[index - prefix] += parseInt(fractional_str[index], 32);
+        }
+      }
+    }
+    for (let index = fractional.length - 1; index >= 0; index -= 1) {
+      const element = fractional[index];
+      if (element >= 32) {
+        fractional[index] = element % 32;
+        fractional[index - 1] ??= 0;
+        fractional[index - 1] += Math.floor(element / 32);
+      }
+      if (element < 0) {
+        fractional[index] = 32 + element;
+        fractional[index - 1] ??= 0;
+        fractional[index - 1] -= 1;
+      }
+    }
+    const fractional_part = fractional.reduceRight((acc, digit, index) => acc + digit * 32 ** -(index + 1), 0);
+    if (fractional[-1]) {
+      whole_part_sum += BigInt(fractional[-1]);
+    }
+    return Number(whole_part_sum) + fractional_part;
+  }
+}
+
 /** https://tc39.es/ecma262/#sec-math-object */
 export function bootstrapMath(realmRec: Realm) {
   /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
@@ -118,6 +227,7 @@ export function bootstrapMath(realmRec: Realm) {
     ['acos', Math_acos, 1],
     ['pow', Math_pow, 2],
     ['random', Math_random, 0],
+    ['sumPrecise', Math_sumPrecise, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
   /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
