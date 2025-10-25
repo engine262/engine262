@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 d209cc60e010ad1691b0dcf5cebb6ab47b67000a
+ * engine262 0.0.1 6f74d02b34bd37de56b2b3ad6991da14322155de
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -14874,6 +14874,7 @@
   const NotASymbol = v => `${i(v)} is not a symbol`;
   const NotAWeakKey = v => `${i(v)} is not an object or a symbol`;
   const NotAString = v => `${i(v)} is not a string`;
+  const NotANumber = v => `${i(v)} is not a number`;
   const NotDefined = n => `${i(n)} is not defined`;
   const NotEnoughArguments = (numArgs, minArgs) => `${minArgs} argument${minArgs !== 1 ? 's' : ''} required, but only ${numArgs} present`;
   const NotInitialized = n => `${i(n)} cannot be used before initialization`;
@@ -15044,6 +15045,7 @@
     NormalizeInvalidForm: NormalizeInvalidForm,
     NotAConstructor: NotAConstructor,
     NotAFunction: NotAFunction,
+    NotANumber: NotANumber,
     NotAString: NotAString,
     NotASymbol: NotASymbol,
     NotATypeObject: NotATypeObject,
@@ -42918,6 +42920,126 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(result);
   }
   Math_random.section = 'https://tc39.es/ecma262/#sec-math.random';
+  /** https://tc39.es/ecma262/#sec-math.sumprecise */
+  function* Math_sumPrecise([items = Value.undefined]) {
+    /* ReturnIfAbrupt */
+    let _temp7 = RequireObjectCoercible(items);
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    /* ReturnIfAbrupt */
+    let _temp8 = yield* GetIterator(items, 'sync');
+    /* node:coverage ignore next */
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    /* node:coverage ignore next */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    const iteratorRecord = _temp8;
+    let state = 'minus-zero';
+    const sums = [];
+    let count = 0;
+    let next = 'not-started';
+    while (next !== 'done') {
+      /* ReturnIfAbrupt */
+      let _temp9 = yield* IteratorStepValue(iteratorRecord);
+      /* node:coverage ignore next */
+      if (_temp9 instanceof AbruptCompletion) return _temp9;
+      /* node:coverage ignore next */
+      if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+      next = _temp9;
+      if (next !== 'done') {
+        if (count >= 2 ** 53 - 1) {
+          const error = exports.surroundingAgent.Throw('RangeError', 'OutOfRange', '');
+          return yield* IteratorClose(iteratorRecord, error);
+        }
+        if (!(next instanceof NumberValue)) {
+          const error = exports.surroundingAgent.Throw('TypeError', 'NotANumber', next);
+          return yield* IteratorClose(iteratorRecord, error);
+        }
+        const n = R(next);
+        if (state !== 'not-a-number') {
+          if (Number.isNaN(n)) {
+            state = 'not-a-number';
+          } else if (n === Infinity) {
+            if (state === 'minus-infinity') {
+              state = 'not-a-number';
+            } else {
+              state = 'plus-infinity';
+            }
+          } else if (n === -Infinity) {
+            if (state === 'plus-infinity') {
+              state = 'not-a-number';
+            } else {
+              state = 'minus-infinity';
+            }
+          } else if (!Object.is(n, -0) && (state === 'minus-zero' || state === 'finite')) {
+            state = 'finite';
+            sums.push(n);
+          }
+        }
+        count += 1;
+      }
+    }
+    if (state === 'not-a-number') {
+      return F(NaN);
+    }
+    if (state === 'plus-infinity') {
+      return F(Infinity);
+    }
+    if (state === 'minus-infinity') {
+      return F(-Infinity);
+    }
+    if (state === 'minus-zero') {
+      return F(-0);
+    }
+    return F(sum(sums));
+    function sum(items) {
+      if ('sumPrecise' in Math) {
+        // @ts-expect-error
+        return Math.sumPrecise(items);
+      }
+      const fractional_parts = [];
+      let whole_part_sum = 0n;
+      items.forEach(n => {
+        const whole_num = Math.trunc(n);
+        fractional_parts.push(n - whole_num);
+        whole_part_sum += BigInt(whole_num);
+      });
+      const fractional_parts_as_hex = fractional_parts.map(n => n.toString(32));
+      const fractional = [];
+      for (const fractional_str of fractional_parts_as_hex) {
+        const neg = fractional_str[0] === '-';
+        const prefix = neg ? 3 : 2; // -0.xxx or 0.xxx
+        for (let index = prefix; index < fractional_str.length; index += 1) {
+          fractional[index - prefix] ??= 0;
+          if (neg) {
+            fractional[index - prefix] -= parseInt(fractional_str[index], 32);
+          } else {
+            fractional[index - prefix] += parseInt(fractional_str[index], 32);
+          }
+        }
+      }
+      for (let index = fractional.length - 1; index >= 0; index -= 1) {
+        const element = fractional[index];
+        if (element >= 32) {
+          fractional[index] = element % 32;
+          fractional[index - 1] ??= 0;
+          fractional[index - 1] += Math.floor(element / 32);
+        }
+        if (element < 0) {
+          fractional[index] = 32 + element;
+          fractional[index - 1] ??= 0;
+          fractional[index - 1] -= 1;
+        }
+      }
+      const fractional_part = fractional.reduceRight((acc, digit, index) => acc + digit * 32 ** -(index + 1), 0);
+      if (fractional[-1]) {
+        whole_part_sum += BigInt(fractional[-1]);
+      }
+      return Number(whole_part_sum) + fractional_part;
+    }
+  }
+  Math_sumPrecise.section = 'https://tc39.es/ecma262/#sec-math.sumprecise';
   /** https://tc39.es/ecma262/#sec-math-object */
   function bootstrapMath(realmRec) {
     /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
@@ -42927,7 +43049,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
 
     // @@toStringTag is handled in the bootstrapPrototype() call.
-    const mathObj = bootstrapPrototype(realmRec, [['E', F(2.718281828459045), undefined, readonly], ['LN10', F(2.302585092994046), undefined, readonly], ['LN2', F(0.6931471805599453), undefined, readonly], ['LOG10E', F(0.4342944819032518), undefined, readonly], ['LOG2E', F(1.4426950408889634), undefined, readonly], ['PI', F(3.141592653589793), undefined, readonly], ['SQRT1_2', F(0.7071067811865476), undefined, readonly], ['SQRT2', F(1.4142135623730951), undefined, readonly], ['abs', Math_abs, 1], ['acos', Math_acos, 1], ['pow', Math_pow, 2], ['random', Math_random, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Math');
+    const mathObj = bootstrapPrototype(realmRec, [['E', F(2.718281828459045), undefined, readonly], ['LN10', F(2.302585092994046), undefined, readonly], ['LN2', F(0.6931471805599453), undefined, readonly], ['LOG10E', F(0.4342944819032518), undefined, readonly], ['LOG2E', F(1.4426950408889634), undefined, readonly], ['PI', F(3.141592653589793), undefined, readonly], ['SQRT1_2', F(0.7071067811865476), undefined, readonly], ['SQRT2', F(1.4142135623730951), undefined, readonly], ['abs', Math_abs, 1], ['acos', Math_acos, 1], ['pow', Math_pow, 2], ['random', Math_random, 0], ['sumPrecise', Math_sumPrecise, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
     /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
 
@@ -42938,12 +43060,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const nextArgs = [];
         for (let i = 0; i < args.length; i += 1) {
           /* ReturnIfAbrupt */
-          let _temp7 = yield* ToNumber(args[i]);
+          let _temp0 = yield* ToNumber(args[i]);
           /* node:coverage ignore next */
-          if (_temp7 instanceof AbruptCompletion) return _temp7;
+          if (_temp0 instanceof AbruptCompletion) return _temp0;
           /* node:coverage ignore next */
-          if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
-          nextArgs[i] = R(_temp7);
+          if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+          nextArgs[i] = R(_temp0);
         }
         // we're calling host Math functions here.
         return F(Math[name](...nextArgs));
@@ -42951,20 +43073,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       method.section = 'https://tc39.es/ecma262/#sec-function-properties-of-the-math-object';
       const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
       /* X */
-      let _temp8 = mathObj.DefineOwnProperty(Value(name), exports.Descriptor({
+      let _temp1 = mathObj.DefineOwnProperty(Value(name), exports.Descriptor({
         Value: func,
         Writable: Value.true,
         Enumerable: Value.false,
         Configurable: Value.true
       }));
       /* node:coverage ignore next */
-      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+      if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
       /* node:coverage ignore next */
-      if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! mathObj.DefineOwnProperty(Value(name), Descriptor({\n      Value: func,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
-        cause: _temp8
+      if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! mathObj.DefineOwnProperty(Value(name), Descriptor({\n      Value: func,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        cause: _temp1
       });
       /* node:coverage ignore next */
-      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
     });
     realmRec.Intrinsics['%Math%'] = mathObj;
   }
@@ -61074,6 +61196,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
   };
+
+  // TODO: add an option to inspect so it can return string with color.
   function inspect(value) {
     const context = {
       realm: exports.surroundingAgent.currentRealmRecord,

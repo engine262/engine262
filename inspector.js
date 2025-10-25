@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 d209cc60e010ad1691b0dcf5cebb6ab47b67000a
+ * engine262 0.0.1 6f74d02b34bd37de56b2b3ad6991da14322155de
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1333,12 +1333,16 @@
         Value: console
       })));
       consoleMethods.forEach(method => {
-        const f = engine262_mjs.CreateBuiltinFunction(args => {
+        const f = engine262_mjs.CreateBuiltinFunction(function* Console(args) {
           if (engine262_mjs.surroundingAgent.debugger_isPreviewing) {
             return engine262_mjs.Value.undefined;
           }
           if (defaultBehaviour[method]) {
-            const completion = defaultBehaviour[method](args);
+            let completion = defaultBehaviour[method](args);
+            if (typeof completion === 'object' && 'next' in completion) {
+              completion = yield* completion;
+            }
+            // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
             if (completion instanceof engine262_mjs.ThrowCompletion) {
               return completion;
             }
