@@ -11,11 +11,11 @@ import {
 } from '../completion.mts';
 import { Evaluate, type PlainEvaluator, type YieldEvaluator } from '../evaluator.mts';
 import {
-  BooleanValue, JSStringValue, ObjectValue, Value, type Arguments,
+  BooleanValue, JSStringValue, Value, type Arguments,
   type NativeSteps,
 } from '../value.mts';
 import {
-  resume, __ts_cast__, type Mutable,
+  resume, __ts_cast__,
 } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
@@ -25,7 +25,6 @@ import {
   CreateIteratorResultObject,
   generatorBrandToErrorMessageType,
   GetGeneratorKind,
-  OrdinaryObjectCreate,
   PerformPromiseThen,
   PromiseCapabilityRecord,
   PromiseResolve,
@@ -344,30 +343,4 @@ function* AsyncGeneratorDrainQueue(generator: AsyncGeneratorObject) {
     }
   }
   generator.AsyncGeneratorState = 'completed';
-}
-
-/** https://tc39.es/ecma262/#sec-createasynciteratorfromclosure */
-export function CreateAsyncIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue, generatorPrototype: ObjectValue) {
-  Assert(typeof closure === 'function');
-  // 1. NOTE: closure can contain uses of the Await shorthand, and uses of the Yield shorthand to yield an IteratorResult object.
-  // 2. Let internalSlotsList be « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] ».
-  const internalSlotsList = ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'GeneratorBrand'];
-  // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
-  const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList)) as Mutable<AsyncGeneratorObject>;
-  // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
-  generator.GeneratorBrand = generatorBrand;
-  // 5. Set generator.[[AsyncGeneratorState]] to suspendedStart.
-  generator.AsyncGeneratorState = 'suspendedStart';
-  const callerContext = surroundingAgent.runningExecutionContext;
-  const calleeContext = new ExecutionContext();
-  calleeContext.Function = Value.null;
-  calleeContext.Realm = callerContext.Realm;
-  calleeContext.ScriptOrModule = callerContext.ScriptOrModule;
-  // 11. If callerContext is not already suspended, suspend callerContext.
-  surroundingAgent.executionContextStack.push(calleeContext);
-  // 6. Perform AsyncGeneratorStart(generator, closure, generatorBrand).
-  AsyncGeneratorStart(generator, closure);
-  surroundingAgent.executionContextStack.pop(calleeContext);
-  // 7. Return generator.
-  return generator;
 }
