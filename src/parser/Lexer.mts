@@ -644,6 +644,8 @@ export abstract class Lexer {
   scanNumber() {
     const start = this.position;
     let base: 2 | 8 | 10 | 16 = 10;
+    let nonDecimalPrefixLength = 2;
+    let zeroLeading = false;
     let check = isDecimalDigit;
     if (this.source[this.position] === '0') {
       this.scannedValue = 0;
@@ -669,8 +671,34 @@ export abstract class Lexer {
           this.position += 1;
           this.scannedValue = 0n;
           return Token.BIGINT;
-        default:
-          return Token.NUMBER;
+        default: {
+          if (!isDecimalDigit(this.source[this.position])) {
+            return Token.NUMBER;
+          }
+          // Legacy octal literal (0123)
+          if (this.isStrictMode()) {
+            this.raise('LegacyOctalLiteralInStrictMode', start);
+          }
+          this.position -= 1;
+          nonDecimalPrefixLength = 1;
+          zeroLeading = true;
+          const oldPos = this.position;
+          base = 8;
+          while (this.position < this.source.length) {
+            const c = this.source[this.position];
+            if (isDecimalDigit(c) && !isOctalDigit(c)) {
+              base = 10;
+              break;
+            } else if (!isOctalDigit(c)) {
+              // A single 0
+              break;
+            } else {
+              this.position += 1;
+            }
+          }
+          this.position = oldPos;
+          break;
+        }
       }
       check = {
         16: isHexDigit,
@@ -690,6 +718,9 @@ export abstract class Lexer {
       if (check(c)) {
         this.position += 1;
       } else if (c === '_') {
+        if (zeroLeading) {
+          this.raise('SeparatorIsNotAllowed', this.position);
+        }
         if (!check(this.source[this.position + 1])) {
           this.unexpected(this.position + 1);
         }
@@ -699,6 +730,9 @@ export abstract class Lexer {
       }
     }
     if (this.source[this.position] === 'n') {
+      if (zeroLeading) {
+        this.raise('BigIntLiteralCannotLeadingZero', this.position);
+      }
       const buffer = this.source.slice(start, this.position).replace(/_/g, '');
       this.position += 1;
       this.scannedValue = BigInt(buffer);
@@ -752,7 +786,7 @@ export abstract class Lexer {
       this.unexpected(this.position);
     }
     const buffer = this.source
-      .slice(base === 10 ? start : start + 2, this.position)
+      .slice(base === 10 ? start : start + nonDecimalPrefixLength, this.position)
       .replace(/_/g, '');
     this.scannedValue = base === 10
       ? Number.parseFloat(buffer)
@@ -822,15 +856,48 @@ export abstract class Lexer {
       case 'u':
         this.position += 1;
         return String.fromCodePoint(this.scanCodePoint());
-      default:
-        if (c === '0' && !isDecimalDigit(this.source[this.position + 1])) {
+      default: {
+        const lookahead = this.source[this.position + 1];
+        if (c === '0' && !isDecimalDigit(lookahead)) {
           this.position += 1;
           return '\u{0000}';
-        } else if (this.isStrictMode() && isDecimalDigit(c)) {
-          this.raise('IllegalOctalEscape', this.position);
+        } else if (isDecimalDigit(c)) {
+          if (this.isStrictMode()) {
+            this.raise('IllegalOctalEscape', this.position);
+          }
+          const lookahead2 = this.source[this.position + 2];
+          if (c === '0' && (lookahead === '8' || lookahead === '9')) {
+            // LegacyOctalEscapeSequence :: 0 [lookahead ∈ { 8, 9 }]
+            // evaluates to \u0000 + 8 or 9
+            this.position += 2;
+            return `\u{0000}${lookahead}`;
+          } else if (c !== '0' && isOctalDigit(c) && !isOctalDigit(lookahead)) {
+            // LegacyOctalEscapeSequence :: NonZeroOctalDigit [lookahead ∉ OctalDigit]
+            // \1 is \u{0001}, etc...
+            this.position += 1;
+            return String.fromCodePoint(parseInt(c, 8));
+          } else if ((c === '0' || c === '1' || c === '2' || c === '3') && isOctalDigit(lookahead) && !isOctalDigit(lookahead2)) {
+            // LegacyOctalEscapeSequence :: ZeroToThree OctalDigit [lookahead ∉ OctalDigit]
+            this.position += 2;
+            return String.fromCodePoint(parseInt(c + lookahead, 8));
+          } else if ((c === '4' || c === '5' || c === '6' || c === '7') && isOctalDigit(lookahead)) {
+            // LegacyOctalEscapeSequence :: FourToSeven OctalDigit
+            this.position += 2;
+            return String.fromCodePoint(parseInt(c + lookahead, 8));
+          } else if ((c === '0' || c === '1' || c === '2' || c === '3') && isOctalDigit(lookahead) && isOctalDigit(lookahead2)) {
+            // LegacyOctalEscapeSequence ::  ZeroToThree OctalDigit OctalDigit
+            this.position += 3;
+            return String.fromCodePoint(parseInt(c + lookahead + lookahead2, 8));
+          } else if (c === '8' || c === '9') {
+            // NonOctalDecimalEscapeSequence
+            // \8 or \9 is 8 or 9
+            this.position += 1;
+            return c;
+          }
         }
         this.position += 1;
         return c;
+      }
     }
   }
 

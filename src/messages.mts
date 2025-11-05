@@ -28,6 +28,7 @@ export const AwaitInClassStaticBlock = () => 'await is not allowed in class stat
 export const AwaitNotInAsyncFunction = () => 'await is only valid in async functions';
 export const BigIntDivideByZero = () => 'Division by zero';
 export const BigIntNegativeExponent = () => 'Exponent must be positive';
+export const BigIntLiteralCannotLeadingZero = () => 'BigInt literal cannot have leading zero.';
 export const BigIntUnsignedRightShift = () => 'BigInt has no unsigned right shift, use >> instead';
 export const BufferContentTypeMismatch = () => 'Newly created TypedArray did not match exemplar\'s content type';
 export const BufferDetachKeyMismatch = (k: Value, b: ArrayBufferObject) => `${i(k)} is not the [[ArrayBufferDetachKey]] of ${i(b)}`;
@@ -61,6 +62,7 @@ export const DuplicateImportAttribute = (a: string) => `Duplicate import attribu
 export const DuplicateProto = () => 'An object literal may only have one __proto__ property';
 export const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
+export const LegacyOctalLiteralInStrictMode = () => 'Legacy octal literals are not allowed in strict mode';
 export const IllegalBreakContinue = (isBreak: boolean) => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
 export const IllegalOctalEscape = () => 'Illegal octal escape';
 export const InternalSlotMissing = (_o: ObjectValue, s: string) => `Internal slot ${s} is missing`;
@@ -155,6 +157,7 @@ export const ResolutionNullOrAmbiguous = (r: string | null, n: Value, m: Abstrac
   ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
 export const SizeIsNaN = () => 'size property must not be undefined, as it will be NaN';
+export const SeparatorIsNotAllowed = () => 'Numeric separators are not allowed here';
 export const SizeMustBePositiveInteger = () => 'size property must be a positive integer';
 export const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 export const StrictModeDelete = (n: PropertyKeyValue) => `Cannot not delete property ${i(n)}`;

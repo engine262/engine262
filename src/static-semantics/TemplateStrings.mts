@@ -2,6 +2,7 @@ import { Value } from '../value.mts';
 import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parser/Lexer.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
+/** https://tc39.es/ecma262/#sec-static-semantics-tv */
 export function TV(s: string) {
   let buffer = '';
   for (let i = 0; i < s.length; i += 1) {

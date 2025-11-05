@@ -10,13 +10,6 @@
 built-ins/Date/parse/without-utc-offset.js
 
 # Non-strict mode
-## LegacyOctalIntegerLiteral
-# https://github.com/tc39/ecma262/pull/1867
-staging/sm/regress/regress-441477-01.js
-language/literals/numeric/legacy-octal-integer.js
-language/literals/numeric/non-octal-decimal-integer.js
-language/literals/string/legacy-octal-escape-sequence.js
-
 # Annex B
 ## RegExp.prototype.compile
 staging/sm/RegExp/compile-lastIndex.js
@@ -56,43 +49,6 @@ staging/sm/async-functions/await-error.js
 
 # TODO: https://github.com/tc39/ecma262/issues/3592
 built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
-
-# Non-strict mode
-## LegacyOctalIntegerLiteral
-# https://github.com/tc39/ecma262/pull/1867
-staging/sm/regress/regress-441477-01.js
-language/literals/numeric/legacy-octal-integer.js
-language/literals/numeric/non-octal-decimal-integer.js
-language/literals/string/legacy-octal-escape-sequence.js
-
-# Annex B
-## RegExp.prototype.compile
-staging/sm/RegExp/compile-lastIndex.js
-staging/sm/RegExp/constructor-ordering.js
-staging/sm/RegExp/flags-param-handling.js
-staging/sm/RegExp/match-local-tolength-recompilation.js
-staging/sm/RegExp/prototype.js
-staging/sm/RegExp/replace-compile-elembase.js
-staging/sm/RegExp/replace-compile.js
-staging/sm/RegExp/replace-local-tolength-recompilation.js
-staging/sm/String/matchAll.js
-# SourceCharacterIdentityEscape
-language/literals/regexp/S7.8.5_A1.4_T2.js
-language/literals/regexp/S7.8.5_A2.4_T2.js
-# IdentityEscape + ExtendedPatternCharacter
-staging/sm/RegExp/unicode-braced.js
-built-ins/String/prototype/split/separator-regexp.js # references /\k<x>/, /\XA0/, /\X/
-# Block
-staging/sm/lexical-environment/block-scoped-functions-annex-b-arguments.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-eval.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-if.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-label.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-notapplicable.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-parameter.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-same-name.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b-with.js
-staging/sm/lexical-environment/block-scoped-functions-annex-b.js
-staging/sm/lexical-environment/block-scoped-functions-deprecated-redecl.js
 
 # Failed tests appended by --update-failed-tests
 built-ins/decodeURI/S15.1.3.1_A2.3_T1.js
@@ -172,9 +128,6 @@ staging/sm/TypedArray/sort_small.js
 staging/sm/TypedArray/sort-negative-nan.js
 staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js
-
-# TODO: https://github.com/tc39/ecma262/issues/3592
-built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
 
 # TODO: investigate if this is just too slow or breaks our gc implemenetation
 built-ins/Array/fromAsync/asyncitems-arraylike-too-long.js
