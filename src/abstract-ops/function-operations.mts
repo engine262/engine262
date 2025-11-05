@@ -17,7 +17,6 @@ import {
   EnsureCompletion,
   NormalCompletion,
   AbruptCompletion,
-  ReturnIfAbrupt,
   Completion,
   Q, X,
   type PlainCompletion,
@@ -276,8 +275,7 @@ function* FunctionCallSlot(this: FunctionObject, thisArgument: Value, argumentsL
   if (result.Type === 'return') {
     return NormalCompletion(result.Value);
   }
-  // 10. ReturnIfAbrupt(result).
-  ReturnIfAbrupt(result);
+  Q(result);
   // 11. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);
 }
@@ -338,8 +336,8 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
     if (result.Value !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
     }
-  } else { // 13. Else, ReturnIfAbrupt(result).
-    ReturnIfAbrupt(result);
+  } else {
+    Q(result);
   }
   // 14. Return ? constructorEnv.GetThisBinding().
   return Q((constructorEnv as FunctionEnvironmentRecord).GetThisBinding() as ObjectValue);

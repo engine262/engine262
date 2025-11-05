@@ -38,7 +38,6 @@ import {
   AbruptCompletion,
   UpdateEmpty,
   EnsureCompletion,
-  ReturnIfAbrupt,
   Await,
   Q, X,
   type PlainCompletion,
@@ -323,8 +322,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
     case !!VariableDeclarationList: {
       // 1. Let varDcl be the result of evaluating VariableDeclarationList.
       const varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
-      // 2. ReturnIfAbrupt(varDcl).
-      ReturnIfAbrupt(varDcl);
+      Q(varDcl);
       // 3. Return ? ForBodyEvaluation(the first Expression, the second Expression, Statement, « », labelSet).
       return Q(yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, [], labelSet));
     }

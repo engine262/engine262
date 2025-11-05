@@ -14,7 +14,7 @@ import {
   type ValueEvaluator,
 } from '../evaluator.mts';
 import {
-  ReturnIfAbrupt, Q, X,
+  Q, X,
 } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
@@ -93,8 +93,7 @@ export function* Evaluate_ArrayLiteral({ ElementList }: ParseNode.ArrayLiteral):
   const array = X(ArrayCreate(0));
   // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.
   const len = yield* ArrayAccumulation(ElementList, array, 0);
-  // 3. ReturnIfAbrupt(len).
-  ReturnIfAbrupt(len);
+  Q(len);
   // 4. Return array.
   return array;
 }

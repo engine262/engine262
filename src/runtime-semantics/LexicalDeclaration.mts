@@ -1,6 +1,5 @@
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import {
-  ReturnIfAbrupt,
   Q, X,
 } from '../completion.mts';
 import { Value } from '../value.mts';
@@ -74,12 +73,11 @@ export function* Evaluate_LexicalBinding(LexicalBinding: ParseNode.LexicalBindin
 //   BindingList : LexicalBinding
 export function* Evaluate_BindingList(BindingList: ParseNode.BindingList) {
   // 1. Let next be the result of evaluating BindingList.
-  // 2. ReturnIfAbrupt(next).
   // 3. Return the result of evaluating LexicalBinding.
   let next;
   for (const LexicalBinding of BindingList) {
     next = yield* Evaluate_LexicalBinding(LexicalBinding);
-    ReturnIfAbrupt(next);
+    Q(next);
   }
   return next;
 }
@@ -88,8 +86,7 @@ export function* Evaluate_BindingList(BindingList: ParseNode.BindingList) {
 //   LexicalDeclaration : LetOrConst BindingList `;`
 export function* Evaluate_LexicalDeclaration({ BindingList }: ParseNode.LexicalDeclaration): PlainEvaluator {
   // 1. Let next be the result of evaluating BindingList.
-  // 2. ReturnIfAbrupt(next).
-  ReturnIfAbrupt(yield* Evaluate_BindingList(BindingList));
+  Q(yield* Evaluate_BindingList(BindingList));
   // 3. Return NormalCompletion(empty).
   return undefined;
 }

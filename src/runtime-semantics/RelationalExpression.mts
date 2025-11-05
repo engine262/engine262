@@ -20,7 +20,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mts';
-import { Q, X, ReturnIfAbrupt } from '../completion.mts';
+import { Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -99,8 +99,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     case '<': {
       // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
       const r = yield* AbstractRelationalComparison(lval, rval);
-      // 6. ReturnIfAbrupt(r).
-      ReturnIfAbrupt(r);
+      Q(r);
       // 7. If r is undefined, return false. Otherwise, return r.
       if (r === Value.undefined) {
         return Value.false;
@@ -110,8 +109,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     case '>': {
       // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
       const r = yield* AbstractRelationalComparison(rval, lval, false);
-      // 6. ReturnIfAbrupt(r).
-      ReturnIfAbrupt(r);
+      Q(r);
       // 7. If r is undefined, return false. Otherwise, return r.
       if (r === Value.undefined) {
         return Value.false;
@@ -121,8 +119,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     case '<=': {
       // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
       const r = yield* AbstractRelationalComparison(rval, lval, false);
-      // 6. ReturnIfAbrupt(r).
-      ReturnIfAbrupt(r);
+      Q(r);
       // 7. If r is true or undefined, return false. Otherwise, return true.
       if (r === Value.true || r === Value.undefined) {
         return Value.false;
@@ -132,8 +129,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     case '>=': {
       // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
       const r = yield* AbstractRelationalComparison(lval, rval);
-      // 6. ReturnIfAbrupt(r).
-      ReturnIfAbrupt(r);
+      Q(r);
       // 7. If r is true or undefined, return false. Otherwise, return true.
       if (r === Value.true || r === Value.undefined) {
         return Value.false;

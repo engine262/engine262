@@ -1,5 +1,5 @@
 import { BoundNames } from '../static-semantics/all.mts';
-import { Q, ReturnIfAbrupt } from '../completion.mts';
+import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { isArray } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
@@ -29,8 +29,7 @@ export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyLi
   if ('PropertyName' in node && node.PropertyName) {
     // 1. Let P be the result of evaluating PropertyName.
     const P = yield* Evaluate_PropertyName(node.PropertyName);
-    // 2. ReturnIfAbrupt(P).
-    ReturnIfAbrupt(P);
+    Q(P);
     // 3. Perform ? KeyedBindingInitialization of BindingElement with value, environment, and P as the arguments.
     Q(yield* KeyedBindingInitialization(node.BindingElement, value, environment, P as PropertyKeyValue));
     // 4. Return a new List containing P.

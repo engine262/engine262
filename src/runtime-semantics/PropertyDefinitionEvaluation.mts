@@ -17,7 +17,6 @@ import {
 import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
   Q, X,
-  ReturnIfAbrupt,
   NormalCompletion,
 } from '../completion.mts';
 import { OutOfRange, kInternal } from '../helpers.mts';
@@ -66,8 +65,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
     return Q(yield* CopyDataProperties(object, fromValue, excludedNames));
   }
   // 1. Let propKey be the result of evaluating PropertyName.
-  const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(PropertyName));
-  // 2. ReturnIfAbrupt(propKey).
+  const propKey = Q(yield* Evaluate_PropertyName(PropertyName));
   // 3. If this PropertyDefinition is contained within a Script which is being evaluated for JSON.parse, then
   let isProtoSetter;
   if (surroundingAgent.runningExecutionContext?.HostDefined?.[kInternal]?.json) {

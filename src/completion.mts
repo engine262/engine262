@@ -17,7 +17,7 @@ import {
   resume,
 } from './helpers.mts';
 import type { Evaluator, ValueEvaluator } from './evaluator.mts';
-import { Q, skipDebugger } from '#self';
+import { skipDebugger } from '#self';
 
 let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompletionImpl<T>;
 let createBreakCompletion: (init: BreakCompletionInit) => BreakCompletion;
@@ -313,7 +313,7 @@ export function UpdateEmpty<C extends Completion<unknown>, const T>(completionRe
 }
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt */
-export type ReturnIfAbrupt<T> =
+export type Q<T> =
   T extends NormalCompletion<infer V> ? V :
   T extends AbruptCompletion ? never :
   T;
@@ -322,58 +322,56 @@ export type ReturnIfAbrupt<T> =
  * https://tc39.es/ecma262/#sec-returnifabrupt
  * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
  */
-export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T> {
+export function Q<const T>(_completion: T): Q<T> {
   /* node:coverage ignore next */
-  throw new TypeError('ReturnIfAbrupt requires build');
+  throw new TypeError('Q requires build');
 }
 
-function ReturnIfAbruptRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
+function Q_runtime<const T>(completion: T): Q<T> {
   /* node:coverage ignore next 3 */
   if (typeof completion === 'object' && completion && 'next' in completion) {
     throw new TypeError('Forgot to yield* on the completion.');
   }
   const c = EnsureCompletion(completion);
   if (c.Type === 'normal') {
-    return c.Value as ReturnIfAbrupt<T>;
+    return c.Value as Q<T>;
   }
   throw c;
 }
 
-export { ReturnIfAbrupt as Q };
-
 /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
-export function X<const T>(_completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
+export function X<const T>(_completion: T | Evaluator<T>): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('X() requires build');
 }
 
-export function unwrapCompletion<const T>(completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
+export function unwrapCompletion<const T>(completion: T | Evaluator<T>): Q<T> {
   /* node:coverage ignore next 3 */
   if (typeof completion === 'object' && completion && 'next' in completion) {
     completion = skipDebugger(completion);
   }
   const c = EnsureCompletion(completion);
   if (c instanceof NormalCompletion) {
-    return c.Value as ReturnIfAbrupt<T>;
+    return c.Value as Q<T>;
   }
   /* node:coverage ignore next */
   throw new Assert.Error('Unexpected AbruptCompletion.', { cause: c });
 }
 
 /** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
-export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRecord): ReturnIfAbrupt<T> {
+export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
 /** https://tc39.es/proposal-array-from-async/#sec-ifabruptcloseasynciterator */
-export function IfAbruptCloseAsyncIterator<T>(_value: T, _iteratorRecord: IteratorRecord): ReturnIfAbrupt<T> {
+export function IfAbruptCloseAsyncIterator<T>(_value: T, _iteratorRecord: IteratorRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptCloseAsyncIterator() requires build');
 }
 
 /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
-export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): ReturnIfAbrupt<T> {
+export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
@@ -387,11 +385,11 @@ export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabili
  *     let val = Q(operation);
  * });
  */
-export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
-export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion
-export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
+export function evalQ<T>(callback: (q: typeof Q, x: typeof X) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
+export function evalQ<T>(callback: (q: typeof Q, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion
+export function evalQ<T>(callback: (q: typeof Q, x: typeof X) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
   try {
-    const result = callback(ReturnIfAbruptRuntime, unwrapCompletion);
+    const result = callback(Q_runtime, unwrapCompletion);
     if (result instanceof Promise) {
       return result.then(EnsureCompletion, (error) => {
         if (error instanceof ThrowCompletion) {

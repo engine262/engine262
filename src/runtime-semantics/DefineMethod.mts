@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '../abstract-ops/all.mts';
-import { ReturnIfAbrupt } from '../completion.mts';
+import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './all.mts';
@@ -16,8 +16,7 @@ export interface DefineMethodRecord {
 export function* DefineMethod(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, functionPrototype?: ObjectValue): PlainEvaluator<DefineMethodRecord> {
   const { ClassElementName, UniqueFormalParameters, FunctionBody } = MethodDefinition;
   // 1. Let propKey be the result of evaluating ClassElementName.
-  const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
-  // 2. ReturnIfAbrupt(propKey).
+  const propKey = Q(yield* Evaluate_PropertyName(ClassElementName));
   // 3. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.

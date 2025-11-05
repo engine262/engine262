@@ -16,7 +16,7 @@ import {
   ToPropertyKey,
 } from '../abstract-ops/all.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { Q, ReturnIfAbrupt } from '../completion.mts';
+import { Q } from '../completion.mts';
 import {
   Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
 } from '../value.mts';
@@ -29,8 +29,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let ref be the result of evaluating UnaryExpression.
   const ref = Q(yield* Evaluate(UnaryExpression));
-  // 2. ReturnIfAbrupt(ref).
-  ReturnIfAbrupt(ref);
+  Q(ref);
   // 3. If ref is not a Reference Record, return true.
   if (!(ref instanceof ReferenceRecord)) {
     return Value.true;

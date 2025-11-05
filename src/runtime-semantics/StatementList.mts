@@ -1,7 +1,7 @@
 import { Evaluate } from '../evaluator.mts';
 import {
   EnsureCompletion,
-  ReturnIfAbrupt,
+  Q,
   UpdateEmpty,
   NormalCompletion,
 } from '../completion.mts';
@@ -24,7 +24,7 @@ export function* Evaluate_StatementList(StatementList: ParseNode.StatementList) 
       surroundingAgent.runningExecutionContext.callSite.setNextLocation(NextStatementListItem);
     }
 
-    ReturnIfAbrupt(blockCompletion);
+    Q(blockCompletion);
     const itemCompletion = EnsureCompletion(yield* Evaluate(StatementListItem));
     blockCompletion = UpdateEmpty(itemCompletion, blockCompletion);
   }

@@ -1,5 +1,5 @@
 import { JSStringValue, ReferenceRecord, Value } from '../value.mts';
-import { Q, X, ReturnIfAbrupt } from '../completion.mts';
+import { Q, X } from '../completion.mts';
 import {
   GetValue,
   PutValue,
@@ -142,8 +142,7 @@ export function* Evaluate_AssignmentExpression({
     if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
       // a. Let lref be the result of evaluating LeftHandSideExpression.
       const lref = Q(yield* Evaluate(LeftHandSideExpression));
-      // b. ReturnIfAbrupt(lref).
-      ReturnIfAbrupt(lref);
+      Q(lref);
       // c. If IsAnonymousFunctionDefinition(AssignmentExpression) and IsIdentifierRef of LeftHandSideExpression are both true, then
       let rval;
       if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {

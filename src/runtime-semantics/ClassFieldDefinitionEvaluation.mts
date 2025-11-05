@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { X, ReturnIfAbrupt } from '../completion.mts';
+import { X, Q } from '../completion.mts';
 import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
@@ -22,8 +22,7 @@ export class ClassFieldDefinitionRecord {
 export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): PlainEvaluator<ClassFieldDefinitionRecord> {
   const { ClassElementName, Initializer } = FieldDefinition;
   // 1. Let name be the result of evaluating ClassElementName.
-  // 2. ReturnIfAbrupt(name).
-  const name = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
+  const name = Q(yield* Evaluate_PropertyName(ClassElementName));
   // 3. If Initializer is present, then
   let initializer;
   if (Initializer) {

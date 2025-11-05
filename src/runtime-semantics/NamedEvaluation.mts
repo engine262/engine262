@@ -1,5 +1,5 @@
 import { Value } from '../value.mts';
-import { ReturnIfAbrupt } from '../completion.mts';
+import { Q } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
@@ -67,8 +67,7 @@ function* NamedEvaluation_ClassExpression(ClassExpression: ParseNode.ClassExpres
   const sourceText = ClassExpression.sourceText;
   // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
   const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name, sourceText);
-  // 2. ReturnIfAbrupt(value).
-  ReturnIfAbrupt(value);
+  Q(value);
   // 4. Return value.
   return value;
 }

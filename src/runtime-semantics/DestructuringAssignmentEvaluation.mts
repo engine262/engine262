@@ -35,7 +35,6 @@ import {
   Completion,
   AbruptCompletion,
   NormalCompletion,
-  ReturnIfAbrupt,
   EnsureCompletion,
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -68,8 +67,7 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ Assignment
 function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget }: ParseNode.AssignmentRestProperty, value: Value, excludedNames: readonly PropertyKeyValue[]): StatementEvaluator {
   // 1. Let lref be the result of evaluating DestructuringAssignmentTarget.
   const lref = Q(yield* Evaluate(DestructuringAssignmentTarget));
-  // 2. ReturnIfAbrupt(lref).
-  ReturnIfAbrupt(lref);
+  Q(lref);
   // 3. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
   const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 4. Perform ? CopyDataProperties(restObj, value, excludedNames).
@@ -109,8 +107,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: Pars
       Assert('PropertyName' in AssignmentProperty);
       // 1. Let name be the result of evaluating PropertyName.
       const name = yield* Evaluate_PropertyName(AssignmentProperty.PropertyName!);
-      // 2. ReturnIfAbrupt(name).
-      ReturnIfAbrupt(name);
+      Q(name);
       // 3. Perform ? KeyedDestructuringAssignmentEvaluation of AssignmentElement with value and name as the arguments.
       Q(yield* KeyedDestructuringAssignmentEvaluation(AssignmentProperty.AssignmentElement, value, name as PropertyKeyValue));
       // 4. Return a new List containing name.
@@ -264,7 +261,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       if (DestructuringAssignmentTarget.type !== 'ObjectLiteral'
           && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
         lref = yield* Evaluate(DestructuringAssignmentTarget);
-        ReturnIfAbrupt(lref);
+        Q(lref);
       }
       // 2. Let A be ! ArrayCreate(0).
       const A = X(ArrayCreate(0));

@@ -3,7 +3,7 @@ import {
   GetValue,
   IsStrictlyEqual,
 } from '../abstract-ops/all.mts';
-import { ReturnIfAbrupt, Q, X } from '../completion.mts';
+import { Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
 import { Value } from '../value.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -31,8 +31,7 @@ export function* Evaluate_EqualityExpression({ EqualityExpression, operator, Rel
     case '!=': {
       // 5. Let r be the result of performing Abstract Equality Comparison rval == lval.
       const r = yield* IsLooselyEqual(rval, lval);
-      // 6. ReturnIfAbrupt(r).
-      ReturnIfAbrupt(r);
+      Q(r);
       // 7. If r is true, return false. Otherwise, return true.
       if (r === Value.true) {
         return Value.false;

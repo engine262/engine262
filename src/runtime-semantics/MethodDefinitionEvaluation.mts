@@ -13,7 +13,6 @@ import {
 } from '../abstract-ops/all.mts';
 import {
   Q, X,
-  ReturnIfAbrupt,
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -83,8 +82,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
     case !!MethodDefinition.PropertySetParameterList: {
       const { ClassElementName, PropertySetParameterList, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating ClassElementName.
-      // 2. ReturnIfAbrupt(propKey).
-      const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
+      const propKey = Q(yield* Evaluate_PropertyName(ClassElementName));
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -122,8 +120,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
     case !MethodDefinition.UniqueFormalParameters && !MethodDefinition.PropertySetParameterList: {
       const { ClassElementName, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating ClassElementName.
-      // 2. ReturnIfAbrupt(propKey).
-      const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
+      const propKey = Q(yield* Evaluate_PropertyName(ClassElementName));
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -170,8 +167,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
 function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void> {
   const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
-  // 2. ReturnIfAbrupt(propKey).
-  const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
+  const propKey = Q(yield* Evaluate_PropertyName(ClassElementName));
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -195,8 +191,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
   const { ClassElementName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
-  // 2. ReturnIfAbrupt(propKey).
-  propKey = ReturnIfAbrupt(propKey);
+  propKey = Q(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -229,8 +224,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
   const { ClassElementName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
-  // 2. ReturnIfAbrupt(propKey).
-  propKey = ReturnIfAbrupt(propKey);
+  propKey = Q(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.

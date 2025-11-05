@@ -4,7 +4,7 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mts';
 import {
-  NormalCompletion, Q, ReturnIfAbrupt,
+  NormalCompletion, Q,
 } from '../completion.mts';
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -58,7 +58,7 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList: Parse
   let next;
   for (const VariableDeclaration of VariableDeclarationList) {
     next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
-    ReturnIfAbrupt(next);
+    Q(next);
   }
   return next;
 }
@@ -67,6 +67,6 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList: Parse
 //   VariableStatement : `var` VariableDeclarationList `;`
 export function* Evaluate_VariableStatement({ VariableDeclarationList }: ParseNode.VariableStatement): PlainEvaluator {
   const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
-  ReturnIfAbrupt(next);
+  Q(next);
   return NormalCompletion(undefined);
 }

@@ -8,7 +8,6 @@ import {
 } from '../value.mts';
 import {
   Q,
-  ReturnIfAbrupt,
   X,
   type PlainCompletion,
 } from '../completion.mts';
@@ -160,10 +159,8 @@ export function GetThisValue(V: ReferenceRecord) {
 
 /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
 export function* InitializeReferencedBinding(V: PlainCompletion<ReferenceRecord>, W: Value): PlainEvaluator {
-  // 1. ReturnIfAbrupt(V).
-  ReturnIfAbrupt(V);
-  // 2. ReturnIfAbrupt(W).
-  ReturnIfAbrupt(W);
+  Q(V);
+  Q(W);
   // 3. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 4. Assert: IsUnresolvableReference(V) is false.
