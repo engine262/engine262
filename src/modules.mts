@@ -472,8 +472,12 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           starResolution = resolution;
         } else { // c. Else,
           // 1. Assert: There is more than one * import that includes the requested name.
-          // 2. If resolution.[[Module]] and starResolution.[[Module]] are not the same Module Record or SameValue(resolution.[[BindingName]], starResolution.[[BindingName]]) is false, return "ambiguous".
-          if (resolution.Module !== starResolution.Module || SameValue(resolution.BindingName as JSStringValue, starResolution.BindingName as JSStringValue) === Value.false) {
+          // 2. If _resolution_.[[Module]] and _starResolution_.[[Module]] are not the same Module Record, return ~ambiguous~.
+          if (resolution.Module !== starResolution.Module) {
+            return 'ambiguous';
+          }
+          // 3. If _resolution_.[[BindingName]] is not _starResolution_.[[BindingName]], return ~ambiguous~.
+          if (SameValue(resolution.BindingName as JSStringValue, starResolution.BindingName as JSStringValue) === Value.false) {
             return 'ambiguous';
           }
         }
