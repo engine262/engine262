@@ -39,7 +39,7 @@ function* DataViewProto_byteLength(_args: Arguments, { thisValue }: FunctionCall
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 6. Let size be O.[[ByteLength]].
@@ -59,7 +59,7 @@ function* DataViewProto_byteOffset(_args: Arguments, { thisValue }: FunctionCall
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 6. Let offset be O.[[ByteOffset]].

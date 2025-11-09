@@ -242,7 +242,7 @@ export interface TypedArrayWithBufferWitnessRecord {
 export function MakeTypedArrayWithBufferWitnessRecord(obj: TypedArrayObject, order: 'seq-cst' | 'unordered') {
   const buffer = obj.ViewedArrayBuffer;
   let byteLength: TypedArrayWithBufferWitnessRecord['CachedBufferByteLength'];
-  if (IsDetachedBuffer(buffer as ArrayBufferObject) === Value.true) {
+  if (IsDetachedBuffer(buffer as ArrayBufferObject)) {
     byteLength = 'detached';
   } else {
     byteLength = ArrayBufferByteLength(buffer as ArrayBufferObject, order);
@@ -268,17 +268,12 @@ export function TypedArrayCreate(prototype: ObjectValue) {
 
 /** https://tc39.es/ecma262/#sec-typedarraybytelength */
 export function TypedArrayByteLength(taRecord: TypedArrayWithBufferWitnessRecord): number {
-  if (IsTypedArrayOutOfBounds(taRecord)) {
-    return 0;
-  }
-  const length = TypedArrayLength(taRecord);
-  if (length === 0) {
-    return 0;
-  }
+  Assert(!IsTypedArrayOutOfBounds(taRecord));
   const O = taRecord.Object;
   if (O.ByteLength !== 'auto') {
     return O.ByteLength;
   }
+  const length = TypedArrayLength(taRecord);
   const elementSize = TypedArrayElementSize(O);
   return length * elementSize;
 }
@@ -302,20 +297,19 @@ export function TypedArrayLength(taRecord: TypedArrayWithBufferWitnessRecord): n
 export function IsTypedArrayOutOfBounds(taRecord: TypedArrayWithBufferWitnessRecord) {
   const O = taRecord.Object;
   const bufferByteLength = taRecord.CachedBufferByteLength;
-  Assert(
-    (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true && bufferByteLength === 'detached')
-    || (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.false && bufferByteLength !== 'detached'),
-  );
-  if (bufferByteLength === 'detached') {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) {
+    Assert(bufferByteLength === 'detached');
     return true;
   }
+  Assert(typeof bufferByteLength === 'number' && bufferByteLength >= 0);
   const byteOffsetStart = O.ByteOffset;
   let byteOffsetEnd;
   if (O.ArrayLength === 'auto') {
     byteOffsetEnd = bufferByteLength;
   } else {
     const elementSize = TypedArrayElementSize(O);
-    byteOffsetEnd = byteOffsetStart + O.ArrayLength * elementSize;
+    const arrayByteLength = O.ArrayLength * elementSize;
+    byteOffsetEnd = byteOffsetStart + arrayByteLength;
   }
   if (byteOffsetStart > bufferByteLength || byteOffsetEnd > bufferByteLength) {
     return true;
@@ -329,7 +323,7 @@ export function IsTypedArrayFixedLength(O: TypedArrayObject) {
     return false;
   }
   const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
-  if (!IsFixedLengthArrayBuffer(buffer) && IsSharedArrayBuffer(buffer) === Value.false) {
+  if (!IsFixedLengthArrayBuffer(buffer) && !IsSharedArrayBuffer(buffer)) {
     return false;
   }
   return true;
@@ -337,7 +331,7 @@ export function IsTypedArrayFixedLength(O: TypedArrayObject) {
 
 /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
 export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue) {
-  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) {
     return Value.false;
   }
   if (IsIntegralNumber(index) === Value.false) {

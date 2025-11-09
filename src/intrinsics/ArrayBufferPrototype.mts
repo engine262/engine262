@@ -19,11 +19,11 @@ function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCa
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer(O) === Value.true) {
+  if (IsSharedArrayBuffer(O)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
   // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
-  if (IsDetachedBuffer(O) === Value.true) {
+  if (IsDetachedBuffer(O)) {
     return F(+0);
   }
   // 5. Let length be O.[[ArrayBufferByteLength]].
@@ -39,11 +39,11 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer(O) === Value.true) {
+  if (IsSharedArrayBuffer(O)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
   // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O) === Value.true) {
+  if (IsDetachedBuffer(O)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
@@ -80,11 +80,11 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer(newO) === Value.true) {
+  if (IsSharedArrayBuffer(newO)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
   // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(newO) === Value.true) {
+  if (IsDetachedBuffer(newO)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
@@ -97,7 +97,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   }
   // 18. NOTE: Side-effects of the above steps may have detached O.
   // 19. If IsDetachedBuffer(O) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O) === Value.true) {
+  if (IsDetachedBuffer(O)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 20. Let fromBuf be O.[[ArrayBufferData]].

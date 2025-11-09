@@ -37,7 +37,7 @@ function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, b
   const offset = Q(yield* ToIndex(byteOffset));
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   __ts_cast__<ArrayBufferObject>(buffer);
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
@@ -62,7 +62,7 @@ function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, b
   // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
   const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset'])) as Mutable<DataViewObject>;
   // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 11. Set O.[[ViewedArrayBuffer]] to buffer.

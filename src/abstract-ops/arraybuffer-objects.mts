@@ -1,4 +1,5 @@
 import { typedArrayInfoByType, type TypedArrayTypes } from '../intrinsics/TypedArray.mts';
+import { IsGrowableSharedArrayBuffer, sharedArrayBufferNotSupported } from './shared-arraybuffer.mts';
 import {
   surroundingAgent,
   NumberValue, BigIntValue, BooleanValue, Value,
@@ -64,15 +65,15 @@ export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: nu
 /** https://tc39.es/ecma262/#sec-isdetachedbuffer */
 export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
   if (arrayBuffer.ArrayBufferData === Value.null) {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
 export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
-  Assert(IsSharedArrayBuffer(arrayBuffer) === Value.false);
+  Assert(!IsSharedArrayBuffer(arrayBuffer));
   // 3. If key is not present, set key to undefined.
   if (key === undefined) {
     key = Value.undefined;
@@ -90,12 +91,12 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
 }
 
 /** https://tc39.es/ecma262/#sec-issharedarraybuffer */
-export function IsSharedArrayBuffer(_obj: Value): BooleanValue {
-  return Value.false;
+export function IsSharedArrayBuffer(_obj: Value) {
+  return false;
 }
 
 export function* CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number): ValueEvaluator<ArrayBufferObject> {
-  Assert(IsDetachedBuffer(srcBuffer) === Value.false);
+  Assert(!IsDetachedBuffer(srcBuffer));
   const targetBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength));
   const srcBlock = srcBuffer.ArrayBufferData as DataBlock;
   const targetBlock = targetBuffer.ArrayBufferData as DataBlock;
@@ -131,7 +132,7 @@ export function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: number[], isL
 /** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
 export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, _isTypedArray: boolean, _order: 'unordered', isLittleEndian?: BooleanValue) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
-  Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
+  Assert(!IsDetachedBuffer(arrayBuffer));
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex));
@@ -140,8 +141,8 @@ export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: nu
   // 5. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   // 6. If IsSharedArrayBuffer(arrayBuffer) is true, then
-  if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-    Assert(false);
+  if (IsSharedArrayBuffer(arrayBuffer)) {
+    sharedArrayBufferNotSupported();
   }
   // 7. Else, let rawValue be a List of elementSize containing, in order, the elementSize sequence of bytes starting with block[byteIndex].
   const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)];
@@ -195,7 +196,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
 export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: BooleanValue): ValueEvaluator<UndefinedValue> {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
-  Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
+  Assert(!IsDetachedBuffer(arrayBuffer));
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex));
@@ -216,8 +217,8 @@ export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: num
   // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
   const rawBytes = NumericToRawBytes(type, value, isLittleEndian);
   // 9. If IsSharedArrayBuffer(arrayBuffer) is true, then
-  if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-    Assert(false);
+  if (IsSharedArrayBuffer(arrayBuffer)) {
+    sharedArrayBufferNotSupported();
   }
   // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
@@ -230,10 +231,10 @@ export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: num
 
 /** https://tc39.es/ecma262/#sec-arraybufferbytelength */
 export function ArrayBufferByteLength(arrayBuffer: ArrayBufferObject, _order: 'seq-cst' | 'unordered'): number {
-  if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-    Assert(false);
+  if (IsGrowableSharedArrayBuffer(arrayBuffer)) {
+    sharedArrayBufferNotSupported();
   }
-  Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
+  Assert(!IsDetachedBuffer(arrayBuffer));
   return arrayBuffer.ArrayBufferByteLength;
 }
 

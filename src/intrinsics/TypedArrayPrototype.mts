@@ -73,6 +73,9 @@ function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCal
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  if (IsTypedArrayOutOfBounds(taRecord)) {
+    return F(0);
+  }
   const size = TypedArrayByteLength(taRecord);
   return F(size);
 }
@@ -324,7 +327,7 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
     return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
   }
   let sameSharedArrayBuffer;
-  if (IsSharedArrayBuffer(srcBuffer) === Value.true && IsSharedArrayBuffer(targetBuffer) === Value.true && srcBuffer.ArrayBufferData === targetBuffer.ArrayBufferData) {
+  if (IsSharedArrayBuffer(srcBuffer) && IsSharedArrayBuffer(targetBuffer) && srcBuffer.ArrayBufferData === targetBuffer.ArrayBufferData) {
     sameSharedArrayBuffer = true;
   } else {
     sameSharedArrayBuffer = false;

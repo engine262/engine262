@@ -364,7 +364,7 @@ export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject
   if (length !== Value.undefined) {
     newLength = Q(yield* ToIndex(length));
   }
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   const bufferByteLength = ArrayBufferByteLength(buffer, 'seq-cst');

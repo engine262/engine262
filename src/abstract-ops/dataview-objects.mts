@@ -33,7 +33,7 @@ export interface DataViewWithBufferWitnessRecord {
 export function MakeDataViewWithBufferWitnessRecord(obj: DataViewObject, order: 'seq-cst' | 'unordered'): DataViewWithBufferWitnessRecord {
   const buffer = obj.ViewedArrayBuffer as ArrayBufferObject;
   let byteLength: DataViewWithBufferWitnessRecord['CachedBufferByteLength'];
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer)) {
     byteLength = 'detached';
   } else {
     byteLength = ArrayBufferByteLength(buffer, order);
@@ -60,13 +60,11 @@ export function GetViewByteLength(viewRecord: DataViewWithBufferWitnessRecord): 
 export function IsViewOutOfBounds(viewRecord: DataViewWithBufferWitnessRecord): boolean {
   const view = viewRecord.Object;
   const bufferByteLength = viewRecord.CachedBufferByteLength;
-  Assert(
-    (IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject) === Value.true && bufferByteLength === 'detached')
-    || (IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject) === Value.false && bufferByteLength !== 'detached'),
-  );
-  if (bufferByteLength === 'detached') {
+  if (IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject)) {
+    Assert(bufferByteLength === 'detached');
     return true;
   }
+  Assert(typeof bufferByteLength === 'number' && bufferByteLength >= 0);
   const byteOffsetStart = view.ByteOffset;
   let byteOffsetEnd;
   // @ts-expect-error
