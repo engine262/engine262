@@ -20,6 +20,18 @@ const LAST_FAILED_LOG = path.resolve(import.meta.dirname, 'last-failed.log');
 const SKIP_LIST = path.resolve(import.meta.dirname, 'skiplist');
 const FEATURES = path.resolve(import.meta.dirname, 'features');
 const SLOW_LIST = path.resolve(import.meta.dirname, 'slowlist');
+const test262Tests = (() => {
+  let files: string[] | undefined;
+  return async () => {
+    if (!files) {
+      files = [];
+      for await (const file of readdir(TEST262_TESTS)) {
+        files.push(file);
+      }
+    }
+    return files;
+  };
+})();
 let mayExit = false;
 const workerCanHoldTasks = 1;
 
@@ -185,18 +197,11 @@ function distributeTest() {
   }
 }
 
-let files: AsyncGenerator<string> | Iterable<string> = [];
 const visited = new Set<string>();
-if (ARGV.positionals.length === 0) {
-  files = readdir(TEST262_TESTS);
-} else {
-  files = parsePositionals(ARGV.positionals);
-}
-
 const stop = startTestPrinter();
 
 const promises = [];
-for await (const file of files) {
+for await (const file of parsePositionals(ARGV.positionals)) {
   if (visited.has(file) || /annexB|intl402|_FIXTURE|README\.md|\.py|\.map|\.mts/.test(file)) {
     continue;
   }
@@ -288,34 +293,35 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
     } else if (b?.isFile()) {
       return yield b_path;
     }
-  }
-  const tries = [
-    () => globby(pattern, { cwd: TEST262_TESTS, absolute: true }),
-    () => globby(`**/${pattern}/*`, { cwd: TEST262_TESTS, absolute: true }),
-    () => globby(`**/${pattern}*`, { cwd: TEST262_TESTS, absolute: true }),
-    () => globby(`**/${pattern}*/*`, { cwd: TEST262_TESTS, absolute: true }),
 
-    () => globby(pattern, { cwd: process.cwd(), absolute: true }),
-    () => globby(`**/${pattern}/*`, { cwd: process.cwd(), absolute: true }),
-    () => globby(`**/${pattern}*`, { cwd: process.cwd(), absolute: true }),
-    () => globby(`**/${pattern}*/*`, { cwd: process.cwd(), absolute: true }),
-  ];
-  for (const try_ of tries) {
-    // eslint-disable-next-line no-await-in-loop
-    const files = await try_();
-    if (files.length) {
-      return yield* files;
+    const files = await test262Tests();
+    const matched = files.filter((f) => f.toLowerCase().includes(pattern.toLowerCase()));
+    if (matched.length) {
+      return yield* matched;
     }
+  }
+
+  const files1 = await globby(pattern, { cwd: TEST262_TESTS, absolute: true, caseSensitiveMatch: false });
+  if (files1.length) {
+    return yield* files1;
+  }
+
+  const files2 = await globby(pattern, { cwd: process.cwd(), absolute: true, caseSensitiveMatch: false });
+  if (files2.length) {
+    return yield* files2;
   }
   return undefined;
 }
 
 async function* parsePositionals(pattern: string[]): AsyncGenerator<string> {
+  if (!pattern.length) {
+    yield* readdir(TEST262_TESTS);
+    return;
+  }
   for (const p of pattern) {
-    if (!p) {
-      continue;
+    if (p) {
+      yield* parsePositional(p);
     }
-    yield* parsePositional(p);
   }
 }
 
