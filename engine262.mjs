@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b9ea8ab5aa43b7ec69d9c2d92aa5e83099ba798a
+ * engine262 0.0.1 349a9c5ec2cce6ed88f894d6e5fdb74bacd3a6f0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -5729,10 +5729,11 @@ class CyclicModuleRecord extends AbstractModuleRecord {
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
     // 3. If module.[[Status]] is evaluating-async or evaluated, then
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      // a. Assert: _module_.[[CycleRoot]] is not ~empty~.
-      Assert(module.CycleRoot !== undefined, "module.CycleRoot !== undefined");
-      // b. Set _module_ to _module_.[[CycleRoot]].
-      module = module.CycleRoot;
+      if (module.CycleRoot !== undefined) {
+        module = module.CycleRoot;
+      } else {
+        Assert(module.Status === 'evaluated' && module.EvaluationError !== undefined, "module.Status === 'evaluated' && module.EvaluationError !== undefined");
+      }
     }
     // 4. If module.[[TopLevelCapability]] is not ~empty~, then
     if (module.TopLevelCapability !== undefined) {
@@ -5985,7 +5986,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
           starResolution = resolution;
         } else {
           // c. Else,
-          // 1. Assert: There is more than one * import that includes the requested name.
+          // 1. Assert: There is more than one * export that includes the requested name.
           // 2. If _resolution_.[[Module]] and _starResolution_.[[Module]] are not the same Module Record, return ~ambiguous~.
           if (resolution.Module !== starResolution.Module) {
             return 'ambiguous';
@@ -17641,7 +17642,7 @@ class ExpressionParser extends FunctionParser {
     const assignmentInfo = this.scope.popAssignmentInfo();
     if (left.type === 'IdentifierReference') {
       // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
-      if (left.name === 'async' && this.test(Token.IDENTIFIER) && !this.peek().hadLineTerminatorBefore && this.testAhead(Token.ARROW) && !this.peekAhead().hadLineTerminatorBefore) {
+      if (left.name === 'async' && !left.escaped && this.test(Token.IDENTIFIER) && !this.peek().hadLineTerminatorBefore && this.testAhead(Token.ARROW) && !this.peekAhead().hadLineTerminatorBefore) {
         assignmentInfo.clear();
         const node = this.startNode(left);
         return this.parseArrowFunction(node, {
@@ -33234,9 +33235,6 @@ function AsyncModuleExecutionRejected(module, error) {
   module.EvaluationError = ThrowCompletion(error);
   module.Status = 'evaluated';
   module.AsyncEvaluationOrder = 'done';
-  for (const m of module.AsyncParentModules) {
-    AsyncModuleExecutionRejected(m, error);
-  }
   if (module.TopLevelCapability !== undefined) {
     Assert(module.CycleRoot === module, "module.CycleRoot === module");
     /* X */
@@ -33249,6 +33247,9 @@ function AsyncModuleExecutionRejected(module, error) {
     });
     /* node:coverage ignore next */
     if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  }
+  for (const m of module.AsyncParentModules) {
+    AsyncModuleExecutionRejected(m, error);
   }
 }
 AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
