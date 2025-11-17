@@ -238,10 +238,11 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
     // 3. If module.[[Status]] is evaluating-async or evaluated, then
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      // a. Assert: _module_.[[CycleRoot]] is not ~empty~.
-      Assert(module.CycleRoot !== undefined);
-      // b. Set _module_ to _module_.[[CycleRoot]].
-      module = module.CycleRoot!;
+      if (module.CycleRoot !== undefined) {
+        module = module.CycleRoot;
+      } else {
+        Assert(module.Status === 'evaluated' && module.EvaluationError !== undefined);
+      }
     }
     // 4. If module.[[TopLevelCapability]] is not ~empty~, then
     if (module.TopLevelCapability !== undefined) {
