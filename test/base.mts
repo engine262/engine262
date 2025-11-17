@@ -156,7 +156,9 @@ export function fail(workerId: number, name: string, desc: string | undefined, e
     const OSC = '\u001B]';
     const BEL = '\u0007';
     const SEP = ';';
-    name = `${OSC}8${SEP}${SEP}${pathToFileURL(path.resolve(TEST262_TESTS, name))}${BEL}${name}${OSC}8${SEP}${SEP}${BEL}`;
+    const fileName = name;
+    name = `${OSC}8${SEP}${SEP}${pathToFileURL(path.resolve(TEST262_TESTS, fileName))}${BEL}${fileName}${OSC}8${SEP}${SEP}${BEL}`;
+    name += ` ${OSC}8${SEP}${SEP}https://github.com/tc39/test262/blob/main/test/${fileName}${BEL}[GitHub]${OSC}8${SEP}${SEP}${BEL}`;
   }
   const line1 = `\n${ANSI.red}FAILED ${name}${ANSI.reset}\n`;
   const line2 = desc ? `  ${ANSI.yellow}${desc}${ANSI.reset}${desc.endsWith('\n') ? '' : '\n'}` : '';

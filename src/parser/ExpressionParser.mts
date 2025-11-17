@@ -79,6 +79,7 @@ export abstract class ExpressionParser extends FunctionParser {
     if (left.type === 'IdentifierReference') {
       // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
       if (left.name === 'async'
+          && !left.escaped
           && this.test(Token.IDENTIFIER)
           && !this.peek().hadLineTerminatorBefore
           && this.testAhead(Token.ARROW)

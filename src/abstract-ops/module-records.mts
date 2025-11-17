@@ -457,12 +457,12 @@ function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) 
   module.EvaluationError = ThrowCompletion(error);
   module.Status = 'evaluated';
   module.AsyncEvaluationOrder = 'done';
-  for (const m of module.AsyncParentModules) {
-    AsyncModuleExecutionRejected(m, error);
-  }
   if (module.TopLevelCapability !== undefined) {
     Assert(module.CycleRoot === module);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
+  }
+  for (const m of module.AsyncParentModules) {
+    AsyncModuleExecutionRejected(m, error);
   }
 }
 

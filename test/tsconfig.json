@@ -14,7 +14,6 @@
     "./test262/test262-worker.mts",
     "./test262/test262_realm.mts",
     "./json/json.mts",
-    "./inspector/*",
-    "./next-runner.mts"
+    "./inspector/*"
   ]
 }

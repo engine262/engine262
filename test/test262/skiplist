@@ -6,6 +6,12 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# wait for this:
+# https://github.com/tc39/proposal-nonextensible-applies-to-private/issues/6
+staging/sm/PrivateName/modify-non-extensible.js
+language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js
+language/statements/class/elements/private-class-field-on-nonextensible-objects.js
+
 # We need our own date parser
 built-ins/Date/parse/without-utc-offset.js
 
