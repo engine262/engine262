@@ -471,7 +471,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         if (starResolution === null) {
           starResolution = resolution;
         } else { // c. Else,
-          // 1. Assert: There is more than one * import that includes the requested name.
+          // 1. Assert: There is more than one * export that includes the requested name.
           // 2. If _resolution_.[[Module]] and _starResolution_.[[Module]] are not the same Module Record, return ~ambiguous~.
           if (resolution.Module !== starResolution.Module) {
             return 'ambiguous';
