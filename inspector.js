@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 ad06dec792e0962affcbecad70515e38bb65645f
+ * engine262 0.0.1 6ee26d50b141eb733abd987602662527b6718c15
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1187,6 +1187,11 @@
     enable() {},
     collectGarbage() {}
   };
+  const Target = {
+    setDiscoverTargets() {},
+    // @ts-expect-error no doc
+    setRemoteLocations() {}
+  };
   const unsupportedError = {
     result: {
       type: 'undefined'
@@ -1319,7 +1324,8 @@
     Debugger: Debugger,
     HeapProfiler: HeapProfiler,
     Profiler: Profiler,
-    Runtime: Runtime
+    Runtime: Runtime,
+    Target: Target
   });
 
   const consoleMethods = ['log', 'debug', 'info', 'error', 'warning', 'dir', 'dirxml', 'table', 'trace', 'clear', 'startGroup', 'startGroupCollapsed', 'endGroup', 'assert', 'profile', 'profileEnd', 'count', 'timeEnd'];
