@@ -1,5 +1,5 @@
 #####################
-### Skipped Tests ###
+### Failed Tests ###
 #####################
 
 # Comments start with `#` or `;`.
@@ -45,14 +45,6 @@ staging/sm/lexical-environment/block-scoped-functions-annex-b-with.js
 staging/sm/lexical-environment/block-scoped-functions-annex-b.js
 staging/sm/lexical-environment/block-scoped-functions-deprecated-redecl.js
 
-# groupBy proposal
-staging/sm/Array/group-callback-evaluation.js
-staging/sm/Array/group-propertkey-is-length.js
-staging/sm/Array/group.js
-
-# Better Error message
-staging/sm/async-functions/await-error.js
-
 # TODO: https://github.com/tc39/ecma262/issues/3592
 built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
 
@@ -82,7 +74,6 @@ staging/sm/extensions/clone-v1-typed-array-data.dat
 staging/sm/extensions/function-caller-skips-eval-frames.js
 staging/sm/extensions/function-properties.js
 staging/sm/extensions/recursion.js
-staging/sm/extensions/regress-469625-01.js
 staging/sm/fields/await-identifier-module-3.js
 staging/sm/fields/await-identifier-script.js
 staging/sm/Function/function-caller-restrictions.js
@@ -97,7 +88,6 @@ staging/sm/JSON/parse-with-source.js
 staging/sm/lexical-environment/for-loop.js
 staging/sm/lexical-environment/var-in-catch-body-annex-b-eval.js
 staging/sm/Math/f16round.js
-staging/sm/misc/builtin-methods-reject-null-undefined-this.js
 staging/sm/misc/explicit-undefined-optional-argument.js
 staging/sm/misc/future-reserved-words.js
 staging/sm/Proxy/revoked-get-function-realm-typeerror.js
@@ -113,19 +103,11 @@ staging/sm/regress/regress-586482-5.js
 staging/sm/regress/regress-602621.js
 staging/sm/statements/for-in-with-declaration.js
 staging/sm/statements/regress-642975.js
-staging/sm/strict/10.4.2.js
-staging/sm/strict/B.1.1.js
 staging/sm/strict/strict-function-statements.js
 staging/sm/String/unicode-braced.js
 staging/sm/syntax/declaration-forbidden-in-label.js
 staging/sm/syntax/linefeed-at-eof-in-unterminated-string-or-template.js
-staging/sm/syntax/syntax-parsed-arrow-then-directive.js
-staging/sm/TypedArray/join.js
 staging/sm/TypedArray/prototype-constructor-identity.js
-staging/sm/TypedArray/sort_small.js
 staging/sm/TypedArray/sort-negative-nan.js
 staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js
-
-# TODO: investigate if this is just too slow or breaks our gc implemenetation
-built-ins/Array/fromAsync/asyncitems-arraylike-too-long.js

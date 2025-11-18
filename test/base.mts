@@ -185,11 +185,8 @@ export function run(workerId: number, test: string, flags: string) {
 
 export function startTestPrinter() {
   process.stdout.write(`
-${ANSI.yellow}#######################
-  engine262 Test Runner
-  ${CI ? 'Running' : 'Not running'} on CI
-#######################${ANSI.reset}
-  `);
+${ANSI.yellow}####### engine262 Test Runner #######${ANSI.reset}
+`);
 
   printStatusUI();
   const i = setInterval(() => {

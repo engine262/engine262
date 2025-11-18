@@ -1,0 +1,7 @@
+#####################
+### Skipped Tests ###
+#####################
+
+# Comments start with `#` or `;`.
+# Paths are relative to the `test262/test` directory.
+# Paths may contain globs.

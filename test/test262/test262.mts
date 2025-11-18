@@ -17,9 +17,10 @@ const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test26
 const TEST262_TESTS = path.join(TEST262, 'test');
 const LAST_FAILED_LIST = path.resolve(import.meta.dirname, 'last-failed-list');
 const LAST_FAILED_LOG = path.resolve(import.meta.dirname, 'last-failed.log');
-const SKIP_LIST = path.resolve(import.meta.dirname, 'skiplist');
+const FAILED_LIST = path.resolve(import.meta.dirname, 'failed');
+const SKIP_LIST = path.resolve(import.meta.dirname, 'skip');
 const FEATURES = path.resolve(import.meta.dirname, 'features');
-const SLOW_LIST = path.resolve(import.meta.dirname, 'slowlist');
+const SLOW_LIST = path.resolve(import.meta.dirname, 'slow');
 const test262Tests = (() => {
   let files: string[] | undefined;
   return async () => {
@@ -145,12 +146,12 @@ const workers = Array.from({ length: NUM_WORKERS }, (_, index) => createWorker(i
 
 const RUN_SLOW_TESTS = ARGV.values['run-slow-tests'];
 
-const [slowlist, skiplist] = await Promise.all([readListPaths(SLOW_LIST), readListPaths(SKIP_LIST)]);
+const [slowlist, skiplist, failedlist] = await Promise.all([readListPaths(SLOW_LIST, false), readListPaths(SKIP_LIST, false), readListPaths(FAILED_LIST, false)]);
 const failedTests_list = fs.createWriteStream(LAST_FAILED_LIST, { encoding: 'utf-8' });
 const failedTests_log = fs.createWriteStream(LAST_FAILED_LOG, { encoding: 'utf-8' });
-const skiplist_stream = ARGV.values['update-failed-tests'] ? fs.createWriteStream(SKIP_LIST, { encoding: 'utf-8', flags: 'a' }) : undefined;
-if (skiplist_stream) {
-  skiplist_stream.write('\n# Failed tests appended by --update-failed-tests\n');
+const failed_list_stream = ARGV.values['update-failed-tests'] ? fs.createWriteStream(FAILED_LIST, { encoding: 'utf-8', flags: 'a' }) : undefined;
+if (failed_list_stream) {
+  failed_list_stream.write('\n# Failed tests appended by --update-failed-tests\n');
 }
 const failedTests = new Set<string>();
 const isDisabled = (feature: string) => disabledFeatures.has(feature);
@@ -201,7 +202,7 @@ const visited = new Set<string>();
 const stop = startTestPrinter();
 
 const promises = [];
-for await (const file of parsePositionals(ARGV.positionals)) {
+for await (const file of parsePositionals(ARGV.positionals, true)) {
   if (visited.has(file) || /annexB|intl402|_FIXTURE|README\.md|\.py|\.map|\.mts/.test(file)) {
     continue;
   }
@@ -256,10 +257,10 @@ await Promise.all(promises);
 mayExit = true;
 distributeTest();
 
-async function readListPaths(file: string) {
+async function readListPaths(file: string, defaults: boolean) {
   const list = readList(file);
   const files = new Set<string>();
-  for await (const file of parsePositionals(list)) {
+  for await (const file of parsePositionals(list, defaults)) {
     files.add(path.relative(TEST262_TESTS, file));
   }
   return files;
@@ -313,9 +314,11 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
   return undefined;
 }
 
-async function* parsePositionals(pattern: string[]): AsyncGenerator<string> {
+async function* parsePositionals(pattern: string[], defaults: boolean): AsyncGenerator<string> {
   if (!pattern.length) {
-    yield* readdir(TEST262_TESTS);
+    if (defaults) {
+      yield* readdir(TEST262_TESTS);
+    }
     return;
   }
   for (const p of pattern) {
@@ -336,11 +339,22 @@ function createWorker(workerId: number) {
         if (pendingWork[workerId] < workerCanHoldTasks) {
           distributeTest();
         }
+        if (failedlist.has(message.file)) {
+          if (failedTests.has(message.file)) {
+            return undefined;
+          } else {
+            failedTests.add(message.file);
+            return fail(workerId, message.file, 'The test is declared to be failed, but passed', '');
+          }
+        }
         return pass(workerId);
       case 'FAIL': {
         pendingWork[workerId] -= 1;
         if (pendingWork[workerId] < workerCanHoldTasks) {
           distributeTest();
+        }
+        if (failedlist.has(message.file)) {
+          return skip(workerId);
         }
         const skipReport = failedTests.has(message.file);
         const err = message.error.split('\n').map(message.description ? (l) => `    ${l}` : (l) => `  ${l}`).join('\n');
@@ -351,8 +365,8 @@ function createWorker(workerId: number) {
 
         failedTests.add(message.file);
         failedTests_list.write(`${message.file}\n`);
-        if (skiplist_stream) {
-          skiplist_stream.write(`${message.file}\n`);
+        if (failed_list_stream) {
+          failed_list_stream.write(`${message.file}\n`);
         }
         return fail(workerId, message.file, message.description, err);
       }

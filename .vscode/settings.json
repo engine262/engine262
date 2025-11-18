@@ -3,5 +3,11 @@
     "typescript.preferences.quoteStyle": "single",
     "editor.tabSize": 2,
     "npm.packageManager": "npm",
-    "eslint.useFlatConfig": false
+    "eslint.useFlatConfig": false,
+    "files.associations": {
+        "slow": "ini",
+        "skip": "ini",
+        "features": "ini",
+        "failed": "ini"
+    },
 }
