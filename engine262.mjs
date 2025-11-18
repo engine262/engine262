@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3899bfdb164cab951112756b2e69959da318b961
+ * engine262 0.0.1 ad06dec792e0962affcbecad70515e38bb65645f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -27685,7 +27685,8 @@ function GetValueFromBuffer(arrayBuffer, byteIndex, type, _isTypedArray, _order,
   const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)];
   // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
-    isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
+    const AR = surroundingAgent.AgentRecord;
+    isLittleEndian = AR.LittleEndian;
   }
   // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
   return RawBytesToNumeric(type, rawValue, isLittleEndian);
@@ -27759,7 +27760,8 @@ function* SetValueInBuffer(arrayBuffer, byteIndex, type, value, _isTypedArray, _
   // const elementSize = typedArrayInfoByType[type].ElementSize;
   // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
-    isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
+    const AR = surroundingAgent.AgentRecord;
+    isLittleEndian = AR.LittleEndian;
   }
   // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
   const rawBytes = NumericToRawBytes(type, value, isLittleEndian);

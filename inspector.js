@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3899bfdb164cab951112756b2e69959da318b961
+ * engine262 0.0.1 ad06dec792e0962affcbecad70515e38bb65645f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1337,8 +1337,13 @@
           if (engine262_mjs.surroundingAgent.debugger_isPreviewing) {
             return engine262_mjs.Value.undefined;
           }
+          let completion;
           if (defaultBehaviour[method]) {
-            let completion = defaultBehaviour[method](args);
+            completion = defaultBehaviour[method](args);
+          } else if (defaultBehaviour.default) {
+            completion = defaultBehaviour.default(method, args);
+          }
+          if (completion) {
             if (typeof completion === 'object' && 'next' in completion) {
               completion = yield* completion;
             }
