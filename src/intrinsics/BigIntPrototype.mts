@@ -31,7 +31,7 @@ function thisBigIntValue(value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
-function BigIntProto_toLocalString(args: Arguments, context: FunctionCallContext): ValueEvaluator {
+function BigIntProto_toLocaleString(args: Arguments, context: FunctionCallContext): ValueEvaluator {
   return BigIntProto_toString(args, context);
 }
 
@@ -74,7 +74,7 @@ function BigIntProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContex
 
 export function bootstrapBigIntPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
-    ['toLocaleString', BigIntProto_toLocalString, 0],
+    ['toLocaleString', BigIntProto_toLocaleString, 0],
     ['toString', BigIntProto_toString, 0],
     ['valueOf', BigIntProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'BigInt');

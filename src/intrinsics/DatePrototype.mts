@@ -600,21 +600,18 @@ function* DateProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext)
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
-function DateProto_toLocaleDateString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleDateString is not implemented');
+function DateProto_toLocaleDateString(_args: Arguments, context: FunctionCallContext) {
+  return DateProto_toString([], context);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocalestring */
-function DateProto_toLocaleString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleString is not implemented');
+function DateProto_toLocaleString(_args: Arguments, context: FunctionCallContext) {
+  return DateProto_toString([], context);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring */
-function DateProto_toLocaleTimeString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleTimeString is not implemented');
+function DateProto_toLocaleTimeString(_args: Arguments, context: FunctionCallContext) {
+  return DateProto_toString([], context);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tostring */

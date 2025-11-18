@@ -203,8 +203,8 @@ if (argv.positionals[0]) {
 } else if (argv.values.eval) {
   oneShotEval(argv.values.eval, process.cwd());
 } else {
-  process.stdout.write(`${packageJson.name} v${packageJson.version}
-Please report bugs to ${packageJson.bugs.url}
+  process.stdout.write(`${packageJson.name} v${String(packageJson.version).replace('0.0.1-', '')}
+Type ".help" for more information. Please report bugs to ${packageJson.bugs.url}
 `);
   const server = start({
     prompt: '> ',
