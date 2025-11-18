@@ -25,7 +25,7 @@ sometimes features just can't be nicely represented with it. Similarly,
 implementing a feature in one of the engines is a large undertaking, involving
 long compile times and annoying bugs with the optimizing compilers.
 
-engine262 is a tool to allow JavaScript developers to have a sandbox where new
+engine262 is a tool to allow JavaScript developers to have a playground where new
 features can be quickly prototyped and explored. As an example, adding
 [do expressions][] to this engine is as simple as the following diff:
 
@@ -67,95 +67,67 @@ conforming JavaScript implementations.
 
 To run engine262 itself, a engine with support for recent ECMAScript features
 is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
-(`test/test262/test262.js`) require a recent version of Node.js.
+(`test/test262/test262.mts`) require a recent version of Node.js.
 
 ## Using engine262
 
-Use it online: <https://engine262.js.org>
+You can install it from npm.
 
-You can install the latest engine262 build from [GitHub Packages][].
+```shell
+npm install @engine262/engine262
+yarn install @engine262/engine262
+pnpm install @engine262/engine262
+```
 
 If you install it globally, you can use the CLI like so:
 
 `$ engine262`
 
-Or, you can install it locally and use the API:
+### engine262 playground
 
-```js
-import { Agent, setSurroundingAgent, ManagedRealm, Value, CreateDataProperty, inspect, CreateBuiltinFunction, skipDebugger } from '@engine262/engine262';
+[Classic playground](https://engine262.js.org) and [Chrome Devtools style playground](https://engine262.js.org/devtools.html)
 
-const agent = new Agent({
-  // onDebugger() {},
-  // ensureCanCompileStrings() {},
-  // hasSourceTextAvailable() {},
-  // loadImportedModule() {},
-  // onNodeEvaluation() {},
-  // features: [],
-});
-setSurroundingAgent(agent);
+### engine262 CLI
 
-const realm = new ManagedRealm({
-  // promiseRejectionTracker() {},
-  // getImportMetaProperties() {},
-  // finalizeImportMeta() {},
-  // randomSeed() {},
-});
+#### --module/-m
 
-realm.scope(() => {
-  // Add print function from host
-  const print = CreateBuiltinFunction((args) => {
-    console.log(...args.map((tmp) => inspect(tmp)));
-    return Value.undefined;
-  }, 1, Value('print'), []);
-  skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), print));
-});
+Evaluate the file as a module.
 
-realm.evaluateScript(`
-'use strict';
+#### --eval \<string> / -e \<string>
 
-async function* numbers() {
-  let i = 0;
-  while (true) {
-    const n = await Promise.resolve(i++);
-    yield n;
-  }
-}
+Evaluate the given string and exit.
 
-(async () => {
-  for await (const item of numbers()) {
-    print(item);
-  }
-})();
-`);
+#### --features=\<featureA,featureB> / --features=all
 
-// a stream of numbers fills your console. it fills you with determination.
-```
+Run `engine262 --list-features` to see all ECMAScript features can be switched.
 
-## Testing engine262
+#### --no-test262
 
-This project can be run against [test262][], which is particularly useful
-for developing new features and/or tests:
+Do not expose `$` and `$262` global variable for test262 test suite.
 
-```sh
-$ # build engine262
-$ npm run build
+#### --no-inspector
 
-$ # update local test262 in test/test262/test262
-$ git submodule update --init --recursive
+Do not start an inspector.
 
-$ # update local test262 to a pull request
-$ pushd test/test262/test262
-$ git fetch origin refs/pull/$PR_NUMBER/head && git checkout FETCH_HEAD
-$ popd
+By default engine262 will start an inspector on `ws://localhost:9229/` (like Node.js with `--inspector`). See the [Node.js guide](https://nodejs.org/en/learn/getting-started/debugging#inspector-clients) for connecting.
 
-$ # run specific tests
-$ npm run test:test262 built-ins/AsyncGenerator*
+#### --no-preview
 
-$ # run all tests
-$ npm run test:test262
-```
+Do not enable the preview feature in the inspector.
 
-The output will indicate counts for total tests, passing tests, failing tests, and skipped tests.
+### engine262 API
+
+See the [example](https://github.com/engine262/engine262/blob/ad06dec792e0962affcbecad70515e38bb65645f/lib-src/node/example.mts).
+
+## Developing engine262
+
+`npm run build` and `npm run watch` will build and watch the build.
+
+`npm run test:test262` will run the [test262][] test suite. Run `npm run test:test262 -- --help` to see the test runner options.
+
+`npm start` start the engine262 CLI.
+
+`npm run inspector` start the website (debugging engine262 mainly happens here).
 
 ## Related Projects
 
@@ -163,8 +135,6 @@ Many people and organizations have attempted to write a JavaScript interpreter
 in JavaScript much like engine262, with different goals. Some of them are
 included here for reference, though engine262 is not based on any of them.
 
-- <https://github.com/facebook/prepack>
-- <https://github.com/mozilla/narcissus>
 - <https://github.com/NeilFraser/JS-Interpreter>
 - <https://github.com/metaes/metaes>
 - <https://github.com/Siubaak/sval>
@@ -176,4 +146,4 @@ included here for reference, though engine262 is not based on any of them.
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
 [test262]: https://github.com/tc39/test262
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
-[GitHub Packages]: https://github.com/engine262/engine262/packages
+[NPM]: https://npmjs.com/@engine262/engine262

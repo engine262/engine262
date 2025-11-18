@@ -13,6 +13,7 @@
     "outDir": "../../lib/node/"
   },
   "include": [
+    "./example.mts",
     "./bin.mts",
     "./inspector.mts",
     "./module.mts"

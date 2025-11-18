@@ -174,6 +174,13 @@ export interface HeapProfilerNamespace {
   takeHeapSnapshot?(req: Protocol.HeapProfiler.TakeHeapSnapshotRequest, context: DebuggerContext): void;
 }
 
+// https://chromedevtools.github.io/devtools-protocol/1-3/Target/
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface TargetNamespace {
+  /** https://chromedevtools.github.io/devtools-protocol/1-3/Target/#method-setDiscoverTargets */
+  setDiscoverTargets?(req: Protocol.Target.SetDiscoverTargetsRequest, context: DebuggerContext): void;
+}
+
 export interface DevtoolEvents {
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#event-paused */
   'Debugger.paused'(event: Protocol.Debugger.PausedEvent): void;

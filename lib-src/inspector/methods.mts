@@ -2,6 +2,7 @@ import type { Protocol } from 'devtools-protocol';
 import type {
   DebuggerContext,
   DebuggerNamespace, HeapProfilerNamespace, ProfilerNamespace, RuntimeNamespace,
+  TargetNamespace,
 } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
 import { InspectorContext } from './context.mts';
@@ -202,6 +203,12 @@ export const Runtime: RuntimeNamespace = {
 export const HeapProfiler: HeapProfilerNamespace = {
   enable() { },
   collectGarbage() { },
+};
+
+export const Target: TargetNamespace = {
+  setDiscoverTargets() { },
+  // @ts-expect-error no doc
+  setRemoteLocations() { },
 };
 
 const unsupportedError: Protocol.Runtime.EvaluateResponse = {
