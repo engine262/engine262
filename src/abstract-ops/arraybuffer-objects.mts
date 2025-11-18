@@ -148,7 +148,8 @@ export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: nu
   const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)];
   // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
-    isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
+    const AR = surroundingAgent.AgentRecord;
+    isLittleEndian = AR.LittleEndian;
   }
   // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
   return RawBytesToNumeric(type, rawValue, isLittleEndian);
@@ -212,7 +213,8 @@ export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: num
   // const elementSize = typedArrayInfoByType[type].ElementSize;
   // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
-    isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
+    const AR = surroundingAgent.AgentRecord;
+    isLittleEndian = AR.LittleEndian;
   }
   // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
   const rawBytes = NumericToRawBytes(type, value, isLittleEndian);
