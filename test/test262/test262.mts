@@ -9,24 +9,26 @@ import {
   pass, fail, skip, incr_total, NUM_WORKERS, type WorkerToSupervisor, type Test, type SupervisorToWorker, run, startTestPrinter, setSlowTestThreshold,
   readList,
   fatal,
-  postRunShowFiles,
   pendingWork,
+  printStatusLine,
+  failed,
 } from '../base.mts';
 
-const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
-const TEST262_TESTS = path.join(TEST262, 'test');
-const LAST_FAILED_LIST = path.resolve(import.meta.dirname, 'last-failed-list');
-const LAST_FAILED_LOG = path.resolve(import.meta.dirname, 'last-failed.log');
-const FAILED_LIST = path.resolve(import.meta.dirname, 'failed');
-const SKIP_LIST = path.resolve(import.meta.dirname, 'skip');
-const FEATURES = path.resolve(import.meta.dirname, 'features');
-const SLOW_LIST = path.resolve(import.meta.dirname, 'slow');
-const test262Tests = (() => {
+const Test262Repo = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
+const Test262Tests = path.join(Test262Repo, 'test');
+const LastRunFailedList = path.resolve(import.meta.dirname, 'last-failed-list');
+const CurrentRunFailureLog = path.resolve(import.meta.dirname, 'last-failed.log');
+const AssertToBeFailedList = path.resolve(import.meta.dirname, 'failed');
+const SkipList = path.resolve(import.meta.dirname, 'skip');
+const SlowList = path.resolve(import.meta.dirname, 'slow');
+const Features = path.resolve(import.meta.dirname, 'features');
+
+const test262TestPaths = (() => {
   let files: string[] | undefined;
   return async () => {
     if (!files) {
       files = [];
-      for await (const file of readdir(TEST262_TESTS)) {
+      for await (const file of readdir(Test262Tests)) {
         files.push(file);
       }
     }
@@ -58,7 +60,7 @@ const ARGV = util.parseArgs({
 });
 
 const disabledFeatures = new Set<string>();
-readList(FEATURES).forEach((f) => {
+readList(Features).forEach((f) => {
   if (f.startsWith('-')) {
     disabledFeatures.add(f.slice(1));
   }
@@ -128,7 +130,7 @@ if (ARGV.values['update-slow-tests']) {
   }
   const slowTests = new Set<string>();
   let lastSize = 0;
-  const stream = fs.createWriteStream(SLOW_LIST, { encoding: 'utf-8', flags: 'a' });
+  const stream = fs.createWriteStream(SlowList, { encoding: 'utf-8', flags: 'a' });
   stream.write(`\n# Slow tests appended by --update-slow-tests=${second}\n`);
   setSlowTestThreshold(second, (f) => {
     slowTests.add(f);
@@ -139,33 +141,51 @@ if (ARGV.values['update-slow-tests']) {
   });
 }
 if (ARGV.values['run-failed-only']) {
-  ARGV.positionals = fs.readFileSync(LAST_FAILED_LIST, { encoding: 'utf-8' }).split('\n');
+  ARGV.positionals = fs.readFileSync(LastRunFailedList, { encoding: 'utf-8' }).split('\n');
 }
 
 const workers = Array.from({ length: NUM_WORKERS }, (_, index) => createWorker(index));
 
-const RUN_SLOW_TESTS = ARGV.values['run-slow-tests'];
-
-const [slowlist, skiplist, failedlist] = await Promise.all([readListPaths(SLOW_LIST, false), readListPaths(SKIP_LIST, false), readListPaths(FAILED_LIST, false)]);
-const failedTests_list = fs.createWriteStream(LAST_FAILED_LIST, { encoding: 'utf-8' });
-const failedTests_log = fs.createWriteStream(LAST_FAILED_LOG, { encoding: 'utf-8' });
-const failed_list_stream = ARGV.values['update-failed-tests'] ? fs.createWriteStream(FAILED_LIST, { encoding: 'utf-8', flags: 'a' }) : undefined;
-if (failed_list_stream) {
-  failed_list_stream.write('\n# Failed tests appended by --update-failed-tests\n');
+const [slowList, skipList, assertFailedList] = await Promise.all([readListPaths(SlowList, false), readListPaths(SkipList, false), readListPaths(AssertToBeFailedList, false)]);
+const lastRunFailedListStream = fs.createWriteStream(LastRunFailedList, { encoding: 'utf-8' });
+const currentRunFailureLogStream = fs.createWriteStream(CurrentRunFailureLog, { encoding: 'utf-8' });
+const failedListStream = ARGV.values['update-failed-tests'] ? fs.createWriteStream(AssertToBeFailedList, { encoding: 'utf-8', flags: 'a' }) : undefined;
+if (failedListStream) {
+  failedListStream.write('\n# Failed tests appended by --update-failed-tests\n');
 }
-const failedTests = new Set<string>();
+const currentRunFailedTests = new Set<string>();
 const isDisabled = (feature: string) => disabledFeatures.has(feature);
 
 const pendingTasks: Test[] = [];
 function queueTest(test: Test) {
   incr_total();
 
-  if (test.attrs.features?.some(isDisabled) || skiplist.has(test.file) || (slowlist.has(test.file) && !RUN_SLOW_TESTS)) {
+  if (test.attrs.features?.some(isDisabled) || skipList.has(test.file) || (slowList.has(test.file) && !ARGV.values['run-slow-tests'])) {
     skip();
     return;
   }
   pendingTasks.push(test);
   distributeTest();
+}
+
+const postRunShowFiles: string[] = [];
+async function onExit() {
+  if (ARGV.values.list) {
+    process.stdout.write('\n');
+    process.stdout.clearLine(0);
+    process.stdout.write(`${postRunShowFiles.length} tests found:\n`);
+    for (const file of postRunShowFiles) {
+      process.stdout.clearLine(0);
+      process.stdout.write(`  ${file}\n`);
+    }
+  }
+  clearInterval(stop);
+  workers.forEach((x) => x.kill());
+
+  process.stdout.write('\n');
+  printStatusLine();
+  process.stdout.write('\n');
+  process.exitCode = failed ? 1 : 0;
 }
 
 function distributeTest() {
@@ -179,17 +199,7 @@ function distributeTest() {
     }
     if (!pendingTasks.length) {
       if (mayExit && pendingWork.every((work) => work === 0)) {
-        if (ARGV.values.list) {
-          process.stdout.write('\n');
-          process.stdout.clearLine(0);
-          process.stdout.write(`${postRunShowFiles.length} tests found:\n`);
-          for (const file of postRunShowFiles) {
-            process.stdout.clearLine(0);
-            process.stdout.write(`  ${file}\n`);
-          }
-        }
-        clearInterval(stop);
-        workers.forEach((x) => x.kill());
+        onExit();
       }
       return;
     }
@@ -229,7 +239,7 @@ for await (const file of parsePositionals(ARGV.positionals, true)) {
     attrs.includes = attrs.includes || [];
 
     const test: Test = {
-      file: path.relative(TEST262_TESTS, file),
+      file: path.relative(Test262Tests, file),
       attrs,
       contents,
       flags: '',
@@ -261,7 +271,7 @@ async function readListPaths(file: string, defaults: boolean) {
   const list = readList(file);
   const files = new Set<string>();
   for await (const file of parsePositionals(list, defaults)) {
-    files.add(path.relative(TEST262_TESTS, file));
+    files.add(path.relative(Test262Tests, file));
   }
   return files;
 }
@@ -279,7 +289,7 @@ async function* readdir(dir: string): AsyncGenerator<string> {
 
 async function* parsePositional(pattern: string): AsyncGenerator<string> {
   if (!isDynamicPattern(pattern)) {
-    const a_path = path.join(TEST262_TESTS, pattern);
+    const a_path = path.join(Test262Tests, pattern);
     const a = await fs.promises.stat(a_path).catch(() => undefined);
     if (a?.isDirectory()) {
       return yield* readdir(a_path);
@@ -295,14 +305,14 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
       return yield b_path;
     }
 
-    const files = await test262Tests();
+    const files = await test262TestPaths();
     const matched = files.filter((f) => f.toLowerCase().includes(pattern.toLowerCase()));
     if (matched.length) {
       return yield* matched;
     }
   }
 
-  const files1 = await globby(pattern, { cwd: TEST262_TESTS, absolute: true, caseSensitiveMatch: false });
+  const files1 = await globby(pattern, { cwd: Test262Tests, absolute: true, caseSensitiveMatch: false });
   if (files1.length) {
     return yield* files1;
   }
@@ -317,7 +327,7 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
 async function* parsePositionals(pattern: string[], defaults: boolean): AsyncGenerator<string> {
   if (!pattern.length) {
     if (defaults) {
-      yield* readdir(TEST262_TESTS);
+      yield* readdir(Test262Tests);
     }
     return;
   }
@@ -339,11 +349,11 @@ function createWorker(workerId: number) {
         if (pendingWork[workerId] < workerCanHoldTasks) {
           distributeTest();
         }
-        if (failedlist.has(message.file)) {
-          if (failedTests.has(message.file)) {
+        if (assertFailedList.has(message.file)) {
+          if (currentRunFailedTests.has(message.file)) {
             return undefined;
           } else {
-            failedTests.add(message.file);
+            currentRunFailedTests.add(message.file);
             return fail(workerId, message.file, 'The test is declared to be failed, but passed', '');
           }
         }
@@ -353,20 +363,20 @@ function createWorker(workerId: number) {
         if (pendingWork[workerId] < workerCanHoldTasks) {
           distributeTest();
         }
-        if (failedlist.has(message.file)) {
+        if (assertFailedList.has(message.file)) {
           return skip(workerId);
         }
-        const skipReport = failedTests.has(message.file);
+        const skipReport = currentRunFailedTests.has(message.file);
         const err = message.error.split('\n').map(message.description ? (l) => `    ${l}` : (l) => `  ${l}`).join('\n');
-        failedTests_log.write(`${message.file}\n  ${message.flags ? `[${message.flags}] ` : ''}${message.description}\n${err}\n\n`);
+        currentRunFailureLogStream.write(`${message.file}\n  ${message.flags ? `[${message.flags}] ` : ''}${message.description}\n${err}\n\n`);
         if (skipReport) {
           return skip(workerId);
         }
 
-        failedTests.add(message.file);
-        failedTests_list.write(`${message.file}\n`);
-        if (failed_list_stream) {
-          failed_list_stream.write(`${message.file}\n`);
+        currentRunFailedTests.add(message.file);
+        lastRunFailedListStream.write(`${message.file}\n`);
+        if (failedListStream) {
+          failedListStream.write(`${message.file}\n`);
         }
         return fail(workerId, message.file, message.description, err);
       }

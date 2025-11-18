@@ -36,14 +36,12 @@ const handledPerSecLast5: number[] = [];
 let handledPerSecCounter = 0;
 let skipped = 0;
 let passed = 0;
-let failed = 0;
+export let failed = 0;
 let total = 0;
 const running: [file: string, flags: string, since: number][] = new Array(NUM_WORKERS).fill(['', Date.now()]);
 export const pendingWork: number[] = new Array(NUM_WORKERS).fill(0);
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262', 'test262');
 const TEST262_TESTS = path.join(TEST262, 'test');
-
-export const postRunShowFiles: string[] = [];
 
 let slowTestThreshold = Infinity;
 let slowTestCallback: (newSlowTestFound: string) => void = () => { };
@@ -56,7 +54,7 @@ const pad = (n: number, l: number, c = '0') => n.toString().padStart(l, c);
 const average = (array: readonly number[]) => (array.reduce((a, b) => a + b, 0) / array.length) || 0;
 const workerPadding = running.length.toString().length;
 
-function printStatusLine() {
+export function printStatusLine() {
   const elapsed = Math.floor((Date.now() - start) / 1000);
   const min = Math.floor(elapsed / 60);
   const sec = elapsed % 60;
@@ -70,6 +68,7 @@ function printStatusLine() {
   const testsPerSec = average(handledPerSecLast5);
 
   const line = `[${time}|${found}|${l}|${p}|${f}|${s}] (${testsPerSec.toFixed(2)}/s)`;
+  process.stdout.clearLine(0);
   process.stdout.write(`${line}${CI ? '\n' : ''}`);
   readline.cursorTo(process.stdout, 0);
 }
@@ -192,13 +191,6 @@ ${ANSI.yellow}####### engine262 Test Runner #######${ANSI.reset}
   const i = setInterval(() => {
     printStatusUI();
   }, CI ? 5000 : 100).unref();
-
-  process.on('exit', () => {
-    process.stdout.write('\n');
-    printStatusLine();
-    process.stdout.write('\n');
-    process.exitCode = failed ? 1 : 0;
-  });
   return i;
 }
 
