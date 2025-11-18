@@ -27,7 +27,10 @@ const consoleMethods = [
   'timeEnd',
 ] as const;
 type ConsoleMethod = typeof consoleMethods[number];
-export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Record<ConsoleMethod, (args: Arguments) => void | PlainCompletion<void> | PlainEvaluator<void>>>) {
+export function createConsole(
+  realm: ManagedRealm,
+  defaultBehaviour: Partial<Record<ConsoleMethod, (args: Arguments) => void | PlainCompletion<void> | PlainEvaluator<void>>> & { default?: (method: ConsoleMethod, args: Arguments) => void | PlainCompletion<void> | PlainEvaluator<void> },
+) {
   realm.scope(() => {
     const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
     skipDebugger(DefinePropertyOrThrow(
@@ -46,8 +49,15 @@ export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Rec
           if (surroundingAgent.debugger_isPreviewing) {
             return Value.undefined;
           }
+
+          let completion;
           if (defaultBehaviour[method]) {
-            let completion = defaultBehaviour[method](args);
+            completion = defaultBehaviour[method](args);
+          } else if (defaultBehaviour.default) {
+            completion = defaultBehaviour.default(method, args);
+          }
+
+          if (completion) {
             if (typeof completion === 'object' && 'next' in completion) {
               completion = yield* completion;
             }
