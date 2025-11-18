@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 349a9c5ec2cce6ed88f894d6e5fdb74bacd3a6f0
+ * engine262 0.0.1 3899bfdb164cab951112756b2e69959da318b961
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -42116,10 +42116,10 @@ function thisBigIntValue(value) {
 }
 thisBigIntValue.section = 'https://tc39.es/ecma262/#sec-thisbigintvalue';
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
-function BigIntProto_toLocalString(args, context) {
+function BigIntProto_toLocaleString(args, context) {
   return BigIntProto_toString(args, context);
 }
-BigIntProto_toLocalString.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring';
+BigIntProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring';
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
 function* BigIntProto_toString([radix], {
   thisValue
@@ -42184,7 +42184,7 @@ function BigIntProto_valueOf(_args, {
 }
 BigIntProto_valueOf.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tostring';
 function bootstrapBigIntPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['toLocaleString', BigIntProto_toLocalString, 0], ['toString', BigIntProto_toString, 0], ['valueOf', BigIntProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'BigInt');
+  const proto = bootstrapPrototype(realmRec, [['toLocaleString', BigIntProto_toLocaleString, 0], ['toString', BigIntProto_toString, 0], ['valueOf', BigIntProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'BigInt');
   realmRec.Intrinsics['%BigInt.prototype%'] = proto;
 }
 
@@ -44215,21 +44215,18 @@ function* DateProto_toJSON(_args, {
 }
 DateProto_toJSON.section = 'https://tc39.es/ecma262/#sec-date.prototype.tojson';
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
-function DateProto_toLocaleDateString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleDateString is not implemented');
+function DateProto_toLocaleDateString(_args, context) {
+  return DateProto_toString([], context);
 }
 DateProto_toLocaleDateString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring';
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocalestring */
-function DateProto_toLocaleString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleString is not implemented');
+function DateProto_toLocaleString(_args, context) {
+  return DateProto_toString([], context);
 }
 DateProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tolocalestring';
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring */
-function DateProto_toLocaleTimeString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleTimeString is not implemented');
+function DateProto_toLocaleTimeString(_args, context) {
+  return DateProto_toString([], context);
 }
 DateProto_toLocaleTimeString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring';
 /** https://tc39.es/ecma262/#sec-date.prototype.tostring */
