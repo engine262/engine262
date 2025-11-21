@@ -6,7 +6,7 @@ import * as util from 'node:util';
 import {
   readList, type SupervisorToWorker, type Test, type WorkerToSupervisor,
 } from '../base.mts';
-import { createRealm, createAgent } from './test262_realm.mts';
+import { createRealm, createAgent } from '../base.mts';
 import {
   AbruptCompletion, ObjectValue, evalQ,
   setSurroundingAgent,
@@ -35,10 +35,12 @@ const includeCache: Record<string, undefined | { source: string, specifier: stri
 
 process.on('message', (test: SupervisorToWorker) => {
   try {
-    process.send!({ status: 'RUNNING', file: test.file, flags: test.flags } satisfies WorkerToSupervisor, handleSendError);
+    process.send!({ status: 'RUNNING', testId: test.id } satisfies WorkerToSupervisor, handleSendError);
     const result = run(test);
     if (result.status === 'PASS') {
-      process.send!({ status: 'PASS', file: test.file } satisfies WorkerToSupervisor, handleSendError);
+      process.send!({
+        status: 'PASS', file: test.file, flags: test.currentTestFlag, testId: test.id,
+      } satisfies WorkerToSupervisor, handleSendError);
     } else {
       process.send!(result satisfies WorkerToSupervisor, handleSendError);
     }
@@ -111,7 +113,9 @@ ${test.attrs.flags.async ? DONE : ''}`);
     if (test.attrs.flags.async) {
       setPrintHandle((m) => {
         if (m === 'Test262:AsyncTestComplete') {
-          asyncResult = { status: 'PASS', file: test.file };
+          asyncResult = {
+            status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
+          };
         } else {
           asyncResult = fails(test, m);
         }
@@ -123,7 +127,7 @@ ${test.attrs.flags.async ? DONE : ''}`);
 
     const completion = evalQ((Q) => {
       if (test.attrs.flags.module) {
-        const module = Q(realm.createSourceTextModule(specifier, test.contents));
+        const module = Q(realm.compileModule(test.content, { specifier }));
         resolverCache.set(specifier, module);
         const loadModuleCompletion = module.LoadRequestedModules();
         if (loadModuleCompletion.PromiseState === 'rejected') {
@@ -137,13 +141,15 @@ ${test.attrs.flags.async ? DONE : ''}`);
           Q(Throw(evaluateCompletion.PromiseResult!, 'Raw', 'Module evaluation failed'));
         }
       } else {
-        Q(realm.evaluateScript(test.contents, { specifier }));
+        Q(realm.evaluateScript(test.content, { specifier }));
       }
     });
 
     if (completion.Type === 'throw') {
       if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
-        return { status: 'PASS', file: test.file };
+        return {
+          status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
+        };
       } else {
         return fails(test, inspect(completion));
       }
@@ -159,7 +165,9 @@ ${test.attrs.flags.async ? DONE : ''}`);
     if (test.attrs.negative) {
       return fails(test, `Expected ${test.attrs.negative.type} during ${test.attrs.negative.phase}`);
     } else {
-      return { status: 'PASS', file: test.file };
+      return {
+        status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
+      };
     }
   });
 
@@ -200,7 +208,8 @@ function fails(test: Test, error: string): WorkerToSupervisor {
   return {
     status: 'FAIL',
     file: test.file,
-    flags: test.flags,
+    flags: test.currentTestFlag,
+    testId: test.id,
     description: test.attrs.description,
     error,
   };

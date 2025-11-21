@@ -12,9 +12,6 @@ staging/sm/PrivateName/modify-non-extensible.js
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js
 language/statements/class/elements/private-class-field-on-nonextensible-objects.js
 
-# We need our own date parser
-built-ins/Date/parse/without-utc-offset.js
-
 # Non-strict mode
 # Annex B
 ## RegExp.prototype.compile

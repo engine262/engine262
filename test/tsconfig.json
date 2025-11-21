@@ -9,11 +9,12 @@
   },
   "include": [
     "./base.mts",
-    "./supplemental.mts",
+    "./tui.mts",
     "./test262/test262.mts",
+    "./test262/test262-runner.mts",
     "./test262/test262-worker.mts",
-    "./test262/test262_realm.mts",
     "./json/json.mts",
-    "./inspector/*"
+    "./inspector/*",
+    "./engine262/*"
   ]
 }

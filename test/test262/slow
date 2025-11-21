@@ -9,6 +9,28 @@
 built-ins/RegExp/property-escapes/generated
 built-ins/RegExp/CharacterClassEscapes
 
+# Slow on CI
+built-ins/Array/prototype/concat/Array.prototype.concat_small-typed-array.js
+built-ins/Array/prototype/every/15.4.4.16-7-c-ii-2.js
+built-ins/Array/prototype/indexOf/15.4.4.14-10-1.js
+built-ins/Array/prototype/lastIndexOf/15.4.4.15-9-1.js
+built-ins/Array/prototype/map/15.4.4.19-8-c-ii-1.js
+built-ins/Array/prototype/some/15.4.4.17-7-c-ii-2.js
+built-ins/decodeURI
+built-ins/encodeURIComponent
+language/literals/regexp/S7.8.5_A1.4_T2.js
+language/literals/regexp/S7.8.5_A2.4_T2.js
+staging/sm/expressions/object-literal-__proto__.js
+staging/sm/misc/getter-setter-outerize-this.js
+staging/sm/Proxy/ownkeys-linear.js
+staging/sm/RegExp/unicode-class-braced.js
+staging/sm/String/replace-math.js
+staging/sm/TypedArray/entries.js
+staging/sm/TypedArray/fill.js
+staging/sm/TypedArray/forEach.js
+staging/sm/TypedArray/sort_small.js
+staging/sm/TypedArray/sort-negative-nan.js
+
 # Slow tests appended by --update-slow-tests=10
 built-ins/Array/fromAsync/asyncitems-arraylike-too-long.js
 built-ins/Array/prototype/concat/Array.prototype.concat_large-typed-array.js

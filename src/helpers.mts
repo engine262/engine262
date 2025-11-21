@@ -6,12 +6,11 @@ import {
 } from './value.mts';
 import {
   Call,
-  ToString,
   isFunctionObject,
   isBuiltinFunctionObject,
   isECMAScriptFunctionObject,
 } from './abstract-ops/all.mts';
-import { Q, X } from './completion.mts';
+import { Q } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type {
   Evaluator, EvaluatorNextType, ValueEvaluator, YieldEvaluator,
@@ -356,15 +355,15 @@ export class CallSite {
   getFunctionName(): string | null {
     if (isFunctionObject(this.context.Function)) {
       const name = this.context.Function.properties.get('name');
-      if (name && name.Value) {
-        return X(ToString(name.Value)).stringValue();
+      if (name && name.Value && name.Value instanceof JSStringValue) {
+        return name.Value.stringValue();
       }
     }
     return null;
   }
 
   getSpecifier() {
-    if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
+    if (!(this.context.ScriptOrModule instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.specifier;
     }
     return null;
