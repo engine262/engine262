@@ -30,6 +30,9 @@ export const GlobalSymbolRegistry: GlobalSymbolRegistryRecord[] = [];
 export interface SymbolObject extends OrdinaryObject {
   readonly SymbolData: SymbolValue;
 }
+export function isSymbolObject(o: Value): o is SymbolObject {
+  return 'SymbolData' in o;
+}
 /** https://tc39.es/ecma262/#sec-symbol-description */
 function* SymbolConstructor(this: FunctionObject, [description = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is not undefined, throw a TypeError exception.

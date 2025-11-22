@@ -15,9 +15,9 @@ import {
   IsCallable,
   IsDataDescriptor,
   JSStringValue,
-  Throw,
   skipDebugger,
   boostTest262Harness,
+  ThrowCompletion,
 } from '#self';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -131,14 +131,14 @@ ${test.attrs.flags.async ? DONE : ''}`);
         resolverCache.set(specifier, module);
         const loadModuleCompletion = module.LoadRequestedModules();
         if (loadModuleCompletion.PromiseState === 'rejected') {
-          Q(Throw(loadModuleCompletion.PromiseResult!, 'Raw', 'Module load failed'));
+          Q(ThrowCompletion(loadModuleCompletion.PromiseResult!));
         } else if (loadModuleCompletion.PromiseState === 'pending') {
           throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
         }
         Q(module.Link());
         const evaluateCompletion = Q(skipDebugger(module.Evaluate()));
         if (evaluateCompletion.PromiseState === 'rejected') {
-          Q(Throw(evaluateCompletion.PromiseResult!, 'Raw', 'Module evaluation failed'));
+          Q(ThrowCompletion(evaluateCompletion.PromiseResult!));
         }
       } else {
         Q(realm.evaluateScript(test.content, { specifier }));

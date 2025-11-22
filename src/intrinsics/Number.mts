@@ -22,6 +22,10 @@ import { bootstrapConstructor } from './bootstrap.mts';
 export interface NumberObject extends OrdinaryObject {
   readonly NumberData: NumberValue;
 }
+export function isNumberObject(o: Value): o is NumberObject {
+  return 'NumberData' in o;
+}
+
 /** https://tc39.es/ecma262/#sec-number-constructor-number-value */
 function* NumberConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   let n;

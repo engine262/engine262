@@ -17,7 +17,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
 
   const parseModule = (realm: ManagedRealm, resolved: string, attributes: Map<string, string>, source: string) => (attributes.get('type') === 'json' || resolved.endsWith('.json')
     ? realm.createJSONModule(resolved, source)
-    : realm.createSourceTextModule(resolved, source));
+    : realm.compileModule(source, { specifier: resolved }));
 
   const loadImportedModule: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, attributes, _hostDefined, finish) => {
     if (referrer instanceof Realm || referrer instanceof NullValue) {
