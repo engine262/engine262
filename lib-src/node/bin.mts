@@ -17,7 +17,6 @@ import {
   evalQ,
   Agent,
   ManagedRealm,
-  Throw,
   skipDebugger,
   type ValueCompletion,
   createTest262Intrinsics,
@@ -161,18 +160,18 @@ function oneShotEval(source: string, filename: string) {
   realm.scope(() => {
     const completion = evalQ((Q) => {
       if (argv.values.module || filename.endsWith('.mjs')) {
-        const module = Q(realm.createSourceTextModule(filename, source));
+        const module = Q(realm.compileModule(source, { specifier: filename }));
         realm.HostDefined.resolverCache?.set(filename, module);
         const load = Q(module.LoadRequestedModules());
         if (load.PromiseState === 'rejected') {
-          Q(Throw(load.PromiseResult!, 'Raw', load.PromiseResult!));
+          Q(ThrowCompletion(load.PromiseResult!));
         } else if (load.PromiseState === 'pending') {
           throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
         }
         Q(module.Link());
         const evaluate = Q(skipDebugger(module.Evaluate()));
         if (evaluate.PromiseState === 'rejected') {
-          Q(Throw(evaluate.PromiseResult!, 'Raw', evaluate.PromiseResult!));
+          Q(ThrowCompletion(evaluate.PromiseResult!));
         }
       } else {
         Q(realm.evaluateScript(source, { specifier: filename }));

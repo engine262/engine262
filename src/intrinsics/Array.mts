@@ -51,7 +51,9 @@ import {
 } from '../value.mts';
 import { __ts_cast__, OutOfRange } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
-import { asyncBuiltinFunctionPrologue, IfAbruptCloseAsyncIterator, IteratorValue } from '#self';
+import {
+  asyncBuiltinFunctionPrologue, IfAbruptCloseAsyncIterator, IteratorValue, Throw,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */
 function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
@@ -119,7 +121,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     mapping = false;
   } else {
     if (!IsCallable(mapper)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+      return Throw.TypeError('$1 is not a function', mapper);
     }
     mapping = true;
   }
@@ -271,7 +273,7 @@ function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefine
       xiii. Set k to k + 1.
       */
       if (k > MAX_SAFE_INTEGER) {
-        const error = ThrowCompletion(surroundingAgent.NewError('TypeError', 'OutOfRange', k));
+        const error = surroundingAgent.Throw('TypeError', 'OutOfRange', k);
         return Q(yield* AsyncIteratorClose(iteratorRecord, error));
       }
 

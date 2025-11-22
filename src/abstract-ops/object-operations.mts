@@ -38,7 +38,6 @@ import {
   F as toNumberValue, R, type FunctionObject, Realm,
   RequireObjectCoercible,
   GetIterator,
-  ThrowCompletion,
   IteratorClose,
   IteratorStepValue,
   F,
@@ -46,6 +45,7 @@ import {
   type ValueCompletion,
   ToPropertyKey,
   CanonicalizeKeyedCollectionKey,
+  Throw,
 } from '#self';
 
 
@@ -179,7 +179,7 @@ export function* GetMethod(V: Value, P: PropertyKeyValue): ValueEvaluator<Undefi
     return Value.undefined;
   }
   if (!IsCallable(func)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    return Throw.TypeError('$1 is not a function', func);
   }
   return func;
 }
@@ -573,7 +573,7 @@ export function* GroupBy(items: Value, callback: Value, keyCoercion: 'property' 
       j. Set k to k + 1.
     */
     if (k >= MAX_SAFE_INTEGER) {
-      const error = ThrowCompletion(surroundingAgent.NewError('TypeError', 'OutOfRange', k));
+      const error = surroundingAgent.Throw('TypeError', 'OutOfRange', k);
       return Q(yield* IteratorClose(iteratorRecord, error));
     }
     const next: Value | 'done' = Q(yield* IteratorStepValue(iteratorRecord));

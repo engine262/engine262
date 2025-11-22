@@ -11,7 +11,6 @@ import {
   Call, Construct, Assert,
   GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
-  CreateArrayFromList,
   FinishLoadingImportedModule,
   Realm,
   type FunctionObject,
@@ -28,6 +27,7 @@ import {
   ManagedRealm,
   SourceTextModuleRecord,
   type ModuleRequestRecord,
+  Throw,
 } from '../index.mts';
 import * as messages from '../messages.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -163,27 +163,12 @@ export class Agent {
   }
 
   // Generate a throw completion using message templates
+  /** @deprecated Use Throw */
   Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
-    const error = this.NewError(type, template, ...templateArgs);
-    return ThrowCompletion(error);
-  }
-
-  NewError<K extends keyof typeof messages>(type: ErrorType, template: K, ...templateArgs: Parameters<typeof messages[K]>): ObjectValue {
-    const message = (messages[template] as (...args: unknown[]) => string)(...templateArgs);
-    const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-    let error;
-    if (type === 'AggregateError') {
-      error = X(Construct(cons, [
-        X(CreateArrayFromList([])),
-        Value(message),
-      ]));
-    } else {
-      error = X(Construct(cons, [Value(message)]));
-    }
-    return error;
+    return Throw(type, template, ...templateArgs);
   }
 
   queueJob(queueName: string, job: () => void) {
