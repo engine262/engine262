@@ -65,9 +65,9 @@ if (args.values['failed-only']) {
   args.positionals = (await readFile(outputs.LastRunFailedList, { encoding: 'utf-8' })).split('\n');
 }
 
-const workersToStart = process.env.NUM_WORKERS
+const workersToStart = Math.min(1, process.env.NUM_WORKERS
   ? Number.parseInt(process.env.NUM_WORKERS, 10)
-  : Math.round(cpus().length * 0.75);
+  : Math.round(cpus().length * 0.75));
 const workers = Array.from({ length: workersToStart }, (_, index) => createWorker(index));
 /**
  * Do not replace this with reporter.workers.
@@ -373,7 +373,7 @@ function createWorker(workerId: number) {
   });
   c.on('exit', (code) => {
     if (code !== 0) {
-      process.exit(1);
+      fatal_exit(`Worker ${workerId} exited with code ${code}`);
     }
   });
   return c;

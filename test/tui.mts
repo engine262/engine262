@@ -295,6 +295,7 @@ export abstract class TestReporter extends EventTarget {
     test.status = 'skipped';
     test.skipReason = reason;
     test.skipFeature = feature ?? null;
+    test.content = '';
     this.skipped += 1;
     this.statsStale = true;
     test.endTime = Date.now();
@@ -302,11 +303,12 @@ export abstract class TestReporter extends EventTarget {
   }
 
   testFailed(testId: number) {
-    const test = this.tests.get(testId);
+    const test = this.tests.get(testId)!;
+    test.status = 'failed';
+    test.endTime = Date.now();
+    test.content = '';
     this.failed += 1;
     this.statsStale = true;
-    test!.status = 'failed';
-    test!.endTime = Date.now();
     this.dispatchEvent(new Event('stats'));
   }
 
@@ -315,9 +317,10 @@ export abstract class TestReporter extends EventTarget {
   }
 
   testPassed(testId: number) {
-    const test = this.tests.get(testId);
-    test!.status = 'passed';
-    test!.endTime = Date.now();
+    const test = this.tests.get(testId)!;
+    test.status = 'passed';
+    test.endTime = Date.now();
+    test.content = '';
     this.passed += 1;
     this.statsStale = true;
     this.dispatchEvent(new Event('stats'));
