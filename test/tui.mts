@@ -10,7 +10,7 @@ import { BarChart } from '@pppp606/ink-chart';
 import { link, type Test } from './base.mts';
 
 const { createElement: h } = React;
-export const isCI = process.env.CI && process.env.CONTINUOUS_INTEGRATION;
+export const isCI = process.env.CI || process.env.CONTINUOUS_INTEGRATION;
 export const supportColor = !isCI && styleText('red', 'test') !== 'test';
 
 function Fragment(...children: (React.JSX.Element | null)[]) {
@@ -295,6 +295,7 @@ export abstract class TestReporter extends EventTarget {
     test.status = 'skipped';
     test.skipReason = reason;
     test.skipFeature = feature ?? null;
+    test.content = '';
     this.skipped += 1;
     this.statsStale = true;
     test.endTime = Date.now();
@@ -302,11 +303,12 @@ export abstract class TestReporter extends EventTarget {
   }
 
   testFailed(testId: number) {
-    const test = this.tests.get(testId);
+    const test = this.tests.get(testId)!;
+    test.status = 'failed';
+    test.endTime = Date.now();
+    test.content = '';
     this.failed += 1;
     this.statsStale = true;
-    test!.status = 'failed';
-    test!.endTime = Date.now();
     this.dispatchEvent(new Event('stats'));
   }
 
@@ -315,9 +317,10 @@ export abstract class TestReporter extends EventTarget {
   }
 
   testPassed(testId: number) {
-    const test = this.tests.get(testId);
-    test!.status = 'passed';
-    test!.endTime = Date.now();
+    const test = this.tests.get(testId)!;
+    test.status = 'passed';
+    test.endTime = Date.now();
+    test.content = '';
     this.passed += 1;
     this.statsStale = true;
     this.dispatchEvent(new Event('stats'));
@@ -331,10 +334,13 @@ class BasicReporter extends TestReporter {
 
   start(): void {
     this.timer = setInterval(() => {
-      if (this.ready) {
-        console.log(`Total ${this.tests.size}, ${this.passed} passed, ${this.skipped} skipped, ${this.failed} failed, ${this.tests.size - this.passed - this.failed} pending`);
+      const {
+        failed, passed, pending, ready, skipped, total,
+      } = this.getStats();
+      if (ready) {
+        console.log(`Total ${total}, ${passed} passed, ${skipped} skipped, ${failed} failed, ${pending} pending`);
       } else {
-        console.log(`Total ${this.tests.size}, ${this.passed} passed, ${this.skipped} skipped, ${this.failed} failed`);
+        console.log(`Total ${total}, ${passed} passed, ${skipped} skipped, ${failed} failed`);
       }
       const seen = new Set();
       this.workers.forEach((task) => {
@@ -355,6 +361,10 @@ class BasicReporter extends TestReporter {
   override exit(): void {
     super.exit();
     clearInterval(this.timer);
+    const {
+      failed, passed, pending, skipped, total,
+    } = this.getStats();
+    console.log(`Total ${total}, ${passed} passed, ${skipped} skipped, ${failed} failed, ${pending} pending`);
     this.onExit.resolve();
   }
 }

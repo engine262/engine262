@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-multi-assign */
 import * as path from 'node:path';
@@ -176,6 +177,7 @@ ${test.attrs.flags.async ? DONE : ''}`);
 
 function handleSendError(e: any) {
   if (e) {
+    console.error(e);
     process.exit(1);
   }
 }

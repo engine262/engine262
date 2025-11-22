@@ -21,7 +21,7 @@ export const args = util.parseArgs({
     'run-slow': { type: 'boolean' },
     'failed-only': { type: 'boolean', short: 'f' },
     'strict-only': { type: 'boolean' },
-    'fast': { type: 'boolean', short: 'q', default: !isCI },
+    'fast': { type: 'boolean', short: 'q', default: !!isCI },
 
     'verbose': { type: 'boolean', short: 'v' },
     'vv': { type: 'boolean', short: 'V' },

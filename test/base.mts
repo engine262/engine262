@@ -1,15 +1,9 @@
 import fs from 'node:fs';
-import util from 'node:util';
 import { loadImportedModuleSync } from '../lib-src/node/module.mts';
 import { supportColor, type SkipReason } from './tui.mts';
 import {
   Agent, ManagedRealm, type OrdinaryObject, SourceTextModuleRecord, OrdinaryObjectCreate, createTest262Intrinsics,
 } from '#self';
-
-process.on('unhandledRejection', (reason) => {
-  fs.writeSync(0, `\n${util.inspect(reason)}\n`);
-  process.exit(1);
-});
 
 export interface Attrs {
   description: string;
