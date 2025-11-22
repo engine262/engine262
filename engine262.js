@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 6ee26d50b141eb733abd987602662527b6718c15
+ * engine262 0.0.1 707b11669400a46952e43d6a586811feb28d44bf
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1417,24 +1417,14 @@
     getFunctionName() {
       if (isFunctionObject(this.context.Function)) {
         const name = this.context.Function.properties.get('name');
-        if (name && name.Value) {
-          /* X */
-          let _temp = ToString(name.Value);
-          /* node:coverage ignore next */
-          if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-          /* node:coverage ignore next */
-          if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToString(name.Value) returned an abrupt completion", {
-            cause: _temp
-          });
-          /* node:coverage ignore next */
-          if (_temp instanceof Completion) _temp = _temp.Value;
-          return _temp.stringValue();
+        if (name && name.Value && name.Value instanceof JSStringValue) {
+          return name.Value.stringValue();
         }
       }
       return null;
     }
     getSpecifier() {
-      if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
+      if (!(this.context.ScriptOrModule instanceof NullValue)) {
         return this.context.ScriptOrModule.HostDefined.specifier;
       }
       return null;
@@ -1606,12 +1596,12 @@
   }
   function* errorStackToString(O, stack, nativeStack = Value.undefined) {
     /* ReturnIfAbrupt */
-    let _temp2 = yield* Call(exports.surroundingAgent.intrinsic('%Error.prototype.toString%'), O);
+    let _temp = yield* Call(exports.surroundingAgent.intrinsic('%Error.prototype.toString%'), O);
     /* node:coverage ignore next */
-    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    if (_temp instanceof AbruptCompletion) return _temp;
     /* node:coverage ignore next */
-    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-    let errorString = _temp2.stringValue();
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    let errorString = _temp.stringValue();
     stack.forEach(s => {
       errorString = `${errorString}\n    at ${s.toString()}`;
     });
