@@ -65,9 +65,12 @@ if (args.values['failed-only']) {
   args.positionals = (await readFile(outputs.LastRunFailedList, { encoding: 'utf-8' })).split('\n');
 }
 
-const workersToStart = process.env.NUM_WORKERS
-  ? Number.parseInt(process.env.NUM_WORKERS, 10)
-  : Math.round(cpus().length * 0.75);
+const workersToStart = Math.max(
+  1,
+  process.env.NUM_WORKERS
+    ? Number.parseInt(process.env.NUM_WORKERS, 10)
+    : cpus().length - 2,
+);
 const workers = Array.from({ length: workersToStart }, (_, index) => createWorker(index));
 /**
  * Do not replace this with reporter.workers.
@@ -335,7 +338,7 @@ function createWorker(workerId: number) {
         distributeTest();
         if (assertToBeFailedList.has(message.file)) {
           if (currentRunFailedTestFiles.has(message.file)) {
-            return undefined;
+            return reporter.testFailed(message.testId);
           } else {
             currentRunFailedTestFiles.add(message.file);
             return fail({
@@ -357,7 +360,7 @@ function createWorker(workerId: number) {
           return reporter.assertFailedTestFails(message.testId);
         }
         if (currentRunFailedTestFiles.has(message.file)) {
-          return fail(message, false);
+          return reporter.testFailed(message.testId);
         }
         currentRunFailedTestFiles.add(message.file);
         outputStreams.LastRunFailedList.write(`${message.file}\n`);
@@ -372,8 +375,8 @@ function createWorker(workerId: number) {
     }
   });
   c.on('exit', (code) => {
-    if (code !== 0) {
-      process.exit(1);
+    if (code !== 0 && code !== null) {
+      fatal_exit(`Worker ${workerId} exited with code ${code}`);
     }
   });
   return c;
