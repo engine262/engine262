@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 0574c6b92a2925de851f895445b7cfd7e97cc0ba
+ * engine262 0.0.1 dd732d2c6976ca9801058c60957511800486afcf
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -3428,7 +3428,7 @@ function ModuleRequests(node) {
         for (const item of node.ModuleItemList) {
           const additionalRequests = ModuleRequests(item);
           for (const mr of additionalRequests) {
-            if (!requests.some(r => ModuleRequestsEqual(r, mr) && (surroundingAgent.feature('import-defer') ? r.Phase === mr.Phase : true))) {
+            if (!requests.some(r => ModuleRequestsEqual(r, mr) && r.Phase === mr.Phase)) {
               requests.push(mr);
             }
           }
@@ -3442,7 +3442,7 @@ function ModuleRequests(node) {
         return [{
           Specifier: specifier,
           Attributes: attributes,
-          /* [import-defer] */Phase: node.Phase
+          Phase: node.Phase
         }];
       }
       if (node.ModuleSpecifier) {
@@ -3451,7 +3451,7 @@ function ModuleRequests(node) {
         return [{
           Specifier: specifier,
           Attributes: attributes,
-          /* [import-defer] */Phase: node.Phase
+          Phase: node.Phase
         }];
       }
       throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
@@ -3462,7 +3462,7 @@ function ModuleRequests(node) {
         return [{
           Specifier: specifier,
           Attributes: attributes,
-          /* [import-defer] */Phase: 'evaluation'
+          Phase: 'evaluation'
         }];
       }
       return [];
@@ -5705,19 +5705,18 @@ class CyclicModuleRecord extends AbstractModuleRecord {
   /** https://tc39.es/ecma262/#sec-moduleevaluation */
   *Evaluate() {
     let module = this;
-    if (surroundingAgent.feature('import-defer')) {
-      // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
-      Assert(function getModules(module, list) {
-        if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
-          return list;
-        }
-        list.push(module);
-        for (const r of module.RequestedModules) {
-          getModules(GetImportedModule(module, r), list);
-        }
+
+    // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
+    Assert(function getModules(module, list) {
+      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
         return list;
-      }(this, []).every(m => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new'), "(function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {\n        if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {\n          return list;\n        }\n        list.push(module);\n        for (const r of module.RequestedModules) {\n          getModules(GetImportedModule(module, r), list);\n        }\n        return list;\n      }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new')");
-    }
+      }
+      list.push(module);
+      for (const r of module.RequestedModules) {
+        getModules(GetImportedModule(module, r), list);
+      }
+      return list;
+    }(this, []).every(m => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new'), "(function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {\n      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {\n        return list;\n      }\n      list.push(module);\n      for (const r of module.RequestedModules) {\n        getModules(GetImportedModule(module, r), list);\n      }\n      return list;\n    }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new')");
 
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
@@ -6026,7 +6025,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
       // b. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
         // i. Let namespace be GetModuleNamespace(importedModule).
-        const namespace = GetModuleNamespace(importedModule, /* [import-defer] */ie.ModuleRequest.Phase);
+        const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         /* X */
         let _temp5 = env.CreateImmutableBinding(ie.LocalName, Value.true);
@@ -6060,7 +6059,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
         // iii. If resolution.[[BindingName]] is ~namespace~, then
         if (resolution.BindingName === 'namespace') {
           // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
-          const namespace = GetModuleNamespace(resolution.Module, /* [import-defer] */'evaluation');
+          const namespace = GetModuleNamespace(resolution.Module, 'evaluation');
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           /* X */
           let _temp7 = env.CreateImmutableBinding(ie.LocalName, Value.true);
@@ -7790,14 +7789,10 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className, sourceTe
   F.Fields = instanceFields;
   // 30. For each PrivateElement method of staticPrivateMethods, do
   for (const method of staticPrivateMethods) {
-    /* X */
-    let _temp1 = PrivateMethodOrAccessorAdd(method, F);
+    /* ReturnIfAbrupt */
+    let _temp1 = yield* PrivateMethodOrAccessorAdd(method, F);
     /* node:coverage ignore next */
-    if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
-    /* node:coverage ignore next */
-    if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! PrivateMethodOrAccessorAdd(method, F) returned an abrupt completion", {
-      cause: _temp1
-    });
+    if (_temp1 instanceof AbruptCompletion) return _temp1;
     /* node:coverage ignore next */
     if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
   }
@@ -8593,11 +8588,11 @@ function* Evaluate_ImportCall(ImportCall) {
   if (_temp instanceof AbruptCompletion) return _temp;
   /* node:coverage ignore next */
   if (_temp instanceof Completion) _temp = _temp.Value;
-  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression, /* [import-defer] */ImportCall.Phase);
+  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression, ImportCall.Phase);
 }
 Evaluate_ImportCall.section = 'https://tc39.es/ecma262/#sec-import-calls';
 /** https://tc39.es/ecma262/#sec-evaluate-import-call */
-function* EvaluateImportCall(specifiersExpression, optionsExpression, /* [import-defer] */phase) {
+function* EvaluateImportCall(specifiersExpression, optionsExpression, phase) {
   /* X */
   let _temp2 = GetActiveScriptOrModule();
   /* node:coverage ignore next */
@@ -8801,7 +8796,7 @@ function* EvaluateImportCall(specifiersExpression, optionsExpression, /* [import
   const moduleRequest = {
     Specifier: specifierString,
     Attributes: attributes,
-    /* [import-defer] */Phase: phase
+    Phase: phase
   };
   // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
   HostLoadImportedModule(referrer, moduleRequest, undefined, promiseCapability);
@@ -14873,7 +14868,6 @@ const ConstDeclarationMissingInitializer = () => 'Missing initialization of cons
 const ConstructorNonCallable = f => `${i(f)} cannot be invoked without new`;
 const CouldNotResolveModule = s => `Could not resolve module ${i(s)}`;
 const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
-/* [import-defer] */
 const DeferredModuleNotReady = m => `Module ${m.HostDefined?.specifier ?? ''} is not ready for synchronous execution`;
 const DeleteIdentifier = () => 'Delete of identifier in strict mode';
 const DeletePrivateName = () => 'Private fields cannot be deleted';
@@ -18122,7 +18116,7 @@ class ExpressionParser extends FunctionParser {
               result = this.finishNode(node, 'ImportMeta');
               break;
             }
-            if (this.feature('import-defer') && this.eat('defer')) {
+            if (this.eat('defer')) {
               node.Phase = 'defer';
             } else {
               this.unexpected();
@@ -19978,7 +19972,7 @@ class ModuleParser extends StatementParser {
     if (this.test(Token.STRING)) {
       node.ModuleSpecifier = this.parsePrimaryExpression();
     } else {
-      if (this.feature('import-defer') && this.test('defer') && this.testAhead(Token.MUL)) {
+      if (this.test('defer') && this.testAhead(Token.MUL)) {
         this.next(); // defer
         node.Phase = 'defer';
         const importClause = this.startNode();
@@ -27377,17 +27371,9 @@ function shouldStepOnNode() {
 }
 
 const FEATURES = [{
-  name: 'FinalizationRegistry.prototype.cleanupSome',
+  name: 'FinalizationRegistry#cleanupSome',
   flag: 'cleanup-some',
   url: 'https://github.com/tc39/proposal-cleanup-some'
-}, {
-  name: 'Uint8Array to/from base64 and hex',
-  flag: 'uint8array-base64',
-  url: 'https://tc39.es/proposal-arraybuffer-base64/'
-}, {
-  name: 'import defer',
-  flag: 'import-defer',
-  url: 'https://tc39.es/proposal-defer-import-eval/'
 }];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
@@ -30869,7 +30855,7 @@ function* DefineField(receiver, fieldRecord) {
   // 5. If fieldName is a Private Name, then
   if (fieldName instanceof PrivateName) {
     /* ReturnIfAbrupt */
-    let _temp4 = PrivateFieldAdd(fieldName, receiver, initValue);
+    let _temp4 = yield* PrivateFieldAdd(fieldName, receiver, initValue);
     /* node:coverage ignore next */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* node:coverage ignore next */
@@ -30905,7 +30891,7 @@ function* InitializeInstanceElements(O, constructor) {
   // 2. For each PrivateElement method of methods, do
   for (const method of methods) {
     /* ReturnIfAbrupt */
-    let _temp7 = PrivateMethodOrAccessorAdd(method, O);
+    let _temp7 = yield* PrivateMethodOrAccessorAdd(method, O);
     /* node:coverage ignore next */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* node:coverage ignore next */
@@ -33348,7 +33334,7 @@ function bootstrapPromise(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
-function ContinueDynamicImport(promiseCapability, moduleCompletion, /* [import-defer] */phase) {
+function ContinueDynamicImport(promiseCapability, moduleCompletion, phase) {
   // 1. If moduleCompletion is an abrupt completion, then
   if (moduleCompletion instanceof AbruptCompletion) {
     /* X */
@@ -33407,15 +33393,13 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion, /* [import-d
       return;
     }
     let evaluatePromise;
-    if (!surroundingAgent.feature('import-defer')) {
-      // c. Let evaluatePromise be module.Evaluate().
-      evaluatePromise = yield* module.Evaluate();
-    }
+    // c. Let evaluatePromise be module.Evaluate().
+    evaluatePromise = yield* module.Evaluate();
 
     // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {
       // i. Let namespace be GetModuleNamespace(module).
-      const namespace = GetModuleNamespace(module, /* [import-defer] */phase);
+      const namespace = GetModuleNamespace(module, phase);
       // ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace »).
       /* X */
       let _temp4 = Call(promiseCapability.Resolve, Value.undefined, [namespace]);
@@ -33430,58 +33414,55 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion, /* [import-d
       // iii. Return unused.
     };
 
-    /** https://tc39.es/proposal-defer-import-eval/#sec-ContinueDynamicImport */
-    if (surroundingAgent.feature('import-defer')) {
-      // e. If phase is "defer", then
-      if (phase === 'defer') {
-        // i. Let evaluationList be module.GatherAsynchronousTransitiveDependencies().
-        const evaluationList = GatherAsynchronousTransitiveDependencies(module);
-        // ii. If evaluationList is empty, then
-        if (evaluationList.length === 0) {
-          // 1. Perform fulfilledClosure().
-          fulfilledClosure();
-          // 2. Return unused.
-          return;
-        }
-        // iii. Let asyncDepsEvaluationPromises be a new empty List.
-        const asyncDepsEvaluationPromises = [];
-        // iv. For each dep in evaluationList, append dep.Evaluate() to asyncDepsEvaluationPromises.
-        for (const dep of evaluationList) {
-          asyncDepsEvaluationPromises.push(yield* dep.Evaluate());
-        }
-        // v. Let iterator be CreateListIteratorRecord(asyncDepsEvaluationPromises).
-        const iterator = CreateListIteratorRecord(asyncDepsEvaluationPromises);
-        // vi. Let pc be ! NewPromiseCapability(%Promise%).
-        /* X */
-        let _temp5 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-        /* node:coverage ignore next */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
-        /* node:coverage ignore next */
-        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
-          cause: _temp5
-        });
-        /* node:coverage ignore next */
-        if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-        const pc = _temp5;
-        // vii. Let evaluatePromise be ! PerformPromiseAll(iterator, %Promise%, pc, %Promise.resolve%).
-        /* X */
-        let _temp6 = PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%'));
-        /* node:coverage ignore next */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
-        /* node:coverage ignore next */
-        if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%')) returned an abrupt completion", {
-          cause: _temp6
-        });
-        /* node:coverage ignore next */
-        if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
-        evaluatePromise = _temp6;
-      } else {
-        // f. Else,
-        // i. Assert: phase is EVALUATION.
-        Assert(phase === 'evaluation', "phase === 'evaluation'");
-        // ii. Let evaluatePromise be module.Evaluate().
-        evaluatePromise = yield* module.Evaluate();
+    // e. If phase is "defer", then
+    if (phase === 'defer') {
+      // i. Let evaluationList be module.GatherAsynchronousTransitiveDependencies().
+      const evaluationList = GatherAsynchronousTransitiveDependencies(module);
+      // ii. If evaluationList is empty, then
+      if (evaluationList.length === 0) {
+        // 1. Perform fulfilledClosure().
+        fulfilledClosure();
+        // 2. Return unused.
+        return;
       }
+      // iii. Let asyncDepsEvaluationPromises be a new empty List.
+      const asyncDepsEvaluationPromises = [];
+      // iv. For each dep in evaluationList, append dep.Evaluate() to asyncDepsEvaluationPromises.
+      for (const dep of evaluationList) {
+        asyncDepsEvaluationPromises.push(yield* dep.Evaluate());
+      }
+      // v. Let iterator be CreateListIteratorRecord(asyncDepsEvaluationPromises).
+      const iterator = CreateListIteratorRecord(asyncDepsEvaluationPromises);
+      // vi. Let pc be ! NewPromiseCapability(%Promise%).
+      /* X */
+      let _temp5 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+      /* node:coverage ignore next */
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+      /* node:coverage ignore next */
+      if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+        cause: _temp5
+      });
+      /* node:coverage ignore next */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      const pc = _temp5;
+      // vii. Let evaluatePromise be ! PerformPromiseAll(iterator, %Promise%, pc, %Promise.resolve%).
+      /* X */
+      let _temp6 = PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%'));
+      /* node:coverage ignore next */
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+      /* node:coverage ignore next */
+      if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%')) returned an abrupt completion", {
+        cause: _temp6
+      });
+      /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      evaluatePromise = _temp6;
+    } else {
+      // f. Else,
+      // i. Assert: phase is EVALUATION.
+      Assert(phase === 'evaluation', "phase === 'evaluation'");
+      // ii. Let evaluatePromise be module.Evaluate().
+      evaluatePromise = yield* module.Evaluate();
     }
 
     // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
@@ -33931,21 +33912,16 @@ const InternalMethods$4 = {
   },
   *GetOwnProperty(P) {
     const O = this;
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return OrdinaryGetOwnProperty(O, P);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      /* ReturnIfAbrupt */
-      let _temp = yield* GetModuleExportsList(O);
-      /* node:coverage ignore next */
-      if (_temp instanceof AbruptCompletion) return _temp;
-      /* node:coverage ignore next */
-      if (_temp instanceof Completion) _temp = _temp.Value;
-      exports = _temp;
-    } else {
-      exports = O.Exports;
-    }
+    /* ReturnIfAbrupt */
+    let _temp = yield* GetModuleExportsList(O);
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    const exports = _temp;
     if (!exports.has(P)) {
       return Value.undefined;
     }
@@ -33965,7 +33941,7 @@ const InternalMethods$4 = {
   },
   *DefineOwnProperty(P, Desc) {
     const O = this;
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return yield* OrdinaryDefineOwnProperty(O, P, Desc);
     }
     /* ReturnIfAbrupt */
@@ -33997,21 +33973,16 @@ const InternalMethods$4 = {
   },
   *HasProperty(P) {
     const O = this;
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return yield* OrdinaryHasProperty(O, P);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      /* ReturnIfAbrupt */
-      let _temp4 = yield* GetModuleExportsList(O);
-      /* node:coverage ignore next */
-      if (_temp4 instanceof AbruptCompletion) return _temp4;
-      /* node:coverage ignore next */
-      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
-      exports = _temp4;
-    } else {
-      exports = O.Exports;
-    }
+    /* ReturnIfAbrupt */
+    let _temp4 = yield* GetModuleExportsList(O);
+    /* node:coverage ignore next */
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    const exports = _temp4;
     if (exports.has(P)) {
       return Value.true;
     }
@@ -34024,23 +33995,17 @@ const InternalMethods$4 = {
     // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
     // 2. If Type(P) is Symbol, then
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       // a. Return ? OrdinaryGet(O, P, Receiver).
       return yield* OrdinaryGet(O, P, Receiver);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      /* ReturnIfAbrupt */
-      let _temp5 = yield* GetModuleExportsList(O);
-      /* node:coverage ignore next */
-      if (_temp5 instanceof AbruptCompletion) return _temp5;
-      /* node:coverage ignore next */
-      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-      exports = _temp5;
-    } else {
-      // 3. Let exports be O.[[Exports]].
-      exports = O.Exports;
-    }
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* GetModuleExportsList(O);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    const exports = _temp5;
     // 4. If P is not an element of exports, return undefined.
     if (!exports.has(P)) {
       return Value.undefined;
@@ -34058,7 +34023,7 @@ const InternalMethods$4 = {
     // 10. If binding.[[BindingName]] is ~namespace~, then
     if (binding.BindingName === 'namespace') {
       // a. Return ? GetModuleNamespace(targetModule).
-      return GetModuleNamespace(targetModule, /* [import-defer] */'evaluation');
+      return GetModuleNamespace(targetModule, 'evaluation');
     }
     // 11. Let targetEnv be targetModule.[[Environment]].
     const targetEnv = targetModule.Environment;
@@ -34075,21 +34040,16 @@ const InternalMethods$4 = {
   *Delete(P) {
     const O = this;
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return yield* OrdinaryDelete(O, P);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      /* ReturnIfAbrupt */
-      let _temp6 = yield* GetModuleExportsList(O);
-      /* node:coverage ignore next */
-      if (_temp6 instanceof AbruptCompletion) return _temp6;
-      /* node:coverage ignore next */
-      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
-      exports = _temp6;
-    } else {
-      exports = O.Exports;
-    }
+    /* ReturnIfAbrupt */
+    let _temp6 = yield* GetModuleExportsList(O);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    const exports = _temp6;
     if (exports.has(P)) {
       return Value.false;
     }
@@ -34098,19 +34058,15 @@ const InternalMethods$4 = {
   *OwnPropertyKeys() {
     const O = this;
     let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      /* ReturnIfAbrupt */
-      let _temp7 = yield* GetModuleExportsList(O);
-      /* node:coverage ignore next */
-      if (_temp7 instanceof AbruptCompletion) return _temp7;
-      /* node:coverage ignore next */
-      if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
-      exports = _temp7;
-      if (O.Deferred && exports.has('then')) {
-        exports = [...exports].filter(x => x.stringValue() !== 'then');
-      }
-    } else {
-      exports = O.Exports;
+    /* ReturnIfAbrupt */
+    let _temp7 = yield* GetModuleExportsList(O);
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    exports = _temp7;
+    if (O.Deferred && exports.has('then')) {
+      exports = [...exports].filter(x => x.stringValue() !== 'then');
     }
     /* X */
     let _temp8 = OrdinaryOwnPropertyKeys(O);
@@ -34128,11 +34084,7 @@ const InternalMethods$4 = {
 };
 
 /** https://tc39.es/ecma262/#sec-modulenamespacecreate */
-function ModuleNamespaceCreate(module, exports, /* [import-defer] */phase) {
-  if (!surroundingAgent.feature('import-defer')) {
-    // 1. Assert: module.[[Namespace]] is EMPTY.
-    Assert(module.Namespace === undefined, "module.Namespace === undefined");
-  }
+function ModuleNamespaceCreate(module, exports, phase) {
   // 2. Let internalSlotsList be the internal slots listed in Table 31.
   const internalSlotsList = ['Module', 'Exports'];
   // 3. Let M be MakeBasicObject(internalSlotsList).
@@ -34169,54 +34121,39 @@ function ModuleNamespaceCreate(module, exports, /* [import-defer] */phase) {
   });
   // 7. Set M.[[Exports]] to sortedExports.
   M.Exports = new JSStringSet(sortedExports);
-  if (!surroundingAgent.feature('import-defer')) {
-    // 8. Create own properties of M corresponding to the definitions in 26.3.
-    M.properties.set(wellKnownSymbols.toStringTag, _Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-      Value: Value('Module')
-    }));
-    // 9. Set module.[[Namespace]] to M.
-    module.Namespace = M;
+  let toStringTag;
+  // 9. If phase is defer, then
+  if (phase === 'defer') {
+    // a. Assert: module.[[DeferredNamespace]] is empty.
+    Assert(module.DeferredNamespace === undefined, "module.DeferredNamespace === undefined");
+    // b. Set module.[[DeferredNamespace]] to M.
+    module.DeferredNamespace = M;
+    // c. Set M.[[Deferred]] to true.
+    M.Deferred = true;
+    // d. Let toStringTag be "Deferred Module".
+    toStringTag = Value('Deferred Module');
   } else {
-    /** https://tc39.es/proposal-defer-import-eval/#sec-modulenamespacecreate */
-
-    let toStringTag;
-    // 9. If phase is defer, then
-    if (phase === 'defer') {
-      // a. Assert: module.[[DeferredNamespace]] is empty.
-      Assert(module.DeferredNamespace === undefined, "module.DeferredNamespace === undefined");
-      // b. Set module.[[DeferredNamespace]] to M.
-      module.DeferredNamespace = M;
-      // c. Set M.[[Deferred]] to true.
-      M.Deferred = true;
-      // d. Let toStringTag be "Deferred Module".
-      toStringTag = Value('Deferred Module');
-    } else {
-      // 10. Else,
-      // a. Assert: module.[[Namespace]] is empty.
-      Assert(module.Namespace === undefined, "module.Namespace === undefined");
-      // b. Set module.[[Namespace]] to M.
-      module.Namespace = M;
-      // c. Set M.[[Deferred]] to false.
-      M.Deferred = false;
-      // d. Let toStringTag be "Module".
-      toStringTag = Value('Module');
-    }
-    // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.
-    M.properties.set(wellKnownSymbols.toStringTag, _Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-      Value: toStringTag
-    }));
+    // 10. Else,
+    // a. Assert: module.[[Namespace]] is empty.
+    Assert(module.Namespace === undefined, "module.Namespace === undefined");
+    // b. Set module.[[Namespace]] to M.
+    module.Namespace = M;
+    // c. Set M.[[Deferred]] to false.
+    M.Deferred = false;
+    // d. Let toStringTag be "Module".
+    toStringTag = Value('Module');
   }
+  // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.
+  M.properties.set(wellKnownSymbols.toStringTag, _Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+    Value: toStringTag
+  }));
   // 10. Return M.
   return M;
 }
 ModuleNamespaceCreate.section = 'https://tc39.es/ecma262/#sec-modulenamespacecreate';
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-IsSymbolLikeNamespaceKey */
 function IsSymbolLikeNamespaceKey(P, ns) {
   if (P instanceof SymbolValue) {
@@ -34228,7 +34165,6 @@ function IsSymbolLikeNamespaceKey(P, ns) {
   return false;
 }
 IsSymbolLikeNamespaceKey.section = 'https://tc39.es/proposal-defer-import-eval/#sec-IsSymbolLikeNamespaceKey';
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-GetModuleExportsList */
 function* GetModuleExportsList(O) {
   if (O.Deferred) {
@@ -34246,7 +34182,6 @@ function* GetModuleExportsList(O) {
   return O.Exports;
 }
 GetModuleExportsList.section = 'https://tc39.es/proposal-defer-import-eval/#sec-GetModuleExportsList';
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-ReadyForSyncExecution */
 function ReadyForSyncExecution(module, seen) {
   if (!(module instanceof CyclicModuleRecord)) {
@@ -34458,13 +34393,8 @@ function InnerModuleLinking(module, stack, index) {
 InnerModuleLinking.section = 'https://tc39.es/ecma262/#sec-InnerModuleLinking';
 /** https://tc39.es/ecma262/#sec-EvaluateModuleSync */
 function* EvaluateModuleSync(module) {
-  if (!surroundingAgent.feature('import-defer')) {
-    // 1. Assert: module is not a Cyclic Module Record.
-    Assert(!(module instanceof CyclicModuleRecord), "!(module instanceof CyclicModuleRecord)");
-  } else {
-    // 1. Assert: If module is a Cyclic Module Record, ReadyForSyncExecution(module) is true.
-    Assert(module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true, "module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true");
-  }
+  // 1. Assert: If module is a Cyclic Module Record, ReadyForSyncExecution(module) is true.
+  Assert(module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true, "module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true");
   // 2. Let promise be module.Evaluate()./
   const promise = yield* module.Evaluate();
   // 3. Assert: promise.[[PromiseState]] is either fulfilled or rejected.
@@ -34512,27 +34442,23 @@ function* InnerModuleEvaluation(module, stack, index) {
   module.PendingAsyncDependencies = 0;
   module.AsyncParentModules = [];
   index += 1;
-  let evaluationList;
-  if (surroundingAgent.feature('import-defer')) {
-    /** https://tc39.es/proposal-defer-import-eval/#sec-innermoduleevaluation */
-    evaluationList = [];
-    for (const request of module.RequestedModules) {
-      const requiredModule = GetImportedModule(module, request);
-      if (request.Phase === 'defer') {
-        const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule);
-        for (const additionalModule of additionalModules) {
-          if (!evaluationList.includes(additionalModule)) {
-            evaluationList.push(additionalModule);
-          }
+  const evaluationList = [];
+  for (const request of module.RequestedModules) {
+    const requiredModule = GetImportedModule(module, request);
+    if (request.Phase === 'defer') {
+      const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule);
+      for (const additionalModule of additionalModules) {
+        if (!evaluationList.includes(additionalModule)) {
+          evaluationList.push(additionalModule);
         }
-      } else if (!evaluationList.includes(requiredModule)) {
-        evaluationList.push(requiredModule);
       }
+    } else if (!evaluationList.includes(requiredModule)) {
+      evaluationList.push(requiredModule);
     }
   }
   stack.push(module);
-  for (const required of surroundingAgent.feature('import-defer') ? evaluationList : module.RequestedModules) {
-    let requiredModule = surroundingAgent.feature('import-defer') ? required : GetImportedModule(module, required);
+  for (const required of evaluationList) {
+    let requiredModule = required;
     /* ReturnIfAbrupt */
     let _temp7 = yield* InnerModuleEvaluation(requiredModule, stack, index);
     /* node:coverage ignore next */
@@ -34601,7 +34527,6 @@ function* InnerModuleEvaluation(module, stack, index) {
   return index;
 }
 InnerModuleEvaluation.section = 'https://tc39.es/ecma262/#sec-innermoduleevaluation';
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-GatherAsynchronousTransitiveDependencies  */
 function GatherAsynchronousTransitiveDependencies(module, seen) {
   // 1. If seen is not present, set seen to a new empty List.
@@ -34885,7 +34810,7 @@ function FinishLoadingImportedModule(referrer, moduleRequest, result, state) {
     // 3. Else,
   } else {
     // a. Perform ContinueDynamicImport(payload, result).
-    ContinueDynamicImport(state, result, /* [import-defer] */moduleRequest.Phase);
+    ContinueDynamicImport(state, result, moduleRequest.Phase);
   }
 
   // 4. Return unused.
@@ -34907,13 +34832,13 @@ function AllImportAttributesSupported(attributes) {
 }
 AllImportAttributesSupported.section = 'https://tc39.es/ecma262/#sec-AllImportAttributesSupported';
 /** https://tc39.es/ecma262/#sec-getmodulenamespace */
-function GetModuleNamespace(module, /* [import-defer] */phase) {
+function GetModuleNamespace(module, phase) {
   // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
   if (module instanceof CyclicModuleRecord) {
     Assert(module.Status !== 'new' && module.Status !== 'unlinked', "module.Status !== 'new' && module.Status !== 'unlinked'");
   }
   // 2. Let namespace be module.[[Namespace]].
-  let namespace = surroundingAgent.feature('import-defer') && phase === 'defer' ? module.DeferredNamespace : module.Namespace;
+  let namespace = phase === 'defer' ? module.DeferredNamespace : module.Namespace;
   // 3. If namespace is empty, then
   if (namespace === undefined) {
     // a. Let exportedNames be module.GetExportedNames().
@@ -34930,7 +34855,7 @@ function GetModuleNamespace(module, /* [import-defer] */phase) {
       }
     }
     // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).
-    namespace = ModuleNamespaceCreate(module, unambiguousNames, /* [import-defer] */phase);
+    namespace = ModuleNamespaceCreate(module, unambiguousNames, phase);
   }
   // 4. Return namespace.
   return namespace;
@@ -36428,21 +36353,30 @@ function* PrivateSet(O, P, value) {
 }
 
 /** https://tc39.es/ecma262/#sec-privatemethodoraccessoradd */
-function PrivateMethodOrAccessorAdd(method, O) {
+function* PrivateMethodOrAccessorAdd(method, O) {
   // 1. Assert: method.[[Kind]] is either method or accessor.
   Assert(method.Kind === 'method' || method.Kind === 'accessor', "method.Kind === 'method' || method.Kind === 'accessor'");
-  // 2. Let entry be ! PrivateElementFind(method.[[Key]], O).
-  /* X */
-  let _temp4 = PrivateElementFind(method.Key, O);
+  /* ReturnIfAbrupt */
+  let _temp4 = yield* IsExtensible(O);
   /* node:coverage ignore next */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
-  /* node:coverage ignore next */
-  if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! PrivateElementFind(method.Key, O) returned an abrupt completion", {
-    cause: _temp4
-  });
+  if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* node:coverage ignore next */
   if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
-  const entry = _temp4;
+  if (_temp4 === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'Raw', 'O is not extensible');
+  }
+  // 2. Let entry be ! PrivateElementFind(method.[[Key]], O).
+  /* X */
+  let _temp5 = PrivateElementFind(method.Key, O);
+  /* node:coverage ignore next */
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+  /* node:coverage ignore next */
+  if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! PrivateElementFind(method.Key, O) returned an abrupt completion", {
+    cause: _temp5
+  });
+  /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const entry = _temp5;
   // 3. If entry is not empty, throw a TypeError exception.
   if (entry !== undefined) {
     return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', method.Key);
@@ -36455,19 +36389,28 @@ function PrivateMethodOrAccessorAdd(method, O) {
 }
 PrivateMethodOrAccessorAdd.section = 'https://tc39.es/ecma262/#sec-privatemethodoraccessoradd';
 /** https://tc39.es/ecma262/#sec-privatefieldadd */
-function PrivateFieldAdd(P, O, value) {
+function* PrivateFieldAdd(P, O, value) {
   /* X */
-  let _temp5 = PrivateElementFind(P, O);
+  let _temp6 = PrivateElementFind(P, O);
   /* node:coverage ignore next */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
   /* node:coverage ignore next */
-  if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! PrivateElementFind(P, O) returned an abrupt completion", {
-    cause: _temp5
+  if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! PrivateElementFind(P, O) returned an abrupt completion", {
+    cause: _temp6
   });
   /* node:coverage ignore next */
-  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
   // 1. Let entry be ! PrivateElementFind(P, O).
-  const entry = _temp5;
+  const entry = _temp6;
+  /* ReturnIfAbrupt */
+  let _temp7 = yield* IsExtensible(O);
+  /* node:coverage ignore next */
+  if (_temp7 instanceof AbruptCompletion) return _temp7;
+  /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  if (_temp7 === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'Raw', 'O is not extensible');
+  }
   // 2. If entry is not empty, throw a TypeError exception.
   if (entry !== undefined) {
     return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', P);
@@ -56756,9 +56699,6 @@ function GetOptionsObject(options) {
 }
 GetOptionsObject.section = 'https://tc39.es/ecma262/#sec-getoptionsobject';
 function bootstrapUint8Array(realmRec) {
-  if (!surroundingAgent.feature('uint8array-base64')) {
-    return;
-  }
   const proto = realmRec.Intrinsics['%Uint8Array.prototype%'];
   const constructor = realmRec.Intrinsics['%Uint8Array%'];
   assignProps(realmRec, proto, [['toBase64', Uint8Array_prototype_toBase64, 0], ['setFromBase64', Uint8Array_prototype_setFromBase64, 1], ['toHex', Uint8Array_prototype_toHex, 0], ['setFromHex', Uint8Array_prototype_setFromHex, 1]]);
