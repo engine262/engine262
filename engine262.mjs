@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 0b90e51ec9e79ea62129c28236e3129b350cca2f
+ * engine262 0.0.1 0574c6b92a2925de851f895445b7cfd7e97cc0ba
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2678,9 +2678,13 @@ function PropName(node) {
     case 'AsyncMethod':
     case 'FieldDefinition':
       return PropName(node.ClassElementName);
-    default:
-      return undefined;
+    case 'PropertyDefinition':
+      if (node.PropertyName) {
+        return PropName(node.PropertyName);
+      }
+      break;
   }
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-numericvalue */
@@ -8721,7 +8725,7 @@ function* EvaluateImportCall(specifiersExpression, optionsExpression, /* [import
         return promiseCapability.Promise;
       }
       // ii. Let entries be Completion(EnumerableOwnProperties(attributesObj, key+value)).
-      let entries = yield* EnumerableOwnPropertyNames(attributesObj, 'key+value');
+      let entries = yield* EnumerableOwnProperties(attributesObj, 'key+value');
       // iii. IfAbruptRejectPromise(entries, promiseCapability).
       /* IfAbruptRejectPromise */
       /* node:coverage disable */
@@ -20548,6 +20552,1611 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 }
 
+/** https://tc39.es/ecma262/#sec-static-semantics-contains */
+function Contains(node, symbol) {
+  switch (node.type) {
+    case 'FunctionDeclaration':
+    case 'FunctionExpression':
+    case 'GeneratorDeclaration':
+    case 'GeneratorExpression':
+    case 'AsyncGeneratorDeclaration':
+    case 'AsyncGeneratorExpression':
+    case 'AsyncFunctionDeclaration':
+    case 'AsyncFunctionExpression':
+      return false;
+    case 'ClassTail':
+      {
+        // We don't have ClassBody?
+        throw new Error('TODO');
+      }
+    case 'ClassStaticBlock':
+      return false;
+    case 'ArrowFunction':
+    case 'AsyncArrowFunction':
+      throw new Error('TODO');
+    case 'PropertyDefinition':
+      {
+        // Note && TODO: PropertyDefinition in spec refers to MethodDefinition here,
+        // but our PropertyDefinition is parital one.
+        // We should check this at all use site of PropertyDefinitionList.
+        break;
+      }
+    //  LiteralPropertyName : IdentifierName
+    // throw new Error('TODO');
+    case 'MemberExpression':
+      {
+        //  MemberExpression : MemberExpression . IdentifierName
+        if (node.IdentifierName) {
+          return Contains(node.MemberExpression, symbol);
+        }
+        break;
+      }
+    case 'SuperProperty':
+      {
+        if (node.IdentifierName) {
+          return symbol === 'super';
+        }
+        break;
+      }
+    case 'CallExpression':
+      {
+        throw new Error('TODO');
+      }
+    case 'OptionalChain':
+      {
+        if (node.IdentifierName) {
+          //  OptionalChain : OptionalChain . IdentifierName
+          if (node.OptionalChain) {
+            return Contains(node.OptionalChain, symbol);
+          }
+          //  OptionalChain : ?. IdentifierName
+          return false;
+        }
+        break;
+      }
+  }
+
+  // 1. For each child node child of this Parse Node
+  for (const child of avoid_using_children(node)) {
+    // a. If child is an instance of symbol, return true.
+    if (child.type === symbol) {
+      return true;
+    }
+    // b. If child is an instance of a nonterminal, then
+    const contained = Contains(child, symbol);
+    // i. If contained is true, return true.
+    if (contained) {
+      return true;
+    }
+  }
+  return false;
+}
+Contains.section = 'https://tc39.es/ecma262/#sec-static-semantics-contains';
+/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-arrayliteralcontentnodes */
+function ArrayLiteralContentNodes(node) {
+  return node.ElementList;
+}
+ArrayLiteralContentNodes.section = 'https://tc39.es/ecma262/pr/3714/#sec-static-semantics-arrayliteralcontentnodes';
+/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-propertydefinitionnodes */
+function PropertyDefinitionNodes(node) {
+  return node.PropertyDefinitionList;
+}
+PropertyDefinitionNodes.section = 'https://tc39.es/ecma262/pr/3714/#sec-static-semantics-propertydefinitionnodes'; // Note: this is not a correct forEachChild implementation, but it is not worth the effort to implement it fully.
+// defer it to the future if needed.
+function* avoid_using_children(node) {
+  for (const key of Reflect.ownKeys(node)) {
+    if (typeof key === 'string' && key !== 'parent') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const child = node[key];
+      if (typeof child === 'object' && child) {
+        if (Array.isArray(child)) {
+          for (const element of child) {
+            if (isParseNode(element)) {
+              yield element;
+            }
+          }
+        } else if ('type' in child) {
+          yield child;
+        }
+      }
+    }
+  }
+}
+function isParseNode(value) {
+  return !!(value && typeof value === 'object' && 'type' in value && 'location' in value);
+}
+
+function isBooleanObject(o) {
+  return 'BooleanData' in o;
+}
+/** https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value */
+function* BooleanConstructor([value = Value.undefined], {
+  NewTarget
+}) {
+  /* X */
+  let _temp = ToBoolean(value);
+  /* node:coverage ignore next */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+  /* node:coverage ignore next */
+  if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(value) returned an abrupt completion", {
+    cause: _temp
+  });
+  /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  // 1. Let b be ! ToBoolean(value).
+  const b = _temp;
+  // 2. If NewTarget is undefined, return b.
+  if (NewTarget instanceof UndefinedValue) {
+    return b;
+  }
+  // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
+  /* ReturnIfAbrupt */
+  let _temp2 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
+  /* node:coverage ignore next */
+  if (_temp2 instanceof AbruptCompletion) return _temp2;
+  /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const O = _temp2;
+  // 4. Set O.[[BooleanData]] to b.
+  O.BooleanData = b;
+  // 5. Return O.
+  return O;
+}
+BooleanConstructor.section = 'https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value';
+function bootstrapBoolean(realmRec) {
+  const cons = bootstrapConstructor(realmRec, BooleanConstructor, 'Boolean', 1, realmRec.Intrinsics['%Boolean.prototype%'], []);
+  realmRec.Intrinsics['%Boolean%'] = cons;
+}
+
+function isBigIntObject(o) {
+  return 'BigIntData' in o;
+}
+/** https://tc39.es/ecma262/#sec-bigint-constructor */
+function* BigIntConstructor([value], {
+  NewTarget
+}) {
+  // 1. If NewTarget is not undefined, throw a TypeError exception.
+  if (NewTarget !== Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
+  }
+  // 2. Let prim be ? ToPrimitive(value, number).
+  /* ReturnIfAbrupt */
+  let _temp = yield* ToPrimitive(value, 'number');
+  /* node:coverage ignore next */
+  if (_temp instanceof AbruptCompletion) return _temp;
+  /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const prim = _temp;
+  // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
+  // 4. Otherwise, return ? ToBigInt(prim).
+  if (prim instanceof NumberValue) {
+    return NumberToBigInt(prim);
+  } else {
+    return yield* ToBigInt(prim);
+  }
+}
+BigIntConstructor.section = 'https://tc39.es/ecma262/#sec-bigint-constructor';
+/** https://tc39.es/ecma262/#sec-bigint.asintn */
+function* BigInt_asIntN([_bits = Value.undefined, _bigint = Value.undefined]) {
+  /* ReturnIfAbrupt */
+  let _temp2 = yield* ToIndex(_bits);
+  /* node:coverage ignore next */
+  if (_temp2 instanceof AbruptCompletion) return _temp2;
+  /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  // 1. Set bits to ? ToIndex(bits).
+  const bits = _temp2;
+  // 2. Set bigint to ? ToBigInt(bigint).
+  /* ReturnIfAbrupt */
+  let _temp3 = yield* ToBigInt(_bigint);
+  /* node:coverage ignore next */
+  if (_temp3 instanceof AbruptCompletion) return _temp3;
+  /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const bigint = _temp3;
+  // 3. Let mod be the BigInt value that represents bigint modulo 2bits.
+  // 4. If mod ≥ 2^bits - 1, return mod - 2^bits; otherwise, return mod.
+  return Z(BigInt.asIntN(bits, R(bigint)));
+}
+BigInt_asIntN.section = 'https://tc39.es/ecma262/#sec-bigint.asintn';
+/** https://tc39.es/ecma262/#sec-bigint.asuintn */
+function* BigInt_asUintN([_bits = Value.undefined, _bigint = Value.undefined]) {
+  /* ReturnIfAbrupt */
+  let _temp4 = yield* ToIndex(_bits);
+  /* node:coverage ignore next */
+  if (_temp4 instanceof AbruptCompletion) return _temp4;
+  /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  // 1. Set bits to ? ToIndex(bits).
+  const bits = _temp4;
+  // 2. Set bigint to ? ToBigInt(bigint).
+  /* ReturnIfAbrupt */
+  let _temp5 = yield* ToBigInt(_bigint);
+  /* node:coverage ignore next */
+  if (_temp5 instanceof AbruptCompletion) return _temp5;
+  /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const bigint = _temp5;
+  // 3. Let mod be ℝ(bigint) modulo 2 ** bits.
+  // 4. If mod ≥ 2 ** (bits - 1), return Z(mod - 2 ** bits); otherwise, return Z(mod).
+  return Z(BigInt.asUintN(bits, R(bigint)));
+}
+BigInt_asUintN.section = 'https://tc39.es/ecma262/#sec-bigint.asuintn';
+function bootstrapBigInt(realmRec) {
+  const bigintConstructor = bootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [['asIntN', BigInt_asIntN, 2], ['asUintN', BigInt_asUintN, 2]]);
+  realmRec.Intrinsics['%BigInt%'] = bigintConstructor;
+}
+
+const WHITESPACE = [' ', '\t', '\r', '\n'];
+const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const VALID_HEX = [...NUMERIC, 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f'];
+const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
+class JSONValidator {
+  input;
+  pos = 0;
+  char;
+  constructor(input) {
+    this.input = input;
+    this.char = input.charAt(0);
+  }
+  validate() {
+    /* X */
+    let _temp = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp
+    });
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    /* ReturnIfAbrupt */
+    let _temp2 = this.parseValue();
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    if (this.pos < this.input.length) {
+      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+    }
+    return NormalCompletion(undefined);
+  }
+  advance() {
+    this.pos += 1;
+    if (this.pos === this.input.length) {
+      this.char = null;
+    } else if (this.pos > this.input.length) {
+      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+    } else {
+      this.char = this.input.charAt(this.pos);
+    }
+    return this.char;
+  }
+  eatWhitespace() {
+    while (this.eat(WHITESPACE)) {
+      // nothing
+    }
+  }
+  eat(c) {
+    if (Array.isArray(c) && c.includes(this.char)) {
+      /* X */
+      let _temp3 = this.advance();
+      /* node:coverage ignore next */
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+      /* node:coverage ignore next */
+      if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! this.advance() returned an abrupt completion", {
+        cause: _temp3
+      });
+      /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      return true;
+    } else if (this.char === c) {
+      /* X */
+      let _temp4 = this.advance();
+      /* node:coverage ignore next */
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+      /* node:coverage ignore next */
+      if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! this.advance() returned an abrupt completion", {
+        cause: _temp4
+      });
+      /* node:coverage ignore next */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      return true;
+    }
+    return false;
+  }
+  expect(c) {
+    const {
+      char
+    } = this;
+    if (!this.eat(c)) {
+      return surroundingAgent.Throw('SyntaxError', 'JSONExpected', c, this.char);
+    }
+    return char;
+  }
+  parseValue() {
+    switch (this.char) {
+      case '"':
+        return this.parseString();
+      case '{':
+        return this.parseObject();
+      case '[':
+        return this.parseArray();
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '-':
+        return this.parseNumber();
+      case 'f':
+        /* X */
+        let _temp5 = this.expect('f');
+        /* node:coverage ignore next */
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+        /* node:coverage ignore next */
+        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! this.expect('f') returned an abrupt completion", {
+          cause: _temp5
+        });
+        /* node:coverage ignore next */
+        if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+        /* ReturnIfAbrupt */
+        let _temp6 = this.expect('a');
+        /* node:coverage ignore next */
+        if (_temp6 instanceof AbruptCompletion) return _temp6;
+        /* node:coverage ignore next */
+        if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+        /* ReturnIfAbrupt */
+        let _temp7 = this.expect('l');
+        /* node:coverage ignore next */
+        if (_temp7 instanceof AbruptCompletion) return _temp7;
+        /* node:coverage ignore next */
+        if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+        /* ReturnIfAbrupt */
+        let _temp8 = this.expect('s');
+        /* node:coverage ignore next */
+        if (_temp8 instanceof AbruptCompletion) return _temp8;
+        /* node:coverage ignore next */
+        if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+        /* ReturnIfAbrupt */
+        let _temp9 = this.expect('e');
+        /* node:coverage ignore next */
+        if (_temp9 instanceof AbruptCompletion) return _temp9;
+        /* node:coverage ignore next */
+        if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+        /* X */
+        let _temp0 = this.eatWhitespace();
+        /* node:coverage ignore next */
+        if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+        /* node:coverage ignore next */
+        if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+          cause: _temp0
+        });
+        /* node:coverage ignore next */
+        if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+        return _temp0;
+      case 't':
+        /* X */
+        let _temp1 = this.expect('t');
+        /* node:coverage ignore next */
+        if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+        /* node:coverage ignore next */
+        if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! this.expect('t') returned an abrupt completion", {
+          cause: _temp1
+        });
+        /* node:coverage ignore next */
+        if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+        /* ReturnIfAbrupt */
+        let _temp10 = this.expect('r');
+        /* node:coverage ignore next */
+        if (_temp10 instanceof AbruptCompletion) return _temp10;
+        /* node:coverage ignore next */
+        if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+        /* ReturnIfAbrupt */
+        let _temp11 = this.expect('u');
+        /* node:coverage ignore next */
+        if (_temp11 instanceof AbruptCompletion) return _temp11;
+        /* node:coverage ignore next */
+        if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+        /* ReturnIfAbrupt */
+        let _temp12 = this.expect('e');
+        /* node:coverage ignore next */
+        if (_temp12 instanceof AbruptCompletion) return _temp12;
+        /* node:coverage ignore next */
+        if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+        /* X */
+        let _temp13 = this.eatWhitespace();
+        /* node:coverage ignore next */
+        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+        /* node:coverage ignore next */
+        if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+          cause: _temp13
+        });
+        /* node:coverage ignore next */
+        if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+        return _temp13;
+      case 'n':
+        /* X */
+        let _temp14 = this.expect('n');
+        /* node:coverage ignore next */
+        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+        /* node:coverage ignore next */
+        if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! this.expect('n') returned an abrupt completion", {
+          cause: _temp14
+        });
+        /* node:coverage ignore next */
+        if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+        /* ReturnIfAbrupt */
+        let _temp15 = this.expect('u');
+        /* node:coverage ignore next */
+        if (_temp15 instanceof AbruptCompletion) return _temp15;
+        /* node:coverage ignore next */
+        if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+        /* ReturnIfAbrupt */
+        let _temp16 = this.expect('l');
+        /* node:coverage ignore next */
+        if (_temp16 instanceof AbruptCompletion) return _temp16;
+        /* node:coverage ignore next */
+        if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+        /* ReturnIfAbrupt */
+        let _temp17 = this.expect('l');
+        /* node:coverage ignore next */
+        if (_temp17 instanceof AbruptCompletion) return _temp17;
+        /* node:coverage ignore next */
+        if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+        /* X */
+        let _temp18 = this.eatWhitespace();
+        /* node:coverage ignore next */
+        if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+        /* node:coverage ignore next */
+        if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+          cause: _temp18
+        });
+        /* node:coverage ignore next */
+        if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+        return _temp18;
+      default:
+        return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
+    }
+  }
+  parseString() {
+    /* ReturnIfAbrupt */
+    let _temp19 = this.expect('"');
+    /* node:coverage ignore next */
+    if (_temp19 instanceof AbruptCompletion) return _temp19;
+    /* node:coverage ignore next */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    while (!this.eat('"')) {
+      if (this.eat('\\')) {
+        if (!this.eat(ESCAPABLE)) {
+          /* ReturnIfAbrupt */
+          let _temp20 = this.expect('u');
+          /* node:coverage ignore next */
+          if (_temp20 instanceof AbruptCompletion) return _temp20;
+          /* node:coverage ignore next */
+          if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+          /* ReturnIfAbrupt */
+          let _temp21 = this.expect(VALID_HEX);
+          /* node:coverage ignore next */
+          if (_temp21 instanceof AbruptCompletion) return _temp21;
+          /* node:coverage ignore next */
+          if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+          /* ReturnIfAbrupt */
+          let _temp22 = this.expect(VALID_HEX);
+          /* node:coverage ignore next */
+          if (_temp22 instanceof AbruptCompletion) return _temp22;
+          /* node:coverage ignore next */
+          if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+          /* ReturnIfAbrupt */
+          let _temp23 = this.expect(VALID_HEX);
+          /* node:coverage ignore next */
+          if (_temp23 instanceof AbruptCompletion) return _temp23;
+          /* node:coverage ignore next */
+          if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+          /* ReturnIfAbrupt */
+          let _temp24 = this.expect(VALID_HEX);
+          /* node:coverage ignore next */
+          if (_temp24 instanceof AbruptCompletion) return _temp24;
+          /* node:coverage ignore next */
+          if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+        }
+      } else {
+        if (this.char < ' ') {
+          return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
+        }
+        /* ReturnIfAbrupt */
+        let _temp25 = this.advance();
+        /* node:coverage ignore next */
+        if (_temp25 instanceof AbruptCompletion) return _temp25;
+        /* node:coverage ignore next */
+        if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+      }
+    }
+    /* X */
+    let _temp26 = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
+    /* node:coverage ignore next */
+    if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp26
+    });
+    /* node:coverage ignore next */
+    if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+    return _temp26;
+  }
+  parseNumber() {
+    this.eat('-');
+    if (!this.eat('0')) {
+      /* ReturnIfAbrupt */
+      let _temp27 = this.expect(NUMERIC);
+      /* node:coverage ignore next */
+      if (_temp27 instanceof AbruptCompletion) return _temp27;
+      /* node:coverage ignore next */
+      if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+      while (this.eat(NUMERIC)) {
+        // nothing
+      }
+    }
+    if (this.eat('.')) {
+      /* ReturnIfAbrupt */
+      let _temp28 = this.expect(NUMERIC);
+      /* node:coverage ignore next */
+      if (_temp28 instanceof AbruptCompletion) return _temp28;
+      /* node:coverage ignore next */
+      if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+      while (this.eat(NUMERIC)) {
+        // nothing
+      }
+    }
+    if (this.eat(['e', 'E'])) {
+      this.eat(['-', '+']);
+      /* ReturnIfAbrupt */
+      let _temp29 = this.expect(NUMERIC);
+      /* node:coverage ignore next */
+      if (_temp29 instanceof AbruptCompletion) return _temp29;
+      /* node:coverage ignore next */
+      if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+      while (this.eat(NUMERIC)) {
+        // nothing
+      }
+    }
+    /* X */
+    let _temp30 = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+    /* node:coverage ignore next */
+    if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp30
+    });
+    /* node:coverage ignore next */
+    if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  }
+  parseObject() {
+    /* ReturnIfAbrupt */
+    let _temp31 = this.expect('{');
+    /* node:coverage ignore next */
+    if (_temp31 instanceof AbruptCompletion) return _temp31;
+    /* node:coverage ignore next */
+    if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+    /* X */
+    let _temp32 = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
+    /* node:coverage ignore next */
+    if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp32
+    });
+    /* node:coverage ignore next */
+    if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+    let first = true;
+    while (!this.eat('}')) {
+      if (first) {
+        first = false;
+      } else {
+        /* ReturnIfAbrupt */
+        let _temp33 = this.expect(',');
+        /* node:coverage ignore next */
+        if (_temp33 instanceof AbruptCompletion) return _temp33;
+        /* node:coverage ignore next */
+        if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+        /* X */
+        let _temp34 = this.eatWhitespace();
+        /* node:coverage ignore next */
+        if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
+        /* node:coverage ignore next */
+        if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+          cause: _temp34
+        });
+        /* node:coverage ignore next */
+        if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+      }
+      /* ReturnIfAbrupt */
+      let _temp35 = this.parseString();
+      /* node:coverage ignore next */
+      if (_temp35 instanceof AbruptCompletion) return _temp35;
+      /* node:coverage ignore next */
+      if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+      /* X */
+      let _temp36 = this.eatWhitespace();
+      /* node:coverage ignore next */
+      if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
+      /* node:coverage ignore next */
+      if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+        cause: _temp36
+      });
+      /* node:coverage ignore next */
+      if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+      /* ReturnIfAbrupt */
+      let _temp37 = this.expect(':');
+      /* node:coverage ignore next */
+      if (_temp37 instanceof AbruptCompletion) return _temp37;
+      /* node:coverage ignore next */
+      if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+      /* X */
+      let _temp38 = this.eatWhitespace();
+      /* node:coverage ignore next */
+      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) _temp38 = skipDebugger(_temp38);
+      /* node:coverage ignore next */
+      if (_temp38 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+        cause: _temp38
+      });
+      /* node:coverage ignore next */
+      if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+      /* ReturnIfAbrupt */
+      let _temp39 = this.parseValue();
+      /* node:coverage ignore next */
+      if (_temp39 instanceof AbruptCompletion) return _temp39;
+      /* node:coverage ignore next */
+      if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+      /* X */
+      let _temp40 = this.eatWhitespace();
+      /* node:coverage ignore next */
+      if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) _temp40 = skipDebugger(_temp40);
+      /* node:coverage ignore next */
+      if (_temp40 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+        cause: _temp40
+      });
+      /* node:coverage ignore next */
+      if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+    }
+    /* X */
+    let _temp41 = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
+    /* node:coverage ignore next */
+    if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp41
+    });
+    /* node:coverage ignore next */
+    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+  }
+  parseArray() {
+    /* ReturnIfAbrupt */
+    let _temp42 = this.expect('[');
+    /* node:coverage ignore next */
+    if (_temp42 instanceof AbruptCompletion) return _temp42;
+    /* node:coverage ignore next */
+    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+    /* X */
+    let _temp43 = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) _temp43 = skipDebugger(_temp43);
+    /* node:coverage ignore next */
+    if (_temp43 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp43
+    });
+    /* node:coverage ignore next */
+    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+    let first = true;
+    while (!this.eat(']')) {
+      if (first) {
+        first = false;
+      } else {
+        /* ReturnIfAbrupt */
+        let _temp44 = this.expect(',');
+        /* node:coverage ignore next */
+        if (_temp44 instanceof AbruptCompletion) return _temp44;
+        /* node:coverage ignore next */
+        if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+        /* X */
+        let _temp45 = this.eatWhitespace();
+        /* node:coverage ignore next */
+        if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) _temp45 = skipDebugger(_temp45);
+        /* node:coverage ignore next */
+        if (_temp45 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+          cause: _temp45
+        });
+        /* node:coverage ignore next */
+        if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+      }
+      /* ReturnIfAbrupt */
+      let _temp46 = this.parseValue();
+      /* node:coverage ignore next */
+      if (_temp46 instanceof AbruptCompletion) return _temp46;
+      /* node:coverage ignore next */
+      if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+      /* X */
+      let _temp47 = this.eatWhitespace();
+      /* node:coverage ignore next */
+      if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) _temp47 = skipDebugger(_temp47);
+      /* node:coverage ignore next */
+      if (_temp47 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+        cause: _temp47
+      });
+      /* node:coverage ignore next */
+      if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+    }
+    /* X */
+    let _temp48 = this.eatWhitespace();
+    /* node:coverage ignore next */
+    if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) _temp48 = skipDebugger(_temp48);
+    /* node:coverage ignore next */
+    if (_temp48 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
+      cause: _temp48
+    });
+    /* node:coverage ignore next */
+    if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+  }
+  static validate(input) {
+    const v = new JSONValidator(input);
+    return v.validate();
+  }
+}
+
+/** https://tc39.es/ecma262/pr/3714/#sec-json-parse-record */
+
+/** https://tc39.es/ecma262/pr/3714/#sec-internalizejsonproperty */
+function* InternalizeJSONProperty(holder, name, reviver, parseRecord) {
+  /* ReturnIfAbrupt */
+  let _temp49 = yield* Get(holder, name);
+  /* node:coverage ignore next */
+  if (_temp49 instanceof AbruptCompletion) return _temp49;
+  /* node:coverage ignore next */
+  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+  const val = _temp49;
+  const context = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  let elementRecords;
+  let entryRecords;
+  if (parseRecord && SameValue(parseRecord.Value, val) === Value.true) {
+    if (!(val instanceof ObjectValue)) {
+      const parseNode = parseRecord.ParseNode;
+      Assert(parseNode.type !== 'ArrayLiteral' && parseNode.type !== 'ObjectLiteral', "parseNode.type !== 'ArrayLiteral' && parseNode.type !== 'ObjectLiteral'");
+      const sourceText = parseNode.sourceText;
+      /* X */
+      let _temp50 = CreateDataPropertyOrThrow(context, Value('source'), Value(CodePointsToString(sourceText)));
+      /* node:coverage ignore next */
+      if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) _temp50 = skipDebugger(_temp50);
+      /* node:coverage ignore next */
+      if (_temp50 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(context, Value('source'), Value(CodePointsToString(sourceText))) returned an abrupt completion", {
+        cause: _temp50
+      });
+      /* node:coverage ignore next */
+      if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+    }
+    elementRecords = parseRecord.Elements;
+    entryRecords = parseRecord.Entries;
+  } else {
+    elementRecords = [];
+    entryRecords = [];
+  }
+  if (val instanceof ObjectValue) {
+    /* ReturnIfAbrupt */
+    let _temp51 = IsArray(val);
+    /* node:coverage ignore next */
+    if (_temp51 instanceof AbruptCompletion) return _temp51;
+    /* node:coverage ignore next */
+    if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
+    const isArray = _temp51;
+    if (isArray === Value.true) {
+      // Let _elementRecordsLen_ be the number of elements in _elementRecords_.
+      const elementRecordsLen = elementRecords.length;
+      let I = 0;
+      /* ReturnIfAbrupt */
+      let _temp52 = yield* LengthOfArrayLike(val);
+      /* node:coverage ignore next */
+      if (_temp52 instanceof AbruptCompletion) return _temp52;
+      /* node:coverage ignore next */
+      if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
+      const len = _temp52;
+      while (I < len) {
+        /* X */
+        let _temp53 = ToString(F(I));
+        /* node:coverage ignore next */
+        if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) _temp53 = skipDebugger(_temp53);
+        /* node:coverage ignore next */
+        if (_temp53 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(I)) returned an abrupt completion", {
+          cause: _temp53
+        });
+        /* node:coverage ignore next */
+        if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
+        const prop = _temp53;
+        const elementRecord = I < elementRecordsLen ? elementRecords[I] : undefined;
+        /* ReturnIfAbrupt */
+        let _temp54 = yield* InternalizeJSONProperty(val, prop, reviver, elementRecord);
+        /* node:coverage ignore next */
+        if (_temp54 instanceof AbruptCompletion) return _temp54;
+        /* node:coverage ignore next */
+        if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
+        const newElement = _temp54;
+        if (newElement instanceof UndefinedValue) {
+          /* ReturnIfAbrupt */
+          let _temp55 = yield* val.Delete(prop);
+          /* node:coverage ignore next */
+          if (_temp55 instanceof AbruptCompletion) return _temp55;
+          /* node:coverage ignore next */
+          if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
+        } else {
+          /* ReturnIfAbrupt */
+          let _temp56 = yield* CreateDataProperty(val, prop, newElement);
+          /* node:coverage ignore next */
+          if (_temp56 instanceof AbruptCompletion) return _temp56;
+          /* node:coverage ignore next */
+          if (_temp56 instanceof Completion) _temp56 = _temp56.Value;
+        }
+        I += 1;
+      }
+    } else {
+      /* ReturnIfAbrupt */
+      let _temp57 = yield* EnumerableOwnProperties(val, 'key');
+      /* node:coverage ignore next */
+      if (_temp57 instanceof AbruptCompletion) return _temp57;
+      /* node:coverage ignore next */
+      if (_temp57 instanceof Completion) _temp57 = _temp57.Value;
+      const keys = _temp57;
+      for (const P of keys) {
+        const entryRecord = entryRecords.find(record => SameValue(record.Key, P) === Value.true);
+        /* ReturnIfAbrupt */
+        let _temp58 = yield* InternalizeJSONProperty(val, P, reviver, entryRecord);
+        /* node:coverage ignore next */
+        if (_temp58 instanceof AbruptCompletion) return _temp58;
+        /* node:coverage ignore next */
+        if (_temp58 instanceof Completion) _temp58 = _temp58.Value;
+        const newElement = _temp58;
+        // const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver));
+        if (newElement instanceof UndefinedValue) {
+          /* ReturnIfAbrupt */
+          let _temp59 = yield* val.Delete(P);
+          /* node:coverage ignore next */
+          if (_temp59 instanceof AbruptCompletion) return _temp59;
+          /* node:coverage ignore next */
+          if (_temp59 instanceof Completion) _temp59 = _temp59.Value;
+        } else {
+          /* ReturnIfAbrupt */
+          let _temp60 = yield* CreateDataProperty(val, P, newElement);
+          /* node:coverage ignore next */
+          if (_temp60 instanceof AbruptCompletion) return _temp60;
+          /* node:coverage ignore next */
+          if (_temp60 instanceof Completion) _temp60 = _temp60.Value;
+        }
+      }
+    }
+  }
+  return yield* Call(reviver, holder, [name, val, context]);
+}
+InternalizeJSONProperty.section = 'https://tc39.es/ecma262/pr/3714/#sec-internalizejsonproperty';
+/** https://tc39.es/ecma262/pr/3714/#sec-createjsonparserecord */
+function CreateJSONParseRecord(parseNode, key, val) {
+  const typedValNode = ShallowestContainedJSONValue(parseNode);
+  Assert(!!typedValNode, "!!typedValNode");
+  const elements = [];
+  const entries = [];
+  if (val instanceof ObjectValue) {
+    /* X */
+    let _temp61 = IsArray(val);
+    /* node:coverage ignore next */
+    if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) _temp61 = skipDebugger(_temp61);
+    /* node:coverage ignore next */
+    if (_temp61 instanceof AbruptCompletion) throw new Assert.Error("! IsArray(val) returned an abrupt completion", {
+      cause: _temp61
+    });
+    /* node:coverage ignore next */
+    if (_temp61 instanceof Completion) _temp61 = _temp61.Value;
+    const isArray = _temp61;
+    if (isArray === Value.true) {
+      Assert(typedValNode.type === 'ArrayLiteral', "typedValNode.type === 'ArrayLiteral'");
+      const contentNodes = ArrayLiteralContentNodes(typedValNode);
+      const len = contentNodes.length;
+      /* X */
+      let _temp62 = LengthOfArrayLike(val);
+      /* node:coverage ignore next */
+      if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) _temp62 = skipDebugger(_temp62);
+      /* node:coverage ignore next */
+      if (_temp62 instanceof AbruptCompletion) throw new Assert.Error("! LengthOfArrayLike(val) returned an abrupt completion", {
+        cause: _temp62
+      });
+      /* node:coverage ignore next */
+      if (_temp62 instanceof Completion) _temp62 = _temp62.Value;
+      const valLen = _temp62;
+      Assert(valLen === len, "valLen === len");
+      let I = 0;
+      while (I < len) {
+        /* X */
+        let _temp63 = ToString(F(I));
+        /* node:coverage ignore next */
+        if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) _temp63 = skipDebugger(_temp63);
+        /* node:coverage ignore next */
+        if (_temp63 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(I)) returned an abrupt completion", {
+          cause: _temp63
+        });
+        /* node:coverage ignore next */
+        if (_temp63 instanceof Completion) _temp63 = _temp63.Value;
+        const propName = _temp63;
+        /* X */
+        let _temp64 = Get(val, propName);
+        /* node:coverage ignore next */
+        if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) _temp64 = skipDebugger(_temp64);
+        /* node:coverage ignore next */
+        if (_temp64 instanceof AbruptCompletion) throw new Assert.Error("! Get(val, propName) returned an abrupt completion", {
+          cause: _temp64
+        });
+        /* node:coverage ignore next */
+        if (_temp64 instanceof Completion) _temp64 = _temp64.Value;
+        const elementParseRecord = CreateJSONParseRecord(contentNodes[I], propName, _temp64);
+        elements.push(elementParseRecord);
+        I += 1;
+      }
+    } else {
+      Assert(typedValNode.type === 'ObjectLiteral', "typedValNode.type === 'ObjectLiteral'");
+      const propertyNodes = PropertyDefinitionNodes(typedValNode);
+      /* X */
+      let _temp65 = EnumerableOwnProperties(val, 'key');
+      /* node:coverage ignore next */
+      if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) _temp65 = skipDebugger(_temp65);
+      /* node:coverage ignore next */
+      if (_temp65 instanceof AbruptCompletion) throw new Assert.Error("! EnumerableOwnProperties(val, 'key') returned an abrupt completion", {
+        cause: _temp65
+      });
+      /* node:coverage ignore next */
+      if (_temp65 instanceof Completion) _temp65 = _temp65.Value;
+      const keys = _temp65;
+      for (const P of keys) {
+        let propertyDefinition;
+        for (const propertyNode of propertyNodes) {
+          const propName = PropName(propertyNode);
+          if (propName === P.stringValue()) {
+            propertyDefinition = propertyNode;
+          }
+        }
+        Assert(!!(propertyDefinition.type === 'PropertyDefinition' && propertyDefinition.PropertyName && propertyDefinition.AssignmentExpression), "!!(propertyDefinition!.type === 'PropertyDefinition' && propertyDefinition.PropertyName && propertyDefinition.AssignmentExpression)");
+        const propertyValueNode = propertyDefinition.AssignmentExpression;
+        /* X */
+        let _temp66 = Get(val, P);
+        /* node:coverage ignore next */
+        if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) _temp66 = skipDebugger(_temp66);
+        /* node:coverage ignore next */
+        if (_temp66 instanceof AbruptCompletion) throw new Assert.Error("! Get(val, P) returned an abrupt completion", {
+          cause: _temp66
+        });
+        /* node:coverage ignore next */
+        if (_temp66 instanceof Completion) _temp66 = _temp66.Value;
+        const entryParseRecord = CreateJSONParseRecord(propertyValueNode, P, _temp66);
+        entries.push(entryParseRecord);
+      }
+    }
+  } else {
+    Assert(typedValNode.type !== 'ArrayLiteral' && typedValNode.type !== 'ObjectLiteral', "typedValNode.type !== 'ArrayLiteral' && typedValNode.type !== 'ObjectLiteral'");
+  }
+  return {
+    ParseNode: typedValNode,
+    Key: key,
+    Value: val,
+    Elements: elements,
+    Entries: entries
+  };
+}
+CreateJSONParseRecord.section = 'https://tc39.es/ecma262/pr/3714/#sec-createjsonparserecord';
+function ParseJSON(text) {
+  /* ReturnIfAbrupt */
+  let _temp67 = JSONValidator.validate(text);
+  /* node:coverage ignore next */
+  if (_temp67 instanceof AbruptCompletion) return _temp67;
+  /* node:coverage ignore next */
+  if (_temp67 instanceof Completion) _temp67 = _temp67.Value;
+  const scriptString = `(${text});`;
+  const script = ParseScript(scriptString, surroundingAgent.currentRealmRecord, {
+    [kInternal]: {
+      json: true
+    }
+  });
+  Assert(!isArray(script), "!isArray(script)"); // array means parse error
+  /* X */
+  let _temp68 = skipDebugger(ScriptEvaluation(script));
+  /* node:coverage ignore next */
+  if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) _temp68 = skipDebugger(_temp68);
+  /* node:coverage ignore next */
+  if (_temp68 instanceof AbruptCompletion) throw new Assert.Error("! skipDebugger(ScriptEvaluation(script)) returned an abrupt completion", {
+    cause: _temp68
+  });
+  /* node:coverage ignore next */
+  if (_temp68 instanceof Completion) _temp68 = _temp68.Value;
+  const result = _temp68;
+  Assert(result instanceof JSStringValue || result instanceof NumberValue || result instanceof BooleanValue || result instanceof ObjectValue || result === Value.null, "result instanceof JSStringValue || result instanceof NumberValue || result instanceof BooleanValue || result instanceof ObjectValue || result === Value.null");
+  return {
+    ParseNode: script.ECMAScriptCode,
+    Value: result
+  };
+}
+
+/** https://tc39.es/ecma262/#sec-json.parse */
+function* JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
+  /* ReturnIfAbrupt */
+  let _temp69 = yield* ToString(text);
+  /* node:coverage ignore next */
+  if (_temp69 instanceof AbruptCompletion) return _temp69;
+  /* node:coverage ignore next */
+  if (_temp69 instanceof Completion) _temp69 = _temp69.Value;
+  const jsonString = _temp69;
+  /* ReturnIfAbrupt */
+  let _temp70 = ParseJSON(jsonString.stringValue());
+  /* node:coverage ignore next */
+  if (_temp70 instanceof AbruptCompletion) return _temp70;
+  /* node:coverage ignore next */
+  if (_temp70 instanceof Completion) _temp70 = _temp70.Value;
+  const parseResult = _temp70;
+  const unfiltered = parseResult.Value;
+  Assert(unfiltered instanceof JSStringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof JSStringValue\n    || unfiltered instanceof NumberValue\n    || unfiltered instanceof BooleanValue\n    || unfiltered instanceof NullValue\n    || unfiltered instanceof ObjectValue");
+  if (IsCallable(reviver)) {
+    const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    const rootName = Value('');
+    /* X */
+    let _temp71 = CreateDataPropertyOrThrow(root, rootName, unfiltered);
+    /* node:coverage ignore next */
+    if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) _temp71 = skipDebugger(_temp71);
+    /* node:coverage ignore next */
+    if (_temp71 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(root, rootName, unfiltered) returned an abrupt completion", {
+      cause: _temp71
+    });
+    /* node:coverage ignore next */
+    if (_temp71 instanceof Completion) _temp71 = _temp71.Value;
+    const snapshot = CreateJSONParseRecord(parseResult.ParseNode, rootName, unfiltered);
+    return yield* InternalizeJSONProperty(root, rootName, reviver, snapshot);
+  } else {
+    return unfiltered;
+  }
+}
+JSON_parse.section = 'https://tc39.es/ecma262/#sec-json.parse';
+const codeUnitTable = new Map([[0x0008, '\\b'], [0x0009, '\\t'], [0x000A, '\\n'], [0x000C, '\\f'], [0x000D, '\\r'], [0x0022, '\\"'], [0x005C, '\\\\']]);
+/** https://tc39.es/ecma262/#sec-serializejsonproperty */
+function* SerializeJSONProperty(state, key, holder) {
+  /* ReturnIfAbrupt */
+  let _temp72 = yield* Get(holder, key);
+  /* node:coverage ignore next */
+  if (_temp72 instanceof AbruptCompletion) return _temp72;
+  /* node:coverage ignore next */
+  if (_temp72 instanceof Completion) _temp72 = _temp72.Value;
+  let value = _temp72; // eslint-disable-line no-shadow
+  if (value instanceof ObjectValue || value instanceof BigIntValue) {
+    /* ReturnIfAbrupt */
+    let _temp73 = yield* GetV(value, Value('toJSON'));
+    /* node:coverage ignore next */
+    if (_temp73 instanceof AbruptCompletion) return _temp73;
+    /* node:coverage ignore next */
+    if (_temp73 instanceof Completion) _temp73 = _temp73.Value;
+    const toJSON = _temp73;
+    if (IsCallable(toJSON)) {
+      /* ReturnIfAbrupt */
+      let _temp74 = yield* Call(toJSON, value, [key]);
+      /* node:coverage ignore next */
+      if (_temp74 instanceof AbruptCompletion) return _temp74;
+      /* node:coverage ignore next */
+      if (_temp74 instanceof Completion) _temp74 = _temp74.Value;
+      value = _temp74;
+    }
+  }
+  if (state.ReplacerFunction !== Value.undefined) {
+    /* ReturnIfAbrupt */
+    let _temp75 = yield* Call(state.ReplacerFunction, holder, [key, value]);
+    /* node:coverage ignore next */
+    if (_temp75 instanceof AbruptCompletion) return _temp75;
+    /* node:coverage ignore next */
+    if (_temp75 instanceof Completion) _temp75 = _temp75.Value;
+    value = _temp75;
+  }
+  if (value instanceof ObjectValue) {
+    if ('IsRawJSON' in value) {
+      /* X */
+      let _temp76 = Get(value, Value('rawJSON'));
+      /* node:coverage ignore next */
+      if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) _temp76 = skipDebugger(_temp76);
+      /* node:coverage ignore next */
+      if (_temp76 instanceof AbruptCompletion) throw new Assert.Error("! Get(value, Value('rawJSON')) returned an abrupt completion", {
+        cause: _temp76
+      });
+      /* node:coverage ignore next */
+      if (_temp76 instanceof Completion) _temp76 = _temp76.Value;
+      return _temp76;
+    }
+    if ('NumberData' in value) {
+      /* ReturnIfAbrupt */
+      let _temp77 = yield* ToNumber(value);
+      /* node:coverage ignore next */
+      if (_temp77 instanceof AbruptCompletion) return _temp77;
+      /* node:coverage ignore next */
+      if (_temp77 instanceof Completion) _temp77 = _temp77.Value;
+      value = _temp77;
+    } else if ('StringData' in value) {
+      /* ReturnIfAbrupt */
+      let _temp78 = yield* ToString(value);
+      /* node:coverage ignore next */
+      if (_temp78 instanceof AbruptCompletion) return _temp78;
+      /* node:coverage ignore next */
+      if (_temp78 instanceof Completion) _temp78 = _temp78.Value;
+      value = _temp78;
+    } else if (isBooleanObject(value)) {
+      value = value.BooleanData;
+    } else if (isBigIntObject(value)) {
+      value = value.BigIntData;
+    }
+  }
+  if (value === Value.null) {
+    return Value('null');
+  }
+  if (value === Value.true) {
+    return Value('true');
+  }
+  if (value === Value.false) {
+    return Value('false');
+  }
+  if (value instanceof JSStringValue) {
+    return QuoteJSONString(value);
+  }
+  if (value instanceof NumberValue) {
+    if (value.isFinite()) {
+      /* X */
+      let _temp79 = ToString(value);
+      /* node:coverage ignore next */
+      if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) _temp79 = skipDebugger(_temp79);
+      /* node:coverage ignore next */
+      if (_temp79 instanceof AbruptCompletion) throw new Assert.Error("! ToString(value) returned an abrupt completion", {
+        cause: _temp79
+      });
+      /* node:coverage ignore next */
+      if (_temp79 instanceof Completion) _temp79 = _temp79.Value;
+      return _temp79;
+    }
+    return Value('null');
+  }
+  if (value instanceof BigIntValue) {
+    return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
+  }
+  if (value instanceof ObjectValue && !IsCallable(value)) {
+    /* ReturnIfAbrupt */
+    let _temp80 = IsArray(value);
+    /* node:coverage ignore next */
+    if (_temp80 instanceof AbruptCompletion) return _temp80;
+    /* node:coverage ignore next */
+    if (_temp80 instanceof Completion) _temp80 = _temp80.Value;
+    const isArray = _temp80;
+    if (isArray === Value.true) {
+      return yield* SerializeJSONArray(state, value);
+    }
+    return yield* SerializeJSONObject(state, value);
+  }
+  return Value.undefined;
+}
+SerializeJSONProperty.section = 'https://tc39.es/ecma262/#sec-serializejsonproperty';
+function UnicodeEscape(C) {
+  const n = C.charCodeAt(0);
+  Assert(n < 0xFFFF, "n < 0xFFFF");
+  return `\u005Cu${n.toString(16).padStart(4, '0')}`;
+}
+
+/** https://tc39.es/ecma262/pr/3714/#sec-quotejsonstring */
+function QuoteJSONString(value) {
+  // eslint-disable-line no-shadow
+  let product = '\u0022';
+  const cpList = [...value.stringValue()].map(c => c.codePointAt(0));
+  for (const C of cpList) {
+    if (codeUnitTable.has(C)) {
+      product = `${product}${codeUnitTable.get(C)}`;
+    } else if (C < 0x0020 || isLeadingSurrogate(C) || isTrailingSurrogate(C)) {
+      const unit = String.fromCodePoint(C);
+      product += UnicodeEscape(unit);
+    } else {
+      product += UTF16EncodeCodePoint(C);
+    }
+  }
+  product = `${product}\u0022`;
+  return Value(product);
+}
+QuoteJSONString.section = 'https://tc39.es/ecma262/pr/3714/#sec-quotejsonstring';
+/** https://tc39.es/ecma262/#sec-serializejsonobject */
+function* SerializeJSONObject(state, value) {
+  if (state.Stack.includes(value)) {
+    return surroundingAgent.Throw('TypeError', 'JSONCircular');
+  }
+  state.Stack.push(value);
+  const stepback = state.Indent;
+  state.Indent = `${state.Indent}${state.Gap}`;
+  let K;
+  if (!(state.PropertyList instanceof UndefinedValue)) {
+    K = state.PropertyList.keys();
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp81 = yield* EnumerableOwnProperties(value, 'key');
+    /* node:coverage ignore next */
+    if (_temp81 instanceof AbruptCompletion) return _temp81;
+    /* node:coverage ignore next */
+    if (_temp81 instanceof Completion) _temp81 = _temp81.Value;
+    K = _temp81.values();
+  }
+  const partial = [];
+  for (const P of K) {
+    /* ReturnIfAbrupt */
+    let _temp82 = yield* SerializeJSONProperty(state, P, value);
+    /* node:coverage ignore next */
+    if (_temp82 instanceof AbruptCompletion) return _temp82;
+    /* node:coverage ignore next */
+    if (_temp82 instanceof Completion) _temp82 = _temp82.Value;
+    const strP = _temp82;
+    if (!(strP instanceof UndefinedValue)) {
+      let member = QuoteJSONString(P).stringValue();
+      member = `${member}:`;
+      if (state.Gap !== '') {
+        member = `${member} `;
+      }
+      member = `${member}${strP.stringValue()}`;
+      partial.push(member);
+    }
+  }
+  let final;
+  if (partial.length === 0) {
+    final = Value('{}');
+  } else {
+    if (state.Gap === '') {
+      const properties = partial.join(',');
+      final = Value(`{${properties}}`);
+    } else {
+      const separator = `,\u000A${state.Indent}`;
+      const properties = partial.join(separator);
+      final = Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
+    }
+  }
+  state.Stack.pop();
+  state.Indent = stepback;
+  return final;
+}
+SerializeJSONObject.section = 'https://tc39.es/ecma262/#sec-serializejsonobject';
+/** https://tc39.es/ecma262/#sec-serializejsonarray */
+function* SerializeJSONArray(state, value) {
+  if (state.Stack.includes(value)) {
+    return surroundingAgent.Throw('TypeError', 'JSONCircular');
+  }
+  state.Stack.push(value);
+  const stepback = state.Indent;
+  state.Indent = `${state.Indent}${state.Gap}`;
+  const partial = [];
+  /* ReturnIfAbrupt */
+  let _temp83 = yield* LengthOfArrayLike(value);
+  /* node:coverage ignore next */
+  if (_temp83 instanceof AbruptCompletion) return _temp83;
+  /* node:coverage ignore next */
+  if (_temp83 instanceof Completion) _temp83 = _temp83.Value;
+  const len = _temp83;
+  let index = 0;
+  while (index < len) {
+    /* X */
+    let _temp84 = ToString(F(index));
+    /* node:coverage ignore next */
+    if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) _temp84 = skipDebugger(_temp84);
+    /* node:coverage ignore next */
+    if (_temp84 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(index)) returned an abrupt completion", {
+      cause: _temp84
+    });
+    /* node:coverage ignore next */
+    if (_temp84 instanceof Completion) _temp84 = _temp84.Value;
+    const indexStr = _temp84;
+    /* ReturnIfAbrupt */
+    let _temp85 = yield* SerializeJSONProperty(state, indexStr, value);
+    /* node:coverage ignore next */
+    if (_temp85 instanceof AbruptCompletion) return _temp85;
+    /* node:coverage ignore next */
+    if (_temp85 instanceof Completion) _temp85 = _temp85.Value;
+    const strP = _temp85;
+    if (strP instanceof UndefinedValue) {
+      partial.push('null');
+    } else {
+      partial.push(strP.stringValue());
+    }
+    index += 1;
+  }
+  let final;
+  if (partial.length === 0) {
+    final = Value('[]');
+  } else {
+    if (state.Gap === '') {
+      const properties = partial.join(',');
+      final = Value(`[${properties}]`);
+    } else {
+      const separator = `,\u000A${state.Indent}`;
+      const properties = partial.join(separator);
+      final = Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
+    }
+  }
+  state.Stack.pop();
+  state.Indent = stepback;
+  return final;
+}
+SerializeJSONArray.section = 'https://tc39.es/ecma262/#sec-serializejsonarray';
+/** https://tc39.es/ecma262/#sec-json.stringify */
+function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _space = Value.undefined]) {
+  const stack = [];
+  const indent = '';
+  let PropertyList = Value.undefined;
+  let ReplacerFunction = Value.undefined;
+  if (replacer instanceof ObjectValue) {
+    if (IsCallable(replacer)) {
+      ReplacerFunction = replacer;
+    } else {
+      /* ReturnIfAbrupt */
+      let _temp86 = IsArray(replacer);
+      /* node:coverage ignore next */
+      if (_temp86 instanceof AbruptCompletion) return _temp86;
+      /* node:coverage ignore next */
+      if (_temp86 instanceof Completion) _temp86 = _temp86.Value;
+      const isArray = _temp86;
+      if (isArray === Value.true) {
+        PropertyList = new JSStringSet();
+        /* ReturnIfAbrupt */
+        let _temp87 = yield* LengthOfArrayLike(replacer);
+        /* node:coverage ignore next */
+        if (_temp87 instanceof AbruptCompletion) return _temp87;
+        /* node:coverage ignore next */
+        if (_temp87 instanceof Completion) _temp87 = _temp87.Value;
+        const len = _temp87;
+        let k = 0;
+        while (k < len) {
+          /* X */
+          let _temp88 = ToString(F(k));
+          /* node:coverage ignore next */
+          if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) _temp88 = skipDebugger(_temp88);
+          /* node:coverage ignore next */
+          if (_temp88 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
+            cause: _temp88
+          });
+          /* node:coverage ignore next */
+          if (_temp88 instanceof Completion) _temp88 = _temp88.Value;
+          const vStr = _temp88;
+          /* ReturnIfAbrupt */
+          let _temp89 = yield* Get(replacer, vStr);
+          /* node:coverage ignore next */
+          if (_temp89 instanceof AbruptCompletion) return _temp89;
+          /* node:coverage ignore next */
+          if (_temp89 instanceof Completion) _temp89 = _temp89.Value;
+          const v = _temp89;
+          let item = Value.undefined;
+          if (v instanceof JSStringValue) {
+            item = v;
+          } else if (v instanceof NumberValue) {
+            /* X */
+            let _temp90 = ToString(v);
+            /* node:coverage ignore next */
+            if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) _temp90 = skipDebugger(_temp90);
+            /* node:coverage ignore next */
+            if (_temp90 instanceof AbruptCompletion) throw new Assert.Error("! ToString(v) returned an abrupt completion", {
+              cause: _temp90
+            });
+            /* node:coverage ignore next */
+            if (_temp90 instanceof Completion) _temp90 = _temp90.Value;
+            item = _temp90;
+          } else if (v instanceof ObjectValue) {
+            if ('StringData' in v || 'NumberData' in v) {
+              /* ReturnIfAbrupt */
+              let _temp91 = yield* ToString(v);
+              /* node:coverage ignore next */
+              if (_temp91 instanceof AbruptCompletion) return _temp91;
+              /* node:coverage ignore next */
+              if (_temp91 instanceof Completion) _temp91 = _temp91.Value;
+              item = _temp91;
+            }
+          }
+          if (!(item instanceof UndefinedValue) && !PropertyList.has(item)) {
+            PropertyList.add(item);
+          }
+          k += 1;
+        }
+      }
+    }
+  }
+  let space = _space;
+  if (space instanceof ObjectValue) {
+    if ('NumberData' in space) {
+      /* ReturnIfAbrupt */
+      let _temp92 = yield* ToNumber(space);
+      /* node:coverage ignore next */
+      if (_temp92 instanceof AbruptCompletion) return _temp92;
+      /* node:coverage ignore next */
+      if (_temp92 instanceof Completion) _temp92 = _temp92.Value;
+      space = _temp92;
+    } else if ('StringData' in space) {
+      /* ReturnIfAbrupt */
+      let _temp93 = yield* ToString(space);
+      /* node:coverage ignore next */
+      if (_temp93 instanceof AbruptCompletion) return _temp93;
+      /* node:coverage ignore next */
+      if (_temp93 instanceof Completion) _temp93 = _temp93.Value;
+      space = _temp93;
+    }
+  }
+  let gap;
+  if (space instanceof NumberValue) {
+    /* X */
+    let _temp94 = ToIntegerOrInfinity(space);
+    /* node:coverage ignore next */
+    if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) _temp94 = skipDebugger(_temp94);
+    /* node:coverage ignore next */
+    if (_temp94 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(space) returned an abrupt completion", {
+      cause: _temp94
+    });
+    /* node:coverage ignore next */
+    if (_temp94 instanceof Completion) _temp94 = _temp94.Value;
+    space = Math.min(10, _temp94);
+    if (space < 1) {
+      gap = '';
+    } else {
+      gap = ' '.repeat(space);
+    }
+  } else if (space instanceof JSStringValue) {
+    if (space.stringValue().length <= 10) {
+      gap = space.stringValue();
+    } else {
+      gap = space.stringValue().slice(0, 10);
+    }
+  } else {
+    gap = '';
+  }
+  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  /* X */
+  let _temp95 = CreateDataPropertyOrThrow(wrapper, Value(''), value);
+  /* node:coverage ignore next */
+  if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) _temp95 = skipDebugger(_temp95);
+  /* node:coverage ignore next */
+  if (_temp95 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(wrapper, Value(''), value) returned an abrupt completion", {
+    cause: _temp95
+  });
+  /* node:coverage ignore next */
+  if (_temp95 instanceof Completion) _temp95 = _temp95.Value;
+  const state = {
+    ReplacerFunction,
+    Stack: stack,
+    Indent: indent,
+    Gap: gap,
+    PropertyList
+  };
+  return yield* SerializeJSONProperty(state, Value(''), wrapper);
+}
+JSON_stringify.section = 'https://tc39.es/ecma262/#sec-json.stringify';
+/** https://tc39.es/ecma262/#sec-json.rawjson */
+function* JSON_rawJSON([text = Value.undefined]) {
+  /* ReturnIfAbrupt */
+  let _temp96 = yield* ToString(text);
+  /* node:coverage ignore next */
+  if (_temp96 instanceof AbruptCompletion) return _temp96;
+  /* node:coverage ignore next */
+  if (_temp96 instanceof Completion) _temp96 = _temp96.Value;
+  const jsonString = _temp96;
+  const str = jsonString.stringValue();
+  if (str === '') {
+    return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+  }
+  const forbiddenChar = ['\u0009', '\u000A', '\u000D', '\u0020', '\u005B', '\u007B'];
+  if (forbiddenChar.includes(str[0]) || forbiddenChar.includes(str[str.length - 1])) {
+    return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+  }
+  /* ReturnIfAbrupt */
+  let _temp97 = ParseJSON(jsonString.stringValue());
+  /* node:coverage ignore next */
+  if (_temp97 instanceof AbruptCompletion) return _temp97;
+  /* node:coverage ignore next */
+  if (_temp97 instanceof Completion) _temp97 = _temp97.Value;
+  const parseResult = _temp97;
+  const value = parseResult.Value;
+  Assert(value instanceof JSStringValue || value instanceof NumberValue || value instanceof BooleanValue || value === Value.null, "value instanceof JSStringValue || value instanceof NumberValue || value instanceof BooleanValue || value === Value.null");
+  {
+    const firstCodeUnit = str[0].charCodeAt(0);
+    Assert(firstCodeUnit >= 0x0061 && firstCodeUnit <= 0x007A || firstCodeUnit >= 0x0030 && firstCodeUnit <= 0x0039 || firstCodeUnit === 0x0022 || firstCodeUnit === 0x002D, "(firstCodeUnit >= 0x0061 && firstCodeUnit <= 0x007A)\n      || (firstCodeUnit >= 0x0030 && firstCodeUnit <= 0x0039)\n      || firstCodeUnit === 0x0022\n      || firstCodeUnit === 0x002D");
+  }
+  {
+    const lastCodeUnit = str[str.length - 1].charCodeAt(0);
+    Assert(lastCodeUnit >= 0x0061 && lastCodeUnit <= 0x007A || lastCodeUnit >= 0x0030 && lastCodeUnit <= 0x0039 || lastCodeUnit === 0x0022, "(lastCodeUnit >= 0x0061 && lastCodeUnit <= 0x007A)\n      || (lastCodeUnit >= 0x0030 && lastCodeUnit <= 0x0039)\n      || lastCodeUnit === 0x0022");
+  }
+  const obj = OrdinaryObjectCreate(Value.null, ['IsRawJSON']);
+  /* X */
+  let _temp98 = CreateDataPropertyOrThrow(obj, Value('rawJSON'), jsonString);
+  /* node:coverage ignore next */
+  if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) _temp98 = skipDebugger(_temp98);
+  /* node:coverage ignore next */
+  if (_temp98 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(obj, Value('rawJSON'), jsonString) returned an abrupt completion", {
+    cause: _temp98
+  });
+  /* node:coverage ignore next */
+  if (_temp98 instanceof Completion) _temp98 = _temp98.Value;
+  /* X */
+  let _temp99 = SetIntegrityLevel(obj, 'frozen');
+  /* node:coverage ignore next */
+  if (_temp99 && typeof _temp99 === 'object' && 'next' in _temp99) _temp99 = skipDebugger(_temp99);
+  /* node:coverage ignore next */
+  if (_temp99 instanceof AbruptCompletion) throw new Assert.Error("! SetIntegrityLevel(obj, 'frozen') returned an abrupt completion", {
+    cause: _temp99
+  });
+  /* node:coverage ignore next */
+  if (_temp99 instanceof Completion) _temp99 = _temp99.Value;
+  return obj;
+}
+JSON_rawJSON.section = 'https://tc39.es/ecma262/#sec-json.rawjson';
+/** https://tc39.es/ecma262/pr/3714/#sec-json.israwjson */
+function JSON_isRawJSON([value = Value.undefined]) {
+  if (value instanceof ObjectValue && 'IsRawJSON' in value) {
+    return Value.true;
+  }
+  return Value.false;
+}
+JSON_isRawJSON.section = 'https://tc39.es/ecma262/pr/3714/#sec-json.israwjson';
+/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-shallowestcontainedjsonvalue */
+function ShallowestContainedJSONValue(node) {
+  const F = surroundingAgent.activeFunctionObject;
+  Assert(F.nativeFunction === JSON_parse, "(F as BuiltinFunctionObject).nativeFunction === JSON_parse");
+  const types = ['NullLiteral', 'BooleanLiteral', 'NumericLiteral', 'StringLiteral', 'ArrayLiteral', 'ObjectLiteral', 'UnaryExpression'];
+  let unaryExpression;
+  let queue = [node];
+  while (queue.length > 0) {
+    const candidate = queue.shift();
+    let queuedChildren = false;
+    for (const type of types) {
+      if (candidate?.type === type) {
+        if (type === 'UnaryExpression') {
+          unaryExpression = candidate;
+        } else if (type === 'NumericLiteral') {
+          // skip Assert: candidate is contained within unaryExpression
+          // our AST is different from the spec's AST
+          // Return unaryExpression.
+          return unaryExpression || candidate;
+        } else {
+          return candidate;
+        }
+      }
+      const children = [...avoid_using_children(candidate)];
+      if (!queuedChildren && children.length && Contains(candidate, type)) {
+        queue = queue.concat(children);
+        queuedChildren = true;
+      }
+    }
+  }
+  return undefined;
+}
+ShallowestContainedJSONValue.section = 'https://tc39.es/ecma262/pr/3714/#sec-static-semantics-shallowestcontainedjsonvalue';
+function bootstrapJSON(realmRec) {
+  const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3], ['rawJSON', JSON_rawJSON, 1], ['isRawJSON', JSON_isRawJSON, 1]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
+  realmRec.Intrinsics['%JSON%'] = json;
+  /* X */
+  let _temp100 = Get(json, Value('parse'));
+  /* node:coverage ignore next */
+  if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) _temp100 = skipDebugger(_temp100);
+  /* node:coverage ignore next */
+  if (_temp100 instanceof AbruptCompletion) throw new Assert.Error("! Get(json, Value('parse')) returned an abrupt completion", {
+    cause: _temp100
+  });
+  /* node:coverage ignore next */
+  if (_temp100 instanceof Completion) _temp100 = _temp100.Value;
+  realmRec.Intrinsics['%JSON.parse%'] = _temp100;
+  /* X */
+  let _temp101 = Get(json, Value('stringify'));
+  /* node:coverage ignore next */
+  if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) _temp101 = skipDebugger(_temp101);
+  /* node:coverage ignore next */
+  if (_temp101 instanceof AbruptCompletion) throw new Assert.Error("! Get(json, Value('stringify')) returned an abrupt completion", {
+    cause: _temp101
+  });
+  /* node:coverage ignore next */
+  if (_temp101 instanceof Completion) _temp101 = _temp101.Value;
+  realmRec.Intrinsics['%JSON.stringify%'] = _temp101;
+}
+
 function handleError(e) {
   if (e instanceof SyntaxError) {
     const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
@@ -20746,40 +22355,30 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
 function ParseJSONModule(sourceText, realm, hostDefined) {
-  // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
-  const jsonParse = realm.Intrinsics['%JSON.parse%'];
-  // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
   /* ReturnIfAbrupt */
-  let _temp3 = skipDebugger(Call(jsonParse, Value.undefined, [sourceText]));
+  let _temp3 = skipDebugger(ToString(sourceText));
   /* node:coverage ignore next */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* node:coverage ignore next */
   if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-  const json = _temp3;
-  // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
-  return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
+  const string = _temp3;
+  /* ReturnIfAbrupt */
+  let _temp4 = ParseJSON(string.stringValue());
+  /* node:coverage ignore next */
+  if (_temp4 instanceof AbruptCompletion) return _temp4;
+  /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const result = _temp4;
+  return CreateDefaultExportSyntheticModule(result.Value, realm, hostDefined);
 }
 ParseJSONModule.section = 'https://tc39.es/ecma262/#sec-parsejsonmodule';
 function setNodeParent(node, parent) {
   node.parent = parent;
-  for (const i in node) {
-    if (Object.hasOwn(node, i)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const value = node[i];
-      if (isArray(value)) {
-        value.forEach(val => {
-          if (isParseNode(val) && !val.parent) {
-            setNodeParent(val, node);
-          }
-        });
-      } else if (isParseNode(value) && !value.parent) {
-        setNodeParent(value, node);
-      }
+  for (const child of avoid_using_children(node)) {
+    if (!child.parent) {
+      setNodeParent(child, node);
     }
   }
-}
-function isParseNode(value) {
-  return !!(value && typeof value === 'object' && 'type' in value && 'location' in value);
 }
 
 /** https://tc39.es/ecma262/#sec-parsepattern */
@@ -33965,8 +35564,7 @@ function* SpeciesConstructor(O, defaultConstructor) {
 }
 SpeciesConstructor.section = 'https://tc39.es/ecma262/#sec-speciesconstructor';
 /** https://tc39.es/ecma262/#sec-enumerableownpropertynames */
-function* EnumerableOwnPropertyNames(O, kind) {
-  Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
+function* EnumerableOwnProperties(O, kind) {
   /* ReturnIfAbrupt */
   let _temp29 = yield* O.OwnPropertyKeys();
   /* node:coverage ignore next */
@@ -33974,7 +35572,7 @@ function* EnumerableOwnPropertyNames(O, kind) {
   /* node:coverage ignore next */
   if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
   const ownKeys = _temp29;
-  const properties = [];
+  const results = [];
   for (const key of ownKeys) {
     if (key instanceof JSStringValue) {
       /* ReturnIfAbrupt */
@@ -33986,7 +35584,7 @@ function* EnumerableOwnPropertyNames(O, kind) {
       const desc = _temp30;
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
         if (kind === 'key') {
-          properties.push(key);
+          results.push(key);
         } else {
           /* ReturnIfAbrupt */
           let _temp31 = yield* Get(O, key);
@@ -33996,7 +35594,7 @@ function* EnumerableOwnPropertyNames(O, kind) {
           if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
           const value = _temp31;
           if (kind === 'value') {
-            properties.push(value);
+            results.push(value);
           } else {
             Assert(kind === 'key+value', "kind === 'key+value'");
             /* X */
@@ -34010,13 +35608,13 @@ function* EnumerableOwnPropertyNames(O, kind) {
             /* node:coverage ignore next */
             if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
             const entry = _temp32;
-            properties.push(entry);
+            results.push(entry);
           }
         }
       }
     }
   }
-  return properties;
+  return results;
 }
 
 /** https://tc39.es/ecma262/#sec-getfunctionrealm */
@@ -37115,7 +38713,7 @@ function* Object_entries([O = Value.undefined]) {
   const obj = _temp15;
   // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, key+value).
   /* ReturnIfAbrupt */
-  let _temp16 = yield* EnumerableOwnPropertyNames(obj, 'key+value');
+  let _temp16 = yield* EnumerableOwnProperties(obj, 'key+value');
   /* node:coverage ignore next */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* node:coverage ignore next */
@@ -37470,7 +39068,7 @@ function* Object_keys([O = Value.undefined]) {
   const obj = _temp39;
   // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, key).
   /* ReturnIfAbrupt */
-  let _temp40 = yield* EnumerableOwnPropertyNames(obj, 'key');
+  let _temp40 = yield* EnumerableOwnProperties(obj, 'key');
   /* node:coverage ignore next */
   if (_temp40 instanceof AbruptCompletion) return _temp40;
   /* node:coverage ignore next */
@@ -37568,7 +39166,7 @@ function* Object_values([O = Value.undefined]) {
   const obj = _temp45;
   // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, value).
   /* ReturnIfAbrupt */
-  let _temp46 = yield* EnumerableOwnPropertyNames(obj, 'value');
+  let _temp46 = yield* EnumerableOwnProperties(obj, 'value');
   /* node:coverage ignore next */
   if (_temp46 instanceof AbruptCompletion) return _temp46;
   /* node:coverage ignore next */
@@ -42011,85 +43609,6 @@ function bootstrapArray(realmRec) {
   realmRec.Intrinsics['%Array%'] = cons;
 }
 
-function isBigIntObject(o) {
-  return 'BigIntData' in o;
-}
-/** https://tc39.es/ecma262/#sec-bigint-constructor */
-function* BigIntConstructor([value], {
-  NewTarget
-}) {
-  // 1. If NewTarget is not undefined, throw a TypeError exception.
-  if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
-  }
-  // 2. Let prim be ? ToPrimitive(value, number).
-  /* ReturnIfAbrupt */
-  let _temp = yield* ToPrimitive(value, 'number');
-  /* node:coverage ignore next */
-  if (_temp instanceof AbruptCompletion) return _temp;
-  /* node:coverage ignore next */
-  if (_temp instanceof Completion) _temp = _temp.Value;
-  const prim = _temp;
-  // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
-  // 4. Otherwise, return ? ToBigInt(prim).
-  if (prim instanceof NumberValue) {
-    return NumberToBigInt(prim);
-  } else {
-    return yield* ToBigInt(prim);
-  }
-}
-BigIntConstructor.section = 'https://tc39.es/ecma262/#sec-bigint-constructor';
-/** https://tc39.es/ecma262/#sec-bigint.asintn */
-function* BigInt_asIntN([_bits = Value.undefined, _bigint = Value.undefined]) {
-  /* ReturnIfAbrupt */
-  let _temp2 = yield* ToIndex(_bits);
-  /* node:coverage ignore next */
-  if (_temp2 instanceof AbruptCompletion) return _temp2;
-  /* node:coverage ignore next */
-  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-  // 1. Set bits to ? ToIndex(bits).
-  const bits = _temp2;
-  // 2. Set bigint to ? ToBigInt(bigint).
-  /* ReturnIfAbrupt */
-  let _temp3 = yield* ToBigInt(_bigint);
-  /* node:coverage ignore next */
-  if (_temp3 instanceof AbruptCompletion) return _temp3;
-  /* node:coverage ignore next */
-  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-  const bigint = _temp3;
-  // 3. Let mod be the BigInt value that represents bigint modulo 2bits.
-  // 4. If mod ≥ 2^bits - 1, return mod - 2^bits; otherwise, return mod.
-  return Z(BigInt.asIntN(bits, R(bigint)));
-}
-BigInt_asIntN.section = 'https://tc39.es/ecma262/#sec-bigint.asintn';
-/** https://tc39.es/ecma262/#sec-bigint.asuintn */
-function* BigInt_asUintN([_bits = Value.undefined, _bigint = Value.undefined]) {
-  /* ReturnIfAbrupt */
-  let _temp4 = yield* ToIndex(_bits);
-  /* node:coverage ignore next */
-  if (_temp4 instanceof AbruptCompletion) return _temp4;
-  /* node:coverage ignore next */
-  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
-  // 1. Set bits to ? ToIndex(bits).
-  const bits = _temp4;
-  // 2. Set bigint to ? ToBigInt(bigint).
-  /* ReturnIfAbrupt */
-  let _temp5 = yield* ToBigInt(_bigint);
-  /* node:coverage ignore next */
-  if (_temp5 instanceof AbruptCompletion) return _temp5;
-  /* node:coverage ignore next */
-  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-  const bigint = _temp5;
-  // 3. Let mod be ℝ(bigint) modulo 2 ** bits.
-  // 4. If mod ≥ 2 ** (bits - 1), return Z(mod - 2 ** bits); otherwise, return Z(mod).
-  return Z(BigInt.asUintN(bits, R(bigint)));
-}
-BigInt_asUintN.section = 'https://tc39.es/ecma262/#sec-bigint.asuintn';
-function bootstrapBigInt(realmRec) {
-  const bigintConstructor = bootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [['asIntN', BigInt_asIntN, 2], ['asUintN', BigInt_asUintN, 2]]);
-  realmRec.Intrinsics['%BigInt%'] = bigintConstructor;
-}
-
 /** https://tc39.es/ecma262/#sec-thisbigintvalue */
 function thisBigIntValue(value) {
   // 1. If Type(value) is BigInt, return value.
@@ -42223,48 +43742,6 @@ function bootstrapBooleanPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['toString', BooleanProto_toString, 0], ['valueOf', BooleanProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
   proto.BooleanData = Value.false;
   realmRec.Intrinsics['%Boolean.prototype%'] = proto;
-}
-
-function isBooleanObject(o) {
-  return 'BooleanData' in o;
-}
-/** https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value */
-function* BooleanConstructor([value = Value.undefined], {
-  NewTarget
-}) {
-  /* X */
-  let _temp = ToBoolean(value);
-  /* node:coverage ignore next */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-  /* node:coverage ignore next */
-  if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(value) returned an abrupt completion", {
-    cause: _temp
-  });
-  /* node:coverage ignore next */
-  if (_temp instanceof Completion) _temp = _temp.Value;
-  // 1. Let b be ! ToBoolean(value).
-  const b = _temp;
-  // 2. If NewTarget is undefined, return b.
-  if (NewTarget instanceof UndefinedValue) {
-    return b;
-  }
-  // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
-  /* ReturnIfAbrupt */
-  let _temp2 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
-  /* node:coverage ignore next */
-  if (_temp2 instanceof AbruptCompletion) return _temp2;
-  /* node:coverage ignore next */
-  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-  const O = _temp2;
-  // 4. Set O.[[BooleanData]] to b.
-  O.BooleanData = b;
-  // 5. Return O.
-  return O;
-}
-BooleanConstructor.section = 'https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value';
-function bootstrapBoolean(realmRec) {
-  const cons = bootstrapConstructor(realmRec, BooleanConstructor, 'Boolean', 1, realmRec.Intrinsics['%Boolean.prototype%'], []);
-  realmRec.Intrinsics['%Boolean%'] = cons;
 }
 
 function thisNumberValue(value) {
@@ -44829,1116 +46306,6 @@ RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%rege
 function bootstrapRegExpStringIteratorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['next', RegExpStringIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'RegExp String Iterator');
   realmRec.Intrinsics['%RegExpStringIteratorPrototype%'] = proto;
-}
-
-const WHITESPACE = [' ', '\t', '\r', '\n'];
-const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-const VALID_HEX = [...NUMERIC, 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f'];
-const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
-class JSONValidator {
-  input;
-  pos = 0;
-  char;
-  constructor(input) {
-    this.input = input;
-    this.char = input.charAt(0);
-  }
-  validate() {
-    /* X */
-    let _temp = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-    /* node:coverage ignore next */
-    if (_temp instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp
-    });
-    /* node:coverage ignore next */
-    if (_temp instanceof Completion) _temp = _temp.Value;
-    /* ReturnIfAbrupt */
-    let _temp2 = this.parseValue();
-    /* node:coverage ignore next */
-    if (_temp2 instanceof AbruptCompletion) return _temp2;
-    /* node:coverage ignore next */
-    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-    if (this.pos < this.input.length) {
-      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
-    }
-    return NormalCompletion(undefined);
-  }
-  advance() {
-    this.pos += 1;
-    if (this.pos === this.input.length) {
-      this.char = null;
-    } else if (this.pos > this.input.length) {
-      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
-    } else {
-      this.char = this.input.charAt(this.pos);
-    }
-    return this.char;
-  }
-  eatWhitespace() {
-    while (this.eat(WHITESPACE)) {
-      // nothing
-    }
-  }
-  eat(c) {
-    if (Array.isArray(c) && c.includes(this.char)) {
-      /* X */
-      let _temp3 = this.advance();
-      /* node:coverage ignore next */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-      /* node:coverage ignore next */
-      if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! this.advance() returned an abrupt completion", {
-        cause: _temp3
-      });
-      /* node:coverage ignore next */
-      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-      return true;
-    } else if (this.char === c) {
-      /* X */
-      let _temp4 = this.advance();
-      /* node:coverage ignore next */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
-      /* node:coverage ignore next */
-      if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! this.advance() returned an abrupt completion", {
-        cause: _temp4
-      });
-      /* node:coverage ignore next */
-      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
-      return true;
-    }
-    return false;
-  }
-  expect(c) {
-    const {
-      char
-    } = this;
-    if (!this.eat(c)) {
-      return surroundingAgent.Throw('SyntaxError', 'JSONExpected', c, this.char);
-    }
-    return char;
-  }
-  parseValue() {
-    switch (this.char) {
-      case '"':
-        return this.parseString();
-      case '{':
-        return this.parseObject();
-      case '[':
-        return this.parseArray();
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case '-':
-        return this.parseNumber();
-      case 'f':
-        /* X */
-        let _temp5 = this.expect('f');
-        /* node:coverage ignore next */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
-        /* node:coverage ignore next */
-        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! this.expect('f') returned an abrupt completion", {
-          cause: _temp5
-        });
-        /* node:coverage ignore next */
-        if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-        /* ReturnIfAbrupt */
-        let _temp6 = this.expect('a');
-        /* node:coverage ignore next */
-        if (_temp6 instanceof AbruptCompletion) return _temp6;
-        /* node:coverage ignore next */
-        if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
-        /* ReturnIfAbrupt */
-        let _temp7 = this.expect('l');
-        /* node:coverage ignore next */
-        if (_temp7 instanceof AbruptCompletion) return _temp7;
-        /* node:coverage ignore next */
-        if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
-        /* ReturnIfAbrupt */
-        let _temp8 = this.expect('s');
-        /* node:coverage ignore next */
-        if (_temp8 instanceof AbruptCompletion) return _temp8;
-        /* node:coverage ignore next */
-        if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
-        /* ReturnIfAbrupt */
-        let _temp9 = this.expect('e');
-        /* node:coverage ignore next */
-        if (_temp9 instanceof AbruptCompletion) return _temp9;
-        /* node:coverage ignore next */
-        if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
-        /* X */
-        let _temp0 = this.eatWhitespace();
-        /* node:coverage ignore next */
-        if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
-        /* node:coverage ignore next */
-        if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-          cause: _temp0
-        });
-        /* node:coverage ignore next */
-        if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
-        return _temp0;
-      case 't':
-        /* X */
-        let _temp1 = this.expect('t');
-        /* node:coverage ignore next */
-        if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
-        /* node:coverage ignore next */
-        if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! this.expect('t') returned an abrupt completion", {
-          cause: _temp1
-        });
-        /* node:coverage ignore next */
-        if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
-        /* ReturnIfAbrupt */
-        let _temp10 = this.expect('r');
-        /* node:coverage ignore next */
-        if (_temp10 instanceof AbruptCompletion) return _temp10;
-        /* node:coverage ignore next */
-        if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
-        /* ReturnIfAbrupt */
-        let _temp11 = this.expect('u');
-        /* node:coverage ignore next */
-        if (_temp11 instanceof AbruptCompletion) return _temp11;
-        /* node:coverage ignore next */
-        if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
-        /* ReturnIfAbrupt */
-        let _temp12 = this.expect('e');
-        /* node:coverage ignore next */
-        if (_temp12 instanceof AbruptCompletion) return _temp12;
-        /* node:coverage ignore next */
-        if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
-        /* X */
-        let _temp13 = this.eatWhitespace();
-        /* node:coverage ignore next */
-        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
-        /* node:coverage ignore next */
-        if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-          cause: _temp13
-        });
-        /* node:coverage ignore next */
-        if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
-        return _temp13;
-      case 'n':
-        /* X */
-        let _temp14 = this.expect('n');
-        /* node:coverage ignore next */
-        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
-        /* node:coverage ignore next */
-        if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! this.expect('n') returned an abrupt completion", {
-          cause: _temp14
-        });
-        /* node:coverage ignore next */
-        if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
-        /* ReturnIfAbrupt */
-        let _temp15 = this.expect('u');
-        /* node:coverage ignore next */
-        if (_temp15 instanceof AbruptCompletion) return _temp15;
-        /* node:coverage ignore next */
-        if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
-        /* ReturnIfAbrupt */
-        let _temp16 = this.expect('l');
-        /* node:coverage ignore next */
-        if (_temp16 instanceof AbruptCompletion) return _temp16;
-        /* node:coverage ignore next */
-        if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
-        /* ReturnIfAbrupt */
-        let _temp17 = this.expect('l');
-        /* node:coverage ignore next */
-        if (_temp17 instanceof AbruptCompletion) return _temp17;
-        /* node:coverage ignore next */
-        if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
-        /* X */
-        let _temp18 = this.eatWhitespace();
-        /* node:coverage ignore next */
-        if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
-        /* node:coverage ignore next */
-        if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-          cause: _temp18
-        });
-        /* node:coverage ignore next */
-        if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
-        return _temp18;
-      default:
-        return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
-    }
-  }
-  parseString() {
-    /* ReturnIfAbrupt */
-    let _temp19 = this.expect('"');
-    /* node:coverage ignore next */
-    if (_temp19 instanceof AbruptCompletion) return _temp19;
-    /* node:coverage ignore next */
-    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
-    while (!this.eat('"')) {
-      if (this.eat('\\')) {
-        if (!this.eat(ESCAPABLE)) {
-          /* ReturnIfAbrupt */
-          let _temp20 = this.expect('u');
-          /* node:coverage ignore next */
-          if (_temp20 instanceof AbruptCompletion) return _temp20;
-          /* node:coverage ignore next */
-          if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
-          /* ReturnIfAbrupt */
-          let _temp21 = this.expect(VALID_HEX);
-          /* node:coverage ignore next */
-          if (_temp21 instanceof AbruptCompletion) return _temp21;
-          /* node:coverage ignore next */
-          if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
-          /* ReturnIfAbrupt */
-          let _temp22 = this.expect(VALID_HEX);
-          /* node:coverage ignore next */
-          if (_temp22 instanceof AbruptCompletion) return _temp22;
-          /* node:coverage ignore next */
-          if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
-          /* ReturnIfAbrupt */
-          let _temp23 = this.expect(VALID_HEX);
-          /* node:coverage ignore next */
-          if (_temp23 instanceof AbruptCompletion) return _temp23;
-          /* node:coverage ignore next */
-          if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
-          /* ReturnIfAbrupt */
-          let _temp24 = this.expect(VALID_HEX);
-          /* node:coverage ignore next */
-          if (_temp24 instanceof AbruptCompletion) return _temp24;
-          /* node:coverage ignore next */
-          if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
-        }
-      } else {
-        if (this.char < ' ') {
-          return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
-        }
-        /* ReturnIfAbrupt */
-        let _temp25 = this.advance();
-        /* node:coverage ignore next */
-        if (_temp25 instanceof AbruptCompletion) return _temp25;
-        /* node:coverage ignore next */
-        if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
-      }
-    }
-    /* X */
-    let _temp26 = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
-    /* node:coverage ignore next */
-    if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp26
-    });
-    /* node:coverage ignore next */
-    if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
-    return _temp26;
-  }
-  parseNumber() {
-    this.eat('-');
-    if (!this.eat('0')) {
-      /* ReturnIfAbrupt */
-      let _temp27 = this.expect(NUMERIC);
-      /* node:coverage ignore next */
-      if (_temp27 instanceof AbruptCompletion) return _temp27;
-      /* node:coverage ignore next */
-      if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
-      while (this.eat(NUMERIC)) {
-        // nothing
-      }
-    }
-    if (this.eat('.')) {
-      /* ReturnIfAbrupt */
-      let _temp28 = this.expect(NUMERIC);
-      /* node:coverage ignore next */
-      if (_temp28 instanceof AbruptCompletion) return _temp28;
-      /* node:coverage ignore next */
-      if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
-      while (this.eat(NUMERIC)) {
-        // nothing
-      }
-    }
-    if (this.eat(['e', 'E'])) {
-      this.eat(['-', '+']);
-      /* ReturnIfAbrupt */
-      let _temp29 = this.expect(NUMERIC);
-      /* node:coverage ignore next */
-      if (_temp29 instanceof AbruptCompletion) return _temp29;
-      /* node:coverage ignore next */
-      if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
-      while (this.eat(NUMERIC)) {
-        // nothing
-      }
-    }
-    /* X */
-    let _temp30 = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
-    /* node:coverage ignore next */
-    if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp30
-    });
-    /* node:coverage ignore next */
-    if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
-  }
-  parseObject() {
-    /* ReturnIfAbrupt */
-    let _temp31 = this.expect('{');
-    /* node:coverage ignore next */
-    if (_temp31 instanceof AbruptCompletion) return _temp31;
-    /* node:coverage ignore next */
-    if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
-    /* X */
-    let _temp32 = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
-    /* node:coverage ignore next */
-    if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp32
-    });
-    /* node:coverage ignore next */
-    if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
-    let first = true;
-    while (!this.eat('}')) {
-      if (first) {
-        first = false;
-      } else {
-        /* ReturnIfAbrupt */
-        let _temp33 = this.expect(',');
-        /* node:coverage ignore next */
-        if (_temp33 instanceof AbruptCompletion) return _temp33;
-        /* node:coverage ignore next */
-        if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
-        /* X */
-        let _temp34 = this.eatWhitespace();
-        /* node:coverage ignore next */
-        if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
-        /* node:coverage ignore next */
-        if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-          cause: _temp34
-        });
-        /* node:coverage ignore next */
-        if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
-      }
-      /* ReturnIfAbrupt */
-      let _temp35 = this.parseString();
-      /* node:coverage ignore next */
-      if (_temp35 instanceof AbruptCompletion) return _temp35;
-      /* node:coverage ignore next */
-      if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
-      /* X */
-      let _temp36 = this.eatWhitespace();
-      /* node:coverage ignore next */
-      if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
-      /* node:coverage ignore next */
-      if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-        cause: _temp36
-      });
-      /* node:coverage ignore next */
-      if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
-      /* ReturnIfAbrupt */
-      let _temp37 = this.expect(':');
-      /* node:coverage ignore next */
-      if (_temp37 instanceof AbruptCompletion) return _temp37;
-      /* node:coverage ignore next */
-      if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
-      /* X */
-      let _temp38 = this.eatWhitespace();
-      /* node:coverage ignore next */
-      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) _temp38 = skipDebugger(_temp38);
-      /* node:coverage ignore next */
-      if (_temp38 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-        cause: _temp38
-      });
-      /* node:coverage ignore next */
-      if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
-      /* ReturnIfAbrupt */
-      let _temp39 = this.parseValue();
-      /* node:coverage ignore next */
-      if (_temp39 instanceof AbruptCompletion) return _temp39;
-      /* node:coverage ignore next */
-      if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
-      /* X */
-      let _temp40 = this.eatWhitespace();
-      /* node:coverage ignore next */
-      if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) _temp40 = skipDebugger(_temp40);
-      /* node:coverage ignore next */
-      if (_temp40 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-        cause: _temp40
-      });
-      /* node:coverage ignore next */
-      if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
-    }
-    /* X */
-    let _temp41 = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
-    /* node:coverage ignore next */
-    if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp41
-    });
-    /* node:coverage ignore next */
-    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
-  }
-  parseArray() {
-    /* ReturnIfAbrupt */
-    let _temp42 = this.expect('[');
-    /* node:coverage ignore next */
-    if (_temp42 instanceof AbruptCompletion) return _temp42;
-    /* node:coverage ignore next */
-    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
-    /* X */
-    let _temp43 = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) _temp43 = skipDebugger(_temp43);
-    /* node:coverage ignore next */
-    if (_temp43 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp43
-    });
-    /* node:coverage ignore next */
-    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
-    let first = true;
-    while (!this.eat(']')) {
-      if (first) {
-        first = false;
-      } else {
-        /* ReturnIfAbrupt */
-        let _temp44 = this.expect(',');
-        /* node:coverage ignore next */
-        if (_temp44 instanceof AbruptCompletion) return _temp44;
-        /* node:coverage ignore next */
-        if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
-        /* X */
-        let _temp45 = this.eatWhitespace();
-        /* node:coverage ignore next */
-        if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) _temp45 = skipDebugger(_temp45);
-        /* node:coverage ignore next */
-        if (_temp45 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-          cause: _temp45
-        });
-        /* node:coverage ignore next */
-        if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
-      }
-      /* ReturnIfAbrupt */
-      let _temp46 = this.parseValue();
-      /* node:coverage ignore next */
-      if (_temp46 instanceof AbruptCompletion) return _temp46;
-      /* node:coverage ignore next */
-      if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
-      /* X */
-      let _temp47 = this.eatWhitespace();
-      /* node:coverage ignore next */
-      if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) _temp47 = skipDebugger(_temp47);
-      /* node:coverage ignore next */
-      if (_temp47 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-        cause: _temp47
-      });
-      /* node:coverage ignore next */
-      if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
-    }
-    /* X */
-    let _temp48 = this.eatWhitespace();
-    /* node:coverage ignore next */
-    if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) _temp48 = skipDebugger(_temp48);
-    /* node:coverage ignore next */
-    if (_temp48 instanceof AbruptCompletion) throw new Assert.Error("! this.eatWhitespace() returned an abrupt completion", {
-      cause: _temp48
-    });
-    /* node:coverage ignore next */
-    if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
-  }
-  static validate(input) {
-    const v = new JSONValidator(input);
-    return v.validate();
-  }
-}
-function* InternalizeJSONProperty(holder, name, reviver) {
-  /* ReturnIfAbrupt */
-  let _temp49 = yield* Get(holder, name);
-  /* node:coverage ignore next */
-  if (_temp49 instanceof AbruptCompletion) return _temp49;
-  /* node:coverage ignore next */
-  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
-  const val = _temp49;
-  if (val instanceof ObjectValue) {
-    /* ReturnIfAbrupt */
-    let _temp50 = IsArray(val);
-    /* node:coverage ignore next */
-    if (_temp50 instanceof AbruptCompletion) return _temp50;
-    /* node:coverage ignore next */
-    if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
-    const isArray = _temp50;
-    if (isArray === Value.true) {
-      let I = 0;
-      /* ReturnIfAbrupt */
-      let _temp51 = yield* LengthOfArrayLike(val);
-      /* node:coverage ignore next */
-      if (_temp51 instanceof AbruptCompletion) return _temp51;
-      /* node:coverage ignore next */
-      if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
-      const len = _temp51;
-      while (I < len) {
-        /* X */
-        let _temp52 = ToString(F(I));
-        /* node:coverage ignore next */
-        if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) _temp52 = skipDebugger(_temp52);
-        /* node:coverage ignore next */
-        if (_temp52 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(I)) returned an abrupt completion", {
-          cause: _temp52
-        });
-        /* node:coverage ignore next */
-        if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
-        const Istr = _temp52;
-        /* ReturnIfAbrupt */
-        let _temp53 = yield* InternalizeJSONProperty(val, Istr, reviver);
-        /* node:coverage ignore next */
-        if (_temp53 instanceof AbruptCompletion) return _temp53;
-        /* node:coverage ignore next */
-        if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
-        const newElement = _temp53;
-        if (newElement instanceof UndefinedValue) {
-          /* ReturnIfAbrupt */
-          let _temp54 = yield* val.Delete(Istr);
-          /* node:coverage ignore next */
-          if (_temp54 instanceof AbruptCompletion) return _temp54;
-          /* node:coverage ignore next */
-          if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
-        } else {
-          /* ReturnIfAbrupt */
-          let _temp55 = yield* CreateDataProperty(val, Istr, newElement);
-          /* node:coverage ignore next */
-          if (_temp55 instanceof AbruptCompletion) return _temp55;
-          /* node:coverage ignore next */
-          if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
-        }
-        I += 1;
-      }
-    } else {
-      /* ReturnIfAbrupt */
-      let _temp56 = yield* EnumerableOwnPropertyNames(val, 'key');
-      /* node:coverage ignore next */
-      if (_temp56 instanceof AbruptCompletion) return _temp56;
-      /* node:coverage ignore next */
-      if (_temp56 instanceof Completion) _temp56 = _temp56.Value;
-      const keys = _temp56;
-      for (const P of keys) {
-        /* ReturnIfAbrupt */
-        let _temp57 = yield* InternalizeJSONProperty(val, P, reviver);
-        /* node:coverage ignore next */
-        if (_temp57 instanceof AbruptCompletion) return _temp57;
-        /* node:coverage ignore next */
-        if (_temp57 instanceof Completion) _temp57 = _temp57.Value;
-        const newElement = _temp57;
-        if (newElement instanceof UndefinedValue) {
-          /* ReturnIfAbrupt */
-          let _temp58 = yield* val.Delete(P);
-          /* node:coverage ignore next */
-          if (_temp58 instanceof AbruptCompletion) return _temp58;
-          /* node:coverage ignore next */
-          if (_temp58 instanceof Completion) _temp58 = _temp58.Value;
-        } else {
-          /* ReturnIfAbrupt */
-          let _temp59 = yield* CreateDataProperty(val, P, newElement);
-          /* node:coverage ignore next */
-          if (_temp59 instanceof AbruptCompletion) return _temp59;
-          /* node:coverage ignore next */
-          if (_temp59 instanceof Completion) _temp59 = _temp59.Value;
-        }
-      }
-    }
-  }
-  return yield* Call(reviver, holder, [name, val]);
-}
-
-/** https://tc39.es/ecma262/#sec-json.parse */
-function* JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
-  /* ReturnIfAbrupt */
-  let _temp60 = yield* ToString(text);
-  /* node:coverage ignore next */
-  if (_temp60 instanceof AbruptCompletion) return _temp60;
-  /* node:coverage ignore next */
-  if (_temp60 instanceof Completion) _temp60 = _temp60.Value;
-  // 1. Let jsonString be ? ToString(text).
-  const jsonString = _temp60;
-  // 2. Parse ! UTF16DecodeString(jsonString) as a JSON text as specified in ECMA-404.
-  //    Throw a SyntaxError exception if it is not a valid JSON text as defined in that specification.
-  /* ReturnIfAbrupt */
-  let _temp61 = JSONValidator.validate(jsonString.stringValue());
-  /* node:coverage ignore next */
-  if (_temp61 instanceof AbruptCompletion) return _temp61;
-  /* node:coverage ignore next */
-  if (_temp61 instanceof Completion) _temp61 = _temp61.Value;
-  // 3. Let scriptString be the string-concatenation of "(", jsonString, and ");".
-  const scriptString = `(${jsonString.stringValue()});`;
-  // 4. Let completion be the result of parsing and evaluating
-  //    ! UTF16DecodeString(scriptString) as if it was the source text of an ECMAScript Script. The
-  //    extended PropertyDefinitionEvaluation semantics defined in B.3.1 must not be used during the evaluation.
-  const parsed = ParseScript(scriptString, surroundingAgent.currentRealmRecord, {
-    [kInternal]: {
-      json: true
-    }
-  });
-  Assert(!isArray(parsed), "!isArray(parsed)"); // array means parse error
-  /* X */
-  let _temp62 = skipDebugger(ScriptEvaluation(parsed));
-  /* node:coverage ignore next */
-  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) _temp62 = skipDebugger(_temp62);
-  /* node:coverage ignore next */
-  if (_temp62 instanceof AbruptCompletion) throw new Assert.Error("! skipDebugger(ScriptEvaluation(parsed)) returned an abrupt completion", {
-    cause: _temp62
-  });
-  /* node:coverage ignore next */
-  if (_temp62 instanceof Completion) _temp62 = _temp62.Value;
-  const completion = _temp62;
-  // 5. Let unfiltered be completion.[[Value]].
-  const unfiltered = completion;
-  // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
-  Assert(unfiltered instanceof JSStringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof JSStringValue\n    || unfiltered instanceof NumberValue\n    || unfiltered instanceof BooleanValue\n    || unfiltered instanceof NullValue\n    || unfiltered instanceof ObjectValue");
-  // 7. If IsCallable(reviver) is true, then
-  if (IsCallable(reviver)) {
-    // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
-    const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    // b. Let rootName be the empty String.
-    const rootName = Value('');
-    // c. Perform ! CreateDataPropertyOrThrow(root, rootName, unfiltered).
-    /* X */
-    let _temp63 = CreateDataPropertyOrThrow(root, rootName, unfiltered);
-    /* node:coverage ignore next */
-    if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) _temp63 = skipDebugger(_temp63);
-    /* node:coverage ignore next */
-    if (_temp63 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(root, rootName, unfiltered) returned an abrupt completion", {
-      cause: _temp63
-    });
-    /* node:coverage ignore next */
-    if (_temp63 instanceof Completion) _temp63 = _temp63.Value;
-    // d. Return ? InternalizeJSONProperty(root, rootName, reviver).
-    return yield* InternalizeJSONProperty(root, rootName, reviver);
-  } else {
-    // a. Return unfiltered.
-    return unfiltered;
-  }
-}
-JSON_parse.section = 'https://tc39.es/ecma262/#sec-json.parse';
-const codeUnitTable = new Map([[0x0008, '\\b'], [0x0009, '\\t'], [0x000A, '\\n'], [0x000C, '\\f'], [0x000D, '\\r'], [0x0022, '\\"'], [0x005C, '\\\\']]);
-/** https://tc39.es/ecma262/#sec-serializejsonproperty */
-function* SerializeJSONProperty(state, key, holder) {
-  /* ReturnIfAbrupt */
-  let _temp64 = yield* Get(holder, key);
-  /* node:coverage ignore next */
-  if (_temp64 instanceof AbruptCompletion) return _temp64;
-  /* node:coverage ignore next */
-  if (_temp64 instanceof Completion) _temp64 = _temp64.Value;
-  let value = _temp64; // eslint-disable-line no-shadow
-  if (value instanceof ObjectValue || value instanceof BigIntValue) {
-    /* ReturnIfAbrupt */
-    let _temp65 = yield* GetV(value, Value('toJSON'));
-    /* node:coverage ignore next */
-    if (_temp65 instanceof AbruptCompletion) return _temp65;
-    /* node:coverage ignore next */
-    if (_temp65 instanceof Completion) _temp65 = _temp65.Value;
-    const toJSON = _temp65;
-    if (IsCallable(toJSON)) {
-      /* ReturnIfAbrupt */
-      let _temp66 = yield* Call(toJSON, value, [key]);
-      /* node:coverage ignore next */
-      if (_temp66 instanceof AbruptCompletion) return _temp66;
-      /* node:coverage ignore next */
-      if (_temp66 instanceof Completion) _temp66 = _temp66.Value;
-      value = _temp66;
-    }
-  }
-  if (state.ReplacerFunction !== Value.undefined) {
-    /* ReturnIfAbrupt */
-    let _temp67 = yield* Call(state.ReplacerFunction, holder, [key, value]);
-    /* node:coverage ignore next */
-    if (_temp67 instanceof AbruptCompletion) return _temp67;
-    /* node:coverage ignore next */
-    if (_temp67 instanceof Completion) _temp67 = _temp67.Value;
-    value = _temp67;
-  }
-  if (value instanceof ObjectValue) {
-    if ('NumberData' in value) {
-      /* ReturnIfAbrupt */
-      let _temp68 = yield* ToNumber(value);
-      /* node:coverage ignore next */
-      if (_temp68 instanceof AbruptCompletion) return _temp68;
-      /* node:coverage ignore next */
-      if (_temp68 instanceof Completion) _temp68 = _temp68.Value;
-      value = _temp68;
-    } else if ('StringData' in value) {
-      /* ReturnIfAbrupt */
-      let _temp69 = yield* ToString(value);
-      /* node:coverage ignore next */
-      if (_temp69 instanceof AbruptCompletion) return _temp69;
-      /* node:coverage ignore next */
-      if (_temp69 instanceof Completion) _temp69 = _temp69.Value;
-      value = _temp69;
-    } else if (isBooleanObject(value)) {
-      value = value.BooleanData;
-    } else if (isBigIntObject(value)) {
-      value = value.BigIntData;
-    }
-  }
-  if (value === Value.null) {
-    return Value('null');
-  }
-  if (value === Value.true) {
-    return Value('true');
-  }
-  if (value === Value.false) {
-    return Value('false');
-  }
-  if (value instanceof JSStringValue) {
-    return QuoteJSONString(value);
-  }
-  if (value instanceof NumberValue) {
-    if (value.isFinite()) {
-      /* X */
-      let _temp70 = ToString(value);
-      /* node:coverage ignore next */
-      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) _temp70 = skipDebugger(_temp70);
-      /* node:coverage ignore next */
-      if (_temp70 instanceof AbruptCompletion) throw new Assert.Error("! ToString(value) returned an abrupt completion", {
-        cause: _temp70
-      });
-      /* node:coverage ignore next */
-      if (_temp70 instanceof Completion) _temp70 = _temp70.Value;
-      return _temp70;
-    }
-    return Value('null');
-  }
-  if (value instanceof BigIntValue) {
-    return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
-  }
-  if (value instanceof ObjectValue && !IsCallable(value)) {
-    /* ReturnIfAbrupt */
-    let _temp71 = IsArray(value);
-    /* node:coverage ignore next */
-    if (_temp71 instanceof AbruptCompletion) return _temp71;
-    /* node:coverage ignore next */
-    if (_temp71 instanceof Completion) _temp71 = _temp71.Value;
-    const isArray = _temp71;
-    if (isArray === Value.true) {
-      return yield* SerializeJSONArray(state, value);
-    }
-    return yield* SerializeJSONObject(state, value);
-  }
-  return Value.undefined;
-}
-SerializeJSONProperty.section = 'https://tc39.es/ecma262/#sec-serializejsonproperty';
-function UnicodeEscape(C) {
-  const n = C.charCodeAt(0);
-  Assert(n < 0xFFFF, "n < 0xFFFF");
-  return `\u005Cu${n.toString(16).padStart(4, '0')}`;
-}
-function QuoteJSONString(value) {
-  // eslint-disable-line no-shadow
-  let product = '\u0022';
-  const cpList = [...value.stringValue()].map(c => c.codePointAt(0));
-  for (const C of cpList) {
-    if (codeUnitTable.has(C)) {
-      product = `${product}${codeUnitTable.get(C)}`;
-    } else if (C < 0x0020 || isLeadingSurrogate(C) || isTrailingSurrogate(C)) {
-      const unit = String.fromCodePoint(C);
-      product += UnicodeEscape(unit);
-    } else {
-      product += UTF16EncodeCodePoint(C);
-    }
-  }
-  product = `${product}\u0022`;
-  return Value(product);
-}
-
-/** https://tc39.es/ecma262/#sec-serializejsonobject */
-function* SerializeJSONObject(state, value) {
-  if (state.Stack.includes(value)) {
-    return surroundingAgent.Throw('TypeError', 'JSONCircular');
-  }
-  state.Stack.push(value);
-  const stepback = state.Indent;
-  state.Indent = `${state.Indent}${state.Gap}`;
-  let K;
-  if (!(state.PropertyList instanceof UndefinedValue)) {
-    K = state.PropertyList.keys();
-  } else {
-    /* ReturnIfAbrupt */
-    let _temp72 = yield* EnumerableOwnPropertyNames(value, 'key');
-    /* node:coverage ignore next */
-    if (_temp72 instanceof AbruptCompletion) return _temp72;
-    /* node:coverage ignore next */
-    if (_temp72 instanceof Completion) _temp72 = _temp72.Value;
-    K = _temp72.values();
-  }
-  const partial = [];
-  for (const P of K) {
-    /* ReturnIfAbrupt */
-    let _temp73 = yield* SerializeJSONProperty(state, P, value);
-    /* node:coverage ignore next */
-    if (_temp73 instanceof AbruptCompletion) return _temp73;
-    /* node:coverage ignore next */
-    if (_temp73 instanceof Completion) _temp73 = _temp73.Value;
-    const strP = _temp73;
-    if (!(strP instanceof UndefinedValue)) {
-      let member = QuoteJSONString(P).stringValue();
-      member = `${member}:`;
-      if (state.Gap !== '') {
-        member = `${member} `;
-      }
-      member = `${member}${strP.stringValue()}`;
-      partial.push(member);
-    }
-  }
-  let final;
-  if (partial.length === 0) {
-    final = Value('{}');
-  } else {
-    if (state.Gap === '') {
-      const properties = partial.join(',');
-      final = Value(`{${properties}}`);
-    } else {
-      const separator = `,\u000A${state.Indent}`;
-      const properties = partial.join(separator);
-      final = Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
-    }
-  }
-  state.Stack.pop();
-  state.Indent = stepback;
-  return final;
-}
-SerializeJSONObject.section = 'https://tc39.es/ecma262/#sec-serializejsonobject';
-/** https://tc39.es/ecma262/#sec-serializejsonarray */
-function* SerializeJSONArray(state, value) {
-  if (state.Stack.includes(value)) {
-    return surroundingAgent.Throw('TypeError', 'JSONCircular');
-  }
-  state.Stack.push(value);
-  const stepback = state.Indent;
-  state.Indent = `${state.Indent}${state.Gap}`;
-  const partial = [];
-  /* ReturnIfAbrupt */
-  let _temp74 = yield* LengthOfArrayLike(value);
-  /* node:coverage ignore next */
-  if (_temp74 instanceof AbruptCompletion) return _temp74;
-  /* node:coverage ignore next */
-  if (_temp74 instanceof Completion) _temp74 = _temp74.Value;
-  const len = _temp74;
-  let index = 0;
-  while (index < len) {
-    /* X */
-    let _temp75 = ToString(F(index));
-    /* node:coverage ignore next */
-    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) _temp75 = skipDebugger(_temp75);
-    /* node:coverage ignore next */
-    if (_temp75 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(index)) returned an abrupt completion", {
-      cause: _temp75
-    });
-    /* node:coverage ignore next */
-    if (_temp75 instanceof Completion) _temp75 = _temp75.Value;
-    const indexStr = _temp75;
-    /* ReturnIfAbrupt */
-    let _temp76 = yield* SerializeJSONProperty(state, indexStr, value);
-    /* node:coverage ignore next */
-    if (_temp76 instanceof AbruptCompletion) return _temp76;
-    /* node:coverage ignore next */
-    if (_temp76 instanceof Completion) _temp76 = _temp76.Value;
-    const strP = _temp76;
-    if (strP instanceof UndefinedValue) {
-      partial.push('null');
-    } else {
-      partial.push(strP.stringValue());
-    }
-    index += 1;
-  }
-  let final;
-  if (partial.length === 0) {
-    final = Value('[]');
-  } else {
-    if (state.Gap === '') {
-      const properties = partial.join(',');
-      final = Value(`[${properties}]`);
-    } else {
-      const separator = `,\u000A${state.Indent}`;
-      const properties = partial.join(separator);
-      final = Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
-    }
-  }
-  state.Stack.pop();
-  state.Indent = stepback;
-  return final;
-}
-SerializeJSONArray.section = 'https://tc39.es/ecma262/#sec-serializejsonarray';
-/** https://tc39.es/ecma262/#sec-json.stringify */
-function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _space = Value.undefined]) {
-  const stack = [];
-  const indent = '';
-  let PropertyList = Value.undefined;
-  let ReplacerFunction = Value.undefined;
-  if (replacer instanceof ObjectValue) {
-    if (IsCallable(replacer)) {
-      ReplacerFunction = replacer;
-    } else {
-      /* ReturnIfAbrupt */
-      let _temp77 = IsArray(replacer);
-      /* node:coverage ignore next */
-      if (_temp77 instanceof AbruptCompletion) return _temp77;
-      /* node:coverage ignore next */
-      if (_temp77 instanceof Completion) _temp77 = _temp77.Value;
-      const isArray = _temp77;
-      if (isArray === Value.true) {
-        PropertyList = new JSStringSet();
-        /* ReturnIfAbrupt */
-        let _temp78 = yield* LengthOfArrayLike(replacer);
-        /* node:coverage ignore next */
-        if (_temp78 instanceof AbruptCompletion) return _temp78;
-        /* node:coverage ignore next */
-        if (_temp78 instanceof Completion) _temp78 = _temp78.Value;
-        const len = _temp78;
-        let k = 0;
-        while (k < len) {
-          /* X */
-          let _temp79 = ToString(F(k));
-          /* node:coverage ignore next */
-          if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) _temp79 = skipDebugger(_temp79);
-          /* node:coverage ignore next */
-          if (_temp79 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
-            cause: _temp79
-          });
-          /* node:coverage ignore next */
-          if (_temp79 instanceof Completion) _temp79 = _temp79.Value;
-          const vStr = _temp79;
-          /* ReturnIfAbrupt */
-          let _temp80 = yield* Get(replacer, vStr);
-          /* node:coverage ignore next */
-          if (_temp80 instanceof AbruptCompletion) return _temp80;
-          /* node:coverage ignore next */
-          if (_temp80 instanceof Completion) _temp80 = _temp80.Value;
-          const v = _temp80;
-          let item = Value.undefined;
-          if (v instanceof JSStringValue) {
-            item = v;
-          } else if (v instanceof NumberValue) {
-            /* X */
-            let _temp81 = ToString(v);
-            /* node:coverage ignore next */
-            if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) _temp81 = skipDebugger(_temp81);
-            /* node:coverage ignore next */
-            if (_temp81 instanceof AbruptCompletion) throw new Assert.Error("! ToString(v) returned an abrupt completion", {
-              cause: _temp81
-            });
-            /* node:coverage ignore next */
-            if (_temp81 instanceof Completion) _temp81 = _temp81.Value;
-            item = _temp81;
-          } else if (v instanceof ObjectValue) {
-            if ('StringData' in v || 'NumberData' in v) {
-              /* ReturnIfAbrupt */
-              let _temp82 = yield* ToString(v);
-              /* node:coverage ignore next */
-              if (_temp82 instanceof AbruptCompletion) return _temp82;
-              /* node:coverage ignore next */
-              if (_temp82 instanceof Completion) _temp82 = _temp82.Value;
-              item = _temp82;
-            }
-          }
-          if (!(item instanceof UndefinedValue) && !PropertyList.has(item)) {
-            PropertyList.add(item);
-          }
-          k += 1;
-        }
-      }
-    }
-  }
-  let space = _space;
-  if (space instanceof ObjectValue) {
-    if ('NumberData' in space) {
-      /* ReturnIfAbrupt */
-      let _temp83 = yield* ToNumber(space);
-      /* node:coverage ignore next */
-      if (_temp83 instanceof AbruptCompletion) return _temp83;
-      /* node:coverage ignore next */
-      if (_temp83 instanceof Completion) _temp83 = _temp83.Value;
-      space = _temp83;
-    } else if ('StringData' in space) {
-      /* ReturnIfAbrupt */
-      let _temp84 = yield* ToString(space);
-      /* node:coverage ignore next */
-      if (_temp84 instanceof AbruptCompletion) return _temp84;
-      /* node:coverage ignore next */
-      if (_temp84 instanceof Completion) _temp84 = _temp84.Value;
-      space = _temp84;
-    }
-  }
-  let gap;
-  if (space instanceof NumberValue) {
-    /* X */
-    let _temp85 = ToIntegerOrInfinity(space);
-    /* node:coverage ignore next */
-    if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) _temp85 = skipDebugger(_temp85);
-    /* node:coverage ignore next */
-    if (_temp85 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(space) returned an abrupt completion", {
-      cause: _temp85
-    });
-    /* node:coverage ignore next */
-    if (_temp85 instanceof Completion) _temp85 = _temp85.Value;
-    space = Math.min(10, _temp85);
-    if (space < 1) {
-      gap = '';
-    } else {
-      gap = ' '.repeat(space);
-    }
-  } else if (space instanceof JSStringValue) {
-    if (space.stringValue().length <= 10) {
-      gap = space.stringValue();
-    } else {
-      gap = space.stringValue().slice(0, 10);
-    }
-  } else {
-    gap = '';
-  }
-  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  /* X */
-  let _temp86 = CreateDataPropertyOrThrow(wrapper, Value(''), value);
-  /* node:coverage ignore next */
-  if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) _temp86 = skipDebugger(_temp86);
-  /* node:coverage ignore next */
-  if (_temp86 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(wrapper, Value(''), value) returned an abrupt completion", {
-    cause: _temp86
-  });
-  /* node:coverage ignore next */
-  if (_temp86 instanceof Completion) _temp86 = _temp86.Value;
-  const state = {
-    ReplacerFunction,
-    Stack: stack,
-    Indent: indent,
-    Gap: gap,
-    PropertyList
-  };
-  return yield* SerializeJSONProperty(state, Value(''), wrapper);
-}
-JSON_stringify.section = 'https://tc39.es/ecma262/#sec-json.stringify';
-function bootstrapJSON(realmRec) {
-  const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
-  realmRec.Intrinsics['%JSON%'] = json;
-  /* X */
-  let _temp87 = Get(json, Value('parse'));
-  /* node:coverage ignore next */
-  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) _temp87 = skipDebugger(_temp87);
-  /* node:coverage ignore next */
-  if (_temp87 instanceof AbruptCompletion) throw new Assert.Error("! Get(json, Value('parse')) returned an abrupt completion", {
-    cause: _temp87
-  });
-  /* node:coverage ignore next */
-  if (_temp87 instanceof Completion) _temp87 = _temp87.Value;
-  realmRec.Intrinsics['%JSON.parse%'] = _temp87;
-  /* X */
-  let _temp88 = Get(json, Value('stringify'));
-  /* node:coverage ignore next */
-  if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) _temp88 = skipDebugger(_temp88);
-  /* node:coverage ignore next */
-  if (_temp88 instanceof AbruptCompletion) throw new Assert.Error("! Get(json, Value('stringify')) returned an abrupt completion", {
-    cause: _temp88
-  });
-  /* node:coverage ignore next */
-  if (_temp88 instanceof Completion) _temp88 = _temp88.Value;
-  realmRec.Intrinsics['%JSON.stringify%'] = _temp88;
 }
 
 function isRegExpObject(o) {
@@ -61897,5 +62264,5 @@ function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
   return result;
 }
 
-export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeKeyedCollectionKey, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompilePattern, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CountLeftCapturingParensWithin, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GatherAsynchronousTransitiveDependencies, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeHostDefinedRealm, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsEqual, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, asyncBuiltinFunctionPrologue, boostTest262Harness, captureStack, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getCurrentStack, getHostDefinedErrorStack, hasSourceTextInternalSlot, inspect, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, IsError as isErrorObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isStrictModeCode, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, kInternal, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeKeyedCollectionKey, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompilePattern, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CountLeftCapturingParensWithin, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GatherAsynchronousTransitiveDependencies, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeHostDefinedRealm, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsEqual, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, asyncBuiltinFunctionPrologue, boostTest262Harness, captureStack, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getCurrentStack, getHostDefinedErrorStack, hasSourceTextInternalSlot, inspect, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, IsError as isErrorObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isStrictModeCode, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, kInternal, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
