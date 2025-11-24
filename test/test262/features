@@ -3,7 +3,6 @@
 # Start with `-` to skip feature
 # Map feature to engine262 feature using `feature = engine262featurename`
 
-uint8array-base64 = uint8array-base64
 import-defer = import-defer
 
 # Update with test262 on Feb 2025, to be investigated/implemented

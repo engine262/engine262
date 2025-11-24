@@ -17,7 +17,7 @@ import { PerformPromiseAll } from '../intrinsics/Promise.mts';
 export function ContinueDynamicImport(
   promiseCapability: PromiseCapabilityRecord,
   moduleCompletion: PlainCompletion<AbstractModuleRecord>,
-  /* [import-defer] */ phase: 'defer' | 'evaluation',
+  phase: 'defer' | 'evaluation',
 ) {
   // 1. If moduleCompletion is an abrupt completion, then
   if (moduleCompletion instanceof AbruptCompletion) {
@@ -54,51 +54,46 @@ export function ContinueDynamicImport(
     }
 
     let evaluatePromise: PromiseObject;
-    if (!surroundingAgent.feature('import-defer')) {
-      // c. Let evaluatePromise be module.Evaluate().
-      evaluatePromise = yield* module.Evaluate();
-    }
+    // c. Let evaluatePromise be module.Evaluate().
+    evaluatePromise = yield* module.Evaluate();
 
     // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {
       // i. Let namespace be GetModuleNamespace(module).
-      const namespace = GetModuleNamespace(module, /* [import-defer] */ phase);
+      const namespace = GetModuleNamespace(module, phase);
       // ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace »).
       X(Call(promiseCapability.Resolve, Value.undefined, [namespace]));
       // iii. Return unused.
     };
 
-    /** https://tc39.es/proposal-defer-import-eval/#sec-ContinueDynamicImport */
-    if (surroundingAgent.feature('import-defer')) {
-      // e. If phase is "defer", then
-      if (phase === 'defer') {
-        // i. Let evaluationList be module.GatherAsynchronousTransitiveDependencies().
-        const evaluationList = GatherAsynchronousTransitiveDependencies(module);
-        // ii. If evaluationList is empty, then
-        if (evaluationList.length === 0) {
-          // 1. Perform fulfilledClosure().
-          fulfilledClosure();
-          // 2. Return unused.
-          return;
-        }
-        // iii. Let asyncDepsEvaluationPromises be a new empty List.
-        const asyncDepsEvaluationPromises = [];
-        // iv. For each dep in evaluationList, append dep.Evaluate() to asyncDepsEvaluationPromises.
-        for (const dep of evaluationList) {
-          asyncDepsEvaluationPromises.push(yield* dep.Evaluate());
-        }
-        // v. Let iterator be CreateListIteratorRecord(asyncDepsEvaluationPromises).
-        const iterator = CreateListIteratorRecord(asyncDepsEvaluationPromises);
-        // vi. Let pc be ! NewPromiseCapability(%Promise%).
-        const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-        // vii. Let evaluatePromise be ! PerformPromiseAll(iterator, %Promise%, pc, %Promise.resolve%).
-        evaluatePromise = X(PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%'))) as PromiseObject;
-      } else { // f. Else,
-        // i. Assert: phase is EVALUATION.
-        Assert(phase === 'evaluation');
-        // ii. Let evaluatePromise be module.Evaluate().
-        evaluatePromise = yield* module.Evaluate();
+    // e. If phase is "defer", then
+    if (phase === 'defer') {
+      // i. Let evaluationList be module.GatherAsynchronousTransitiveDependencies().
+      const evaluationList = GatherAsynchronousTransitiveDependencies(module);
+      // ii. If evaluationList is empty, then
+      if (evaluationList.length === 0) {
+        // 1. Perform fulfilledClosure().
+        fulfilledClosure();
+        // 2. Return unused.
+        return;
       }
+      // iii. Let asyncDepsEvaluationPromises be a new empty List.
+      const asyncDepsEvaluationPromises = [];
+      // iv. For each dep in evaluationList, append dep.Evaluate() to asyncDepsEvaluationPromises.
+      for (const dep of evaluationList) {
+        asyncDepsEvaluationPromises.push(yield* dep.Evaluate());
+      }
+      // v. Let iterator be CreateListIteratorRecord(asyncDepsEvaluationPromises).
+      const iterator = CreateListIteratorRecord(asyncDepsEvaluationPromises);
+      // vi. Let pc be ! NewPromiseCapability(%Promise%).
+      const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+      // vii. Let evaluatePromise be ! PerformPromiseAll(iterator, %Promise%, pc, %Promise.resolve%).
+      evaluatePromise = X(PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%'))) as PromiseObject;
+    } else { // f. Else,
+      // i. Assert: phase is EVALUATION.
+      Assert(phase === 'evaluation');
+      // ii. Let evaluatePromise be module.Evaluate().
+      evaluatePromise = yield* module.Evaluate();
     }
 
     // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).

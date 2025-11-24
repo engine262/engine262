@@ -2019,7 +2019,7 @@ export namespace ParseNode {
   export interface ImportDeclaration extends BaseParseNode {
     readonly type: 'ImportDeclaration';
     readonly ModuleSpecifier?: PrimaryExpression;
-    /* [import-defer] */ readonly Phase: 'defer' | 'evaluation';
+    readonly Phase: 'defer' | 'evaluation';
     readonly ImportClause?: ImportClause;
     readonly FromClause?: FromClause;
     readonly WithClause?: WithClause;

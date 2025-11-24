@@ -42,19 +42,9 @@ export interface Engine262Feature {
 }
 export const FEATURES = ([
   {
-    name: 'FinalizationRegistry.prototype.cleanupSome',
+    name: 'FinalizationRegistry#cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
-  },
-  {
-    name: 'Uint8Array to/from base64 and hex',
-    flag: 'uint8array-base64',
-    url: 'https://tc39.es/proposal-arraybuffer-base64/',
-  },
-  {
-    name: 'import defer',
-    flag: 'import-defer',
-    url: 'https://tc39.es/proposal-defer-import-eval/',
   },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);

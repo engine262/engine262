@@ -6,6 +6,11 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# TODO: import defer
+language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/main.js
+language/expressions/dynamic-import/import-defer/sync/main.js
+language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js
+
 # wait for this:
 # https://github.com/tc39/proposal-nonextensible-applies-to-private/issues/6
 staging/sm/PrivateName/modify-non-extensible.js
@@ -103,7 +108,6 @@ staging/sm/strict/strict-function-statements.js
 staging/sm/String/unicode-braced.js
 staging/sm/syntax/declaration-forbidden-in-label.js
 staging/sm/syntax/linefeed-at-eof-in-unterminated-string-or-template.js
-staging/sm/TypedArray/prototype-constructor-identity.js
 staging/sm/TypedArray/sort-negative-nan.js
 staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js
