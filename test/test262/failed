@@ -11,12 +11,6 @@ language/expressions/dynamic-import/import-defer/import-defer-transitive-async-m
 language/expressions/dynamic-import/import-defer/sync/main.js
 language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js
 
-# wait for this:
-# https://github.com/tc39/proposal-nonextensible-applies-to-private/issues/6
-staging/sm/PrivateName/modify-non-extensible.js
-language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js
-language/statements/class/elements/private-class-field-on-nonextensible-objects.js
-
 # Non-strict mode
 # Annex B
 ## RegExp.prototype.compile

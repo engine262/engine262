@@ -211,7 +211,7 @@ export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefin
   // 5. If fieldName is a Private Name, then
   if (fieldName instanceof PrivateName) {
     // a. Perform ? PrivateFieldAdd(fieldName, receiver, initValue).
-    Q(PrivateFieldAdd(fieldName, receiver, initValue));
+    Q(yield* PrivateFieldAdd(fieldName, receiver, initValue));
   } else { // 6. Else,
     // a. Assert: ! IsPropertyKey(fieldName) is true.
     Assert(X(IsPropertyKey(fieldName)));
@@ -227,7 +227,7 @@ export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScr
   // 2. For each PrivateElement method of methods, do
   for (const method of methods) {
     // a. Perform ? PrivateMethodOrAccessorAdd(method, O).
-    Q(PrivateMethodOrAccessorAdd(method, O));
+    Q(yield* PrivateMethodOrAccessorAdd(method, O));
   }
   // 3. Let fields be the value of constructor.[[Fields]].
   const fields = constructor.Fields;
