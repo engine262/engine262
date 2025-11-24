@@ -13,7 +13,7 @@ import {
   Call,
   CreateDataProperty,
   CreateDataPropertyOrThrow,
-  EnumerableOwnPropertyNames,
+  EnumerableOwnProperties,
   Get,
   GetV,
   IsArray,
@@ -25,6 +25,8 @@ import {
   ToString,
 } from '../abstract-ops/all.mts';
 import {
+  CodePointsToString,
+  PropName,
   UTF16EncodeCodePoint,
 } from '../static-semantics/all.mts';
 import {
@@ -39,8 +41,16 @@ import {
   type PlainCompletion,
   isLeadingSurrogate,
   isTrailingSurrogate,
+  type ParseNode,
+  type BuiltinFunctionObject,
+  SetIntegrityLevel,
+  SameValue,
+  type PropertyKeyValue,
 } from '../index.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import {
+  ArrayLiteralContentNodes, avoid_using_children, Contains, PropertyDefinitionNodes,
+} from '../parser/utils.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { isBooleanObject } from './Boolean.mts';
 import { isBigIntObject } from './BigInt.mts';
@@ -241,27 +251,58 @@ class JSONValidator {
   }
 }
 
-function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, reviver: Value): ValueEvaluator {
+/** https://tc39.es/ecma262/pr/3714/#sec-json-parse-record */
+interface JSONParseRecord {
+  readonly ParseNode: ParseNode;
+  readonly Key: PropertyKeyValue;
+  readonly Value: Value;
+  readonly Elements: readonly JSONParseRecord[];
+  readonly Entries: readonly JSONParseRecord[];
+}
+
+/** https://tc39.es/ecma262/pr/3714/#sec-internalizejsonproperty */
+function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, reviver: Value, parseRecord: JSONParseRecord | undefined): ValueEvaluator {
   const val = Q(yield* Get(holder, name));
+  const context = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  let elementRecords: readonly JSONParseRecord[];
+  let entryRecords: readonly JSONParseRecord[];
+  if (parseRecord && SameValue(parseRecord.Value, val) === Value.true) {
+    if (!(val instanceof ObjectValue)) {
+      const parseNode = parseRecord.ParseNode;
+      Assert(parseNode.type !== 'ArrayLiteral' && parseNode.type !== 'ObjectLiteral');
+      const sourceText = parseNode.sourceText;
+      X(CreateDataPropertyOrThrow(context, Value('source'), Value(CodePointsToString(sourceText))));
+    }
+    elementRecords = parseRecord.Elements;
+    entryRecords = parseRecord.Entries;
+  } else {
+    elementRecords = [];
+    entryRecords = [];
+  }
   if (val instanceof ObjectValue) {
     const isArray = Q(IsArray(val));
     if (isArray === Value.true) {
+      // Let _elementRecordsLen_ be the number of elements in _elementRecords_.
+      const elementRecordsLen = elementRecords.length;
       let I = 0;
       const len = Q(yield* LengthOfArrayLike(val));
       while (I < len) {
-        const Istr = X(ToString(F(I)));
-        const newElement = Q(yield* InternalizeJSONProperty(val, Istr, reviver));
+        const prop = X(ToString(F(I)));
+        const elementRecord = I < elementRecordsLen ? elementRecords[I] : undefined;
+        const newElement = Q(yield* InternalizeJSONProperty(val, prop, reviver, elementRecord));
         if (newElement instanceof UndefinedValue) {
-          Q(yield* val.Delete(Istr));
+          Q(yield* val.Delete(prop));
         } else {
-          Q(yield* CreateDataProperty(val, Istr, newElement));
+          Q(yield* CreateDataProperty(val, prop, newElement));
         }
         I += 1;
       }
     } else {
-      const keys = Q(yield* EnumerableOwnPropertyNames(val, 'key'));
+      const keys = Q(yield* EnumerableOwnProperties(val, 'key'));
       for (const P of keys) {
-        const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver));
+        const entryRecord = entryRecords.find((record) => SameValue(record.Key, P) === Value.true);
+        const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver, entryRecord));
+        // const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver));
         if (newElement instanceof UndefinedValue) {
           Q(yield* val.Delete(P));
         } else {
@@ -270,44 +311,84 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
       }
     }
   }
-  return Q(yield* Call(reviver, holder, [name, val]));
+  return Q(yield* Call(reviver, holder, [name, val, context]));
+}
+
+/** https://tc39.es/ecma262/pr/3714/#sec-createjsonparserecord */
+function CreateJSONParseRecord(parseNode: ParseNode, key: PropertyKeyValue, val: Value): JSONParseRecord {
+  const typedValNode = ShallowestContainedJSONValue(parseNode);
+  Assert(!!typedValNode);
+  const elements = [];
+  const entries = [];
+  if (val instanceof ObjectValue) {
+    const isArray = X(IsArray(val));
+    if (isArray === Value.true) {
+      Assert(typedValNode.type === 'ArrayLiteral');
+      const contentNodes = ArrayLiteralContentNodes(typedValNode);
+      const len = contentNodes.length;
+      const valLen = X(LengthOfArrayLike(val));
+      Assert(valLen === len);
+      let I = 0;
+      while (I < len) {
+        const propName = X(ToString(F(I)));
+        const elementParseRecord = CreateJSONParseRecord(contentNodes[I], propName, X(Get(val, propName)));
+        elements.push(elementParseRecord);
+        I += 1;
+      }
+    } else {
+      Assert(typedValNode.type === 'ObjectLiteral');
+      const propertyNodes = PropertyDefinitionNodes(typedValNode);
+      const keys = X(EnumerableOwnProperties(val, 'key'));
+      for (const P of keys) {
+        let propertyDefinition: ParseNode;
+        for (const propertyNode of propertyNodes) {
+          const propName = PropName(propertyNode);
+          if (propName === P.stringValue()) {
+            propertyDefinition = propertyNode;
+          }
+        }
+        Assert(!!(propertyDefinition!.type === 'PropertyDefinition' && propertyDefinition.PropertyName && propertyDefinition.AssignmentExpression));
+        const propertyValueNode = propertyDefinition.AssignmentExpression;
+        const entryParseRecord = CreateJSONParseRecord(propertyValueNode, P, X(Get(val, P)));
+        entries.push(entryParseRecord);
+      }
+    }
+  } else {
+    Assert(typedValNode.type !== 'ArrayLiteral' && typedValNode.type !== 'ObjectLiteral');
+  }
+  return {
+    ParseNode: typedValNode, Key: key, Value: val, Elements: elements, Entries: entries,
+  };
+}
+
+export function ParseJSON(text: string): PlainCompletion<{ ParseNode: ParseNode, Value: Value }> {
+  // 1. If StringToCodePoints(text) is not a valid JSON text as specified in ECMA-404, throw a SyntaxError exception.
+  Q(JSONValidator.validate(text));
+  const scriptString = `(${text});`;
+  const script = ParseScript(scriptString, surroundingAgent.currentRealmRecord, { [kInternal]: { json: true } });
+  Assert(!isArray(script)); // array means parse error
+  const result = X(skipDebugger(ScriptEvaluation(script)));
+  Assert(result instanceof JSStringValue || result instanceof NumberValue || result instanceof BooleanValue || result instanceof ObjectValue || result === Value.null);
+  return { ParseNode: script.ECMAScriptCode, Value: result };
 }
 
 /** https://tc39.es/ecma262/#sec-json.parse */
 function* JSON_parse([text = Value.undefined, reviver = Value.undefined]: Arguments): ValueEvaluator {
-  // 1. Let jsonString be ? ToString(text).
   const jsonString = Q(yield* ToString(text));
-  // 2. Parse ! UTF16DecodeString(jsonString) as a JSON text as specified in ECMA-404.
-  //    Throw a SyntaxError exception if it is not a valid JSON text as defined in that specification.
-  Q(JSONValidator.validate(jsonString.stringValue()));
-  // 3. Let scriptString be the string-concatenation of "(", jsonString, and ");".
-  const scriptString = `(${jsonString.stringValue()});`;
-  // 4. Let completion be the result of parsing and evaluating
-  //    ! UTF16DecodeString(scriptString) as if it was the source text of an ECMAScript Script. The
-  //    extended PropertyDefinitionEvaluation semantics defined in B.3.1 must not be used during the evaluation.
-  const parsed = ParseScript(scriptString, surroundingAgent.currentRealmRecord, { [kInternal]: { json: true } });
-  Assert(!isArray(parsed)); // array means parse error
-  const completion = X(skipDebugger(ScriptEvaluation(parsed)));
-  // 5. Let unfiltered be completion.[[Value]].
-  const unfiltered = completion;
-  // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
+  const parseResult = Q(ParseJSON(jsonString.stringValue()));
+  const unfiltered = parseResult.Value;
   Assert(unfiltered instanceof JSStringValue
     || unfiltered instanceof NumberValue
     || unfiltered instanceof BooleanValue
     || unfiltered instanceof NullValue
     || unfiltered instanceof ObjectValue);
-  // 7. If IsCallable(reviver) is true, then
   if (IsCallable(reviver)) {
-    // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
     const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    // b. Let rootName be the empty String.
     const rootName = Value('');
-    // c. Perform ! CreateDataPropertyOrThrow(root, rootName, unfiltered).
     X(CreateDataPropertyOrThrow(root, rootName, unfiltered));
-    // d. Return ? InternalizeJSONProperty(root, rootName, reviver).
-    return Q(yield* InternalizeJSONProperty(root, rootName, reviver));
+    const snapshot = CreateJSONParseRecord(parseResult.ParseNode, rootName, unfiltered);
+    return Q(yield* InternalizeJSONProperty(root, rootName, reviver, snapshot));
   } else {
-    // a. Return unfiltered.
     return unfiltered;
   }
 }
@@ -342,6 +423,9 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
     value = Q(yield* Call(state.ReplacerFunction, holder, [key, value]));
   }
   if (value instanceof ObjectValue) {
+    if ('IsRawJSON' in value) {
+      return X(Get(value, Value('rawJSON'))) as JSStringValue;
+    }
     if ('NumberData' in value) {
       value = Q(yield* ToNumber(value));
     } else if ('StringData' in value) {
@@ -389,6 +473,7 @@ export function UnicodeEscape(C: string) {
   return `\u005Cu${n.toString(16).padStart(4, '0')}`;
 }
 
+/** https://tc39.es/ecma262/pr/3714/#sec-quotejsonstring */
 function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shadow
   let product = '\u0022';
   const cpList = [...value.stringValue()].map((c) => c.codePointAt(0)!);
@@ -418,7 +503,7 @@ function* SerializeJSONObject(state: State, value: ObjectValue): ValueEvaluator<
   if (!(state.PropertyList instanceof UndefinedValue)) {
     K = state.PropertyList.keys();
   } else {
-    K = Q(yield* EnumerableOwnPropertyNames(value, 'key')).values();
+    K = Q(yield* EnumerableOwnProperties(value, 'key')).values();
   }
   const partial = [];
   for (const P of K) {
@@ -559,10 +644,92 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
   return Q(yield* SerializeJSONProperty(state, Value(''), wrapper));
 }
 
+/** https://tc39.es/ecma262/#sec-json.rawjson */
+function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
+  const jsonString = Q(yield* ToString(text));
+  const str = jsonString.stringValue();
+  if (str === '') {
+    return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+  }
+  const forbiddenChar = ['\u0009', '\u000A', '\u000D', '\u0020', '\u005B', '\u007B'];
+  if (forbiddenChar.includes(str[0]) || forbiddenChar.includes(str[str.length - 1])) {
+    return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+  }
+  const parseResult = Q(ParseJSON(jsonString.stringValue()));
+  const value = parseResult.Value;
+  Assert(value instanceof JSStringValue || value instanceof NumberValue || value instanceof BooleanValue || value === Value.null);
+  {
+    const firstCodeUnit = str[0].charCodeAt(0);
+    Assert(
+      (firstCodeUnit >= 0x0061 && firstCodeUnit <= 0x007A)
+      || (firstCodeUnit >= 0x0030 && firstCodeUnit <= 0x0039)
+      || firstCodeUnit === 0x0022
+      || firstCodeUnit === 0x002D,
+    );
+  }
+  {
+    const lastCodeUnit = str[str.length - 1].charCodeAt(0);
+    Assert(
+      (lastCodeUnit >= 0x0061 && lastCodeUnit <= 0x007A)
+      || (lastCodeUnit >= 0x0030 && lastCodeUnit <= 0x0039)
+      || lastCodeUnit === 0x0022,
+    );
+  }
+  const obj = OrdinaryObjectCreate(Value.null, ['IsRawJSON']);
+  X(CreateDataPropertyOrThrow(obj, Value('rawJSON'), jsonString));
+  X(SetIntegrityLevel(obj, 'frozen'));
+  return obj;
+}
+
+/** https://tc39.es/ecma262/pr/3714/#sec-json.israwjson */
+function JSON_isRawJSON([value = Value.undefined]: Arguments) {
+  if (value instanceof ObjectValue && 'IsRawJSON' in value) {
+    return Value.true;
+  }
+  return Value.false;
+}
+
+/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-shallowestcontainedjsonvalue */
+function ShallowestContainedJSONValue(node: ParseNode): ParseNode | undefined {
+  const F = surroundingAgent.activeFunctionObject;
+  Assert((F as BuiltinFunctionObject).nativeFunction === JSON_parse);
+  const types: ParseNode['type'][] = [
+    'NullLiteral', 'BooleanLiteral', 'NumericLiteral', 'StringLiteral', 'ArrayLiteral', 'ObjectLiteral', 'UnaryExpression',
+  ];
+  let unaryExpression: ParseNode | undefined;
+  let queue = [node];
+  while (queue.length > 0) {
+    const candidate = queue.shift()!;
+    let queuedChildren = false;
+    for (const type of types) {
+      if (candidate?.type === type) {
+        if (type === 'UnaryExpression') {
+          unaryExpression = candidate;
+        } else if (type === 'NumericLiteral') {
+          // skip Assert: candidate is contained within unaryExpression
+          // our AST is different from the spec's AST
+          // Return unaryExpression.
+          return unaryExpression || candidate;
+        } else {
+          return candidate;
+        }
+      }
+      const children = [...avoid_using_children(candidate)];
+      if (!queuedChildren && children.length && Contains(candidate, type)) {
+        queue = queue.concat(children);
+        queuedChildren = true;
+      }
+    }
+  }
+  return undefined;
+}
+
 export function bootstrapJSON(realmRec: Realm) {
   const json = bootstrapPrototype(realmRec, [
     ['parse', JSON_parse, 2],
     ['stringify', JSON_stringify, 3],
+    ['rawJSON', JSON_rawJSON, 1],
+    ['isRawJSON', JSON_isRawJSON, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;

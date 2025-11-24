@@ -81,7 +81,6 @@ staging/sm/Function/invalid-parameter-list.js
 staging/sm/generators/runtime.js
 staging/sm/generators/syntax.js
 staging/sm/generators/yield-star-throw-htmldda.js
-staging/sm/JSON/parse-with-source.js
 staging/sm/lexical-environment/for-loop.js
 staging/sm/lexical-environment/var-in-catch-body-annex-b-eval.js
 staging/sm/Math/f16round.js

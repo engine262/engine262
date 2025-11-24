@@ -10,7 +10,7 @@ import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mts';
 import {
-  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnPropertyNames, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
+  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../helpers.mts';
@@ -86,7 +86,7 @@ function* EvaluateImportCall(
         return promiseCapability.Promise;
       }
       // ii. Let entries be Completion(EnumerableOwnProperties(attributesObj, key+value)).
-      const entries = yield* EnumerableOwnPropertyNames(attributesObj, 'key+value');
+      const entries = yield* EnumerableOwnProperties(attributesObj, 'key+value');
       // iii. IfAbruptRejectPromise(entries, promiseCapability).
       IfAbruptRejectPromise(entries, promiseCapability);
       __ts_cast__<ObjectValue[]>(entries);
@@ -132,4 +132,3 @@ function* EvaluateImportCall(
   // 9. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
-

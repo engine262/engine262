@@ -12,7 +12,12 @@ export function PropName(node: ParseNode): string | undefined {
     case 'AsyncMethod':
     case 'FieldDefinition':
       return PropName(node.ClassElementName);
+    case 'PropertyDefinition':
+      if (node.PropertyName) {
+        return PropName(node.PropertyName);
+      }
+      break;
     default:
-      return undefined;
   }
+  return undefined;
 }
