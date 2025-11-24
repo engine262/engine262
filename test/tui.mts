@@ -398,7 +398,7 @@ export function createTestReporter(): TestReporter {
 
 export function annotateFileWithURL(filePath: string) {
   if (supportColor) {
-    const fileLink = link(filePath, new URL(`./test262/test/${filePath}`, import.meta.url));
+    const fileLink = link(filePath, new URL(`./test262/test262/test/${filePath}`, import.meta.url));
     return `${fileLink} ${link('[GitHub]', `https://github.com/tc39/test262/blob/main/test/${filePath}`)}`;
   }
   return filePath;
