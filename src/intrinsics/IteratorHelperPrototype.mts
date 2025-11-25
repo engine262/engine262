@@ -3,10 +3,10 @@ import {
   CreateIteratorResultObject,
   GeneratorResume,
   GeneratorResumeAbrupt,
-  IteratorClose,
+  IteratorCloseAll,
   Realm,
   RequireInternalSlot,
-  type IteratorRecord,
+  type GeneratorObject,
 } from '../abstract-ops/all.mts';
 import {
   NormalCompletion, Q, ReturnCompletion, type ValueEvaluator,
@@ -26,8 +26,8 @@ function* IteratorHelperPrototype_next(_args: Arguments, { thisValue }: Function
 function* IteratorHelperPrototype_return(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be this value.
   const O = thisValue;
-  // 2. Perform ? RequireInternalSlot(O, [[UnderlyingIterator]]).
-  Q(RequireInternalSlot(O, 'UnderlyingIterator'));
+  // 2. Perform ? RequireInternalSlot(O, [[UnderlyingIterators]]).
+  Q(RequireInternalSlot(O, 'UnderlyingIterators'));
   // 3. Assert: O has a [[GeneratorState]] internal slot.
   Assert('GeneratorState' in O);
 
@@ -38,8 +38,8 @@ function* IteratorHelperPrototype_return(_args: Arguments, { thisValue }: Functi
 
     // b. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed.
     // Any execution state associated with O can be discarded at this point.
-    // c. Perform ? IteratorClose(O.[[UnderlyingIterator]], NormalCompletion(unused)).
-    Q(yield* IteratorClose((O as unknown as { UnderlyingIterator: IteratorRecord }).UnderlyingIterator, NormalCompletion(undefined)));
+    // c. Perform ? IteratorCloseAll(O.[[UnderlyingIterators]], NormalCompletion(unused)).
+    Q(yield* IteratorCloseAll((O as GeneratorObject).UnderlyingIterators!, NormalCompletion(undefined)));
 
     // d. Return CreateIteratorResultObject(undefined, true).
     return CreateIteratorResultObject(Value.undefined, Value.true);

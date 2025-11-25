@@ -86,6 +86,7 @@ import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistr
 import {
   ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ValueEvaluator, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
   type LoadedModuleRequestRecord,
+  SymbolValue,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
@@ -223,6 +224,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%RegExp.prototype%': ObjectValue;
   '%Set.prototype%': ObjectValue;
   '%String.prototype%': ObjectValue;
+  // Note: do not add any well known symbols here, use wellKnownSymbols.*
   '%Symbol.prototype%': ObjectValue;
   '%SyntaxError.prototype%': ObjectValue;
   '%SyntaxError%': FunctionObject;

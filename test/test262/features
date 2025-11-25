@@ -2,14 +2,13 @@
 
 # Start with `-` to skip feature
 # Map feature to engine262 feature using `feature = engine262featurename`
-
-import-defer = import-defer
+# e.g.:
+# import-defer = import-defer
 
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Float16Array
 -arraybuffer-transfer
 -explicit-resource-management
--iterator-sequencing
 -source-phase-imports
 -source-phase-imports-module-source
 -immutable-arraybuffer

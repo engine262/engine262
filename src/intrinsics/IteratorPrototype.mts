@@ -130,10 +130,10 @@ function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 12. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 12. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 13. Return result.
   return result;
 }
@@ -233,10 +233,10 @@ function* IteratorPrototype_filter([predicate = Value.undefined]: Arguments, { t
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 8. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 8. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 9. Return result.
   return result;
 }
@@ -363,10 +363,10 @@ function* IteratorPrototype_flatMap([mapper = Value.undefined]: Arguments, { thi
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 8. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 8. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 9. Return result.
   return result;
 }
@@ -464,10 +464,10 @@ function* IteratorPrototype_map([mapper = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 8. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 8. Set result.[[UnderlyingIterators]] to [iterated].
+  result.UnderlyingIterators = [iterated];
   // 9. Return result.
   return result;
 }
@@ -640,10 +640,10 @@ function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 12. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 12. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 13. Return result.
   return result;
 }

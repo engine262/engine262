@@ -32,7 +32,7 @@ export interface GeneratorObject extends OrdinaryObject {
   GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | UndefinedValue;
   GeneratorContext: ExecutionContext | null;
   readonly GeneratorBrand: JSStringValue | undefined;
-  UnderlyingIterator?: IteratorRecord;
+  UnderlyingIterators?: IteratorRecord[];
   // NON-SPEC
   HostCapturedValues?: readonly Value[];
 }
