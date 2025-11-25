@@ -7,7 +7,7 @@ import { stripVTControlCharacters, styleText } from 'node:util';
 import { fork } from 'node:child_process';
 import { cpus } from 'node:os';
 import { glob, isDynamicPattern } from 'tinyglobby';
-import YAML from 'js-yaml';
+import { parse as parseYaml } from 'yaml';
 import { highlight } from 'cli-highlight';
 import {
   type WorkerToSupervisor, type SupervisorToWorker, Test,
@@ -218,7 +218,7 @@ for await (const file of parsePositionals(args.positionals, true)) {
   visited.add(file);
   promises.push(readFile(file, 'utf8').then((contents) => {
     const frontmatterYaml = contents.match(/\/\*---(.*?)---\*\//s)?.[1];
-    const attrs: any = frontmatterYaml ? YAML.load(frontmatterYaml) : {};
+    const attrs: any = frontmatterYaml ? parseYaml(frontmatterYaml) : {};
 
     if (args.values.features && (!attrs.features || !attrs.features.includes(args.values.features))) {
       // feature not match
