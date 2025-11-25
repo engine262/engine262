@@ -32,7 +32,7 @@ function test(filename: string) {
   const realm = new ManagedRealm();
 
   const source = fs.readFileSync(filename, 'utf8');
-  const test = new Test(filename, null!, '', source);
+  const test = new Test(filename, [], null!, '', source);
   reporter.addTest(test);
 
   if (failed.includes(path.basename(filename))) {

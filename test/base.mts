@@ -23,8 +23,9 @@ export interface Attrs {
 }
 
 export class Test {
-  constructor(file: string, attrs: Attrs, currentRunFlags: string, contents: string) {
+  constructor(file: string, engineFeatures: readonly string[], attrs: Attrs, currentRunFlags: string, contents: string) {
     this.file = file;
+    this.engineFeatures = engineFeatures;
     this.attrs = attrs;
     this.content = contents;
     this.currentTestFlag = currentRunFlags;
@@ -47,6 +48,8 @@ export class Test {
 
   attrs: Attrs;
 
+  engineFeatures: readonly string[];
+
   content: string;
 
   currentTestFlag: string;
@@ -58,7 +61,7 @@ export class Test {
   skipFeature: string | null = null;
 
   withDifferentTestFlag(newFlag: string, newContent = this.content) {
-    return new Test(this.file, this.attrs, newFlag, newContent);
+    return new Test(this.file, this.engineFeatures, this.attrs, newFlag, newContent);
   }
 }
 

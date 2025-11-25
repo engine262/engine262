@@ -46,6 +46,12 @@ export const FEATURES = ([
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
+  // stage 2.7
+  {
+    name: 'Iterator#join',
+    flag: 'iterator.join',
+    url: 'https://github.com/tc39/proposal-iterator-join',
+  },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);

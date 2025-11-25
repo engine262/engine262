@@ -209,6 +209,8 @@ reporter.onExit.promise.then(() => {
   }
 });
 
+const engineFeatures = [...args.values['engine-features'] || []];
+
 const promises = [];
 for await (const file of parsePositionals(args.positionals, true)) {
   if (visited.has(file) || /_FIXTURE|README\.md|\.py|\.map|\.mts/.test(file)) {
@@ -231,7 +233,7 @@ for await (const file of parsePositionals(args.positionals, true)) {
     }, {});
     attrs.includes = attrs.includes || [];
 
-    const test = new Test(relative(inputs.Test262TestsPath, file), attrs, '', contents);
+    const test = new Test(relative(inputs.Test262TestsPath, file), engineFeatures, attrs, '', contents);
 
     if (test.attrs.flags.module) {
       discoverTest(test.withDifferentTestFlag('module'));

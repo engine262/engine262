@@ -39,6 +39,7 @@ jobs:
       - run: npm run coverage:all
         env:
           CONTINUOUS_INTEGRATION: 1
+          NUM_WORKERS: 1
 
       # Upload coverage data
       - name: Coveralls
