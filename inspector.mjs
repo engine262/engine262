@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 dbf8b75d849384e7b5ce00918399e9888a077363
+ * engine262 0.0.1 27615a19b32e5ab55bbe815959d5375c0b668e68
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, IsCallable, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, PrivateName, ManagedRealm, IsAccessorDescriptor, IsPromise, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
+import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, IsCallable, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, PrivateName, isWrappedFunctionExoticObject, ManagedRealm, IsAccessorDescriptor, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
 
 /*
 Test code: copy this into the inspector console.
@@ -189,8 +189,15 @@ const Number = {
     return value instanceof BigIntValue ? `${r}n` : r.toString();
   }
 };
+function unwrapFunction(value) {
+  if (isWrappedFunctionExoticObject(value)) {
+    return unwrapFunction(value.WrappedTargetFunction);
+  }
+  return value;
+}
 const Function = {
   toRemoteObject(value, getObjectId) {
+    value = unwrapFunction(value);
     const result = {
       type: 'function',
       objectId: getObjectId(value)
@@ -232,12 +239,14 @@ class ObjectInspector {
   toDescription;
   toEntries;
   additionalProperties;
+  internalProperties;
   constructor(className, subtype, toDescription, additionalOptions) {
     this.className = className;
     this.subtype = subtype;
     this.toDescription = toDescription;
     this.toEntries = additionalOptions?.entries;
     this.additionalProperties = additionalOptions?.additionalProperties;
+    this.internalProperties = additionalOptions?.internalProperties;
   }
   toRemoteObject(value, getObjectId) {
     return {
@@ -257,6 +266,16 @@ class ObjectInspector {
       value: this.toDescription(value)
     };
   }
+  toInternalProperties(value, getObjectId, generatePreview) {
+    const internalProperties = [...(this.internalProperties?.(value) || [])];
+    if (!internalProperties.length) {
+      return [];
+    }
+    return internalProperties.map(([name, val]) => ({
+      name,
+      value: getInspector(val).toRemoteObject(val, getObjectId, generatePreview)
+    }));
+  }
   toObjectPreview(value) {
     const e = this.toEntries?.(value);
     return {
@@ -264,7 +283,7 @@ class ObjectInspector {
       subtype: this.subtype,
       description: this.toDescription(value),
       entries: e?.length ? e : undefined,
-      ...propertiesToPropertyPreview(value, this.additionalProperties?.(value))
+      ...propertiesToPropertyPreview(value, [...(this.internalProperties?.(value) || []), ...(this.additionalProperties?.(value) || [])])
     };
   }
 }
@@ -326,7 +345,7 @@ const Date$1 = new ObjectInspector('Date', 'date', value => {
   return ValueOfNormalCompletion(val).stringValue();
 });
 const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
-  additionalProperties: value => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]]
+  internalProperties: value => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]]
 });
 const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
   if (IsCallable(value.ProxyTarget)) {
@@ -339,6 +358,9 @@ const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
 });
 const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
 const Module = new ObjectInspector('Module', undefined, () => 'Module', {});
+const ShadowRealm = new ObjectInspector('ShadowRealm', undefined, () => 'ShadowRealm', {
+  internalProperties: realm => [['[[GlobalObject]]', realm.ShadowRealm.GlobalObject]]
+});
 const Array$1 = {
   toRemoteObject(value, getObjectId) {
     return {
@@ -515,6 +537,8 @@ function getInspector(value) {
       return DataView;
     case isModuleNamespaceObject(value):
       return Module;
+    case isShadowRealmObject(value):
+      return ShadowRealm;
     default:
       return Default;
   }
@@ -530,8 +554,8 @@ class InspectorContext {
     const id = this.realms.length;
     const descriptor = {
       id,
-      origin: 'vm://realm',
-      name: 'engine262',
+      origin: realm.HostDefined.specifier || 'vm://repl',
+      name: realm.HostDefined.name || 'engine262',
       uniqueId: id.toString()
     };
     this.realms.push({
@@ -540,6 +564,11 @@ class InspectorContext {
       agent,
       detach: () => {
         realm.HostDefined.attachingInspector = oldInspector;
+        realm.HostDefined.attachingInspectorReportError = function attachingInspectorReportError(realm, error) {
+          if (this.attachingInspector && realm instanceof ManagedRealm) {
+            this.attachingInspector.console(realm, 'error', [error]);
+          }
+        };
       }
     });
     const oldInspector = realm.HostDefined.attachingInspector;
@@ -582,6 +611,7 @@ class InspectorContext {
       descriptor
     } = this.realms[index];
     realm.HostDefined.attachingInspector = undefined;
+    realm.HostDefined.attachingInspectorReportError = undefined;
     this.realms[index] = undefined;
     this.#io.sendEvent['Runtime.executionContextDestroyed']({
       executionContextId: descriptor.id,
@@ -712,18 +742,9 @@ class InspectorContext {
         exceptionDetails: this.createExceptionDetails(value, false)
       };
     }
-    if (IsPromise(object) === Value.true) {
-      internalProperties.push({
-        name: '[[PromiseState]]',
-        value: {
-          type: 'string',
-          value: object.PromiseState
-        }
-      });
-      internalProperties.push({
-        name: '[[PromiseResult]]',
-        value: wrap(object.PromiseResult)
-      });
+    const additionalInternalFields = getInspector(object).toInternalProperties?.(object, val => this.#internObject(val, 'default'), generatePreview);
+    if (additionalInternalFields) {
+      internalProperties.push(...additionalInternalFields);
     }
     if ('Prototype' in object) {
       internalProperties.push({
@@ -1354,7 +1375,7 @@ function createConsole(realm, defaultBehaviour) {
             return completion;
           }
         }
-        if (realm.HostDefined.attachingInspector instanceof Inspector) {
+        if (realm.HostDefined.attachingInspector) {
           realm.HostDefined.attachingInspector.console(realm, method, args);
         }
         return Value.undefined;

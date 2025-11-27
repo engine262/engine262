@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 dbf8b75d849384e7b5ce00918399e9888a077363
+ * engine262 0.0.1 27615a19b32e5ab55bbe815959d5375c0b668e68
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1594,21 +1594,26 @@
       nativeStack
     };
   }
-  function* errorStackToString(O, stack, nativeStack = Value.undefined) {
+  function* callSiteToErrorString(O, stack, nativeStack) {
     /* ReturnIfAbrupt */
     let _temp = yield* Call(exports.surroundingAgent.intrinsic('%Error.prototype.toString%'), O);
     /* node:coverage ignore next */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* node:coverage ignore next */
     if (_temp instanceof Completion) _temp = _temp.Value;
-    let errorString = _temp.stringValue();
+    const errorString = _temp.stringValue();
+    const errorStack = callSiteToErrorStack(stack, nativeStack);
+    return Value(errorString + errorStack);
+  }
+  function callSiteToErrorStack(stack, nativeStack) {
+    let errorString = '';
     stack.forEach(s => {
       errorString = `${errorString}\n    at ${s.toString()}`;
     });
     if (typeof nativeStack === 'string') {
       errorString = `${errorString}\n    <NATIVE>\n${nativeStack.split('\n').slice(6).join('\n')}`;
     }
-    return Value(errorString);
+    return errorString;
   }
   function callable(onCalled = (target, _thisArg, args) => Reflect.construct(target, args)) {
     const handler = Object.freeze({
@@ -9656,10 +9661,8 @@
         const evalText = argList[0];
         // iv. If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
         const strictCaller = CallExpression.strict;
-        // v. Let evalRealm be the current Realm Record.
-        const evalRealm = exports.surroundingAgent.currentRealmRecord;
-        // vi. Return ? PerformEval(evalText, evalRealm, strictCaller, true).
-        return yield* PerformEval(evalText, evalRealm, strictCaller, true);
+        // vi. Return ? PerformEval(evalText, strictCaller, true).
+        return yield* PerformEval(evalText, strictCaller, true);
       }
     }
     // 8. Let tailCall be IsInTailPosition(thisCall).
@@ -14872,7 +14875,7 @@
   const ClassMissingBindingIdentifier = () => 'Class declaration missing binding identifier';
   const ConstDeclarationMissingInitializer = () => 'Missing initialization of const declaration';
   const ConstructorNonCallable = f => `${i(f)} cannot be invoked without new`;
-  const CouldNotResolveModule = s => `Could not resolve module ${i(s)}`;
+  const CouldNotResolveModule = (s, from) => `Could not resolve module ${i(s)} from ${from ? i(from) : 'no referrer'}`;
   const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
   const DeferredModuleNotReady = m => `Module ${m.HostDefined?.specifier ?? ''} is not ready for synchronous execution`;
   const DeleteIdentifier = () => 'Delete of identifier in strict mode';
@@ -22412,48 +22415,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   ParsePattern.section = 'https://tc39.es/ecma262/#sec-parsepattern';
 
-  // #table-dynamic-function-sourcetext-prefixes
-  const DynamicFunctionSourceTextPrefixes = {
-    'normal': 'function',
-    'generator': 'function*',
-    'async': 'async function',
-    'asyncGenerator': 'async function*'
-  };
-  function* CreateDynamicFunction(constructor, newTarget, kind, args) {
-    // 1. Assert: The execution context stack has at least two elements.
-    Assert(exports.surroundingAgent.executionContextStack.length >= 2, "surroundingAgent.executionContextStack.length >= 2");
-    // 2. Let callerContext be the second to top element of the execution context stack.
-    const callerContext = exports.surroundingAgent.executionContextStack[exports.surroundingAgent.executionContextStack.length - 2];
-    // 3. Let callerRealm be callerContext's Realm.
-    const callerRealm = callerContext.Realm;
-    // 4. Let calleeRealm be the current Realm Record.
-    const calleeRealm = exports.surroundingAgent.currentRealmRecord;
-    // 5. Perform ? HostEnsureCanCompileStrings(callerRealm, calleeRealm).
-    /* ReturnIfAbrupt */
-    let _temp = HostEnsureCanCompileStrings(callerRealm, calleeRealm);
-    /* node:coverage ignore next */
-    if (_temp instanceof AbruptCompletion) return _temp;
-    /* node:coverage ignore next */
-    if (_temp instanceof Completion) _temp = _temp.Value;
+  function* CreateDynamicFunction(constructor, newTarget, kind, parameterArgs, bodyArg) {
     // 6. If newTarget is undefined, set newTarget to constructor.
     if (newTarget instanceof UndefinedValue) {
       newTarget = constructor;
     }
     // 7. If kind is normal, then
     let fallbackProto;
+    let prefix;
     if (kind === 'normal') {
+      prefix = 'function';
       // a. Let goal be the grammar symbol FunctionBody[~Yield, ~Await].
       // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, ~Await].
       // c. Let fallbackProto be "%Function.prototype%".
       fallbackProto = '%Function.prototype%';
     } else if (kind === 'generator') {
       // 8. Else if kind is generator, then
+      prefix = 'function*';
       // a. Let goal be the grammar symbol GeneratorBody.
       // b. Let parameterGoal be the grammar symbol FormalParameters[+Yield, ~Await].
       // c. Let fallbackProto be "%GeneratorFunction.prototype%".
       fallbackProto = '%GeneratorFunction.prototype%';
     } else if (kind === 'async') {
       // 9. Else if kind is async, then
+      prefix = 'async function';
       // a. Let goal be the grammar symbol AsyncBody.
       // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, +Await].
       // c. Let fallbackProto be "%AsyncFunction.prototype%".
@@ -22462,70 +22447,56 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 10. Else,
       // a. Assert: kind is asyncGenerator.
       Assert(kind === 'asyncGenerator', "kind === 'asyncGenerator'");
+      prefix = 'async function*';
       // b. Let goal be the grammar symbol AsyncGeneratorBody.
       // c. Let parameterGoal be the grammar symbol FormalParameters[+Yield, +Await].
       // d. Let fallbackProto be "%AsyncGeneratorFunction.prototype%".
       fallbackProto = '%AsyncGeneratorFunction.prototype%';
     }
     // 11. Let argCount be the number of elements in args.
-    const argCount = args.length;
+    const argCount = parameterArgs.length;
+    const parameterStrings = [];
+    for (const arg of parameterArgs) {
+      /* ReturnIfAbrupt */
+      let _temp = yield* ToString(arg);
+      /* node:coverage ignore next */
+      if (_temp instanceof AbruptCompletion) return _temp;
+      /* node:coverage ignore next */
+      if (_temp instanceof Completion) _temp = _temp.Value;
+      parameterStrings.push(_temp.stringValue());
+    }
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* ToString(bodyArg);
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    const bodyString = _temp2.stringValue();
+    const currentRealm = exports.surroundingAgent.currentRealmRecord;
+    /* ReturnIfAbrupt */
+    let _temp3 = yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, false);
+    /* node:coverage ignore next */
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    /* node:coverage ignore next */
+    if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
     // 12. Let P be the empty String.
     let P = '';
-    // 13. If argCount = 0, let bodyArg be the empty String.
-    let bodyArg;
-    if (argCount === 0) {
-      bodyArg = Value('');
-    } else if (argCount === 1) {
-      // 14. Else if argCount = 1, let bodyArg be args[0].
-      bodyArg = args[0];
-    } else {
-      // 15. Else,
-      // a. Assert: argCount > 1.
-      Assert(argCount > 1, "argCount > 1");
-      // b. Let firstArg be args[0].
-      const firstArg = args[0];
-      // c. Set P to ? ToString(firstArg).
-      /* ReturnIfAbrupt */
-      let _temp2 = yield* ToString(firstArg);
-      /* node:coverage ignore next */
-      if (_temp2 instanceof AbruptCompletion) return _temp2;
-      /* node:coverage ignore next */
-      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-      P = _temp2.stringValue();
+    if (argCount > 0) {
+      P = parameterStrings[0];
       // d. Let k be 1.
       let k = 1;
       // e. Repeat, while k < argCount - 1
-      while (k < argCount - 1) {
-        // i. Let nextArg be args[k].
-        const nextArg = args[k];
-        // ii. Let nextArgString be ? ToString(nextArg).
-        /* ReturnIfAbrupt */
-        let _temp3 = yield* ToString(nextArg);
-        /* node:coverage ignore next */
-        if (_temp3 instanceof AbruptCompletion) return _temp3;
-        /* node:coverage ignore next */
-        if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-        const nextArgString = _temp3;
+      while (k < argCount) {
+        const nextArgString = parameterStrings[k];
         // iii. Set P to the string-concatenation of the previous value of P, "," (a comma), and nextArgString.
-        P = `${P},${nextArgString.stringValue()}`;
+        P = `${P},${nextArgString}`;
         // iv. Set k to k + 1.
         k += 1;
       }
-      // f. Let bodyArg be args[k].
-      bodyArg = args[k];
     }
-    // 16. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-    /* ReturnIfAbrupt */
-    let _temp4 = yield* ToString(bodyArg);
-    /* node:coverage ignore next */
-    if (_temp4 instanceof AbruptCompletion) return _temp4;
-    /* node:coverage ignore next */
-    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
-    const bodyString = `\u{000A}${_temp4.stringValue()}\u{000A}`;
-    // 17. Let prefix be the prefix associated with kind in Table 48.
-    const prefix = DynamicFunctionSourceTextPrefixes[kind];
+    const bodyParseString = `\u{000A}${bodyString}\u{000A}`;
     // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
-    const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyString}}`;
+    const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyParseString}}`;
     // 19. Let sourceText be ! UTF16DecodeString(sourceString).
     const sourceText = sourceString;
     // 20. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
@@ -22579,34 +22550,53 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
     /* ReturnIfAbrupt */
-    let _temp5 = yield* GetPrototypeFromConstructor(newTarget, fallbackProto);
+    let _temp4 = yield* GetPrototypeFromConstructor(newTarget, fallbackProto);
     /* node:coverage ignore next */
-    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* node:coverage ignore next */
-    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-    const proto = _temp5;
-    // 22. Let realmF be the current Realm Record.
-    const realmF = exports.surroundingAgent.currentRealmRecord;
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    const proto = _temp4;
     // 23. Let scope be realmF.[[GlobalEnv]].
-    const scope = realmF.GlobalEnv;
-    // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, null).
+    const env = currentRealm.GlobalEnv;
+    const privateEnv = Value.null;
+    // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, privateEnv).
     /* X */
-    let _temp6 = OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null);
+    let _temp5 = OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', env, privateEnv);
     /* node:coverage ignore next */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
     /* node:coverage ignore next */
-    if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null) returned an abrupt completion", {
-      cause: _temp6
+    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', env, privateEnv) returned an abrupt completion", {
+      cause: _temp5
     });
     /* node:coverage ignore next */
-    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
-    const F = _temp6;
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    const F = _temp5;
     // 25. Perform SetFunctionName(F, "anonymous").
     SetFunctionName(F, Value('anonymous'));
     // 26. If kind is generator, then
     if (kind === 'generator') {
       // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
       const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
+      // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+      /* X */
+      let _temp6 = DefinePropertyOrThrow(F, Value('prototype'), exports.Descriptor({
+        Value: prototype,
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.false
+      }));
+      /* node:coverage ignore next */
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+      /* node:coverage ignore next */
+      if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, Value('prototype'), Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        cause: _temp6
+      });
+      /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    } else if (kind === 'asyncGenerator') {
+      // 27. Else if kind is asyncGenerator, then
+      // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+      const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
       // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
       /* X */
       let _temp7 = DefinePropertyOrThrow(F, Value('prototype'), exports.Descriptor({
@@ -22623,26 +22613,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       /* node:coverage ignore next */
       if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
-    } else if (kind === 'asyncGenerator') {
-      // 27. Else if kind is asyncGenerator, then
-      // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-      const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
-      // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-      /* X */
-      let _temp8 = DefinePropertyOrThrow(F, Value('prototype'), exports.Descriptor({
-        Value: prototype,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.false
-      }));
-      /* node:coverage ignore next */
-      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
-      /* node:coverage ignore next */
-      if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, Value('prototype'), Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
-        cause: _temp8
-      });
-      /* node:coverage ignore next */
-      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
     } else if (kind === 'normal') {
       // 28. Else if kind is normal, then perform MakeConstructor(F).
       MakeConstructor(F);
@@ -27380,6 +27350,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     name: 'FinalizationRegistry#cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some'
+  },
+  // stage 2.7
+  {
+    name: 'Iterator#join',
+    flag: 'iterator.join',
+    url: 'https://github.com/tc39/proposal-iterator-join'
   }];
   Object.freeze(FEATURES);
   FEATURES.forEach(Object.freeze);
@@ -27782,16 +27758,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return AR.Signifier;
   }
   AgentSignifier.section = 'https://tc39.es/ecma262/#sec-agentsignifier';
-  function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
-    if (exports.surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
+  function* HostEnsureCanCompileStrings(calleeRealm, parameterStrings, bodyString, direct) {
+    let completion = exports.surroundingAgent.hostDefinedOptions.hostHooks?.HostEnsureCanCompileStrings?.(calleeRealm, parameterStrings, bodyString, direct);
+    if (!completion) {
+      return NormalCompletion(undefined);
+    }
+    if ('next' in completion) {
       /* ReturnIfAbrupt */
-      let _temp5 = exports.surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
+      let _temp5 = yield* completion;
       /* node:coverage ignore next */
       if (_temp5 instanceof AbruptCompletion) return _temp5;
       /* node:coverage ignore next */
       if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    } else {
+      /* ReturnIfAbrupt */
+      /* node:coverage ignore next */
+      if (completion && typeof completion === 'object' && 'next' in completion) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* node:coverage ignore next */
+      if (completion instanceof AbruptCompletion) return completion;
+      /* node:coverage ignore next */
+      if (completion instanceof Completion) completion = completion.Value;
     }
-    return NormalCompletion(undefined);
   }
   function HostPromiseRejectionTracker(promise, operation) {
     if (exports.surroundingAgent.debugger_isPreviewing) {
@@ -30562,79 +30549,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* node:coverage ignore next */
     if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
     const F = _temp4;
-    // 4. Let L be 0.
-    let L = 0;
-    // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
     /* ReturnIfAbrupt */
-    let _temp5 = yield* HasOwnProperty(Target, Value('length'));
+    let _temp5 = yield* CopyNameAndLength(F, Target, 'bound', args.length);
     /* node:coverage ignore next */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* node:coverage ignore next */
     if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-    const targetHasLength = _temp5;
-    // 6. If targetHasLength is true, then
-    if (targetHasLength === Value.true) {
-      /* ReturnIfAbrupt */
-      let _temp6 = yield* Get(Target, Value('length'));
-      /* node:coverage ignore next */
-      if (_temp6 instanceof AbruptCompletion) return _temp6;
-      /* node:coverage ignore next */
-      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
-      // a. Let targetLen be ? Get(Target, "length").
-      const targetLen = _temp6;
-      // b. If Type(targetLen) is Number, then
-      if (targetLen instanceof NumberValue) {
-        // i. If targetLen is +∞𝔽, set L to +∞.
-        if (R(targetLen) === +Infinity) {
-          L = +Infinity;
-        } else if (R(targetLen) === -Infinity) {
-          // ii. Else if targetLen is -∞𝔽, set L to 0.
-          L = 0;
-        } else {
-          /* ReturnIfAbrupt */
-          let _temp7 = yield* ToIntegerOrInfinity(targetLen);
-          /* node:coverage ignore next */
-          if (_temp7 instanceof AbruptCompletion) return _temp7;
-          /* node:coverage ignore next */
-          if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
-          // iii. Else,
-          // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
-          const targetLenAsInt = _temp7;
-          // 2. Assert: targetLenAsInt is finite.
-          Assert(Number.isFinite(targetLenAsInt), "Number.isFinite(targetLenAsInt)");
-          // 3. Let argCount be the number of elements in args.
-          const argCount = args.length;
-          // 4. Set L to max(targetLenAsInt - argCount, 0).
-          L = Math.max(targetLenAsInt - argCount, 0);
-        }
-      }
-    }
-    // 7. Perform ! SetFunctionLength(F, L).
-    /* X */
-    let _temp8 = SetFunctionLength(F, L);
-    /* node:coverage ignore next */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
-    /* node:coverage ignore next */
-    if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! SetFunctionLength(F, L) returned an abrupt completion", {
-      cause: _temp8
-    });
-    /* node:coverage ignore next */
-    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
-    // 8. Let targetName be ? Get(Target, "name").
-    /* ReturnIfAbrupt */
-    let _temp9 = yield* Get(Target, Value('name'));
-    /* node:coverage ignore next */
-    if (_temp9 instanceof AbruptCompletion) return _temp9;
-    /* node:coverage ignore next */
-    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
-    let targetName = _temp9;
-    // 9. If Type(targetName) is not String, set targetName to the empty String.
-    if (!(targetName instanceof JSStringValue)) {
-      targetName = Value('');
-    }
-    // 10. Perform SetFunctionName(F, targetName, "bound").
-    SetFunctionName(F, targetName, Value('bound'));
-    // 11. Return F.
     return F;
   }
   FunctionProto_bind.section = 'https://tc39.es/ecma262/#sec-function.prototype.bind';
@@ -30669,16 +30589,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
     //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
     /* X */
-    let _temp0 = HostHasSourceTextAvailable(func);
+    let _temp6 = HostHasSourceTextAvailable(func);
     /* node:coverage ignore next */
-    if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
     /* node:coverage ignore next */
-    if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! HostHasSourceTextAvailable(func) returned an abrupt completion", {
-      cause: _temp0
+    if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! HostHasSourceTextAvailable(func) returned an abrupt completion", {
+      cause: _temp6
     });
     /* node:coverage ignore next */
-    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
-    if (hasSourceTextInternalSlot(func) && _temp0 === Value.true) {
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    if (hasSourceTextInternalSlot(func) && _temp6 === Value.true) {
       // Return ! UTF16Encode(func.[[SourceText]]).
       return Value(func.SourceText);
     }
@@ -31453,22 +31373,80 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     leafContext.poppedForTailCall = true;
   }
   PrepareForTailCall.section = 'https://tc39.es/ecma262/#sec-preparefortailcall';
+  /** https://tc39.es/proposal-shadowrealm/#sec-copynameandlength */
+  function* CopyNameAndLength(F, Target, prefix, argCount = 0) {
+    let L = 0;
+    /* ReturnIfAbrupt */
+    let _temp21 = yield* HasOwnProperty(Target, Value('length'));
+    /* node:coverage ignore next */
+    if (_temp21 instanceof AbruptCompletion) return _temp21;
+    /* node:coverage ignore next */
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    const targetHasLength = _temp21;
+    if (targetHasLength === Value.true) {
+      /* ReturnIfAbrupt */
+      let _temp22 = yield* Get(Target, Value('length'));
+      /* node:coverage ignore next */
+      if (_temp22 instanceof AbruptCompletion) return _temp22;
+      /* node:coverage ignore next */
+      if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+      const targetLen = _temp22;
+      if (targetLen instanceof NumberValue) {
+        if (R(targetLen) === Infinity) {
+          L = Infinity;
+        } else if (R(targetLen) === -Infinity) {
+          L = 0;
+        } else {
+          /* X */
+          let _temp23 = ToIntegerOrInfinity(targetLen);
+          /* node:coverage ignore next */
+          if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
+          /* node:coverage ignore next */
+          if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(targetLen) returned an abrupt completion", {
+            cause: _temp23
+          });
+          /* node:coverage ignore next */
+          if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+          const targetLenAsInt = _temp23;
+          Assert(Number.isFinite(targetLenAsInt), "Number.isFinite(targetLenAsInt)");
+          L = Math.max(targetLenAsInt - argCount, 0);
+        }
+      }
+    }
+    SetFunctionLength(F, L);
+    /* ReturnIfAbrupt */
+    let _temp24 = yield* Get(Target, Value('name'));
+    /* node:coverage ignore next */
+    if (_temp24 instanceof AbruptCompletion) return _temp24;
+    /* node:coverage ignore next */
+    if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+    let targetName = _temp24;
+    if (!(targetName instanceof JSStringValue)) {
+      targetName = Value('');
+    }
+    if (prefix !== undefined) {
+      SetFunctionName(F, targetName, Value(prefix));
+    } else {
+      SetFunctionName(F, targetName);
+    }
+  }
+  CopyNameAndLength.section = 'https://tc39.es/proposal-shadowrealm/#sec-copynameandlength';
   /** NON-SPEC */
   function IntrinsicsFunctionToString(F) {
     /* X */
-    let _temp21 = FunctionProto_toString([], {
+    let _temp25 = FunctionProto_toString([], {
       thisValue: F,
       NewTarget: Value.undefined
     });
     /* node:coverage ignore next */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
     /* node:coverage ignore next */
-    if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! FunctionProto_toString([], { thisValue: F, NewTarget: Value.undefined }) returned an abrupt completion", {
-      cause: _temp21
+    if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! FunctionProto_toString([], { thisValue: F, NewTarget: Value.undefined }) returned an abrupt completion", {
+      cause: _temp25
     });
     /* node:coverage ignore next */
-    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
-    return _temp21.stringValue();
+    if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+    return _temp25.stringValue();
   }
 
   /** https://tc39.es/ecma262/#sec-generator-objects */
@@ -31807,7 +31785,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-global-object */
 
   /** https://tc39.es/ecma262/#sec-performeval */
-  function* PerformEval(x, callerRealm, strictCaller, direct) {
+  function* PerformEval(x, strictCaller, direct) {
     // 1. Assert: If direct is false, then strictCaller is also false.
     if (direct === false) {
       Assert(strictCaller === false, "strictCaller === false");
@@ -31818,9 +31796,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 3. Let evalRealm be the current Realm Record.
     const evalRealm = exports.surroundingAgent.currentRealmRecord;
-    // 4. Perform ? HostEnsureCanCompileStrings(callerRealm, evalRealm).
+    // 4. Perform ? HostEnsureCanCompileStrings(evalRealm, « », x, direct).
     /* ReturnIfAbrupt */
-    let _temp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
+    let _temp = yield* HostEnsureCanCompileStrings(evalRealm, [], x.stringValue(), direct);
     /* node:coverage ignore next */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* node:coverage ignore next */
@@ -33726,6 +33704,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return completion;
   }
   IteratorClose.section = 'https://tc39.es/ecma262/#sec-iteratorclose';
+  function* IteratorCloseAll(iters, completion) {
+    for (const iter of [...iters].reverse()) {
+      completion = yield* IteratorClose(iter, completion);
+    }
+    return completion;
+  }
+
   /** https://tc39.es/ecma262/#sec-asynciteratorclose */
   function* AsyncIteratorClose(iteratorRecord, completion) {
     Assert(iteratorRecord.Iterator instanceof ObjectValue, "iteratorRecord.Iterator instanceof ObjectValue");
@@ -35781,6 +35766,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       AddValueToKeyedGroup(groups, key, value);
       k += 1;
     }
+  }
+
+  function isOrdinaryObject(value) {
+    return value instanceof ObjectValue && value.GetPrototypeOf === ObjectValue.prototype.GetPrototypeOf && value.SetPrototypeOf === ObjectValue.prototype.SetPrototypeOf && value.IsExtensible === ObjectValue.prototype.IsExtensible && value.PreventExtensions === ObjectValue.prototype.PreventExtensions && value.GetOwnProperty === ObjectValue.prototype.GetOwnProperty && value.DefineOwnProperty === ObjectValue.prototype.DefineOwnProperty && value.HasProperty === ObjectValue.prototype.HasProperty && value.Get === ObjectValue.prototype.Get && value.Set === ObjectValue.prototype.Set && value.Delete === ObjectValue.prototype.Delete && value.OwnPropertyKeys === ObjectValue.prototype.OwnPropertyKeys && 'Prototype' in value && 'Extensible' in value;
   }
 
   // TODO: ban other direct extension from ObjectValue in the linter
@@ -44025,11 +44014,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* FunctionConstructor(args, {
     NewTarget
   }) {
+    const bodyArg = args[args.length - 1] || Value('');
+    args = args.slice(0, -1);
     // 1. Let C be the active function object.
     const C = exports.surroundingAgent.activeFunctionObject;
     // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
     // 3. Return ? CreateDynamicFunction(C, NewTarget, normal, args).
-    return yield* CreateDynamicFunction(C, NewTarget, 'normal', args);
+    return yield* CreateDynamicFunction(C, NewTarget, 'normal', args, bodyArg);
   }
   FunctionConstructor.section = 'https://tc39.es/ecma262/#sec-function-p1-p2-pn-body';
   function bootstrapFunction(realmRec) {
@@ -50280,11 +50271,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const S = captureStack();
     O.HostDefinedErrorStack = S.stack;
     /* X */
-    let _temp5 = errorStackToString(O, S.stack, S.nativeStack);
+    let _temp5 = callSiteToErrorString(O, S.stack, S.nativeStack);
     /* node:coverage ignore next */
     if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
     /* node:coverage ignore next */
-    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! errorStackToString(O, S.stack, S.nativeStack) returned an abrupt completion", {
+    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! callSiteToErrorString(O, S.stack, S.nativeStack) returned an abrupt completion", {
       cause: _temp5
     });
     /* node:coverage ignore next */
@@ -50499,11 +50490,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const S = captureStack();
         O.HostDefinedErrorStack = S.stack;
         /* X */
-        let _temp5 = errorStackToString(O, S.stack, S.nativeStack);
+        let _temp5 = callSiteToErrorString(O, S.stack, S.nativeStack);
         /* node:coverage ignore next */
         if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
         /* node:coverage ignore next */
-        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! errorStackToString(O, S.stack, S.nativeStack) returned an abrupt completion", {
+        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! callSiteToErrorString(O, S.stack, S.nativeStack) returned an abrupt completion", {
           cause: _temp5
         });
         /* node:coverage ignore next */
@@ -50538,9 +50529,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }) {
     // 1. Let O be this value.
     const O = thisValue;
-    // 2. Perform ? RequireInternalSlot(O, [[UnderlyingIterator]]).
+    // 2. Perform ? RequireInternalSlot(O, [[UnderlyingIterators]]).
     /* ReturnIfAbrupt */
-    let _temp = RequireInternalSlot(O, 'UnderlyingIterator');
+    let _temp = RequireInternalSlot(O, 'UnderlyingIterators');
     /* node:coverage ignore next */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* node:coverage ignore next */
@@ -50555,9 +50546,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       // b. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed.
       // Any execution state associated with O can be discarded at this point.
-      // c. Perform ? IteratorClose(O.[[UnderlyingIterator]], NormalCompletion(unused)).
+      // c. Perform ? IteratorCloseAll(O.[[UnderlyingIterators]], NormalCompletion(unused)).
       /* ReturnIfAbrupt */
-      let _temp2 = yield* IteratorClose(O.UnderlyingIterator, NormalCompletion(undefined));
+      let _temp2 = yield* IteratorCloseAll(O.UnderlyingIterators, NormalCompletion(undefined));
       /* node:coverage ignore next */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* node:coverage ignore next */
@@ -50703,9 +50694,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     };
     // 11. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
-    // 12. Set result.[[UnderlyingIterator]] to iterated.
-    result.UnderlyingIterator = iterated;
+    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    // 12. Set result.[[UnderlyingIterators]] to iterated.
+    result.UnderlyingIterators = [iterated];
     // 13. Return result.
     return result;
   }
@@ -50846,9 +50837,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     };
     // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
-    // 8. Set result.[[UnderlyingIterator]] to iterated.
-    result.UnderlyingIterator = iterated;
+    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    // 8. Set result.[[UnderlyingIterators]] to iterated.
+    result.UnderlyingIterators = [iterated];
     // 9. Return result.
     return result;
   }
@@ -51022,9 +51013,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
 
     // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
-    // 8. Set result.[[UnderlyingIterator]] to iterated.
-    result.UnderlyingIterator = iterated;
+    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    // 8. Set result.[[UnderlyingIterators]] to iterated.
+    result.UnderlyingIterators = [iterated];
     // 9. Return result.
     return result;
   }
@@ -51166,9 +51157,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     };
     // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
-    // 8. Set result.[[UnderlyingIterator]] to iterated.
-    result.UnderlyingIterator = iterated;
+    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    // 8. Set result.[[UnderlyingIterators]] to [iterated].
+    result.UnderlyingIterators = [iterated];
     // 9. Return result.
     return result;
   }
@@ -51417,9 +51408,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     };
     // 11. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
-    // 12. Set result.[[UnderlyingIterator]] to iterated.
-    result.UnderlyingIterator = iterated;
+    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    // 12. Set result.[[UnderlyingIterators]] to iterated.
+    result.UnderlyingIterators = [iterated];
     // 13. Return result.
     return result;
   }
@@ -51482,8 +51473,91 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Value.undefined;
   }
   IteratorPrototype_toStringTagSetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag%';
+  /** https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join */
+  function* IteratorPrototype_join([separator = Value.undefined], {
+    thisValue
+  }) {
+    const O = thisValue;
+    if (!(O instanceof ObjectValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    }
+    let iterated = {
+      Iterator: O,
+      NextMethod: Value.undefined,
+      Done: Value.false
+    };
+    let sep;
+    if (separator === Value.undefined) {
+      sep = ',';
+    } else {
+      let completion = yield* ToString(separator);
+      /* IfAbruptCloseIterator */
+      /* node:coverage ignore next */
+      if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion));
+      /* node:coverage ignore next */
+      if (completion instanceof Completion) completion = completion.Value;
+      /* X */
+      let _temp27 = completion;
+      /* node:coverage ignore next */
+      if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) _temp27 = skipDebugger(_temp27);
+      /* node:coverage ignore next */
+      if (_temp27 instanceof AbruptCompletion) throw new Assert.Error("! completion returned an abrupt completion", {
+        cause: _temp27
+      });
+      /* node:coverage ignore next */
+      if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+      sep = _temp27.stringValue();
+    }
+    /* ReturnIfAbrupt */
+    let _temp28 = yield* GetIteratorDirect(O);
+    /* node:coverage ignore next */
+    if (_temp28 instanceof AbruptCompletion) return _temp28;
+    /* node:coverage ignore next */
+    if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+    iterated = _temp28;
+    let R = '';
+    let first = true;
+    while (true) {
+      /* ReturnIfAbrupt */
+      let _temp29 = yield* IteratorStepValue(iterated);
+      /* node:coverage ignore next */
+      if (_temp29 instanceof AbruptCompletion) return _temp29;
+      /* node:coverage ignore next */
+      if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+      const value = _temp29;
+      if (value === 'done') {
+        return Value(R);
+      }
+      if (first) {
+        first = false;
+      } else {
+        R += sep;
+      }
+      if (value !== Value.undefined && value !== Value.null) {
+        let S_completion = yield* ToString(value);
+        /* IfAbruptCloseIterator */
+        /* node:coverage ignore next */
+        if (S_completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, S_completion));
+        /* node:coverage ignore next */
+        if (S_completion instanceof Completion) S_completion = S_completion.Value;
+        /* X */
+        let _temp30 = S_completion;
+        /* node:coverage ignore next */
+        if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+        /* node:coverage ignore next */
+        if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! S_completion returned an abrupt completion", {
+          cause: _temp30
+        });
+        /* node:coverage ignore next */
+        if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+        const S = _temp30.stringValue();
+        R += S;
+      }
+    }
+  }
+  IteratorPrototype_join.section = 'https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join';
   function bootstrapIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]], ['drop', IteratorPrototype_drop, 1], ['every', IteratorPrototype_every, 1], ['filter', IteratorPrototype_filter, 1], ['find', IteratorPrototype_find, 1], ['flatMap', IteratorPrototype_flatMap, 1], ['forEach', IteratorPrototype_forEach, 1], ['map', IteratorPrototype_map, 1], ['reduce', IteratorPrototype_reduce, 1], ['some', IteratorPrototype_some, 1], ['take', IteratorPrototype_take, 1], ['toArray', IteratorPrototype_toArray, 0], [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]]], realmRec.Intrinsics['%Object.prototype%']);
+    const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]], ['drop', IteratorPrototype_drop, 1], ['every', IteratorPrototype_every, 1], ['filter', IteratorPrototype_filter, 1], ['find', IteratorPrototype_find, 1], ['flatMap', IteratorPrototype_flatMap, 1], ['forEach', IteratorPrototype_forEach, 1], ['map', IteratorPrototype_map, 1], ['reduce', IteratorPrototype_reduce, 1], ['some', IteratorPrototype_some, 1], ['take', IteratorPrototype_take, 1], ['toArray', IteratorPrototype_toArray, 0], [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]], exports.surroundingAgent.feature('iterator.join') ? ['join', IteratorPrototype_join, 1] : undefined], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Iterator.prototype%'] = proto;
   }
 
@@ -51536,8 +51610,74 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return wrapper;
   }
   Iterator_from.section = 'https://tc39.es/ecma262/#sec-iterator.from';
+  /** https://tc39.es/ecma262/pr/3713/#sec-iterator.concat */
+  function* Iterator_concat(items) {
+    const iterables = [];
+    for (const item of items) {
+      if (!(item instanceof ObjectValue)) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', item);
+      }
+      /* ReturnIfAbrupt */
+      let _temp3 = yield* GetMethod(item, wellKnownSymbols.iterator);
+      /* node:coverage ignore next */
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      const method = _temp3;
+      if (method instanceof UndefinedValue) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotIterable', item);
+      }
+      iterables.push({
+        OpenMethod: method,
+        Iterable: item
+      });
+    }
+    const gen = CreateIteratorFromClosure(function* Iterator_concat() {
+      for (const iterable of iterables) {
+        /* ReturnIfAbrupt */
+        let _temp4 = yield* Call(iterable.OpenMethod, iterable.Iterable);
+        /* node:coverage ignore next */
+        if (_temp4 instanceof AbruptCompletion) return _temp4;
+        /* node:coverage ignore next */
+        if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+        const iter = _temp4;
+        if (!(iter instanceof ObjectValue)) {
+          return exports.surroundingAgent.Throw('TypeError', 'NotIterable', iter);
+        }
+        /* ReturnIfAbrupt */
+        let _temp5 = yield* GetIteratorDirect(iter);
+        /* node:coverage ignore next */
+        if (_temp5 instanceof AbruptCompletion) return _temp5;
+        /* node:coverage ignore next */
+        if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+        const iteratorRecord = _temp5;
+        let innerAlive = true;
+        while (innerAlive) {
+          /* ReturnIfAbrupt */
+          let _temp6 = yield* IteratorStepValue(iteratorRecord);
+          /* node:coverage ignore next */
+          if (_temp6 instanceof AbruptCompletion) return _temp6;
+          /* node:coverage ignore next */
+          if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+          const innerValue = _temp6;
+          if (innerValue === 'done') {
+            innerAlive = false;
+          } else {
+            const completion = yield* Yield(innerValue);
+            if (completion instanceof AbruptCompletion) {
+              return yield* IteratorClose(iteratorRecord, completion);
+            }
+          }
+        }
+      }
+      return Value.undefined;
+    }, Value('Iterator Helper'), exports.surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
+    gen.UnderlyingIterators = [];
+    return gen;
+  }
+  Iterator_concat.section = 'https://tc39.es/ecma262/pr/3713/#sec-iterator.concat';
   function bootstrapIterator(realmRec) {
-    const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], [['from', Iterator_from, 1]]);
+    const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], [['from', Iterator_from, 1], ['concat', Iterator_concat, 0]]);
     realmRec.Intrinsics['%Iterator%'] = cons;
   }
 
@@ -53275,11 +53415,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* GeneratorFunctionConstructor(args, {
     NewTarget
   }) {
+    const bodyArg = args[args.length - 1] || Value('');
+    args = args.slice(0, -1);
     // 1. Let C be the active function object.
     const C = exports.surroundingAgent.activeFunctionObject;
     // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
     // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
-    return yield* CreateDynamicFunction(C, NewTarget, 'generator', args);
+    return yield* CreateDynamicFunction(C, NewTarget, 'generator', args, bodyArg);
   }
   GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-generatorfunction';
   function bootstrapGeneratorFunction(realmRec) {
@@ -53322,11 +53464,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* AsyncFunctionConstructor(args, {
     NewTarget
   }) {
+    const bodyArg = args[args.length - 1] || Value('');
+    args = args.slice(0, -1);
     // 1. Let C be the active function object.
     const C = exports.surroundingAgent.activeFunctionObject;
     // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
     // 3. Return CreateDynamicFunction(C, NewTarget, async, args).
-    return yield* CreateDynamicFunction(C, NewTarget, 'async', args);
+    return yield* CreateDynamicFunction(C, NewTarget, 'async', args, bodyArg);
   }
   AsyncFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-async-function-constructor-arguments';
   function bootstrapAsyncFunction(realmRec) {
@@ -53570,11 +53714,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* AsyncGeneratorFunctionConstructor(args, {
     NewTarget
   }) {
+    const bodyArg = args[args.length - 1] || Value('');
+    args = args.slice(0, -1);
     // 1. Let C be the active function object.
     const C = exports.surroundingAgent.activeFunctionObject;
     // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
     // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
-    return yield* CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args);
+    return yield* CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args, bodyArg);
   }
   AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorfunction';
   function bootstrapAsyncGeneratorFunction(realmRec) {
@@ -54062,14 +54208,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-eval-x */
   function* Eval([x = Value.undefined]) {
-    // 1. Assert: The execution context stack has at least two elements.
-    Assert(exports.surroundingAgent.executionContextStack.length >= 2, "surroundingAgent.executionContextStack.length >= 2");
-    // 2. Let callerContext be the second to top element of the execution context stack.
-    const callerContext = exports.surroundingAgent.executionContextStack[exports.surroundingAgent.executionContextStack.length - 2];
-    // 3. Let callerRealm be callerContext's Realm.
-    const callerRealm = callerContext.Realm;
-    // 4. Return ? PerformEval(x, callerRealm, false, false).
-    return yield* PerformEval(x, callerRealm, false, false);
+    return yield* PerformEval(x, false, false);
   }
   Eval.section = 'https://tc39.es/ecma262/#sec-eval-x';
   function bootstrapEval(realmRec) {
@@ -57632,11 +57771,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const S = captureStack();
     O.HostDefinedErrorStack = S.stack;
     /* X */
-    let _temp7 = errorStackToString(O, S.stack, S.nativeStack);
+    let _temp7 = callSiteToErrorString(O, S.stack, S.nativeStack);
     /* node:coverage ignore next */
     if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
     /* node:coverage ignore next */
-    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! errorStackToString(O, S.stack, S.nativeStack) returned an abrupt completion", {
+    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! callSiteToErrorString(O, S.stack, S.nativeStack) returned an abrupt completion", {
       cause: _temp7
     });
     /* node:coverage ignore next */
@@ -57955,6 +58094,441 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
   }
 
+  /** https://tc39.es/proposal-shadowrealm/#table-internal-slots-of-wrapped-function-exotic-objects */
+
+  function isWrappedFunctionExoticObject(value) {
+    return 'WrappedTargetFunction' in value;
+  }
+
+  /** https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist */
+  function* WrappedFunction_Call(thisArgument, argumentList) {
+    const F = this;
+    const callerContext = exports.surroundingAgent.runningExecutionContext;
+    const calleeContext = PrepareForWrappedFunctionCall(F);
+    Assert(exports.surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
+    const result = yield* OrdinaryWrappedFunctionCall(F, thisArgument, argumentList);
+    exports.surroundingAgent.executionContextStack.pop(calleeContext);
+    Assert(exports.surroundingAgent.runningExecutionContext === callerContext, "surroundingAgent.runningExecutionContext === callerContext");
+    return result;
+  }
+  WrappedFunction_Call.section = 'https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist';
+  /** https://tc39.es/proposal-shadowrealm/#sec-create-type-error-copy */
+  function CreateTypeErrorCopy(realmRecord, non_spec_evalRealm, originalError) {
+    realmRecord.HostDefined.attachingInspectorReportError?.(non_spec_evalRealm, originalError);
+    let message = 'An error occurred in a ShadowRealm.';
+    let errorData;
+    let hostStack;
+    let stack = '';
+    if (originalError instanceof ObjectValue) {
+      if (IsError(originalError)) {
+        errorData = originalError.ErrorData.stringValue();
+        hostStack = originalError.HostDefinedErrorStack;
+      } else {
+        const S = captureStack();
+        stack = callSiteToErrorStack(S.stack, S.nativeStack);
+      }
+      if (originalError.properties.has('message')) {
+        const messageProp = originalError.properties.get('message');
+        if (messageProp && messageProp.Value && messageProp.Value instanceof JSStringValue) {
+          message = messageProp.Value.stringValue();
+        }
+      }
+    }
+    /* X */
+    let _temp = Construct(realmRecord.Intrinsics['%TypeError%'], [Value(message)]);
+    /* node:coverage ignore next */
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) throw new Assert.Error("! Construct(realmRecord.Intrinsics['%TypeError%'], [Value(message)]) returned an abrupt completion", {
+      cause: _temp
+    });
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    const newError = _temp;
+    newError.ErrorData = errorData ? Value(errorData) : Value(message + stack);
+    newError.HostDefinedErrorStack ??= hostStack;
+    return newError;
+  }
+  CreateTypeErrorCopy.section = 'https://tc39.es/proposal-shadowrealm/#sec-create-type-error-copy';
+  /** https://tc39.es/proposal-shadowrealm/#sec-ordinary-wrapped-function-call */
+  function* OrdinaryWrappedFunctionCall(F, thisArgument, argumentList) {
+    const target = F.WrappedTargetFunction;
+    Assert(IsCallable(target), "IsCallable(target)");
+    const callerRealm = F.Realm;
+
+    // Note: Any exception objects produced after this point are associated with callerRealm.
+    /* ReturnIfAbrupt */
+    let _temp2 = GetFunctionRealm(target);
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    const targetRealm = _temp2;
+    const wrappedArgs = [];
+    for (const arg of argumentList) {
+      /* ReturnIfAbrupt */
+      let _temp3 = yield* GetWrappedValue(targetRealm, arg);
+      /* node:coverage ignore next */
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      const wrappedValue = _temp3;
+      wrappedArgs.push(wrappedValue);
+    }
+    /* ReturnIfAbrupt */
+    let _temp4 = yield* GetWrappedValue(targetRealm, thisArgument);
+    /* node:coverage ignore next */
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    const wrappedThisArgument = _temp4;
+    const result = yield* Call(target, wrappedThisArgument, wrappedArgs);
+    if (result instanceof Value || result instanceof NormalCompletion) {
+      return yield* GetWrappedValue(callerRealm, result instanceof Value ? result : result.Value);
+    } else {
+      const copiedError = CreateTypeErrorCopy(callerRealm, targetRealm, result.Value);
+      return ThrowCompletion(copiedError);
+    }
+  }
+  OrdinaryWrappedFunctionCall.section = 'https://tc39.es/proposal-shadowrealm/#sec-ordinary-wrapped-function-call';
+  /** https://tc39.es/proposal-shadowrealm/#sec-prepare-for-wrapped-function-call */
+  function PrepareForWrappedFunctionCall(F) {
+    const calleeContext = new ExecutionContext();
+    calleeContext.Function = F;
+    const calleeRealm = F.Realm;
+    calleeContext.Realm = calleeRealm;
+    calleeContext.ScriptOrModule = Value.null;
+    exports.surroundingAgent.executionContextStack.push(calleeContext);
+    // 9. NOTE: Any exception objects produced after this point are associated with calleeRealm.
+    return calleeContext;
+  }
+  PrepareForWrappedFunctionCall.section = 'https://tc39.es/proposal-shadowrealm/#sec-prepare-for-wrapped-function-call';
+  /** https://tc39.es/proposal-shadowrealm/#sec-wrappedfunctioncreate */
+  function* WrappedFunctionCreate(callerRealm, Target) {
+    const internalSlotsList = ['WrappedTargetFunction', 'Call', 'Realm', 'Prototype', 'Extensible'];
+    const wrapped = MakeBasicObject(internalSlotsList);
+    wrapped.Prototype = callerRealm.Intrinsics['%Function.prototype%'];
+    wrapped.Call = WrappedFunction_Call;
+    wrapped.WrappedTargetFunction = Target;
+    wrapped.Realm = callerRealm;
+    const result = yield* CopyNameAndLength(wrapped, Target);
+    if (result instanceof ThrowCompletion) {
+      return exports.surroundingAgent.Throw('TypeError', 'Raw', 'Cannot create wrapped function');
+    }
+    return wrapped;
+  }
+  WrappedFunctionCreate.section = 'https://tc39.es/proposal-shadowrealm/#sec-wrappedfunctioncreate';
+  /** https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval */
+  function* PerformShadowRealmEval(sourceText, callerRealm, evalRealm) {
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* HostEnsureCanCompileStrings(evalRealm, [], sourceText, false);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    const script = wrappedParse({
+      source: sourceText
+    }, p => p.scope.with({
+      newTarget: false,
+      superProperty: false,
+      superCall: false
+    }, () => p.parseScript()));
+    if (isArray(script)) {
+      return ThrowCompletion(script[0]);
+    }
+    if (!script.ScriptBody) {
+      return Value.undefined;
+    }
+
+    // To let the inspector work properly
+    const scriptRec = new ScriptRecord({
+      Realm: evalRealm,
+      ECMAScriptCode: script,
+      LoadedModules: [],
+      HostDefined: {}
+    });
+    exports.surroundingAgent.addParsedSource(scriptRec);
+    const body = script.ScriptBody;
+    const strictEval = script.strict;
+    const evalContext = GetShadowRealmContext(evalRealm, strictEval);
+    // TODO: spec bug? dynamic import leak & inspector not working
+    // evalContext.ScriptOrModule = scriptRec;
+    const lexEnv = evalContext.LexicalEnvironment;
+    // TODO: spec bug?
+    Assert(lexEnv instanceof DeclarativeEnvironmentRecord, "lexEnv instanceof DeclarativeEnvironmentRecord");
+    const varEnv = evalContext.VariableEnvironment;
+    exports.surroundingAgent.executionContextStack.push(evalContext);
+    let result = yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, Value.null, strictEval);
+    if (result instanceof NormalCompletion) {
+      result = yield* Evaluate(body);
+    }
+    if (result === undefined || result instanceof NormalCompletion && result.Value === undefined) {
+      result = NormalCompletion(Value.undefined);
+    }
+    exports.surroundingAgent.executionContextStack.pop(evalContext);
+    if (result instanceof ThrowCompletion) {
+      const copiedError = CreateTypeErrorCopy(callerRealm, evalRealm, result.Value);
+      return ThrowCompletion(copiedError);
+    }
+    /* X */
+    let _temp6 = result;
+    /* node:coverage ignore next */
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! result returned an abrupt completion", {
+      cause: _temp6
+    });
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    return yield* GetWrappedValue(callerRealm, _temp6 || Value.undefined);
+  }
+  PerformShadowRealmEval.section = 'https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval';
+  /** https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue */
+  function ShadowRealmImportValue(specifierString, exportNameString, callerRealm, evalRealm) {
+    const evalContext = GetShadowRealmContext(evalRealm, true);
+    /* X */
+    let _temp7 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+    /* node:coverage ignore next */
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+      cause: _temp7
+    });
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    const innerCapability = _temp7;
+    exports.surroundingAgent.executionContextStack.push(evalContext);
+    const referrer = evalContext.Realm;
+    HostLoadImportedModule(referrer, {
+      Specifier: specifierString,
+      Phase: 'evaluation',
+      Attributes: []
+    }, undefined, innerCapability);
+    exports.surroundingAgent.executionContextStack.pop(evalContext);
+    const onFullfilled = CreateBuiltinFunction(function* onFullfilled([exports$1]) {
+      Assert(isModuleNamespaceObject(exports$1), "isModuleNamespaceObject(exports)");
+      const f = exports.surroundingAgent.activeFunctionObject;
+      const string = exportNameString;
+      /* ReturnIfAbrupt */
+      let _temp8 = yield* HasOwnProperty(exports$1, string);
+      /* node:coverage ignore next */
+      if (_temp8 instanceof AbruptCompletion) return _temp8;
+      /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      const hasOwn = _temp8;
+      if (hasOwn === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'Raw', `The module does not define an export named ${string.stringValue()}.`);
+      }
+      /* ReturnIfAbrupt */
+      let _temp9 = yield* Get(exports$1, string);
+      /* node:coverage ignore next */
+      if (_temp9 instanceof AbruptCompletion) return _temp9;
+      /* node:coverage ignore next */
+      if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+      const value = _temp9;
+      const realm = f.Realm;
+      return yield* GetWrappedValue(realm, value);
+    }, 1, Value(''), [], callerRealm);
+    const onRejected = CreateBuiltinFunction(([error]) => {
+      // 1. Let realmRecord be the function's associated Realm Record.
+      const realmRecord = callerRealm;
+      const copiedError = CreateTypeErrorCopy(realmRecord, evalRealm, error);
+      return ThrowCompletion(copiedError);
+    }, 1, Value(''), [], callerRealm);
+    /* X */
+    let _temp0 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+    /* node:coverage ignore next */
+    if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+    /* node:coverage ignore next */
+    if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+      cause: _temp0
+    });
+    /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    const promiseCapability = _temp0;
+    return PerformPromiseThen(innerCapability.Promise, onFullfilled, onRejected, promiseCapability);
+  }
+  ShadowRealmImportValue.section = 'https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue';
+  /** https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue */
+  function* GetWrappedValue(callerRealm, value) {
+    if (value instanceof ObjectValue) {
+      if (!IsCallable(value)) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', value);
+      }
+      return yield* WrappedFunctionCreate(callerRealm, value);
+    }
+    return value;
+  }
+  GetWrappedValue.section = 'https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue';
+  /** https://tc39.es/proposal-shadowrealm/#sec-validateshadowrealmobject */
+  function ValidateShadowRealmObject(O) {
+    /* ReturnIfAbrupt */
+    let _temp1 = RequireInternalSlot(O, 'ShadowRealm');
+    /* node:coverage ignore next */
+    if (_temp1 instanceof AbruptCompletion) return _temp1;
+    /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  }
+  ValidateShadowRealmObject.section = 'https://tc39.es/proposal-shadowrealm/#sec-validateshadowrealmobject';
+  /** https://tc39.es/proposal-shadowrealm/#sec-getshadowrealmcontext */
+  function GetShadowRealmContext(shadowRealmRecord, strictEval) {
+    const lexEnv = new DeclarativeEnvironmentRecord(shadowRealmRecord.GlobalEnv);
+    let varEnv = shadowRealmRecord.GlobalEnv;
+    if (strictEval) {
+      varEnv = lexEnv;
+    }
+    const context = new ExecutionContext();
+    context.Function = Value.null;
+    context.Realm = shadowRealmRecord;
+    context.ScriptOrModule = Value.null;
+    context.VariableEnvironment = varEnv;
+    context.LexicalEnvironment = lexEnv;
+    context.PrivateEnvironment = Value.null;
+    return context;
+  }
+  GetShadowRealmContext.section = 'https://tc39.es/proposal-shadowrealm/#sec-getshadowrealmcontext';
+
+  /** https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.evaluate */
+  function* ShadowRealmPrototype_evaluate([sourceText = Value.undefined], {
+    thisValue
+  }) {
+    /* ReturnIfAbrupt */
+    let _temp = exports.surroundingAgent.debugger_cannotPreview;
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    const O = thisValue;
+    /* ReturnIfAbrupt */
+    let _temp2 = ValidateShadowRealmObject(O);
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    if (!(sourceText instanceof JSStringValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAString', sourceText);
+    }
+    const callerRealm = exports.surroundingAgent.currentRealmRecord;
+    const evalRealm = O.ShadowRealm;
+    return yield* PerformShadowRealmEval(sourceText.stringValue(), callerRealm, evalRealm);
+  }
+  ShadowRealmPrototype_evaluate.section = 'https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.evaluate';
+  /** https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.importvalue */
+  function* ShadowRealmPrototype_importValue([specifier = Value.undefined, exportName = Value.undefined], {
+    thisValue
+  }) {
+    /* ReturnIfAbrupt */
+    let _temp3 = exports.surroundingAgent.debugger_cannotPreview;
+    /* node:coverage ignore next */
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    /* node:coverage ignore next */
+    if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    const O = thisValue;
+    /* ReturnIfAbrupt */
+    let _temp4 = ValidateShadowRealmObject(O);
+    /* node:coverage ignore next */
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* ToString(specifier);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    const specifierString = _temp5;
+    if (!(exportName instanceof JSStringValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAString', exportName);
+    }
+    const callerRealm = exports.surroundingAgent.currentRealmRecord;
+    const evalRealm = O.ShadowRealm;
+    return ShadowRealmImportValue(specifierString, exportName, callerRealm, evalRealm);
+  }
+  ShadowRealmPrototype_importValue.section = 'https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.importvalue';
+  function bootstrapShadowRealmPrototype(realmRec) {
+    const proto = bootstrapPrototype(realmRec, [['evaluate', ShadowRealmPrototype_evaluate, 1], ['importValue', ShadowRealmPrototype_importValue, 2]], realmRec.Intrinsics['%Object.prototype%'], 'ShadowRealm');
+    realmRec.Intrinsics['%ShadowRealm.prototype%'] = proto;
+  }
+
+  function isShadowRealmObject(value) {
+    return 'ShadowRealm' in value;
+  }
+
+  /** https://tc39.es/ecma262/#sec-symbol-description */
+  function* ShadowRealmConstructor(_args, {
+    NewTarget
+  }) {
+    /* ReturnIfAbrupt */
+    let _temp = exports.surroundingAgent.debugger_cannotPreview;
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    if (NewTarget instanceof UndefinedValue) {
+      return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    }
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* OrdinaryCreateFromConstructor(NewTarget, '%ShadowRealm.prototype%', ['ShadowRealm']);
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    const O = _temp2;
+    // Note: wait for https://github.com/tc39/ecma262/pull/3728
+    /* ReturnIfAbrupt */
+    let _temp3 = MakeRealm({
+      name: 'ShadowRealm',
+      specifier: exports.surroundingAgent.currentRealmRecord.HostDefined.specifier
+    });
+    /* node:coverage ignore next */
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    /* node:coverage ignore next */
+    if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    const realm = _temp3;
+    const innerContext = realm.topContext;
+    const realmRec = innerContext.Realm;
+    O.ShadowRealm = realmRec;
+    let hostHookCompletion = exports.surroundingAgent.hostDefinedOptions.hostHooks?.HostInitializeShadowRealm?.(realmRec, innerContext, O);
+    if (typeof hostHookCompletion === 'object' && hostHookCompletion && 'next' in hostHookCompletion) {
+      /* ReturnIfAbrupt */
+      let _temp4 = yield* hostHookCompletion;
+      /* node:coverage ignore next */
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      /* node:coverage ignore next */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    } else {
+      /* ReturnIfAbrupt */
+      /* node:coverage ignore next */
+      if (hostHookCompletion && typeof hostHookCompletion === 'object' && 'next' in hostHookCompletion) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* node:coverage ignore next */
+      if (hostHookCompletion instanceof AbruptCompletion) return hostHookCompletion;
+      /* node:coverage ignore next */
+      if (hostHookCompletion instanceof Completion) hostHookCompletion = hostHookCompletion.Value;
+    }
+    Assert(isOrdinaryObject(realmRec.GlobalObject), "isOrdinaryObject(realmRec.GlobalObject)");
+    return O;
+  }
+  ShadowRealmConstructor.section = 'https://tc39.es/ecma262/#sec-symbol-description';
+  function bootstrapShadowRealm(realmRec) {
+    const shadowRealmConstructor = bootstrapConstructor(realmRec, ShadowRealmConstructor, 'ShadowRealm', 0, realmRec.Intrinsics['%ShadowRealm.prototype%'], []);
+    /* X */
+    let _temp5 = shadowRealmConstructor.DefineOwnProperty(Value('prototype'), exports.Descriptor({
+      Value: realmRec.Intrinsics['%ShadowRealm.prototype%'],
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+    /* node:coverage ignore next */
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! shadowRealmConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: realmRec.Intrinsics['%ShadowRealm.prototype%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      cause: _temp5
+    });
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    realmRec.Intrinsics['%ShadowRealm%'] = shadowRealmConstructor;
+  }
+
   /** https://tc39.es/ecma262/#table-well-known-intrinsic-objects */
 
   /** https://tc39.es/ecma262/#sec-code-realms */
@@ -57977,9 +58551,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
   }
-  function InitializeHostDefinedRealm() {
-    return new ManagedRealm();
+
+  /** https://tc39.es/ecma262/pr/3728/#sec-makerealm */
+  function MakeRealm(...args) {
+    return new ManagedRealm(...args);
   }
+  MakeRealm.section = 'https://tc39.es/ecma262/pr/3728/#sec-makerealm';
   function AddRestrictedFunctionProperties(F, realm) {
     Assert(!!realm.Intrinsics['%ThrowTypeError%'], "!!realm.Intrinsics['%ThrowTypeError%']");
     const thrower = realm.Intrinsics['%ThrowTypeError%'];
@@ -58099,70 +58676,75 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     bootstrapWeakRef(realmRec);
     bootstrapFinalizationRegistryPrototype(realmRec);
     bootstrapFinalizationRegistry(realmRec);
+    bootstrapShadowRealmPrototype(realmRec);
+    bootstrapShadowRealm(realmRec);
     AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
-    for (const key in intrinsics) {
-      if (intrinsics[key] instanceof ObjectValue) {
-        Object.defineProperty(intrinsics, '__debug_intrinsic_name__', {
-          value: key,
-          configurable: true
-        });
-      }
-    }
     return intrinsics;
   }
   CreateIntrinsics.section = 'https://tc39.es/ecma262/#sec-createintrinsics';
   /** https://tc39.es/ecma262/#sec-setdefaultglobalbindings */
-  function* SetDefaultGlobalBindings(realmRec) {
+  function SetDefaultGlobalBindings(realmRec) {
     const global = realmRec.GlobalObject;
 
     // Value Properties of the Global Object
     for (const [name, value] of [['Infinity', F(Infinity)], ['NaN', F(NaN)], ['undefined', Value.undefined]]) {
-      /* ReturnIfAbrupt */
-      let _temp3 = yield* DefinePropertyOrThrow(global, Value(name), exports.Descriptor({
+      /* X */
+      let _temp3 = DefinePropertyOrThrow(global, Value(name), exports.Descriptor({
         Value: value,
         Writable: Value.false,
         Enumerable: Value.false,
         Configurable: Value.false
       }));
       /* node:coverage ignore next */
-      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+      /* node:coverage ignore next */
+      if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: value,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        cause: _temp3
+      });
       /* node:coverage ignore next */
       if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
     }
-    /* ReturnIfAbrupt */
-    let _temp4 = yield* DefinePropertyOrThrow(global, Value('globalThis'), exports.Descriptor({
+    /* X */
+    let _temp4 = DefinePropertyOrThrow(global, Value('globalThis'), exports.Descriptor({
       Value: realmRec.GlobalEnv.GlobalThisValue,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
     /* node:coverage ignore next */
-    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+    /* node:coverage ignore next */
+    if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({\n    Value: realmRec.GlobalEnv.GlobalThisValue,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      cause: _temp4
+    });
     /* node:coverage ignore next */
     if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
     for (const name of [
     // Function Properties of the Global Object
     'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
     // Constructor Properties of the Global Object
-    'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Iterator', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set',
+    'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Iterator', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', 'ShadowRealm',
     // 'SharedArrayBuffer',
     'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet',
     // Other Properties of the Global Object
     // 'Atomics',
     'JSON', 'Math', 'Reflect']) {
-      /* ReturnIfAbrupt */
-      let _temp5 = yield* DefinePropertyOrThrow(global, Value(name), exports.Descriptor({
+      /* X */
+      let _temp5 = DefinePropertyOrThrow(global, Value(name), exports.Descriptor({
         Value: realmRec.Intrinsics[`%${name}%`],
         Writable: Value.true,
         Enumerable: Value.false,
         Configurable: Value.true
       }));
       /* node:coverage ignore next */
-      if (_temp5 instanceof AbruptCompletion) return _temp5;
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+      /* node:coverage ignore next */
+      if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: realmRec.Intrinsics[`%${name}%`],\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        cause: _temp5
+      });
       /* node:coverage ignore next */
       if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
     }
-    return global;
   }
   SetDefaultGlobalBindings.section = 'https://tc39.es/ecma262/#sec-setdefaultglobalbindings';
 
@@ -61336,6 +61918,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if ('SymbolData' in v) {
         return `[Symbol ${i(v.SymbolData)}]`;
       }
+      if (isShadowRealmObject(v)) {
+        return '[ShadowRealm]';
+      }
       ctx.indent += 1;
       ctx.inspected.push(v);
       try {
@@ -61617,26 +62202,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     active = false;
 
     /** https://tc39.es/ecma262/#sec-initializehostdefinedrealm */
-    constructor(HostDefined = {}) {
+    constructor(HostDefined = {}, customizations) {
       super();
       this.Intrinsics = CreateIntrinsics(this);
       this.AgentSignifier = AgentSignifier();
       this.TemplateMap = [];
+      let [global, thisValue] = customizations?.(this) || [];
+      if (!global) {
+        global = OrdinaryObjectCreate(this.Intrinsics['%Object.prototype%']);
+      } else {
+        Assert(global instanceof ObjectValue, "global instanceof ObjectValue");
+      }
+      if (!thisValue) {
+        thisValue = global;
+      } else {
+        Assert(thisValue instanceof ObjectValue, "thisValue instanceof ObjectValue");
+      }
+      this.GlobalObject = global;
+      this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
+      SetDefaultGlobalBindings(this);
       const newContext = new ExecutionContext();
       newContext.Function = Value.null;
       newContext.Realm = this;
       newContext.ScriptOrModule = Value.null;
-      exports.surroundingAgent.executionContextStack.push(newContext);
-      // TODO: a host hook for exotic global object
-      const global = OrdinaryObjectCreate(this.Intrinsics['%Object.prototype%']);
-      // TODO: a host hook for global "this" binding
-      const thisValue = global;
-      this.GlobalObject = global;
-      this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
-      skipDebugger(SetDefaultGlobalBindings(this));
-
-      // misc
-      exports.surroundingAgent.executionContextStack.pop(newContext);
       this.HostDefined = HostDefined;
       this.topContext = newContext;
       exports.surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
@@ -62274,6 +62862,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ContinueModuleLoading = ContinueModuleLoading;
   exports.CopyDataBlockBytes = CopyDataBlockBytes;
   exports.CopyDataProperties = CopyDataProperties;
+  exports.CopyNameAndLength = CopyNameAndLength;
   exports.CountLeftCapturingParensWithin = CountLeftCapturingParensWithin;
   exports.CreateArrayFromList = CreateArrayFromList;
   exports.CreateArrayIterator = CreateArrayIterator;
@@ -62294,6 +62883,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CreateNonEnumerableDataPropertyOrThrow = CreateNonEnumerableDataPropertyOrThrow;
   exports.CreateResolvingFunctions = CreateResolvingFunctions;
   exports.CreateSyntheticModule = CreateSyntheticModule;
+  exports.CreateTypeErrorCopy = CreateTypeErrorCopy;
   exports.CreateUnmappedArgumentsObject = CreateUnmappedArgumentsObject;
   exports.CyclicModuleRecord = CyclicModuleRecord;
   exports.DataBlock = DataBlock;
@@ -62441,6 +63031,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetModuleNamespace = GetModuleNamespace;
   exports.GetNewTarget = GetNewTarget;
   exports.GetPrototypeFromConstructor = GetPrototypeFromConstructor;
+  exports.GetShadowRealmContext = GetShadowRealmContext;
   exports.GetStringIndex = GetStringIndex;
   exports.GetSubstitution = GetSubstitution;
   exports.GetThisEnvironment = GetThisEnvironment;
@@ -62450,6 +63041,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetValueFromBuffer = GetValueFromBuffer;
   exports.GetViewByteLength = GetViewByteLength;
   exports.GetViewValue = GetViewValue;
+  exports.GetWrappedValue = GetWrappedValue;
   exports.GlobalDeclarationInstantiation = GlobalDeclarationInstantiation;
   exports.GlobalEnvironmentRecord = GlobalEnvironmentRecord;
   exports.GraphLoadingState = GraphLoadingState;
@@ -62480,7 +63072,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.InLeapYear = InLeapYear;
   exports.IncrementModuleAsyncEvaluationCount = IncrementModuleAsyncEvaluationCount;
   exports.InitializeBoundName = InitializeBoundName;
-  exports.InitializeHostDefinedRealm = InitializeHostDefinedRealm;
   exports.InitializeInstanceElements = InitializeInstanceElements;
   exports.InitializeReferencedBinding = InitializeReferencedBinding;
   exports.InnerModuleEvaluation = InnerModuleEvaluation;
@@ -62546,6 +63137,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IteratorBindingInitialization_ArrayBindingPattern = IteratorBindingInitialization_ArrayBindingPattern;
   exports.IteratorBindingInitialization_FormalParameters = IteratorBindingInitialization_FormalParameters;
   exports.IteratorClose = IteratorClose;
+  exports.IteratorCloseAll = IteratorCloseAll;
   exports.IteratorComplete = IteratorComplete;
   exports.IteratorNext = IteratorNext;
   exports.IteratorStep = IteratorStep;
@@ -62573,6 +63165,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.MakeMatchIndicesIndexPairArray = MakeMatchIndicesIndexPairArray;
   exports.MakeMethod = MakeMethod;
   exports.MakePrivateReference = MakePrivateReference;
+  exports.MakeRealm = MakeRealm;
   exports.MakeTime = MakeTime;
   exports.MakeTypedArrayWithBufferWitnessRecord = MakeTypedArrayWithBufferWitnessRecord;
   exports.ManagedRealm = ManagedRealm;
@@ -62615,6 +63208,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.OrdinarySetPrototypeOf = OrdinarySetPrototypeOf;
   exports.OrdinarySetWithOwnDescriptor = OrdinarySetWithOwnDescriptor;
   exports.OrdinaryToPrimitive = OrdinaryToPrimitive;
+  exports.OrdinaryWrappedFunctionCall = OrdinaryWrappedFunctionCall;
   exports.ParseJSONModule = ParseJSONModule;
   exports.ParseModule = ParseModule;
   exports.ParsePattern = ParsePattern;
@@ -62622,8 +63216,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.Parser = Parser;
   exports.PerformEval = PerformEval;
   exports.PerformPromiseThen = PerformPromiseThen;
+  exports.PerformShadowRealmEval = PerformShadowRealmEval;
   exports.PrepareForOrdinaryCall = PrepareForOrdinaryCall;
   exports.PrepareForTailCall = PrepareForTailCall;
+  exports.PrepareForWrappedFunctionCall = PrepareForWrappedFunctionCall;
   exports.PrimitiveValue = PrimitiveValue;
   exports.PrivateBoundIdentifiers = PrivateBoundIdentifiers;
   exports.PrivateElementFind = PrivateElementFind;
@@ -62680,6 +63276,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.SetValueInBuffer = SetValueInBuffer;
   exports.SetViewValue = SetViewValue;
   exports.SetterThatIgnoresPrototypeProperties = SetterThatIgnoresPrototypeProperties;
+  exports.ShadowRealmImportValue = ShadowRealmImportValue;
   exports.SourceTextModuleRecord = SourceTextModuleRecord;
   exports.SpeciesConstructor = SpeciesConstructor;
   exports.StringCreate = StringCreate;
@@ -62741,12 +63338,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.Unicode = Unicode;
   exports.UpdateEmpty = UpdateEmpty;
   exports.ValidateAndApplyPropertyDescriptor = ValidateAndApplyPropertyDescriptor;
+  exports.ValidateShadowRealmObject = ValidateShadowRealmObject;
   exports.Value = Value;
   exports.ValueOfNormalCompletion = ValueOfNormalCompletion;
   exports.VarDeclaredNames = VarDeclaredNames;
   exports.VarScopedDeclarations = VarScopedDeclarations;
   exports.WeakRefDeref = WeakRefDeref;
   exports.WeekDay = WeekDay;
+  exports.WrappedFunctionCreate = WrappedFunctionCreate;
   exports.X = X;
   exports.YearFromTime = YearFromTime;
   exports.Yield = Yield;
@@ -62777,16 +63376,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.isMapObject = isMapObject;
   exports.isModuleNamespaceObject = isModuleNamespaceObject;
   exports.isNonNegativeInteger = isNonNegativeInteger;
+  exports.isOrdinaryObject = isOrdinaryObject;
   exports.isPromiseObject = isPromiseObject;
   exports.isProxyExoticObject = isProxyExoticObject;
   exports.isRegExpObject = isRegExpObject;
   exports.isSetObject = isSetObject;
+  exports.isShadowRealmObject = isShadowRealmObject;
   exports.isStrictModeCode = isStrictModeCode;
   exports.isTrailingSurrogate = isTrailingSurrogate;
   exports.isTypedArrayObject = isTypedArrayObject;
   exports.isWeakMapObject = isWeakMapObject;
   exports.isWeakRef = isWeakRef;
   exports.isWeakSetObject = isWeakSetObject;
+  exports.isWrappedFunctionExoticObject = isWrappedFunctionExoticObject;
   exports.kInternal = kInternal;
   exports.msFromTime = msFromTime;
   exports.msPerAverageYear = msPerAverageYear;
