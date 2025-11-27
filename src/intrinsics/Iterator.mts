@@ -73,6 +73,7 @@ function* Iterator_from([O]: Arguments): ValueEvaluator {
   return wrapper;
 }
 
+/** https://tc39.es/ecma262/pr/3713/#sec-iterator.concat */
 function* Iterator_concat(items: Arguments): ValueEvaluator {
   const iterables: { OpenMethod: FunctionObject, Iterable: ObjectValue }[] = [];
   for (const item of items) {

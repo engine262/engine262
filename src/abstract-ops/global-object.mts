@@ -30,13 +30,13 @@ import {
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import { __ts_cast__, JSStringSet } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { Assert, GetThisEnvironment, Realm } from './all.mts';
+import { Assert, GetThisEnvironment } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-global-object */
 
 /** https://tc39.es/ecma262/#sec-performeval */
-export function* PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean, direct: boolean): ValueEvaluator {
+export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): ValueEvaluator {
   // 1. Assert: If direct is false, then strictCaller is also false.
   if (direct === false) {
     Assert(strictCaller === false);
@@ -47,8 +47,8 @@ export function* PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean
   }
   // 3. Let evalRealm be the current Realm Record.
   const evalRealm = surroundingAgent.currentRealmRecord;
-  // 4. Perform ? HostEnsureCanCompileStrings(callerRealm, evalRealm).
-  Q(HostEnsureCanCompileStrings(callerRealm, evalRealm));
+  // 4. Perform ? HostEnsureCanCompileStrings(evalRealm, « », x, direct).
+  Q(yield* HostEnsureCanCompileStrings(evalRealm, [], x.stringValue(), direct));
   // 5. Let inFunction be false.
   let inFunction = false;
   // 6. Let inMethod be false.

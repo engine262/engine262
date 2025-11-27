@@ -49,7 +49,7 @@ export const CannotSetProperty = (p: PropertyKeyValue, o: unknown) => `Cannot se
 export const ClassMissingBindingIdentifier = () => 'Class declaration missing binding identifier';
 export const ConstDeclarationMissingInitializer = () => 'Missing initialization of const declaration';
 export const ConstructorNonCallable = (f: Value) => `${i(f)} cannot be invoked without new`;
-export const CouldNotResolveModule = (s: JSStringValue | string) => `Could not resolve module ${i(s)}`;
+export const CouldNotResolveModule = (s: JSStringValue | string, from?: string) => `Could not resolve module ${i(s)} from ${from ? i(from) : 'no referrer'}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 export const DeferredModuleNotReady = (m: AbstractModuleRecord) => `Module ${m.HostDefined?.specifier ?? ''} is not ready for synchronous execution`;
 export const DeleteIdentifier = () => 'Delete of identifier in strict mode';

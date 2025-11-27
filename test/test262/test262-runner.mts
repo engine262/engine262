@@ -233,7 +233,7 @@ for await (const file of parsePositionals(args.positionals, true)) {
     }, {});
     attrs.includes = attrs.includes || [];
 
-    const test = new Test(relative(inputs.Test262TestsPath, file), engineFeatures, attrs, '', contents);
+    const test = new Test(relative(inputs.Test262TestsPath, file), file, engineFeatures, attrs, '', contents);
 
     if (test.attrs.flags.module) {
       discoverTest(test.withDifferentTestFlag('module'));

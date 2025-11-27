@@ -1,12 +1,11 @@
-import { readFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readFile, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  evalQ, ManagedRealm, NullValue, Realm, Throw, ThrowCompletion, type AgentHostDefined,
+  evalQ, ManagedRealm, Realm, Throw, ThrowCompletion, type AgentHostDefined,
 } from '#self';
 
 export function createLoadImportedModule(getCache = (realm: ManagedRealm) => realm.HostDefined.resolverCache) {
-  const validateType = (attributes: Map<string, string>, finish: (completon: ThrowCompletion) => void) => {
+  const validateType = (attributes: Map<string, string>, finish: (completion: ThrowCompletion) => void) => {
     const type = attributes.get('type');
     if (type && type !== 'json') {
       finish(Throw('TypeError', 'UnsupportedModuleType', type));
@@ -17,14 +16,19 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
 
   const parseModule = (realm: ManagedRealm, resolved: string, attributes: Map<string, string>, source: string) => (attributes.get('type') === 'json' || resolved.endsWith('.json')
     ? realm.createJSONModule(resolved, source)
-    : realm.createSourceTextModule(resolved, source));
+    : realm.compileModule(source, { specifier: resolved }));
 
-  const loadImportedModule: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, attributes, _hostDefined, finish) => {
-    if (referrer instanceof Realm || referrer instanceof NullValue) {
-      throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
-    }
-    const realm = referrer.Realm as ManagedRealm;
+  const loadImportedModuleSyncOrAsync = (
+    readFile: (path: string, callback: (err: NodeJS.ErrnoException | null, data: string) => void) => void,
+    ...[referrer, specifier, attributes, _hostDefined, finish]: Parameters<NonNullable<AgentHostDefined['loadImportedModule']>>
+  ) => {
+    const realm = (referrer instanceof Realm ? referrer : referrer.Realm) as ManagedRealm;
     const cache = getCache(realm);
+
+    if (!referrer.HostDefined.specifier) {
+      finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+      return;
+    }
 
     if (!validateType(attributes, finish)) {
       return;
@@ -38,47 +42,32 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
         return;
       }
       try {
-        const source = await readFile(resolved, 'utf8');
-        const m = Q(parseModule(realm, resolved, attributes, source));
-        cache?.set(resolved, m);
-        finish(m);
+        readFile(resolved, (err, data) => {
+          if (err) {
+            finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+            return;
+          }
+          const m = Q(parseModule(realm, resolved, attributes, data));
+          cache?.set(resolved, m);
+          finish(m);
+        });
       } catch (error) {
         finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
       }
     });
   };
-  const loadImportedModuleSync: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, attributes, _hostDefined, finish) => {
-    if (referrer instanceof Realm || referrer instanceof NullValue) {
-      throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
-    }
-    const realm = referrer.Realm as ManagedRealm;
-    const cache = getCache(realm);
 
-    if (!validateType(attributes, finish)) {
-      return;
+  const loadImportedModule: NonNullable<AgentHostDefined['loadImportedModule']> = loadImportedModuleSyncOrAsync.bind(null, (path, callback) => {
+    readFile(path, 'utf8', callback);
+  });
+  const loadImportedModuleSync: NonNullable<AgentHostDefined['loadImportedModule']> = loadImportedModuleSyncOrAsync.bind(null, (path, callback) => {
+    try {
+      const data = readFileSync(path, 'utf8');
+      callback(null, data);
+    } catch (error) {
+      callback(error as NodeJS.ErrnoException, '');
     }
-
-    evalQ((Q) => {
-      const base = path.dirname(referrer.HostDefined.specifier!);
-      const resolved = path.resolve(base, specifier);
-      if (cache?.has(resolved)) {
-        finish(cache.get(resolved)!);
-        return;
-      }
-      try {
-        const source = readFileSync(resolved, 'utf8');
-        const m = Q(parseModule(realm, resolved, attributes, source));
-        cache?.set(resolved, m);
-        finish(m);
-      } catch (error) {
-        if (error instanceof ThrowCompletion) {
-          finish(error);
-        } else {
-          finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
-        }
-      }
-    });
-  };
+  });
   return { loadImportedModule, loadImportedModuleSync };
 }
 

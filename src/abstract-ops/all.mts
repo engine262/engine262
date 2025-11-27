@@ -26,6 +26,7 @@ export * from './proxy-objects.mts';
 export * from './realms.mts';
 export * from './reference-operations.mts';
 export * from './regexp-objects.mts';
+export * from './shadow-realm.mts';
 export * from './spec-types.mts';
 export * from './string-objects.mts';
 export * from './symbol-objects.mts';

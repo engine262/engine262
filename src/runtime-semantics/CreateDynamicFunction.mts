@@ -24,42 +24,28 @@ import {
 import { __ts_cast__, OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
-// #table-dynamic-function-sourcetext-prefixes
-const DynamicFunctionSourceTextPrefixes = {
-  'normal': 'function',
-  'generator': 'function*',
-  'async': 'async function',
-  'asyncGenerator': 'async function*',
-};
-
-export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', args: Arguments) {
-  // 1. Assert: The execution context stack has at least two elements.
-  Assert(surroundingAgent.executionContextStack.length >= 2);
-  // 2. Let callerContext be the second to top element of the execution context stack.
-  const callerContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
-  // 3. Let callerRealm be callerContext's Realm.
-  const callerRealm = callerContext.Realm;
-  // 4. Let calleeRealm be the current Realm Record.
-  const calleeRealm = surroundingAgent.currentRealmRecord;
-  // 5. Perform ? HostEnsureCanCompileStrings(callerRealm, calleeRealm).
-  Q(HostEnsureCanCompileStrings(callerRealm, calleeRealm));
+export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value) {
   // 6. If newTarget is undefined, set newTarget to constructor.
   if (newTarget instanceof UndefinedValue) {
     newTarget = constructor;
   }
   // 7. If kind is normal, then
   let fallbackProto: keyof Intrinsics;
+  let prefix;
   if (kind === 'normal') {
+    prefix = 'function';
     // a. Let goal be the grammar symbol FunctionBody[~Yield, ~Await].
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, ~Await].
     // c. Let fallbackProto be "%Function.prototype%".
     fallbackProto = '%Function.prototype%';
   } else if (kind === 'generator') { // 8. Else if kind is generator, then
+    prefix = 'function*';
     // a. Let goal be the grammar symbol GeneratorBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[+Yield, ~Await].
     // c. Let fallbackProto be "%GeneratorFunction.prototype%".
     fallbackProto = '%GeneratorFunction.prototype%';
   } else if (kind === 'async') { // 9. Else if kind is async, then
+    prefix = 'async function';
     // a. Let goal be the grammar symbol AsyncBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, +Await].
     // c. Let fallbackProto be "%AsyncFunction.prototype%".
@@ -67,50 +53,39 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   } else { // 10. Else,
     // a. Assert: kind is asyncGenerator.
     Assert(kind === 'asyncGenerator');
+    prefix = 'async function*';
     // b. Let goal be the grammar symbol AsyncGeneratorBody.
     // c. Let parameterGoal be the grammar symbol FormalParameters[+Yield, +Await].
     // d. Let fallbackProto be "%AsyncGeneratorFunction.prototype%".
     fallbackProto = '%AsyncGeneratorFunction.prototype%';
   }
   // 11. Let argCount be the number of elements in args.
-  const argCount = args.length;
+  const argCount = parameterArgs.length;
+  const parameterStrings: string[] = [];
+  for (const arg of parameterArgs) {
+    parameterStrings.push(Q(yield* ToString(arg)).stringValue());
+  }
+  const bodyString = Q(yield* ToString(bodyArg)).stringValue();
+  const currentRealm = surroundingAgent.currentRealmRecord;
+  Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, false));
   // 12. Let P be the empty String.
   let P = '';
-  // 13. If argCount = 0, let bodyArg be the empty String.
-  let bodyArg;
-  if (argCount === 0) {
-    bodyArg = Value('');
-  } else if (argCount === 1) { // 14. Else if argCount = 1, let bodyArg be args[0].
-    bodyArg = args[0];
-  } else { // 15. Else,
-    // a. Assert: argCount > 1.
-    Assert(argCount > 1);
-    // b. Let firstArg be args[0].
-    const firstArg = args[0];
-    // c. Set P to ? ToString(firstArg).
-    P = Q(yield* ToString(firstArg)).stringValue();
+  if (argCount > 0) {
+    P = parameterStrings[0];
     // d. Let k be 1.
     let k = 1;
     // e. Repeat, while k < argCount - 1
-    while (k < argCount - 1) {
-      // i. Let nextArg be args[k].
-      const nextArg = args[k];
-      // ii. Let nextArgString be ? ToString(nextArg).
-      const nextArgString = Q(yield* ToString(nextArg));
+    while (k < argCount) {
+      const nextArgString = parameterStrings[k];
       // iii. Set P to the string-concatenation of the previous value of P, "," (a comma), and nextArgString.
-      P = `${P},${nextArgString.stringValue()}`;
+      P = `${P},${nextArgString}`;
       // iv. Set k to k + 1.
       k += 1;
     }
-    // f. Let bodyArg be args[k].
-    bodyArg = args[k];
   }
-  // 16. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-  const bodyString = `\u{000A}${Q(yield* ToString(bodyArg)).stringValue()}\u{000A}`;
-  // 17. Let prefix be the prefix associated with kind in Table 48.
-  const prefix = DynamicFunctionSourceTextPrefixes[kind];
+  const bodyParseString = `\u{000A}${bodyString}\u{000A}`;
   // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
-  const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyString}}`;
+  const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyParseString}}`;
   // 19. Let sourceText be ! UTF16DecodeString(sourceString).
   const sourceText = sourceString;
   // 20. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
@@ -162,12 +137,11 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   }
   // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
   const proto = Q(yield* GetPrototypeFromConstructor(newTarget, fallbackProto));
-  // 22. Let realmF be the current Realm Record.
-  const realmF = surroundingAgent.currentRealmRecord;
   // 23. Let scope be realmF.[[GlobalEnv]].
-  const scope = realmF.GlobalEnv;
-  // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, null).
-  const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null));
+  const env = currentRealm.GlobalEnv;
+  const privateEnv = Value.null;
+  // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, privateEnv).
+  const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', env, privateEnv));
   // 25. Perform SetFunctionName(F, "anonymous").
   SetFunctionName(F, Value('anonymous'));
   // 26. If kind is generator, then

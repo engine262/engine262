@@ -63,7 +63,7 @@ function run(test: Test): WorkerToSupervisor {
   setSurroundingAgent(agent);
   agent.hostDefinedOptions.errorStackAttachNativeStack = true;
 
-  const { realm, resolverCache, setPrintHandle } = createRealm();
+  const { realm, resolverCache, setPrintHandle } = createRealm({ specifier: test.specifier });
   const r = realm.scope((): WorkerToSupervisor => {
     test.attrs.includes.unshift('assert.js', 'sta.js');
     if (test.attrs.flags.async) {

@@ -2171,6 +2171,40 @@ exports[`regex > var a = /cat/; a.lastIndex = 1; a 1`] = `
 }
 `;
 
+exports[`shadow realm > ShadowRealm 1`] = `
+{
+  "className": "ShadowRealm",
+  "description": "ShadowRealm",
+  "objectId": "default:1",
+  "preview": {
+    "description": "ShadowRealm",
+    "entries": undefined,
+    "overflow": false,
+    "properties": [
+      {
+        "name": "[[GlobalObject]]",
+        "subtype": undefined,
+        "type": "object",
+        "value": "Object",
+      },
+    ],
+    "subtype": undefined,
+    "type": "object",
+  },
+  "subtype": undefined,
+  "type": "object",
+}
+`;
+
+exports[`shadow realm > ShadowRealm function 1`] = `
+{
+  "className": "Function",
+  "description": "() => {}",
+  "objectId": "default:2",
+  "type": "function",
+}
+`;
+
 exports[`typed array > new Int32Array() 1`] = `
 {
   "className": "TypedArray",

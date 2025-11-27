@@ -35,3 +35,4 @@ export { isProxyExoticObject, type ProxyObject } from './intrinsics/Proxy.mts';
 export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 export { type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 export { isErrorObject } from './intrinsics/Error.mts';
+export { isShadowRealmObject, type ShadowRealmObject } from './intrinsics/ShadowRealm.mts';

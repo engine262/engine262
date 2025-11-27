@@ -556,16 +556,21 @@ export function captureStack() {
   };
 }
 
-export function* errorStackToString(O: ErrorObject, stack: readonly CallSite[], nativeStack: string | UndefinedValue = Value.undefined): ValueEvaluator<JSStringValue> {
-  let errorString = (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+export function* callSiteToErrorString(O: ErrorObject, stack: readonly CallSite[], nativeStack?: string): ValueEvaluator<JSStringValue> {
+  const errorString = (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+  const errorStack = callSiteToErrorStack(stack, nativeStack);
+  return Value(errorString + errorStack);
+}
+
+export function callSiteToErrorStack(stack: readonly CallSite[], nativeStack: string | undefined) {
+  let errorString = '';
   stack.forEach((s) => {
     errorString = `${errorString}\n    at ${s.toString()}`;
   });
   if (typeof nativeStack === 'string') {
     errorString = `${errorString}\n    <NATIVE>\n${nativeStack.split('\n').slice(6).join('\n')}`;
   }
-
-  return Value(errorString);
+  return errorString;
 }
 
 export function callable<Class extends object>(

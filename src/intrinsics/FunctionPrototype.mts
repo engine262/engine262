@@ -7,28 +7,23 @@ import {
   Call,
   Construct,
   CreateListFromArrayLike,
-  Get,
-  HasOwnProperty,
   IsCallable,
   IsConstructor,
   OrdinaryHasInstance,
   PrepareForTailCall,
   SameValue,
-  SetFunctionLength,
-  SetFunctionName,
-  ToIntegerOrInfinity,
   CreateBuiltinFunction,
-  MakeBasicObject, R,
+  MakeBasicObject,
   Realm,
   type ExoticObject,
   type FunctionObject,
   isBuiltinFunctionObject,
   type BuiltinFunctionObject,
   hasSourceTextInternalSlot,
+  CopyNameAndLength,
 } from '../abstract-ops/all.mts';
 import {
   JSStringValue,
-  NumberValue,
   ObjectValue,
   UndefinedValue,
   Value,
@@ -150,44 +145,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args]: Arguments, { 
   __ts_cast__<ObjectValue>(Target);
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
   const F = Q(yield* BoundFunctionCreate(Target, thisArg, args));
-  // 4. Let L be 0.
-  let L = 0;
-  // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
-  const targetHasLength = Q(yield* HasOwnProperty(Target, Value('length')));
-  // 6. If targetHasLength is true, then
-  if (targetHasLength === Value.true) {
-    // a. Let targetLen be ? Get(Target, "length").
-    const targetLen = Q(yield* Get(Target, Value('length')));
-    // b. If Type(targetLen) is Number, then
-    if (targetLen instanceof NumberValue) {
-      // i. If targetLen is +∞𝔽, set L to +∞.
-      if (R(targetLen) === +Infinity) {
-        L = +Infinity;
-      } else if (R(targetLen) === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
-        L = 0;
-      } else { // iii. Else,
-        // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
-        const targetLenAsInt = Q(yield* ToIntegerOrInfinity(targetLen));
-        // 2. Assert: targetLenAsInt is finite.
-        Assert(Number.isFinite(targetLenAsInt));
-        // 3. Let argCount be the number of elements in args.
-        const argCount = args.length;
-        // 4. Set L to max(targetLenAsInt - argCount, 0).
-        L = Math.max(targetLenAsInt - argCount, 0);
-      }
-    }
-  }
-  // 7. Perform ! SetFunctionLength(F, L).
-  X(SetFunctionLength(F, L));
-  // 8. Let targetName be ? Get(Target, "name").
-  let targetName = Q(yield* Get(Target, Value('name')));
-  // 9. If Type(targetName) is not String, set targetName to the empty String.
-  if (!(targetName instanceof JSStringValue)) {
-    targetName = Value('');
-  }
-  // 10. Perform SetFunctionName(F, targetName, "bound").
-  SetFunctionName(F, targetName, Value('bound'));
-  // 11. Return F.
+  Q(yield* CopyNameAndLength(F, Target, 'bound', args.length));
   return F;
 }
 

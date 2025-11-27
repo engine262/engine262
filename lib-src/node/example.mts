@@ -12,7 +12,7 @@ setSurroundingAgent(agent);
 
 // A Realm is a separate global environment.
 // In Web browsers, each iframe has its own Realm and they may interact with each other.
-const realm = new ManagedRealm({ resolverCache: new Map() });
+const realm = new ManagedRealm({ resolverCache: new Map(), name: 'My Realm', specifier: process.cwd() });
 
 // Define console.log
 {

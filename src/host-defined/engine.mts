@@ -20,7 +20,7 @@ import {
 } from '../abstract-ops/all.mts';
 import { GlobalDeclarationInstantiation } from '../runtime-semantics/all.mts';
 import {
-  Evaluate, type ValueEvaluator, type YieldEvaluator,
+  Evaluate, type PlainEvaluator, type ValueEvaluator, type YieldEvaluator,
 } from '../evaluator.mts';
 import { CallSite, kAsyncContext } from '../helpers.mts';
 import {
@@ -33,6 +33,7 @@ import * as messages from '../messages.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PromiseObject } from '../intrinsics/Promise.mts';
 import type { FinalizationRegistryObject } from '../intrinsics/FinalizationRegistry.mts';
+import type { ShadowRealmObject } from '../intrinsics/ShadowRealm.mts';
 import { shouldStepOnNode } from './debugger-util.mts';
 
 export interface Engine262Feature {
@@ -75,13 +76,18 @@ class ExecutionContextStack extends Array<ExecutionContext> {
 }
 
 let agentSignifier = 0;
+export interface HostHooks {
+  HostInitializeShadowRealm?(realmRec: Realm, innerContext: ExecutionContext, O: ShadowRealmObject): PlainEvaluator | PlainCompletion<void>;
+  HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator | PlainCompletion<void>;
+}
 export interface AgentHostDefined {
+  hostHooks?: HostHooks;
   hasSourceTextAvailable?(f: FunctionObject): void;
   ensureCanCompileStrings?(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void>;
   cleanupFinalizationRegistry?(FinalizationRegistry: FinalizationRegistryObject): PlainCompletion<void>;
   features?: readonly string[];
   supportedImportAttributes?: readonly string[];
-  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
+  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
   onDebugger?(): void;
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord, scriptId: string): void;
@@ -471,11 +477,16 @@ export function AgentSignifier() {
   return AR.Signifier;
 }
 
-export function HostEnsureCanCompileStrings(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void> {
-  if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
-    Q(surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm));
+export function* HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator {
+  const completion = surroundingAgent.hostDefinedOptions.hostHooks?.HostEnsureCanCompileStrings?.(calleeRealm, parameterStrings, bodyString, direct);
+  if (!completion) {
+    return NormalCompletion(undefined);
   }
-  return NormalCompletion(undefined);
+  if ('next' in completion) {
+    Q(yield* completion);
+  } else {
+    Q(completion);
+  }
 }
 
 export function HostPromiseRejectionTracker(promise: PromiseObject, operation: 'reject' | 'handle') {

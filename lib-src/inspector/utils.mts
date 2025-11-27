@@ -1,5 +1,5 @@
 import type Protocol from 'devtools-protocol';
-import { Inspector } from './index.mts';
+import type { Inspector } from './index.mts';
 import {
   CreateBuiltinFunction, CreateDataProperty, DefinePropertyOrThrow, Descriptor, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
   type PlainEvaluator,
@@ -66,8 +66,8 @@ export function createConsole(
               return completion;
             }
           }
-          if (realm.HostDefined.attachingInspector instanceof Inspector) {
-            realm.HostDefined.attachingInspector.console(realm, method as Protocol.Protocol.Runtime.ConsoleAPICalledEventType, args);
+          if (realm.HostDefined.attachingInspector) {
+            (realm.HostDefined.attachingInspector as Inspector).console(realm, method as Protocol.Protocol.Runtime.ConsoleAPICalledEventType, args);
           }
           return Value.undefined;
         },

@@ -3,8 +3,7 @@ import { getInspector } from './inspect.mts';
 import type { Inspector } from './index.mts';
 import {
   evalQ,
-  EnsureCompletion, IsPromise, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, UndefinedValue, Value,
-  type PromiseObject,
+  EnsureCompletion, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, UndefinedValue, Value,
   getHostDefinedErrorStack,
   skipDebugger,
   type ValueCompletion,
@@ -50,8 +49,8 @@ export class InspectorContext {
     const id = this.realms.length;
     const descriptor: Protocol.Runtime.ExecutionContextDescription = {
       id,
-      origin: 'vm://realm',
-      name: 'engine262',
+      origin: realm.HostDefined.specifier || 'vm://repl',
+      name: realm.HostDefined.name || 'engine262',
       uniqueId: id.toString(),
     };
     this.realms.push({
@@ -60,6 +59,11 @@ export class InspectorContext {
       agent,
       detach: () => {
         realm.HostDefined.attachingInspector = oldInspector;
+        realm.HostDefined.attachingInspectorReportError = function attachingInspectorReportError(realm, error) {
+          if (this.attachingInspector && realm instanceof ManagedRealm) {
+            (this.attachingInspector as Inspector).console(realm, 'error' as Protocol.Runtime.ConsoleAPICalledEventType, [error]);
+          }
+        };
       },
     });
     const oldInspector = realm.HostDefined.attachingInspector;
@@ -100,6 +104,7 @@ export class InspectorContext {
     }
     const { descriptor } = this.realms[index]!;
     realm.HostDefined.attachingInspector = undefined;
+    realm.HostDefined.attachingInspectorReportError = undefined;
     this.realms[index] = undefined;
     this.#io.sendEvent['Runtime.executionContextDestroyed']({ executionContextId: descriptor.id, executionContextUniqueId: descriptor.uniqueId });
   }
@@ -236,19 +241,11 @@ export class InspectorContext {
       };
     }
 
-    if (IsPromise(object) === Value.true) {
-      internalProperties.push({
-        name: '[[PromiseState]]',
-        value: {
-          type: 'string',
-          value: (object as PromiseObject).PromiseState,
-        },
-      });
-      internalProperties.push({
-        name: '[[PromiseResult]]',
-        value: wrap((object as PromiseObject).PromiseResult!),
-      });
+    const additionalInternalFields = getInspector(object).toInternalProperties?.(object, (val) => this.#internObject(val, 'default'), generatePreview);
+    if (additionalInternalFields) {
+      internalProperties.push(...additionalInternalFields);
     }
+
     if ('Prototype' in object) {
       internalProperties.push({
         name: '[[Prototype]]',

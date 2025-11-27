@@ -9,11 +9,13 @@ import type {
 
 /** https://tc39.es/ecma262/#sec-async-function-constructor-arguments */
 function* AsyncFunctionConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
+  const bodyArg = args[args.length - 1] || Value('');
+  args = args.slice(0, -1);
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
   // 3. Return CreateDynamicFunction(C, NewTarget, async, args).
-  return Q(yield* CreateDynamicFunction(C, NewTarget, 'async', args));
+  return Q(yield* CreateDynamicFunction(C, NewTarget, 'async', args, bodyArg));
 }
 
 export function bootstrapAsyncFunction(realmRec: Realm) {

@@ -305,6 +305,17 @@ test('module namespace', async () => {
   }
 });
 
+test('shadow realm', async () => {
+  const agent = new Agent();
+  setSurroundingAgent(agent);
+  const inspector = new TestInspector();
+  const realm = new ManagedRealm();
+  inspector.attachAgent(agent, [realm]);
+
+  expect(await inspector.eval('new ShadowRealm')).toMatchSnapshot('ShadowRealm');
+  expect(await inspector.eval('new ShadowRealm().evaluate("(() => {})")')).toMatchSnapshot('ShadowRealm function');
+});
+
 test('normal object', async () => {
   const agent = new Agent();
   setSurroundingAgent(agent);

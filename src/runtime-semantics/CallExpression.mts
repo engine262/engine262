@@ -44,10 +44,8 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
       const evalText = argList[0];
       // iv. If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
       const strictCaller = CallExpression.strict;
-      // v. Let evalRealm be the current Realm Record.
-      const evalRealm = surroundingAgent.currentRealmRecord;
-      // vi. Return ? PerformEval(evalText, evalRealm, strictCaller, true).
-      return Q(yield* PerformEval(evalText, evalRealm, strictCaller, true));
+      // vi. Return ? PerformEval(evalText, strictCaller, true).
+      return Q(yield* PerformEval(evalText, strictCaller, true));
     }
   }
   // 7. Let thisCall be this CallExpression.

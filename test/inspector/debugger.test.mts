@@ -31,7 +31,7 @@ test('evaluate on frame', async () => {
           "context": {
             "id": 0,
             "name": "engine262",
-            "origin": "vm://realm",
+            "origin": "vm://repl",
             "uniqueId": "0",
           },
         },

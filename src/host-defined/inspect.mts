@@ -14,6 +14,7 @@ import type { BigIntObject } from '../intrinsics/BigInt.mts';
 import type { StringObject } from '../intrinsics/String.mts';
 import type { SymbolObject } from '../intrinsics/Symbol.mts';
 import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
+import { isShadowRealmObject } from '../intrinsics/ShadowRealm.mts';
 import { surroundingAgent } from './engine.mts';
 import {
   type Descriptor, type ValueCompletion, type PromiseObject, CyclicModuleRecord,
@@ -157,6 +158,9 @@ const INSPECTORS = {
     }
     if ('SymbolData' in v) {
       return `[Symbol ${i((v as SymbolObject).SymbolData)}]`;
+    }
+    if (isShadowRealmObject(v)) {
+      return '[ShadowRealm]';
     }
 
     ctx.indent += 1;
