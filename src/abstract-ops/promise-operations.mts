@@ -57,9 +57,6 @@ export interface PromiseAllResolveElementFunctionObject extends BuiltinFunctionO
 /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
 export interface PromiseAllRejectElementFunctionObject extends BuiltinFunctionObject {
   readonly Index: number;
-  readonly Errors: Value[];
-  readonly Capability: PromiseCapabilityRecord;
-  readonly RemainingElements: { Value: number };
   readonly AlreadyCalled: { Value: boolean };
 }
 

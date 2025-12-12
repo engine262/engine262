@@ -42,7 +42,6 @@ import {
 } from '../abstract-ops/all.mts';
 import {
   AbruptCompletion,
-  ThrowCompletion,
   IfAbruptRejectPromise,
   EnsureCompletion,
   Q, X,
@@ -382,50 +381,8 @@ function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValu
   return result;
 }
 
-/** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
-function* PromiseAnyRejectElementFunctions([x = Value.undefined]: Arguments): ValueEvaluator {
-  // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject as PromiseAllRejectElementFunctionObject;
-  // 2. Let alreadyCalled be F.[[AlreadyCalled]].
-  const alreadyCalled = F.AlreadyCalled;
-  // 3. If alreadyCalled.[[Value]] is true, return undefined.
-  if (alreadyCalled.Value) {
-    return Value.undefined;
-  }
-  // 4. Set alreadyCalled.[[Value]] to true.
-  alreadyCalled.Value = true;
-  // 5. Let index be F.[[Index]].
-  const index = F.Index;
-  // 6. Let errors be F.[[Errors]].
-  const errors = F.Errors;
-  // 7. Let promiseCapability be F.[[Capability]].
-  const promiseCapability = F.Capability;
-  // 8. Let remainingElementsCount be F.[[RemainingElements]].
-  const remainingElementsCount = F.RemainingElements;
-  // 9. Set errors[index] to x.
-  errors[index] = x;
-  // 10. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
-  remainingElementsCount.Value -= 1;
-  // 11. If remainingElementsCount.[[Value]] is 0, then
-  if (remainingElementsCount.Value === 0) {
-    // a. Let error be a newly created AggregateError object.
-    const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
-    // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-    X(DefinePropertyOrThrow(error, Value('errors'), Descriptor({
-      Configurable: Value.true,
-      Enumerable: Value.false,
-      Writable: Value.true,
-      Value: X(CreateArrayFromList(errors)),
-    })));
-    // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
-    return Q(yield* Call(promiseCapability.Reject, Value.undefined, [error]));
-  }
-  // 12. Return undefined.
-  return Value.undefined;
-}
-
 /** https://tc39.es/ecma262/#sec-performpromiseany */
-function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject) {
+function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -433,7 +390,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
   // 3. Assert: ! IsCallable(promiseResolve) is true.
   Assert(IsCallable(promiseResolve));
   // 4. Let errors be a new empty List.
-  const errors = [];
+  const errors: Value[] = [];
   // 5. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
   const remainingElementsCount = { Value: 1 };
   // 6. Let index be 0.
@@ -448,17 +405,17 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
       if (remainingElementsCount.Value === 0) {
-        // 1. Let error be a newly created AggregateError object.
-        const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
-        // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-        X(DefinePropertyOrThrow(error, Value('errors'), Descriptor({
+        // 1. Let aggregateError be a newly created AggregateError object.
+        const aggregateError = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
+        // 2. Perform ! DefinePropertyOrThrow(aggregateError, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
+        X(DefinePropertyOrThrow(aggregateError, Value('errors'), Descriptor({
           Configurable: Value.true,
           Enumerable: Value.false,
           Writable: Value.true,
           Value: X(CreateArrayFromList(errors)),
         })));
-        // 3. Return ThrowCompletion(error).
-        return ThrowCompletion(error);
+        // 3. Perform ? Call(resultCapability.[[Reject]], *undefined*, « _aggregateError_ »).
+        Q(yield* Call(resultCapability.Reject, Value.undefined, [aggregateError]));
       }
       // iv. Return resultCapability.[[Promise]].
       return resultCapability.Promise;
@@ -467,28 +424,34 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
     errors.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
     const nextPromise = Q(yield* Call(promiseResolve, constructor, [next]));
-    // j. Let stepsRejected be the algorithm steps defined in Promise.any Reject Element Functions.
-    const stepsRejected = PromiseAnyRejectElementFunctions;
-    // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
-    const lengthRejected = 1;
+    const rejectedSteps = function* PromiseAnyRejectElementFunctions([error = Value.undefined]: Arguments): ValueEvaluator {
+      const F = surroundingAgent.activeFunctionObject as PromiseAllRejectElementFunctionObject;
+      const alreadyCalled = F.AlreadyCalled;
+      if (alreadyCalled.Value) {
+        return Value.undefined;
+      }
+      alreadyCalled.Value = true;
+      errors[F.Index] = error;
+      remainingElementsCount.Value -= 1;
+      if (remainingElementsCount.Value === 0) {
+        const aggregateError = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
+        X(DefinePropertyOrThrow(aggregateError, Value('errors'), Descriptor({
+          Configurable: Value.true,
+          Enumerable: Value.false,
+          Writable: Value.true,
+          Value: X(CreateArrayFromList(errors)),
+        })));
+        return Q(yield* Call(resultCapability.Reject, Value.undefined, [aggregateError]));
+      }
+      return Value.undefined;
+    };
     // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])) as Mutable<PromiseAllRejectElementFunctionObject>;
-    // m. Set onRejected.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
+    const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllRejectElementFunctionObject>;
     onRejected.AlreadyCalled = { Value: false };
-    // n. Set onRejected.[[Index]] to index.
     onRejected.Index = index;
-    // o. Set onRejected.[[Errors]] to errors.
-    onRejected.Errors = errors;
-    // p. Set onRejected.[[Capability]] to resultCapability.
-    onRejected.Capability = resultCapability;
-    // q. Set onRejected.[[RemainingElements]] to remainingElementsCount.
-    onRejected.RemainingElements = remainingElementsCount;
-    // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
-    remainingElementsCount.Value += 1;
-    // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-    Q(yield* Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]));
-    // t. Increase index by 1.
     index += 1;
+    remainingElementsCount.Value += 1;
+    Q(yield* Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]));
   }
 }
 
