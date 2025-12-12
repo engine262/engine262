@@ -212,52 +212,6 @@ function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   return result;
 }
 
-function* PromiseAllSettledResolveElementFunctions([x = Value.undefined]: Arguments): ValueEvaluator {
-  const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
-  const alreadyCalled = F.AlreadyCalled;
-  if (alreadyCalled.Value === true) {
-    return Value.undefined;
-  }
-  alreadyCalled.Value = true;
-  const index = F.Index;
-  const values = F.Values;
-  const promiseCapability = F.Capability;
-  const remainingElementsCount = F.RemainingElements;
-  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
-  X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
-  X(CreateDataProperty(obj, Value('value'), x));
-  values[index] = obj;
-  remainingElementsCount.Value -= 1;
-  if (remainingElementsCount.Value === 0) {
-    const valuesArray = X(CreateArrayFromList(values));
-    return Q(yield* Call(promiseCapability.Resolve, Value.undefined, [valuesArray]));
-  }
-  return Value.undefined;
-}
-
-function* PromiseAllSettledRejectElementFunctions([x = Value.undefined]: Arguments): ValueEvaluator {
-  const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
-  const alreadyCalled = F.AlreadyCalled;
-  if (alreadyCalled.Value === true) {
-    return Value.undefined;
-  }
-  alreadyCalled.Value = true;
-  const index = F.Index;
-  const values = F.Values;
-  const promiseCapability = F.Capability;
-  const remainingElementsCount = F.RemainingElements;
-  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
-  X(CreateDataProperty(obj, Value('status'), Value('rejected')));
-  X(CreateDataProperty(obj, Value('reason'), x));
-  values[index] = obj;
-  remainingElementsCount.Value -= 1;
-  if (remainingElementsCount.Value === 0) {
-    const valuesArray = X(CreateArrayFromList(values));
-    return Q(yield* Call(promiseCapability.Resolve, Value.undefined, [valuesArray]));
-  }
-  return Value.undefined;
-}
-
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: ! IsConstructor(constructor) is true.
@@ -267,7 +221,7 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
   // 3. Assert: IsCallable(promiseResolve) is true.
   Assert(IsCallable(promiseResolve));
   // 4. Let values be a new empty List.
-  const values = [];
+  const values: Value[] = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
   const remainingElementsCount = { Value: 1 };
   // 6. Let index be 0.
@@ -294,12 +248,27 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
     values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
     const nextPromise = Q(yield* Call(promiseResolve, constructor, [next]));
-    // j. Let stepsFulfilled be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
-    const stepsFulfilled = PromiseAllSettledResolveElementFunctions;
-    // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
-    const lengthFulfilled = 1;
-    // l. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), [
+    // j. Let fulfilledSteps be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
+    const fulfilledSteps = function* PromiseAllSettledResolveElementFunctions([value = Value.undefined]: Arguments): ValueEvaluator {
+      const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
+      const alreadyCalled = F.AlreadyCalled;
+      if (alreadyCalled.Value === true) {
+        return Value.undefined;
+      }
+      alreadyCalled.Value = true;
+      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+      X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
+      X(CreateDataProperty(obj, Value('value'), value));
+      values[F.Index] = obj;
+      remainingElementsCount.Value -= 1;
+      if (remainingElementsCount.Value === 0) {
+        const valuesArray = CreateArrayFromList(values);
+        return Q(yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
+      }
+      return Value.undefined;
+    };
+    // l. Let onFulfilled be ! CreateBuiltinFunction(fulfilledSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
+    const onFulfilled = X(CreateBuiltinFunction(fulfilledSteps, 1, Value(''), [
       'AlreadyCalled',
       'Index',
       'Values',
@@ -312,40 +281,32 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
     onFulfilled.AlreadyCalled = alreadyCalled;
     // o. Set onFulfilled.[[Index]] to index.
     onFulfilled.Index = index;
-    // p. Set onFulfilled.[[Values]] to values.
-    onFulfilled.Values = values;
-    // q. Set onFulfilled.[[Capability]] to resultCapability.
-    onFulfilled.Capability = resultCapability;
-    // r. Set onFulfilled.[[RemainingElements]] to remainingElementsCount.
-    onFulfilled.RemainingElements = remainingElementsCount;
-    // s. Let rejectSteps be the algorithm steps defined in Promise.allSettled Reject Element Functions.
-    const stepsRejected = PromiseAllSettledRejectElementFunctions;
-    // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
-    const lengthRejected = 1;
-    // u. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), [
-      'AlreadyCalled',
-      'Index',
-      'Values',
-      'Capability',
-      'RemainingElements',
-    ])) as Mutable<PromiseAllResolveElementFunctionObject>;
-    // v. Set onRejected.[[AlreadyCalled]] to alreadyCalled.
+    // s. Let rejectedSteps be the algorithm steps defined in Promise.allSettled Reject Element Functions.
+    const rejectedSteps = function* PromiseAllSettledRejectElementFunctions([error = Value.undefined]: Arguments): ValueEvaluator {
+      const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
+      const alreadyCalled = F.AlreadyCalled;
+      if (alreadyCalled.Value === true) {
+        return Value.undefined;
+      }
+      alreadyCalled.Value = true;
+      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+      X(CreateDataProperty(obj, Value('status'), Value('rejected')));
+      X(CreateDataProperty(obj, Value('reason'), error));
+      values[F.Index] = obj;
+      remainingElementsCount.Value -= 1;
+      if (remainingElementsCount.Value === 0) {
+        const valuesArray = X(CreateArrayFromList(values));
+        return Q(yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
+      }
+      return Value.undefined;
+    };
+    // u. Let onRejected be ! CreateBuiltinFunction(rejectedSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
+    const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllResolveElementFunctionObject>;
     onRejected.AlreadyCalled = alreadyCalled;
-    // w. Set onRejected.[[Index]] to index.
     onRejected.Index = index;
-    // x. Set onRejected.[[Values]] to values.
-    onRejected.Values = values;
-    // y. Set onRejected.[[Capability]] to resultCapability.
-    onRejected.Capability = resultCapability;
-    // z. Set onRejected.[[RemainingElements]] to remainingElementsCount.
-    onRejected.RemainingElements = remainingElementsCount;
-    // aa. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
-    remainingElementsCount.Value += 1;
-    // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-    Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
-    // ac. Set index to index + 1.
     index += 1;
+    remainingElementsCount.Value += 1;
+    Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
   }
 }
 
