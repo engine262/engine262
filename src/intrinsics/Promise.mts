@@ -162,8 +162,8 @@ export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: 
         return Value.undefined;
       }
       alreadyCalled.Value = true;
-      const index = F.Index;
-      values[index] = x;
+      const thisIndex = F.Index;
+      values[thisIndex] = x;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
         const valuesArray = CreateArrayFromList(values);
@@ -259,7 +259,8 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
       X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
       X(CreateDataProperty(obj, Value('value'), value));
-      values[F.Index] = obj;
+      const thisIndex = F.Index;
+      values[thisIndex] = obj;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
         const valuesArray = CreateArrayFromList(values);
@@ -292,7 +293,8 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
       X(CreateDataProperty(obj, Value('status'), Value('rejected')));
       X(CreateDataProperty(obj, Value('reason'), error));
-      values[F.Index] = obj;
+      const thisIndex = F.Index;
+      values[thisIndex] = obj;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
         const valuesArray = X(CreateArrayFromList(values));
@@ -392,7 +394,8 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
         return Value.undefined;
       }
       alreadyCalled.Value = true;
-      errors[F.Index] = error;
+      const thisIndex = F.Index;
+      errors[thisIndex] = error;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
         const aggregateError = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
