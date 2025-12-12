@@ -206,6 +206,7 @@ export function* IteratorClose<T, C extends Completion<T>>(iteratorRecord: Itera
   return completion;
 }
 
+/** https://tc39.es/ecma262/#sec-iteratorcloseall */
 export function* IteratorCloseAll<C>(iters: Iterable<IteratorRecord>, completion: Completion<C>): Evaluator<Completion<C>> {
   for (const iter of [...iters].reverse()) {
     completion = yield* IteratorClose(iter, completion);

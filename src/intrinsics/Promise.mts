@@ -106,27 +106,6 @@ function* PromiseConstructor(this: FunctionObject, [executor = Value.undefined]:
   return promise;
 }
 
-/** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
-function* PromiseAllResolveElementFunctions([x = Value.undefined]: Arguments): ValueEvaluator {
-  const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
-  const alreadyCalled = F.AlreadyCalled;
-  if (alreadyCalled.Value === true) {
-    return Value.undefined;
-  }
-  alreadyCalled.Value = true;
-  const index = F.Index;
-  const values = F.Values;
-  const promiseCapability = F.Capability;
-  const remainingElementsCount = F.RemainingElements;
-  values[index] = x;
-  remainingElementsCount.Value -= 1;
-  if (remainingElementsCount.Value === 0) {
-    const valuesArray = CreateArrayFromList(values);
-    return Q(yield* Call(promiseCapability.Resolve, Value.undefined, [valuesArray]));
-  }
-  return Value.undefined;
-}
-
 /** https://tc39.es/ecma262/#sec-getpromiseresolve */
 function* GetPromiseResolve(promiseConstructor: FunctionObject) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
@@ -150,7 +129,7 @@ export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: 
   // 3. Assert: IsCallable(promiseResolve) is true.
   Assert(IsCallable(promiseResolve));
   // 4. Let values be a new empty List.
-  const values = [];
+  const values: Value[] = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
   const remainingElementsCount = { Value: 1 };
   // 6. Let index be 0.
@@ -177,30 +156,28 @@ export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: 
     values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
     const nextPromise = Q(yield* Call(promiseResolve, constructor, [next]));
-    // j. Let steps be the algorithm steps defined in Promise.all Resolve Element Functions.
-    const steps = PromiseAllResolveElementFunctions;
-    // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
-    const length = 1;
-    // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onFulfilled = X(CreateBuiltinFunction(steps, length, Value(''), [
-      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
-    ])) as Mutable<PromiseAllResolveElementFunctionObject>;
-    // m. Set onFulfilled.[[AlreadyCalled]] to the Record { [[Value]]: false }.
+    const fulfilledSteps = function* PromiseAllResolveElementFunctions([x = Value.undefined]: Arguments): ValueEvaluator {
+      const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
+      const alreadyCalled = F.AlreadyCalled;
+      if (alreadyCalled.Value === true) {
+        return Value.undefined;
+      }
+      alreadyCalled.Value = true;
+      const index = F.Index;
+      values[index] = x;
+      remainingElementsCount.Value -= 1;
+      if (remainingElementsCount.Value === 0) {
+        const valuesArray = CreateArrayFromList(values);
+        return Q(yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
+      }
+      return Value.undefined;
+    };
+    const onFulfilled = X(CreateBuiltinFunction(fulfilledSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllResolveElementFunctionObject>;
     onFulfilled.AlreadyCalled = { Value: false };
-    // n. Set onFulfilled.[[Index]] to index.
     onFulfilled.Index = index;
-    // o. Set onFulfilled.[[Values]] to values.
-    onFulfilled.Values = values;
-    // p. Set onFulfilled.[[Capability]] to resultCapability.
-    onFulfilled.Capability = resultCapability;
-    // q. Set onFulfilled.[[RemainingElements]] to remainingElementsCount.
-    onFulfilled.RemainingElements = remainingElementsCount;
-    // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
-    remainingElementsCount.Value += 1;
-    // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-    Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]));
-    // t. Set index to index + 1.
     index += 1;
+    remainingElementsCount.Value += 1;
+    Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]));
   }
 }
 
