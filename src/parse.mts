@@ -243,7 +243,7 @@ export function ParsePattern(patternText: string, u: boolean, v: boolean) {
     }
   };
   if (v && u) {
-    return [surroundingAgent.NewError('SyntaxError', 'RegExpFlagsCannotUseTogether', 'v', 'u')];
+    return [surroundingAgent.Throw('SyntaxError', 'RegExpFlagsCannotUseTogether', 'v', 'u').Value];
   } else if (v) {
     return parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
   } else if (u) {

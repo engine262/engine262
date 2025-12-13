@@ -36,6 +36,9 @@ export interface StringObject extends ExoticObject {
   Prototype: ObjectValue | NullValue;
   Extensible: BooleanValue;
 }
+export function isStringObject(o: Value): o is StringObject {
+  return 'StringData' in o;
+}
 /** https://tc39.es/ecma262/#sec-string-constructor-string-value */
 function* StringConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   let s;

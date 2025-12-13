@@ -8,11 +8,12 @@ export * from './environment.mts';
 export * from './parse.mts';
 export * from './modules.mts';
 export * from './host-defined/inspect.mts';
+export { type ErrorType, type Formattable, Throw } from './host-defined/error-messages.mts';
 export * from './evaluator.mts';
 
 export { captureStack } from './helpers.mts';
 export {
-  Throw, type ErrorType, gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
+  gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
 export { createTest262Intrinsics, boostTest262Harness } from './host-defined/test262-intrinsics.mts';

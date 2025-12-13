@@ -34,7 +34,6 @@ import {
 import {
   AbstractModuleRecord, ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
-import * as messages from './messages.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
@@ -45,11 +44,6 @@ import {
   EnsureCompletion, GetModuleNamespace, GlobalEnvironmentRecord, type Intrinsics,
   type ValueEvaluator,
 } from '#self';
-
-export type ErrorType = 'AggregateError' | 'TypeError' | 'Error' | 'SyntaxError' | 'RangeError' | 'ReferenceError' | 'URIError';
-export function Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
-  return surroundingAgent.Throw(type, template, ...templateArgs);
-}
 
 /** https://tc39.es/ecma262/#sec-weakref-execution */
 export function gc() {
@@ -331,7 +325,7 @@ export class ManagedRealm extends Realm {
       const loadModuleCompletion = sourceText.LoadRequestedModules();
       const link = ((): PlainCompletion<void> => {
         if (loadModuleCompletion.PromiseState === 'rejected') {
-          Q(Throw(loadModuleCompletion.PromiseResult!, 'Raw', 'Module load failed'));
+          Q(ThrowCompletion(loadModuleCompletion.PromiseResult!));
         } else if (loadModuleCompletion.PromiseState === 'pending') {
           throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
         }
