@@ -2,16 +2,13 @@
 
 # Start with `-` to skip feature
 # Map feature to engine262 feature using `feature = engine262featurename`
-
-uint8array-base64 = uint8array-base64
-import-defer = import-defer
+# e.g.:
+# import-defer = import-defer
 
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Float16Array
 -arraybuffer-transfer
 -explicit-resource-management
--iterator-sequencing
--json-parse-with-source
 -source-phase-imports
 -source-phase-imports-module-source
 -immutable-arraybuffer
@@ -27,4 +24,3 @@ import-defer = import-defer
 -Temporal
 -resizable-arraybuffer
 -decorators
--ShadowRealm

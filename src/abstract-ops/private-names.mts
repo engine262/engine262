@@ -2,7 +2,7 @@ import { ObjectValue, PrivateName, Value } from '../value.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
 import { PrivateElementRecord } from '../runtime-semantics/all.mts';
-import { Assert, Call } from './all.mts';
+import { Assert, Call, IsExtensible } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-privateelementfind */
 export function PrivateElementFind(P: PrivateName, O: ObjectValue) {
@@ -72,9 +72,12 @@ export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-privatemethodoraccessoradd */
-export function PrivateMethodOrAccessorAdd(method: PrivateElementRecord, O: ObjectValue) {
+export function* PrivateMethodOrAccessorAdd(method: PrivateElementRecord, O: ObjectValue) {
   // 1. Assert: method.[[Kind]] is either method or accessor.
   Assert(method.Kind === 'method' || method.Kind === 'accessor');
+  if (Q(yield* IsExtensible(O)) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'Raw', 'O is not extensible');
+  }
   // 2. Let entry be ! PrivateElementFind(method.[[Key]], O).
   const entry = X(PrivateElementFind(method.Key, O));
   // 3. If entry is not empty, throw a TypeError exception.
@@ -89,9 +92,12 @@ export function PrivateMethodOrAccessorAdd(method: PrivateElementRecord, O: Obje
 }
 
 /** https://tc39.es/ecma262/#sec-privatefieldadd */
-export function PrivateFieldAdd(P: PrivateName, O: ObjectValue, value: Value) {
+export function* PrivateFieldAdd(P: PrivateName, O: ObjectValue, value: Value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
+  if (Q(yield* IsExtensible(O)) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'Raw', 'O is not extensible');
+  }
   // 2. If entry is not empty, throw a TypeError exception.
   if (entry !== undefined) {
     return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', P);

@@ -10,7 +10,7 @@ import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mts';
 import {
-  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnPropertyNames, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
+  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../helpers.mts';
@@ -19,14 +19,14 @@ import { __ts_cast__ } from '../helpers.mts';
 // ImportCall : `import` `(` AssignmentExpression `)`
 export function* Evaluate_ImportCall(ImportCall: ParseNode.ImportCall): ValueEvaluator<PromiseObject> {
   Q(surroundingAgent.debugger_cannotPreview);
-  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression, /* [import-defer] */ ImportCall.Phase);
+  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression, ImportCall.Phase);
 }
 
 /** https://tc39.es/ecma262/#sec-evaluate-import-call */
 function* EvaluateImportCall(
   specifiersExpression: ParseNode.AssignmentExpressionOrHigher,
   optionsExpression: undefined | ParseNode.AssignmentExpressionOrHigher,
-  /* [import-defer] */ phase: 'defer' | 'evaluation',
+  phase: 'defer' | 'evaluation',
 ): ValueEvaluator<PromiseObject> {
   // 1. Let referrer be ! GetActiveScriptOrModule().
   let referrer: NullValue | AbstractModuleRecord | ScriptRecord | Realm = X(GetActiveScriptOrModule());
@@ -86,7 +86,7 @@ function* EvaluateImportCall(
         return promiseCapability.Promise;
       }
       // ii. Let entries be Completion(EnumerableOwnProperties(attributesObj, key+value)).
-      const entries = yield* EnumerableOwnPropertyNames(attributesObj, 'key+value');
+      const entries = yield* EnumerableOwnProperties(attributesObj, 'key+value');
       // iii. IfAbruptRejectPromise(entries, promiseCapability).
       IfAbruptRejectPromise(entries, promiseCapability);
       __ts_cast__<ObjectValue[]>(entries);
@@ -126,10 +126,9 @@ function* EvaluateImportCall(
     }
   }
   // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
-  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString, Attributes: attributes, /* [import-defer] */ Phase: phase };
+  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString, Attributes: attributes, Phase: phase };
   // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
   HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, moduleRequest, undefined, promiseCapability);
   // 9. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
-

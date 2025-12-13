@@ -16,6 +16,9 @@ import {
   DateProto_toISOString,
   ValueOfNormalCompletion,
   NormalCompletion,
+  type ShadowRealmObject,
+  isShadowRealmObject,
+  isWrappedFunctionExoticObject,
 } from '#self';
 
 /*
@@ -42,6 +45,7 @@ interface Inspector<T extends Value> {
     toObjectPreview(value: T): Protocol.Runtime.ObjectPreview;
     toPropertyPreview(name: string, value: T): Protocol.Runtime.PropertyPreview;
     toDescription(value: T): string;
+    toInternalProperties?(value: T, getObjectId: (val: SymbolValue | ObjectValue) => string, generatePreview: boolean | undefined): Protocol.Runtime.InternalPropertyDescriptor[];
 }
 
 const Null: Inspector<NullValue> = {
@@ -153,8 +157,15 @@ const Number: Inspector<NumberValue> = {
   },
 };
 
+function unwrapFunction(value: FunctionObject): FunctionObject {
+  if (isWrappedFunctionExoticObject(value)) {
+    return unwrapFunction(value.WrappedTargetFunction);
+  }
+  return value;
+}
 const Function: Inspector<FunctionObject> = {
   toRemoteObject(value, getObjectId) {
+    value = unwrapFunction(value);
     const result: Protocol.Runtime.RemoteObject = {
       type: 'function',
       objectId: getObjectId(value),
@@ -198,6 +209,8 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
 
   private additionalProperties;
 
+  private internalProperties;
+
   constructor(
     className: string | ((value: Value) => string),
     subtype: Protocol.Runtime.RemoteObject['subtype'],
@@ -205,6 +218,7 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
     additionalOptions?: {
       entries?: (value: T) => Protocol.Runtime.ObjectPreview['entries'];
       additionalProperties?: (value: T) => Iterable<[string, Value]>;
+      internalProperties?: (value: T) => Iterable<[string, Value]>;
     },
   ) {
     this.className = className;
@@ -212,6 +226,7 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
     this.toDescription = toDescription;
     this.toEntries = additionalOptions?.entries;
     this.additionalProperties = additionalOptions?.additionalProperties;
+    this.internalProperties = additionalOptions?.internalProperties;
   }
 
   toRemoteObject(value: T, getObjectId: (val: ObjectValue) => string): Protocol.Runtime.RemoteObject {
@@ -227,8 +242,22 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
 
   toPropertyPreview(name: string, value: T): Protocol.Runtime.PropertyPreview {
     return {
-      name, type: 'object', subtype: this.subtype, value: this.toDescription(value),
+      name,
+      type: 'object',
+      subtype: this.subtype,
+      value: this.toDescription(value),
     };
+  }
+
+  toInternalProperties(value: T, getObjectId: (val: ObjectValue | SymbolValue) => string, generatePreview: boolean | undefined): Protocol.Runtime.InternalPropertyDescriptor[] {
+    const internalProperties = [...this.internalProperties?.(value) || []];
+    if (!internalProperties.length) {
+      return [];
+    }
+    return internalProperties.map(([name, val]): Protocol.Runtime.InternalPropertyDescriptor => ({
+      name,
+      value: getInspector(val).toRemoteObject(val, getObjectId, generatePreview),
+    }));
   }
 
   toObjectPreview(value: T): Protocol.Runtime.ObjectPreview {
@@ -238,7 +267,7 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
       subtype: this.subtype,
       description: this.toDescription(value),
       entries: e?.length ? e : undefined,
-      ...propertiesToPropertyPreview(value, this.additionalProperties?.(value)),
+      ...propertiesToPropertyPreview(value, [...this.internalProperties?.(value) || [], ...this.additionalProperties?.(value) || []]),
     };
   }
 }
@@ -294,7 +323,7 @@ const Date = new ObjectInspector<DateObject>('Date', 'date', ((value: DateObject
   return ValueOfNormalCompletion(val as NormalCompletion<JSStringValue>).stringValue();
 }));
 const Promise = new ObjectInspector<PromiseObject>('Promise', 'promise', () => 'Promise', {
-  additionalProperties: (value) => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]],
+  internalProperties: (value) => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]],
 });
 const Proxy = new ObjectInspector<ProxyObject>('Proxy', 'proxy', (value) => {
   if (IsCallable(value.ProxyTarget)) {
@@ -307,6 +336,9 @@ const Proxy = new ObjectInspector<ProxyObject>('Proxy', 'proxy', (value) => {
 });
 const RegExp = new ObjectInspector<RegExpObject>('RegExp', 'regexp', (value) => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
 const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undefined, () => 'Module', {});
+const ShadowRealm = new ObjectInspector<ShadowRealmObject>('ShadowRealm', undefined, () => 'ShadowRealm', {
+  internalProperties: (realm) => [['[[GlobalObject]]', realm.ShadowRealm.GlobalObject]],
+});
 
 const Array: Inspector<ObjectValue> = {
   toRemoteObject(value, getObjectId) {
@@ -468,6 +500,8 @@ export function getInspector(value: Value): Inspector<Value> {
       return DataView;
     case isModuleNamespaceObject(value):
       return Module;
+    case isShadowRealmObject(value):
+      return ShadowRealm;
     default:
       return Default;
   }

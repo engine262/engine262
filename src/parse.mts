@@ -8,10 +8,9 @@ import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   Get,
   Set,
-  Call,
   CreateDefaultExportSyntheticModule,
   Realm,
-  type BuiltinFunctionObject,
+  ToString,
 } from './abstract-ops/all.mts';
 import { Q, X, type PlainCompletion } from './completion.mts';
 import {
@@ -21,9 +20,11 @@ import {
   ImportedLocalNames,
 } from './static-semantics/all.mts';
 import {
-  isArray, JSStringSet, kInternal, skipDebugger, type Mutable,
+  JSStringSet, kInternal, skipDebugger, type Mutable,
 } from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import { ParseJSON } from './intrinsics/JSON.mts';
+import { avoid_using_children } from './parser/utils.mts';
 
 export { Parser, RegExpParser };
 
@@ -217,34 +218,18 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
 export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: ModuleRecordHostDefined): PlainCompletion<SyntheticModuleRecord> {
-  // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
-  const jsonParse = realm.Intrinsics['%JSON.parse%'] as BuiltinFunctionObject;
-  // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
-  const json = Q(skipDebugger(Call(jsonParse, Value.undefined, [sourceText])));
-  // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
-  return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
+  const string = Q(skipDebugger(ToString(sourceText)));
+  const result = Q(ParseJSON(string.stringValue()));
+  return CreateDefaultExportSyntheticModule(result.Value, realm, hostDefined);
 }
 
 function setNodeParent(node: ParseNode, parent: ParseNode | undefined) {
   (node as Mutable<ParseNode.BaseParseNode>).parent = parent;
-  for (const i in node) {
-    if (Object.hasOwn(node, i)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const value = (node as any)[i];
-      if (isArray(value)) {
-        value.forEach((val) => {
-          if (isParseNode(val) && !val.parent) {
-            setNodeParent(val, node);
-          }
-        });
-      } else if (isParseNode(value) && !value.parent) {
-        setNodeParent(value, node);
-      }
+  for (const child of avoid_using_children(node)) {
+    if (!child.parent) {
+      setNodeParent(child, node);
     }
   }
-}
-function isParseNode(value: unknown): value is ParseNode {
-  return !!(value && typeof value === 'object' && 'type' in value && 'location' in value);
 }
 
 /** https://tc39.es/ecma262/#sec-parsepattern */

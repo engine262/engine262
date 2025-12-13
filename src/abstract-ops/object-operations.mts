@@ -393,33 +393,32 @@ export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: Function
 }
 
 /** https://tc39.es/ecma262/#sec-enumerableownpropertynames */
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key'): PlainEvaluator<JSStringValue[]>
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'value'): PlainEvaluator<Value[]>
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<ObjectValue[]>
-export function* EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<Value[]> {
-  Assert(O instanceof ObjectValue);
+export function EnumerableOwnProperties(O: ObjectValue, kind: 'key'): PlainEvaluator<JSStringValue[]>
+export function EnumerableOwnProperties(O: ObjectValue, kind: 'value'): PlainEvaluator<Value[]>
+export function EnumerableOwnProperties(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<ObjectValue[]>
+export function* EnumerableOwnProperties(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<Value[]> {
   const ownKeys = Q(yield* O.OwnPropertyKeys());
-  const properties = [];
+  const results = [];
   for (const key of ownKeys) {
     if (key instanceof JSStringValue) {
       const desc = Q(yield* O.GetOwnProperty(key));
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
         if (kind === 'key') {
-          properties.push(key);
+          results.push(key);
         } else {
           const value = Q(yield* Get(O, key));
           if (kind === 'value') {
-            properties.push(value);
+            results.push(value);
           } else {
             Assert(kind === 'key+value');
             const entry = X(CreateArrayFromList([key, value]));
-            properties.push(entry);
+            results.push(entry);
           }
         }
       }
     }
   }
-  return properties;
+  return results;
 }
 
 /** https://tc39.es/ecma262/#sec-getfunctionrealm */

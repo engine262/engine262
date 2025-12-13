@@ -37,6 +37,24 @@ export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;
   Extensible: BooleanValue;
 }
+
+export function isOrdinaryObject(value: Value): value is OrdinaryObject {
+  return value instanceof ObjectValue
+    && value.GetPrototypeOf === ObjectValue.prototype.GetPrototypeOf
+    && value.SetPrototypeOf === ObjectValue.prototype.SetPrototypeOf
+    && value.IsExtensible === ObjectValue.prototype.IsExtensible
+    && value.PreventExtensions === ObjectValue.prototype.PreventExtensions
+    && value.GetOwnProperty === ObjectValue.prototype.GetOwnProperty
+    && value.DefineOwnProperty === ObjectValue.prototype.DefineOwnProperty
+    && value.HasProperty === ObjectValue.prototype.HasProperty
+    && value.Get === ObjectValue.prototype.Get
+    && value.Set === ObjectValue.prototype.Set
+    && value.Delete === ObjectValue.prototype.Delete
+    && value.OwnPropertyKeys === ObjectValue.prototype.OwnPropertyKeys
+    && 'Prototype' in value
+    && 'Extensible' in value;
+}
+
 // TODO: ban other direct extension from ObjectValue in the linter
 export type ExoticObject = ObjectValue;
 // 9.1.1.1 OrdinaryGetPrototypeOf

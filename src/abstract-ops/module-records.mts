@@ -184,13 +184,8 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
 
 /** https://tc39.es/ecma262/#sec-EvaluateModuleSync */
 export function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefined> {
-  if (!surroundingAgent.feature('import-defer')) {
-    // 1. Assert: module is not a Cyclic Module Record.
-    Assert(!(module instanceof CyclicModuleRecord));
-  } else {
-    // 1. Assert: If module is a Cyclic Module Record, ReadyForSyncExecution(module) is true.
-    Assert(module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true);
-  }
+  // 1. Assert: If module is a Cyclic Module Record, ReadyForSyncExecution(module) is true.
+  Assert(module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true);
   // 2. Let promise be module.Evaluate()./
   const promise = yield* module.Evaluate();
   // 3. Assert: promise.[[PromiseState]] is either fulfilled or rejected.
@@ -233,27 +228,23 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
   module.PendingAsyncDependencies = 0;
   module.AsyncParentModules = [];
   index += 1;
-  let evaluationList: ModuleRecord[];
-  if (surroundingAgent.feature('import-defer')) {
-    /** https://tc39.es/proposal-defer-import-eval/#sec-innermoduleevaluation */
-    evaluationList = [];
-    for (const request of module.RequestedModules) {
-      const requiredModule = GetImportedModule(module, request);
-      if (request.Phase === 'defer') {
-        const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule);
-        for (const additionalModule of additionalModules) {
-          if (!evaluationList.includes(additionalModule)) {
-            evaluationList.push(additionalModule);
-          }
+  const evaluationList: ModuleRecord[] = [];
+  for (const request of module.RequestedModules) {
+    const requiredModule = GetImportedModule(module, request);
+    if (request.Phase === 'defer') {
+      const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule);
+      for (const additionalModule of additionalModules) {
+        if (!evaluationList.includes(additionalModule)) {
+          evaluationList.push(additionalModule);
         }
-      } else if (!evaluationList.includes(requiredModule)) {
-        evaluationList.push(requiredModule);
       }
+    } else if (!evaluationList.includes(requiredModule)) {
+      evaluationList.push(requiredModule);
     }
   }
   stack.push(module);
-  for (const required of surroundingAgent.feature('import-defer') ? evaluationList! : module.RequestedModules) {
-    let requiredModule: ModuleRecord | CyclicModuleRecord = surroundingAgent.feature('import-defer') ? required as ModuleRecord : GetImportedModule(module, required as ModuleRequestRecord) as CyclicModuleRecord;
+  for (const required of evaluationList!) {
+    let requiredModule: ModuleRecord | CyclicModuleRecord = required as ModuleRecord;
     index = Q(yield* InnerModuleEvaluation(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
@@ -304,7 +295,6 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
   return index;
 }
 
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-GatherAsynchronousTransitiveDependencies  */
 export function GatherAsynchronousTransitiveDependencies(module: ModuleRecord, seen?: Set<ModuleRecord>): ModuleRecord[] {
   // 1. If seen is not present, set seen to a new empty List.
@@ -502,7 +492,7 @@ export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModul
     // 3. Else,
   } else {
     // a. Perform ContinueDynamicImport(payload, result).
-    ContinueDynamicImport(state, result, /* [import-defer] */ moduleRequest.Phase);
+    ContinueDynamicImport(state, result, moduleRequest.Phase);
   }
 
   // 4. Return unused.
@@ -526,14 +516,14 @@ export function AllImportAttributesSupported(attributes: readonly ImportAttribut
 /** https://tc39.es/ecma262/#sec-getmodulenamespace */
 export function GetModuleNamespace(
   module: AbstractModuleRecord,
-  /* [import-defer] */ phase: 'defer' | 'evaluation',
+  phase: 'defer' | 'evaluation',
 ): ObjectValue {
   // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
   if (module instanceof CyclicModuleRecord) {
     Assert(module.Status !== 'new' && module.Status !== 'unlinked');
   }
   // 2. Let namespace be module.[[Namespace]].
-  let namespace = surroundingAgent.feature('import-defer') && phase === 'defer' ? module.DeferredNamespace : module.Namespace;
+  let namespace = phase === 'defer' ? module.DeferredNamespace : module.Namespace;
   // 3. If namespace is empty, then
   if (namespace === undefined) {
     // a. Let exportedNames be module.GetExportedNames().
@@ -550,7 +540,7 @@ export function GetModuleNamespace(
       }
     }
     // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).
-    namespace = ModuleNamespaceCreate(module, unambiguousNames, /* [import-defer] */ phase);
+    namespace = ModuleNamespaceCreate(module, unambiguousNames, phase);
   }
   // 4. Return namespace.
   return namespace;

@@ -6,7 +6,7 @@ import { opendir, readFile, stat } from 'node:fs/promises';
 import { stripVTControlCharacters, styleText } from 'node:util';
 import { fork } from 'node:child_process';
 import { cpus } from 'node:os';
-import { globby, isDynamicPattern } from 'globby';
+import { glob, isDynamicPattern } from 'tinyglobby';
 import YAML from 'js-yaml';
 import { highlight } from 'cli-highlight';
 import {
@@ -209,6 +209,8 @@ reporter.onExit.promise.then(() => {
   }
 });
 
+const engineFeatures = [...args.values['engine-features'] || []];
+
 const promises = [];
 for await (const file of parsePositionals(args.positionals, true)) {
   if (visited.has(file) || /_FIXTURE|README\.md|\.py|\.map|\.mts/.test(file)) {
@@ -231,7 +233,7 @@ for await (const file of parsePositionals(args.positionals, true)) {
     }, {});
     attrs.includes = attrs.includes || [];
 
-    const test = new Test(relative(inputs.Test262TestsPath, file), attrs, '', contents);
+    const test = new Test(relative(inputs.Test262TestsPath, file), file, engineFeatures, attrs, '', contents);
 
     if (test.attrs.flags.module) {
       discoverTest(test.withDifferentTestFlag('module'));
@@ -300,12 +302,12 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
     }
   }
 
-  const files1 = await globby(pattern, { cwd: inputs.Test262TestsPath, absolute: true, caseSensitiveMatch: false });
+  const files1 = await glob(pattern, { cwd: inputs.Test262TestsPath, absolute: true, caseSensitiveMatch: false });
   if (files1.length) {
     return yield* files1;
   }
 
-  const files2 = await globby(pattern, { cwd: process.cwd(), absolute: true, caseSensitiveMatch: false });
+  const files2 = await glob(pattern, { cwd: process.cwd(), absolute: true, caseSensitiveMatch: false });
   if (files2.length) {
     return yield* files2;
   }

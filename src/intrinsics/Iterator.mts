@@ -1,24 +1,34 @@
 import {
+  Call,
+  CreateIteratorFromClosure,
+  GetIteratorDirect,
   GetIteratorFlattenable,
+  GetMethod,
+  IteratorClose,
+  IteratorStepValue,
   OrdinaryCreateFromConstructor,
   OrdinaryHasInstance,
   OrdinaryObjectCreate,
+  Yield,
   type BuiltinFunctionObject,
+  type FunctionObject,
   type IteratorObject,
   type Realm,
 } from '../abstract-ops/all.mts';
-import { Q, type ValueEvaluator } from '../completion.mts';
+import { AbruptCompletion, Q, type ValueEvaluator } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  ObjectValue,
   type BooleanValue,
   UndefinedValue,
   Value,
   type Arguments,
   type FunctionCallContext,
-  type ObjectValue,
+  wellKnownSymbols,
 } from '../value.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import type { YieldEvaluator } from '#self';
 
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator-constructor */
@@ -63,9 +73,49 @@ function* Iterator_from([O]: Arguments): ValueEvaluator {
   return wrapper;
 }
 
+/** https://tc39.es/ecma262/#sec-iterator.concat */
+function* Iterator_concat(items: Arguments): ValueEvaluator {
+  const iterables: { OpenMethod: FunctionObject, Iterable: ObjectValue }[] = [];
+  for (const item of items) {
+    if (!(item instanceof ObjectValue)) {
+      return surroundingAgent.Throw('TypeError', 'NotAnObject', item);
+    }
+    const method = Q(yield* GetMethod(item, wellKnownSymbols.iterator));
+    if (method instanceof UndefinedValue) {
+      return surroundingAgent.Throw('TypeError', 'NotIterable', item);
+    }
+    iterables.push({ OpenMethod: method, Iterable: item });
+  }
+  const gen = CreateIteratorFromClosure(function* Iterator_concat(): YieldEvaluator {
+    for (const iterable of iterables) {
+      const iter = Q(yield* Call(iterable.OpenMethod, iterable.Iterable));
+      if (!(iter instanceof ObjectValue)) {
+        return surroundingAgent.Throw('TypeError', 'NotIterable', iter);
+      }
+      const iteratorRecord = Q(yield* GetIteratorDirect(iter));
+      let innerAlive = true;
+      while (innerAlive) {
+        const innerValue = Q(yield* IteratorStepValue(iteratorRecord));
+        if (innerValue === 'done') {
+          innerAlive = false;
+        } else {
+          const completion = yield* Yield(innerValue);
+          if (completion instanceof AbruptCompletion) {
+            return Q(yield* IteratorClose(iteratorRecord, completion));
+          }
+        }
+      }
+    }
+    return Value.undefined;
+  }, Value('Iterator Helper'), surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
+  gen.UnderlyingIterators = [];
+  return gen;
+}
+
 export function bootstrapIterator(realmRec: Realm) {
   const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], [
     ['from', Iterator_from, 1],
+    ['concat', Iterator_concat, 0],
   ]);
 
   realmRec.Intrinsics['%Iterator%'] = cons;

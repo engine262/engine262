@@ -3,7 +3,9 @@ import { InspectorContext } from './context.mts';
 import * as impl from './methods.mts';
 import type { DebuggerContext, DebuggerPreference, DevtoolEvents } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
-import { Agent, type Arguments, type ManagedRealm } from '#self';
+import {
+  Agent, ManagedRealm, Realm, type Arguments,
+} from '#self';
 
 const ignoreNamespaces = ['Network'];
 const ignoreMethods: string[] = [];
@@ -107,8 +109,8 @@ export abstract class Inspector {
     },
   }));
 
-  console(realm: ManagedRealm, type: Protocol.Runtime.ConsoleAPICalledEventType, args: Arguments) {
-    const context = this.#context.getRealm(realm);
+  console(realm: Realm, type: Protocol.Runtime.ConsoleAPICalledEventType, args: Arguments) {
+    const context = this.#context.getRealm(realm as ManagedRealm);
     if (!context) {
       return;
     }

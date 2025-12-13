@@ -16,7 +16,7 @@ import {
   GetIterator,
 } from '../abstract-ops/all.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack, errorStackToString } from '../helpers.mts';
+import { captureStack, callSiteToErrorString } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import type { ErrorObject } from './Error.mts';
 
@@ -55,7 +55,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
   // NON-SPEC
   const S = captureStack();
   O.HostDefinedErrorStack = S.stack;
-  O.ErrorData = X(errorStackToString(O, S.stack, S.nativeStack));
+  O.ErrorData = X(callSiteToErrorString(O, S.stack, S.nativeStack));
 
   // 7. Return O.
   return O;

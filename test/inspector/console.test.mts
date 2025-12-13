@@ -144,6 +144,7 @@ test('get local lexical names', async () => {
         "ReferenceError",
         "RegExp",
         "Set",
+        "ShadowRealm",
         "String",
         "Symbol",
         "SyntaxError",

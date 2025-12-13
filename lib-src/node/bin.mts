@@ -10,7 +10,7 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import { createRequire } from 'node:module';
 import { createConsole } from '../inspector/utils.mts';
 import type { NodeWebsocketInspector } from './inspector.mts';
-import { loadImportedModuleSync } from './module.mts';
+import { loadImportedModule } from './module.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
@@ -105,11 +105,11 @@ if (argv.values.features === 'all') {
 const agent = new Agent({
   features,
   supportedImportAttributes: ['type'],
-  loadImportedModule: loadImportedModuleSync,
+  loadImportedModule,
 });
 setSurroundingAgent(agent);
 
-const realm = new ManagedRealm({ resolverCache: new Map() });
+const realm = new ManagedRealm({ resolverCache: new Map(), name: 'repl', specifier: process.cwd() });
 // Define console.log
 {
   const format = (function* format(args: Arguments): PlainEvaluator<string> {

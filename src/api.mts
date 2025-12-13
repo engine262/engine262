@@ -40,7 +40,6 @@ import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
 import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
-import { skipDebugger } from './helpers.mts';
 import {
   EnsureCompletion, GetModuleNamespace, GlobalEnvironmentRecord, type Intrinsics,
   type ValueEvaluator,
@@ -189,6 +188,18 @@ export interface ManagedRealmHostDefined {
 
   randomSeed?(): string;
   attachingInspector?: unknown;
+  attachingInspectorReportError?(realm: Realm, error: Value): void;
+  /**
+   * See https://tc39.es/ecma262/#sec-HostLoadImportedModule
+   * In case of
+   *  <button type="button" onclick="import('./foo.mjs')">Click me</button>
+   * and
+   *  new ShadowRealm().importValue('./foo.mjs', 'default')
+   * a Realm instead of a ModuleRecord or ScriptRecord is passed as the referrer.
+   */
+  specifier?: string | undefined;
+  /** The name displayed in the inspector. */
+  name?: string | undefined;
 }
 export class ManagedRealm extends Realm {
   override TemplateMap: { Site: ParseNode.TemplateLiteral; Array: ObjectValue; }[];
@@ -210,26 +221,29 @@ export class ManagedRealm extends Realm {
   active = false;
 
   /** https://tc39.es/ecma262/#sec-initializehostdefinedrealm */
-  constructor(HostDefined: ManagedRealmHostDefined = {}) {
+  constructor(HostDefined: ManagedRealmHostDefined = {}, customizations?: (record: Realm) => [global: ObjectValue | undefined, thisValue: ObjectValue | undefined]) {
     super();
     this.Intrinsics = CreateIntrinsics(this);
     this.AgentSignifier = AgentSignifier();
     this.TemplateMap = [];
+    let [global, thisValue] = customizations?.(this) || [];
+    if (!global) {
+      global = OrdinaryObjectCreate(this.Intrinsics['%Object.prototype%']);
+    } else {
+      Assert(global instanceof ObjectValue);
+    }
+    if (!thisValue) {
+      thisValue = global;
+    } else {
+      Assert(thisValue instanceof ObjectValue);
+    }
+    this.GlobalObject = global;
+    this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
+    SetDefaultGlobalBindings(this);
     const newContext = new ExecutionContext();
     newContext.Function = Value.null;
     newContext.Realm = this;
     newContext.ScriptOrModule = Value.null;
-    surroundingAgent.executionContextStack.push(newContext);
-    // TODO: a host hook for exotic global object
-    const global = OrdinaryObjectCreate(this.Intrinsics['%Object.prototype%']);
-    // TODO: a host hook for global "this" binding
-    const thisValue = global;
-    this.GlobalObject = global;
-    this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
-    skipDebugger(SetDefaultGlobalBindings(this));
-
-    // misc
-    surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
 

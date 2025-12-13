@@ -3,7 +3,7 @@ import {
   Value,
 } from '../value.mts';
 import { GlobalEnvironmentRecord } from '../environment.mts';
-import { Q, X } from '../completion.mts';
+import { X } from '../completion.mts';
 import { bootstrapObjectPrototype, makeObjectPrototype } from '../intrinsics/ObjectPrototype.mts';
 import { bootstrapObject } from '../intrinsics/Object.mts';
 import { bootstrapArrayPrototype } from '../intrinsics/ArrayPrototype.mts';
@@ -84,11 +84,13 @@ import { bootstrapWrapForValidIteratorPrototype } from '../intrinsics/WrapForVal
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mts';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mts';
 import {
-  ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ValueEvaluator, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
+  ManagedRealm, ObjectValue, type BuiltinFunctionObject, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
   type LoadedModuleRequestRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
+import { bootstrapShadowRealmPrototype } from '../intrinsics/ShadowRealmPrototype.mts';
+import { bootstrapShadowRealm } from '../intrinsics/ShadowRealm.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -222,7 +224,10 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%ReferenceError%': FunctionObject;
   '%RegExp.prototype%': ObjectValue;
   '%Set.prototype%': ObjectValue;
+  '%ShadowRealm%': FunctionObject;
+  '%ShadowRealm.prototype%': ObjectValue;
   '%String.prototype%': ObjectValue;
+  // Note: do not add any well known symbols here, use wellKnownSymbols.*
   '%Symbol.prototype%': ObjectValue;
   '%SyntaxError.prototype%': ObjectValue;
   '%SyntaxError%': FunctionObject;
@@ -278,8 +283,9 @@ export abstract class Realm {
   }
 }
 
-export function InitializeHostDefinedRealm() {
-  return new ManagedRealm();
+/** https://tc39.es/ecma262/pr/3728/#sec-makerealm */
+export function MakeRealm(...args: ConstructorParameters<typeof ManagedRealm>) {
+  return new ManagedRealm(...args);
 }
 
 function AddRestrictedFunctionProperties(F: ObjectValue, realm: Realm) {
@@ -416,19 +422,16 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapFinalizationRegistryPrototype(realmRec);
   bootstrapFinalizationRegistry(realmRec);
 
-  AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
+  bootstrapShadowRealmPrototype(realmRec);
+  bootstrapShadowRealm(realmRec);
 
-  for (const key in intrinsics) {
-    if (intrinsics[key] instanceof ObjectValue) {
-      Object.defineProperty(intrinsics, '__debug_intrinsic_name__', { value: key, configurable: true });
-    }
-  }
+  AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 
   return intrinsics;
 }
 
 /** https://tc39.es/ecma262/#sec-setdefaultglobalbindings */
-export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<ObjectValue> {
+export function SetDefaultGlobalBindings(realmRec: Realm) {
   const global = realmRec.GlobalObject;
 
   // Value Properties of the Global Object
@@ -437,7 +440,7 @@ export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<Objec
     ['NaN', toNumberValue(NaN)],
     ['undefined', Value.undefined],
   ] as const) {
-    Q(yield* DefinePropertyOrThrow(global, Value(name), Descriptor({
+    X(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: value,
       Writable: Value.false,
       Enumerable: Value.false,
@@ -445,7 +448,7 @@ export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<Objec
     })));
   }
 
-  Q(yield* DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({
+  X(DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -493,6 +496,7 @@ export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<Objec
     'ReferenceError',
     'RegExp',
     'Set',
+    'ShadowRealm',
     // 'SharedArrayBuffer',
     'String',
     'Symbol',
@@ -513,13 +517,11 @@ export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<Objec
     'Math',
     'Reflect',
   ] as const) {
-    Q(yield* DefinePropertyOrThrow(global, Value(name), Descriptor({
+    X(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,
     })));
   }
-
-  return global;
 }

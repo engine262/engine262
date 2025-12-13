@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
-import { globbySync } from 'globby';
+import { globSync } from 'tinyglobby';
 import { createTestReporter, annotateFileWithURL } from '../tui.mts';
 import { Test } from '../base.mts';
 import {
@@ -32,7 +32,7 @@ function test(filename: string) {
   const realm = new ManagedRealm();
 
   const source = fs.readFileSync(filename, 'utf8');
-  const test = new Test(filename, null!, '', source);
+  const test = new Test(filename, filename, [], null!, '', source);
   reporter.addTest(test);
 
   if (failed.includes(path.basename(filename))) {
@@ -72,7 +72,7 @@ function test(filename: string) {
   }
 }
 
-const tests = globbySync(
+const tests = globSync(
   'test_{parsing,transform}/**/*.json',
   { cwd: BASE_DIR, absolute: true },
 );

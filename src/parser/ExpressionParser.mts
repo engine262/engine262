@@ -576,7 +576,7 @@ export abstract class ExpressionParser extends FunctionParser {
             result = this.finishNode(node, 'ImportMeta');
             break;
           }
-          if (this.feature('import-defer') && this.eat('defer')) {
+          if (this.eat('defer')) {
             node.Phase = 'defer';
           } else {
             this.unexpected();

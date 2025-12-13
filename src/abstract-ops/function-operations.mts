@@ -12,6 +12,7 @@ import {
   type Arguments,
   BooleanValue, type PropertyKeyValue, NullValue, JSStringValue,
   type NativeSteps,
+  NumberValue,
 } from '../value.mts';
 import {
   EnsureCompletion,
@@ -57,6 +58,9 @@ import {
   type OrdinaryObject,
   NewPromiseCapability,
   AsyncFunctionStart,
+  Get,
+  R,
+  ToIntegerOrInfinity,
 } from './all.mts';
 import type {
   AbstractModuleRecord, CanBeNativeSteps, DefaultConstructorBuiltinFunction, FunctionCallContext, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
@@ -211,7 +215,7 @@ export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefin
   // 5. If fieldName is a Private Name, then
   if (fieldName instanceof PrivateName) {
     // a. Perform ? PrivateFieldAdd(fieldName, receiver, initValue).
-    Q(PrivateFieldAdd(fieldName, receiver, initValue));
+    Q(yield* PrivateFieldAdd(fieldName, receiver, initValue));
   } else { // 6. Else,
     // a. Assert: ! IsPropertyKey(fieldName) is true.
     Assert(X(IsPropertyKey(fieldName)));
@@ -227,7 +231,7 @@ export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScr
   // 2. For each PrivateElement method of methods, do
   for (const method of methods) {
     // a. Perform ? PrivateMethodOrAccessorAdd(method, O).
-    Q(PrivateMethodOrAccessorAdd(method, O));
+    Q(yield* PrivateMethodOrAccessorAdd(method, O));
   }
   // 3. Let fields be the value of constructor.[[Fields]].
   const fields = constructor.Fields;
@@ -643,6 +647,36 @@ export function PrepareForTailCall() {
   surroundingAgent.executionContextStack.pop(leafContext);
   // 4. Assert: leafContext has no further use. It will never be activated as the running execution context.
   leafContext.poppedForTailCall = true;
+}
+
+/** https://tc39.es/proposal-shadowrealm/#sec-copynameandlength */
+export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, prefix?: string, argCount = 0): PlainEvaluator {
+  let L = 0;
+  const targetHasLength = Q(yield* HasOwnProperty(Target, Value('length')));
+  if (targetHasLength === Value.true) {
+    const targetLen = Q(yield* Get(Target, Value('length')));
+    if (targetLen instanceof NumberValue) {
+      if (R(targetLen) === Infinity) {
+        L = Infinity;
+      } else if (R(targetLen) === -Infinity) {
+        L = 0;
+      } else {
+        const targetLenAsInt = X(ToIntegerOrInfinity(targetLen));
+        Assert(Number.isFinite(targetLenAsInt));
+        L = Math.max(targetLenAsInt - argCount, 0);
+      }
+    }
+  }
+  SetFunctionLength(F, L);
+  let targetName = Q(yield* Get(Target, Value('name')));
+  if (!(targetName instanceof JSStringValue)) {
+    targetName = Value('');
+  }
+  if (prefix !== undefined) {
+    SetFunctionName(F, targetName, Value(prefix));
+  } else {
+    SetFunctionName(F, targetName);
+  }
 }
 
 /** NON-SPEC */

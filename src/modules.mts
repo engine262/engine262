@@ -220,19 +220,17 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   * Evaluate(): Evaluator<PromiseObject> {
     let module: CyclicModuleRecord = this;
 
-    if (surroundingAgent.feature('import-defer')) {
-      // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
-      Assert((function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {
-        if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
-          return list;
-        }
-        list.push(module);
-        for (const r of module.RequestedModules) {
-          getModules(GetImportedModule(module, r), list);
-        }
+    // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
+    Assert((function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {
+      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
         return list;
-      }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new'));
-    }
+      }
+      list.push(module);
+      for (const r of module.RequestedModules) {
+        getModules(GetImportedModule(module, r), list);
+      }
+      return list;
+    }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new'));
 
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
@@ -524,7 +522,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // b. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
         // i. Let namespace be GetModuleNamespace(importedModule).
-        const namespace = GetModuleNamespace(importedModule, /* [import-defer] */ ie.ModuleRequest.Phase);
+        const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
@@ -545,7 +543,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         // iii. If resolution.[[BindingName]] is ~namespace~, then
         if (resolution.BindingName === 'namespace') {
           // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
-          const namespace = GetModuleNamespace(resolution.Module, /* [import-defer] */ 'evaluation');
+          const namespace = GetModuleNamespace(resolution.Module, 'evaluation');
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).

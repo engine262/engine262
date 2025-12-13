@@ -428,9 +428,6 @@ function GetOptionsObject(options: Value) {
 }
 
 export function bootstrapUint8Array(realmRec: Realm) {
-  if (!surroundingAgent.feature('uint8array-base64')) {
-    return;
-  }
   const proto = realmRec.Intrinsics['%Uint8Array.prototype%'];
   const constructor = realmRec.Intrinsics['%Uint8Array%'];
   assignProps(realmRec, proto, [

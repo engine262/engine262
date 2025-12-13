@@ -40,7 +40,7 @@ import type { ModuleRecord, PlainEvaluator } from '#self';
 export interface ModuleNamespaceObject extends ExoticObject {
   readonly Module: AbstractModuleRecord;
   readonly Exports: JSStringSet;
-  /* [import-defer] */ readonly Deferred: boolean;
+  readonly Deferred: boolean;
 }
 
 export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
@@ -63,15 +63,10 @@ const InternalMethods = {
   * GetOwnProperty(P) {
     const O = this;
 
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return OrdinaryGetOwnProperty(O, P);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      exports = Q(yield* GetModuleExportsList(O));
-    } else {
-      exports = O.Exports;
-    }
+    const exports = Q(yield* GetModuleExportsList(O));
     if (!exports.has(P as JSStringValue)) {
       return Value.undefined;
     }
@@ -86,7 +81,7 @@ const InternalMethods = {
   * DefineOwnProperty(P, Desc) {
     const O = this;
 
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return yield* OrdinaryDefineOwnProperty(O, P, Desc);
     }
 
@@ -114,15 +109,10 @@ const InternalMethods = {
   * HasProperty(P) {
     const O = this;
 
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return yield* OrdinaryHasProperty(O, P);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      exports = Q(yield* GetModuleExportsList(O));
-    } else {
-      exports = O.Exports;
-    }
+    const exports = Q(yield* GetModuleExportsList(O));
     if (exports.has(P as JSStringValue)) {
       return Value.true;
     }
@@ -135,17 +125,11 @@ const InternalMethods = {
     // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
     // 2. If Type(P) is Symbol, then
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       // a. Return ? OrdinaryGet(O, P, Receiver).
       return yield* OrdinaryGet(O, P, Receiver);
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      exports = Q(yield* GetModuleExportsList(O));
-    } else {
-      // 3. Let exports be O.[[Exports]].
-      exports = O.Exports;
-    }
+    const exports = Q(yield* GetModuleExportsList(O));
     // 4. If P is not an element of exports, return undefined.
     if (!exports.has(P as JSStringValue)) {
       return Value.undefined;
@@ -163,7 +147,7 @@ const InternalMethods = {
     // 10. If binding.[[BindingName]] is ~namespace~, then
     if (binding.BindingName === 'namespace') {
       // a. Return ? GetModuleNamespace(targetModule).
-      return Q(GetModuleNamespace(targetModule, /* [import-defer] */ 'evaluation'));
+      return Q(GetModuleNamespace(targetModule, 'evaluation'));
     }
     // 11. Let targetEnv be targetModule.[[Environment]].
     const targetEnv = targetModule.Environment;
@@ -181,15 +165,10 @@ const InternalMethods = {
     const O = this;
 
     Assert(IsPropertyKey(P));
-    if (surroundingAgent.feature('import-defer') ? IsSymbolLikeNamespaceKey(P, O) : P instanceof SymbolValue) {
+    if (IsSymbolLikeNamespaceKey(P, O)) {
       return Q(yield* OrdinaryDelete(O, P));
     }
-    let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      exports = Q(yield* GetModuleExportsList(O));
-    } else {
-      exports = O.Exports;
-    }
+    const exports = Q(yield* GetModuleExportsList(O));
     if (exports.has(P as JSStringValue)) {
       return Value.false;
     }
@@ -199,13 +178,9 @@ const InternalMethods = {
     const O = this;
 
     let exports;
-    if (surroundingAgent.feature('import-defer')) {
-      exports = Q(yield* GetModuleExportsList(O));
-      if (O.Deferred && exports.has('then')) {
-        exports = [...exports].filter((x) => x.stringValue() !== 'then');
-      }
-    } else {
-      exports = O.Exports;
+    exports = Q(yield* GetModuleExportsList(O));
+    if (O.Deferred && exports.has('then')) {
+      exports = [...exports].filter((x) => x.stringValue() !== 'then');
     }
 
     const symbolKeys = X(OrdinaryOwnPropertyKeys(O));
@@ -217,12 +192,8 @@ const InternalMethods = {
 export function ModuleNamespaceCreate(
   module: AbstractModuleRecord,
   exports: readonly JSStringValue[],
-  /* [import-defer] */ phase: 'defer' | 'evaluation',
+  phase: 'defer' | 'evaluation',
 ): ModuleNamespaceObject {
-  if (!surroundingAgent.feature('import-defer')) {
-    // 1. Assert: module.[[Namespace]] is EMPTY.
-    Assert(module.Namespace === undefined);
-  }
   // 2. Let internalSlotsList be the internal slots listed in Table 31.
   const internalSlotsList = ['Module', 'Exports'];
   // 3. Let M be MakeBasicObject(internalSlotsList).
@@ -249,53 +220,38 @@ export function ModuleNamespaceCreate(
   });
   // 7. Set M.[[Exports]] to sortedExports.
   M.Exports = new JSStringSet(sortedExports);
-  if (!surroundingAgent.feature('import-defer')) {
-    // 8. Create own properties of M corresponding to the definitions in 26.3.
-    M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-      Value: Value('Module'),
-    }));
-    // 9. Set module.[[Namespace]] to M.
+  let toStringTag: JSStringValue;
+  // 9. If phase is defer, then
+  if (phase === 'defer') {
+    // a. Assert: module.[[DeferredNamespace]] is empty.
+    Assert(module.DeferredNamespace === undefined);
+    // b. Set module.[[DeferredNamespace]] to M.
+    (module as Mutable<AbstractModuleRecord>).DeferredNamespace = M;
+    // c. Set M.[[Deferred]] to true.
+    M.Deferred = true;
+    // d. Let toStringTag be "Deferred Module".
+    toStringTag = Value('Deferred Module');
+  } else { // 10. Else,
+    // a. Assert: module.[[Namespace]] is empty.
+    Assert(module.Namespace === undefined);
+    // b. Set module.[[Namespace]] to M.
     (module as Mutable<AbstractModuleRecord>).Namespace = M;
-  } else {
-    /** https://tc39.es/proposal-defer-import-eval/#sec-modulenamespacecreate */
-
-    let toStringTag: JSStringValue;
-    // 9. If phase is defer, then
-    if (phase === 'defer') {
-      // a. Assert: module.[[DeferredNamespace]] is empty.
-      Assert(module.DeferredNamespace === undefined);
-      // b. Set module.[[DeferredNamespace]] to M.
-      (module as Mutable<AbstractModuleRecord>).DeferredNamespace = M;
-      // c. Set M.[[Deferred]] to true.
-      M.Deferred = true;
-      // d. Let toStringTag be "Deferred Module".
-      toStringTag = Value('Deferred Module');
-    } else { // 10. Else,
-      // a. Assert: module.[[Namespace]] is empty.
-      Assert(module.Namespace === undefined);
-      // b. Set module.[[Namespace]] to M.
-      (module as Mutable<AbstractModuleRecord>).Namespace = M;
-      // c. Set M.[[Deferred]] to false.
-      M.Deferred = false;
-      // d. Let toStringTag be "Module".
-      toStringTag = Value('Module');
-    }
-    // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.
-    M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-      Value: toStringTag,
-    }));
+    // c. Set M.[[Deferred]] to false.
+    M.Deferred = false;
+    // d. Let toStringTag be "Module".
+    toStringTag = Value('Module');
   }
+  // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.
+  M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+    Value: toStringTag,
+  }));
   // 10. Return M.
   return M;
 }
 
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-IsSymbolLikeNamespaceKey */
 function IsSymbolLikeNamespaceKey(P: PropertyKeyValue, ns: ModuleNamespaceObject): P is SymbolValue {
   if (P instanceof SymbolValue) {
@@ -307,7 +263,6 @@ function IsSymbolLikeNamespaceKey(P: PropertyKeyValue, ns: ModuleNamespaceObject
   return false;
 }
 
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-GetModuleExportsList */
 function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<JSStringSet> {
   if (O.Deferred) {
@@ -320,7 +275,6 @@ function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<JSStrin
   return O.Exports;
 }
 
-/* [import-defer] */
 /** https://tc39.es/proposal-defer-import-eval/#sec-ReadyForSyncExecution */
 export function ReadyForSyncExecution(module: ModuleRecord, seen?: Set<CyclicModuleRecord>): BooleanValue {
   if (!(module instanceof CyclicModuleRecord)) {

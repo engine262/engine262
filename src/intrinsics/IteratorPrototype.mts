@@ -12,6 +12,7 @@ import {
   ToBoolean,
   ToIntegerOrInfinity,
   ToNumber,
+  ToString,
   Yield,
   type GeneratorObject,
   type IteratorRecord,
@@ -129,10 +130,10 @@ function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 12. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 12. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 13. Return result.
   return result;
 }
@@ -232,10 +233,10 @@ function* IteratorPrototype_filter([predicate = Value.undefined]: Arguments, { t
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 8. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 8. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 9. Return result.
   return result;
 }
@@ -362,10 +363,10 @@ function* IteratorPrototype_flatMap([mapper = Value.undefined]: Arguments, { thi
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 8. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 8. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 9. Return result.
   return result;
 }
@@ -463,10 +464,10 @@ function* IteratorPrototype_map([mapper = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 8. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 8. Set result.[[UnderlyingIterators]] to [iterated].
+  result.UnderlyingIterators = [iterated];
   // 9. Return result.
   return result;
 }
@@ -639,10 +640,10 @@ function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterator'],
+    ['UnderlyingIterators'],
   );
-  // 12. Set result.[[UnderlyingIterator]] to iterated.
-  result.UnderlyingIterator = iterated;
+  // 12. Set result.[[UnderlyingIterators]] to iterated.
+  result.UnderlyingIterators = [iterated];
   // 13. Return result.
   return result;
 }
@@ -690,6 +691,43 @@ function* IteratorPrototype_toStringTagSetter([v]: Arguments, { thisValue }: Fun
   return Value.undefined;
 }
 
+/** https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join */
+function* IteratorPrototype_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = thisValue;
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let sep;
+  if (separator === Value.undefined) {
+    sep = ',';
+  } else {
+    const completion = yield* ToString(separator);
+    IfAbruptCloseIterator(completion, iterated);
+    sep = X(completion).stringValue();
+  }
+  iterated = Q(yield* GetIteratorDirect(O));
+  let R = '';
+  let first = true;
+  while (true) {
+    const value = Q(yield* IteratorStepValue(iterated));
+    if (value === 'done') {
+      return Value(R);
+    }
+    if (first) {
+      first = false;
+    } else {
+      R += sep;
+    }
+    if (value !== Value.undefined && value !== Value.null) {
+      const S_completion = yield* ToString(value);
+      IfAbruptCloseIterator(S_completion, iterated);
+      const S = X(S_completion).stringValue();
+      R += S;
+    }
+  }
+}
+
 export function bootstrapIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]],
@@ -706,6 +744,7 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['toArray', IteratorPrototype_toArray, 0],
     [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0],
     [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]],
+    surroundingAgent.feature('iterator.join') ? ['join', IteratorPrototype_join, 1] : undefined,
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Iterator.prototype%'] = proto;

@@ -322,7 +322,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 30. For each PrivateElement method of staticPrivateMethods, do
   for (const method of staticPrivateMethods) {
     // a. Perform ! PrivateMethodOrAccessorAdd(method, F).
-    X(PrivateMethodOrAccessorAdd(method, F));
+    Q(yield* PrivateMethodOrAccessorAdd(method, F));
   }
   // 31. For each element elementRecord of staticElements, do
   for (const elementRecord of staticElements) {

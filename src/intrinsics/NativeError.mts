@@ -17,7 +17,7 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack, errorStackToString } from '../helpers.mts';
+import { captureStack, callSiteToErrorString } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 import type { ErrorObject } from './Error.mts';
 
@@ -70,7 +70,7 @@ export function bootstrapNativeError(realmRec: Realm) {
       // NON-SPEC
       const S = captureStack();
       O.HostDefinedErrorStack = S.stack;
-      O.ErrorData = X(errorStackToString(O, S.stack, S.nativeStack));
+      O.ErrorData = X(callSiteToErrorString(O, S.stack, S.nativeStack));
       // 5. Return O.
       return O;
     };

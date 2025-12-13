@@ -23,8 +23,10 @@ export interface Attrs {
 }
 
 export class Test {
-  constructor(file: string, attrs: Attrs, currentRunFlags: string, contents: string) {
+  constructor(file: string, specifier: string, engineFeatures: readonly string[], attrs: Attrs, currentRunFlags: string, contents: string) {
     this.file = file;
+    this.specifier = specifier;
+    this.engineFeatures = engineFeatures;
     this.attrs = attrs;
     this.content = contents;
     this.currentTestFlag = currentRunFlags;
@@ -45,7 +47,11 @@ export class Test {
 
   file: string;
 
+  specifier: string;
+
   attrs: Attrs;
+
+  engineFeatures: readonly string[];
 
   content: string;
 
@@ -58,7 +64,7 @@ export class Test {
   skipFeature: string | null = null;
 
   withDifferentTestFlag(newFlag: string, newContent = this.content) {
-    return new Test(this.file, this.attrs, newFlag, newContent);
+    return new Test(this.file, this.specifier, this.engineFeatures, this.attrs, newFlag, newContent);
   }
 }
 
@@ -122,13 +128,15 @@ export interface Test262CreateRealm {
 }
 export interface CreateRealmOptions {
   printCompatMode?: boolean;
+  specifier?: string;
 }
 
-export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}): Test262CreateRealm {
+export function createRealm({ printCompatMode = false, specifier }: CreateRealmOptions = {}): Test262CreateRealm {
   const resolverCache = new Map();
 
   const realm = new ManagedRealm({
     resolverCache,
+    specifier,
   });
 
   return realm.scope(() => {

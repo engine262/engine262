@@ -48,18 +48,12 @@ export interface PromiseResolvingFunctionObject extends BuiltinFunctionObject {
 /** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
 export interface PromiseAllResolveElementFunctionObject extends BuiltinFunctionObject {
   readonly Index: number;
-  readonly Values: Value[];
-  readonly Capability: PromiseCapabilityRecord;
-  readonly RemainingElements: { Value: number };
   readonly AlreadyCalled: { Value: boolean };
 }
 
 /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
 export interface PromiseAllRejectElementFunctionObject extends BuiltinFunctionObject {
   readonly Index: number;
-  readonly Errors: Value[];
-  readonly Capability: PromiseCapabilityRecord;
-  readonly RemainingElements: { Value: number };
   readonly AlreadyCalled: { Value: boolean };
 }
 
