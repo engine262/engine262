@@ -117,7 +117,7 @@ Do not enable the preview feature in the inspector.
 
 ### engine262 API
 
-See the [example](https://github.com/engine262/engine262/blob/ad06dec792e0962affcbecad70515e38bb65645f/lib-src/node/example.mts).
+See the [example](https://github.com/engine262/engine262/blob/main/lib-src/node/example.mts).
 
 ## Developing engine262
 
