@@ -40,10 +40,6 @@ import type {
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-promise-objects */
 
-export interface PromiseResolvingFunctionObject extends BuiltinFunctionObject {
-  readonly Promise: PromiseObject;
-  readonly AlreadyResolved: { Value: boolean };
-}
 
 /** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
 export interface PromiseAllResolveElementFunctionObject extends BuiltinFunctionObject {
@@ -90,46 +86,76 @@ export class PromiseReactionRecord {
 export function CreateResolvingFunctions(promise: PromiseObject) {
   // 1. Let alreadyResolved be the Record { [[Value]]: false }.
   const alreadyResolved = { Value: false };
-  // 2. Let stepsResolve be the algorithm steps defined in Promise Resolve Functions.
-  const stepsResolve = PromiseResolveFunctions;
-  // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.
-  const lengthResolve = 1;
-  // 4. Let resolve be ! CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
-  const resolve = X(CreateBuiltinFunction(stepsResolve, lengthResolve, Value(''), ['Promise', 'AlreadyResolved'])) as Mutable<PromiseResolvingFunctionObject>;
-  // 5. Set resolve.[[Promise]] to promise.
-  resolve.Promise = promise;
-  // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
-  resolve.AlreadyResolved = alreadyResolved;
-  // 7. Let stepsReject be the algorithm steps defined in Promise Reject Functions.
-  const stepsReject = PromiseRejectFunctions;
-  // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
-  const lengthReject = 1;
-  // 9. Let reject be ! CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
-  const reject = X(CreateBuiltinFunction(stepsReject, lengthReject, Value(''), ['Promise', 'AlreadyResolved'])) as Mutable<PromiseResolvingFunctionObject>;
-  // 10. Set reject.[[Promise]] to promise.
-  reject.Promise = promise;
-  // 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
-  reject.AlreadyResolved = alreadyResolved;
+  // 2. Let resolveSteps be the algorithm steps defined in Promise Resolve Functions.
+  const resolveSteps = function* PromiseResolveFunctions([resolution = Value.undefined]: Arguments): ValueEvaluator {
+    // 5. If alreadyResolved.[[Value]] is true, return undefined.
+    if (alreadyResolved.Value) {
+      return Value.undefined;
+    }
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
+    // 6. Set alreadyResolved.[[Value]] to true.
+    alreadyResolved.Value = true;
+    // 7. If SameValue(resolution, promise) is true, then
+    if (SameValue(resolution, promise) === Value.true) {
+      // a. Let selfResolutionError be a newly created TypeError object.
+      const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
+      // b. Return RejectPromise(promise, selfResolutionError).
+      RejectPromise(promise, selfResolutionError);
+      return Value.undefined;
+    }
+    // 8. If Type(resolution) is not Object, then
+    if (!(resolution instanceof ObjectValue)) {
+      // a. Return FulfillPromise(promise, resolution).
+      FulfillPromise(promise, resolution);
+      return Value.undefined;
+    }
+    // 9. Let then be Get(resolution, "then").
+    const then = EnsureCompletion(yield* Get(resolution, Value('then')));
+    // 10. If then is an abrupt completion, then
+    if (then instanceof AbruptCompletion) {
+      // a. Return RejectPromise(promise, then.[[Value]]).
+      RejectPromise(promise, then.Value);
+      return Value.undefined;
+    }
+    // 11. Let thenAction be then.[[Value]].
+    const thenAction = then.Value;
+    // 12. If IsCallable(thenAction) is false, then
+    if (!IsCallable(thenAction)) {
+      // a. Return FulfillPromise(promise, resolution).
+      FulfillPromise(promise, resolution);
+      return Value.undefined;
+    }
+    if (surroundingAgent.debugger_isPreviewing) {
+      return Value.undefined;
+    }
+    // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
+    const thenJobCallback = HostMakeJobCallback(thenAction);
+    // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
+    const job = NewPromiseResolveThenableJob(promise, resolution, thenJobCallback);
+    // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
+    HostEnqueuePromiseJob(job.Job, job.Realm);
+    // 16. Return undefined.
+    return Value.undefined;
+  };
+  // 4. Let resolve be CreateBuiltinFunction(resolveSteps, 1, "", « »).
+  const resolve = CreateBuiltinFunction(resolveSteps, 1, Value(''), []);
+  // 7. Let rejectSteps be the algorithm steps defined in Promise Reject Functions.
+  const rejectSteps = function PromiseRejectFunctions([reason = Value.undefined]: Arguments): ValueCompletion<UndefinedValue> {
+    if (alreadyResolved.Value) {
+      return Value.undefined;
+    }
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
+    alreadyResolved.Value = true;
+    RejectPromise(promise, reason);
+    return Value.undefined;
+  };
+  // 9. Let reject be CreateBuiltinFunction(rejectSteps, 1, "", « »).
+  const reject = CreateBuiltinFunction(rejectSteps, 1, Value(''), []);
   // 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
   return {
     Resolve: resolve,
     Reject: reject,
   };
-}
-
-/** https://tc39.es/ecma262/#sec-promise-reject-functions */
-function PromiseRejectFunctions(this: BuiltinFunctionObject, [reason = Value.undefined]: Arguments): ValueCompletion<UndefinedValue> {
-  const F = this as PromiseResolvingFunctionObject;
-
-  Assert('Promise' in F && F.Promise instanceof ObjectValue);
-  const promise = F.Promise;
-  const alreadyResolved = F.AlreadyResolved;
-  if (alreadyResolved.Value === true) {
-    return Value.undefined;
-  }
-  Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
-  alreadyResolved.Value = true;
-  return RejectPromise(promise, reason);
 }
 
 /** https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob */
@@ -164,62 +190,6 @@ function NewPromiseResolveThenableJob(promiseToResolve: PromiseObject, thenable:
   // 5. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
   // 6. Return { [[Job]]: job, [[Realm]]: thenRealm }.
   return { Job: job, Realm: thenRealm };
-}
-
-/** https://tc39.es/ecma262/#sec-promise-resolve-functions */
-function* PromiseResolveFunctions(this: BuiltinFunctionObject, [resolution = Value.undefined]: Arguments): ValueEvaluator {
-  // 1. Let F be the active function object.
-  const F = this as PromiseResolvingFunctionObject;
-  // 2. Assert: F has a [[Promise]] internal slot whose value is an Object.
-  Assert('Promise' in F && F.Promise instanceof ObjectValue);
-  // 3. Let promise be F.[[Promise]].
-  const promise = F.Promise;
-  // 4. Let alreadyResolved be F.[[AlreadyResolved]].
-  const alreadyResolved = F.AlreadyResolved;
-  // 5. If alreadyResolved.[[Value]] is true, return undefined.
-  if (alreadyResolved.Value === true) {
-    return Value.undefined;
-  }
-  Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
-  // 6. Set alreadyResolved.[[Value]] to true.
-  alreadyResolved.Value = true;
-  // 7. If SameValue(resolution, promise) is true, then
-  if (SameValue(resolution, promise) === Value.true) {
-    // a. Let selfResolutionError be a newly created TypeError object.
-    const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
-    // b. Return RejectPromise(promise, selfResolutionError).
-    return RejectPromise(promise, selfResolutionError);
-  }
-  // 8. If Type(resolution) is not Object, then
-  if (!(resolution instanceof ObjectValue)) {
-    // a. Return FulfillPromise(promise, resolution).
-    return FulfillPromise(promise, resolution);
-  }
-  // 9. Let then be Get(resolution, "then").
-  const then = EnsureCompletion(yield* Get(resolution, Value('then')));
-  // 10. If then is an abrupt completion, then
-  if (then instanceof AbruptCompletion) {
-    // a. Return RejectPromise(promise, then.[[Value]]).
-    return RejectPromise(promise, then.Value);
-  }
-  // 11. Let thenAction be then.[[Value]].
-  const thenAction = then.Value;
-  // 12. If IsCallable(thenAction) is false, then
-  if (!IsCallable(thenAction)) {
-    // a. Return FulfillPromise(promise, resolution).
-    return FulfillPromise(promise, resolution);
-  }
-  if (surroundingAgent.debugger_isPreviewing) {
-    return Value.undefined;
-  }
-  // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
-  const thenJobCallback = HostMakeJobCallback(thenAction);
-  // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
-  const job = NewPromiseResolveThenableJob(promise, resolution, thenJobCallback);
-  // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-  HostEnqueuePromiseJob(job.Job, job.Realm);
-  // 16. Return undefined.
-  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-fulfillpromise */
