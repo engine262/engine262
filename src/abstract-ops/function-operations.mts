@@ -74,6 +74,8 @@ import {
 interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
   readonly InitialName: JSStringValue | NullValue;
+  readonly Async: boolean;
+  // https://github.com/tc39/ecma262/pull/3212/
   readonly IsClassConstructor: BooleanValue;
   Call(thisValue: Value, args: Arguments): ValueEvaluator;
   Construct(args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
@@ -607,6 +609,7 @@ function BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Ar
   return BuiltinCallOrConstruct(this, 'uninitialized', argumentsList, newTarget) as ValueEvaluator<ObjectValue>;
 }
 
+const { apply } = Reflect;
 /** https://tc39.es/ecma262/#sec-builtincallorconstruct */
 function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value | 'uninitialized', argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator {
   const calleeContext = new ExecutionContext();
@@ -617,37 +620,50 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
   surroundingAgent.executionContextStack.push(calleeContext);
 
   const isNew = thisArgument === 'uninitialized';
+  const thisValue = thisArgument === 'uninitialized' ? Value.undefined : thisArgument;
   // Perform any necessary implementation-defined initialization of calleeContext.
   surroundingAgent.runningExecutionContext.callSite.constructCall = isNew;
-
-  let completion = F.nativeFunction(argumentsList, {
-    thisValue: thisArgument === 'uninitialized' ? Value.undefined : thisArgument,
+  const functionCallContext: FunctionCallContext = {
+    thisValue,
     NewTarget: newTarget,
-  });
-  // in case of debugging, use the following version so F.nativeFunction's name can appears in the stack trace.
-  // let completion = Reflect['apply'](F.nativeFunction, F, [argumentsList, {
-  //   thisValue: thisArgument || Value.undefined,
-  //   NewTarget: newTarget || Value.undefined,
-  // }]);
-  if (completion && 'next' in completion) {
-    completion = yield* completion;
-  }
-  if (completion instanceof Completion) {
-    Assert(completion instanceof NormalCompletion || completion instanceof ThrowCompletion);
-  }
+  };
+  if (F.Async) {
+    const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    const resultClosure = function* asyncFunctionPrologue() {
+      let result = apply(F.nativeFunction, F, [argumentsList, functionCallContext]);
+      if (result && 'next' in result) {
+        result = yield* result;
+      }
+      return ReturnCompletion(Q(result) || Value.undefined);
+    };
+    yield* AsyncFunctionStart(promiseCapability, resultClosure);
+    surroundingAgent.executionContextStack.pop(calleeContext);
+    return NormalCompletion(promiseCapability.Promise);
+  } else {
+    let result = apply(F.nativeFunction, F, [argumentsList, functionCallContext]);
+    if (result && 'next' in result) {
+      result = yield* result;
+    }
+    if (result instanceof Completion) {
+      Assert(result instanceof NormalCompletion || result instanceof ThrowCompletion);
+    }
 
-  surroundingAgent.executionContextStack.pop(calleeContext);
-  const result = Q(completion) || Value.undefined;
-  if (isNew) {
-    Assert(result instanceof ObjectValue);
+    surroundingAgent.executionContextStack.pop(calleeContext);
+    const value = Q(result);
+    if (isNew && !(result instanceof ThrowCompletion)) {
+      Assert(result instanceof ObjectValue);
+    }
+    return NormalCompletion(value || Value.undefined);
   }
-  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, isConstructor: BooleanValue = Value.false): BuiltinFunctionObject {
+export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, async = false): BuiltinFunctionObject {
+  if (typeof name === 'string') {
+    name = Value(name);
+  }
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
-  Assert(typeof steps === 'function');
+  Assert(typeof behaviour === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
   if (realm === undefined) {
     realm = surroundingAgent.currentRealmRecord;
@@ -659,12 +675,13 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName', 'IsClassConstructor'].concat(internalSlotsList))) as Mutable<BuiltinFunctionObject>;
+  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName', 'IsClassConstructor'].concat(additionalInternalSlotsList))) as Mutable<BuiltinFunctionObject>;
   func.Call = BuiltinFunctionCall;
-  if (isConstructor === Value.true) {
+  if (behaviour.isConstructor) {
     func.Construct = BuiltinFunctionConstruct;
   }
-  func.nativeFunction = steps;
+  func.nativeFunction = behaviour;
+  func.Async = async;
   // 6. Set func.[[Realm]] to realm.
   func.Realm = realm;
   // 7. Set func.[[Prototype]] to prototype.
@@ -690,28 +707,11 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
 }
 
 /** This is a helper function to define non-spec host functions. */
-CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
+CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name, async = false) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, name, [], surroundingAgent.currentRealmRecord, undefined, undefined, async);
 
-/**
- * "This async function performs the following steps when called:"
- *
- * this function wraps the async function.
- */
-export function asyncBuiltinFunctionPrologue(steps: NativeSteps): NativeSteps {
-  function* async(this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext) {
-    const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-    const self = this;
-    yield* AsyncFunctionStart(promiseCapability, function* asyncFunctionPrologue() {
-      let result = Reflect.apply(steps, self, [args, context]);
-      if (result && 'next' in result) {
-        result = yield* result;
-      }
-      return ReturnCompletion(Q(result) || Value.undefined);
-    });
-    return NormalCompletion(promiseCapability.Promise);
-  }
-  async.section = steps.section;
-  return async;
+export function markBuiltinFunctionAsConstructor(steps: NativeSteps) {
+  steps.isConstructor = true;
+  return steps;
 }
 
 /** https://tc39.es/ecma262/#sec-preparefortailcall */

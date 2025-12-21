@@ -1007,6 +1007,7 @@ export interface FunctionCallContext {
 export interface NativeSteps {
   (this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext): PlainEvaluator<Value | void> | PlainCompletion<Value | void>;
   section?: string;
+  isConstructor?: boolean;
 }
 export interface CanBeNativeSteps {
   (...args: (Value | undefined)[]): PlainEvaluator<Value | void> | PlainCompletion<Value | void>;

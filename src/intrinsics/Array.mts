@@ -39,8 +39,6 @@ import {
   IteratorComplete,
 } from '../abstract-ops/all.mts';
 import {
-  BooleanValue,
-  JSStringValue,
   NumberValue,
   ObjectValue,
   UndefinedValue,
@@ -52,7 +50,7 @@ import {
 import { __ts_cast__, OutOfRange } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
-  asyncBuiltinFunctionPrologue, IfAbruptCloseAsyncIterator, IteratorValue, Throw,
+  IfAbruptCloseAsyncIterator, IteratorValue, Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */
@@ -318,7 +316,7 @@ export function bootstrapArray(realmRec: Realm) {
 
   const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [
     ['from', Array_from, 1],
-    ['fromAsync', asyncBuiltinFunctionPrologue(Array_fromAsync), 1],
+    ['fromAsync', Array_fromAsync, 1, undefined, true],
     ['isArray', Array_isArray, 1],
     ['of', Array_of, 0],
     [wellKnownSymbols.species, [Array_speciesGetter]],

@@ -5,6 +5,7 @@ import {
   Assert,
   CreateBuiltinFunction,
   CreateDataProperty,
+  markBuiltinFunctionAsConstructor,
   OrdinaryObjectCreate,
   ProxyCreate,
   Realm,
@@ -84,14 +85,11 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]: 
 
 export function bootstrapProxy(realmRec: Realm) {
   const proxyConstructor = CreateBuiltinFunction(
-    ProxyConstructor,
+    markBuiltinFunctionAsConstructor(ProxyConstructor),
     2,
     Value('Proxy'),
     [],
     realmRec,
-    undefined,
-    undefined,
-    Value.true,
   );
 
   assignProps(realmRec, proxyConstructor, [

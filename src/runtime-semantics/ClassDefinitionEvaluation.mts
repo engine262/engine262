@@ -61,7 +61,7 @@ import {
   ClassFieldDefinitionEvaluation_decorator,
 } from './all.mts';
 import {
-  CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
+  CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-static-semantics-classelementevaluation */
@@ -231,7 +231,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       return result;
     };
     // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[PrivateMethods]], [[Fields]] », the current Realm Record, constructorParent).
-    F = X(CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText', surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods', surroundingAgent.feature('decorators') ? 'Elements' : 'Fields'], undefined, constructorParent, undefined, Value.true));
+    F = X(CreateBuiltinFunction(markBuiltinFunctionAsConstructor(defaultConstructor), 0, className, ['ConstructorKind', 'SourceText', surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods', surroundingAgent.feature('decorators') ? 'Elements' : 'Fields'], surroundingAgent.currentRealmRecord, constructorParent));
   } else { // 15. Else,
     // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
     const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
