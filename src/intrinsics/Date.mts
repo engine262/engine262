@@ -44,8 +44,8 @@ function* DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): 
       const now = Date.now();
       return ToDateString(F(now));
     } else {
-      const y = Q(yield* ToNumber(year));
-      const m = Q(yield* ToNumber(month));
+      const y = Q(yield* ToNumber(year!));
+      const m = Q(yield* ToNumber(month!));
       let dt;
       if (date !== undefined) {
         dt = Q(yield* ToNumber(date));
@@ -104,7 +104,7 @@ function* DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): 
       if (value instanceof ObjectValue && 'DateValue' in value) {
         tv = X(thisTimeValue(value));
       } else {
-        const v = Q(yield* ToPrimitive(value));
+        const v = Q(yield* ToPrimitive(value!));
         if (v instanceof JSStringValue) {
           // Assert: The next step never returns an abrupt completion because Type(v) is String.
           tv = parseDate(v);

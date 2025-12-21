@@ -1,5 +1,7 @@
 import type { Protocol } from 'devtools-protocol';
-import { ExecutionContext, type GCMarker, surroundingAgent } from './host-defined/engine.mts';
+import {
+  DynamicParsedCodeRecord, ExecutionContext, type GCMarker, surroundingAgent,
+} from './host-defined/engine.mts';
 import {
   Value, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
   SymbolValue,
@@ -363,6 +365,9 @@ export class CallSite {
   }
 
   getSpecifier() {
+    if (this.context.HostDefined?.scriptId && surroundingAgent.parsedSources.get(this.context.HostDefined.scriptId) instanceof DynamicParsedCodeRecord) {
+      return null;
+    }
     if (!(this.context.ScriptOrModule instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.specifier;
     }
@@ -370,10 +375,14 @@ export class CallSite {
   }
 
   getScriptId() {
+    const context = this.context.HostDefined?.scriptId;
+    if (context) {
+      return context;
+    }
     if (!(this.context.ScriptOrModule instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.scriptId;
     }
-    return this.context.HostDefined?.scriptId;
+    return undefined;
   }
 
   setLocation(node: ParseNode) {
@@ -478,6 +487,31 @@ export class CallSite {
   }
 }
 
+export class CallFrame {
+  columnNumber: number | undefined;
+
+  lineNumber: number | undefined;
+
+  functionName: string | undefined;
+
+  scriptId: string | undefined;
+
+  url: string | undefined;
+
+  toCallFrame(): Protocol.Runtime.CallFrame | undefined {
+    if (!this.scriptId) {
+      return undefined;
+    }
+    return {
+      columnNumber: (this.columnNumber || 1) - 1,
+      lineNumber: (this.lineNumber || 1) - 1,
+      functionName: this.functionName || '<anonymous>',
+      scriptId: this.scriptId,
+      url: this.url || '<anonymous>',
+    };
+  }
+}
+
 export const kAsyncContext = Symbol('kAsyncContext');
 
 function captureAsyncStack(stack: CallSite[]) {
@@ -505,9 +539,9 @@ function captureAsyncStack(stack: CallSite[]) {
   }
 }
 
-export function getHostDefinedErrorStack(O: Value) {
-  if (O instanceof ObjectValue && 'HostDefinedErrorStack' in O && isArray(O.HostDefinedErrorStack)) {
-    return O.HostDefinedErrorStack as readonly CallSite[];
+export function getHostDefinedErrorStack(O: Value): (CallSite | CallFrame)[] | undefined {
+  if (O instanceof ObjectValue && 'HostDefinedErrorStack' in O && isArray((O as ErrorObject).HostDefinedErrorStack)) {
+    return (O as ErrorObject).HostDefinedErrorStack as (CallSite | CallFrame)[];
   }
   return undefined;
 }

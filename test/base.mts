@@ -3,6 +3,7 @@ import { loadImportedModuleSync } from '../lib-src/node/module.mts';
 import { supportColor, type SkipReason } from './tui.mts';
 import {
   Agent, ManagedRealm, type OrdinaryObject, SourceTextModuleRecord, OrdinaryObjectCreate, createTest262Intrinsics,
+  Value,
 } from '#self';
 
 export interface Attrs {
@@ -81,6 +82,13 @@ export type WorkerToSupervisor_Pass = {
   testId: number;
 };
 
+export interface Stack {
+  specifier?: string | null | undefined;
+  source?: string;
+  line: number;
+  column: number;
+}
+
 export type WorkerToSupervisor_Failed = {
   status: 'FAIL';
   file: string;
@@ -88,6 +96,7 @@ export type WorkerToSupervisor_Failed = {
   testId: number;
   description: string;
   error: string;
+  stack: Stack[]
 };
 
 export type WorkerToSupervisor =
@@ -124,7 +133,7 @@ export interface Test262CreateRealm {
   realm: ManagedRealm;
   $262: OrdinaryObject;
   resolverCache: Map<string, SourceTextModuleRecord>;
-  setPrintHandle: (f: ((val: string) => void) | undefined) => void;
+  setPrintHandle: (callback: ((str: string, value: Value) => void) | undefined) => void;
 }
 export interface CreateRealmOptions {
   printCompatMode?: boolean;

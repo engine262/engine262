@@ -1,0 +1,95 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`code in ShadowRealm 1`] = `
+[
+  [
+    {
+      "columnNumber": 6,
+      "functionName": "<anonymous>",
+      "lineNumber": 0,
+      "scriptId": "1",
+      "url": "<anonymous>",
+    },
+    undefined,
+    {
+      "columnNumber": 15,
+      "functionName": "<anonymous>",
+      "lineNumber": 1,
+      "scriptId": "0",
+      "url": "<anonymous>",
+    },
+  ],
+]
+`;
+
+exports[`code in eval 1`] = `
+[
+  [
+    {
+      "columnNumber": 6,
+      "functionName": "<anonymous>",
+      "lineNumber": 0,
+      "scriptId": "1",
+      "url": "<anonymous>",
+    },
+    {
+      "columnNumber": 5,
+      "functionName": "<anonymous>",
+      "lineNumber": 0,
+      "scriptId": "0",
+      "url": "<anonymous>",
+    },
+  ],
+  [
+    {
+      "columnNumber": 12,
+      "functionName": "f",
+      "lineNumber": 1,
+      "scriptId": "2",
+      "url": "<anonymous>",
+    },
+    {
+      "columnNumber": 4,
+      "functionName": "<anonymous>",
+      "lineNumber": 3,
+      "scriptId": "2",
+      "url": "<anonymous>",
+    },
+    {
+      "columnNumber": 5,
+      "functionName": "<anonymous>",
+      "lineNumber": 1,
+      "scriptId": "0",
+      "url": "<anonymous>",
+    },
+  ],
+]
+`;
+
+exports[`code in new Function 1`] = `
+[
+  [
+    {
+      "columnNumber": 14,
+      "functionName": "x",
+      "lineNumber": 4,
+      "scriptId": "1",
+      "url": "<anonymous>",
+    },
+    {
+      "columnNumber": 8,
+      "functionName": "y",
+      "lineNumber": 7,
+      "scriptId": "1",
+      "url": "<anonymous>",
+    },
+    {
+      "columnNumber": 17,
+      "functionName": "<anonymous>",
+      "lineNumber": 1,
+      "scriptId": "0",
+      "url": "<anonymous>",
+    },
+  ],
+]
+`;

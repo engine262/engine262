@@ -82,7 +82,7 @@ function* BoundFunctionExoticObjectCall(this: BoundFunctionObject, _thisArgument
   const target = F.BoundTargetFunction;
   const boundThis = F.BoundThis;
   const boundArgs = F.BoundArguments;
-  const args = [...boundArgs, ...argumentsList];
+  const args = [...boundArgs.values(), ...argumentsList.values()];
   return Q(yield* Call(target, boundThis, args));
 }
 
@@ -92,7 +92,7 @@ function* BoundFunctionExoticObjectConstruct(this: BoundFunctionObject, argument
   const target = F.BoundTargetFunction;
   Assert(IsConstructor(target));
   const boundArgs = F.BoundArguments;
-  const args = [...boundArgs, ...argumentsList];
+  const args = [...boundArgs.values(), ...argumentsList.values()];
   if (SameValue(F, newTarget) === Value.true) {
     newTarget = target;
   }
@@ -144,7 +144,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args]: Arguments, { 
   }
   __ts_cast__<ObjectValue>(Target);
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
-  const F = Q(yield* BoundFunctionCreate(Target, thisArg, args));
+  const F = Q(yield* BoundFunctionCreate(Target, thisArg, args as Arguments));
   Q(yield* CopyNameAndLength(F, Target, 'bound', args.length));
   return F;
 }
@@ -158,10 +158,10 @@ function* FunctionProto_call([thisArg = Value.undefined, ...args]: Arguments, { 
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. Let argList be a new empty List.
-  const argList = [];
+  const argList: Value[] = [];
   // 4. If this method was called with more than one argument, then in left to right order, starting with the second argument, append each argument as the last element of argList.
   for (const arg of args) {
-    argList.push(arg);
+    argList.push(arg!);
   }
   // 5. Perform PrepareForTailCall().
   PrepareForTailCall();

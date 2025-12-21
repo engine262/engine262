@@ -6,7 +6,7 @@ import {
   ContainsArguments,
 } from '../static-semantics/all.mts';
 import type { Mutable } from '../helpers.mts';
-import type { Feature } from '../host-defined/engine.mts';
+import { surroundingAgent, type Feature } from '../host-defined/engine.mts';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
@@ -777,6 +777,8 @@ export abstract class ExpressionParser extends FunctionParser {
         return this.parseObjectLiteral();
       case Token.FUNCTION:
         return this.parseFunctionExpression(FunctionKind.NORMAL);
+      case Token.AT:
+        return surroundingAgent.feature('decorators') ? this.parseClassExpression() : this.unexpected();
       case Token.CLASS:
         return this.parseClassExpression();
       case Token.TEMPLATE:
@@ -943,14 +945,15 @@ export abstract class ExpressionParser extends FunctionParser {
 
   /** https://tc39.es/ecma262/#sec-class-definitions */
   // ClassDeclaration :
-  //   `class` BindingIdentifier ClassTail
-  //   [+Default] `class` ClassTail
+  //   DecoratorList? `class` BindingIdentifier ClassTail
+  //   DecoratorList? [+Default] `class` ClassTail
   //
   // ClassExpression :
-  //   `class` BindingIdentifier? ClassTail
-  parseClass(isExpression: boolean): ParseNode.ClassLike {
+  //   DecoratorList? `class` BindingIdentifier? ClassTail
+  parseClass(decoratorsAttachedToClassDeclaration: null | readonly ParseNode.Decorator[], isExpression: boolean): ParseNode.ClassLike {
     const node = this.startNode<ParseNode.ClassLike>();
 
+    const decorators = decoratorsAttachedToClassDeclaration || this.parseDecorators();
     this.expect(Token.CLASS);
 
     this.scope.with({ strict: true }, () => {
@@ -966,6 +969,7 @@ export abstract class ExpressionParser extends FunctionParser {
       }
       node.ClassTail = this.scope.with({ default: false }, () => this.parseClassTail());
     });
+    node.Decorators = decorators;
 
     return this.finishNode(node, isExpression ? 'ClassExpression' : 'ClassDeclaration');
   }
@@ -1097,7 +1101,7 @@ export abstract class ExpressionParser extends FunctionParser {
   }
 
   parseClassExpression(): ParseNode.ClassExpression {
-    return this.parseClass(true) as ParseNode.ClassExpression;
+    return this.parseClass(null, true) as ParseNode.ClassExpression;
   }
 
   parseTemplateLiteral(tagged = false): ParseNode.TemplateLiteral {
@@ -1365,7 +1369,18 @@ export abstract class ExpressionParser extends FunctionParser {
     }
 
     let firstFirstName;
+    let isAccessor = false;
     if (type === 'class element') {
+      node.Decorators = this.parseDecorators();
+      const parseAccessorKeyword = surroundingAgent.feature('decorators') ? () => this.try(() => {
+        this.expect('accessor');
+        const next = this.peek();
+        if ((next.type === Token.IDENTIFIER || next.type === Token.STRING || next.type === Token.LBRACK || next.type === Token.PRIVATE_IDENTIFIER || next.type === Token.NUMBER || next.type === Token.BIGINT) && !next.hadLineTerminatorBefore) {
+          isAccessor = true;
+          return true;
+        }
+        return false;
+      }) : () => false;
       if (this.test('static') && (
         this.testAhead(Token.ASSIGN)
         || this.testAhead(Token.SEMICOLON)
@@ -1373,9 +1388,11 @@ export abstract class ExpressionParser extends FunctionParser {
         || isAutomaticSemicolon(this.peekAhead().type)
       )) {
         node.static = false;
+        node.accessor = parseAccessorKeyword();
         firstFirstName = this.parseIdentifierName();
       } else {
         node.static = this.eat('static');
+        node.accessor = parseAccessorKeyword();
         this.markNodeStart(node);
       }
     }
@@ -1384,7 +1401,7 @@ export abstract class ExpressionParser extends FunctionParser {
     let isGetter = false;
     let isSetter = false;
     let isAsync = false;
-    if (!isGenerator) {
+    if (!isGenerator && !isAccessor) {
       if (this.test('get')) {
         isGetter = true;
       } else if (this.test('set')) {
@@ -1417,6 +1434,7 @@ export abstract class ExpressionParser extends FunctionParser {
         || this.peek().hadLineTerminatorBefore
         || isAutomaticSemicolon(this.peek().type)
       )) {
+        node.accessor = isAccessor;
         node.ClassElementName = firstName;
         node.Initializer = this.scope.with({ superProperty: true }, () => this.parseInitializerOpt());
         const argumentNode = node.Initializer && ContainsArguments(node.Initializer);
@@ -1515,5 +1533,75 @@ export abstract class ExpressionParser extends FunctionParser {
       name = isGenerator ? 'GeneratorMethod' : 'MethodDefinition';
     }
     return this.finishNode(node, name);
+  }
+
+  parseDecorators(): ParseNode.Decorator[] | null {
+    if (!surroundingAgent.feature('decorators')) {
+      return null;
+    }
+    const Decorators: ParseNode.Decorator[] = [];
+    while (true) {
+      const decorator = this.parseDecorator();
+      if (!decorator) {
+        return Decorators.length ? Decorators : null;
+      }
+      Decorators.push(decorator);
+    }
+  }
+
+  parseDecorator(): ParseNode.Decorator | undefined {
+    if (!this.eat(Token.AT)) {
+      return undefined;
+    }
+    // @ DecoratorParenthesizedExpression : `(` Expression[+In] `)`
+    if (this.eat(Token.LPAREN)) {
+      const node = this.startNode<ParseNode.Decorator_ParenthesizedExpression>();
+      node.subtype = 'ParenthesizedExpression';
+      node.ParenthesizedExpression = this.scope.with({ in: true }, () => this.parseExpression());
+      this.expect(Token.RPAREN);
+      return this.finishNode(node, 'Decorator');
+    }
+
+    let result: ParseNode.MemberExpression | ParseNode.IdentifierReference = this.parseIdentifierReference();
+
+    while (isPropertyOrCall(this.peek().type)) {
+      let finished: ParseNode.MemberExpression | ParseNode.CallExpression;
+      const next = this.peek().type;
+      if (next === Token.PERIOD) {
+        const node = this.startNode<ParseNode.MemberExpression>(result);
+        this.next();
+        node.MemberExpression = result;
+        if (this.test(Token.PRIVATE_IDENTIFIER)) {
+          node.PrivateIdentifier = this.parsePrivateIdentifier();
+          this.scope.checkUndefinedPrivate(node.PrivateIdentifier);
+          node.IdentifierName = null;
+        } else {
+          node.IdentifierName = this.parseIdentifierName();
+          node.PrivateIdentifier = null;
+        }
+        node.Expression = null;
+        finished = this.finishNode(node, 'MemberExpression');
+      } else if (next === Token.LPAREN) {
+        const node = this.startNode<ParseNode.CallExpression>(result);
+        const { Arguments } = this.parseArguments();
+        node.CallExpression = result;
+        node.Arguments = Arguments;
+        finished = this.finishNode(node, 'CallExpression');
+        const finishedNode = finished;
+
+        const outerNode = this.startNode<ParseNode.Decorator_CallExpression>(finishedNode);
+        outerNode.subtype = 'CallExpression';
+        outerNode.CallExpression = finishedNode;
+        return this.finishNode(outerNode, 'Decorator');
+      } else {
+        this.unexpected();
+      }
+      // NOTE: unwinds ParseNode.Finish type alias to avoid circularity issues in type checker
+      result = finished as ParseNode.MemberExpression;
+    }
+    const outerNode = this.startNode<ParseNode.Decorator_MemberExpression>(result);
+    outerNode.subtype = 'MemberExpression';
+    outerNode.MemberExpression = result;
+    return this.finishNode(outerNode, 'Decorator');
   }
 }

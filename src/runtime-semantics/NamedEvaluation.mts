@@ -11,10 +11,10 @@ import {
   InstantiateAsyncGeneratorFunctionExpression,
   InstantiateArrowFunctionExpression,
   InstantiateAsyncArrowFunctionExpression,
+  DecoratorListEvaluation,
 } from './all.mts';
 import type {
-  DefaultConstructorBuiltinFunction,
-  ECMAScriptFunctionObject, FunctionDeclaration, PrivateName, PropertyKeyValue,
+  FunctionDeclaration, FunctionObject, PrivateName, PropertyKeyValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation */
@@ -63,16 +63,17 @@ function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction: ParseNode.AsyncA
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation */
 //   ClassExpression : `class` ClassTail
 function* NamedEvaluation_ClassExpression(ClassExpression: ParseNode.ClassExpression, name: PropertyKeyValue | PrivateName) {
-  const { ClassTail } = ClassExpression;
+  const { ClassTail, Decorators } = ClassExpression;
+  const decorators = Decorators ? Q(yield* DecoratorListEvaluation(Decorators)) : [];
   const sourceText = ClassExpression.sourceText;
   // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
-  const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name, sourceText);
+  const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name, sourceText, decorators);
   Q(value);
   // 4. Return value.
   return value;
 }
 
-export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ValueEvaluator<ECMAScriptFunctionObject | DefaultConstructorBuiltinFunction> {
+export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ValueEvaluator<FunctionObject> {
   switch (F.type) {
     case 'FunctionExpression':
       return NamedEvaluation_FunctionExpression(F, name);

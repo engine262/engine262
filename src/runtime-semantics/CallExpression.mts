@@ -41,7 +41,7 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
         return Value.undefined;
       }
       // iii. Let evalText be the first element of argList.
-      const evalText = argList[0];
+      const evalText = argList[0]!;
       // iv. If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
       const strictCaller = CallExpression.strict;
       // vi. Return ? PerformEval(evalText, strictCaller, true).

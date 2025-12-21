@@ -10,7 +10,7 @@ function i(V: unknown) {
     return inspect(V);
   }
   if (V instanceof PrivateName) {
-    return `#${V.Description.stringValue()}`;
+    return `${V.Description.stringValue()}`;
   }
   return `${V}`;
 }

@@ -69,7 +69,7 @@ function* Object_assign([target = Value.undefined, ...sources]: Arguments): Valu
   }
   // 3. Let sources be the List of argument values starting with the second argument.
   // 4. For each element nextSource of sources, in ascending index order, do
-  for (const nextSource of sources) {
+  for (const nextSource of (sources as Arguments).values()) {
     // a. If nextSource is neither undefined nor null, then
     if (nextSource !== Value.undefined && nextSource !== Value.null) {
       // i. Let from be ! ToObject(nextSource).

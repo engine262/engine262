@@ -140,7 +140,7 @@ export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    X(CreateDataProperty(obj, X(ToString(F(index))), val));
+    X(CreateDataProperty(obj, X(ToString(F(index))), val!));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
@@ -200,7 +200,7 @@ export function CreateMappedArgumentsObject(func: ObjectValue, formals: ParseNod
   const numberOfParameters = parameterNames.length;
   let index = 0;
   while (index < len) {
-    const val = argumentsList[index];
+    const val = argumentsList[index]!;
     X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }

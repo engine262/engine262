@@ -25,7 +25,9 @@ import {
   ThrowCompletion,
 } from '../completion.mts';
 import { ExpectedArgumentCount } from '../static-semantics/all.mts';
-import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mts';
+import {
+  ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord,
+} from '../runtime-semantics/all.mts';
 import {
   EnvironmentRecord,
   FunctionEnvironmentRecord,
@@ -61,9 +63,12 @@ import {
   Get,
   R,
   ToIntegerOrInfinity,
+  InitializePrivateMethods,
+  getActiveScriptId,
 } from './all.mts';
-import type {
-  AbstractModuleRecord, CanBeNativeSteps, DefaultConstructorBuiltinFunction, FunctionCallContext, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
+import {
+  ClassElementDefinitionRecord,
+  type AbstractModuleRecord, type CanBeNativeSteps, type DefaultConstructorBuiltinFunction, type DescriptorInit, type FunctionCallContext, type ModuleRecord, type PrivateEnvironmentRecord, type ScriptRecord,
 } from '#self';
 
 interface BaseFunctionObject extends OrdinaryObject {
@@ -81,12 +86,17 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly ECMAScriptCode: Body | null;
   readonly ConstructorKind: 'base' | 'derived';
   readonly ScriptOrModule: ScriptRecord | AbstractModuleRecord;
+  readonly scriptId?: string;
   readonly ThisMode: 'lexical' | 'strict' | 'global';
   readonly Strict: boolean;
   readonly HomeObject: ObjectValue | UndefinedValue;
   readonly SourceText: string;
+  // -decorator
   readonly Fields: readonly ClassFieldDefinitionRecord[];
   readonly PrivateMethods: readonly PrivateElementRecord[];
+  // +decorator (Fields => Elements, PrivateMethods => Initializers)
+  readonly Elements: readonly ClassElementDefinitionRecord[];
+  readonly Initializers: readonly FunctionObject[];
   readonly ClassFieldInitializerName: undefined | PropertyKeyValue | PrivateName;
   /**
    * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
@@ -138,6 +148,8 @@ export function PrepareForOrdinaryCall(F: ECMAScriptFunctionObject, newTarget: O
   calleeContext.Realm = calleeRealm;
   // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
   calleeContext.ScriptOrModule = F.ScriptOrModule;
+  calleeContext.HostDefined ??= {};
+  calleeContext.HostDefined.scriptId = F.scriptId;
   // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
   const localEnv = new FunctionEnvironmentRecord(F, newTarget);
   // 9. Set the LexicalEnvironment of calleeContext to localEnv.
@@ -198,6 +210,7 @@ export function* OrdinaryCallEvaluateBody(F: ECMAScriptFunctionObject, arguments
   return EnsureCompletion(yield* (EvaluateBody(F.ECMAScriptCode!, F, argumentsList)));
 }
 
+// -decorator (removed in the decorator proposal)
 /** https://tc39.es/ecma262/#sec-definefield */
 export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefinitionRecord): PlainEvaluator {
   // 1. Let fieldName be fieldRecord.[[Name]].
@@ -215,7 +228,7 @@ export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefin
   // 5. If fieldName is a Private Name, then
   if (fieldName instanceof PrivateName) {
     // a. Perform ? PrivateFieldAdd(fieldName, receiver, initValue).
-    Q(yield* PrivateFieldAdd(fieldName, receiver, initValue));
+    Q(yield* PrivateFieldAdd(receiver, fieldName, initValue));
   } else { // 6. Else,
     // a. Assert: ! IsPropertyKey(fieldName) is true.
     Assert(X(IsPropertyKey(fieldName)));
@@ -225,27 +238,64 @@ export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefin
 }
 
 /** https://tc39.es/ecma262/#sec-initializeinstanceelements */
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-initializeinstanceelements */
 export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScriptFunctionObject | DefaultConstructorBuiltinFunction): PlainEvaluator {
-  // 1. Let methods be the value of constructor.[[PrivateMethods]].
-  const methods = constructor.PrivateMethods;
-  // 2. For each PrivateElement method of methods, do
-  for (const method of methods) {
-    // a. Perform ? PrivateMethodOrAccessorAdd(method, O).
-    Q(yield* PrivateMethodOrAccessorAdd(method, O));
+  if (surroundingAgent.feature('decorators')) {
+    const elements = constructor.Elements;
+    Q(yield* InitializePrivateMethods(O, elements));
+    for (const initializer of constructor.Initializers) {
+      Q(yield* Call(initializer, O));
+    }
+    for (const e of elements) {
+      if (e instanceof ClassElementDefinitionRecord && (e.Kind === 'field' || e.Kind === 'accessor')) {
+        Q(yield* InitializeFieldOrAccessor(O, e));
+      }
+    }
+  } else {
+    // 1. Let methods be the value of constructor.[[PrivateMethods]].
+    const methods = constructor.PrivateMethods;
+    // 2. For each PrivateElement method of methods, do
+    for (const method of methods) {
+      // a. Perform ? PrivateMethodOrAccessorAdd(method, O).
+      Q(yield* PrivateMethodOrAccessorAdd(O, method));
+    }
+    // 3. Let fields be the value of constructor.[[Fields]].
+    const fields = constructor.Fields;
+    // 4. For each element fieldRecord of fields, do
+    for (const fieldRecord of fields) {
+      // a. Perform ? DefineField(O, fieldRecord).
+      Q(yield* DefineField(O, fieldRecord));
+    }
   }
-  // 3. Let fields be the value of constructor.[[Fields]].
-  const fields = constructor.Fields;
-  // 4. For each element fieldRecord of fields, do
-  for (const fieldRecord of fields) {
-    // a. Perform ? DefineField(O, fieldRecord).
-    Q(yield* DefineField(O, fieldRecord));
-  }
-
   // https://tc39.es/proposal-pattern-matching/#sec-initializeinstance
   // 5. Append constructor to O.[[ConstructedBy]].
   O.ConstructedBy.push(constructor);
+}
 
-  // 6. Return unused.
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-initializefieldoraccessor */
+export function* InitializeFieldOrAccessor(receiver: ObjectValue, elementRecord: ClassElementDefinitionRecord): PlainEvaluator<void> {
+  Assert(elementRecord.Kind === 'field' || elementRecord.Kind === 'accessor');
+  const fieldName = elementRecord.Kind === 'accessor' ? elementRecord.BackingStorageKey : elementRecord.Key;
+  let initValue: Value;
+  // TODO(decorator): spec bug. ApplyDecoratorsToElementDefinition unshift decorator initializers into this array, but read it in order, so the spec order is wrong (be like [decorator2, decorator1, syntaxInit], but the correct order should be [syntaxInit, decorator2, decorator1])
+  if (!surroundingAgent.feature('decorators.no-bugfix.1') && elementRecord.Initializers[-1]) {
+    initValue = Q(yield* Call(elementRecord.Initializers[-1], receiver));
+  } else {
+    initValue = Value.undefined;
+  }
+
+  for (const initializer of elementRecord.Initializers) {
+    initValue = Q(yield* Call(initializer, receiver, [initValue]));
+  }
+  if (fieldName instanceof PrivateName) {
+    Q(yield* PrivateFieldAdd(receiver, fieldName, initValue));
+  } else {
+    Assert(IsPropertyKey(fieldName));
+    Q(yield* CreateDataPropertyOrThrow(receiver, fieldName, initValue));
+  }
+  for (const initializer of elementRecord.ExtraInitializers) {
+    Q(yield* Call(initializer, receiver));
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
@@ -364,8 +414,8 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
     'Strict',
     'HomeObject',
     'SourceText',
-    'Fields',
-    'PrivateMethods',
+    surroundingAgent.feature('decorators') ? 'Elements' : 'Fields',
+    surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods',
     'ClassFieldInitializerName',
     'IsClassConstructor',
     'HostInitialName',
@@ -401,14 +451,20 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
   F.PrivateEnvironment = PrivateEnv;
   // 16. Set F.[[ScriptOrModule]] to GetActiveScriptOrModule().
   F.ScriptOrModule = GetActiveScriptOrModule() as ScriptRecord | ModuleRecord;
+  F.scriptId = getActiveScriptId();
   // 17. Set F.[[Realm]] to the current Realm Record.
   F.Realm = surroundingAgent.currentRealmRecord;
   // 18. Set F.[[HomeObject]] to undefined.
   F.HomeObject = Value.undefined;
   // 19. Set F.[[ClassFieldInitializerName]] to empty.
   F.ClassFieldInitializerName = undefined;
-  F.PrivateMethods = [];
-  F.Fields = [];
+  if (surroundingAgent.feature('decorators')) {
+    F.Initializers = [];
+    F.Elements = [];
+  } else {
+    F.PrivateMethods = [];
+    F.Fields = [];
+  }
   // 20. Let len be the ExpectedArgumentCount of ParameterList.
   const len = ExpectedArgumentCount(ParameterList);
   // 21. Perform ! SetFunctionLength(F, len).
@@ -458,6 +514,28 @@ export function MakeMethod(F: Mutable<ECMAScriptFunctionObject>, homeObject: Obj
   Assert(isECMAScriptFunctionObject(F));
   Assert(homeObject instanceof ObjectValue);
   F.HomeObject = homeObject;
+}
+
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-definemethodproperty */
+export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition: ClassElementDefinitionRecord, enumerable: boolean): PlainEvaluator<void> {
+  // TODO(decorator): spec bug or our bug?
+  // Assert(isOrdinaryObject(homeObject) && homeObject.Extensible === Value.true && [...homeObject.properties.values()].every((desc) => desc.Configurable === Value.true));
+  Assert(methodDefinition.Kind === 'method' || methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor');
+  const key = methodDefinition.Key;
+  if (!(key instanceof PrivateName)) {
+    const desc: Mutable<DescriptorInit> = { Enumerable: Value(enumerable), Configurable: Value.true };
+    if (methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'accessor') {
+      desc.Get = methodDefinition.Get;
+    }
+    if (methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor') {
+      desc.Set = methodDefinition.Set;
+    }
+    if (methodDefinition.Kind === 'method') {
+      desc.Value = methodDefinition.Value;
+      desc.Writable = Value.true;
+    }
+    Q(yield* DefinePropertyOrThrow(homeObject, key, new Descriptor(desc)));
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */

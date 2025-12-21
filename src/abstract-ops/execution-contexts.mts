@@ -24,6 +24,23 @@ export function GetActiveScriptOrModule() {
   return Value.null;
 }
 
+/** Used in the inspector infrastructure to track the real source (or compiled) */
+export function getActiveScriptId(): string | undefined {
+  for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
+    const e = surroundingAgent.executionContextStack[i];
+    if (e.HostDefined?.scriptId) {
+      return e.HostDefined.scriptId;
+    }
+    if (!(e.ScriptOrModule instanceof NullValue)) {
+      const fromScript = e.ScriptOrModule.HostDefined.scriptId;
+      if (fromScript) {
+        return fromScript;
+      }
+    }
+  }
+  return undefined;
+}
+
 /** https://tc39.es/ecma262/#sec-resolvebinding */
 export function ResolveBinding(name: JSStringValue, env?: EnvironmentRecord | UndefinedValue | NullValue, strict?: boolean) {
   // 1. If env is not present or if env is undefined, then

@@ -14,3 +14,10 @@ harness/nativeFunctionMatcher.js
 
 # Our date parser is now calling the host algorithm, may unstable based on the host.
 built-ins/Date/parse/without-utc-offset.js
+
+# Decorators (not merged yet) https://github.com/tc39/test262/pull/4103/
+## wrong test, we are correct
+language/expressions/class/decorator/class/error/class-deco-invalid-return-arrow.js
+language/statements/class/decorator/class/error/class-deco-invalid-return-arrow.js
+language/expressions/class/decorator/class/class-deco-returns-proxy.js
+language/statements/class/decorator/class/class-deco-returns-proxy.js

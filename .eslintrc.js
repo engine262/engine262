@@ -69,7 +69,6 @@ module.exports = {
     SharedArrayBuffer: false,
   },
   rules: {
-    '@engine262/no-use-in-def': 'error',
     '@engine262/mathematical-value': 'error',
     'arrow-parens': ['error', 'always'],
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],

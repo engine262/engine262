@@ -58,7 +58,7 @@ function Uint8Array_prototype_toHex(_args: Arguments, { thisValue }: FunctionCal
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.frombase64 */
-function* Uint8Array_fromBase64([string, options = Value.undefined]: Arguments) {
+function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undefined]: Arguments) {
   if (!(string instanceof JSStringValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAString', string);
   }
@@ -103,7 +103,7 @@ function* Uint8Array_fromBase64([string, options = Value.undefined]: Arguments) 
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.setfrombase64 */
-function* Uint8Array_prototype_setFromBase64([string, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* Uint8Array_prototype_setFromBase64([string = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
   Q(ValidateUint8Array(into));
   __ts_cast__<TypedArrayObject>(into);
@@ -153,7 +153,7 @@ function* Uint8Array_prototype_setFromBase64([string, options = Value.undefined]
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.fromhex */
-function* Uint8Array_fromHex([string]: Arguments) {
+function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
   if (!(string instanceof JSStringValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAString', string);
   }
@@ -174,7 +174,7 @@ function* Uint8Array_fromHex([string]: Arguments) {
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.setfromhex */
-function* Uint8Array_prototype_setFromHex([string]: Arguments, { thisValue }: FunctionCallContext) {
+function* Uint8Array_prototype_setFromHex([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
   Q(ValidateUint8Array(into));
   __ts_cast__<TypedArrayObject>(into);

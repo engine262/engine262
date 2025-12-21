@@ -35,7 +35,7 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
       if (numberOfArgs === 0) {
         return yield* AllocateTypedArray(constructorName, NewTarget, proto, 0);
       } else {
-        const firstArgument = args[0];
+        const firstArgument = args[0]!;
         if (firstArgument instanceof ObjectValue) {
           const O = Q(yield* AllocateTypedArray(constructorName, NewTarget, proto));
           if (isTypedArrayObject(firstArgument)) {
@@ -44,12 +44,12 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
             let byteOffset;
             let length;
             if (numberOfArgs > 1) {
-              byteOffset = args[1];
+              byteOffset = args[1]!;
             } else {
               byteOffset = Value.undefined;
             }
             if (numberOfArgs > 2) {
-              length = args[2];
+              length = args[2]!;
             } else {
               length = Value.undefined;
             }

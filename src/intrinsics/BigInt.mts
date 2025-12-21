@@ -21,7 +21,7 @@ export function isBigIntObject(o: Value): o is BigIntObject {
   return 'BigIntData' in o;
 }
 /** https://tc39.es/ecma262/#sec-bigint-constructor */
-function* BigIntConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
+function* BigIntConstructor([value = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');

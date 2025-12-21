@@ -1,7 +1,7 @@
 import { captureStack, isArray, callSiteToErrorStack } from '../helpers.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
 import {
-  Assert, Call, Construct, CopyNameAndLength, CreateBuiltinFunction, DeclarativeEnvironmentRecord, EnvironmentRecord, EvalDeclarationInstantiation, Evaluate, ExecutionContext, Get, GetFunctionRealm, HasOwnProperty, HostEnsureCanCompileStrings, HostLoadImportedModule, IsCallable, isErrorObject, isModuleNamespaceObject, JSStringValue, MakeBasicObject, NewPromiseCapability, NormalCompletion, ObjectValue, PerformPromiseThen, Q, RequireInternalSlot, ScriptRecord, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type Arguments, type BuiltinFunctionObject, type ExoticObject, type FunctionObject, type Mutable, type PlainCompletion, type Realm, type ValueEvaluator,
+  Assert, Call, Construct, CopyNameAndLength, CreateBuiltinFunction, DeclarativeEnvironmentRecord, EnvironmentRecord, EvalDeclarationInstantiation, Evaluate, ExecutionContext, Get, GetFunctionRealm, HasOwnProperty, HostEnsureCanCompileStrings, HostLoadImportedModule, IsCallable, isErrorObject, isModuleNamespaceObject, JSStringValue, MakeBasicObject, NewPromiseCapability, NormalCompletion, ObjectValue, Parser, PerformPromiseThen, Q, RequireInternalSlot, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type Arguments, type BuiltinFunctionObject, type ExoticObject, type FunctionObject, type Mutable, type PlainCompletion, type Realm, type ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/proposal-shadowrealm/#table-internal-slots-of-wrapped-function-exotic-objects */
@@ -63,7 +63,7 @@ export function* OrdinaryWrappedFunctionCall(F: WrappedFunctionExoticObject, thi
   // Note: Any exception objects produced after this point are associated with callerRealm.
   const targetRealm = Q(GetFunctionRealm(target));
   const wrappedArgs: Value[] = [];
-  for (const arg of argumentList) {
+  for (const arg of argumentList.values()) {
     const wrappedValue = Q(yield* GetWrappedValue(targetRealm, arg));
     wrappedArgs.push(wrappedValue);
   }
@@ -112,26 +112,21 @@ export function* PerformShadowRealmEval(sourceText: string, callerRealm: Realm, 
     superProperty: false,
     superCall: false,
   }, () => p.parseScript()));
+  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceText);
   if (isArray(script)) {
+    Parser.decorateSyntaxErrorWithScriptId(script[0], scriptId);
     return ThrowCompletion(script[0]);
   }
   if (!script.ScriptBody) {
     return Value.undefined;
   }
 
-  // To let the inspector work properly
-  const scriptRec = new ScriptRecord({
-    Realm: evalRealm,
-    ECMAScriptCode: script,
-    LoadedModules: [],
-    HostDefined: {},
-  });
-  surroundingAgent.addParsedSource(scriptRec);
-
   const body = script.ScriptBody;
   const strictEval = script.strict;
   const evalContext = GetShadowRealmContext(evalRealm, strictEval);
-  // TODO: spec bug? dynamic import leak & inspector not working
+  evalContext.HostDefined ??= {};
+  evalContext.HostDefined.scriptId = scriptId;
+  // TODO: spec bug? dynamic import leak
   // evalContext.ScriptOrModule = scriptRec;
   const lexEnv = evalContext.LexicalEnvironment;
   // TODO: spec bug?
@@ -165,7 +160,7 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
     Attributes: [],
   }, undefined, innerCapability);
   surroundingAgent.executionContextStack.pop(evalContext);
-  const onFullfilled = CreateBuiltinFunction(function* onFullfilled([exports]) {
+  const onFullfilled = CreateBuiltinFunction(function* onFullfilled([exports = Value.undefined]) {
     Assert(isModuleNamespaceObject(exports));
     const f = surroundingAgent.activeFunctionObject as FunctionObject;
     const string = exportNameString;
@@ -177,7 +172,7 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
     const realm = f.Realm;
     return Q(yield* GetWrappedValue(realm, value));
   }, 1, Value(''), [], callerRealm);
-  const onRejected = CreateBuiltinFunction((([error]) => {
+  const onRejected = CreateBuiltinFunction((([error = Value.undefined]) => {
     // 1. Let realmRecord be the function's associated Realm Record.
     const realmRecord = callerRealm;
     const copiedError = CreateTypeErrorCopy(realmRecord, evalRealm, error);

@@ -537,7 +537,7 @@ function Promise_symbolSpecies(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-promise.try */
-function* Promise_try([callback, ...args]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Promise_try([callback = Value.undefined, ...args]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If C is not an Object, throw a TypeError exception.
@@ -547,7 +547,7 @@ function* Promise_try([callback, ...args]: Arguments, { thisValue }: FunctionCal
   // 3. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(C));
   // 4. Let status be Completion(Call(callback, undefined, args)).
-  const status = EnsureCompletion(yield* Call(callback, Value.undefined, args));
+  const status = EnsureCompletion(yield* Call(callback, Value.undefined, args as Arguments));
 
   if (status instanceof AbruptCompletion) {
     // 5. If status is an abrupt completion, then

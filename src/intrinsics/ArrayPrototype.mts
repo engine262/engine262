@@ -516,7 +516,7 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
 
 /** https://tc39.es/ecma262/#sec-array.prototype.tospliced */
 function* ArrayProto_toSpliced(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const [start = Value.undefined, skipCount = Value.undefined, ...items] = args;
+  const [start = Value.undefined, skipCount = Value.undefined, ...items] = args as Value[];
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
   const relativeStart = Q(yield* ToIntegerOrInfinity(start));

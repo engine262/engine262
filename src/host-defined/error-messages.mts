@@ -155,7 +155,8 @@ function format(arg: Formattable): string {
 
 export interface Throw {
   // auto-generate start
-  (m: '$1 is not a function', $1: Formattable): ThrowCompletion;
+  (m: 'Cannot call addInitializer after decoration is finished' | 'Decorators can only be used to decorate classes' | 'Invalid receiver'): ThrowCompletion;
+  (m: '$1 is not a function' | 'Accessor decorator must return an object or undefined, but $1 was returned' | 'Class decorator must return a function or undefined, but $1 was returned' | 'Field decorator must return a function or undefined, but $1 was returned' | 'Method decorator must return a function or undefined, but $1 was returned' | 'The get property of the return value of an accessor decorator must be a function or undefined, but $1 was returned' | 'The init property of the return value of an accessor decorator must be a function or undefined, but $1 was returned' | 'The set property of the return value of an accessor decorator must be a function or undefined, but $1 was returned' | 'addInitializer must be called with a function, but $1 was passed', $1: Formattable): ThrowCompletion;
   // auto-generate end
   <const S extends string>(m: S, ...args: ParsePrintFormat<S>): ThrowCompletion;
 }

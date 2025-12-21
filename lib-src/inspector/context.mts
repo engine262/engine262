@@ -28,6 +28,7 @@ import {
   isArrayBufferObject,
   DataBlock,
   CallSite,
+  CallFrame,
 } from '#self';
 
 interface InspectedRealmDescriptor {
@@ -303,7 +304,7 @@ export class InspectorContext {
     };
   }
 
-  static callSiteToCallFrame(callSite: readonly CallSite[] | undefined): Protocol.Runtime.CallFrame[] {
+  static callSiteToCallFrame(callSite: readonly (CallSite | CallFrame)[] | undefined): Protocol.Runtime.CallFrame[] {
     return callSite?.map((call) => call.toCallFrame()!).filter(Boolean) || [];
   }
 

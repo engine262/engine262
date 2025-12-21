@@ -314,6 +314,8 @@ export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generat
   calleeContext.Realm = surroundingAgent.currentRealmRecord;
   // 11. Set the ScriptOrModule of calleeContext to callerContext's ScriptOrModule.
   calleeContext.ScriptOrModule = callerContext.ScriptOrModule;
+  calleeContext.HostDefined ??= {};
+  calleeContext.HostDefined.scriptId = callerContext.HostDefined?.scriptId;
   // 12. If callerContext is not already suspended, suspend callerContext.
   // 13. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
   surroundingAgent.executionContextStack.push(calleeContext);

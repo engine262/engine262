@@ -162,7 +162,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     parameterBindings = new JSStringSet(parameterNames);
   }
   // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
-  const iteratorRecord = CreateListIteratorRecord(argumentsList);
+  const iteratorRecord = CreateListIteratorRecord(argumentsList.values());
   let usedEnv;
   // 25. If hasDuplicates is true, then
   if (hasDuplicates) {

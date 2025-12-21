@@ -48,7 +48,7 @@ function IteratorProto_constructorGetter() {
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor */
-function* IteratorProto_constructorSetter([v]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
+function* IteratorProto_constructorSetter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   // 1. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Iterator.prototype%, "constructor", v).
   Q(yield* SetterThatIgnoresPrototypeProperties(
     thisValue,
@@ -679,7 +679,7 @@ function IteratorPrototype_toStringTagGetter() {
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag% */
-function* IteratorPrototype_toStringTagSetter([v]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
+function* IteratorPrototype_toStringTagSetter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   // 1. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Iterator.prototype%, %Symbol.toStringTag%, v).
   Q(yield* SetterThatIgnoresPrototypeProperties(
     thisValue,

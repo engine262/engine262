@@ -1,7 +1,7 @@
 import type { Protocol } from 'devtools-protocol';
-import { SourceTextModuleRecord, type ScriptRecord } from '#self';
+import { DynamicParsedCodeRecord, SourceTextModuleRecord, type ScriptRecord } from '#self';
 
-export function getParsedEvent(source: ScriptRecord | SourceTextModuleRecord, id: string, executionContextId: number): Protocol.Debugger.ScriptParsedEvent {
+export function getParsedEvent(source: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord, id: string, executionContextId: number): Protocol.Debugger.ScriptParsedEvent {
   const lines = source.ECMAScriptCode.sourceText.split('\n');
   return {
     isModule: source instanceof SourceTextModuleRecord,

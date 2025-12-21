@@ -50,8 +50,15 @@ export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
 
   try {
     const r = f(p);
-    if (p.earlyErrors.size > 0) {
-      return [...p.earlyErrors].map((e) => handleError(e));
+    const errors = [];
+    for (const error of p.earlyErrors) {
+      errors.push(handleError(error));
+    }
+    for (const error of p.earlyErrors2) {
+      errors.push(error);
+    }
+    if (errors.length > 0) {
+      return errors;
     }
     return r;
   } catch (e) {
@@ -105,6 +112,8 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined: Parse
   }, (p) => p.parseScript());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
+    const scriptId = hostDefined.doNotTrackScriptId ? undefined : surroundingAgent.addDynamicParsedSource(realm, sourceText);
+    body.forEach((error) => Parser.decorateSyntaxErrorWithScriptId(error, scriptId));
     return body;
   }
   setNodeParent(body, undefined);
@@ -133,6 +142,8 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
   const body = wrappedParse<ParseNode.Module>({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
+    const scriptId = hostDefined.doNotTrackScriptId ? undefined : surroundingAgent.addDynamicParsedSource(realm, sourceText);
+    body.forEach((error) => Parser.decorateSyntaxErrorWithScriptId(error, scriptId));
     return body;
   }
   setNodeParent(body, undefined);

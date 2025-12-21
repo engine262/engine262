@@ -15,7 +15,7 @@ import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
 } from '../host-defined/engine.mts';
-import { wrappedParse } from '../parse.mts';
+import { Parser, wrappedParse } from '../parse.mts';
 import { Token } from '../parser/tokens.mts';
 import {
   Descriptor, UndefinedValue, Value,
@@ -63,7 +63,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   const argCount = parameterArgs.length;
   const parameterStrings: string[] = [];
   for (const arg of parameterArgs) {
-    parameterStrings.push(Q(yield* ToString(arg)).stringValue());
+    parameterStrings.push(Q(yield* ToString(arg!)).stringValue());
   }
   const bodyString = Q(yield* ToString(bodyArg)).stringValue();
   const currentRealm = surroundingAgent.currentRealmRecord;
@@ -107,6 +107,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   //     i. If BoundNames of parameters contains any duplicate elements, throw a SyntaxError exception.
   let parameters;
   let body;
+  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceString);
   {
     const f = wrappedParse({ source: sourceString }, (p) => {
       const r = p.parseExpression();
@@ -114,6 +115,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
       return r;
     });
     if (Array.isArray(f)) {
+      Parser.decorateSyntaxErrorWithScriptId(f[0], scriptId);
       return ThrowCompletion(f[0]);
     }
     __ts_cast__<ParseNode.FunctionExpression | ParseNode.GeneratorExpression | ParseNode.AsyncFunctionExpression | ParseNode.AsyncGeneratorExpression>(f);
@@ -142,6 +144,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   const privateEnv = Value.null;
   // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, privateEnv).
   const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', env, privateEnv));
+  F.scriptId = scriptId;
   // 25. Perform SetFunctionName(F, "anonymous").
   SetFunctionName(F, Value('anonymous'));
   // 26. If kind is generator, then

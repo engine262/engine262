@@ -23,6 +23,7 @@ export class Parser extends LanguageParser {
 
   protected readonly specifier?: string;
 
+  /** @deprecated migrating to earlyErrors2... */
   readonly earlyErrors: Set<SyntaxError>;
 
   readonly state: {

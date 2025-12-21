@@ -163,6 +163,7 @@ export const RawTokens = [
   ['EXTENDS', 'extends'],
   ['IMPORT', 'import'],
   ['PRIVATE_IDENTIFIER', null],
+  ['AT', '@'],
 
   ['ENUM', 'enum'],
 

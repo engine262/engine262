@@ -21,7 +21,7 @@ import { GlobalDeclarationInstantiation } from '../runtime-semantics/all.mts';
 import {
   Evaluate, type PlainEvaluator, type ValueEvaluator, type YieldEvaluator,
 } from '../evaluator.mts';
-import { CallSite, kAsyncContext } from '../helpers.mts';
+import { CallSite, kAsyncContext, kInternal } from '../helpers.mts';
 import {
   AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, skipDebugger, type Arguments, type AsyncGeneratorObject, type ErrorType, type ValueCompletion, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
   ManagedRealm,
@@ -41,17 +41,31 @@ export interface Engine262Feature {
   flag: string;
   url: string;
 }
+
+// unflag a feature when it reaches stage 3.
 export const FEATURES = ([
+  // stage 3, but too big
   {
-    name: 'FinalizationRegistry#cleanupSome',
-    flag: 'cleanup-some',
-    url: 'https://github.com/tc39/proposal-cleanup-some',
+    name: 'Decorators',
+    flag: 'decorators',
+    url: 'https://github.com/tc39/proposal-decorators',
+  },
+  {
+    name: 'Skip bugfix for field initializers in decorator',
+    flag: 'decorators.no-bugfix.1',
+    url: '',
   },
   // stage 2.7
   {
     name: 'Iterator#join',
     flag: 'iterator.join',
     url: 'https://github.com/tc39/proposal-iterator-join',
+  },
+  // stage 2
+  {
+    name: 'FinalizationRegistry#cleanupSome',
+    flag: 'cleanup-some',
+    url: 'https://github.com/tc39/proposal-cleanup-some',
   },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
@@ -90,7 +104,7 @@ export interface AgentHostDefined {
   loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
   onDebugger?(): void;
   onRealmCreated?(realm: ManagedRealm): void;
-  onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord, scriptId: string): void;
+  onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord, scriptId: string): void;
   onNodeEvaluation?(node: ParseNode, realm: Realm): void;
 
   errorStackAttachNativeStack?: boolean;
@@ -107,6 +121,22 @@ export interface Breakpoint {
   once: boolean;
   /** code to evaluate, pause iff condition evaluates to truthy */
   condition: ParseNode.ScriptBody | undefined;
+}
+
+// NON-SPEC, only used in the inspector
+export class DynamicParsedCodeRecord {
+  constructor(public Realm: Realm, sourceText: string) {
+    this.ECMAScriptCode.sourceText = sourceText;
+  }
+
+  public HostDefined = {
+    scriptId: undefined as string | undefined,
+    specifier: undefined,
+  };
+
+  public ECMAScriptCode = {
+    sourceText: '',
+  };
 }
 
 /** https://tc39.es/ecma262/#sec-agents */
@@ -268,7 +298,7 @@ export class Agent {
   // #region parsed scripts/modules
   #script_id = 0;
 
-  parsedSources = new Map<string, ScriptRecord | SourceTextModuleRecord>();
+  parsedSources = new Map<string, ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord>();
 
   addParsedSource(source: ScriptRecord | SourceTextModuleRecord) {
     const id = `${this.#script_id}`;
@@ -278,6 +308,25 @@ export class Agent {
     this.hostDefinedOptions.onScriptParsed?.(source, id);
     this.parsedSources.set(id, source);
     this.#script_id += 1;
+  }
+
+  #dynamicParsedSourceIds = new Map<string, string>();
+
+  addDynamicParsedSource(realm: Realm, sourceText: string): string | undefined {
+    if (this.debugger_isPreviewing) {
+      return undefined;
+    }
+    if (this.#dynamicParsedSourceIds.has(sourceText)) {
+      return this.#dynamicParsedSourceIds.get(sourceText);
+    }
+    const id = `${this.#script_id}`;
+    const source = new DynamicParsedCodeRecord(realm, sourceText);
+    source.HostDefined.scriptId = id;
+    this.hostDefinedOptions.onScriptParsed?.(source, id);
+    this.parsedSources.set(id, source);
+    this.#script_id += 1;
+    this.#dynamicParsedSourceIds.set(sourceText, id);
+    return id;
   }
   // #endregion
 
@@ -361,6 +410,11 @@ export function setSurroundingAgent(a: Agent) {
   surroundingAgent = a;
 }
 
+export interface ExecutionContextHostDefined {
+  readonly [kInternal]?: ParseScriptHostDefined[typeof kInternal];
+  scriptId?: string;
+}
+
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
   codeEvaluationState?: YieldEvaluator;
@@ -377,7 +431,7 @@ export class ExecutionContext {
 
   PrivateEnvironment: PrivateEnvironmentRecord | NullValue = Value.null;
 
-  HostDefined?: ParseScriptHostDefined;
+  HostDefined?: ExecutionContextHostDefined;
 
   // NON-SPEC
   callSite = new CallSite(this);
@@ -397,6 +451,7 @@ export class ExecutionContext {
     e.VariableEnvironment = this.VariableEnvironment;
     e.LexicalEnvironment = this.LexicalEnvironment;
     e.PrivateEnvironment = this.PrivateEnvironment;
+    e.HostDefined = this.HostDefined;
 
     e.callSite = this.callSite.clone(e);
     e.promiseCapability = this.promiseCapability;
@@ -425,7 +480,11 @@ export function* ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator {
   scriptContext.VariableEnvironment = globalEnv;
   scriptContext.LexicalEnvironment = globalEnv;
   scriptContext.PrivateEnvironment = Value.null;
-  scriptContext.HostDefined = scriptRecord.HostDefined;
+  if (scriptRecord.HostDefined[kInternal]) {
+    scriptContext.HostDefined = {
+      [kInternal]: scriptRecord.HostDefined[kInternal],
+    };
+  }
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
   const scriptBody = scriptRecord.ECMAScriptCode;

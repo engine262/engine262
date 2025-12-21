@@ -18,7 +18,7 @@ import {
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
 export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean) {
   return realm.scope(() => {
-    let test262PrintHandle: ((str: string) => void) | undefined;
+    let test262PrintHandle: ((str: string, value: Value) => void) | undefined;
     const setPrintHandle = (f: typeof test262PrintHandle | undefined) => {
       test262PrintHandle = f;
     };
@@ -29,14 +29,14 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       /* node:coverage ignore next */
       if (test262PrintHandle) {
         if (args[0] instanceof JSStringValue) {
-          test262PrintHandle(args[0].stringValue());
+          test262PrintHandle(args[0].stringValue(), args[1] || Value.undefined);
           return Value.undefined;
         }
       } else {
         if (printCompatMode) {
           const str: string[] = [];
           for (let i = 0; i < args.length; i += 1) {
-            const arg = args[i];
+            const arg = args[i]!;
             const s = EnsureCompletion(skipDebugger(ToString(arg)));
             if (s.Type === 'throw') {
               return s;
@@ -47,7 +47,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
           console.log(...str);
           return Value.undefined;
         } else {
-          const formatted = args.map((a: Value, i: number) => {
+          const formatted = args.map((a, i) => {
             if (i === 0 && a instanceof JSStringValue) {
               return a.stringValue();
             }
@@ -68,7 +68,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
         const { $262 } = createTest262Intrinsics(realm, printCompatMode);
         return $262;
       },
-      detachArrayBuffer: function* detachArrayBuffer(arrayBuffer) {
+      detachArrayBuffer: function* detachArrayBuffer(arrayBuffer = Value.undefined) {
         if (!isArrayBufferObject(arrayBuffer)) {
           return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
         }
@@ -132,7 +132,7 @@ export function boostTest262Harness(realm: ManagedRealm) {
 
 const boostHarness = {
   * buildString(argumentsList): ValueEvaluator {
-    const json = Q(yield* Call(surroundingAgent.intrinsic('%JSON.stringify%'), Value.null, [argumentsList[0]]));
+    const json = Q(yield* Call(surroundingAgent.intrinsic('%JSON.stringify%'), Value.null, [argumentsList[0] || Value.undefined]));
     Assert(json instanceof JSStringValue);
     const jsonString = json.stringValue();
 

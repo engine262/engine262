@@ -305,13 +305,13 @@ export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseC
   }
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
   __ts_cast__<PromiseObject>(valueWrapper);
-  const unwrap = ([v]: Arguments) => CreateIteratorResultObject(v, done);
+  const unwrap = ([v = Value.undefined]: Arguments) => CreateIteratorResultObject(v, done);
   const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
   let onRejected;
   if (done === Value.true || closeOnRejection === Value.false) {
     onRejected = Value.undefined;
   } else {
-    const closeIterator = ([error]: Arguments) => IteratorClose(syncIteratorRecord, ThrowCompletion(error));
+    const closeIterator = ([error = Value.undefined]: Arguments) => IteratorClose(syncIteratorRecord, ThrowCompletion(error));
     onRejected = CreateBuiltinFunction(closeIterator, 1, Value(''), []);
   }
   PerformPromiseThen(valueWrapper, onFullfilled, onRejected, promiseCapability);

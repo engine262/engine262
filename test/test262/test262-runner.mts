@@ -13,6 +13,7 @@ import {
   type WorkerToSupervisor, type SupervisorToWorker, Test,
   readList,
   type WorkerToSupervisor_Failed,
+  type Stack,
 } from '../base.mts';
 import { annotateFileWithURL, isCI } from '../tui.mts';
 import {
@@ -44,6 +45,11 @@ const outputs = {
   LastRunFailedList: resolve(import.meta.dirname, 'last-failed-list'),
   CurrentRunFailureLog: resolve(import.meta.dirname, 'last-failed.log'),
 };
+
+if (args.values['failed-only']) {
+  args.positionals = (await readFile(outputs.LastRunFailedList, { encoding: 'utf-8' })).split('\n');
+}
+
 const outputStreams = {
   SlowList: args.values['update-slow'] ? createWriteStream(inputs.SlowList, { encoding: 'utf-8', flags: 'a' }) : undefined,
   LastRunFailedList: createWriteStream(outputs.LastRunFailedList, { encoding: 'utf-8' }),
@@ -60,10 +66,6 @@ readList(inputs.Features).forEach((feature) => {
   }
 });
 disabledFeatures.delete(args.values.features!);
-
-if (args.values['failed-only']) {
-  args.positionals = (await readFile(outputs.LastRunFailedList, { encoding: 'utf-8' })).split('\n');
-}
 
 const workersToStart = Math.max(
   1,
@@ -350,6 +352,7 @@ function createWorker(workerId: number) {
               flags: message.flags,
               status: 'FAIL',
               testId: message.testId,
+              stack: [],
             }, false);
           }
         }
@@ -398,7 +401,7 @@ function fail(message: WorkerToSupervisor_Failed, showSource: boolean) {
   //   Test description in the header
   const line2 = descNeedOwnLine ? `${indent(desc, '   ')}\n` : '';
   //   Source code with error position annotated
-  const line3 = showSource ? annotateSourceWithErrorPosition(error, message.file, reporter.tests.get(testId)!.content) : '';
+  const line3 = showSource ? annotateSourceWithErrorPosition(error, reporter.tests.get(testId)!.content, message.stack) : '';
   //   Error message
   const line4 = `${indent(error, '  ')}\n`;
   const line5 = styleText('red', `${'⎯'.repeat(process.stdout.columns)}\n`);
@@ -412,13 +415,9 @@ function indent(string: string, space: string) {
   return string.split('\n').map((line) => space + line).join('\n');
 }
 
-function annotateSourceWithErrorPosition(error: string, fileName: string, sourceCode: string) {
-  const pos = error.indexOf(fileName);
-  if (pos === -1) {
-    return '';
-  }
-  const errorPosition = error.slice(pos).match(/:(\d+):(\d+)/);
-  if (!errorPosition) {
+function annotateSourceWithErrorPosition(error: string, sourceCode: string, [stack]: Stack[]) {
+  sourceCode = stack?.source || sourceCode;
+  if (!stack) {
     return '';
   }
   if (sourceCode.endsWith('\n')) {
@@ -430,14 +429,14 @@ function annotateSourceWithErrorPosition(error: string, fileName: string, source
   const LINES_BEFORE = 3;
   const LINES_AFTER = 2;
   const slicedLines = decoratedLines.slice(
-    Math.max(0, Number(errorPosition[1]) - LINES_BEFORE),
-    Math.min(decoratedLines.length, Number(errorPosition[1])),
+    Math.max(0, Number(stack.line) - LINES_BEFORE),
+    Math.min(decoratedLines.length, Number(stack.line)),
   );
-  slicedLines.push(''.padStart(linesPad + 5) + styleText('red', `${'-'.repeat(Number(errorPosition[2]) - 1)}^ ${error.split('\n')[0].trim()}`));
+  slicedLines.push(''.padStart(linesPad + 5) + styleText('red', `${'-'.repeat(Math.max(Number(stack.column) - 1, 0))}^ ${error.split('\n')[0].trim()}`));
   slicedLines.push(
     decoratedLines.slice(
-      Number(errorPosition[1]),
-      Math.min(decoratedLines.length, Number(errorPosition[1]) + LINES_AFTER),
+      Number(stack.line),
+      Math.min(decoratedLines.length, Number(stack.line) + LINES_AFTER),
     ).join('\n'),
   );
 

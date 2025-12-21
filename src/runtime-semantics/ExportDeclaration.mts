@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
-import { GetValue, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
+import { Assert, GetValue, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
 import { NormalCompletion, Q } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -10,6 +10,7 @@ import {
   NamedEvaluation,
   InitializeBoundName,
   BindingClassDeclarationEvaluation,
+  DecoratorListEvaluation,
 } from './all.mts';
 import type { FunctionDeclaration } from '#self';
 
@@ -31,6 +32,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     HoistableDeclaration,
     ClassDeclaration,
     AssignmentExpression,
+    Decorators,
   } = ExportDeclaration;
 
   if (FromClause || NamedExports) {
@@ -42,8 +44,15 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     return yield* Evaluate(VariableStatement);
   }
   if (Declaration) {
-    // 1. Return the result of evaluating Declaration.
-    return yield* Evaluate(ExportDeclaration.Declaration!);
+    if (Decorators) {
+      Assert(Declaration.type === 'ClassDeclaration' && !Declaration.Decorators);
+      const decorators = Q(yield* DecoratorListEvaluation(Decorators));
+      Q(yield* BindingClassDeclarationEvaluation(Declaration, decorators));
+      return undefined;
+    } else {
+      // 1. Return the result of evaluating Declaration.
+      return yield* Evaluate(ExportDeclaration.Declaration!);
+    }
   }
   if (!isDefault) {
     throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
@@ -53,8 +62,8 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     return yield* Evaluate(HoistableDeclaration);
   }
   if (ClassDeclaration) {
-    // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
-    const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration)) as ECMAScriptFunctionObject;
+    const decorators = Decorators ? Q(yield* DecoratorListEvaluation(Decorators)) : [];
+    const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration, decorators)) as ECMAScriptFunctionObject;
     // 2. Let className be the sole element of BoundNames of ClassDeclaration.
     const className = BoundNames(ClassDeclaration)[0];
     // If className is "*default*", then

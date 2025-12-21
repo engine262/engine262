@@ -18,7 +18,7 @@ const realm = new ManagedRealm({ resolverCache: new Map(), name: 'My Realm', spe
 {
   const format = (function* format(args: Arguments): PlainEvaluator<string> {
     const str = [];
-    for (const arg of args) {
+    for (const arg of args.values()) {
       str.push(inspect(arg));
     }
     return str.join(' ');

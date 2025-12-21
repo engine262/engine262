@@ -1720,6 +1720,7 @@ export namespace ParseNode {
   //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
   export interface MethodDefinition extends BaseParseNode {
     readonly type: 'MethodDefinition';
+    readonly Decorators?: readonly Decorator[] | null;
     readonly static?: boolean;
     readonly ClassElementName: ClassElementName;
     readonly PropertySetParameterList: PropertySetParameterList | null;
@@ -1754,6 +1755,7 @@ export namespace ParseNode {
   //   `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
   export interface GeneratorMethod extends BaseParseNode {
     readonly type: 'GeneratorMethod';
+    readonly Decorators?: readonly Decorator[] | null;
     readonly static?: boolean;
     readonly ClassElementName: ClassElementName;
     readonly PropertySetParameterList: null;
@@ -1803,6 +1805,7 @@ export namespace ParseNode {
   //   `async` `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
   export interface AsyncGeneratorMethod extends BaseParseNode {
     readonly type: 'AsyncGeneratorMethod';
+    readonly Decorators?: readonly Decorator[] | null;
     readonly static?: boolean;
     readonly ClassElementName: ClassElementName;
     readonly PropertySetParameterList: null;
@@ -1842,6 +1845,7 @@ export namespace ParseNode {
   //   `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
   export interface AsyncMethod extends BaseParseNode {
     readonly type: 'AsyncMethod';
+    readonly Decorators?: readonly Decorator[] | null;
     readonly static?: boolean;
     readonly ClassElementName: ClassElementName;
     readonly PropertySetParameterList: null;
@@ -1871,18 +1875,47 @@ export namespace ParseNode {
     | ClassDeclaration
     | ClassExpression;
 
+  //  Decorator[Yield, Await] :
+  //    @ DecoratorMemberExpression (subset of MemberExpression that only allows identifiers, e.g. A.B, no this.y or x[y])
+  //    @ DecoratorParenthesizedExpression : `(` Expression[+In] `)`
+  //    @ DecoratorCallExpression : DecoratorMemberExpression Arguments
+  export type Decorator = Decorator_MemberExpression | Decorator_ParenthesizedExpression | Decorator_CallExpression;
+  export interface Decorator_MemberExpression extends BaseParseNode {
+    readonly type: 'Decorator';
+    readonly subtype: 'MemberExpression';
+    readonly MemberExpression: MemberExpression | IdentifierReference;
+    readonly ParenthesizedExpression?: undefined;
+    readonly CallExpression?: undefined;
+  }
+  export interface Decorator_ParenthesizedExpression extends BaseParseNode {
+    readonly type: 'Decorator';
+    readonly subtype: 'ParenthesizedExpression';
+    readonly ParenthesizedExpression: Expression;
+    readonly MemberExpression?: undefined;
+    readonly CallExpression?: undefined;
+  }
+  export interface Decorator_CallExpression extends BaseParseNode {
+    readonly type: 'Decorator';
+    readonly subtype: 'CallExpression';
+    readonly CallExpression: CallExpression;
+    readonly MemberExpression?: undefined;
+    readonly ParenthesizedExpression?: undefined;
+  }
+
   // ClassDeclaration :
-  //   `class` BindingIdentifier ClassTail
-  //   [+Default] `class` ClassTail
+  //   DecoratorList? `class` BindingIdentifier ClassTail
+  //   DecoratorList? [+Default] `class` ClassTail
   export interface ClassDeclaration extends BaseParseNode {
+    readonly Decorators?: readonly Decorator[] | null;
     readonly type: 'ClassDeclaration';
     readonly BindingIdentifier: BindingIdentifier | null;
     readonly ClassTail: ClassTail;
   }
 
   // ClassExpression :
-  //   `class` BindingIdentifier? ClassTail
+  //   DecoratorList? `class` BindingIdentifier? ClassTail
   export interface ClassExpression extends BaseParseNode {
+    readonly Decorators?: readonly Decorator[] | null;
     readonly type: 'ClassExpression';
     readonly BindingIdentifier: BindingIdentifier | null;
     readonly ClassTail: ClassTail;
@@ -1912,10 +1945,10 @@ export namespace ParseNode {
   export type ClassElementList = readonly ClassElement[];
 
   // ClassElement :
-  //   MethodDefinition
-  //   `static` MethodDefinition
-  //   FieldDefinition `;`
-  //   `static` FieldDefinition `;`
+  //   DecoratorList? MethodDefinition
+  //   DecoratorList? `static` MethodDefinition
+  //   DecoratorList? FieldDefinition `;`
+  //   DecoratorList? `static` FieldDefinition `;`
   //   ClassStaticBlock
   //   `;`
   export type ClassElement =
@@ -1925,7 +1958,10 @@ export namespace ParseNode {
 
   // FieldDefinition :
   //   ClassElementName Initializer?
+  //   accessor [nLTh] ClassElementName Initializer?
   export interface FieldDefinition extends BaseParseNode {
+    readonly Decorators?: readonly Decorator[] | null;
+    readonly accessor?: boolean;
     readonly type: 'FieldDefinition';
     readonly static?: boolean;
     readonly ClassElementName: ClassElementName;
@@ -2115,27 +2151,132 @@ export namespace ParseNode {
     | IdentifierName
     | StringLiteral;
 
+  export type ExportDeclaration =
+    | ExportDeclaration_Declaration
+    | ExportDeclaration_DefaultClass
+    | ExportDeclaration_DefaultDeclaration
+    | ExportDeclaration_DefaultExpression
+    | ExportDeclaration_NamedExports
+    | ExportDeclaration_NamedFrom
+    | ExportDeclaration_VariableStatement;
 
-  // ExportDeclaration :
-  //   `export` ExportFromClause FromClause WithClause? `;`
-  //   `export` NamedExports `;`
-  //   `export` VariableStatement
-  //   `export` Declaration
-  //   `export` `default` HoistableDeclaration
-  //   `export` `default` ClassDeclaration
-  //   `export` `default` AssignmentExpression `;`
-  export interface ExportDeclaration extends BaseParseNode {
+  //   `export` ExportFromClause FromClause WithClause?;
+  export interface ExportDeclaration_NamedFrom extends BaseParseNode {
     readonly type: 'ExportDeclaration';
-    readonly default: boolean;
-    readonly HoistableDeclaration?: HoistableDeclaration;
-    readonly ClassDeclaration?: ClassDeclaration;
-    readonly AssignmentExpression?: AssignmentExpressionOrHigher;
-    readonly Declaration?: Declaration;
-    readonly VariableStatement?: VariableStatement;
-    readonly ExportFromClause?: ExportFromClauseLike;
-    readonly FromClause?: FromClause;
-    readonly WithClause?: WithClause;
-    readonly NamedExports?: NamedExports;
+    readonly ExportFromClause: ExportFromClauseLike;
+    readonly FromClause: FromClause;
+    readonly WithClause: undefined | WithClause;
+
+    readonly AssignmentExpression?: undefined;
+    readonly ClassDeclaration?: undefined;
+    readonly Declaration?: null;
+    readonly Decorators?: null;
+    readonly default?: boolean;
+    readonly HoistableDeclaration?: undefined;
+    readonly NamedExports?: undefined;
+    readonly VariableStatement?: undefined;
+  }
+
+  //   `export` NamedExports `;`
+  export interface ExportDeclaration_NamedExports extends BaseParseNode {
+    readonly type: 'ExportDeclaration';
+    readonly NamedExports: NamedExports;
+
+    readonly AssignmentExpression?: undefined;
+    readonly ClassDeclaration?: undefined;
+    readonly Declaration?: null;
+    readonly Decorators?: null;
+    readonly default?: boolean;
+    readonly ExportFromClause?: undefined;
+    readonly FromClause?: undefined;
+    readonly HoistableDeclaration?: undefined;
+    readonly VariableStatement?: undefined;
+    readonly WithClause?: undefined;
+  }
+
+  //   `export` VariableStatement
+  export interface ExportDeclaration_VariableStatement extends BaseParseNode {
+    readonly type: 'ExportDeclaration';
+    readonly VariableStatement: VariableStatement;
+
+    readonly AssignmentExpression?: undefined;
+    readonly ClassDeclaration?: undefined;
+    readonly Declaration?: null;
+    readonly Decorators?: null;
+    readonly default?: boolean;
+    readonly ExportFromClause?: undefined;
+    readonly FromClause?: undefined;
+    readonly HoistableDeclaration?: undefined;
+    readonly NamedExports?: undefined;
+    readonly WithClause?: undefined;
+  }
+
+  //   DecoratorList? `export` Declaration
+  export interface ExportDeclaration_Declaration extends BaseParseNode {
+    readonly type: 'ExportDeclaration';
+    readonly Decorators: readonly Decorator[] | null;
+    readonly Declaration: Declaration;
+
+    readonly AssignmentExpression?: undefined;
+    readonly ClassDeclaration?: undefined;
+    readonly default?: boolean;
+    readonly ExportFromClause?: undefined;
+    readonly FromClause?: undefined;
+    readonly HoistableDeclaration?: undefined;
+    readonly NamedExports?: undefined;
+    readonly VariableStatement?: undefined;
+    readonly WithClause?: undefined;
+  }
+
+  //   `export` `default` HoistableDeclaration
+  export interface ExportDeclaration_DefaultDeclaration extends BaseParseNode {
+    readonly type: 'ExportDeclaration';
+    readonly default: true;
+    readonly HoistableDeclaration: HoistableDeclaration;
+
+    readonly AssignmentExpression?: undefined;
+    readonly ClassDeclaration?: undefined;
+    readonly Declaration?: null;
+    readonly Decorators?: null;
+    readonly ExportFromClause?: undefined;
+    readonly FromClause?: undefined;
+    readonly NamedExports?: undefined;
+    readonly VariableStatement?: undefined;
+    readonly WithClause?: undefined;
+  }
+
+  //   DecoratorList? `export` `default` ClassDeclaration
+  export interface ExportDeclaration_DefaultClass extends BaseParseNode {
+    readonly type: 'ExportDeclaration';
+    readonly Decorators: readonly Decorator[] | null;
+    readonly default: true;
+    readonly ClassDeclaration: ClassDeclaration;
+
+    readonly AssignmentExpression?: undefined;
+    readonly Declaration?: null;
+    readonly ExportFromClause?: undefined;
+    readonly FromClause?: undefined;
+    readonly HoistableDeclaration?: undefined;
+    readonly NamedExports?: undefined;
+    readonly VariableStatement?: undefined;
+    readonly WithClause?: undefined;
+  }
+
+  //   `export` `default` AssignmentExpression `;`
+  export interface ExportDeclaration_DefaultExpression extends BaseParseNode {
+    readonly type: 'ExportDeclaration';
+    readonly default: true;
+    readonly AssignmentExpression: AssignmentExpressionOrHigher;
+
+    readonly ClassDeclaration?: undefined;
+    readonly Declaration?: null;
+    readonly Decorators?: null;
+    readonly ExportFromClause?: undefined;
+    readonly FromClause?: undefined;
+    readonly HoistableDeclaration?: undefined;
+    readonly NamedExports?: undefined;
+    readonly VariableStatement?: undefined;
+    readonly WithClause?: undefined;
   }
 
   // ExportFromClause :
@@ -2617,6 +2758,7 @@ export type ParseNode =
   | ParseNode.AsyncGeneratorExpression
   | ParseNode.AsyncGeneratorMethod
   | ParseNode.AsyncGeneratorBody
+  | ParseNode.Decorator
   | ParseNode.ClassDeclaration
   | ParseNode.ClassExpression
   | ParseNode.ClassTail

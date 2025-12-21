@@ -130,16 +130,18 @@ export abstract class ModuleParser extends StatementParser {
   //   `export` NamedExports `;`
   //   `export` VariableStatement
   //   `export` Declaration
+  //   DecoratorList? `export` Declaration
   //   `export` `default` HoistableDeclaration
-  //   `export` `default` ClassDeclaration
+  //   DecoratorList? `export` `default` ClassDeclaration
   //   `export` `default` AssignmentExpression `;`
   //
   // ExportFromClause :
   //   `*`
   //   `*` as ModuleExportName
   //   NamedExports
-  parseExportDeclaration(): ParseNode.ExportDeclaration {
+  parseExportDeclaration(decoratorsBeforeExportKeyword: null | readonly ParseNode.Decorator[]): ParseNode.ExportDeclaration {
     const node = this.startNode<ParseNode.ExportDeclaration>();
+    node.Decorators = decoratorsBeforeExportKeyword;
     this.expect(Token.EXPORT);
     node.default = this.eat(Token.DEFAULT);
     if (node.default) {
@@ -147,8 +149,13 @@ export abstract class ModuleParser extends StatementParser {
         case Token.FUNCTION:
           node.HoistableDeclaration = this.scope.with({ default: true }, () => this.parseFunctionDeclaration(FunctionKind.NORMAL));
           break;
+        case Token.AT: {
+          const decorators = this.parseDecorators();
+          node.ClassDeclaration = this.scope.with({ default: true }, () => this.parseClassDeclaration(decorators));
+          break;
+        }
         case Token.CLASS:
-          node.ClassDeclaration = this.scope.with({ default: true }, () => this.parseClassDeclaration());
+          node.ClassDeclaration = this.scope.with({ default: true }, () => this.parseClassDeclaration(null));
           break;
         default:
           if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
@@ -170,8 +177,9 @@ export abstract class ModuleParser extends StatementParser {
           node.Declaration = this.parseLexicalDeclaration();
           this.scope.declare(node.Declaration, 'export');
           break;
+        case Token.AT:
         case Token.CLASS:
-          node.Declaration = this.parseClassDeclaration();
+          node.Declaration = this.parseClassDeclaration(null);
           this.scope.declare(node.Declaration, 'export');
           break;
         case Token.FUNCTION:

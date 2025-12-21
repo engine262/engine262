@@ -1,8 +1,11 @@
 import { ObjectValue, PrivateName, Value } from '../value.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
-import { PrivateElementRecord } from '../runtime-semantics/all.mts';
-import { Assert, Call, IsExtensible } from './all.mts';
+import { ClassElementDefinitionRecord, PrivateElementRecord } from '../runtime-semantics/all.mts';
+import {
+  Assert, Call, IsExtensible,
+} from './all.mts';
+import type { PlainEvaluator } from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateelementfind */
 export function PrivateElementFind(P: PrivateName, O: ObjectValue) {
@@ -72,7 +75,7 @@ export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-privatemethodoraccessoradd */
-export function* PrivateMethodOrAccessorAdd(method: PrivateElementRecord, O: ObjectValue) {
+export function* PrivateMethodOrAccessorAdd(O: ObjectValue, method: PrivateElementRecord) {
   // 1. Assert: method.[[Kind]] is either method or accessor.
   Assert(method.Kind === 'method' || method.Kind === 'accessor');
   if (Q(yield* IsExtensible(O)) === Value.false) {
@@ -92,7 +95,7 @@ export function* PrivateMethodOrAccessorAdd(method: PrivateElementRecord, O: Obj
 }
 
 /** https://tc39.es/ecma262/#sec-privatefieldadd */
-export function* PrivateFieldAdd(P: PrivateName, O: ObjectValue, value: Value) {
+export function* PrivateFieldAdd(O: ObjectValue, P: PrivateName, value: Value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
   if (Q(yield* IsExtensible(O)) === Value.false) {
@@ -109,4 +112,60 @@ export function* PrivateFieldAdd(P: PrivateName, O: ObjectValue, value: Value) {
     Value: value,
   }));
   return undefined;
+}
+
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-initializeprivatemethods */
+export function* InitializePrivateMethods(O: ObjectValue, elementDefinitions: readonly ClassElementDefinitionRecord[]): PlainEvaluator<void> {
+  const privateMethods: PrivateElementRecord[] = [];
+  for (const element of elementDefinitions) {
+    if (element.Key instanceof PrivateName && (element.Kind === 'method' || element.Kind === 'getter' || element.Kind === 'setter' || element.Kind === 'accessor')) {
+      if (element.Kind === 'method') {
+        const privateElement = new PrivateElementRecord({
+          Key: element.Key,
+          Kind: 'method',
+          Value: element.Value,
+        });
+        privateMethods.push(privateElement);
+      } else if (element.Kind === 'accessor') {
+        const privateElement = new PrivateElementRecord({
+          Key: element.Key,
+          Kind: 'accessor',
+          Get: element.Get,
+          Set: element.Set,
+        });
+        privateMethods.push(privateElement);
+      } else {
+        Assert(element.Kind === 'getter' || element.Kind === 'setter');
+        let getter = element.Kind === 'getter' ? element.Get : Value.undefined;
+        let setter = element.Kind === 'setter' ? element.Set : Value.undefined;
+        let existing: PrivateElementRecord | undefined;
+        const e = privateMethods.find(((e) => e.Key === element.Key));
+        if (e) {
+          Assert(e.Kind === 'accessor');
+          existing = e;
+          if (e.Get !== undefined && e.Get !== Value.undefined) {
+            getter = e.Get;
+          }
+          if (e.Set !== undefined && e.Set !== Value.undefined) {
+            setter = e.Set;
+          }
+        }
+        const privateElement = new PrivateElementRecord({
+          Key: element.Key,
+          Kind: 'accessor',
+          Get: getter,
+          Set: setter,
+        });
+        if (existing) {
+          const index = privateMethods.indexOf(existing);
+          privateMethods[index] = privateElement;
+        } else {
+          privateMethods.push(privateElement);
+        }
+      }
+    }
+  }
+  for (const method of privateMethods) {
+    Q(yield* PrivateMethodOrAccessorAdd(O, method));
+  }
 }

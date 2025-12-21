@@ -50,7 +50,7 @@ function* IteratorConstructor(
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.from */
-function* Iterator_from([O]: Arguments): ValueEvaluator {
+function* Iterator_from([O = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let iteratorRecord be ? GetIteratorFlattenable(O, iterate-string-primitives).
   const iteratorRecord = Q(yield* GetIteratorFlattenable(O, 'iterate-string-primitives'));
 
@@ -76,7 +76,7 @@ function* Iterator_from([O]: Arguments): ValueEvaluator {
 /** https://tc39.es/ecma262/#sec-iterator.concat */
 function* Iterator_concat(items: Arguments): ValueEvaluator {
   const iterables: { OpenMethod: FunctionObject, Iterable: ObjectValue }[] = [];
-  for (const item of items) {
+  for (const item of items.values()) {
     if (!(item instanceof ObjectValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAnObject', item);
     }

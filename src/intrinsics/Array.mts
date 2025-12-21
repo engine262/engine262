@@ -77,7 +77,7 @@ function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCall
     const array = X(ArrayCreate(0, proto));
     let intLen;
     if (!(len instanceof NumberValue)) {
-      const defineStatus = X(CreateDataProperty(array, Value('0'), len));
+      const defineStatus = X(CreateDataProperty(array, Value('0'), len!));
       Assert(defineStatus === Value.true);
       intLen = F(1);
     } else {
@@ -100,7 +100,7 @@ function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCall
     let k = 0;
     while (k < numberOfArgs) {
       const Pk = X(ToString(F(k)));
-      const itemK = items[k];
+      const itemK = items[k]!;
       const defineStatus = X(CreateDataProperty(array, Pk, itemK));
       Assert(defineStatus === Value.true);
       k += 1;
@@ -382,7 +382,7 @@ function* Array_of(items: Arguments, { thisValue }: FunctionCallContext): ValueE
   }
   let k = 0;
   while (k < len) {
-    const kValue = items[k];
+    const kValue = items[k]!;
     const Pk = X(ToString(F(k)));
     Q(yield* CreateDataPropertyOrThrow(A, Pk, kValue));
     k += 1;

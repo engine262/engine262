@@ -18,7 +18,7 @@ import {
   ThrowCompletion,
   type PlainCompletion,
 } from '../completion.mts';
-import { wrappedParse } from '../parse.mts';
+import { Parser, wrappedParse } from '../parse.mts';
 import {
   DeclarativeEnvironmentRecord,
   EnvironmentRecord,
@@ -110,7 +110,9 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
     });
     return parser.parseScript();
   }));
+  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, x.stringValue());
   if (Array.isArray(script)) {
+    Parser.decorateSyntaxErrorWithScriptId(script[0], scriptId);
     return ThrowCompletion(script[0]);
   }
   if (!script.ScriptBody) {
@@ -158,6 +160,8 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
   // 18. If runningContext is not already suspended, suspend runningContext.
   // 19. Let evalContext be a new ECMAScript code execution context.
   const evalContext = new ExecutionContext();
+  evalContext.HostDefined ??= {};
+  evalContext.HostDefined.scriptId = scriptId;
   // 20. Set evalContext's Function to null.
   evalContext.Function = Value.null;
   // 21. Set evalContext's Realm to evalRealm.

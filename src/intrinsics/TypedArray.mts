@@ -552,7 +552,7 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
     // b. Let Pk be ! ToString(𝔽(k)).
     const Pk = X(ToString(F(k)));
     // c. Perform ? Set(newObj, Pk, kValue, true).
-    Q(yield* Set(newObj, Pk, kValue, Value.true));
+    Q(yield* Set(newObj, Pk, kValue!, Value.true));
     // d. Set k to k + 1.
     k += 1;
   }

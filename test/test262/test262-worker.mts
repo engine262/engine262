@@ -5,7 +5,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as util from 'node:util';
 import {
-  readList, type SupervisorToWorker, type Test, type WorkerToSupervisor,
+  readList, type Stack, type SupervisorToWorker, type Test, type WorkerToSupervisor,
 } from '../base.mts';
 import { createRealm, createAgent } from '../base.mts';
 import {
@@ -19,6 +19,8 @@ import {
   skipDebugger,
   boostTest262Harness,
   ThrowCompletion,
+  getHostDefinedErrorStack,
+  CallSite,
 } from '#self';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -46,7 +48,7 @@ process.on('message', (test: SupervisorToWorker) => {
       process.send!(result satisfies WorkerToSupervisor, handleSendError);
     }
   } catch (e) {
-    process.send!(fails(test, util.inspect(e)), handleSendError);
+    process.send!(fails(test, util.inspect(e), []), handleSendError);
   }
 });
 
@@ -60,8 +62,47 @@ function run(test: Test): WorkerToSupervisor {
     });
   }
   const agent = createAgent({ features });
+  const parsedScripts = new Map<string, string>();
   setSurroundingAgent(agent);
   agent.hostDefinedOptions.errorStackAttachNativeStack = true;
+  agent.hostDefinedOptions.onScriptParsed = (script, id) => {
+    parsedScripts.set(id, script.ECMAScriptCode.sourceText);
+  };
+
+
+  function fail(test: Test, error: Value): WorkerToSupervisor {
+    const stacks = getHostDefinedErrorStack(error);
+    const reportStack: Stack[] = [];
+    for (const stack of stacks || []) {
+      if (!(stack instanceof CallSite)) {
+        continue;
+      }
+      const scriptId = stack.getScriptId();
+      if (!scriptId || stack.columnNumber === null || stack.lineNumber === null) {
+        continue;
+      }
+      const source = parsedScripts.get(scriptId);
+      const record = agent.parsedSources.get(scriptId);
+      if (record?.HostDefined.specifier?.includes('harness')) {
+        continue;
+      }
+      reportStack.push({
+        column: stack.columnNumber,
+        line: stack.lineNumber,
+        source: source === test.content ? undefined : source,
+        specifier: stack.getSpecifier(),
+      });
+    }
+    return {
+      status: 'FAIL',
+      file: test.file,
+      flags: test.currentTestFlag,
+      testId: test.id,
+      description: test.attrs.description,
+      error: inspect(error),
+      stack: reportStack,
+    };
+  }
 
   const { realm, resolverCache, setPrintHandle } = createRealm({ specifier: test.specifier });
   const r = realm.scope((): WorkerToSupervisor => {
@@ -81,7 +122,7 @@ function run(test: Test): WorkerToSupervisor {
       const entry = includeCache[include];
       const completion = realm.evaluateScript(entry.source, { specifier: entry.specifier });
       if (completion instanceof AbruptCompletion) {
-        return fails(test, inspect(completion));
+        return fail(test, completion.Value);
       }
     }
     boostTest262Harness(realm);
@@ -91,12 +132,12 @@ function run(test: Test): WorkerToSupervisor {
 function $DONE(error) {
   if (error) {
     if (typeof error === 'object' && error !== null && 'stack' in error) {
-      __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
+      print('Test262:AsyncTestFailure:' + error.stack, error);
     } else {
-      __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
+      print('Test262:AsyncTestFailure:Test262Error: ' + error, error);
     }
   } else {
-    __consolePrintHandle__('Test262:AsyncTestComplete');
+    print('Test262:AsyncTestComplete');
   }
 }`;
       const completion = realm.evaluateScript(`\
@@ -106,19 +147,19 @@ Test262Error.thrower = (...args) => {
 };
 ${test.attrs.flags.async ? DONE : ''}`);
       if (completion instanceof AbruptCompletion) {
-        return fails(test, inspect(completion));
+        return fail(test, completion.Value);
       }
     }
 
     let asyncResult: WorkerToSupervisor | undefined;
     if (test.attrs.flags.async) {
-      setPrintHandle((m) => {
+      setPrintHandle((m, value) => {
         if (m === 'Test262:AsyncTestComplete') {
           asyncResult = {
             status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
           };
         } else {
-          asyncResult = fails(test, m);
+          asyncResult = fail(test, value);
         }
         setPrintHandle(undefined);
       });
@@ -152,7 +193,7 @@ ${test.attrs.flags.async ? DONE : ''}`);
           status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
         };
       } else {
-        return fails(test, inspect(completion));
+        return fail(test, completion.Value);
       }
     }
 
@@ -164,7 +205,7 @@ ${test.attrs.flags.async ? DONE : ''}`);
     }
 
     if (test.attrs.negative) {
-      return fails(test, `Expected ${test.attrs.negative.type} during ${test.attrs.negative.phase}`);
+      return fails(test, `Expected ${test.attrs.negative.type} during ${test.attrs.negative.phase}`, []);
     } else {
       return {
         status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
@@ -206,7 +247,7 @@ function isError(type: string, value: unknown) {
   return nameProp instanceof JSStringValue && nameProp.stringValue() === type;
 }
 
-function fails(test: Test, error: string): WorkerToSupervisor {
+function fails(test: Test, error: string, stack: Stack[]): WorkerToSupervisor {
   return {
     status: 'FAIL',
     file: test.file,
@@ -214,5 +255,6 @@ function fails(test: Test, error: string): WorkerToSupervisor {
     testId: test.id,
     description: test.attrs.description,
     error,
+    stack,
   };
 }

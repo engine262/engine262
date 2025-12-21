@@ -14,7 +14,7 @@ test('Every built-in function should have a section property', () => {
     skipDebugger(CreateDataProperty(
       realm.GlobalObject,
       Value('fail'),
-      CreateBuiltinFunction(([path]: Arguments) => {
+      CreateBuiltinFunction(([path = Value.undefined]: Arguments) => {
         const o = EnsureCompletion(skipDebugger(ToString(path)));
         if (o.Type === 'throw') {
           return o;

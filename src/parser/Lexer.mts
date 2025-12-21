@@ -2,7 +2,12 @@ import isUnicodeIDStartRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_St
 import isUnicodeIDContinueRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_Continue/regex.js';
 import isSpaceSeparatorRegex from '@unicode/unicode-16.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mts';
-import { Assert, isLeadingSurrogate, isTrailingSurrogate } from '../index.mts';
+import {
+  Assert, CallFrame, isLeadingSurrogate, isTrailingSurrogate, ObjectValue, surroundingAgent,
+  ThrowCompletion,
+} from '../index.mts';
+import type { ErrorObject } from '../intrinsics/Error.mts';
+import { __ts_cast__, getHostDefinedErrorStack } from '../helpers.mts';
 import {
   Token,
   TokenNames,
@@ -132,6 +137,7 @@ const SingleCharTokens: { [key: string]: number } = {
   '"': Token.STRING,
   '\'': Token.STRING,
   '#': Token.PRIVATE_IDENTIFIER,
+  '@': Token.AT,
 };
 
 export class TokenData {
@@ -218,6 +224,102 @@ export abstract class Lexer {
 
   protected escapeIndex = -1;
 
+  earlyErrors2 = new Set<ErrorObject>();
+
+  decorateSyntaxError(error: ErrorObject, location: number | Locatable) {
+    // if (template === 'UnexpectedToken' && typeof context !== 'number' && 'type' in context && context.type === Token.EOS) {
+    //   return this.createSyntaxError(context, 'UnexpectedEOS', []);
+    // }
+
+    let startIndex;
+    // @ts-ignore unused
+    let endIndex;
+    let line;
+    let column;
+    if (typeof location === 'number') {
+      line = this.line;
+      if (location === this.source.length) {
+        while (isLineTerminator(this.source[location - 1])) {
+          line -= 1;
+          location -= 1;
+        }
+      }
+      startIndex = location;
+      endIndex = location + 1;
+    } else if ('type' in location && location.type === Token.EOS) {
+      line = this.line;
+      startIndex = location.startIndex;
+      while (isLineTerminator(this.source[startIndex - 1])) {
+        line -= 1;
+        startIndex -= 1;
+      }
+      endIndex = startIndex + 1;
+    } else {
+      if ('location' in location && location.location) {
+        location = location.location;
+      }
+      ({
+        startIndex,
+        endIndex,
+        start: {
+          line,
+          column,
+        } = location as Position, // NOTE: unsound cast
+      } = location as Location); // NOTE: unsound cast
+    }
+
+    /*
+       * Source looks like:
+       *
+       *  const a = 1;
+       *  const b 'string string string'; // a string
+       *  const c = 3;                  |            |
+       *  |       |                     |            |
+       *  |       | startIndex          | endIndex   |
+       *  | lineStart                                | lineEnd
+       *
+       * Exception looks like:
+       *
+       *  const b 'string string string'; // a string
+       *          ^^^^^^^^^^^^^^^^^^^^^^
+       *  SyntaxError: unexpected token
+      */
+
+    let lineStart = startIndex;
+    while (!isLineTerminator(this.source[lineStart - 1]) && this.source[lineStart - 1] !== undefined) {
+      lineStart -= 1;
+    }
+
+    let lineEnd = startIndex;
+    while (!isLineTerminator(this.source[lineEnd]) && this.source[lineEnd] !== undefined) {
+      lineEnd += 1;
+    }
+
+    if (column === undefined) {
+      column = startIndex - lineStart + 1;
+    }
+
+    const callFrame = new CallFrame();
+    callFrame.columnNumber = column;
+    callFrame.lineNumber = line;
+    error.HostDefinedErrorStack = [callFrame];
+  }
+
+  static decorateSyntaxErrorWithScriptId(error: ObjectValue, scriptId: string | undefined) {
+    const stack = getHostDefinedErrorStack(error);
+    if (stack?.[0] instanceof CallFrame) {
+      stack[0].scriptId = scriptId;
+    }
+  }
+
+  // parseFailure(completion: ThrowCompletion): never;
+
+  addEarlyError({ Value: error }: ThrowCompletion, location: Locatable): void {
+    __ts_cast__<ErrorObject>(error);
+    this.decorateSyntaxError(error, location);
+    this.earlyErrors2.add(error);
+  }
+
   abstract isStrictMode(): boolean;
 
   abstract createSyntaxError<K extends keyof typeof import('../messages.mjs')>(context: number | Locatable | undefined, template: K, templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
@@ -227,6 +329,36 @@ export abstract class Lexer {
   abstract raise<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): never;
 
   abstract unexpected(...args: [(number | Locatable)?, ...Parameters<typeof import('../messages.mjs')['UnexpectedToken']>]): never;
+
+  try<T>(callback: () => T): T | undefined {
+    const currentToken = this.currentToken;
+    const peekToken = this.peekToken;
+    const peekAheadToken = this.peekAheadToken;
+    const lineTerminatorBeforeNextToken = this.lineTerminatorBeforeNextToken;
+    const escapeIndex = this.escapeIndex;
+    const positionForNextToken = this.positionForNextToken;
+    const lineForNextToken = this.lineForNextToken;
+    const columnForNextToken = this.columnForNextToken;
+    const position = this.position;
+    const earlyErrors = [...this.earlyErrors2];
+    let result: T | undefined;
+    try {
+      result = callback();
+    } catch {}
+    if (!result) {
+      this.currentToken = currentToken;
+      this.peekToken = peekToken;
+      this.peekAheadToken = peekAheadToken;
+      this.lineTerminatorBeforeNextToken = lineTerminatorBeforeNextToken;
+      this.escapeIndex = escapeIndex;
+      this.positionForNextToken = positionForNextToken;
+      this.lineForNextToken = lineForNextToken;
+      this.columnForNextToken = columnForNextToken;
+      this.position = position;
+      this.earlyErrors2 = new Set(earlyErrors);
+    }
+    return result;
+  }
 
   advance(): TokenData {
     this.lineTerminatorBeforeNextToken = false;
@@ -418,6 +550,12 @@ export abstract class Lexer {
         case Token.BIT_NOT:
         case Token.TEMPLATE:
           return single;
+        case Token.AT:
+          if (surroundingAgent.feature('decorators')) {
+            return single;
+          } else {
+            return this.unexpected(single);
+          }
 
         case Token.CONDITIONAL:
           // ? ?. ?? ??=

@@ -7,6 +7,7 @@ import {
   GetValue,
   CreateDataPropertyOrThrow,
   CopyDataProperties,
+  DefineMethodProperty,
 } from '../abstract-ops/all.mts';
 import {
   StringValue,
@@ -45,8 +46,15 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
     case 'MethodDefinition':
     case 'GeneratorMethod':
     case 'AsyncMethod':
-    case 'AsyncGeneratorMethod':
-      return yield* MethodDefinitionEvaluation(PropertyDefinition, object, enumerable);
+    case 'AsyncGeneratorMethod': {
+      if (surroundingAgent.feature('decorators')) {
+        const methodDefinition = Q(yield* MethodDefinitionEvaluation(PropertyDefinition, object));
+        Q(yield* DefineMethodProperty(object, methodDefinition, true));
+        return undefined;
+      } else {
+        return yield* MethodDefinitionEvaluation(PropertyDefinition, object, enumerable);
+      }
+    }
     default:
       throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
   }

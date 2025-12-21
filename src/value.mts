@@ -85,7 +85,7 @@ export const Value = (() => {
   }
   return Value;
 })() as typeof BaseValue & {
-  <T extends null | undefined | boolean | string | number | bigint>(value: T): // eslint-disable-line @engine262/no-use-in-def
+  <T extends null | undefined | boolean | string | number | bigint>(value: T):
     T extends null ? NullValue :
     T extends undefined ? UndefinedValue :
     T extends boolean ? BooleanValue<T> :
@@ -989,7 +989,17 @@ export function SameType(x: Value, y: Value) {
   }
 }
 
-export type Arguments = readonly Value[];
+type SafeAccessMethods = 'map' | 'values' | 'entries' | 'filter' | 'forEach' | 'find';
+// function* myFunction([callback]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator
+//                       ^^^^^^^^
+// if user calls myFunction with no arguments, callback would be undefined, not Value.undefined
+// the correct way is to type it as:
+// function* myFunction([callback = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator
+//
+// this type is to prevent such mistakes
+export type Arguments =
+  Omit<readonly (Value | undefined)[], SafeAccessMethods> &
+  Pick<readonly Value[], SafeAccessMethods>;
 export interface FunctionCallContext {
   readonly thisValue: Value;
   readonly NewTarget: FunctionObject | UndefinedValue;
@@ -999,5 +1009,5 @@ export interface NativeSteps {
   section?: string;
 }
 export interface CanBeNativeSteps {
-  (...args: Value[]): void | ValueEvaluator;
+  (...args: (Value | undefined)[]): PlainEvaluator<Value | void> | PlainCompletion<Value | void>;
 }

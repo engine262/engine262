@@ -70,7 +70,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
   // 7. If return is undefined, then
   if (ret === Value.undefined) {
     // a. Let iteratorResult be CreateIteratorResultObject(value, true).
-    const iteratorResult = CreateIteratorResultObject(value, Value.true);
+    const iteratorResult = CreateIteratorResultObject(value || Value.undefined, Value.true);
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
     // c. Return promiseCapability.[[Promise]].
@@ -102,7 +102,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
 }
 
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
-function* AsyncFromSyncIteratorPrototype_throw([value]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncFromSyncIteratorPrototype_throw([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be this value.
   const O = thisValue as AsyncFromSyncIteratorObject;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.

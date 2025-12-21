@@ -4,6 +4,7 @@
 # Map feature to engine262 feature using `feature = engine262featurename`
 # e.g.:
 # import-defer = import-defer
+decorators = decorators
 
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Float16Array
@@ -23,4 +24,3 @@
 -tail-call-optimization
 -Temporal
 -resizable-arraybuffer
--decorators

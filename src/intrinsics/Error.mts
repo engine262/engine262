@@ -18,12 +18,14 @@ import {
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { captureStack, callSiteToErrorString, type CallSite } from '../helpers.mts';
+import {
+  captureStack, callSiteToErrorString, type CallSite, CallFrame,
+} from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 export interface ErrorObject extends ObjectValue {
   ErrorData: JSStringValue;
-  HostDefinedErrorStack?: CallSite[] | UndefinedValue;
+  HostDefinedErrorStack?: (CallSite | CallFrame)[] | UndefinedValue;
 }
 
 export { IsError as isErrorObject } from '../abstract-ops/error-objects.mts';
@@ -70,7 +72,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
 }
 
 /** https://tc39.es/proposal-is-error/#sec-error.iserror */
-function Error_isError([value]: Arguments) {
+function Error_isError([value = Value.undefined]: Arguments) {
   return Value(IsError(value));
 }
 

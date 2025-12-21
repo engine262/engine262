@@ -6,7 +6,7 @@ import {
   EvalDeclarationInstantiation,
   Evaluate,
   ExecutionContext,
-  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NormalCompletion, NullValue, Q, ScriptRecord, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type PlainCompletion, type ValueEvaluator,
+  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NormalCompletion, NullValue, Q, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type PlainCompletion, type ValueEvaluator,
 } from '#self';
 
 const cascadeStack = new WeakMap<EnvironmentRecord, EnvironmentRecord>();
@@ -85,18 +85,12 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
     return surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
   }
 
-  const scriptRecord = new ScriptRecord({
-    ECMAScriptCode: script,
-    HostDefined: {},
-    LoadedModules: [],
-    Realm: evalRealm,
-  });
+  const scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source);
   if (!doNotTrack) {
-    surroundingAgent.addParsedSource(scriptRecord);
-  }
-  if (scriptContext) {
-    scriptContext.ScriptOrModule = scriptRecord;
-    scriptContext.HostDefined = scriptRecord.HostDefined;
+    if (scriptContext) {
+      scriptContext.HostDefined ??= {};
+      scriptContext.HostDefined.scriptId = scriptId;
+    }
   }
 
   let strictEval;
@@ -121,6 +115,8 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
     varEnv = lexEnv;
   }
   const evalContext = new ExecutionContext();
+  evalContext.HostDefined ??= {};
+  evalContext.HostDefined.scriptId = scriptId;
   evalContext.Function = Value.null;
   evalContext.Realm = evalRealm;
   evalContext.ScriptOrModule = runningContext.ScriptOrModule;

@@ -114,7 +114,7 @@ const realm = new ManagedRealm({ resolverCache: new Map(), name: 'repl', specifi
 {
   const format = (function* format(args: Arguments): PlainEvaluator<string> {
     const str = [];
-    for (const arg of args) {
+    for (const arg of args.values()) {
       // TODO: inspect should return a PlainEvaluator so debugger can hook in.
       str.push(inspect(arg));
     }

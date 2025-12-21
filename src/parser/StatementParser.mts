@@ -72,8 +72,9 @@ export abstract class StatementParser extends ExpressionParser {
     switch (this.peek().type) {
       case Token.FUNCTION:
         return this.parseHoistableDeclaration();
+      case Token.AT:
       case Token.CLASS:
-        return this.parseClassDeclaration();
+        return this.parseClassDeclaration(null);
       case Token.CONST:
         return this.parseLexicalDeclaration();
       default:
@@ -116,8 +117,8 @@ export abstract class StatementParser extends ExpressionParser {
   // ClassDeclaration :
   //   `class` BindingIdentifier ClassTail
   //   [+Default] `class` ClassTail
-  parseClassDeclaration(): ParseNode.ClassDeclaration {
-    return this.parseClass(false) as ParseNode.ClassDeclaration;
+  parseClassDeclaration(decoratorsAttachedToClassDeclaration: null | readonly ParseNode.Decorator[]): ParseNode.ClassDeclaration {
+    return this.parseClass(decoratorsAttachedToClassDeclaration, false) as ParseNode.ClassDeclaration;
   }
 
   // LexicalDeclaration : LetOrConst BindingList `;`

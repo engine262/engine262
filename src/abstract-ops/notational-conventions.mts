@@ -14,6 +14,11 @@ export function Assert(invariant: boolean, source?: string, completion?: Complet
   /* node:coverage enable */
 }
 Assert.Error = AssertError;
+Assert.Throw = (source?: string, completion?: Completion<unknown>) => {
+  /* node:coverage disable */
+  throw new AssertError(source, { cause: completion });
+  /* node:coverage enable */
+};
 
 /** https://tc39.es/ecma262/#sec-requireinternalslot */
 export function RequireInternalSlot(O: Value, internalSlot: string): ThrowCompletion | undefined {

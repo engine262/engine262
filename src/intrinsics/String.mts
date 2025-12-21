@@ -62,7 +62,7 @@ function* String_fromCharCode(codeUnits: Arguments): ValueEvaluator {
   const elements = [];
   let nextIndex = 0;
   while (nextIndex < length) {
-    const next = codeUnits[nextIndex];
+    const next = codeUnits[nextIndex]!;
     const nextCU = Q(yield* ToUint16(next));
     elements.push(nextCU);
     nextIndex += 1;
@@ -76,7 +76,7 @@ function* String_fromCodePoint(codePoints: Arguments) {
   // 1. Let result be the empty String.
   let result = '';
   // 2. For each element next of codePoints, do
-  for (const next of codePoints) {
+  for (const next of codePoints.values()) {
     // a. Let nextCP be ? ToNumber(next).
     const nextCP = Q(yield* ToNumber(next));
     // b. If IsIntegralNumber(nextCP) is false, throw a RangeError exception.
@@ -121,7 +121,7 @@ function* String_raw([template = Value.undefined, ...substitutions]: Arguments):
     } else {
       next = Value('');
     }
-    const nextSub = Q(yield* ToString(next));
+    const nextSub = Q(yield* ToString(next!));
     stringElements.push(nextSub.stringValue());
     nextIndex += 1;
   }

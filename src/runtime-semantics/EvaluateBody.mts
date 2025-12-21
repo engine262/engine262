@@ -144,7 +144,13 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody: ParseNode.AsyncBod
 //   `=` AssignmentExpression
 export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNode.Initializer, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
   // 1. Assert: argumentsList is empty.
-  Assert(argumentsList.length === 0);
+  if (surroundingAgent.feature('decorators') && surroundingAgent.feature('decorators.no-bugfix.1')) {
+    // TODO(decorator): spec bug
+    // eslint-disable-next-line no-console
+    console.assert(argumentsList.length === 0, 'Assert: argumentsList is empty.');
+  } else {
+    Assert(argumentsList.length === 0);
+  }
   // 2. Assert: functionObject.[[ClassFieldInitializerName]] is not empty.
   Assert(functionObject.ClassFieldInitializerName !== undefined);
   let value;

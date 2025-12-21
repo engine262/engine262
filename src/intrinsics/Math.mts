@@ -270,7 +270,7 @@ export function bootstrapMath(realmRec: Realm) {
     const method = function* method(args: Arguments): ValueEvaluator {
       const nextArgs: number[] = [];
       for (let i = 0; i < args.length; i += 1) {
-        nextArgs[i] = R(Q(yield* ToNumber(args[i])));
+        nextArgs[i] = R(Q(yield* ToNumber(args[i]!)));
       }
       // we're calling host Math functions here.
       return F((Math[name] as (...args: unknown[]) => number)(...nextArgs));

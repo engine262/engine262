@@ -1,8 +1,11 @@
-import type {
-  Node, NodePath,
-  PluginObj, PluginPass,
-  types as t,
+import {
+  type NodePath,
+  traverse,
+  type Node,
+  type PluginObj, type PluginPass,
+  type types as t,
 } from '@babel/core';
+import type { PublicReplacements } from '@babel/template';
 
 function __ts_cast__<T>(_value: unknown): asserts _value is T { }
 
@@ -29,8 +32,8 @@ interface State extends PluginPass {
   needed: Partial<Record<NeededNames, boolean>>;
 }
 
-interface Macro<R extends Record<string, Node | null> = Record<string, Node | null>> {
-  template(replacements: Readonly<R>): t.Statement | t.Statement[];
+interface Macro<R extends PublicReplacements = Record<string, Node | null>> {
+  template(sourceLocation: Node, replacements: Readonly<R>): t.Statement | t.Statement[];
   readonly imports: readonly NeededNames[];
   readonly allowAnyExpression?: boolean;
 }
@@ -46,6 +49,7 @@ interface Macros {
 }
 
 export default ({ types: t, template }: typeof import('@babel/core')): PluginObj<State> => {
+  const parseOptions = { preserveComments: true };
   function createImportCompletion() {
     return template.ast(`
       import { Completion } from "#self";
@@ -116,7 +120,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
           if (/#sec/.test(line)) {
             const section = line.split(' ').find((l) => l.includes('#sec'))!;
             const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
-            const result = path.insertAfter(template.ast(`${name}.section = '${url}';`));
+            const result = path.insertAfter(withSource(c, template.ast(`${name}.section = '${url}';`)));
             if (path.node.trailingComments) {
               result[result.length - 1].node.trailingComments = path.node.trailingComments;
               path.node.trailingComments = null;
@@ -128,53 +132,86 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
     }
   }
 
-  const maybeSkipDebugger = template.statement(`
-    /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) %%value%% = skipDebugger(%%value%%);
-  `, { preserveComments: true });
 
-  const MACROS: Partial<Macros> = {
+  const maybeSkipDebugger = (value: t.Identifier, callee: Node) => withSource(callee, template.statement(`
+      /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) %%value%% = skipDebugger(%%value%%);
+    `, { preserveComments: true })({ value }))[0];
+
+  type NodeWithLocation = Pick<Node, 'start' | 'end' | 'loc'>;
+
+  function setSource(source: NodeWithLocation, n: t.Node) {
+    if (n.loc) {
+      return;
+    }
+    n.start = source.start;
+    n.end = source.end;
+    n.loc = source.loc;
+    n.leadingComments?.forEach((comment) => {
+      comment.start = source.start || undefined;
+      comment.end = source.end || undefined;
+      comment.loc = source.loc || undefined;
+    });
+  }
+
+  function withSource(source: NodeWithLocation, node: t.Statement | t.Statement[]): t.Statement[] {
+    if (!Array.isArray(node)) {
+      node = [node];
+    }
+    for (const n of node) {
+      setSource(source, n);
+      traverse(n, {
+        noScope: true,
+        enter(path) {
+          setSource(source, path.node);
+        },
+      });
+    }
+    return node;
+  }
+
+  const MACROS: Macros = {
     Q: {
-      template: template(`
+      template: (source, code) => withSource(source, template(`
       /* ReturnIfAbrupt */
       %%checkYieldStar%%
       /* node:coverage ignore next */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
       /* node:coverage ignore next */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
-      `, { preserveComments: true }),
+      `, parseOptions)(code)),
       imports: ['AbruptCompletion', 'Completion', 'Assert'],
       allowAnyExpression: true,
     },
     X: {
-      template: template(`
+      template: (source, code) => withSource(source, template(`
       /* X */
       %%checkYieldStar%%
       /* node:coverage ignore next */ if (%%value%% instanceof AbruptCompletion) throw new Assert.Error(%%source%%, { cause: %%value%% });
       /* node:coverage ignore next */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
-      `, { preserveComments: true }),
+      `, parseOptions)(code)),
       imports: ['Assert', 'Completion', 'AbruptCompletion', 'skipDebugger'],
       allowAnyExpression: true,
     },
     IfAbruptCloseIterator: {
-      template: template(`
+      template: (source, code) => withSource(source, template(`
       /* IfAbruptCloseIterator */
       /* node:coverage ignore next */
       if (%%value%% instanceof AbruptCompletion) return skipDebugger(IteratorClose(%%iteratorRecord%%, %%value%%));
       /* node:coverage ignore next */
       if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
-      `, { preserveComments: true }),
+      `, parseOptions)(code)),
       imports: ['IteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
     IfAbruptCloseAsyncIterator: {
-      template: template(`
+      template: (source, code) => withSource(source, template(`
       /* IfAbruptCloseAsyncIterator */
       /* node:coverage ignore next */
       if (%%value%% instanceof AbruptCompletion) return yield* AsyncIteratorClose(%%iteratorRecord%%, %%value%%);
       /* node:coverage ignore next */
       if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
-      `, { preserveComments: true }),
+      `, parseOptions)(code)),
       imports: ['Assert', 'AsyncIteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
     IfAbruptRejectPromise: {
-      template: template(`
+      template: (source, code) => withSource(source, template(`
       /* IfAbruptRejectPromise */
       /* node:coverage disable */
       if (%%value%% instanceof AbruptCompletion) {
@@ -184,19 +221,23 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       }
       if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       /* node:coverage enable */
-      `, { preserveComments: true }),
+      `, parseOptions)(code)),
       imports: ['Call', 'Value', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
+    ReturnIfAbrupt: null!,
   };
   __ts_cast__<Macros>(MACROS);
   MACROS.ReturnIfAbrupt = MACROS.Q;
   const MACRO_NAMES = Object.keys(MACROS);
 
   // For frequently used Record-like classes, inline them to get a better debug experience.
-  const records = {
-    NormalCompletion: template('({ __proto__: NormalCompletion.prototype, Value: %%value%% })', { preserveComments: true }),
-    ThrowCompletion: template('({ __proto__: ThrowCompletion.prototype, Value: %%value%% })', { preserveComments: true }),
+  const Completions = {
+    NormalCompletion: (source: Node, code: PublicReplacements) => withSource(source, template('({ __proto__: NormalCompletion.prototype, Value: %%value%% })', parseOptions)(code))[0],
+    ThrowCompletion: (source: Node, code: PublicReplacements) => withSource(source, template('({ __proto__: ThrowCompletion.prototype, Value: %%value%% })', parseOptions)(code))[0],
   };
+  const Structs = [
+    'ClassElementDefinitionRecord',
+  ];
 
   function tryRemove(path: NodePath<t.CallExpression>) {
     try {
@@ -240,17 +281,29 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
         },
       },
       CallExpression(path, state) {
-        if (!t.isIdentifier(path.node.callee)) {
+        const callee = path.node.callee;
+        if (!t.isIdentifier(callee)) {
           return;
         }
 
-        // if (path.node.callee?.name in records) {
-        //   const template = records[path.node.callee?.name as keyof typeof records];
-        //   path.replaceWith(template({ value: path.node.arguments[0] }));
-        //   return;
-        // }
+        if (callee.name && callee.name in Completions) {
+          const template = Completions[callee.name as keyof typeof Completions];
+          path.replaceWith(template(callee, { value: path.node.arguments[0] }));
+          return;
+        }
 
-        const macroName = path.node.callee.name;
+        if (Structs.includes(callee.name) && path.node.arguments.length === 1) {
+          const arg0 = path.node.arguments[0];
+          if (t.isObjectExpression(arg0)) {
+            path.replaceWith(t.objectExpression([
+              t.objectProperty(t.identifier('__proto__'), t.memberExpression(t.identifier(callee.name), t.identifier('prototype'))),
+              ...arg0.properties,
+            ]));
+            return;
+          }
+        }
+
+        const macroName = callee.name;
         if (MACRO_NAMES.includes(macroName)) {
           const enclosingConditional = getEnclosingConditionalExpression(path);
           if (enclosingConditional !== null) {
@@ -295,12 +348,12 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
           if (macro === MACROS.Q && t.isIdentifier(argument)) {
             const binding = path.scope.getBinding(argument.name)!;
             (binding.path.parent as t.VariableDeclaration).kind = 'let';
-            statementPath.insertBefore(template(`
+            statementPath.insertBefore(withSource(callee, template(`
               /* ReturnIfAbrupt */
               /* node:coverage ignore next */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
               /* node:coverage ignore next */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
               /* node:coverage ignore next */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
-            `, { preserveComments: true })({ value: argument }));
+            `, parseOptions)({ value: argument })));
             path.replaceWith(argument);
           } else {
             if (macro === MACROS.IfAbruptRejectPromise) {
@@ -313,7 +366,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               }
               const binding = path.scope.getBinding(argument.name)!;
               (binding.path.parent as t.VariableDeclaration).kind = 'let';
-              statementPath.insertBefore(macro.template({ value: argument, capability }));
+              statementPath.insertBefore(macro.template(callee, { value: argument, capability }));
               tryRemove(path);
             } else if (macro === MACROS.IfAbruptCloseIterator || macro === MACROS.IfAbruptCloseAsyncIterator) {
               if (!t.isIdentifier(argument)) {
@@ -326,7 +379,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               const binding = path.scope.getBinding(argument.name)!;
               (binding.path.parent as t.VariableDeclaration).kind = 'let';
               statementPath.insertBefore(
-                macro.template({
+                macro.template(callee, {
                   value: argument,
                   iteratorRecord: iteratorRecord.node,
                 }),
@@ -341,10 +394,10 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
                 id = argument;
               } else {
                 id = statementPath.scope.generateUidIdentifier();
-                statementPath.insertBefore(template(`
+                statementPath.insertBefore(withSource(callee, template(`
                   /* ${macroName !== 'Q' ? macroName : 'ReturnIfAbrupt'} */
                   let %%id%% = %%argument%%;
-                `, { preserveComments: true })({ id, argument }));
+                `, parseOptions)({ id, argument })));
               }
 
               const replacement: { value: typeof id, checkYieldStar: t.Statement | null, source?: t.StringLiteral } = {
@@ -354,15 +407,17 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               if (macro === MACROS.X) {
                 replacement.source = t.stringLiteral(`! ${path.get('arguments.0').getSource()} returned an abrupt completion`);
                 if (!t.isYieldExpression(argument, { delegate: true })) {
-                  replacement.checkYieldStar = maybeSkipDebugger({ value: id });
+                  replacement.checkYieldStar = maybeSkipDebugger(id, callee);
                 }
               }
-              statementPath.insertBefore(macro.template(replacement));
+              statementPath.insertBefore(macro.template(callee, replacement));
               path.replaceWith(id);
             }
           }
         } else if (macroName === 'Assert') {
-          path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
+          if (!path.node.arguments[1]) {
+            path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
+          }
         }
       },
       ThrowStatement(path) {

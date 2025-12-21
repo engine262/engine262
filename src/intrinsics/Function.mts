@@ -10,7 +10,7 @@ import {
 /** https://tc39.es/ecma262/#sec-function-p1-p2-pn-body */
 function* FunctionConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   const bodyArg = args[args.length - 1] || Value('');
-  args = args.slice(0, -1);
+  args = args.slice(0, -1) as Arguments;
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
