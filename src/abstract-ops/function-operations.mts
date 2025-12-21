@@ -693,9 +693,7 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
 CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
 
 /**
- * @internal
- * in https://tc39.es/proposal-array-from-async/#sec-array.fromAsync
- * "This async method performs the following steps when called:"
+ * "This async function performs the following steps when called:"
  *
  * this function wraps the async function.
  */

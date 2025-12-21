@@ -182,63 +182,30 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   return A;
 }
 
-/** https://tc39.es/proposal-array-from-async/#sec-array.fromAsync */
-function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  /* 1. Let C be the this value. */
+/** https://tc39.es/ecma262/#sec-array.fromasync */
+function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const C = thisValue;
-  /*
-  2. If mapper is undefined, then
-    a. Let mapping be false.
-  3. Else,
-    a. If IsCallable(mapper) is false, throw a TypeError exception.
-    b. Let mapping be true.
-  */
-  let mapping: boolean;
-  if (mapper === Value.undefined) {
-    mapping = false;
-  } else {
+  let mapping = false;
+  if (mapper !== Value.undefined) {
     if (!IsCallable(mapper)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
     }
     mapping = true;
   }
-  /*
-  4. Let usingAsyncIterator be ? GetMethod(asyncItems, %Symbol.asyncIterator%).
-  5. If usingAsyncIterator is undefined, then
-    a. Let usingSyncIterator be ? GetMethod(asyncItems, %Symbol.iterator%).
-  */
-  const usingAsyncIterator: UndefinedValue | FunctionObject = Q(yield* GetMethod(asyncItems, wellKnownSymbols.asyncIterator));
-  let usingSyncIterator: UndefinedValue | FunctionObject = Value.undefined;
-  if (usingAsyncIterator === Value.undefined) {
-    usingSyncIterator = Q(yield* GetMethod(asyncItems, wellKnownSymbols.iterator));
-  }
-
-  /*
-  6. Let iteratorRecord be undefined.
-  7. If usingAsyncIterator is not undefined, then
-    a. Set iteratorRecord to ? GetIteratorFromMethod(asyncItems, usingAsyncIterator).
-  8. Else if usingSyncIterator is not undefined, then
-    a. Set iteratorRecord to CreateAsyncFromSyncIterator(? GetIteratorFromMethod(asyncItems, usingSyncIterator)).
-  */
   let iteratorRecord: IteratorRecord | undefined;
-  if (usingAsyncIterator !== Value.undefined) {
-    iteratorRecord = Q(yield* GetIteratorFromMethod(asyncItems, usingAsyncIterator as FunctionObject));
-  } else if (usingSyncIterator !== Value.undefined) {
-    iteratorRecord = CreateAsyncFromSyncIterator(Q(yield* GetIteratorFromMethod(asyncItems, usingSyncIterator as FunctionObject)));
+  const usingAsyncIterator = Q(yield* GetMethod(items, wellKnownSymbols.asyncIterator));
+  let usingSyncIterator: UndefinedValue | FunctionObject = Value.undefined;
+  if (usingAsyncIterator instanceof UndefinedValue) {
+    usingSyncIterator = Q(yield* GetMethod(items, wellKnownSymbols.iterator));
+    if (!(usingSyncIterator instanceof UndefinedValue)) {
+      iteratorRecord = CreateAsyncFromSyncIterator(Q(yield* GetIteratorFromMethod(items, usingSyncIterator)));
+    }
+  } else {
+    iteratorRecord = Q(yield* GetIteratorFromMethod(items, usingAsyncIterator));
   }
 
   if (iteratorRecord) {
-    // 9. If iteratorRecord is not undefined, then
-    // NOTE: This constant shows up a lot.  Can we move it to a constants file?
     const MAX_SAFE_INTEGER = (2 ** 53) - 1;
-
-    /*
-    a. If IsConstructor(C) is true, then
-      i. Let A be ? Construct(C).
-    b. Else,
-      i. Let A be ! ArrayCreate(0).
-    c. Let k be 0.
-    */
     let A: ObjectValue;
     if (IsConstructor(C)) {
       A = Q(yield* Construct(C));
@@ -248,44 +215,18 @@ function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefine
 
     let k = 0;
     while (true) {
-      /*
-      i. If k ≥ 2**53 - 1, then
-        1. Let error be ThrowCompletion(a newly created TypeError object).
-        2. Return ? AsyncIteratorClose(iteratorRecord, error).
-      ii. Let Pk be ! ToString(𝔽(k)).
-      iii. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-      iv. Set nextResult to ? Await(nextResult).
-      v. If nextResult is not an Object, throw a TypeError exception.
-      vi. Let done be ? IteratorComplete(nextResult).
-      vii. If done is true, then
-        1. Perform ? Set(A, "length", 𝔽(k), true).
-        2. Return A.
-      viii. Let nextValue be ? IteratorValue(nextResult).
-      ix. If mapping is true, then
-        1. Let mappedValue be Completion(Call(mapper, thisArg, « nextValue, 𝔽(k) »)).
-        2. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
-        3. Set mappedValue to Completion(Await(mappedValue)).
-        4. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
-      x. Else,
-        1. Let mappedValue be nextValue.
-      xi. Let defineStatus be Completion(CreateDataPropertyOrThrow(A, Pk, mappedValue)).
-      xii. IfAbruptCloseAsyncIterator(defineStatus, iteratorRecord).
-      xiii. Set k to k + 1.
-      */
       if (k > MAX_SAFE_INTEGER) {
         const error = surroundingAgent.Throw('TypeError', 'OutOfRange', k);
         return Q(yield* AsyncIteratorClose(iteratorRecord, error));
       }
 
-      const Pk: JSStringValue = X(yield* ToString(F(k)));
+      const Pk = X(ToString(F(k)));
       let nextResult: Value = Q(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
-
-      // FIXME: if nextResult is a rejected promise, at least on the first pass, we throw instead of returning a rejected promise.
       nextResult = Q(yield* Await(nextResult));
       if (!(nextResult instanceof ObjectValue)) {
         return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
       }
-      const done: BooleanValue = Q(yield* IteratorComplete(nextResult));
+      const done = Q(yield* IteratorComplete(nextResult));
       if (done === Value.true) {
         Q(yield* Set(A, Value('length'), F(k), Value.true));
         return A;
@@ -309,38 +250,14 @@ function* Array_fromAsync([asyncItems = Value.undefined, mapper = Value.undefine
       k += 1;
     }
   } else {
-    // 10. Else,
-    /*
-    a. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
-    b. Let arrayLike be ! ToObject(asyncItems).
-    c. Let len be ? LengthOfArrayLike(arrayLike).
-    d. If IsConstructor(C) is true, then
-      i. Let A be ? Construct(C, « 𝔽(len) »).
-    e. Else,
-      i. Let A be ? ArrayCreate(len).
-    f. Let k be 0.
-    g. Repeat, while k < len,
-      i. Let Pk be ! ToString(𝔽(k)).
-      ii. Let kValue be ? Get(arrayLike, Pk).
-      iii. Set kValue to ? Await(kValue).
-      iv. If mapping is true, then
-        1. Let mappedValue be ? Call(mapper, thisArg, « kValue, 𝔽(k) »).
-        2. Set mappedValue to ? Await(mappedValue).
-      v. Else,
-        1. Let mappedValue be kValue.
-      vi. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
-      vii. Set k to k + 1.
-    h. Perform ? Set(A, "length", 𝔽(len), true).
-    i. Return A.
-    */
-    const arrayLike: ObjectValue = X(ToObject(asyncItems));
+    const arrayLike = X(ToObject(items));
     const len = Q(yield* LengthOfArrayLike(arrayLike));
 
     let A: ObjectValue;
     if (IsConstructor(C)) {
       A = Q(yield* Construct(C, [F(len)]));
     } else {
-      A = X(ArrayCreate(0));
+      A = Q(ArrayCreate(len));
     }
 
     let k = 0;

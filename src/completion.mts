@@ -364,7 +364,7 @@ export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRec
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
-/** https://tc39.es/proposal-array-from-async/#sec-ifabruptcloseasynciterator */
+/** https://tc39.es/ecma262/#sec-ifabruptcloseasynciterator */
 export function IfAbruptCloseAsyncIterator<T>(_value: T, _iteratorRecord: IteratorRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptCloseAsyncIterator() requires build');
