@@ -50,6 +50,7 @@ import {
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { Throw, type NativeSteps, type PropertyKeyValue } from '#self';
 
 /** https://tc39.es/ecma262/#table-internal-slots-of-promise-instances */
 export interface PromiseObject extends OrdinaryObject {
@@ -212,6 +213,189 @@ function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   return result;
 }
 
+/** https://tc39.es/proposal-await-dictionary/#sec-promise.allkeyed */
+function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability = Q(yield* NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
+  // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
+  const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(C));
+  // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
+  __ts_cast__<FunctionObject>(promiseResolve);
+  // 5. If promises is not an Object, then
+  if (!(promises instanceof ObjectValue)) {
+    // a. Let error be a newly created TypeError object.
+    const error = Throw.TypeError('$1 is not an object', promises).Value;
+    // b. Perform ? Call(promiseCapability.[[Reject]], undefined, « error »).
+    Q(yield* Call(promiseCapability.Reject, Value.undefined, [error]));
+    // c. Return promiseCapability.[[Promise]].
+    return promiseCapability.Promise;
+  }
+
+  // 6. Let result be Completion(PerformPromiseAllKeyed(all, promises, C, promiseCapability, promiseResolve)).
+  const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all', promises, C, promiseCapability, promiseResolve));
+  // 7. IfAbruptRejectPromise(result, promiseCapability).
+  IfAbruptRejectPromise(result, promiseCapability);
+  // 8. Return promiseCapability.[[Promise]].
+  return promiseCapability.Promise;
+}
+
+/** https://tc39.es/proposal-await-dictionary/#sec-performpromiseallkeyed */
+function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: ObjectValue, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
+  // 1. Let allKeys be ? promises.[[OwnPropertyKeys]]().
+  const allKeys: PropertyKeyValue[] = Q(yield* promises.OwnPropertyKeys());
+  // 2. Let keys be a new empty List.
+  const keys: PropertyKeyValue[] = [];
+  // 3. Let values be a new empty List.
+  const values: Value[] = [];
+  // 4. Let remainingElementsCount be the Record { [[Value]]: 1 }.
+  const remainingElementsCount = { Value: 1 };
+  // 5. Let index be 0.
+  let index: number = 0;
+  // 6. For each element key of allKeys, do
+  for (const key of allKeys) {
+    // a. Let desc be ? promises.[[GetOwnProperty]](key).
+    const desc = Q(yield* promises.GetOwnProperty(key));
+    // b. If desc is not undefined and desc.[[Enumerable]] is true, then
+    if (desc !== Value.undefined && (desc as Descriptor).Enumerable === Value.true) {
+      // i. Let value be ? Get(promises, key).
+      const value = Q(yield* Get(promises, key));
+      // ii. Append key to keys.
+      keys.push(key);
+      // iii. Append undefined to values.
+      values.push(Value.undefined);
+      // iv. Let nextPromise be ? Call(promiseResolve, constructor, « value »).
+      const nextPromise = Q(yield* Call(promiseResolve, constructor, [value]));
+      // v. Let alreadyCalled be the Record { [[Value]]: false }.
+      const alreadyCalled = { Value: false };
+      // vi. Let onFulfilled be a new Abstract Closure with parameters (x) that captures variant, alreadyCalled, index, keys, values, resultCapability, and remainingElementsCount and performs the following steps when called:
+      const onFulfilledNative: NativeSteps = ((index: number) => function* onFulfilledNative([x = Value.undefined]: Arguments): ValueEvaluator {
+        // 1. If alreadyCalled.[[Value]] is true, return undefined.
+        if (alreadyCalled.Value === true) {
+          return Value.undefined;
+        }
+        // 2. Set alreadyCalled.[[Value]] to true.
+        alreadyCalled.Value = true;
+        // 3. If variant is all, then
+        //   a. Set values[index] to x.
+        // 4. Else,
+        if (variant === 'all') {
+          values[index] = x!;
+        } else {
+          // a. Assert: variant is all-settled.
+          Assert(variant === 'all-settled');
+          // b. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+          const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+          // c. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
+          X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
+          // d. Perform ! CreateDataPropertyOrThrow(obj, "value", x).
+          X(CreateDataProperty(obj, Value('value'), x));
+          // e. Set values[index] to obj.
+          values[index] = obj;
+        }
+        // 5. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+        remainingElementsCount.Value -= 1;
+        // 6. If remainingElementsCount.[[Value]] = 0, then
+        if (remainingElementsCount.Value === 0) {
+          // a. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
+          const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(keys, values);
+          // b. Return ? Call(resultCapability.[[Resolve]], undefined, « result »).
+          return Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
+        }
+
+        // 7. Return undefined.
+        return Value.undefined;
+      })(index);
+      // vii. Set onFulfilled.[[Length]] to 1.
+      const onFulfilled = X(CreateBuiltinFunction(onFulfilledNative, 1, Value(''), []));
+      // CODEREVIEW: come back here
+
+      let onRejected: Value;
+      // viii. If variant is all, then
+      if (variant === 'all') {
+        onRejected = resultCapability.Reject;
+      } else {
+        // 1. Assert: variant is all-settled.
+        Assert(variant === 'all-settled');
+        // 2. Let onRejected be a new Abstract Closure with parameters (x) that captures alreadyCalled, index, keys, values, resultCapability, and remainingElementsCount and performs the following steps when called:
+        const onRejectedNative: NativeSteps = ((index: number) => function* onRejectedNative([x = Value.undefined]: Arguments): ValueEvaluator {
+          // a. If alreadyCalled.[[Value]] is true, return undefined.
+          if (alreadyCalled.Value === true) {
+            return Value.undefined;
+          }
+          // b. Set alreadyCalled.[[Value]] to true.
+          alreadyCalled.Value = true;
+
+          // c. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+          const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+          // d. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
+          X(CreateDataProperty(obj, Value('status'), Value('rejected')));
+          // e. Perform ! CreateDataPropertyOrThrow(obj, "reason", x).
+          X(CreateDataProperty(obj, Value('reason'), x));
+          // f. Set values[index] to obj.
+          values[index] = obj;
+          // g. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+          remainingElementsCount.Value -= 1;
+
+          // h. If remainingElementsCount.[[Value]] = 0, then
+          if (remainingElementsCount.Value === 0) {
+            // i. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
+            const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(keys, values);
+            // ii. Return ? Call(resultCapability.[[Resolve]], undefined, « result »).
+            return Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
+          }
+
+          // i. Return undefined.
+          return Value.undefined;
+        })(index);
+        // 3. Set onRejected.[[Length]] to 1.
+        onRejected = X(CreateBuiltinFunction(onRejectedNative, 1, Value(''), []));
+      }
+
+      // x. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
+      remainingElementsCount.Value += 1;
+      // xi. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
+      Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
+      // xii. Set index to index + 1.
+      index += 1;
+    }
+  }
+
+  // 7. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+  remainingElementsCount.Value -= 1;
+
+  // 8. If remainingElementsCount.[[Value]] = 0, then
+  if (remainingElementsCount.Value === 0) {
+    /*
+    a. NOTE: This can happen even if keys was non-empty if an ill-behaved thenable synchronously invoked the callback passed to its "then" method.
+    b. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
+    */
+    const result = CreateKeyedPromiseCombinatorResultObject(keys, values);
+    // c. Perform ? Call(resultCapability.[[Resolve]], undefined, « result »).
+    Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
+  }
+  //  9. Return resultCapability.[[Promise]].
+  return resultCapability.Promise;
+}
+
+/** https://tc39.es/proposal-await-dictionary/#sec-createkeyedpromisecombinatorresultobject */
+function CreateKeyedPromiseCombinatorResultObject(keys: readonly PropertyKeyValue[], values: readonly Value[]): OrdinaryObject {
+  // 1. Assert: The number of elements in keys is the same as the number of elements in values.
+  Assert(keys.length === values.length);
+  // 2. Let obj be OrdinaryObjectCreate(null).
+  const obj = OrdinaryObjectCreate(Value.null);
+  // 3. For each integer i such that 0 ≤ i < the number of elements in keys, in ascending order, do
+  for (let i = 0; i < keys.length; i += 1) {
+    // a. Perform ! CreateDataPropertyOrThrow(obj, keys[i], values[i]).
+    X(CreateDataPropertyOrThrow(obj, keys[i], values[i]));
+  }
+  // 4. Return obj.
+  return obj;
+}
+
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: ! IsConstructor(constructor) is true.
@@ -342,6 +526,36 @@ function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValu
   }
   // 9. Return ? result.
   return result;
+}
+
+/** https://tc39.es/proposal-await-dictionary/#sec-promise.allsettledkeyed */
+function* Promise_allSettledKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability = Q(yield* NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
+  // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
+  const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(C));
+  // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
+  __ts_cast__<FunctionObject>(promiseResolve);
+  // 5. If promises is not an Object, then
+  if (!(promises instanceof ObjectValue)) {
+    // a. Let error be a newly created TypeError object.
+    const error = Throw.TypeError('$1 is not an object', promises).Value;
+    // b. Perform ? Call(promiseCapability.[[Reject]], undefined, « error »).
+    Q(yield* Call(promiseCapability.Reject, Value.undefined, [error]));
+    // c. Return promiseCapability.[[Promise]].
+    return promiseCapability.Promise;
+  }
+
+  // 6. Let result be Completion(PerformPromiseAllKeyed(all, promises, C, promiseCapability, promiseResolve)).
+  const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all-settled', promises, C, promiseCapability, promiseResolve));
+  // 7. IfAbruptRejectPromise(result, promiseCapability).
+  IfAbruptRejectPromise(result, promiseCapability);
+  // 8. Return promiseCapability.[[Promise]].
+  return promiseCapability.Promise;
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseany */
@@ -591,6 +805,8 @@ export function bootstrapPromise(realmRec: Realm) {
     ['try', Promise_try, 1],
     ['withResolvers', Promise_withResolvers, 0],
     [wellKnownSymbols.species, [Promise_symbolSpecies]],
+    surroundingAgent.feature('promise.allkeyed') ? ['allKeyed', Promise_allKeyed, 1] : undefined,
+    surroundingAgent.feature('promise.allkeyed') ? ['allSettledKeyed', Promise_allSettledKeyed, 1] : undefined,
   ]);
 
   X(promiseConstructor.DefineOwnProperty(Value('prototype'), Descriptor({

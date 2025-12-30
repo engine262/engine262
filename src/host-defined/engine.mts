@@ -61,6 +61,11 @@ export const FEATURES = ([
     flag: 'iterator.join',
     url: 'https://github.com/tc39/proposal-iterator-join',
   },
+  {
+    name: 'Promise#allKeyed',
+    flag: 'promise.allkeyed',
+    url: 'https://github.com/tc39/proposal-await-dictionary',
+  },
   // stage 2
   {
     name: 'FinalizationRegistry#cleanupSome',
