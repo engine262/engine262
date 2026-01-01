@@ -2,6 +2,9 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { IfAbruptCloseIterator, Q } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   IsCallable,
   OrdinaryCreateFromConstructor,
@@ -12,10 +15,7 @@ import {
   Realm,
   type FunctionObject,
   IteratorStepValue,
-} from '../abstract-ops/all.mts';
-import { IfAbruptCloseIterator, Q } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 export interface WeakSetObject extends OrdinaryObject {
   readonly WeakSetData: (Value | undefined)[];

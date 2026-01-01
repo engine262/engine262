@@ -3,13 +3,6 @@ import {
   Value, NullValue, ObjectValue, type PropertyKeyValue, JSStringValue, BooleanValue,
 } from '../value.mts';
 import {
-  Assert,
-  GetValue,
-  CreateDataPropertyOrThrow,
-  CopyDataProperties,
-  DefineMethodProperty,
-} from '../abstract-ops/all.mts';
-import {
   StringValue,
   IsAnonymousFunctionDefinition,
   IsComputedPropertyKey,
@@ -23,6 +16,13 @@ import {
 import { OutOfRange, kInternal } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mts';
+import {
+  Assert,
+  GetValue,
+  CreateDataPropertyOrThrow,
+  CopyDataProperties,
+  DefineMethodProperty,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :

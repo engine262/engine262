@@ -10,6 +10,9 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
+import { UTF16EncodeCodePoint } from '../static-semantics/all.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Assert,
   Get,
@@ -25,11 +28,8 @@ import {
   F, R,
   type ExoticObject,
   Realm,
-} from '../abstract-ops/all.mts';
-import { UTF16EncodeCodePoint } from '../static-semantics/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import type { CodePoint } from '#self';
+  type CodePoint,
+} from '#self';
 
 export interface StringObject extends ExoticObject {
   readonly StringData: JSStringValue;

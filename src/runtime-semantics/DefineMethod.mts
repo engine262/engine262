@@ -1,9 +1,9 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './all.mts';
+import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '#self';
 import type {
   ECMAScriptFunctionObject, ObjectValue, PrivateName, PropertyKeyValue,
 } from '#self';

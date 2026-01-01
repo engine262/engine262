@@ -1,5 +1,13 @@
 import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
+  Q, X, type ValueEvaluator, type PlainCompletion,
+} from './completion.mts';
+import {
+  PropertyKeyMap, OutOfRange, callable,
+} from './helpers.mts';
+import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
+import type { PlainEvaluator } from './evaluator.mts';
+import {
   Assert,
   OrdinaryDefineOwnProperty,
   OrdinaryDelete,
@@ -17,16 +25,10 @@ import {
   Z,
   F, R, type OrdinaryObject, type FunctionObject,
   type BuiltinFunctionObject,
-} from './abstract-ops/all.mts';
-import { EnvironmentRecord } from './environment.mts';
-import {
-  Q, X, type ValueEvaluator, type PlainCompletion,
-} from './completion.mts';
-import {
-  PropertyKeyMap, OutOfRange, callable,
-} from './helpers.mts';
-import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
-import type { PlainEvaluator } from './evaluator.mts';
+  type ECMAScriptFunctionObject,
+  type DefaultConstructorBuiltinFunction, EnvironmentRecord,
+  Throw,
+} from '#self';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
 let createNumberValue: (value: number) => NumberValue; // set by static block in NumberValue for privileged access to constructor
@@ -556,7 +558,7 @@ export class BigIntValue extends PrimitiveValue {
   static exponentiate(base: BigIntValue, exponent: BigIntValue) {
     // 1. If exponent < 0n, throw a RangeError exception.
     if (R(exponent) < 0n) {
-      return surroundingAgent.Throw('RangeError', 'BigIntNegativeExponent');
+      return Throw.RangeError('Exponent of bigint must be positive');
     }
     // 2. If base is 0n and exponent is 0n, return 1n.
     if (R(base) === 0n && R(exponent) === 0n) {
@@ -575,7 +577,7 @@ export class BigIntValue extends PrimitiveValue {
   static divide(x: BigIntValue, y: BigIntValue) {
     // 1. If y is 0n, throw a RangeError exception.
     if (R(y) === 0n) {
-      return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
+      return Throw.RangeError('Cannot divide by zero');
     }
     // 2. Let quotient be the mathematical value of x divided by y.
     const quotient = R(x) / R(y);
@@ -587,7 +589,7 @@ export class BigIntValue extends PrimitiveValue {
   static remainder(n: BigIntValue, d: BigIntValue) {
     // 1. If d is 0n, throw a RangeError exception.
     if (R(d) === 0n) {
-      return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
+      return Throw.RangeError('Cannot divide by zero');
     }
     // 2. If n is 0n, return 0n.
     if (R(n) === 0n) {
@@ -625,7 +627,7 @@ export class BigIntValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
   static unsignedRightShift(_x: BigIntValue, _y: BigIntValue) {
-    return surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
+    return Throw.TypeError('BigInt has no unsigned right shift, use >> instead');
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
@@ -788,7 +790,7 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
   readonly PrivateElements: PrivateElementRecord[];
 
   // https://tc39.es/proposal-pattern-matching/#sec-object-internal-methods-and-internal-slots
-  readonly ConstructedBy: ObjectValue[];
+  readonly ConstructedBy: (ECMAScriptFunctionObject | DefaultConstructorBuiltinFunction)[];
 
   constructor(internalSlotsList: readonly string[]) {
     super();

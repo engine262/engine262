@@ -1,10 +1,4 @@
 import {
-  GeneratorResume,
-  GeneratorResumeAbrupt,
-  Realm,
-  type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
   Completion,
   ThrowCompletion,
   Q,
@@ -15,6 +9,12 @@ import {
   Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import {
+  GeneratorResume,
+  GeneratorResumeAbrupt,
+  type FunctionObject,
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.next */
 function* GeneratorProto_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {

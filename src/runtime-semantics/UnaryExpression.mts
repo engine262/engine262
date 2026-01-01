@@ -1,4 +1,11 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
+import { Q } from '../completion.mts';
+import {
+  Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
+} from '../value.mts';
+import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   GetValue,
@@ -14,15 +21,8 @@ import {
   IsPropertyKey,
   IsPrivateReference,
   ToPropertyKey,
-} from '../abstract-ops/all.mts';
-import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { Q } from '../completion.mts';
-import {
-  Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
-} from '../value.mts';
-import { EnvironmentRecord } from '../environment.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
+import { EnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `delete` UnaryExpression

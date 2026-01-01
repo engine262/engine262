@@ -1,8 +1,8 @@
 import { Value } from '../value.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { ToBoolean, GetValue } from '../abstract-ops/all.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { ToBoolean, GetValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
 //   ConditionalExpression :

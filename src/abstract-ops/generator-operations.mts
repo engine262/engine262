@@ -7,7 +7,8 @@ import {
   ReturnCompletion,
   ThrowCompletion,
 } from '../completion.mts';
-import { ExecutionContext, surroundingAgent } from '../host-defined/engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
 } from '../value.mts';

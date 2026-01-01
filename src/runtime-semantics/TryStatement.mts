@@ -9,10 +9,10 @@ import {
   X,
 } from '../completion.mts';
 import { BoundNames } from '../static-semantics/all.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { BindingInitialization } from './all.mts';
+import { DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
 //   TryStatement :

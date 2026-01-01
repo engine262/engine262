@@ -1,15 +1,15 @@
 import {
-  OrdinaryCreateFromConstructor,
-  Realm,
-  ToBoolean,
-  type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
   BooleanValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  OrdinaryCreateFromConstructor,
+  ToBoolean,
+  type OrdinaryObject,
+  Realm,
+} from '#self';
 
 export interface BooleanObject extends OrdinaryObject {
   readonly BooleanData: BooleanValue;

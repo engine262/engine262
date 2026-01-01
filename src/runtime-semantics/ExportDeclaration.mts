@@ -1,7 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
-import { Assert, GetValue, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
 import { NormalCompletion, Q } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -12,7 +11,9 @@ import {
   BindingClassDeclarationEvaluation,
   DecoratorListEvaluation,
 } from './all.mts';
-import type { FunctionDeclaration } from '#self';
+import {
+  Assert, GetValue, type ECMAScriptFunctionObject, type FunctionDeclaration,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation */
 //   ExportDeclaration :

@@ -1,5 +1,8 @@
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
+import { BigIntValue, NumberValue } from '../value.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   F,
@@ -7,10 +10,7 @@ import {
   PutValue,
   ToNumeric,
   Z,
-} from '../abstract-ops/all.mts';
-import { BigIntValue, NumberValue } from '../value.mts';
-import { Q } from '../completion.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
 
 type AnyNumericValue = BigIntValue | NumberValue;
 // UpdateExpression :

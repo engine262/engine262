@@ -1,4 +1,3 @@
-import { GetValue, MakePrivateReference } from '../abstract-ops/all.mts';
 import { Evaluate } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -8,6 +7,7 @@ import {
   EvaluatePropertyAccessWithExpressionKey,
   EvaluatePropertyAccessWithIdentifierKey,
 } from './all.mts';
+import { GetValue, MakePrivateReference } from '#self';
 import type { PlainEvaluator, ReferenceRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */

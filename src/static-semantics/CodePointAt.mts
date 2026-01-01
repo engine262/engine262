@@ -1,6 +1,6 @@
-import { Assert } from '../abstract-ops/all.mts';
 import { X } from '../completion.mts';
 import { UTF16SurrogatePairToCodePoint } from './all.mts';
+import { Assert } from '#self';
 import { isLeadingSurrogate, isTrailingSurrogate, type CodePoint } from '#self';
 
 /** https://tc39.es/ecma262/#sec-codepointat */

@@ -1,13 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  Get,
-  IsCallable,
-  OrdinaryCreateFromConstructor,
-  Realm,
-  type FunctionObject,
-  type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
   UndefinedValue,
   Value,
   type Arguments,
@@ -19,6 +11,14 @@ import {
 import type { Mutable } from '../helpers.mts';
 import { AddEntriesFromIterable } from './Map.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  Get,
+  IsCallable,
+  OrdinaryCreateFromConstructor,
+  Realm,
+  type FunctionObject,
+  type OrdinaryObject,
+} from '#self';
 
 export interface WeakMapObject extends OrdinaryObject {
   readonly WeakMapData: { Key: Value | undefined; Value: Value | undefined; }[];

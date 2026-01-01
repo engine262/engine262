@@ -1,4 +1,7 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { ObjectValue, Value, type Arguments } from '../value.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Call,
   Construct,
@@ -12,10 +15,7 @@ import {
   ToPropertyDescriptor,
   ToPropertyKey,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import { ObjectValue, Value, type Arguments } from '../value.mts';
-import { Q } from '../completion.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-reflect.apply */
 function* Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]: Arguments) {

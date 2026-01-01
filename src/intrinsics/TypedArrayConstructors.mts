@@ -4,6 +4,12 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  AllocateTypedArray, InitializeTypedArrayFromArrayBuffer, InitializeTypedArrayFromArrayLike, InitializeTypedArrayFromList, InitializeTypedArrayFromTypedArray, isTypedArrayObject, typedArrayInfoByName, type TypedArrayConstructorNames,
+} from './TypedArray.mts';
 import {
   Assert,
   GetMethod,
@@ -13,13 +19,7 @@ import {
   Realm,
   GetIteratorFromMethod,
   isArrayBufferObject,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import {
-  AllocateTypedArray, InitializeTypedArrayFromArrayBuffer, InitializeTypedArrayFromArrayLike, InitializeTypedArrayFromList, InitializeTypedArrayFromTypedArray, isTypedArrayObject, typedArrayInfoByName, type TypedArrayConstructorNames,
-} from './TypedArray.mts';
+} from '#self';
 
 export function bootstrapTypedArrayConstructors(realmRec: Realm) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {

@@ -1,4 +1,4 @@
-import { AbstractModuleRecord } from './modules.mts';
+import { AbstractModuleRecord } from '../modules.mts';
 import {
   Descriptor,
   ReferenceRecord,
@@ -8,10 +8,15 @@ import {
   wellKnownSymbols,
   BooleanValue,
   JSStringValue,
-  PrivateName,
   NullValue,
-} from './value.mts';
-import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
+} from '../value.mts';
+import { surroundingAgent, type GCMarker } from '../host-defined/engine.mts';
+import {
+  NormalCompletion, Q, X,
+  type ValueEvaluator,
+} from '../completion.mts';
+import { JSStringMap, skipDebugger } from '../helpers.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -25,13 +30,7 @@ import {
   ToBoolean,
   isECMAScriptFunctionObject,
   type ECMAScriptFunctionObject,
-} from './abstract-ops/all.mts';
-import {
-  NormalCompletion, Q, X,
-  type ValueEvaluator,
-} from './completion.mts';
-import { JSStringMap, skipDebugger } from './helpers.mts';
-import type { PlainEvaluator } from './evaluator.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-environment-records */
 export abstract class EnvironmentRecord {
@@ -81,6 +80,7 @@ interface DeclarativeEnvironmentBinding {
 interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
   readonly target: [AbstractModuleRecord, JSStringValue];
 }
+
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   readonly bindings = new JSStringMap<DeclarativeEnvironmentBinding>();
@@ -257,6 +257,196 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
+/** https://tc39.es/ecma262/#sec-function-environment-records */
+export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
+  constructor(F: ECMAScriptFunctionObject, newTarget: UndefinedValue | ObjectValue) {
+    // 1. Assert: F is an ECMAScript function.
+    Assert(isECMAScriptFunctionObject(F));
+    // 2. Assert: Type(newTarget) is Undefined or Object.
+    Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue);
+    // 3. Let env be a new function Environment Record containing no bindings.
+    super(F.Environment);
+    // 4. Set env.[[FunctionObject]] to F.
+    this.FunctionObject = F;
+    // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
+
+    if (F.ThisMode === 'lexical') {
+      this.ThisBindingStatus = 'lexical';
+    } else { // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
+      this.ThisBindingStatus = 'uninitialized';
+    }
+    // 7. Set env.[[NewTarget]] to newTarget.
+    this.NewTarget = newTarget;
+    // 8. Set env.[[OuterEnv]] to F.[[Environment]].
+    // 9. Return env.
+  }
+
+  protected ThisValue!: Value;
+
+  ThisBindingStatus: 'lexical' | 'uninitialized' | 'initialized';
+
+  readonly FunctionObject: ECMAScriptFunctionObject;
+
+  readonly NewTarget: UndefinedValue | ObjectValue;
+
+  /** https://tc39.es/ecma262/#sec-bindthisvalue */
+  BindThisValue(V: Value) {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+    Assert(envRec.ThisBindingStatus !== 'lexical');
+    // 3. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
+    if (envRec.ThisBindingStatus === 'initialized') {
+      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
+    }
+    // 4. Set envRec.[[ThisValue]] to V.
+    envRec.ThisValue = V;
+    // 5. Set envRec.[[ThisBindingStatus]] to initialized.
+    envRec.ThisBindingStatus = 'initialized';
+    // 6. Return V.
+    return V;
+  }
+
+  /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
+  override HasThisBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return Value.false;
+    } else {
+      return Value.true;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
+  override HasSuperBinding() {
+    const envRec = this;
+    // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return Value.false;
+    }
+    // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
+    if (envRec.FunctionObject.HomeObject === Value.undefined) {
+      return Value.false;
+    } else {
+      return Value.true;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
+  GetThisBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+    Assert(envRec.ThisBindingStatus !== 'lexical');
+    // 3. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
+    if (envRec.ThisBindingStatus === 'uninitialized') {
+      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
+    }
+    // 4. Return envRec.[[ThisValue]].
+    return envRec.ThisValue;
+  }
+
+  /** https://tc39.es/ecma262/#sec-getsuperbase */
+  GetSuperBase() {
+    const envRec = this;
+    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
+    const home = envRec.FunctionObject.HomeObject;
+    // 2. If home has the value undefined, return undefined.
+    if (home === Value.undefined) {
+      return Value.undefined;
+    }
+    // 3. Assert: Type(home) is Object.
+    Assert(home instanceof ObjectValue);
+    // 4. Return ! home.[[GetPrototypeOf]]().
+    return X(home.GetPrototypeOf());
+  }
+
+  override mark(m: GCMarker) {
+    super.mark(m);
+    m(this.ThisValue);
+    m(this.FunctionObject);
+    m(this.NewTarget);
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-module-environment-records */
+export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  declare readonly bindings: JSStringMap<ModuleEnvironmentBinding>;
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
+  override* GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator {
+    // 1. Assert: S is true.
+    Assert(S === Value.true);
+    // 2. Let envRec be the module Environment Record for which the method was invoked.
+    const envRec = this;
+    // 3. Assert: envRec has a binding for N.
+    const binding = envRec.bindings.get(N);
+    Assert(binding !== undefined);
+    // 4. If the binding for N is an indirect binding, then
+    if (binding.indirect === true) {
+      // a. Let M and N2 be the indirection values provided when this binding for N was created.
+      const [M, N2] = binding.target;
+      // b.Let targetEnv be M.[[Environment]].
+      const targetEnv = M.Environment;
+      // c. If targetEnv is undefined, throw a ReferenceError exception.
+      if (!targetEnv) {
+        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+      }
+      // d. Return ? targetEnv.GetBindingValue(N2, true).
+      return yield* targetEnv.GetBindingValue(N2, Value.true);
+    }
+    // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
+    if (binding.initialized === false) {
+      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
+    }
+    // 6. Return the value currently bound to N in envRec.
+    return NormalCompletion(binding.value!);
+  }
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
+  override DeleteBinding(): never {
+    Assert(false, 'This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
+  }
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
+  override HasThisBinding() {
+    // Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
+  GetThisBinding() {
+    // Return undefined.
+    return Value.undefined;
+  }
+
+  /** https://tc39.es/ecma262/#sec-createimportbinding */
+  CreateImportBinding(N: JSStringValue, M: AbstractModuleRecord, N2: JSStringValue) {
+    // 1. Let envRec be the module Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec does not already have a binding for N.
+    Assert(skipDebugger(envRec.HasBinding(N)) === Value.false);
+    // 3. Assert: M is a Module Record.
+    Assert(M instanceof AbstractModuleRecord);
+    // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
+    // 5. Create an immutable indirect binding in envRec for N that references M and N2 as its target binding and record that the binding is initialized.
+    envRec.bindings.set(N, {
+      indirect: true,
+      target: [M, N2],
+      initialized: true,
+      mark(m: GCMarker) {
+        m(this.target[0]);
+        m(this.target[1]);
+      },
+    });
+    // 6. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+}
+
 /** https://tc39.es/ecma262/#sec-object-environment-records */
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
   BindingObject: ObjectValue;
@@ -407,121 +597,6 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   override mark(m: GCMarker) {
     // TODO(ts): this function does not call super.mark(). is it a mistake?
     m(this.BindingObject);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-function-environment-records */
-export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
-  constructor(F: ECMAScriptFunctionObject, newTarget: UndefinedValue | ObjectValue) {
-    // 1. Assert: F is an ECMAScript function.
-    Assert(isECMAScriptFunctionObject(F));
-    // 2. Assert: Type(newTarget) is Undefined or Object.
-    Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue);
-    // 3. Let env be a new function Environment Record containing no bindings.
-    super(F.Environment);
-    // 4. Set env.[[FunctionObject]] to F.
-    this.FunctionObject = F;
-    // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
-
-    if (F.ThisMode === 'lexical') {
-      this.ThisBindingStatus = 'lexical';
-    } else { // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
-      this.ThisBindingStatus = 'uninitialized';
-    }
-    // 7. Set env.[[NewTarget]] to newTarget.
-    this.NewTarget = newTarget;
-    // 8. Set env.[[OuterEnv]] to F.[[Environment]].
-    // 9. Return env.
-  }
-
-  protected ThisValue!: Value;
-
-  ThisBindingStatus: 'lexical' | 'uninitialized' | 'initialized';
-
-  readonly FunctionObject: ECMAScriptFunctionObject;
-
-  readonly NewTarget: UndefinedValue | ObjectValue;
-
-  /** https://tc39.es/ecma262/#sec-bindthisvalue */
-  BindThisValue(V: Value) {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
-    Assert(envRec.ThisBindingStatus !== 'lexical');
-    // 3. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
-    if (envRec.ThisBindingStatus === 'initialized') {
-      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
-    }
-    // 4. Set envRec.[[ThisValue]] to V.
-    envRec.ThisValue = V;
-    // 5. Set envRec.[[ThisBindingStatus]] to initialized.
-    envRec.ThisBindingStatus = 'initialized';
-    // 6. Return V.
-    return V;
-  }
-
-  /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
-  override HasThisBinding() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
-    if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
-    } else {
-      return Value.true;
-    }
-  }
-
-  /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
-  override HasSuperBinding() {
-    const envRec = this;
-    // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
-    if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
-    }
-    // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
-    if (envRec.FunctionObject.HomeObject === Value.undefined) {
-      return Value.false;
-    } else {
-      return Value.true;
-    }
-  }
-
-  /** https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
-  GetThisBinding() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
-    Assert(envRec.ThisBindingStatus !== 'lexical');
-    // 3. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
-    if (envRec.ThisBindingStatus === 'uninitialized') {
-      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
-    }
-    // 4. Return envRec.[[ThisValue]].
-    return envRec.ThisValue;
-  }
-
-  /** https://tc39.es/ecma262/#sec-getsuperbase */
-  GetSuperBase() {
-    const envRec = this;
-    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
-    const home = envRec.FunctionObject.HomeObject;
-    // 2. If home has the value undefined, return undefined.
-    if (home === Value.undefined) {
-      return Value.undefined;
-    }
-    // 3. Assert: Type(home) is Object.
-    Assert(home instanceof ObjectValue);
-    // 4. Return ! home.[[GetPrototypeOf]]().
-    return X(home.GetPrototypeOf());
-  }
-
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.ThisValue);
-    m(this.FunctionObject);
-    m(this.NewTarget);
   }
 }
 
@@ -847,80 +922,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-module-environment-records */
-export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  declare readonly bindings: JSStringMap<ModuleEnvironmentBinding>;
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
-  override* GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator {
-    // 1. Assert: S is true.
-    Assert(S === Value.true);
-    // 2. Let envRec be the module Environment Record for which the method was invoked.
-    const envRec = this;
-    // 3. Assert: envRec has a binding for N.
-    const binding = envRec.bindings.get(N);
-    Assert(binding !== undefined);
-    // 4. If the binding for N is an indirect binding, then
-    if (binding.indirect === true) {
-      // a. Let M and N2 be the indirection values provided when this binding for N was created.
-      const [M, N2] = binding.target;
-      // b.Let targetEnv be M.[[Environment]].
-      const targetEnv = M.Environment;
-      // c. If targetEnv is undefined, throw a ReferenceError exception.
-      if (!targetEnv) {
-        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-      }
-      // d. Return ? targetEnv.GetBindingValue(N2, true).
-      return yield* targetEnv.GetBindingValue(N2, Value.true);
-    }
-    // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
-    if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
-    }
-    // 6. Return the value currently bound to N in envRec.
-    return NormalCompletion(binding.value!);
-  }
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
-  override DeleteBinding(): never {
-    Assert(false, 'This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
-  }
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
-  override HasThisBinding() {
-    // Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
-  GetThisBinding() {
-    // Return undefined.
-    return Value.undefined;
-  }
-
-  /** https://tc39.es/ecma262/#sec-createimportbinding */
-  CreateImportBinding(N: JSStringValue, M: AbstractModuleRecord, N2: JSStringValue) {
-    // 1. Let envRec be the module Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec does not already have a binding for N.
-    Assert(skipDebugger(envRec.HasBinding(N)) === Value.false);
-    // 3. Assert: M is a Module Record.
-    Assert(M instanceof AbstractModuleRecord);
-    // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
-    // 5. Create an immutable indirect binding in envRec for N that references M and N2 as its target binding and record that the binding is initialized.
-    envRec.bindings.set(N, {
-      indirect: true,
-      target: [M, N2],
-      initialized: true,
-      mark(m: GCMarker) {
-        m(this.target[0]);
-        m(this.target[1]);
-      },
-    });
-    // 6. Return NormalCompletion(empty).
-    return NormalCompletion(undefined);
-  }
-}
+export type EnvironmentRecordWithThisBinding = FunctionEnvironmentRecord | GlobalEnvironmentRecord | ModuleEnvironmentRecord;
 
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
 export function* GetIdentifierReference(env: EnvironmentRecord | NullValue, name: JSStringValue, strict: BooleanValue): PlainEvaluator<ReferenceRecord> {
@@ -952,22 +954,3 @@ export function* GetIdentifierReference(env: EnvironmentRecord | NullValue, name
     return yield* GetIdentifierReference(outer, name, strict);
   }
 }
-
-export class PrivateEnvironmentRecord {
-  readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | NullValue;
-
-  readonly Names: PrivateName[] = [];
-
-  /** https://tc39.es/ecma262/#sec-newprivateenvironment */
-  constructor(outerEnv: PrivateEnvironmentRecord | NullValue) {
-    this.OuterPrivateEnvironment = outerEnv;
-  }
-
-  mark(m: GCMarker) {
-    this.Names.forEach((name) => {
-      m(name);
-    });
-  }
-}
-
-export type EnvironmentRecordWithThisBinding = FunctionEnvironmentRecord | GlobalEnvironmentRecord | ModuleEnvironmentRecord;

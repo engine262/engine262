@@ -19,6 +19,8 @@ import {
   type ShadowRealmObject,
   isShadowRealmObject,
   isWrappedFunctionExoticObject,
+  ArrayExoticObjectInternalMethods,
+  F,
 } from '#self';
 
 /*
@@ -218,7 +220,7 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
     additionalOptions?: {
       entries?: (value: T) => Protocol.Runtime.ObjectPreview['entries'];
       additionalProperties?: (value: T) => Iterable<[string, Value]>;
-      internalProperties?: (value: T) => Iterable<[string, Value]>;
+      internalProperties?: (value: T) => Iterable<[string, Value | MapObject['MapData'] | SetObject['SetData']]>;
     },
   ) {
     this.className = className;
@@ -254,10 +256,32 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
     if (!internalProperties.length) {
       return [];
     }
-    return internalProperties.map(([name, val]): Protocol.Runtime.InternalPropertyDescriptor => ({
-      name,
-      value: getInspector(val).toRemoteObject(val, getObjectId, generatePreview),
-    }));
+    return internalProperties.map(([name, val]): Protocol.Runtime.InternalPropertyDescriptor => {
+      let value: Protocol.Runtime.RemoteObject;
+      if (val instanceof Value) {
+        value = getInspector(val).toRemoteObject(val, getObjectId, generatePreview);
+      } else {
+        const array = new ObjectValue([]);
+        array.DefineOwnProperty = ArrayExoticObjectInternalMethods.DefineOwnProperty;
+        array.properties.set('length', Descriptor({ Value: F(val.length) }));
+        for (const [index, item] of val.entries()) {
+          let value;
+          if (item instanceof Value) {
+            value = item;
+          } else {
+            if (!item?.Key || !item.Value) {
+              continue;
+            }
+            value = new ObjectValue(['InspectorEntry']);
+            value.properties.set('key', Descriptor({ Value: item.Key }));
+            value.properties.set('value', Descriptor({ Value: item.Value }));
+          }
+          array.properties.set(Value(index.toString()), Descriptor({ Value: value }));
+        }
+        value = Array.toRemoteObject(array, getObjectId, generatePreview);
+      }
+      return ({ name, value });
+    });
   }
 
   toObjectPreview(value: T): Protocol.Runtime.ObjectPreview {
@@ -271,7 +295,20 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
     };
   }
 }
-const Default = new ObjectInspector<ObjectValue>('Object', undefined, () => 'Object');
+
+const InspectorEntry = new ObjectInspector<ObjectValue>('Object', 'internal#entry' as never, (value) => {
+  const key = value.properties.get(Value('key'))!.Value!;
+  const val = value.properties.get(Value('value'))!.Value!;
+  return `{${getInspector(key).toDescription(key)} => ${getInspector(val).toDescription(val)}}`;
+});
+
+const Default = new ObjectInspector<ObjectValue>('Object', undefined, (object) => {
+  const [ctor] = object.ConstructedBy;
+  if (!ctor) {
+    return 'Object';
+  }
+  return propertyNameToString(ctor.HostInitialName);
+});
 
 const ArrayBuffer = new ObjectInspector<ArrayBufferObject>('ArrayBuffer', 'arraybuffer', (value) => `ArrayBuffer(${value.ArrayBufferByteLength})`, {});
 const DataView = new ObjectInspector<DataViewObject>('DataView', 'dataview', (value) => `DataView(${value.ByteLength})`);
@@ -292,6 +329,7 @@ const Error = new ObjectInspector<ObjectValue>('SyntaxError', 'error', (value) =
 
 const Map = new ObjectInspector<MapObject>('Map', 'map', (value) => `Map(${value.MapData.filter((x) => !!x.Key).length})`, {
   additionalProperties: (value) => [['size', Value(value.MapData.filter((x) => !!x.Key).length)]],
+  internalProperties: (value) => [['[[Entries]]', value.MapData]],
   entries: (value) => value.MapData.filter((x) => x.Key).map(({ Key, Value }) => ({
     key: getInspector(Key!).toObjectPreview(Key!),
     value: getInspector(Value!).toObjectPreview(Value!),
@@ -299,17 +337,20 @@ const Map = new ObjectInspector<MapObject>('Map', 'map', (value) => `Map(${value
 });
 const Set = new ObjectInspector<SetObject>('Set', 'set', (value) => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
   additionalProperties: (value) => [['size', Value(value.SetData.filter(globalThis.Boolean).length)]],
+  internalProperties: (value) => [['[[Entries]]', value.SetData]],
   entries: (value) => value.SetData.filter(globalThis.Boolean).map((Value) => ({
     value: getInspector(Value!).toObjectPreview(Value!),
   })),
 });
 const WeakMap = new ObjectInspector<WeakMapObject>('WeakMap', 'weakmap', () => 'WeakMap', {
+  internalProperties: (value) => [['[[Entries]]', value.WeakMapData]],
   entries: (value) => value.WeakMapData.filter((x) => x.Key).map(({ Key, Value }) => ({
     key: getInspector(Key!).toObjectPreview(Key!),
     value: getInspector(Value!).toObjectPreview(Value!),
   })),
 });
 const WeakSet = new ObjectInspector<WeakSetObject>('WeakSet', 'weakset', () => 'WeakSet', {
+  internalProperties: (value) => [['[[Entries]]', value.WeakSetData]],
   entries: (value) => value.WeakSetData.filter(globalThis.Boolean).map((Value) => ({
     value: getInspector(Value!).toObjectPreview(Value!),
   })),
@@ -390,15 +431,17 @@ const Array: Inspector<ObjectValue> = {
 };
 const TypedArray = new ObjectInspector<TypedArrayObject>('TypedArray', 'typedarray', (value) => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
 
-function propertyToPropertyPreview(key: PropertyKeyValue | PrivateName, desc: Descriptor | PrivateElementRecord): Protocol.Runtime.PropertyPreview {
-  let name;
-  if (key instanceof JSStringValue) {
-    name = key.stringValue();
-  } else if (key instanceof PrivateName) {
-    name = key.Description.stringValue();
+function propertyNameToString(value: PropertyKeyValue | PrivateName): string {
+  if (value instanceof JSStringValue) {
+    return value.stringValue();
+  } else if (value instanceof PrivateName) {
+    return value.Description.stringValue();
   } else {
-    name = SymbolDescriptiveString(key).stringValue();
+    return SymbolDescriptiveString(value).stringValue();
   }
+}
+function propertyToPropertyPreview(key: PropertyKeyValue | PrivateName, desc: Descriptor | PrivateElementRecord): Protocol.Runtime.PropertyPreview {
+  const name = propertyNameToString(key);
   if (desc.Get || desc.Set) {
     return { name, type: 'accessor' };
   } else {
@@ -406,12 +449,15 @@ function propertyToPropertyPreview(key: PropertyKeyValue | PrivateName, desc: De
   }
 }
 
-function propertiesToPropertyPreview(value: ObjectValue, extra: undefined | Iterable<[string, Value]>, max = 5) {
+function propertiesToPropertyPreview(value: ObjectValue, extra: undefined | Iterable<[string, Value | MapObject['MapData'] | SetObject['SetData']]>, max = 5) {
   let overflow = false;
   const properties: Protocol.Runtime.PropertyPreview[] = [];
   if (extra) {
     for (const [key, value] of extra) {
-      properties.push(getInspector(value).toPropertyPreview(key, value));
+      if (value instanceof Value) {
+        properties.push(getInspector(value).toPropertyPreview(key, value));
+      }
+      // TODO:... handle Value[]
     }
   }
   if (isTypedArrayObject(value) && value.ViewedArrayBuffer instanceof ObjectValue && value.ViewedArrayBuffer.ArrayBufferData instanceof DataBlock) {
@@ -502,6 +548,8 @@ export function getInspector(value: Value): Inspector<Value> {
       return Module;
     case isShadowRealmObject(value):
       return ShadowRealm;
+    case (value as ObjectValue).internalSlotsList.includes('InspectorEntry'):
+      return InspectorEntry;
     default:
       return Default;
   }

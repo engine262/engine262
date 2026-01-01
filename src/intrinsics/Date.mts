@@ -1,4 +1,15 @@
 import {
+  Value, JSStringValue, ObjectValue, type Arguments, type FunctionCallContext, NumberValue,
+} from '../value.mts';
+import {
+  AbruptCompletion,
+  Q, ValueOfNormalCompletion, X,
+  type ValueEvaluator,
+} from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import { ToDateString, thisTimeValue } from './DatePrototype.mts';
+import {
   Assert,
   OrdinaryCreateFromConstructor,
   ToPrimitive,
@@ -14,18 +25,7 @@ import {
   type OrdinaryObject,
   type FunctionObject,
   Realm,
-} from '../abstract-ops/all.mts';
-import {
-  Value, JSStringValue, ObjectValue, type Arguments, type FunctionCallContext, NumberValue,
-} from '../value.mts';
-import {
-  AbruptCompletion,
-  Q, ValueOfNormalCompletion, X,
-  type ValueEvaluator,
-} from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import { ToDateString, thisTimeValue } from './DatePrototype.mts';
+} from '#self';
 
 export interface DateObject extends OrdinaryObject {
   DateValue: NumberValue;

@@ -1,13 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
-  Assert,
-  CreateListIteratorRecord,
-  CreateMappedArgumentsObject,
-  CreateUnmappedArgumentsObject,
-  type ECMAScriptFunctionObject,
-} from '../abstract-ops/all.mts';
-import {
   BoundNames,
   IsConstantDeclaration,
   IsSimpleParameterList,
@@ -17,7 +10,6 @@ import {
   LexicallyDeclaredNames,
   LexicallyScopedDeclarations,
 } from '../static-semantics/all.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import { Q, X, NormalCompletion } from '../completion.mts';
 import { JSStringSet } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
@@ -25,6 +17,14 @@ import {
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mts';
+import {
+  Assert,
+  CreateListIteratorRecord,
+  CreateMappedArgumentsObject,
+  CreateUnmappedArgumentsObject,
+  type ECMAScriptFunctionObject,
+} from '#self';
+import { DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
 export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject, argumentsList: Arguments): PlainEvaluator<void> {

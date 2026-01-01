@@ -4,7 +4,7 @@ exports[`array > [,,,] 1`] = `
 {
   "className": "Array",
   "description": "Array(3)",
-  "objectId": "default:4",
+  "objectId": "default:5",
   "preview": {
     "description": "Array(3)",
     "overflow": false,
@@ -14,6 +14,31 @@ exports[`array > [,,,] 1`] = `
   },
   "subtype": "array",
   "type": "object",
+}
+`;
+
+exports[`array > [,,,] properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "length",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "3",
+        "type": "number",
+        "value": 3,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
 }
 `;
 
@@ -34,11 +59,36 @@ exports[`array > [] 1`] = `
 }
 `;
 
+exports[`array > [] properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "length",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "0",
+        "type": "number",
+        "value": 0,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`array > [1] 1`] = `
 {
   "className": "Array",
   "description": "Array(1)",
-  "objectId": "default:2",
+  "objectId": "default:3",
   "preview": {
     "description": "Array(1)",
     "overflow": false,
@@ -57,11 +107,52 @@ exports[`array > [1] 1`] = `
 }
 `;
 
+exports[`array > [1] properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "length",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "0",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`array > Array(10) 1`] = `
 {
   "className": "Array",
   "description": "Array(10)",
-  "objectId": "default:3",
+  "objectId": "default:4",
   "preview": {
     "description": "Array(10)",
     "overflow": false,
@@ -74,11 +165,36 @@ exports[`array > Array(10) 1`] = `
 }
 `;
 
+exports[`array > Array(10) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "length",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "10",
+        "type": "number",
+        "value": 10,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`array > var a = [1,,2]; a.x = 1; a 1`] = `
 {
   "className": "Array",
   "description": "Array(3)",
-  "objectId": "default:5",
+  "objectId": "default:6",
   "preview": {
     "description": "Array(3)",
     "overflow": false,
@@ -107,6 +223,79 @@ exports[`array > var a = [1,,2]; a.x = 1; a 1`] = `
 }
 `;
 
+exports[`array > var a = [1,,2]; a.x = 1; a properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "length",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "3",
+        "type": "number",
+        "value": 3,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "0",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "2",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "2",
+        "type": "number",
+        "value": 2,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "x",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`array buffer > new ArrayBuffer(0) 1`] = `
 {
   "className": "ArrayBuffer",
@@ -125,11 +314,34 @@ exports[`array buffer > new ArrayBuffer(0) 1`] = `
 }
 `;
 
+exports[`array buffer > new ArrayBuffer(0) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[ArrayBufferByteLength]]",
+      "value": {
+        "type": "number",
+        "value": 0,
+      },
+    },
+    {
+      "name": "[[ArrayBufferData]]",
+      "value": {
+        "type": "number",
+        "value": 1,
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`array buffer > new ArrayBuffer(10) 1`] = `
 {
   "className": "ArrayBuffer",
   "description": "ArrayBuffer(10)",
-  "objectId": "default:2",
+  "objectId": "default:3",
   "preview": {
     "description": "ArrayBuffer(10)",
     "entries": undefined,
@@ -143,11 +355,34 @@ exports[`array buffer > new ArrayBuffer(10) 1`] = `
 }
 `;
 
+exports[`array buffer > new ArrayBuffer(10) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[ArrayBufferByteLength]]",
+      "value": {
+        "type": "number",
+        "value": 10,
+      },
+    },
+    {
+      "name": "[[ArrayBufferData]]",
+      "value": {
+        "type": "number",
+        "value": 2,
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x 1`] = `
 {
   "className": "ArrayBuffer",
   "description": "ArrayBuffer(10)",
-  "objectId": "default:3",
+  "objectId": "default:4",
   "preview": {
     "description": "ArrayBuffer(10)",
     "entries": undefined,
@@ -164,6 +399,46 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x 1`] = `
   },
   "subtype": "arraybuffer",
   "type": "object",
+}
+`;
+
+exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[ArrayBufferByteLength]]",
+      "value": {
+        "type": "number",
+        "value": 10,
+      },
+    },
+    {
+      "name": "[[ArrayBufferData]]",
+      "value": {
+        "type": "number",
+        "value": 3,
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "a",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
 }
 `;
 
@@ -185,11 +460,19 @@ exports[`data view > new DataView(new ArrayBuffer(0)) 1`] = `
 }
 `;
 
+exports[`data view > new DataView(new ArrayBuffer(0)) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`data view > new DataView(new ArrayBuffer(10)) 1`] = `
 {
   "className": "DataView",
   "description": "DataView(10)",
-  "objectId": "default:2",
+  "objectId": "default:3",
   "preview": {
     "description": "DataView(10)",
     "entries": undefined,
@@ -203,11 +486,19 @@ exports[`data view > new DataView(new ArrayBuffer(10)) 1`] = `
 }
 `;
 
+exports[`data view > new DataView(new ArrayBuffer(10)) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x 1`] = `
 {
   "className": "DataView",
   "description": "DataView(10)",
-  "objectId": "default:3",
+  "objectId": "default:4",
   "preview": {
     "description": "DataView(10)",
     "entries": undefined,
@@ -224,6 +515,31 @@ exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x 1`
   },
   "subtype": "dataview",
   "type": "object",
+}
+`;
+
+exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "a",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
 }
 `;
 
@@ -765,11 +1081,37 @@ exports[`map and set > new Map 1`] = `
 }
 `;
 
+exports[`map and set > new Map properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(0)",
+        "objectId": "default:2",
+        "preview": {
+          "description": "Array(0)",
+          "overflow": false,
+          "properties": [],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new Map([["a", 1], ["b", 2]]) 1`] = `
 {
   "className": "Map",
   "description": "Map(2)",
-  "objectId": "default:2",
+  "objectId": "default:4",
   "preview": {
     "description": "Map(2)",
     "entries": [
@@ -818,11 +1160,50 @@ exports[`map and set > new Map([["a", 1], ["b", 2]]) 1`] = `
 }
 `;
 
+exports[`map and set > new Map([["a", 1], ["b", 2]]) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(2)",
+        "objectId": "default:5",
+        "preview": {
+          "description": "Array(2)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{a => 1}",
+            },
+            {
+              "name": "1",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{b => 2}",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new Set 1`] = `
 {
   "className": "Set",
   "description": "Set(0)",
-  "objectId": "default:4",
+  "objectId": "default:8",
   "preview": {
     "description": "Set(0)",
     "entries": undefined,
@@ -842,11 +1223,37 @@ exports[`map and set > new Set 1`] = `
 }
 `;
 
+exports[`map and set > new Set properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(0)",
+        "objectId": "default:9",
+        "preview": {
+          "description": "Array(0)",
+          "overflow": false,
+          "properties": [],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new Set(["a", 1, "b", 2]) 1`] = `
 {
   "className": "Set",
   "description": "Set(4)",
-  "objectId": "default:5",
+  "objectId": "default:11",
   "preview": {
     "description": "Set(4)",
     "entries": [
@@ -899,11 +1306,58 @@ exports[`map and set > new Set(["a", 1, "b", 2]) 1`] = `
 }
 `;
 
+exports[`map and set > new Set(["a", 1, "b", 2]) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(4)",
+        "objectId": "default:12",
+        "preview": {
+          "description": "Array(4)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "type": "string",
+              "value": "a",
+            },
+            {
+              "name": "1",
+              "type": "number",
+              "value": "1",
+            },
+            {
+              "name": "2",
+              "type": "string",
+              "value": "b",
+            },
+            {
+              "name": "3",
+              "type": "number",
+              "value": "2",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new WeakMap 1`] = `
 {
   "className": "WeakMap",
   "description": "WeakMap",
-  "objectId": "default:7",
+  "objectId": "default:15",
   "preview": {
     "description": "WeakMap",
     "entries": undefined,
@@ -917,11 +1371,37 @@ exports[`map and set > new WeakMap 1`] = `
 }
 `;
 
+exports[`map and set > new WeakMap properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(0)",
+        "objectId": "default:16",
+        "preview": {
+          "description": "Array(0)",
+          "overflow": false,
+          "properties": [],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new WeakMap([[{}, 1], [{}, 2]]) 1`] = `
 {
   "className": "WeakMap",
   "description": "WeakMap",
-  "objectId": "default:8",
+  "objectId": "default:18",
   "preview": {
     "description": "WeakMap",
     "entries": [
@@ -968,11 +1448,50 @@ exports[`map and set > new WeakMap([[{}, 1], [{}, 2]]) 1`] = `
 }
 `;
 
+exports[`map and set > new WeakMap([[{}, 1], [{}, 2]]) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(2)",
+        "objectId": "default:19",
+        "preview": {
+          "description": "Array(2)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{Object => 1}",
+            },
+            {
+              "name": "1",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{Object => 2}",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new WeakSet 1`] = `
 {
   "className": "WeakSet",
   "description": "WeakSet",
-  "objectId": "default:10",
+  "objectId": "default:22",
   "preview": {
     "description": "WeakSet",
     "entries": undefined,
@@ -986,11 +1505,37 @@ exports[`map and set > new WeakSet 1`] = `
 }
 `;
 
+exports[`map and set > new WeakSet properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(0)",
+        "objectId": "default:23",
+        "preview": {
+          "description": "Array(0)",
+          "overflow": false,
+          "properties": [],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > new WeakSet([{}, {}]) 1`] = `
 {
   "className": "WeakSet",
   "description": "WeakSet",
-  "objectId": "default:11",
+  "objectId": "default:25",
   "preview": {
     "description": "WeakSet",
     "entries": [
@@ -1025,11 +1570,50 @@ exports[`map and set > new WeakSet([{}, {}]) 1`] = `
 }
 `;
 
+exports[`map and set > new WeakSet([{}, {}]) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(2)",
+        "objectId": "default:26",
+        "preview": {
+          "description": "Array(2)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "subtype": undefined,
+              "type": "object",
+              "value": "Object",
+            },
+            {
+              "name": "1",
+              "subtype": undefined,
+              "type": "object",
+              "value": "Object",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`map and set > var x = new Map([["a", 1], ["b", 2]]); x.x = 1; x 1`] = `
 {
   "className": "Map",
   "description": "Map(2)",
-  "objectId": "default:3",
+  "objectId": "default:6",
   "preview": {
     "description": "Map(2)",
     "entries": [
@@ -1083,11 +1667,67 @@ exports[`map and set > var x = new Map([["a", 1], ["b", 2]]); x.x = 1; x 1`] = `
 }
 `;
 
+exports[`map and set > var x = new Map([["a", 1], ["b", 2]]); x.x = 1; x properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(2)",
+        "objectId": "default:7",
+        "preview": {
+          "description": "Array(2)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{a => 1}",
+            },
+            {
+              "name": "1",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{b => 2}",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "x",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`map and set > var x = new Set(["a", 1, "b", 2]); x.x = 1; x 1`] = `
 {
   "className": "Set",
   "description": "Set(4)",
-  "objectId": "default:6",
+  "objectId": "default:13",
   "preview": {
     "description": "Set(4)",
     "entries": [
@@ -1145,11 +1785,75 @@ exports[`map and set > var x = new Set(["a", 1, "b", 2]); x.x = 1; x 1`] = `
 }
 `;
 
+exports[`map and set > var x = new Set(["a", 1, "b", 2]); x.x = 1; x properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(4)",
+        "objectId": "default:14",
+        "preview": {
+          "description": "Array(4)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "type": "string",
+              "value": "a",
+            },
+            {
+              "name": "1",
+              "type": "number",
+              "value": "1",
+            },
+            {
+              "name": "2",
+              "type": "string",
+              "value": "b",
+            },
+            {
+              "name": "3",
+              "type": "number",
+              "value": "2",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "x",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`map and set > var x = new WeakMap([[{}, 1], [{}, 2]]); x.x = 1; x 1`] = `
 {
   "className": "WeakMap",
   "description": "WeakMap",
-  "objectId": "default:9",
+  "objectId": "default:20",
   "preview": {
     "description": "WeakMap",
     "entries": [
@@ -1202,11 +1906,67 @@ exports[`map and set > var x = new WeakMap([[{}, 1], [{}, 2]]); x.x = 1; x 1`] =
 }
 `;
 
+exports[`map and set > var x = new WeakMap([[{}, 1], [{}, 2]]); x.x = 1; x properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(2)",
+        "objectId": "default:21",
+        "preview": {
+          "description": "Array(2)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{Object => 1}",
+            },
+            {
+              "name": "1",
+              "subtype": "internal#entry",
+              "type": "object",
+              "value": "{Object => 2}",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "x",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`map and set > var x = new WeakSet([{}, {}]); x.x = 1; x 1`] = `
 {
   "className": "WeakSet",
   "description": "WeakSet",
-  "objectId": "default:12",
+  "objectId": "default:27",
   "preview": {
     "description": "WeakSet",
     "entries": [
@@ -1247,31 +2007,91 @@ exports[`map and set > var x = new WeakSet([{}, {}]); x.x = 1; x 1`] = `
 }
 `;
 
-exports[`module namespace > export const a = 1 1`] = `
+exports[`map and set > var x = new WeakSet([{}, {}]); x.x = 1; x properties 1`] = `
 {
-  "className": "Module",
-  "description": "Module",
-  "objectId": "default:2",
-  "preview": {
-    "description": "Module",
-    "entries": undefined,
-    "overflow": false,
-    "properties": [
-      {
-        "name": "Symbol(Symbol.toStringTag)",
-        "type": "string",
-        "value": "Module",
+  "internalProperties": [
+    {
+      "name": "[[Entries]]",
+      "value": {
+        "className": "Array",
+        "description": "Array(2)",
+        "objectId": "default:28",
+        "preview": {
+          "description": "Array(2)",
+          "overflow": false,
+          "properties": [
+            {
+              "name": "0",
+              "subtype": undefined,
+              "type": "object",
+              "value": "Object",
+            },
+            {
+              "name": "1",
+              "subtype": undefined,
+              "type": "object",
+              "value": "Object",
+            },
+          ],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
       },
-    ],
-    "subtype": undefined,
-    "type": "object",
-  },
-  "subtype": undefined,
-  "type": "object",
+    },
+  ],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "x",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
 }
 `;
 
-exports[`module namespace > export const b = 2; export { b as c } 1`] = `
+exports[`module namespace >  properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "Symbol(Symbol.toStringTag)",
+      "set": undefined,
+      "symbol": {
+        "description": "Symbol(Symbol.toStringTag)",
+        "objectId": "default:2",
+        "type": "symbol",
+      },
+      "value": {
+        "type": "string",
+        "value": "Module",
+      },
+      "wasThrown": false,
+      "writable": false,
+    },
+  ],
+}
+`;
+
+exports[`module namespace > export const a = 1 1`] = `
 {
   "className": "Module",
   "description": "Module",
@@ -1295,7 +2115,35 @@ exports[`module namespace > export const b = 2; export { b as c } 1`] = `
 }
 `;
 
-exports[`module namespace > export default 42 1`] = `
+exports[`module namespace > export const a = 1 properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "Symbol(Symbol.toStringTag)",
+      "set": undefined,
+      "symbol": {
+        "description": "Symbol(Symbol.toStringTag)",
+        "objectId": "default:2",
+        "type": "symbol",
+      },
+      "value": {
+        "type": "string",
+        "value": "Module",
+      },
+      "wasThrown": false,
+      "writable": false,
+    },
+  ],
+}
+`;
+
+exports[`module namespace > export const b = 2; export { b as c } 1`] = `
 {
   "className": "Module",
   "description": "Module",
@@ -1319,7 +2167,35 @@ exports[`module namespace > export default 42 1`] = `
 }
 `;
 
-exports[`module namespace > export default function() {} 1`] = `
+exports[`module namespace > export const b = 2; export { b as c } properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "Symbol(Symbol.toStringTag)",
+      "set": undefined,
+      "symbol": {
+        "description": "Symbol(Symbol.toStringTag)",
+        "objectId": "default:2",
+        "type": "symbol",
+      },
+      "value": {
+        "type": "string",
+        "value": "Module",
+      },
+      "wasThrown": false,
+      "writable": false,
+    },
+  ],
+}
+`;
+
+exports[`module namespace > export default 42 1`] = `
 {
   "className": "Module",
   "description": "Module",
@@ -1340,6 +2216,86 @@ exports[`module namespace > export default function() {} 1`] = `
   },
   "subtype": undefined,
   "type": "object",
+}
+`;
+
+exports[`module namespace > export default 42 properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "Symbol(Symbol.toStringTag)",
+      "set": undefined,
+      "symbol": {
+        "description": "Symbol(Symbol.toStringTag)",
+        "objectId": "default:2",
+        "type": "symbol",
+      },
+      "value": {
+        "type": "string",
+        "value": "Module",
+      },
+      "wasThrown": false,
+      "writable": false,
+    },
+  ],
+}
+`;
+
+exports[`module namespace > export default function() {} 1`] = `
+{
+  "className": "Module",
+  "description": "Module",
+  "objectId": "default:6",
+  "preview": {
+    "description": "Module",
+    "entries": undefined,
+    "overflow": false,
+    "properties": [
+      {
+        "name": "Symbol(Symbol.toStringTag)",
+        "type": "string",
+        "value": "Module",
+      },
+    ],
+    "subtype": undefined,
+    "type": "object",
+  },
+  "subtype": undefined,
+  "type": "object",
+}
+`;
+
+exports[`module namespace > export default function() {} properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": false,
+      "enumerable": false,
+      "get": undefined,
+      "isOwn": true,
+      "name": "Symbol(Symbol.toStringTag)",
+      "set": undefined,
+      "symbol": {
+        "description": "Symbol(Symbol.toStringTag)",
+        "objectId": "default:2",
+        "type": "symbol",
+      },
+      "value": {
+        "type": "string",
+        "value": "Module",
+      },
+      "wasThrown": false,
+      "writable": false,
+    },
+  ],
 }
 `;
 
@@ -1371,7 +2327,7 @@ exports[`normal object > ({ [Symbol.iterator]: () => {} }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
-  "objectId": "default:6",
+  "objectId": "default:8",
   "preview": {
     "description": "Object",
     "entries": undefined,
@@ -1391,7 +2347,63 @@ exports[`normal object > ({ [Symbol.iterator]: () => {} }) 1`] = `
 }
 `;
 
+exports[`normal object > ({ [Symbol.iterator]: () => {} }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "Symbol(Symbol.iterator)",
+      "set": undefined,
+      "symbol": {
+        "description": "Symbol(Symbol.iterator)",
+        "objectId": "default:10",
+        "type": "symbol",
+      },
+      "value": {
+        "className": "Function",
+        "description": "() => {}",
+        "objectId": "default:9",
+        "type": "function",
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`normal object > ({ __proto__: { a: 1 } }) 1`] = `
+{
+  "className": "Object",
+  "description": "Object",
+  "objectId": "default:6",
+  "preview": {
+    "description": "Object",
+    "entries": undefined,
+    "overflow": false,
+    "properties": [],
+    "subtype": undefined,
+    "type": "object",
+  },
+  "subtype": undefined,
+  "type": "object",
+}
+`;
+
+exports[`normal object > ({ __proto__: { a: 1 } }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
+exports[`normal object > ({ __proto__: null }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
@@ -1409,21 +2421,11 @@ exports[`normal object > ({ __proto__: { a: 1 } }) 1`] = `
 }
 `;
 
-exports[`normal object > ({ __proto__: null }) 1`] = `
+exports[`normal object > ({ __proto__: null }) properties 1`] = `
 {
-  "className": "Object",
-  "description": "Object",
-  "objectId": "default:4",
-  "preview": {
-    "description": "Object",
-    "entries": undefined,
-    "overflow": false,
-    "properties": [],
-    "subtype": undefined,
-    "type": "object",
-  },
-  "subtype": undefined,
-  "type": "object",
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
@@ -1431,7 +2433,7 @@ exports[`normal object > ({ a: 1 }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
-  "objectId": "default:2",
+  "objectId": "default:3",
   "preview": {
     "description": "Object",
     "entries": undefined,
@@ -1451,11 +2453,36 @@ exports[`normal object > ({ a: 1 }) 1`] = `
 }
 `;
 
+exports[`normal object > ({ a: 1 }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "a",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`normal object > ({ a: 1, b: 2 }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
-  "objectId": "default:3",
+  "objectId": "default:4",
   "preview": {
     "description": "Object",
     "entries": undefined,
@@ -1480,11 +2507,52 @@ exports[`normal object > ({ a: 1, b: 2 }) 1`] = `
 }
 `;
 
+exports[`normal object > ({ a: 1, b: 2 }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "a",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "b",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "2",
+        "type": "number",
+        "value": 2,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`normal object > ({ a: 1n, b: undefined, c: null, d: true, e: Symbol.iterator, f: [] }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
-  "objectId": "default:11",
+  "objectId": "default:20",
   "preview": {
     "description": "Object",
     "entries": undefined,
@@ -1531,11 +2599,122 @@ exports[`normal object > ({ a: 1n, b: undefined, c: null, d: true, e: Symbol.ite
 }
 `;
 
+exports[`normal object > ({ a: 1n, b: undefined, c: null, d: true, e: Symbol.iterator, f: [] }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "a",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1n",
+        "type": "bigint",
+        "unserializableValue": "1n",
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "b",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "type": "undefined",
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "c",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "subtype": "null",
+        "type": "object",
+        "value": null,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "d",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "type": "boolean",
+        "value": true,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "e",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "Symbol(Symbol.iterator)",
+        "objectId": "default:10",
+        "type": "symbol",
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "f",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "className": "Array",
+        "description": "Array(0)",
+        "objectId": "default:21",
+        "preview": {
+          "description": "Array(0)",
+          "overflow": false,
+          "properties": [],
+          "subtype": "array",
+          "type": "object",
+        },
+        "subtype": "array",
+        "type": "object",
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`normal object > ({ f() {} }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
-  "objectId": "default:7",
+  "objectId": "default:11",
   "preview": {
     "description": "Object",
     "entries": undefined,
@@ -1555,11 +2734,37 @@ exports[`normal object > ({ f() {} }) 1`] = `
 }
 `;
 
+exports[`normal object > ({ f() {} }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "f",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "className": "Function",
+        "description": "f() {}",
+        "objectId": "default:12",
+        "type": "function",
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`normal object > ({ get f() {}, set f(v) {} }) 1`] = `
 {
   "className": "Object",
   "description": "Object",
-  "objectId": "default:8",
+  "objectId": "default:13",
   "preview": {
     "description": "Object",
     "entries": undefined,
@@ -1575,6 +2780,37 @@ exports[`normal object > ({ get f() {}, set f(v) {} }) 1`] = `
   },
   "subtype": undefined,
   "type": "object",
+}
+`;
+
+exports[`normal object > ({ get f() {}, set f(v) {} }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": {
+        "className": "Function",
+        "description": "get f() {}",
+        "objectId": "default:14",
+        "type": "function",
+      },
+      "isOwn": true,
+      "name": "f",
+      "set": {
+        "className": "Function",
+        "description": "set f(v) {}",
+        "objectId": "default:15",
+        "type": "function",
+      },
+      "symbol": undefined,
+      "value": undefined,
+      "wasThrown": false,
+      "writable": false,
+    },
+  ],
 }
 `;
 
@@ -1596,13 +2832,21 @@ exports[`normal object > ({}) 1`] = `
 }
 `;
 
+exports[`normal object > ({}) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`normal object > { class T { #priv = 1 }; new T } 1`] = `
 {
   "className": "Object",
-  "description": "Object",
-  "objectId": "default:9",
+  "description": "T",
+  "objectId": "default:16",
   "preview": {
-    "description": "Object",
+    "description": "T",
     "entries": undefined,
     "overflow": false,
     "properties": [
@@ -1620,13 +2864,32 @@ exports[`normal object > { class T { #priv = 1 }; new T } 1`] = `
 }
 `;
 
+exports[`normal object > { class T { #priv = 1 }; new T } properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [
+    {
+      "get": undefined,
+      "name": "#priv",
+      "set": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+    },
+  ],
+  "result": [],
+}
+`;
+
 exports[`normal object > { class T { #priv = 1; normal = 2 }; new T } 1`] = `
 {
   "className": "Object",
-  "description": "Object",
-  "objectId": "default:10",
+  "description": "T",
+  "objectId": "default:18",
   "preview": {
-    "description": "Object",
+    "description": "T",
     "entries": undefined,
     "overflow": false,
     "properties": [
@@ -1646,6 +2909,42 @@ exports[`normal object > { class T { #priv = 1; normal = 2 }; new T } 1`] = `
   },
   "subtype": undefined,
   "type": "object",
+}
+`;
+
+exports[`normal object > { class T { #priv = 1; normal = 2 }; new T } properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [
+    {
+      "get": undefined,
+      "name": "#priv",
+      "set": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+    },
+  ],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "normal",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "2",
+        "type": "number",
+        "value": 2,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
 }
 `;
 
@@ -1792,7 +3091,7 @@ exports[`promise > Promise.reject() 1`] = `
 {
   "className": "Promise",
   "description": "Promise",
-  "objectId": "default:6",
+  "objectId": "default:7",
   "preview": {
     "description": "Promise",
     "entries": undefined,
@@ -1817,11 +3116,33 @@ exports[`promise > Promise.reject() 1`] = `
 }
 `;
 
+exports[`promise > Promise.reject() properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[PromiseState]]",
+      "value": {
+        "type": "string",
+        "value": "rejected",
+      },
+    },
+    {
+      "name": "[[PromiseResult]]",
+      "value": {
+        "type": "undefined",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`promise > Promise.reject(42) 1`] = `
 {
   "className": "Promise",
   "description": "Promise",
-  "objectId": "default:8",
+  "objectId": "default:9",
   "preview": {
     "description": "Promise",
     "entries": undefined,
@@ -1846,36 +3167,31 @@ exports[`promise > Promise.reject(42) 1`] = `
 }
 `;
 
-exports[`promise > Promise.resolve() 1`] = `
+exports[`promise > Promise.reject(42) properties 1`] = `
 {
-  "className": "Promise",
-  "description": "Promise",
-  "objectId": "default:3",
-  "preview": {
-    "description": "Promise",
-    "entries": undefined,
-    "overflow": false,
-    "properties": [
-      {
-        "name": "[[PromiseState]]",
+  "internalProperties": [
+    {
+      "name": "[[PromiseState]]",
+      "value": {
         "type": "string",
-        "value": "fulfilled",
+        "value": "rejected",
       },
-      {
-        "name": "[[PromiseResult]]",
-        "type": "undefined",
-        "value": "undefined",
+    },
+    {
+      "name": "[[PromiseResult]]",
+      "value": {
+        "description": "42",
+        "type": "number",
+        "value": 42,
       },
-    ],
-    "subtype": "promise",
-    "type": "object",
-  },
-  "subtype": "promise",
-  "type": "object",
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
-exports[`promise > Promise.resolve(42) 1`] = `
+exports[`promise > Promise.resolve() 1`] = `
 {
   "className": "Promise",
   "description": "Promise",
@@ -1892,6 +3208,57 @@ exports[`promise > Promise.resolve(42) 1`] = `
       },
       {
         "name": "[[PromiseResult]]",
+        "type": "undefined",
+        "value": "undefined",
+      },
+    ],
+    "subtype": "promise",
+    "type": "object",
+  },
+  "subtype": "promise",
+  "type": "object",
+}
+`;
+
+exports[`promise > Promise.resolve() properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[PromiseState]]",
+      "value": {
+        "type": "string",
+        "value": "fulfilled",
+      },
+    },
+    {
+      "name": "[[PromiseResult]]",
+      "value": {
+        "type": "undefined",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
+exports[`promise > Promise.resolve(42) 1`] = `
+{
+  "className": "Promise",
+  "description": "Promise",
+  "objectId": "default:5",
+  "preview": {
+    "description": "Promise",
+    "entries": undefined,
+    "overflow": false,
+    "properties": [
+      {
+        "name": "[[PromiseState]]",
+        "type": "string",
+        "value": "fulfilled",
+      },
+      {
+        "name": "[[PromiseResult]]",
         "type": "number",
         "value": "42",
       },
@@ -1901,6 +3268,30 @@ exports[`promise > Promise.resolve(42) 1`] = `
   },
   "subtype": "promise",
   "type": "object",
+}
+`;
+
+exports[`promise > Promise.resolve(42) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[PromiseState]]",
+      "value": {
+        "type": "string",
+        "value": "fulfilled",
+      },
+    },
+    {
+      "name": "[[PromiseResult]]",
+      "value": {
+        "description": "42",
+        "type": "number",
+        "value": 42,
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
@@ -1933,11 +3324,33 @@ exports[`promise > new Promise(() => {}) 1`] = `
 }
 `;
 
+exports[`promise > new Promise(() => {}) properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[PromiseState]]",
+      "value": {
+        "type": "string",
+        "value": "pending",
+      },
+    },
+    {
+      "name": "[[PromiseResult]]",
+      "value": {
+        "type": "undefined",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`promise > var a = new Promise(() => {}); a.x = 1; a 1`] = `
 {
   "className": "Promise",
   "description": "Promise",
-  "objectId": "default:2",
+  "objectId": "default:3",
   "preview": {
     "description": "Promise",
     "entries": undefined,
@@ -1967,6 +3380,45 @@ exports[`promise > var a = new Promise(() => {}); a.x = 1; a 1`] = `
 }
 `;
 
+exports[`promise > var a = new Promise(() => {}); a.x = 1; a properties 1`] = `
+{
+  "internalProperties": [
+    {
+      "name": "[[PromiseState]]",
+      "value": {
+        "type": "string",
+        "value": "pending",
+      },
+    },
+    {
+      "name": "[[PromiseResult]]",
+      "value": {
+        "type": "undefined",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "x",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
+}
+`;
+
 exports[`proxy > new Proxy(() => {}, {}) 1`] = `
 {
   "className": "Proxy",
@@ -1982,6 +3434,14 @@ exports[`proxy > new Proxy(() => {}, {}) 1`] = `
   },
   "subtype": "proxy",
   "type": "object",
+}
+`;
+
+exports[`proxy > new Proxy(() => {}, {}) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
@@ -2003,6 +3463,14 @@ exports[`proxy > new Proxy({ a: 1 }, {}) 1`] = `
 }
 `;
 
+exports[`proxy > new Proxy({ a: 1 }, {}) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`proxy > new Proxy({}, { get: () => {} }) 1`] = `
 {
   "className": "Proxy",
@@ -2018,6 +3486,14 @@ exports[`proxy > new Proxy({}, { get: () => {} }) 1`] = `
   },
   "subtype": "proxy",
   "type": "object",
+}
+`;
+
+exports[`proxy > new Proxy({}, { get: () => {} }) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
@@ -2039,6 +3515,14 @@ exports[`proxy > new Proxy({}, {}) 1`] = `
 }
 `;
 
+exports[`proxy > new Proxy({}, {}) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`proxy > new Proxy(Function, {}) 1`] = `
 {
   "className": "Proxy",
@@ -2057,6 +3541,14 @@ exports[`proxy > new Proxy(Function, {}) 1`] = `
 }
 `;
 
+exports[`proxy > new Proxy(Function, {}) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`proxy > var a = Proxy.revocable({}, {}); a.revoke(); a.proxy 1`] = `
 {
   "className": "Proxy",
@@ -2072,6 +3564,14 @@ exports[`proxy > var a = Proxy.revocable({}, {}); a.revoke(); a.proxy 1`] = `
   },
   "subtype": "proxy",
   "type": "object",
+}
+`;
+
+exports[`proxy > var a = Proxy.revocable({}, {}); a.revoke(); a.proxy properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
@@ -2171,7 +3671,16 @@ exports[`regex > var a = /cat/; a.lastIndex = 1; a 1`] = `
 }
 `;
 
-exports[`shadow realm > ShadowRealm 1`] = `
+exports[`shadow realm > ShadowRealm function 1`] = `
+{
+  "className": "Function",
+  "description": "() => {}",
+  "objectId": "default:4",
+  "type": "function",
+}
+`;
+
+exports[`shadow realm > new ShadowRealm 1`] = `
 {
   "className": "ShadowRealm",
   "description": "ShadowRealm",
@@ -2196,12 +3705,62 @@ exports[`shadow realm > ShadowRealm 1`] = `
 }
 `;
 
-exports[`shadow realm > ShadowRealm function 1`] = `
+exports[`shadow realm > new ShadowRealm properties 1`] = `
 {
-  "className": "Function",
-  "description": "() => {}",
-  "objectId": "default:2",
-  "type": "function",
+  "internalProperties": [
+    {
+      "name": "[[GlobalObject]]",
+      "value": {
+        "className": "Object",
+        "description": "Object",
+        "objectId": "default:2",
+        "preview": {
+          "description": "Object",
+          "entries": undefined,
+          "overflow": true,
+          "properties": [
+            {
+              "name": "Infinity",
+              "type": "number",
+              "value": "Infinity",
+            },
+            {
+              "name": "NaN",
+              "type": "number",
+              "value": "NaN",
+            },
+            {
+              "name": "undefined",
+              "type": "undefined",
+              "value": "undefined",
+            },
+            {
+              "name": "globalThis",
+              "subtype": undefined,
+              "type": "object",
+              "value": "Object",
+            },
+            {
+              "name": "eval",
+              "type": "function",
+              "value": "",
+            },
+            {
+              "name": "isFinite",
+              "type": "function",
+              "value": "",
+            },
+          ],
+          "subtype": undefined,
+          "type": "object",
+        },
+        "subtype": undefined,
+        "type": "object",
+      },
+    },
+  ],
+  "privateProperties": [],
+  "result": [],
 }
 `;
 
@@ -2209,7 +3768,7 @@ exports[`typed array > new Int32Array() 1`] = `
 {
   "className": "TypedArray",
   "description": "Int32Array(0)",
-  "objectId": "default:5",
+  "objectId": "default:6",
   "preview": {
     "description": "Int32Array(0)",
     "entries": undefined,
@@ -2245,11 +3804,19 @@ exports[`typed array > new Int32Array() 1`] = `
 }
 `;
 
+exports[`typed array > new Int32Array() properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`typed array > new Int32Array([1, 2, 3]) 1`] = `
 {
   "className": "TypedArray",
   "description": "Int32Array(3)",
-  "objectId": "default:7",
+  "objectId": "default:9",
   "preview": {
     "description": "Int32Array(3)",
     "entries": undefined,
@@ -2300,11 +3867,19 @@ exports[`typed array > new Int32Array([1, 2, 3]) 1`] = `
 }
 `;
 
+exports[`typed array > new Int32Array([1, 2, 3]) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`typed array > new Int32Array(10) 1`] = `
 {
   "className": "TypedArray",
   "description": "Int32Array(10)",
-  "objectId": "default:6",
+  "objectId": "default:8",
   "preview": {
     "description": "Int32Array(10)",
     "entries": undefined,
@@ -2390,6 +3965,14 @@ exports[`typed array > new Int32Array(10) 1`] = `
 }
 `;
 
+exports[`typed array > new Int32Array(10) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`typed array > new Uint8Array() 1`] = `
 {
   "className": "TypedArray",
@@ -2430,11 +4013,19 @@ exports[`typed array > new Uint8Array() 1`] = `
 }
 `;
 
+exports[`typed array > new Uint8Array() properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`typed array > new Uint8Array([1, 2, 3]) 1`] = `
 {
   "className": "TypedArray",
   "description": "Uint8Array(3)",
-  "objectId": "default:3",
+  "objectId": "default:4",
   "preview": {
     "description": "Uint8Array(3)",
     "entries": undefined,
@@ -2485,11 +4076,19 @@ exports[`typed array > new Uint8Array([1, 2, 3]) 1`] = `
 }
 `;
 
+exports[`typed array > new Uint8Array([1, 2, 3]) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`typed array > new Uint8Array(10) 1`] = `
 {
   "className": "TypedArray",
   "description": "Uint8Array(10)",
-  "objectId": "default:2",
+  "objectId": "default:3",
   "preview": {
     "description": "Uint8Array(10)",
     "entries": undefined,
@@ -2575,11 +4174,19 @@ exports[`typed array > new Uint8Array(10) 1`] = `
 }
 `;
 
+exports[`typed array > new Uint8Array(10) properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [],
+}
+`;
+
 exports[`typed array > var x = new Uint8Array(10); x.a = 1; x 1`] = `
 {
   "className": "TypedArray",
   "description": "Uint8Array(10)",
-  "objectId": "default:4",
+  "objectId": "default:5",
   "preview": {
     "description": "Uint8Array(10)",
     "entries": undefined,
@@ -2662,5 +4269,30 @@ exports[`typed array > var x = new Uint8Array(10); x.a = 1; x 1`] = `
   },
   "subtype": "typedarray",
   "type": "object",
+}
+`;
+
+exports[`typed array > var x = new Uint8Array(10); x.a = 1; x properties 1`] = `
+{
+  "internalProperties": [],
+  "privateProperties": [],
+  "result": [
+    {
+      "configurable": true,
+      "enumerable": true,
+      "get": undefined,
+      "isOwn": true,
+      "name": "a",
+      "set": undefined,
+      "symbol": undefined,
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "wasThrown": false,
+      "writable": true,
+    },
+  ],
 }
 `;

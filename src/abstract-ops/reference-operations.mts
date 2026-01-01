@@ -1,29 +1,30 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
+import { DynamicParsedCodeRecord, surroundingAgent } from '../host-defined/engine.mts';
 import {
   ReferenceRecord,
   Value,
   PrivateName,
   JSStringValue,
   NullValue,
+  ObjectValue,
 } from '../value.mts';
 import {
   Q,
-  X,
   type PlainCompletion,
 } from '../completion.mts';
-import { EnvironmentRecord, PrivateEnvironmentRecord } from '../environment.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import { ResolvePrivateIdentifier } from '../execution-context/PrivateEnvironment.mts';
 import {
   Assert,
-  GetGlobalObject,
   ToObject,
   Set,
   PrivateGet,
   PrivateSet,
   IsPropertyKey,
   ToPropertyKey,
+  getActiveScriptId,
 } from './all.mts';
+import { EnvironmentRecord, GetGlobalObject } from '#self';
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
 export function IsPropertyReference(V: ReferenceRecord) {
@@ -178,9 +179,28 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
   // 1. Let privEnv be the running execution context's PrivateEnvironment.
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 2. Assert: privEnv is not null.
-  Assert(!(privEnv instanceof NullValue));
+  // but we allow private reference to be accessed directly in the inspector eval
+  if (privEnv instanceof NullValue) {
+    const scriptId = getActiveScriptId();
+    const script = surroundingAgent.parsedSources.get(scriptId!);
+    if (script instanceof DynamicParsedCodeRecord && script?.HostDefined?.isInspectorEval) {
+      let privateName;
+      if (baseValue instanceof ObjectValue) {
+        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description.stringValue() === privateIdentifier.stringValue())?.Key;
+      }
+      privateName ??= new PrivateName(privateIdentifier);
+      return new ReferenceRecord({
+        Base: baseValue,
+        ReferencedName: privateName,
+        Strict: Value.true,
+        ThisValue: undefined,
+      });
+    } else {
+      Assert(!(privEnv instanceof NullValue));
+    }
+  }
   // 3. Let privateName be ! ResolvePrivateIdentifier(privEnv, privateIdentifier).
-  const privateName = X(ResolvePrivateIdentifier(privEnv, privateIdentifier));
+  const privateName = ResolvePrivateIdentifier(privEnv, privateIdentifier);
   // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: privateName, [[Strict]]: true, [[ThisValue]]: empty }.
   return new ReferenceRecord({
     Base: baseValue,
@@ -188,24 +208,4 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
     Strict: Value.true,
     ThisValue: undefined,
   });
-}
-
-/** https://tc39.es/ecma262/#sec-resolve-private-identifier */
-export function ResolvePrivateIdentifier(privEnv: PrivateEnvironmentRecord, identifier: JSStringValue) {
-  // 1. Let names be privEnv.[[Names]].
-  const names = privEnv.Names;
-  // 2. If names contains a Private Name whose [[Description]] is identifier, then
-  const name = names.find((n) => n.Description.stringValue() === identifier.stringValue());
-  if (name) {
-    // a. Let name be that Private Name.
-    // b. Return name.
-    return name;
-  } else { // 3. Else,
-    // a. Let outerPrivEnv be privEnv.[[OuterPrivateEnvironment]].
-    const outerPrivEnv = privEnv.OuterPrivateEnvironment;
-    // b. Assert: outerPrivEnv is not null.
-    Assert(!(outerPrivEnv instanceof NullValue));
-    // c. Return ResolvePrivateIdentifier(outerPrivEnv, identifier).
-    return ResolvePrivateIdentifier(outerPrivEnv, identifier);
-  }
 }

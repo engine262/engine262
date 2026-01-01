@@ -1,18 +1,5 @@
 import { Value } from '../value.mts';
 import {
-  Assert,
-  GetValue,
-  InitializeReferencedBinding,
-  IteratorStep,
-  PutValue,
-  ResolveBinding,
-  ArrayCreate,
-  CreateDataPropertyOrThrow,
-  ToString,
-  F,
-  type IteratorRecord,
-} from '../abstract-ops/all.mts';
-import {
   NormalCompletion,
   Q, X,
 } from '../completion.mts';
@@ -25,6 +12,18 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
+  Assert,
+  GetValue,
+  InitializeReferencedBinding,
+  IteratorStep,
+  PutValue,
+  ResolveBinding,
+  ArrayCreate,
+  CreateDataPropertyOrThrow,
+  ToString,
+  F,
+  type IteratorRecord,
+
   IteratorStepValue,
   UndefinedValue, type EnvironmentRecord, type FunctionDeclaration,
 } from '#self';

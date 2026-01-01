@@ -1,7 +1,7 @@
 import {
   surroundingAgent,
-  ExecutionContext,
 } from '../host-defined/engine.mts';
+import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
   Descriptor,
   SymbolValue,
@@ -28,11 +28,6 @@ import { ExpectedArgumentCount } from '../static-semantics/all.mts';
 import {
   ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord,
 } from '../runtime-semantics/all.mts';
-import {
-  EnvironmentRecord,
-  FunctionEnvironmentRecord,
-  GlobalEnvironmentRecord,
-} from '../environment.mts';
 import { skipDebugger, type Mutable } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
@@ -42,7 +37,6 @@ import {
   Call,
   CreateDataPropertyOrThrow,
   DefinePropertyOrThrow,
-  GetActiveScriptOrModule,
   HasOwnProperty,
   IsConstructor,
   IsExtensible,
@@ -55,7 +49,6 @@ import {
   IsPropertyKey,
   isNonNegativeInteger,
   isStrictModeCode,
-  Realm,
   F as toNumberValue,
   type OrdinaryObject,
   NewPromiseCapability,
@@ -67,6 +60,11 @@ import {
   getActiveScriptId,
 } from './all.mts';
 import {
+  GetActiveScriptOrModule,
+  Realm,
+  EnvironmentRecord,
+  FunctionEnvironmentRecord,
+  GlobalEnvironmentRecord,
   ClassElementDefinitionRecord,
   type AbstractModuleRecord, type CanBeNativeSteps, type DefaultConstructorBuiltinFunction, type DescriptorInit, type FunctionCallContext, type ModuleRecord, type PrivateEnvironmentRecord, type ScriptRecord,
 } from '#self';
@@ -104,7 +102,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
    * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
    * This is only used in the inspector.
    */
-  readonly HostInitialName: string;
+  readonly HostInitialName: PropertyKeyValue | PrivateName;
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
@@ -566,7 +564,7 @@ export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | Priv
   }
   if ('HostInitialName' in F) {
     // a. Set F.[[InitialName]] to name.
-    (F as Mutable<ECMAScriptFunctionObject>).HostInitialName = name.stringValue();
+    (F as Mutable<ECMAScriptFunctionObject>).HostInitialName = name;
   }
   // 5. If prefix is present, then
   if (prefix !== undefined) {

@@ -9,6 +9,20 @@ import {
   UndefinedValue,
 } from '../value.mts';
 import {
+  GetSubstitution,
+  TrimString,
+  StringPad,
+  StringIndexOf,
+} from '../runtime-semantics/all.mts';
+import {
+  CodePointAt,
+  IsStringWellFormedUnicode,
+  UTF16EncodeCodePoint,
+} from '../static-semantics/all.mts';
+import { Q, X } from '../completion.mts';
+import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
+import { assignProps } from './bootstrap.mts';
+import {
   ArrayCreate,
   Assert,
   Call,
@@ -29,21 +43,7 @@ import {
   Yield,
   F, R, R as MathematicalValue,
   Realm,
-} from '../abstract-ops/all.mts';
-import {
-  GetSubstitution,
-  TrimString,
-  StringPad,
-  StringIndexOf,
-} from '../runtime-semantics/all.mts';
-import {
-  CodePointAt,
-  IsStringWellFormedUnicode,
-  UTF16EncodeCodePoint,
-} from '../static-semantics/all.mts';
-import { Q, X } from '../completion.mts';
-import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
-import { assignProps } from './bootstrap.mts';
+} from '#self';
 
 
 function thisStringValue(value: Value) {

@@ -1,24 +1,4 @@
 import {
-  Call,
-  CreateArrayFromList,
-  CreateIteratorFromClosure,
-  GetIteratorDirect,
-  GetIteratorFlattenable,
-  IsCallable,
-  IteratorClose,
-  IteratorStep,
-  IteratorStepValue,
-  SetterThatIgnoresPrototypeProperties,
-  ToBoolean,
-  ToIntegerOrInfinity,
-  ToNumber,
-  ToString,
-  Yield,
-  type GeneratorObject,
-  type IteratorRecord,
-  type Realm,
-} from '../abstract-ops/all.mts';
-import {
   AbruptCompletion,
   EnsureCompletion,
   IfAbruptCloseIterator,
@@ -40,6 +20,26 @@ import {
   Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import {
+  Call,
+  CreateArrayFromList,
+  CreateIteratorFromClosure,
+  GetIteratorDirect,
+  GetIteratorFlattenable,
+  IsCallable,
+  IteratorClose,
+  IteratorStep,
+  IteratorStepValue,
+  SetterThatIgnoresPrototypeProperties,
+  ToBoolean,
+  ToIntegerOrInfinity,
+  ToNumber,
+  ToString,
+  Yield,
+  type GeneratorObject,
+  type IteratorRecord,
+  type Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
 function IteratorProto_constructorGetter() {

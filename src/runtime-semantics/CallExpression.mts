@@ -1,16 +1,16 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, ReferenceRecord, JSStringValue } from '../value.mts';
-import {
-  GetValue,
-  IsPropertyReference,
-  PerformEval,
-  SameValue,
-} from '../abstract-ops/all.mts';
 import { IsInTailPosition } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { EvaluateCall, ArgumentListEvaluation } from './all.mts';
+import {
+  GetValue,
+  IsPropertyReference,
+  PerformEval,
+  SameValue,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
 // CallExpression :

@@ -2,13 +2,13 @@ import {
   Evaluate,
 } from '../evaluator.mts';
 import {
-  GetValue,
-} from '../abstract-ops/all.mts';
-import {
   Q,
   ThrowCompletion,
 } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  GetValue,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
 // ThrowStatement : `throw` Expression `;`

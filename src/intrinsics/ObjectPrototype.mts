@@ -12,6 +12,11 @@ import {
   type ObjectInternalMethods,
 } from '../value.mts';
 import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { assignProps } from './bootstrap.mts';
+import {
   DefinePropertyOrThrow,
   Get,
   HasOwnProperty,
@@ -30,12 +35,7 @@ import {
   type FunctionObject,
   type ImmutablePrototypeObject,
   type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
-  Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
-import { assignProps } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
 function* ObjectProto_hasOwnProperty([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {

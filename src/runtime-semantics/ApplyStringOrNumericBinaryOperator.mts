@@ -1,14 +1,13 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, Value,
   NumberValue,
   BigIntValue,
   SameType,
 } from '../value.mts';
-import {
-  Assert, ToNumeric, ToPrimitive, ToString,
-} from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
+import {
+  Assert, Throw, ToNumeric, ToPrimitive, ToString,
+} from '#self';
 
 export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '<<' | '>>' | '>>>' | '&' | '^' | '|';
 /** https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
@@ -40,7 +39,7 @@ export function* ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryO
   const rnum = Q(yield* ToNumeric(rval));
   // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
   if (!SameType(lnum, rnum)) {
-    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
+    return Throw.TypeError('Cannot mix BigInt and other types in $1 operation', opText);
   }
   if (lnum instanceof BigIntValue) {
     const operations = {

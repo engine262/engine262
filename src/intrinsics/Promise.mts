@@ -12,6 +12,16 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import {
+  AbruptCompletion,
+  IfAbruptRejectPromise,
+  EnsureCompletion,
+  Q, X,
+  type ValueEvaluator,
+  type ValueCompletion,
+} from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import {
   Assert,
   Call,
   CreateArrayFromList,
@@ -39,17 +49,7 @@ import {
   type PromiseAllResolveElementFunctionObject,
   type PromiseAllRejectElementFunctionObject,
   IteratorStepValue,
-} from '../abstract-ops/all.mts';
-import {
-  AbruptCompletion,
-  IfAbruptRejectPromise,
-  EnsureCompletion,
-  Q, X,
-  type ValueEvaluator,
-  type ValueCompletion,
-} from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#table-internal-slots-of-promise-instances */
 export interface PromiseObject extends OrdinaryObject {

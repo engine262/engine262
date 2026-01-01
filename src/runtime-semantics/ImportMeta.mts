@@ -1,14 +1,14 @@
 import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../host-defined/engine.mts';
 import { ObjectValue, Value } from '../value.mts';
+import { X } from '../completion.mts';
+import { SourceTextModuleRecord } from '../modules.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   GetActiveScriptOrModule,
   OrdinaryObjectCreate,
   CreateDataPropertyOrThrow,
-} from '../abstract-ops/all.mts';
-import { X } from '../completion.mts';
-import { SourceTextModuleRecord } from '../modules.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-meta-properties */
 //   ImportMeta : `import` `.` `meta`

@@ -1,7 +1,7 @@
 import { Value } from '../value.mts';
-import { RegExpCreate } from '../abstract-ops/all.mts';
 import { BodyText, FlagText } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { RegExpCreate } from '#self';
 
 /** https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation */
 //   RegularExpressionLiteral :

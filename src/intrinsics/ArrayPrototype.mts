@@ -11,6 +11,13 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
+import { assignProps } from './bootstrap.mts';
+import { ArrayProto_sortBody, bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
+import {
   ArrayCreate,
   ArraySpeciesCreate,
   Assert,
@@ -33,16 +40,9 @@ import {
   ToObject,
   ToString,
   F,
-  Realm,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
-  Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import type { PlainEvaluator } from '../evaluator.mts';
-import { assignProps } from './bootstrap.mts';
-import { ArrayProto_sortBody, bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-array.prototype.concat */
 function* ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {

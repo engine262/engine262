@@ -1,8 +1,8 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value, NumberValue } from '../value.mts';
 import {
   Assert, IsIntegralNumber, Z, R,
-} from '../abstract-ops/all.mts';
-import { Value, NumberValue } from '../value.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-numbertobigint */
 export function NumberToBigInt(number: NumberValue) {

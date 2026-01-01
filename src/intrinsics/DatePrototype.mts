@@ -1,5 +1,20 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  JSStringValue,
+  NumberValue,
+  ObjectValue,
+  Value,
+  wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { StringPad } from '../runtime-semantics/all.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { DateObject } from './Date.mts';
+import {
   Assert,
   DateFromTime,
   Day,
@@ -25,23 +40,8 @@ import {
   WeekDay,
   YearFromTime,
   F, R,
-  Realm,
-} from '../abstract-ops/all.mts';
-import {
-  JSStringValue,
-  NumberValue,
-  ObjectValue,
-  Value,
-  wellKnownSymbols,
-  type Arguments,
-  type FunctionCallContext,
-} from '../value.mts';
-import {
-  Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import { StringPad } from '../runtime-semantics/all.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import type { DateObject } from './Date.mts';
+} from '#self';
+import type { Realm } from '#self';
 
 
 export function thisTimeValue(value: Value): ValueCompletion<NumberValue> {

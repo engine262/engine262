@@ -1,12 +1,4 @@
 import {
-  IsIntegralNumber,
-  OrdinaryCreateFromConstructor,
-  ToNumeric,
-  F, R,
-  Realm,
-  type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
   Descriptor,
   NumberValue,
   BigIntValue,
@@ -18,6 +10,14 @@ import {
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  IsIntegralNumber,
+  OrdinaryCreateFromConstructor,
+  ToNumeric,
+  F, R,
+  Realm,
+  type OrdinaryObject,
+} from '#self';
 
 export interface NumberObject extends OrdinaryObject {
   readonly NumberData: NumberValue;

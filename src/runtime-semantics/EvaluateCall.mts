@@ -2,6 +2,9 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, Value, ReferenceRecord,
 } from '../value.mts';
+import { Q, Completion, AbruptCompletion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 import {
   Assert,
   IsPropertyReference,
@@ -9,11 +12,8 @@ import {
   GetThisValue,
   PrepareForTailCall,
   Call,
-} from '../abstract-ops/all.mts';
-import { Q, Completion, AbruptCompletion } from '../completion.mts';
-import { EnvironmentRecord } from '../environment.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { ArgumentListEvaluation } from './all.mts';
+  EnvironmentRecord,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-evaluatecall */
 export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: ParseNode | ParseNode.Arguments, tailPosition: boolean) {

@@ -1,13 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  Call,
-  CanonicalizeKeyedCollectionKey,
-  F,
-  IsCallable,
-  RequireInternalSlot,
-  SameValue, SameValueZero, R,
-} from '../abstract-ops/all.mts';
-import {
   NumberValue,
   Value,
   wellKnownSymbols,
@@ -16,6 +8,14 @@ import { Q, X } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateMapIterator } from './MapIteratorPrototype.mts';
 import type { MapObject } from './Map.mts';
+import {
+  Call,
+  CanonicalizeKeyedCollectionKey,
+  F,
+  IsCallable,
+  RequireInternalSlot,
+  SameValue, SameValueZero, R,
+} from '#self';
 import type {
   Arguments, Descriptor, ValueEvaluator, FunctionCallContext, Realm,
   ValueCompletion,

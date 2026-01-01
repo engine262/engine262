@@ -5,13 +5,6 @@ import {
   SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
 } from './modules.mts';
 import { JSStringValue, ObjectValue, Value } from './value.mts';
-import {
-  Get,
-  Set,
-  CreateDefaultExportSyntheticModule,
-  Realm,
-  ToString,
-} from './abstract-ops/all.mts';
 import { Q, X, type PlainCompletion } from './completion.mts';
 import {
   ModuleRequests,
@@ -25,6 +18,14 @@ import {
 import type { ParseNode } from './parser/ParseNode.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';
+import {
+  Get,
+  Set,
+  CreateDefaultExportSyntheticModule,
+  ToString,
+  Throw,
+} from '#self';
+import type { Realm } from '#self';
 
 export { Parser, RegExpParser };
 
@@ -254,7 +255,7 @@ export function ParsePattern(patternText: string, u: boolean, v: boolean) {
     }
   };
   if (v && u) {
-    return [surroundingAgent.Throw('SyntaxError', 'RegExpFlagsCannotUseTogether', 'v', 'u').Value];
+    return [Throw.SyntaxError('RegExp flags "v" and "u" cannot be used together').Value];
   } else if (v) {
     return parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
   } else if (u) {

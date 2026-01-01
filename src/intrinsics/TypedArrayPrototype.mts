@@ -1,4 +1,25 @@
 import {
+  Q, X, type ValueEvaluator,
+  type ValueCompletion,
+} from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  BigIntValue,
+  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
+import {
+  CompareTypedArrayElements,
+  TypedArrayCreateSameType,
+  TypedArrayElementSize,
+  TypedArrayElementType,
+  TypedArraySpeciesCreate, ValidateTypedArray, type TypedArrayObject,
+} from './TypedArray.mts';
+import {
   Assert,
   Call,
   CloneArrayBuffer,
@@ -27,28 +48,7 @@ import {
   IsTypedArrayOutOfBounds,
   TypedArrayLength,
   IsValidIntegerIndex,
-} from '../abstract-ops/all.mts';
-import {
-  Q, X, type ValueEvaluator,
-  type ValueCompletion,
-} from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
-import {
-  BigIntValue,
-  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
-  type Arguments,
-  type FunctionCallContext,
-} from '../value.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
-import {
-  CompareTypedArrayElements,
-  TypedArrayCreateSameType,
-  TypedArrayElementSize,
-  TypedArrayElementType,
-  TypedArraySpeciesCreate, ValidateTypedArray, type TypedArrayObject,
-} from './TypedArray.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
 function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {

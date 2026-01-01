@@ -1,8 +1,8 @@
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { GetValue } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ApplyStringOrNumericBinaryOperator, type BinaryOperator } from './all.mts';
+import { GetValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression */
 export function* EvaluateStringOrNumericBinaryExpression(leftOperand: ParseNode.Expression, opText: BinaryOperator, rightOperand: ParseNode.Expression): ValueEvaluator {

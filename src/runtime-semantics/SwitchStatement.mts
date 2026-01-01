@@ -1,7 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Evaluate, type StatementEvaluator, type ValueEvaluator } from '../evaluator.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
-import { Assert, GetValue, IsStrictlyEqual } from '../abstract-ops/all.mts';
 import {
   BooleanValue, ReferenceRecord, Value,
 } from '../value.mts';
@@ -19,6 +17,9 @@ import {
   BlockDeclarationInstantiation,
   Evaluate_StatementList,
 } from './all.mts';
+import {
+  Assert, GetValue, IsStrictlyEqual, DeclarativeEnvironmentRecord,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
 function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEvaluator<BooleanValue> {

@@ -1,5 +1,4 @@
 import { ReferenceRecord, Value } from '../value.mts';
-import { GetValue, MakePrivateReference } from '../abstract-ops/all.mts';
 import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import { IsInTailPosition, StringValue } from '../static-semantics/all.mts';
@@ -10,6 +9,7 @@ import {
   EvaluatePropertyAccessWithExpressionKey,
   EvaluatePropertyAccessWithIdentifierKey,
 } from './all.mts';
+import { GetValue, MakePrivateReference } from '#self';
 
 /** https://tc39.es/ecma262/#sec-optional-chaining-evaluation */
 //   OptionalExpression :

@@ -1,5 +1,11 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { IfAbruptCloseIterator, Q } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import {
   Call,
   Get,
   GetIterator,
@@ -9,13 +15,7 @@ import {
   Realm,
   type FunctionObject,
   type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
-  UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import { IfAbruptCloseIterator, Q } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 export interface SetObject extends OrdinaryObject {
   readonly SetData: (Value | undefined)[];

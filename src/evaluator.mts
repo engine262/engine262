@@ -76,6 +76,7 @@ import {
   Evaluate_AnyFunctionBody,
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
+import { avoid_using_children } from './parser/utils.mts';
 import {
   type AbruptCompletion, Assert, type ReferenceRecord, type ReturnCompletion, Value,
   type ValueCompletion,
@@ -297,4 +298,56 @@ export type EvaluatorNextType = {
 } | {
   type: 'async-generator-resume',
   value: ValueCompletion | ReturnCompletion
+}
+
+export interface BreakpointLocation {
+  scriptId: string;
+  lineNumber: number;
+  columnNumber?: number;
+}
+
+export function getBreakpointCandidates(from: BreakpointLocation, to?: BreakpointLocation, _restrictToFunction = false): BreakpointLocation[] {
+  const scriptId = from.scriptId;
+  const script = surroundingAgent.parsedSources.get(scriptId);
+  if (!script || (to && scriptId !== to.scriptId)) {
+    return [];
+  }
+  const node = script.ECMAScriptCode;
+  if (!('type' in node)) {
+    return [];
+  }
+  const nodes = [...yieldAllNodesIntersectWithRange(node, from, to)];
+  return nodes.map((node): BreakpointLocation => ({ scriptId, lineNumber: node.location.start.line - 1, columnNumber: node.location.start.column - 1 }));
+}
+
+function* yieldAllNodesIntersectWithRange(node: ParseNode, from: BreakpointLocation, to: BreakpointLocation | undefined): Generator<ParseNode> {
+  const fromLine = from.lineNumber + 1;
+  const fromColumn = from.columnNumber !== undefined ? from.columnNumber + 1 : undefined;
+  const toLine = to ? to.lineNumber + 1 : fromLine;
+  const toColumn = to?.columnNumber !== undefined ? to.columnNumber + 1 : undefined;
+  if (node.location.end.line < fromLine) {
+    return;
+  }
+  if (fromColumn && node.location.end.line === fromLine && node.location.end.column < fromColumn) {
+    return;
+  }
+  if (toLine) {
+    if (node.location.start.line > toLine) {
+      return;
+    }
+    if (toColumn && node.location.start.line === toLine && node.location.start.column > toColumn) {
+      return;
+    }
+  }
+  // only yield the current node iff strictly in the range
+  if (
+    node.location.start.line >= fromLine
+    && (fromColumn ? node.location.start.column >= fromColumn : true)
+    && (toLine ? node.location.end.line <= toLine && (toColumn ? node.location.end.column <= toColumn : true) : true)
+  ) {
+    yield node;
+  }
+  for (const child of avoid_using_children(node)) {
+    yield* yieldAllNodesIntersectWithRange(child, from, to);
+  }
 }

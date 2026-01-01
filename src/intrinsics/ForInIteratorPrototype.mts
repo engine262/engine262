@@ -5,17 +5,17 @@ import {
   NullValue,
 } from '../value.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { Q, type ValueEvaluator } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert,
   SameValue,
   OrdinaryObjectCreate,
   CreateIteratorResultObject,
-  Realm,
   type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import { Q, type ValueEvaluator } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+  Realm,
+} from '#self';
 
 export interface ForInIteratorInstance extends OrdinaryObject {
   Object: ObjectValue | NullValue;

@@ -32,11 +32,33 @@ export const Debugger: DebuggerNamespace = {
   },
   setAsyncCallStackDepth() { },
   setBlackboxPatterns() { },
-  setPauseOnExceptions() { },
   setBlackboxExecutionContexts() { },
-  setBreakpointByUrl() {
-    return { breakpointId: '0', locations: [] };
+
+  // #region breakpoints
+  getPossibleBreakpoints() {
+  // getPossibleBreakpoints({ start, end, restrictToFunction }) {
+    return { locations: [] };
+    // return { locations: getBreakpointCandidates(start, end, restrictToFunction) };
   },
+  removeBreakpoint({ breakpointId }) {
+    surroundingAgent?.removeBreakpoint(breakpointId);
+  },
+  // setBreakpoint({ location, condition }) { },
+  setBreakpointByUrl(req) {
+    return surroundingAgent?.addBreakpointByUrl(req);
+  },
+  // setBreakpointOnFunctionCall({ objectId, condition }) { },
+  setBreakpointsActive({ active }) {
+    surroundingAgent.breakpointsEnabled = active;
+  },
+  // setInstrumentationBreakpoint({ instrumentation }) { },
+  setPauseOnExceptions({ state }) {
+    if (surroundingAgent) {
+      surroundingAgent.pauseOnExceptions = state === 'none' ? undefined : state;
+    }
+  },
+  // #endregion
+
   stepInto(_, { sendEvent }) {
     sendEvent['Debugger.resumed']();
     surroundingAgent.resumeEvaluate({ pauseAt: 'step-in' });

@@ -1,12 +1,12 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value } from '../value.mts';
+import { X } from '../completion.mts';
 import {
   Assert,
   CreateBuiltinFunction,
   Realm,
   SetIntegrityLevel,
-} from '../abstract-ops/all.mts';
-import { Value } from '../value.mts';
-import { X } from '../completion.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {

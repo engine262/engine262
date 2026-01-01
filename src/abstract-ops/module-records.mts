@@ -1,6 +1,7 @@
 import {
-  surroundingAgent, HostLoadImportedModule, IncrementModuleAsyncEvaluationCount, HostPromiseRejectionTracker,
+  surroundingAgent, HostLoadImportedModule, HostPromiseRejectionTracker,
 } from '../host-defined/engine.mts';
+import { IncrementModuleAsyncEvaluationCount } from '../execution-context/Agent.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
@@ -26,9 +27,9 @@ import {
   Call,
   ContinueDynamicImport,
   PromiseCapabilityRecord,
-  Realm,
 } from './all.mts';
 import {
+  Realm,
   Completion,
   HostGetSupportedImportAttributes,
   ModuleRequestsEqual,

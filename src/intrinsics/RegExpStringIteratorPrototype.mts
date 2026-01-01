@@ -3,6 +3,11 @@ import {
   JSStringValue, NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import {
   CreateIteratorFromClosure,
   GeneratorResume,
   ToString,
@@ -13,12 +18,7 @@ import {
   F, R as MathematicalValue,
   Realm,
   type GeneratorObject,
-} from '../abstract-ops/all.mts';
-import {
-  Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
 export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, global: boolean, fullUnicode: boolean): ValueCompletion<GeneratorObject> {

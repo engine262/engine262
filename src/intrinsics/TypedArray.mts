@@ -12,6 +12,9 @@ import {
   UndefinedValue,
   Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { type Mutable, __ts_cast__ } from '../helpers.mts';
+import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Assert,
   Call,
@@ -61,10 +64,7 @@ import {
   IsFixedLengthArrayBuffer,
   IsDetachedBuffer,
   ArrayBufferByteLength,
-} from '../abstract-ops/all.mts';
-import { type Mutable, __ts_cast__ } from '../helpers.mts';
-import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 export const typedArrayInfoByName = {
   Int8Array: {

@@ -9,7 +9,7 @@ import { isSymbolObject } from '../intrinsics/Symbol.mts';
 import {
   BigIntValue,
   BooleanValue,
-  Construct, CreateArrayFromList, EscapeRegExpPattern, isArrayBufferObject, isArrayExoticObject, isDateObject, isErrorObject, isFunctionObject, isModuleNamespaceObject, isPromiseObject, isRegExpObject, isTypedArrayObject, JSStringValue, NullValue, NumberValue, ObjectValue, surroundingAgent, SymbolValue, ThrowCompletion, UndefinedValue, Value, X,
+  Construct, CreateArrayFromList, EscapeRegExpPattern, isArrayBufferObject, isArrayExoticObject, isDateObject, isErrorObject, isFunctionObject, isModuleNamespaceObject, isPromiseObject, isRegExpObject, isTypedArrayObject, JSStringValue, NullValue, NumberValue, ObjectValue, PrivateName, surroundingAgent, SymbolValue, ThrowCompletion, UndefinedValue, Value, X,
   type Intrinsics,
 } from '#self';
 
@@ -67,11 +67,13 @@ Throw.URIError = ThrowFactory('%URIError%');
 Throw.Error = ThrowFactory('%Error%');
 Throw.AggregateError = ThrowFactory('%AggregateError%');
 
-export type Formattable = string | number | bigint | Value | Formattable[];
-function format(arg: Formattable): string {
+export type Formattable = string | number | bigint | Value | PrivateName | Formattable[];
+export function format(arg: Formattable): string {
   switch (true) {
     case typeof arg !== 'object':
       return String(arg);
+    case arg instanceof PrivateName:
+      return `#${arg.Description instanceof UndefinedValue ? '' : arg.Description.stringValue()}`;
     case arg instanceof JSStringValue:
       return JSON.stringify(arg.stringValue());
     case arg instanceof NumberValue: {
@@ -155,8 +157,45 @@ function format(arg: Formattable): string {
 
 export interface Throw {
   // auto-generate start
-  (m: 'Cannot call addInitializer after decoration is finished' | 'Decorators can only be used to decorate classes' | 'Invalid receiver'): ThrowCompletion;
-  (m: '$1 is not a function' | 'Accessor decorator must return an object or undefined, but $1 was returned' | 'Class decorator must return a function or undefined, but $1 was returned' | 'Field decorator must return a function or undefined, but $1 was returned' | 'Method decorator must return a function or undefined, but $1 was returned' | 'The get property of the return value of an accessor decorator must be a function or undefined, but $1 was returned' | 'The init property of the return value of an accessor decorator must be a function or undefined, but $1 was returned' | 'The set property of the return value of an accessor decorator must be a function or undefined, but $1 was returned' | 'addInitializer must be called with a function, but $1 was passed', $1: Formattable): ThrowCompletion;
+  (m:
+'Array length must be uint32.'
+  | 'Array length too big.'
+  | 'BigInt has no unsigned right shift, use >> instead'
+  | 'Cannot call addInitializer after decoration is finished'
+  | 'Cannot define private element to a non-extensible object'
+  | 'Cannot divide by zero'
+  | 'Cannot resize ArrayBuffer to bigger than maxByteLength'
+  | 'Decorators can only be used to decorate classes'
+  | 'Decorators cannot appear on both sides of the export keyword'
+  | 'Exponent of bigint must be positive'
+  | 'Invalid receiver'
+  | 'Offset is out of bound'
+  | 'RegExp flags "v" and "u" cannot be used together'
+  | 'TypedArray out of bounds'
+  ): ThrowCompletion;
+  (m:
+'$1 cannot be used as a WeakMap key'
+  | '$1 is not a constructor'
+  | '$1 is not a function'
+  | '$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer'
+  | 'Accessor decorator must return an object or undefined, but $1 was returned'
+  | 'Cannot mix BigInt and other types in $1 operation'
+  | 'Class decorator must return a function or undefined, but $1 was returned'
+  | 'Field decorator must return a function or undefined, but $1 was returned'
+  | 'Method decorator must return a function or undefined, but $1 was returned'
+  | 'Private field $1 is not a getter'
+  | 'Private field $1 is not a setter'
+  | 'Private method $1 cannot be set'
+  | 'The get property of the return value of an accessor decorator must be a function or undefined, but $1 was returned'
+  | 'The init property of the return value of an accessor decorator must be a function or undefined, but $1 was returned'
+  | 'The set property of the return value of an accessor decorator must be a function or undefined, but $1 was returned'
+  | 'addInitializer must be called with a function, but $1 was passed'
+  , $1: Formattable): ThrowCompletion;
+  (m:
+'$1 does not exist on $2'
+  | '$1 is not a $2'
+  | 'Private element $1 is already defined on $2'
+  , $1: Formattable, $2: Formattable): ThrowCompletion;
   // auto-generate end
   <const S extends string>(m: S, ...args: ParsePrintFormat<S>): ThrowCompletion;
 }

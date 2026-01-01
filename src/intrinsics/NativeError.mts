@@ -2,14 +2,6 @@ import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
 import {
-  DefinePropertyOrThrow,
-  OrdinaryCreateFromConstructor,
-  InstallErrorCause,
-  ToString,
-  Realm,
-  type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
   Descriptor,
   UndefinedValue,
   Value,
@@ -20,6 +12,14 @@ import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { captureStack, callSiteToErrorString } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 import type { ErrorObject } from './Error.mts';
+import {
+  DefinePropertyOrThrow,
+  OrdinaryCreateFromConstructor,
+  InstallErrorCause,
+  ToString,
+  Realm,
+  type FunctionObject,
+} from '#self';
 
 const nativeErrorNames = [
   'EvalError',

@@ -91,7 +91,7 @@ export function PropertyDefinitionNodes(node: ParseNode.ObjectLiteral) {
 // defer it to the future if needed.
 export function* avoid_using_children(node: ParseNode): Generator<ParseNode> {
   for (const key of Reflect.ownKeys(node)) {
-    if (typeof key === 'string' && key !== 'parent') {
+    if (typeof key === 'string' && key !== 'parent' && key !== 'type' && key !== 'location' && key !== 'sourceText') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const child = (node as any)[key];
       if (typeof child === 'object' && child) {

@@ -1,5 +1,13 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import {
+  IfAbruptRejectPromise, NormalCompletion, X,
+} from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import {
   AsyncFromSyncIteratorContinuation,
   Call,
   CreateIteratorResultObject,
@@ -8,19 +16,11 @@ import {
   NewPromiseCapability,
   Assert,
   type OrdinaryObject,
-  Realm,
   type IteratorRecord,
   IteratorClose,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
-  ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import {
-  IfAbruptRejectPromise, NormalCompletion, X,
-} from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+  Realm,
+} from '#self';
 
 export interface AsyncFromSyncIteratorObject extends OrdinaryObject {
   readonly SyncIteratorRecord: IteratorRecord;

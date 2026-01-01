@@ -1,3 +1,16 @@
+import { AbruptCompletion, Q, type ValueEvaluator } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  ObjectValue,
+  type BooleanValue,
+  UndefinedValue,
+  Value,
+  type Arguments,
+  type FunctionCallContext,
+  wellKnownSymbols,
+} from '../value.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Call,
   CreateIteratorFromClosure,
@@ -14,21 +27,8 @@ import {
   type FunctionObject,
   type IteratorObject,
   type Realm,
-} from '../abstract-ops/all.mts';
-import { AbruptCompletion, Q, type ValueEvaluator } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
-import {
-  ObjectValue,
-  type BooleanValue,
-  UndefinedValue,
-  Value,
-  type Arguments,
-  type FunctionCallContext,
-  wellKnownSymbols,
-} from '../value.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import type { YieldEvaluator } from '#self';
+  type YieldEvaluator,
+} from '#self';
 
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator-constructor */

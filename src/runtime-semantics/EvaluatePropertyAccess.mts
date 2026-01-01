@@ -1,12 +1,12 @@
-import {
-  GetValue,
-  Assert,
-} from '../abstract-ops/all.mts';
 import { Value, ReferenceRecord } from '../value.mts';
 import { Evaluate, type ReferenceEvaluator } from '../evaluator.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import { Q, type PlainCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  GetValue,
+  Assert,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
 export function* EvaluatePropertyAccessWithExpressionKey(baseValue: Value, expression: ParseNode.Expression, strict: boolean): ReferenceEvaluator {

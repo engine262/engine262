@@ -3,6 +3,10 @@ import {
   Value, Descriptor, type Arguments, type FunctionCallContext,
   UndefinedValue,
 } from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { captureStack, callSiteToErrorString } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import type { ErrorObject } from './Error.mts';
 import {
   ToString,
   IteratorToList,
@@ -10,15 +14,11 @@ import {
   DefinePropertyOrThrow,
   InstallErrorCause,
   CreateArrayFromList,
-  Realm,
   type FunctionObject,
   CreateNonEnumerableDataPropertyOrThrow,
   GetIterator,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack, callSiteToErrorString } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import type { ErrorObject } from './Error.mts';
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-aggregate-error-constructor */
 function* AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {

@@ -1,4 +1,11 @@
 import {
+  NormalCompletion, Q, ReturnCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import {
+  Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import {
   Assert,
   CreateIteratorResultObject,
   GeneratorResume,
@@ -7,14 +14,7 @@ import {
   Realm,
   RequireInternalSlot,
   type GeneratorObject,
-} from '../abstract-ops/all.mts';
-import {
-  NormalCompletion, Q, ReturnCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import {
-  Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.next */
 function* IteratorHelperPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {

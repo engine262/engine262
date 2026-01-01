@@ -1,15 +1,3 @@
-import {
-  Assert,
-  DefinePropertyOrThrow,
-  GetPrototypeFromConstructor,
-  MakeConstructor,
-  OrdinaryFunctionCreate,
-  OrdinaryObjectCreate,
-  SetFunctionName,
-  ToString,
-  type FunctionObject,
-  type Intrinsics,
-} from '../abstract-ops/all.mts';
 import { Q, ThrowCompletion, X } from '../completion.mts';
 import {
   HostEnsureCanCompileStrings,
@@ -23,6 +11,18 @@ import {
 } from '../value.mts';
 import { __ts_cast__, OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  Assert,
+  DefinePropertyOrThrow,
+  GetPrototypeFromConstructor,
+  MakeConstructor,
+  OrdinaryFunctionCreate,
+  OrdinaryObjectCreate,
+  SetFunctionName,
+  ToString,
+  type FunctionObject,
+  type Intrinsics,
+} from '#self';
 
 export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value) {
   // 6. If newTarget is undefined, set newTarget to constructor.
@@ -107,13 +107,14 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   //     i. If BoundNames of parameters contains any duplicate elements, throw a SyntaxError exception.
   let parameters;
   let body;
-  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceString);
+  let scriptId;
   {
     const f = wrappedParse({ source: sourceString }, (p) => {
       const r = p.parseExpression();
       p.expect(Token.EOS);
       return r;
     });
+    scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceString, f);
     if (Array.isArray(f)) {
       Parser.decorateSyntaxErrorWithScriptId(f[0], scriptId);
       return ThrowCompletion(f[0]);

@@ -1,12 +1,6 @@
 import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import {
-  GetValue,
-  ToString,
-  NewPromiseCapability,
-  GetActiveScriptOrModule,
-} from '../abstract-ops/all.mts';
-import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mts';
 import {
@@ -14,6 +8,12 @@ import {
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../helpers.mts';
+import {
+  GetValue,
+  ToString,
+  NewPromiseCapability,
+  GetActiveScriptOrModule,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-import-calls */
 // ImportCall : `import` `(` AssignmentExpression `)`

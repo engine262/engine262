@@ -1,5 +1,22 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  Descriptor,
+  NumberValue,
+  Value,
+  wellKnownSymbols,
+  ObjectValue,
+  type Arguments,
+  type FunctionCallContext,
+  BooleanValue,
+} from '../value.mts';
+import {
+  EnsureCompletion, NormalCompletion, Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { CreateSetIterator } from './SetIteratorPrototype.mts';
+import type { SetObject } from './Set.mts';
+import {
   Call,
   F,
   IsCallable,
@@ -17,24 +34,7 @@ import {
   CanonicalizeKeyedCollectionKey,
   IteratorStepValue,
   IteratorClose,
-} from '../abstract-ops/all.mts';
-import {
-  Descriptor,
-  NumberValue,
-  Value,
-  wellKnownSymbols,
-  ObjectValue,
-  type Arguments,
-  type FunctionCallContext,
-  BooleanValue,
-} from '../value.mts';
-import {
-  EnsureCompletion, NormalCompletion, Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import { CreateSetIterator } from './SetIteratorPrototype.mts';
-import type { SetObject } from './Set.mts';
+} from '#self';
 import type {
   FunctionObject,
   Mutable,

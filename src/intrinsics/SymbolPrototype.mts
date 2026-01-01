@@ -9,13 +9,13 @@ import {
 import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
+import { Q, type ValueCompletion } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert,
   Realm,
   SymbolDescriptiveString,
-} from '../abstract-ops/all.mts';
-import { Q, type ValueCompletion } from '../completion.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-thissymbolvalue */
 function thisSymbolValue(value: Value) {

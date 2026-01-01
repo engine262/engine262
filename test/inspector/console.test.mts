@@ -258,3 +258,21 @@ test('call function on', async () => {
     }
   `);
 });
+
+test('private field jailbreak', async () => {
+  const agent = new Agent();
+  setSurroundingAgent(agent);
+  const inspector = new TestInspector();
+  const realm = new ManagedRealm();
+  inspector.attachAgent(agent, [realm]);
+
+  await inspector.eval('class A { #x = 1; }; globalThis.a = new A();');
+  await inspector.debugger.engine262_setEvaluateMode({ mode: 'console' });
+  expect(await inspector.runtime.evaluate({ expression: 'a.#x', uniqueContextId: '0' })).toMatchInlineSnapshot(`
+    {
+      "description": "1",
+      "type": "number",
+      "value": 1,
+    }
+  `);
+});

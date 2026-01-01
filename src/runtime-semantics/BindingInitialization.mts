@@ -1,13 +1,5 @@
 import { JSStringValue, Value } from '../value.mts';
 import {
-  Assert,
-  PutValue,
-  ResolveBinding,
-  RequireObjectCoercible,
-  GetIterator,
-  IteratorClose,
-} from '../abstract-ops/all.mts';
-import {
   EnsureCompletion,
   EnvironmentRecord, StringValue, UndefinedValue,
 } from '../index.mts';
@@ -20,6 +12,14 @@ import {
   PropertyBindingInitialization,
   RestBindingInitialization,
 } from './all.mts';
+import {
+  Assert,
+  PutValue,
+  ResolveBinding,
+  RequireObjectCoercible,
+  GetIterator,
+  IteratorClose,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-initializeboundname */
 export function* InitializeBoundName(name: JSStringValue, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {

@@ -36,6 +36,7 @@ import {
   TypedArrayLength,
   CreateIteratorResultObject,
   GeneratorYield,
+  Throw,
 } from '#self';
 import { isTypedArrayObject } from '#self';
 
@@ -73,6 +74,8 @@ const InternalMethods = {
   },
 } satisfies Partial<ObjectInternalMethods<OrdinaryObject>>;
 
+export { InternalMethods as ArrayExoticObjectInternalMethods };
+
 export function isArrayExoticObject(O: Value) {
   return O instanceof ObjectValue && O.DefineOwnProperty === InternalMethods.DefineOwnProperty;
 }
@@ -84,7 +87,7 @@ export function ArrayCreate(length: number, proto?: ObjectValue): ValueCompletio
     length = +0;
   }
   if (length > (2 ** 32) - 1) {
-    return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', length);
+    return Throw.RangeError('Array length too big.');
   }
   if (proto === undefined) {
     proto = surroundingAgent.intrinsic('%Array.prototype%');
@@ -133,7 +136,7 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
     return Q(ArrayCreate(length));
   }
   if (!IsConstructor(C)) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
+    return Throw.TypeError('$1 is not a constructor', C);
   }
   return Q(yield* Construct(C, [F(length)]));
 }
@@ -147,7 +150,7 @@ export function* ArraySetLength(A: OrdinaryObject, Desc: Descriptor): ValueEvalu
   const newLen = R(Q(yield* ToUint32(Desc.Value)));
   const numberLen = R(Q(yield* ToNumber(Desc.Value)));
   if (newLen !== numberLen) {
-    return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
+    return Throw.RangeError('Array length must be uint32.');
   }
   newLenDesc = Descriptor({ ...Desc, Value: F(newLen) });
   const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
@@ -268,7 +271,7 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
       if (isTypedArrayObject(array)) {
         const taRecord = MakeTypedArrayWithBufferWitnessRecord(array, 'seq-cst');
         if (IsTypedArrayOutOfBounds(taRecord)) {
-          return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+          return Throw.TypeError('TypedArray out of bounds');
         }
         // 2. Let len be array.[[ArrayLength]].
         len = TypedArrayLength(taRecord);

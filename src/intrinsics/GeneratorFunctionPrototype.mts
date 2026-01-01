@@ -1,7 +1,8 @@
 import { Descriptor, Value } from '../value.mts';
-import { DefinePropertyOrThrow, Realm } from '../abstract-ops/all.mts';
 import { X } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { DefinePropertyOrThrow } from '#self';
+import type { Realm } from '#self';
 
 export function bootstrapGeneratorFunctionPrototype(realmRec: Realm) {
   const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];

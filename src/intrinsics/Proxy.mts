@@ -2,6 +2,11 @@ import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
 import {
+  NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { Q, X, type ValueCompletion } from '../completion.mts';
+import { assignProps } from './bootstrap.mts';
+import {
   Assert,
   CreateBuiltinFunction,
   CreateDataProperty,
@@ -12,12 +17,7 @@ import {
   type BuiltinFunctionObject,
   type ExoticObject,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
-  NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import { Q, X, type ValueCompletion } from '../completion.mts';
-import { assignProps } from './bootstrap.mts';
+} from '#self';
 
 export interface ProxyObject extends ExoticObject, BuiltinFunctionObject {
   ProxyHandler: Value | NullValue;

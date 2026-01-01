@@ -5,25 +5,6 @@ import {
 import {
   Evaluate, type Evaluator, type PlainEvaluator, type StatementEvaluator,
 } from '../evaluator.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
-import {
-  Assert,
-  Call,
-  GetIterator,
-  GetValue,
-  PutValue,
-  GetV,
-  ResolveBinding,
-  InitializeReferencedBinding,
-  IteratorComplete,
-  IteratorValue,
-  IteratorClose,
-  AsyncIteratorClose,
-  ToBoolean,
-  ToObject,
-  SameValue,
-  type IteratorRecord,
-} from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -52,6 +33,25 @@ import {
   DestructuringAssignmentEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
+import {
+  Assert,
+  Call,
+  GetIterator,
+  GetValue,
+  PutValue,
+  GetV,
+  ResolveBinding,
+  InitializeReferencedBinding,
+  IteratorComplete,
+  IteratorValue,
+  IteratorClose,
+  AsyncIteratorClose,
+  ToBoolean,
+  ToObject,
+  SameValue,
+  type IteratorRecord,
+} from '#self';
+import { DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-loopcontinues */
 function LoopContinues(completion: Completion<Value | void>, labelSet: JSStringSet) {

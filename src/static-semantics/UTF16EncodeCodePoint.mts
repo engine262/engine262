@@ -1,4 +1,4 @@
-import { Assert } from '../abstract-ops/all.mts';
+import { Assert } from '#self';
 import type { CodePoint } from '#self';
 
 /** https://tc39.es/ecma262/#sec-utf16encodecodepoint */

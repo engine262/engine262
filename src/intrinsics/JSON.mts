@@ -9,22 +9,6 @@ import {
   Value,
 } from '../value.mts';
 import {
-  Assert,
-  Call,
-  CreateDataProperty,
-  CreateDataPropertyOrThrow,
-  EnumerableOwnProperties,
-  Get,
-  GetV,
-  IsArray,
-  IsCallable,
-  OrdinaryObjectCreate,
-  LengthOfArrayLike,
-  ToIntegerOrInfinity,
-  ToNumber,
-  ToString,
-} from '../abstract-ops/all.mts';
-import {
   CodePointsToString,
   PropName,
   UTF16EncodeCodePoint,
@@ -54,6 +38,22 @@ import {
 import { bootstrapPrototype } from './bootstrap.mts';
 import { isBooleanObject } from './Boolean.mts';
 import { isBigIntObject } from './BigInt.mts';
+import {
+  Assert,
+  Call,
+  CreateDataProperty,
+  CreateDataPropertyOrThrow,
+  EnumerableOwnProperties,
+  Get,
+  GetV,
+  IsArray,
+  IsCallable,
+  OrdinaryObjectCreate,
+  LengthOfArrayLike,
+  ToIntegerOrInfinity,
+  ToNumber,
+  ToString,
+} from '#self';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];

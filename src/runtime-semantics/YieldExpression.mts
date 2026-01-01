@@ -1,6 +1,16 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { ObjectValue, Value } from '../value.mts';
 import {
+  Await,
+  NormalCompletion,
+  Q,
+  ReturnCompletion,
+  ThrowCompletion,
+  type ValueCompletion,
+} from '../completion.mts';
+import { Evaluate, type YieldEvaluator } from '../evaluator.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import {
   Assert,
   Call,
   GeneratorYield,
@@ -14,17 +24,7 @@ import {
   AsyncGeneratorYield,
   AsyncIteratorClose,
   Yield,
-} from '../abstract-ops/all.mts';
-import {
-  Await,
-  NormalCompletion,
-  Q,
-  ReturnCompletion,
-  ThrowCompletion,
-  type ValueCompletion,
-} from '../completion.mts';
-import { Evaluate, type YieldEvaluator } from '../evaluator.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   YieldExpression :

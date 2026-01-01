@@ -3,10 +3,11 @@ import {
   ObjectValue, UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
-import {
-  ToIndex, AllocateArrayBuffer, type FunctionObject, Realm,
-} from '../abstract-ops/all.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  ToIndex, AllocateArrayBuffer, type FunctionObject,
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-arraybuffer-length */
 function* ArrayBufferConstructor(this: FunctionObject, [length = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {

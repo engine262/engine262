@@ -1,5 +1,14 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  ObjectValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import {
+  Q, ThrowCompletion, X,
+} from '../completion.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { PromiseObject } from './Promise.mts';
+import {
   Assert,
   Call,
   CreateBuiltinFunction,
@@ -14,16 +23,7 @@ import {
   Realm,
   SpeciesConstructor,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
-  ObjectValue, Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import {
-  Q, ThrowCompletion, X,
-} from '../completion.mts';
-import type { ValueEvaluator } from '../evaluator.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import type { PromiseObject } from './Promise.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.catch */
 function* PromiseProto_catch([onRejected = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {

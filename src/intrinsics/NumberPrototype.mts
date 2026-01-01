@@ -5,13 +5,6 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import {
-  Assert,
-  ToIntegerOrInfinity,
-  ToString,
-  F, R,
-  Realm,
-} from '../abstract-ops/all.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
@@ -19,6 +12,13 @@ import {
 import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { NumberObject } from './Number.mts';
+import {
+  Assert,
+  ToIntegerOrInfinity,
+  ToString,
+  F, R,
+  Realm,
+} from '#self';
 
 function thisNumberValue(value: Value) {
   if (value instanceof NumberValue) {

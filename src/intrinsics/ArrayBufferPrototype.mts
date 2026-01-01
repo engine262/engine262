@@ -3,14 +3,14 @@ import {
   DataBlock, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
   F,
-  Realm,
   type ArrayBufferObject,
-} from '../abstract-ops/all.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
 function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext) {

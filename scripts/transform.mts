@@ -236,7 +236,11 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
     ThrowCompletion: (source: Node, code: PublicReplacements) => withSource(source, template('({ __proto__: ThrowCompletion.prototype, Value: %%value%% })', parseOptions)(code))[0],
   };
   const Structs = [
+    'AsyncGeneratorRequestRecord',
     'ClassElementDefinitionRecord',
+    'ClassFieldDefinitionRecord',
+    'ClassStaticBlockDefinitionRecord',
+    'PrivateElementRecord',
   ];
 
   function tryRemove(path: NodePath<t.CallExpression>) {

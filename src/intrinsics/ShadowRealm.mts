@@ -8,6 +8,8 @@ import {
 import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Assert,
   MakeRealm,
@@ -16,10 +18,8 @@ import {
   Realm,
   type FunctionObject,
   type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import { type Mutable } from '#self';
+  type Mutable,
+} from '#self';
 
 export interface ShadowRealmObject extends OrdinaryObject {
   readonly ShadowRealm: Realm;

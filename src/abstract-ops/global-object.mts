@@ -1,4 +1,5 @@
-import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../host-defined/engine.mts';
+import { HostEnsureCanCompileStrings, surroundingAgent } from '../host-defined/engine.mts';
+import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import { JSStringValue, NullValue, Value } from '../value.mts';
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mts';
 import {
@@ -19,18 +20,19 @@ import {
   type PlainCompletion,
 } from '../completion.mts';
 import { Parser, wrappedParse } from '../parse.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
+import { __ts_cast__, JSStringSet } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { Assert } from './all.mts';
 import {
+  GetThisEnvironment,
   DeclarativeEnvironmentRecord,
   EnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   ObjectEnvironmentRecord,
   PrivateEnvironmentRecord,
-} from '../environment.mts';
-import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
-import { __ts_cast__, JSStringSet } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { Assert, GetThisEnvironment } from './all.mts';
+} from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-global-object */
@@ -110,7 +112,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
     });
     return parser.parseScript();
   }));
-  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, x.stringValue());
+  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, x.stringValue(), script);
   if (Array.isArray(script)) {
     Parser.decorateSyntaxErrorWithScriptId(script[0], scriptId);
     return ThrowCompletion(script[0]);
