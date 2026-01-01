@@ -1,13 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  Call,
-  IsCallable,
-  SameValue,
-  RequireInternalSlot,
-  CanBeHeldWeakly,
-  Realm,
-} from '../abstract-ops/all.mts';
-import {
   Value,
   type Arguments,
   type FunctionCallContext,
@@ -15,6 +7,15 @@ import {
 import { Q, type ValueCompletion, type ValueEvaluator } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakMapObject } from './WeakMap.mts';
+import {
+  Call,
+  IsCallable,
+  SameValue,
+  RequireInternalSlot,
+  CanBeHeldWeakly,
+  Realm,
+  Throw,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.delete */
 function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
@@ -23,7 +24,7 @@ function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: 
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, return false.
-  if (CanBeHeldWeakly(key) === Value.false) {
+  if (!CanBeHeldWeakly(key)) {
     return Value.false;
   }
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -52,7 +53,7 @@ function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: Fun
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, return false.
-  if (CanBeHeldWeakly(key) === Value.false) {
+  if (!CanBeHeldWeakly(key)) {
     return Value.undefined;
   }
   // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
@@ -74,8 +75,8 @@ function WeakMapProto_getOrInsert([key = Value.undefined, value = Value.undefine
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
-  if (CanBeHeldWeakly(key) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', key);
+  if (!CanBeHeldWeakly(key)) {
+    return Throw.TypeError('$1 cannot be used as a WeakMap key', key);
   }
   // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
   const entries = M.WeakMapData;
@@ -100,7 +101,7 @@ function* WeakMapProto_getOrInsertComputed([key = Value.undefined, callbackfn = 
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
-  if (CanBeHeldWeakly(key) === Value.false) {
+  if (!CanBeHeldWeakly(key)) {
     return surroundingAgent.Throw('TypeError', 'NotAWeakKey', key);
   }
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
@@ -143,7 +144,7 @@ function WeakMapProto_has([key = Value.undefined]: Arguments, { thisValue }: Fun
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, return false.
-  if (CanBeHeldWeakly(key) === Value.false) {
+  if (!CanBeHeldWeakly(key)) {
     return Value.false;
   }
   // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
@@ -165,7 +166,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined]: Argu
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
-  if (CanBeHeldWeakly(key) === Value.false) {
+  if (!CanBeHeldWeakly(key)) {
     return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
   }
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do

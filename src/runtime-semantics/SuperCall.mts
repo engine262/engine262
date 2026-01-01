@@ -1,4 +1,8 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { ObjectValue } from '../value.mts';
+import { Q, X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 import {
   Assert,
   Construct,
@@ -8,12 +12,8 @@ import {
   InitializeInstanceElements,
   isECMAScriptFunctionObject,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import { ObjectValue } from '../value.mts';
-import { Q, X } from '../completion.mts';
-import { FunctionEnvironmentRecord } from '../environment.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { ArgumentListEvaluation } from './all.mts';
+} from '#self';
+import { FunctionEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
 // SuperCall : `super` Arguments

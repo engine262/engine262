@@ -1,9 +1,9 @@
-import type { ArrayBufferObject, FunctionObject } from './abstract-ops/all.mts';
 import type { AbstractModuleRecord } from './modules.mts';
 import type {
   BooleanValue, JSStringValue, NumberValue, ObjectValue, PropertyKeyValue,
 } from './value.mts';
 import { inspect, PrivateName, Value } from './index.mts';
+import type { ArrayBufferObject, FunctionObject } from '#self';
 
 function i(V: unknown) {
   if (V instanceof Value) {

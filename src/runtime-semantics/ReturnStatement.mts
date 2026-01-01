@@ -1,6 +1,5 @@
 import { Value } from '../value.mts';
 import { Evaluate, type Evaluator } from '../evaluator.mts';
-import { GetValue, GetGeneratorKind } from '../abstract-ops/all.mts';
 import {
   Completion,
   Await,
@@ -9,6 +8,7 @@ import {
   ThrowCompletion,
 } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { GetValue, GetGeneratorKind } from '#self';
 
 /** https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
 //  ReturnStatement :

@@ -2,18 +2,18 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, type Arguments, type FunctionCallContext, BooleanValue,
 } from '../value.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { FinalizationRegistryCell, FinalizationRegistryObject } from './FinalizationRegistry.mts';
 import {
   CanBeHeldWeakly,
   CleanupFinalizationRegistry,
   IsCallable,
-  Realm,
   RequireInternalSlot,
   SameValue,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import type { FinalizationRegistryCell, FinalizationRegistryObject } from './FinalizationRegistry.mts';
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
 function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
@@ -38,7 +38,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If CanBeHeldWeakly(target) is false, throw a TypeError exception.
-  if (CanBeHeldWeakly(target) === Value.false) {
+  if (!CanBeHeldWeakly(target)) {
     return surroundingAgent.Throw('TypeError', 'NotAWeakKey', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
@@ -46,7 +46,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
     return surroundingAgent.Throw('TypeError', 'TargetMatchesHeldValue', heldValue);
   }
   // 5. If CanBeHeldWeakly(unregisterToken) is false, then
-  if (CanBeHeldWeakly(unregisterToken) === Value.false) {
+  if (!CanBeHeldWeakly(unregisterToken)) {
     // a. If unregisterToken is not undefined, throw a TypeError exception.
     if (unregisterToken !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
@@ -74,7 +74,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If CanBeHeldWeakly(unregisterToken) is false, throw a TypeError exception.
-  if (CanBeHeldWeakly(unregisterToken) === Value.false) {
+  if (!CanBeHeldWeakly(unregisterToken)) {
     return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
   }
   // 4. Let removed be false.

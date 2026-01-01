@@ -1,9 +1,4 @@
 import {
-  GetValue,
-  PutValue,
-  ResolveBinding,
-} from '../abstract-ops/all.mts';
-import {
   NormalCompletion, Q,
 } from '../completion.mts';
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
@@ -11,6 +6,11 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { StringValue, IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
 import { Value } from '../value.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
+import {
+  GetValue,
+  PutValue,
+  ResolveBinding,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
 //   VariableDeclaration :

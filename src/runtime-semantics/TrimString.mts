@@ -1,6 +1,6 @@
-import { Assert, RequireObjectCoercible, ToString } from '../abstract-ops/all.mts';
 import { JSStringValue, Value } from '../value.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
+import { Assert, RequireObjectCoercible, ToString } from '#self';
 
 /** https://tc39.es/ecma262/#sec-trimstring */
 export function* TrimString(string: Value, where: 'start' | 'end' | 'start+end'): ValueEvaluator<JSStringValue> {

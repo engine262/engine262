@@ -2,6 +2,9 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type PropertyKeyValue, PrivateName,
 } from '../value.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -9,11 +12,8 @@ import {
   OrdinaryObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mts';
-import { StringValue } from '../static-semantics/all.mts';
-import { X } from '../completion.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+  DeclarativeEnvironmentRecord,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
 //   AsyncGeneratorExpression :

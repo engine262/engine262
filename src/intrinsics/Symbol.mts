@@ -10,6 +10,8 @@ import {
 import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   KeyForSymbol,
   Realm,
@@ -17,9 +19,7 @@ import {
   ToString,
   type FunctionObject,
   type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 export interface GlobalSymbolRegistryRecord {
   readonly Key: JSStringValue;

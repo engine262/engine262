@@ -16,6 +16,10 @@ This project is bound by a [Code of Conduct][COC].
 
 Join us in `#engine262:matrix.org`.
 
+> [!NOTE]
+> Due to [recent changes on npm](https://github.blog/changelog/2025-12-09-npm-classic-tokens-revoked-session-based-auth-and-cli-token-management-now-available/), engine262 cannot release new versions in CI with its old name (`@engine262/engine262`), and the current active maintainer does not have permission to fix it. We're temporarily releasing it under the name `@magic-works/engine262`.
+
+
 ## Why this exists
 
 While helping develop new features for JavaScript, I've found that one of the
@@ -74,9 +78,9 @@ is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
 You can install it from npm.
 
 ```shell
-npm install @engine262/engine262
-yarn install @engine262/engine262
-pnpm install @engine262/engine262
+npm install @magic-works/engine262
+yarn install @magic-works/engine262
+pnpm install @magic-works/engine262
 ```
 
 If you install it globally, you can use the CLI like so:
@@ -146,4 +150,4 @@ included here for reference, though engine262 is not based on any of them.
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
 [test262]: https://github.com/tc39/test262
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
-[NPM]: https://npmjs.com/@engine262/engine262
+[NPM]: https://npmjs.com/@magic-works/engine262

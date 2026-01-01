@@ -12,6 +12,16 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import {
+  AbruptCompletion,
+  IfAbruptRejectPromise,
+  EnsureCompletion,
+  Q, X,
+  type ValueEvaluator,
+  type ValueCompletion,
+} from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import {
   Assert,
   Call,
   CreateArrayFromList,
@@ -26,31 +36,24 @@ import {
   IsCallable,
   IsConstructor,
   IteratorClose,
+  type NativeSteps,
   NewPromiseCapability,
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   PromiseCapabilityRecord,
   PromiseResolve,
   PromiseReactionRecord,
+  type PropertyKeyValue,
   type FunctionObject,
   Realm,
+  Throw,
   type IteratorRecord,
   type OrdinaryObject,
   type PromiseAllResolveElementFunctionObject,
   type PromiseAllRejectElementFunctionObject,
   IteratorStepValue,
-} from '../abstract-ops/all.mts';
-import {
-  AbruptCompletion,
-  IfAbruptRejectPromise,
-  EnsureCompletion,
-  Q, X,
-  type ValueEvaluator,
-  type ValueCompletion,
-} from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import { Throw, type NativeSteps, type PropertyKeyValue } from '#self';
+} from '#self';
+
 
 /** https://tc39.es/ecma262/#table-internal-slots-of-promise-instances */
 export interface PromiseObject extends OrdinaryObject {

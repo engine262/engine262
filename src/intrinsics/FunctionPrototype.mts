@@ -3,26 +3,6 @@ import {
   HostHasSourceTextAvailable,
 } from '../host-defined/engine.mts';
 import {
-  Assert,
-  Call,
-  Construct,
-  CreateListFromArrayLike,
-  IsCallable,
-  IsConstructor,
-  OrdinaryHasInstance,
-  PrepareForTailCall,
-  SameValue,
-  CreateBuiltinFunction,
-  MakeBasicObject,
-  Realm,
-  type ExoticObject,
-  type FunctionObject,
-  isBuiltinFunctionObject,
-  type BuiltinFunctionObject,
-  hasSourceTextInternalSlot,
-  CopyNameAndLength,
-} from '../abstract-ops/all.mts';
-import {
   JSStringValue,
   ObjectValue,
   UndefinedValue,
@@ -36,6 +16,26 @@ import {
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { assignProps } from './bootstrap.mts';
+import {
+  Assert,
+  Call,
+  Construct,
+  CreateListFromArrayLike,
+  IsCallable,
+  IsConstructor,
+  OrdinaryHasInstance,
+  PrepareForTailCall,
+  SameValue,
+  CreateBuiltinFunction,
+  MakeBasicObject,
+  type ExoticObject,
+  type FunctionObject,
+  isBuiltinFunctionObject,
+  type BuiltinFunctionObject,
+  hasSourceTextInternalSlot,
+  CopyNameAndLength,
+  Realm,
+} from '#self';
 
 export interface BoundFunctionObject extends ExoticObject, BuiltinFunctionObject {
   readonly BoundTargetFunction: FunctionObject;

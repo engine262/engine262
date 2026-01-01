@@ -1,4 +1,11 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { Q, X, type ValueCompletion } from '../completion.mts';
+import {
+  Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { SetObject } from './Set.mts';
 import {
   Assert,
   CreateArrayFromList,
@@ -8,14 +15,7 @@ import {
   RequireInternalSlot,
   Yield,
   type GeneratorObject,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueCompletion } from '../completion.mts';
-import {
-  Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import type { SetObject } from './Set.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-createsetiterator */
 export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): ValueCompletion<GeneratorObject> {

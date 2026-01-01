@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-await-in-loop */
 import { expect, test } from 'vitest';
+import type Protocol from 'devtools-protocol';
 import { TestInspector } from './utils.mts';
 import { Agent, ManagedRealm, setSurroundingAgent } from '#self';
 
@@ -83,6 +86,14 @@ test('functions', async () => {
   }
 });
 
+async function snapshotObject(inspector: TestInspector, value: string) {
+  const result = await inspector.eval(value);
+  expect(result).toMatchSnapshot(value);
+  const properties = await inspector.runtime.getProperties({ objectId: (result as any).objectId!, ownProperties: true, generatePreview: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
+  properties.internalProperties = properties.internalProperties?.filter((prop) => prop.name !== '[[Prototype]]');
+  expect(properties).toMatchSnapshot(`${value} properties`);
+}
+
 test('array', async () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
@@ -97,8 +108,7 @@ test('array', async () => {
     '[,,,]',
     'var a = [1,,2]; a.x = 1; a',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -115,7 +125,6 @@ test('regex', async () => {
     '/cat/i',
     'var a = /cat/; a.lastIndex = 1; a',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
     expect(await inspector.eval(value)).toMatchSnapshot(value);
   }
 });
@@ -133,7 +142,6 @@ test('date', async () => {
     'new Date(-1)',
     'new Date(9999999999999)',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
     expect(await inspector.eval(value)).toMatchSnapshot(value);
   }
 });
@@ -159,8 +167,7 @@ test('map and set', async () => {
     'new WeakSet([{}, {}])',
     'var x = new WeakSet([{}, {}]); x.x = 1; x',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -182,7 +189,6 @@ test('error', async () => {
     // TODO: className should not be syntaxError
     'new (class MyError extends Error { constructor() { super(); this.message = "hello" } })()',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
     expect(await inspector.eval(value)).toMatchSnapshot(value);
   }
 });
@@ -202,8 +208,7 @@ test('proxy', async () => {
     'new Proxy(() => {}, {})',
     'var a = Proxy.revocable({}, {}); a.revoke(); a.proxy',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -222,8 +227,7 @@ test('promise', async () => {
     'Promise.reject()',
     'Promise.reject(42)',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -244,8 +248,7 @@ test('typed array', async () => {
     'new Int32Array([1, 2, 3])',
     // TODO: test with detached arraybuffer
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -262,8 +265,7 @@ test('array buffer', async () => {
     'var x = new ArrayBuffer(10); x.a = 1; x',
     // TODO: test with detached arraybuffer
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -279,8 +281,7 @@ test('data view', async () => {
     'new DataView(new ArrayBuffer(10))',
     'var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -300,8 +301,7 @@ test('module namespace', async () => {
     'export default 42',
     'export default function() {}',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -312,7 +312,7 @@ test('shadow realm', async () => {
   const realm = new ManagedRealm();
   inspector.attachAgent(agent, [realm]);
 
-  expect(await inspector.eval('new ShadowRealm')).toMatchSnapshot('ShadowRealm');
+  await snapshotObject(inspector, 'new ShadowRealm');
   expect(await inspector.eval('new ShadowRealm().evaluate("(() => {})")')).toMatchSnapshot('ShadowRealm function');
 });
 
@@ -336,7 +336,6 @@ test('normal object', async () => {
     '{ class T { #priv = 1; normal = 2 }; new T }',
     '({ a: 1n, b: undefined, c: null, d: true, e: Symbol.iterator, f: [] })',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });

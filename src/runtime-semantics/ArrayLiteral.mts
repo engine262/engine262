@@ -1,5 +1,13 @@
 import { ObjectValue, Value } from '../value.mts';
 import {
+  Evaluate, type PlainEvaluator,
+  type ValueEvaluator,
+} from '../evaluator.mts';
+import {
+  Q, X,
+} from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import {
   Set,
   ArrayCreate,
   GetValue,
@@ -8,15 +16,7 @@ import {
   CreateDataPropertyOrThrow,
   F,
   IteratorStepValue,
-} from '../abstract-ops/all.mts';
-import {
-  Evaluate, type PlainEvaluator,
-  type ValueEvaluator,
-} from '../evaluator.mts';
-import {
-  Q, X,
-} from '../completion.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
 //  Elision :

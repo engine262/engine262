@@ -1,8 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
-import { ToObject, GetValue } from '../abstract-ops/all.mts';
 import { Evaluate } from '../evaluator.mts';
-import { ObjectEnvironmentRecord } from '../environment.mts';
 import {
   UpdateEmpty,
   Completion,
@@ -10,6 +8,7 @@ import {
   Q,
 } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { ToObject, GetValue, ObjectEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
 //   WithStatement : `with` `(` Expression `)` Statement

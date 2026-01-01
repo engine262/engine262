@@ -1,11 +1,11 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { X, Q } from '../completion.mts';
-import {
-  CreateBuiltinFunction, DefinePropertyOrThrow, MakeMethod, OrdinaryFunctionCreate, PrivateGet, PrivateSet, SymbolDescriptiveString,
-} from '../abstract-ops/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './PropertyName.mts';
+import {
+  CreateBuiltinFunction, DefinePropertyOrThrow, MakeMethod, OrdinaryFunctionCreate, PrivateGet, PrivateSet, SymbolDescriptiveString,
+} from '#self';
 import {
   ClassElementDefinitionRecord,
   Descriptor,
@@ -16,16 +16,18 @@ import {
   type ECMAScriptFunctionObject, type FunctionCallContext, type FunctionObject, type ObjectValue, PrivateName, type PropertyKeyValue,
 } from '#self';
 
-export class ClassFieldDefinitionRecord {
-  Name: PropertyKeyValue | PrivateName;
-
-  Initializer: ECMAScriptFunctionObject | undefined;
-
-  constructor(init: ClassFieldDefinitionRecord) {
-    this.Name = init.Name;
-    this.Initializer = init.Initializer;
-  }
+/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */
+export interface ClassFieldDefinitionRecord {
+  readonly Name: PropertyKeyValue | PrivateName;
+  readonly Initializer: ECMAScriptFunctionObject | undefined;
 }
+export const ClassFieldDefinitionRecord = function ClassFieldDefinitionRecord(value: ClassFieldDefinitionRecord) {
+  Object.setPrototypeOf(value, ClassFieldDefinitionRecord.prototype);
+  return value;
+} as {
+  (value: ClassFieldDefinitionRecord): ClassFieldDefinitionRecord;
+  [Symbol.hasInstance](instance: unknown): instance is ClassFieldDefinitionRecord;
+};
 
 export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): PlainEvaluator<ClassFieldDefinitionRecord> {
   const { ClassElementName, Initializer } = FieldDefinition;
@@ -61,7 +63,7 @@ export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.Field
     initializer = undefined;
   }
   // 5. Return the ClassFieldDefinition Record { [[Name]]: name, [[Initializer]]: initializer }.
-  return new ClassFieldDefinitionRecord({
+  return ClassFieldDefinitionRecord({
     Name: name,
     Initializer: initializer,
   });

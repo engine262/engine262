@@ -1,5 +1,4 @@
 import { Q } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import type { DataViewObject } from '../intrinsics/DataView.mts';
 import { type TypedArrayTypes, typedArrayInfoByType } from '../intrinsics/TypedArray.mts';
@@ -19,6 +18,7 @@ import {
   ArrayBufferByteLength,
   IsFixedLengthArrayBuffer,
 } from './all.mts';
+import { Throw } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-dataview-objects */
@@ -94,19 +94,19 @@ export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   const viewOffset = view.ByteOffset;
   const viewRecord = MakeDataViewWithBufferWitnessRecord(view, 'unordered');
   if (IsViewOutOfBounds(viewRecord)) {
-    return surroundingAgent.Throw('TypeError', 'DataViewOOB');
+    return Throw.TypeError('Offset is out of bound');
   }
   const viewSize = GetViewByteLength(viewRecord);
   // 9. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   // 10. If getIndex + elementSize > viewSize, throw a RangeError exception.
   if (getIndex + elementSize > viewSize) {
-    return surroundingAgent.Throw('RangeError', 'DataViewOOB');
+    return Throw.RangeError('Offset is out of bound');
   }
   // 11. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-  return GetValueFromBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, false, 'unordered', isLittleEndian);
+  return GetValueFromBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, false, 'unordered', isLittleEndian.booleanValue());
 }
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
@@ -132,18 +132,18 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   const viewOffset = view.ByteOffset;
   const viewRecord = MakeDataViewWithBufferWitnessRecord(view, 'unordered');
   if (IsViewOutOfBounds(viewRecord)) {
-    return surroundingAgent.Throw('TypeError', 'DataViewOOB');
+    return Throw.TypeError('Offset is out of bound');
   }
   const viewSize = GetViewByteLength(viewRecord);
   // 11. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   // 12. If getIndex + elementSize > viewSize, throw a RangeError exception.
   if (getIndex + elementSize > viewSize) {
-    return surroundingAgent.Throw('RangeError', 'DataViewOOB');
+    return Throw.RangeError('Offset is out of bound');
   }
   // 13. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian));
+  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian.booleanValue()));
   return Value.undefined;
 }

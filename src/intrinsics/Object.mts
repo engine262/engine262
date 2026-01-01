@@ -13,6 +13,9 @@ import {
 import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { AddEntriesFromIterable } from './Map.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Assert,
   CreateArrayFromList,
@@ -39,10 +42,7 @@ import {
   type FunctionObject,
   GroupBy,
   type KeyedGroupRecord,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { AddEntriesFromIterable } from './Map.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-object-value */
 function* ObjectConstructor([value = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {

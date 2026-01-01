@@ -1,7 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
-import { Assert } from '../abstract-ops/all.mts';
 import {
   LexicallyScopedDeclarations,
   IsConstantDeclaration,
@@ -10,6 +8,7 @@ import {
 import { X, NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mts';
+import { Assert, DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
 export function* BlockDeclarationInstantiation(code: ParseNode.StatementList | ParseNode.CaseBlock, env: DeclarativeEnvironmentRecord) {

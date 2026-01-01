@@ -1,24 +1,9 @@
-import { ModuleEnvironmentRecord } from './environment.mts';
 import {
   Value, JSStringValue, ObjectValue, UndefinedValue, BooleanValue,
   NullValue,
 } from './value.mts';
-import { ExecutionContext, surroundingAgent, type GCMarker } from './host-defined/engine.mts';
-import {
-  Assert,
-  Call,
-  NewPromiseCapability,
-  GetImportedModule,
-  GetModuleNamespace,
-  InnerModuleEvaluation,
-  InnerModuleLinking,
-  InnerModuleLoading,
-  SameValue,
-  AsyncBlockStart,
-  PromiseCapabilityRecord,
-  GraphLoadingState,
-  Realm,
-} from './abstract-ops/all.mts';
+import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
+import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
   VarScopedDeclarations,
   LexicallyScopedDeclarations,
@@ -41,10 +26,25 @@ import {
   Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
 } from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
-import type {
-  ImportAttributeRecord,
-  ModuleRequestRecord,
-  PlainCompletion, PromiseObject,
+import {
+  Assert,
+  Call,
+  NewPromiseCapability,
+  GetImportedModule,
+  GetModuleNamespace,
+  InnerModuleEvaluation,
+  InnerModuleLinking,
+  InnerModuleLoading,
+  SameValue,
+  AsyncBlockStart,
+  PromiseCapabilityRecord,
+  GraphLoadingState,
+  Realm,
+} from '#self';
+import {
+  type ImportAttributeRecord,
+  type ModuleRequestRecord,
+  type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
 } from '#self';
 
 // https://tc39.es/ecma262/#loadedmodulerequest-record

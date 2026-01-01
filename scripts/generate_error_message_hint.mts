@@ -82,8 +82,9 @@ sortedMessages.forEach((m) => {
 
 const generatedLines: string[] = [];
 messagesByParameterCount.forEach((group, index) => {
-  const args: string[] = [group.map((m) => (m.includes("'") ? `"${m}"` : `'${m}'`)).join(' | '), ...Array(index).fill('Formattable').map((t, i) => `$${i + 1}: ${t}`)];
-  generatedLines.push(`  (m: ${args.join(', ')}): ThrowCompletion;`);
+  const args: string[] = [group.sort().map((m) => (m.includes("'") ? `"${m}"` : `'${m}'`)).join('\n  | '), ...Array(index).fill('Formattable').map((t, i) => `$${i + 1}: ${t}`)];
+  args[0] += '\n  ';
+  generatedLines.push(`  (m:\n${args.join(', ')}): ThrowCompletion;`);
 });
 const generated = generatedLines.join('\n');
 

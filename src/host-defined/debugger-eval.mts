@@ -1,12 +1,13 @@
 import {
   ContainsArguments,
   DeclarativeEnvironmentRecord,
+  DynamicParsedCodeRecord,
   EnsureCompletion,
   EnvironmentRecord,
   EvalDeclarationInstantiation,
   Evaluate,
   ExecutionContext,
-  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NormalCompletion, NullValue, Q, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type PlainCompletion, type ValueEvaluator,
+  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NormalCompletion, Q, surroundingAgent, ThrowCompletion, Value, wrappedParse, type PlainCompletion, type ValueEvaluator,
 } from '#self';
 
 const cascadeStack = new WeakMap<EnvironmentRecord, EnvironmentRecord>();
@@ -34,7 +35,7 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
     surroundingAgent.executionContextStack.push(scriptContext);
   }
 
-  const thisEnv = X(GetThisEnvironment());
+  const thisEnv = GetThisEnvironment();
   if (thisEnv instanceof FunctionEnvironmentRecord) {
     const F = thisEnv.FunctionObject;
     inFunction = true;
@@ -47,26 +48,13 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
       inClassFieldInitializer = true;
     }
   }
-  const privateIdentifiers: string[] = [];
-  let pointer = surroundingAgent.runningExecutionContext.PrivateEnvironment;
-  while (!(pointer instanceof NullValue)) {
-    for (const binding of pointer.Names) {
-      privateIdentifiers.push(binding.Description.stringValue());
-    }
-    pointer = pointer.OuterPrivateEnvironment;
-  }
-  const script = wrappedParse({ source }, (parser) => parser.scope.with({
+  const script = wrappedParse({ source, allowAllPrivateNames: true }, (parser) => parser.scope.with({
     strict: strictCaller,
     newTarget: inFunction,
     superProperty: inMethod,
     superCall: inDerivedConstructor,
-    private: privateIdentifiers.length > 0,
-  }, () => {
-    privateIdentifiers.forEach((name) => {
-      parser.scope.privateScope!.names.set(name, new Set(['field']));
-    });
-    return parser.parseScript();
-  }));
+    private: true,
+  }, () => parser.parseScript()));
   if (Array.isArray(script)) {
     if (scriptContext) {
       surroundingAgent.executionContextStack.pop(scriptContext);
@@ -85,8 +73,9 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
     return surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
   }
 
-  const scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source);
+  const scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source, script);
   if (!doNotTrack) {
+    (surroundingAgent.parsedSources.get(scriptId!) as DynamicParsedCodeRecord).HostDefined.isInspectorEval = true;
     if (scriptContext) {
       scriptContext.HostDefined ??= {};
       scriptContext.HostDefined.scriptId = scriptId;

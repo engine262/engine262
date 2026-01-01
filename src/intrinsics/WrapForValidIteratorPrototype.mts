@@ -1,9 +1,8 @@
 import { __ts_cast__ } from '../helpers.mts';
-import {
-  type IteratorObject,
-} from '../abstract-ops/all.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
+  type IteratorObject,
+
   Assert,
   Call,
   CreateIteratorResultObject,

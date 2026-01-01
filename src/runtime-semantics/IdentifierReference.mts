@@ -1,8 +1,8 @@
-import { ResolveBinding } from '../abstract-ops/all.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { ReferenceRecord } from '../value.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import { ResolveBinding } from '#self';
 
 /** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
 // IdentifierReference :

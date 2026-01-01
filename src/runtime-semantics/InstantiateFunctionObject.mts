@@ -1,3 +1,9 @@
+import { X } from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { OutOfRange } from '../helpers.mts';
+import { Descriptor, Value } from '../value.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   DefinePropertyOrThrow,
   MakeConstructor,
@@ -5,13 +11,7 @@ import {
   SetFunctionName,
   OrdinaryFunctionCreate,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mts';
-import { X } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
-import { OutOfRange } from '../helpers.mts';
-import { Descriptor, Value } from '../value.mts';
-import { StringValue } from '../static-semantics/all.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
 import type { EnvironmentRecord, NullValue, PrivateEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */

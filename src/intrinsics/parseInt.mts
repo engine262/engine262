@@ -1,3 +1,6 @@
+import { TrimString } from '../runtime-semantics/all.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { Value, type Arguments } from '../value.mts';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -5,10 +8,7 @@ import {
   ToString,
   F, R as MathematicalValue,
   Realm,
-} from '../abstract-ops/all.mts';
-import { TrimString } from '../runtime-semantics/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { Value, type Arguments } from '../value.mts';
+} from '#self';
 
 function digitToNumber(_digit: string) {
   let digit = _digit.charCodeAt(0);

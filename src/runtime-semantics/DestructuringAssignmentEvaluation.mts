@@ -3,25 +3,6 @@ import {
   JSStringValue, ReferenceRecord, Value, type PropertyKeyValue,
 } from '../value.mts';
 import {
-  ArrayCreate,
-  CopyDataProperties,
-  CreateDataPropertyOrThrow,
-  GetIterator,
-  GetV,
-  GetValue,
-  IteratorClose,
-  IteratorStep,
-  OrdinaryObjectCreate,
-  PutValue,
-  ResolveBinding,
-  RequireObjectCoercible,
-  ToString,
-  F,
-  Assert,
-  type IteratorRecord,
-  IteratorStepValue,
-} from '../abstract-ops/all.mts';
-import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
   StringValue,
@@ -44,6 +25,25 @@ import {
   NamedEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
+import {
+  ArrayCreate,
+  CopyDataProperties,
+  CreateDataPropertyOrThrow,
+  GetIterator,
+  GetV,
+  GetValue,
+  IteratorClose,
+  IteratorStep,
+  OrdinaryObjectCreate,
+  PutValue,
+  ResolveBinding,
+  RequireObjectCoercible,
+  ToString,
+  F,
+  Assert,
+  type IteratorRecord,
+  IteratorStepValue,
+} from '#self';
 
 // ObjectAssignmentPattern :
 //  `{` `}`

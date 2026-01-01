@@ -1,10 +1,10 @@
-import {
-  Realm,
-} from '../abstract-ops/all.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import { PerformShadowRealmEval, ShadowRealmImportValue, ValidateShadowRealmObject } from '../abstract-ops/shadow-realm.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { type ShadowRealmObject } from './ShadowRealm.mts';
+import {
+  Realm,
+} from '#self';
 import {
   JSStringValue, Q, surroundingAgent, ToString, Value, type Arguments, type FunctionCallContext, type ValueEvaluator,
 } from '#self';

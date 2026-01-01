@@ -1,3 +1,8 @@
+import { Q, type ValueCompletion, type ValueEvaluator } from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { DataViewObject } from './DataView.mts';
 import {
   Assert,
   GetViewValue,
@@ -5,14 +10,9 @@ import {
   IsDetachedBuffer,
   RequireInternalSlot,
   F,
-  Realm,
   type ArrayBufferObject,
-} from '../abstract-ops/all.mts';
-import { Q, type ValueCompletion, type ValueEvaluator } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
-import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import type { DataViewObject } from './DataView.mts';
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
 function DataViewProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {

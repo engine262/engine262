@@ -1,14 +1,14 @@
-import {
-  CreateBuiltinFunction,
-  ToString,
-  F,
-  Realm,
-} from '../abstract-ops/all.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
   TrimString,
 } from '../runtime-semantics/all.mts';
+import {
+  CreateBuiltinFunction,
+  ToString,
+  F,
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-parsefloat-string */
 function* ParseFloat([string = Value.undefined]: Arguments): ValueEvaluator {

@@ -9,17 +9,17 @@ import {
   type FunctionCallContext,
   type UndefinedValue,
 } from '../value.mts';
-import {
-  Assert,
-  Get,
-  Realm,
-  SetterThatIgnoresPrototypeProperties,
-  ToString,
-  type BuiltinFunctionObject,
-} from '../abstract-ops/all.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { isErrorObject } from './Error.mts';
+import {
+  Assert,
+  Get,
+  SetterThatIgnoresPrototypeProperties,
+  ToString,
+  type BuiltinFunctionObject,
+  Realm,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
 function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<JSStringValue> {

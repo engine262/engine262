@@ -7,6 +7,8 @@ import {
   ReturnCompletion,
 } from '../completion.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert,
   Call,
@@ -18,9 +20,7 @@ import {
   CreateIteratorResultObject,
   type AsyncGeneratorObject,
   Realm,
-} from '../abstract-ops/all.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
 function* AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {

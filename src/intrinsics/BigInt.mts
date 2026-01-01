@@ -2,6 +2,9 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue, NumberValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { NumberToBigInt } from '../runtime-semantics/all.mts';
+import { Q, type ValueEvaluator } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 import {
   ToBigInt,
   ToIndex,
@@ -9,10 +12,7 @@ import {
   Z, R,
   type OrdinaryObject,
   Realm,
-} from '../abstract-ops/all.mts';
-import { NumberToBigInt } from '../runtime-semantics/all.mts';
-import { Q, type ValueEvaluator } from '../completion.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+} from '#self';
 
 export interface BigIntObject extends OrdinaryObject {
   readonly BigIntData: BigIntValue;

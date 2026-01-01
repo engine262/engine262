@@ -1,13 +1,13 @@
-import {
-  IsLooselyEqual,
-  GetValue,
-  IsStrictlyEqual,
-} from '../abstract-ops/all.mts';
 import { Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
 import { Value } from '../value.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  IsLooselyEqual,
+  GetValue,
+  IsStrictlyEqual,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
 //   EqualityExpression :

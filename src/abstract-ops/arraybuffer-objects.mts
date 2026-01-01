@@ -2,7 +2,7 @@ import { typedArrayInfoByType, type TypedArrayTypes } from '../intrinsics/TypedA
 import { IsGrowableSharedArrayBuffer, sharedArrayBufferNotSupported } from './shared-arraybuffer.mts';
 import {
   surroundingAgent,
-  NumberValue, BigIntValue, BooleanValue, Value,
+  NumberValue, BigIntValue, Value,
   DataBlock,
   UndefinedValue,
   NullValue,
@@ -15,6 +15,7 @@ import {
   Z, R,
   type FunctionObject,
   type OrdinaryObject,
+  Throw,
 } from '#self';
 
 export interface ArrayBufferObject extends OrdinaryObject {
@@ -42,7 +43,7 @@ export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: nu
   }
   if (allocatingResizableBuffer) {
     if (byteLength > maxByteLength!) {
-      return surroundingAgent.Throw('RangeError', 'ResizableBufferInvalidMaxByteLength');
+      return Throw.RangeError('Cannot resize ArrayBuffer to bigger than maxByteLength');
     }
     slots.push('ArrayBufferMaxByteLength');
   }
@@ -80,7 +81,7 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
   }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
   if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetachKeyMismatch', key, arrayBuffer);
+    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
@@ -119,18 +120,18 @@ const throwawayDataView = new DataView(throwawayBuffer);
 const throwawayArray = new Uint8Array(throwawayBuffer);
 
 /** https://tc39.es/ecma262/#sec-rawbytestonumeric */
-export function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: number[], isLittleEndian: BooleanValue) {
+export function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: number[], isLittleEndian: boolean) {
   // 1. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   Assert(elementSize === rawBytes.length);
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
   Object.assign(throwawayArray, rawBytes);
-  const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true);
+  const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian);
   return IsBigIntElementType(type) === Value.true ? Z(result as bigint) : F(result as number);
 }
 
 /** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
-export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, _isTypedArray: boolean, _order: 'unordered', isLittleEndian?: BooleanValue) {
+export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, _isTypedArray: boolean, _order: 'unordered', isLittleEndian?: boolean) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(!IsDetachedBuffer(arrayBuffer));
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
@@ -161,9 +162,7 @@ const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
 const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 
 /** https://tc39.es/ecma262/#sec-numerictorawbytes */
-export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | BigIntValue, _isLittleEndian: BooleanValue) {
-  Assert(_isLittleEndian instanceof BooleanValue);
-  const isLittleEndian = _isLittleEndian === Value.true;
+export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | BigIntValue, isLittleEndian: boolean) {
   let rawBytes;
   // One day, we will write our own IEEE 754 and two's complement encoder…
   if (type === 'Float32') {
@@ -195,7 +194,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
 }
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
-export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: BooleanValue): ValueEvaluator<UndefinedValue> {
+export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): ValueEvaluator<UndefinedValue> {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(!IsDetachedBuffer(arrayBuffer));
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.

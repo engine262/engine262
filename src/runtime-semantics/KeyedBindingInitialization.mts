@@ -1,11 +1,4 @@
 import { Value } from '../value.mts';
-import {
-  GetV,
-  GetValue,
-  PutValue,
-  ResolveBinding,
-  InitializeReferencedBinding,
-} from '../abstract-ops/all.mts';
 import { Evaluate } from '../evaluator.mts';
 import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
@@ -14,6 +7,13 @@ import {
   NamedEvaluation,
   BindingInitialization,
 } from './all.mts';
+import {
+  GetV,
+  GetValue,
+  PutValue,
+  ResolveBinding,
+  InitializeReferencedBinding,
+} from '#self';
 import type {
   EnvironmentRecord, FunctionDeclaration, PropertyKeyValue, UndefinedValue,
 } from '#self';

@@ -5,6 +5,8 @@ import {
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import { OutOfRange, isArray } from '../helpers.mts';
+import { TemplateStrings } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   ArrayCreate,
@@ -14,9 +16,7 @@ import {
   GetValue,
   F,
   IteratorStepValue,
-} from '../abstract-ops/all.mts';
-import { TemplateStrings } from '../static-semantics/all.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-gettemplateobjec */
 function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {

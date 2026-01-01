@@ -1,7 +1,7 @@
-import { GetValue } from '../abstract-ops/all.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { GetValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-expression-statement-runtime-semantics-evaluation */
 //   ExpressionStatement :

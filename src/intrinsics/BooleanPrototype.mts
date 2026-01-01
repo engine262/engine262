@@ -8,11 +8,12 @@ import {
 import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
-import { Assert, Realm } from '../abstract-ops/all.mts';
 import { Q, type ValueCompletion } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { BooleanObject } from './Boolean.mts';
+import { Assert } from '#self';
+import type { Realm } from '#self';
 
 
 function thisBooleanValue(value: Value) {

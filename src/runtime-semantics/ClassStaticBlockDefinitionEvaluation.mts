@@ -1,20 +1,24 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   MakeMethod,
   OrdinaryFunctionCreate,
   type ECMAScriptFunctionObject,
-} from '../abstract-ops/all.mts';
-import { X } from '../completion.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import type { ObjectValue } from '#self';
+  ObjectValue,
+} from '#self';
 
-export class ClassStaticBlockDefinitionRecord {
-  BodyFunction: ECMAScriptFunctionObject;
-
-  constructor({ BodyFunction }: ClassStaticBlockDefinitionRecord) {
-    this.BodyFunction = BodyFunction;
-  }
+/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */
+export interface ClassStaticBlockDefinitionRecord {
+  readonly BodyFunction: ECMAScriptFunctionObject;
 }
+export const ClassStaticBlockDefinitionRecord = function ClassStaticBlockDefinitionRecord(value: ClassStaticBlockDefinitionRecord) {
+  Object.setPrototypeOf(value, ClassStaticBlockDefinitionRecord.prototype);
+  return value;
+} as {
+  (value: ClassStaticBlockDefinitionRecord): ClassStaticBlockDefinitionRecord;
+  [Symbol.hasInstance](instance: unknown): instance is ClassStaticBlockDefinitionRecord;
+};
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
 //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`
@@ -40,5 +44,5 @@ export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }: P
   // 6. Perform MakeMethod(bodyFunction, homeObject).
   X(MakeMethod(bodyFunction, homeObject));
   // 7. Return the ClassStaticBlockDefinition Record { [[BodyFunction]]: bodyFunction }.
-  return new ClassStaticBlockDefinitionRecord({ BodyFunction: bodyFunction });
+  return ClassStaticBlockDefinitionRecord({ BodyFunction: bodyFunction });
 }

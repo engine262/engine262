@@ -1,8 +1,8 @@
 import { Value } from '../value.mts';
-import { GetValue, ToBoolean } from '../abstract-ops/all.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { GetValue, ToBoolean } from '#self';
 
 /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
 //   LogicalORExpression :

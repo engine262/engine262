@@ -1,9 +1,9 @@
 import { Value } from '../value.mts';
 import { Q } from '../completion.mts';
-import { GetValue, ToString } from '../abstract-ops/all.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { TV } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { GetValue, ToString } from '#self';
 
 /** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
 //   TemplateLiteral : NoSubstitutionTemplate

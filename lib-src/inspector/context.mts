@@ -2,10 +2,8 @@ import type { Protocol } from 'devtools-protocol';
 import { getInspector } from './inspect.mts';
 import type { Inspector } from './index.mts';
 import {
-  evalQ,
-  EnsureCompletion, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, UndefinedValue, Value,
+  EnsureCompletion, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, Value,
   getHostDefinedErrorStack,
-  skipDebugger,
   type ValueCompletion,
   getCurrentStack,
   isECMAScriptFunctionObject,
@@ -29,6 +27,7 @@ import {
   DataBlock,
   CallSite,
   CallFrame,
+  type OrdinaryObject,
 } from '#self';
 
 interface InspectedRealmDescriptor {
@@ -198,15 +197,15 @@ export class InspectorContext {
       });
     });
 
-    const value = evalQ((Q) => {
+    (() => {
       let p: NullValue | ObjectValue = object;
       while (p instanceof ObjectValue) {
-        for (const key of Q(skipDebugger(p.OwnPropertyKeys()))) {
+        for (const key of p.properties.keys()) {
           if (nonIndexedPropertiesOnly && isIntegerIndex(key)) {
             continue;
           }
-          const desc = Q(skipDebugger(p.GetOwnProperty(key)));
-          if (desc instanceof UndefinedValue) {
+          const desc = (p.properties.get(key));
+          if (!desc) {
             return;
           }
           if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
@@ -232,15 +231,13 @@ export class InspectorContext {
         if (ownProperties) {
           break;
         }
-        p = Q(skipDebugger(p.GetPrototypeOf()));
+        if ('Prototype' in p) {
+          p = (p as OrdinaryObject).Prototype;
+        } else {
+          p = Value.null;
+        }
       }
-    });
-    if (value.Type === 'throw') {
-      return {
-        result: [],
-        exceptionDetails: this.createExceptionDetails(value, false),
-      };
-    }
+    })();
 
     const additionalInternalFields = getInspector(object).toInternalProperties?.(object, (val) => this.#internObject(val, 'default'), generatePreview);
     if (additionalInternalFields) {

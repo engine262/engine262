@@ -1,22 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  Assert,
-  Call,
-  Construct,
-  CreateArrayFromList,
-  Get,
-  GetIterator,
-  GroupBy,
-  IsCallable,
-  IteratorClose,
-  IteratorStepValue,
-  OrdinaryCreateFromConstructor,
-  Realm,
-  type FunctionObject,
-  type KeyedGroupRecord,
-  type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
   ObjectValue,
   UndefinedValue,
   Value,
@@ -32,6 +15,23 @@ import {
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  Assert,
+  Call,
+  Construct,
+  CreateArrayFromList,
+  Get,
+  GetIterator,
+  GroupBy,
+  IsCallable,
+  IteratorClose,
+  IteratorStepValue,
+  OrdinaryCreateFromConstructor,
+  Realm,
+  type FunctionObject,
+  type KeyedGroupRecord,
+  type OrdinaryObject,
+} from '#self';
 
 export function* AddEntriesFromIterable(target: ObjectValue, iterable: Value, adder: FunctionObject): ValueEvaluator {
   Assert(iterable !== Value.undefined && iterable !== Value.null);

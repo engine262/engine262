@@ -1,14 +1,14 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 import {
   Assert,
   Construct,
   GetValue,
   IsConstructor,
-} from '../abstract-ops/all.mts';
-import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { Q } from '../completion.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { ArgumentListEvaluation } from './all.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-evaluatenew */
 function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: undefined | ParseNode.Arguments) {

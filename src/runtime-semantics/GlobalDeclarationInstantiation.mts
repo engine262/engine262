@@ -1,6 +1,4 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { GlobalEnvironmentRecord } from '../environment.mts';
-import { Assert } from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -14,6 +12,7 @@ import { Q, NormalCompletion } from '../completion.mts';
 import { JSStringSet } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { InstantiateFunctionObject } from './all.mts';
+import { Assert, GlobalEnvironmentRecord } from '#self';
 
 export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
   // 2. Let lexNames be the LexicallyDeclaredNames of script.

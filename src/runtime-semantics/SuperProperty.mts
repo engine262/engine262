@@ -2,15 +2,15 @@ import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import {
   ReferenceRecord, Value,
 } from '../value.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   GetThisEnvironment,
   GetValue,
-} from '../abstract-ops/all.mts';
-import { StringValue } from '../static-semantics/all.mts';
-import { Q } from '../completion.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { FunctionEnvironmentRecord } from '#self';
+  FunctionEnvironmentRecord,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-makesuperpropertyreference */
 function MakeSuperPropertyReference(actualThis: Value, propertyKey: Value, strict: boolean) {

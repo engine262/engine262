@@ -2,16 +2,16 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   PrivateName, Value, type PropertyKeyValue,
 } from '../value.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   OrdinaryFunctionCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mts';
-import { StringValue } from '../static-semantics/all.mts';
-import { X } from '../completion.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+  DeclarativeEnvironmentRecord,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
 export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: PropertyKeyValue | PrivateName) {

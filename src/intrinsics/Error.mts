@@ -1,13 +1,4 @@
 import {
-  DefinePropertyOrThrow,
-  OrdinaryCreateFromConstructor,
-  InstallErrorCause,
-  ToString,
-  Realm,
-  type FunctionObject,
-  IsError,
-} from '../abstract-ops/all.mts';
-import {
   Descriptor,
   Value,
   type Arguments,
@@ -22,6 +13,15 @@ import {
   captureStack, callSiteToErrorString, type CallSite, CallFrame,
 } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  DefinePropertyOrThrow,
+  OrdinaryCreateFromConstructor,
+  InstallErrorCause,
+  ToString,
+  type FunctionObject,
+  IsError,
+  Realm,
+} from '#self';
 
 export interface ErrorObject extends ObjectValue {
   ErrorData: JSStringValue;

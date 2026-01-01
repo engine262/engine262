@@ -5,13 +5,13 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import {
-  Assert, ToIntegerOrInfinity, ToString, R,
-  Realm,
-} from '../abstract-ops/all.mts';
-import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import {
+  Assert, ToIntegerOrInfinity, ToString, R,
+} from '#self';
+import type { Realm } from '#self';
 
 /** https://tc39.es/ecma262/#sec-thisbigintvalue */
 function thisBigIntValue(value: Value) {

@@ -1,8 +1,8 @@
 import { Q } from '../completion.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { GetValue } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { GetValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
 //   CoalesceExpression :

@@ -1,4 +1,5 @@
-import { ExecutionContext, surroundingAgent } from '../host-defined/engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
   Q, X,
   Await,
@@ -28,26 +29,27 @@ import {
   PerformPromiseThen,
   PromiseCapabilityRecord,
   PromiseResolve,
-  Realm,
   RequireInternalSlot,
   SameValue,
   type OrdinaryObject,
 } from './all.mts';
+import { Throw, type Realm } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
-class AsyncGeneratorRequestRecord {
-  Completion: YieldCompletion;
-
-  Capability: PromiseCapabilityRecord;
-
-  constructor(completion: YieldCompletion, promiseCapability: PromiseCapabilityRecord) {
-    this.Completion = completion;
-    this.Capability = promiseCapability;
-  }
+export interface AsyncGeneratorRequestRecord {
+  readonly Completion: YieldCompletion;
+  readonly Capability: PromiseCapabilityRecord;
 }
+export const AsyncGeneratorRequestRecord = function AsyncGeneratorRequestRecord(value: AsyncGeneratorRequestRecord) {
+  Object.setPrototypeOf(value, AsyncGeneratorRequestRecord.prototype);
+  return value;
+} as {
+  (value: AsyncGeneratorRequestRecord): AsyncGeneratorRequestRecord;
+  [Symbol.hasInstance](instance: unknown): instance is AsyncGeneratorRequestRecord;
+};
 
 export interface AsyncGeneratorObject extends OrdinaryObject {
   AsyncGeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | 'draining-queue';
@@ -125,12 +127,7 @@ export function AsyncGeneratorValidate(generator: Value, generatorBrand: JSStrin
       ? brand !== generatorBrand
       : SameValue(brand, generatorBrand) === Value.false
   ) {
-    return surroundingAgent.Throw(
-      'TypeError',
-      'NotATypeObject',
-      generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator',
-      generator,
-    );
+    return Throw.TypeError('$1 is not a $2', generator, generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator');
   }
   return undefined;
 }
@@ -138,7 +135,7 @@ export function AsyncGeneratorValidate(generator: Value, generatorBrand: JSStrin
 /** https://tc39.es/ecma262/#sec-asyncgeneratorenqueue */
 export function AsyncGeneratorEnqueue(generator: AsyncGeneratorObject, completion: YieldCompletion, promiseCapability: PromiseCapabilityRecord) {
   // 1. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
-  const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
+  const request = AsyncGeneratorRequestRecord({ Completion: completion, Capability: promiseCapability });
   // 2. Append request to the end of generator.[[AsyncGeneratorQueue]].
   generator.AsyncGeneratorQueue.push(request);
 }

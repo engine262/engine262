@@ -5,6 +5,8 @@ import {
   NumberValue,
   type Arguments,
 } from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 import {
   CreateBuiltinFunction,
   ToNumber,
@@ -14,9 +16,7 @@ import {
   GetIterator,
   IteratorStepValue,
   IteratorClose,
-} from '../abstract-ops/all.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-math.abs */
 function* Math_abs([x = Value.undefined]: Arguments): ValueEvaluator {

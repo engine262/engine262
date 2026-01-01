@@ -1,14 +1,14 @@
 import {
-  Assert,
-  Get,
-  ToString,
-} from '../abstract-ops/all.mts';
-import {
   ObjectValue, UndefinedValue, JSStringValue, Value,
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
-import { surroundingAgent } from '#self';
+import {
+  Assert,
+  Get,
+  ToString,
+  surroundingAgent,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
 export function* GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacementTemplate: JSStringValue): ValueEvaluator<JSStringValue> {

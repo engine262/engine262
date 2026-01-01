@@ -112,7 +112,7 @@ export function* PerformShadowRealmEval(sourceText: string, callerRealm: Realm, 
     superProperty: false,
     superCall: false,
   }, () => p.parseScript()));
-  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceText);
+  const scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceText, script);
   if (isArray(script)) {
     Parser.decorateSyntaxErrorWithScriptId(script[0], scriptId);
     return ThrowCompletion(script[0]);

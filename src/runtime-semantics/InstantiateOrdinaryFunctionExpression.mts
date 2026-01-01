@@ -1,16 +1,15 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { PrivateName, Value, type PropertyKeyValue } from '../value.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   OrdinaryFunctionCreate,
   SetFunctionName,
   MakeConstructor,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mts';
-import { StringValue } from '../static-semantics/all.mts';
-import { DeclarativeEnvironmentRecord } from '../environment.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { X } from '#self';
+  DeclarativeEnvironmentRecord, X,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 //   FunctionExpression :

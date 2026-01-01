@@ -3,8 +3,8 @@ import { Value, type Arguments } from '../value.mts';
 import {
   CreateBuiltinFunction,
   PerformEval,
-  Realm,
-} from '../abstract-ops/all.mts';
+} from '#self';
+import type { Realm } from '#self';
 
 /** https://tc39.es/ecma262/#sec-eval-x */
 function* Eval([x = Value.undefined]: Arguments): ValueEvaluator {

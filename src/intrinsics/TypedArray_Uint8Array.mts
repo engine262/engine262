@@ -1,10 +1,10 @@
-import { F } from '../abstract-ops/all.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import {
   AllocateTypedArray, type TypedArrayObject,
 } from './TypedArray.mts';
 import { assignProps } from './bootstrap.mts';
+import { F } from '#self';
 import {
   Assert, CodePointsToString, CreateDataPropertyOrThrow, EnsureCompletion, Get, GetValueFromBuffer, IsTypedArrayOutOfBounds, JSStringValue, MakeTypedArrayWithBufferWitnessRecord, NumberValue, ObjectValue, OrdinaryObjectCreate, Q, R, Realm, RequireInternalSlot, SetValueInBuffer, StringPad, surroundingAgent, ThrowCompletion, ToBoolean, TypedArrayLength, UndefinedValue, X, type ArrayBufferObject, type PlainCompletion, type ValueCompletion,
 } from '#self';

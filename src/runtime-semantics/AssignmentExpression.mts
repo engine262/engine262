@@ -1,11 +1,6 @@
 import { JSStringValue, ReferenceRecord, Value } from '../value.mts';
 import { Q, X } from '../completion.mts';
 import {
-  GetValue,
-  PutValue,
-  ToBoolean,
-} from '../abstract-ops/all.mts';
-import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
   type DestructuringParseNode,
@@ -19,6 +14,11 @@ import {
   ApplyStringOrNumericBinaryOperator,
   DestructuringAssignmentEvaluation,
 } from './all.mts';
+import {
+  GetValue,
+  PutValue,
+  ToBoolean,
+} from '#self';
 
 
 /** https://tc39.es/ecma262/#sec-destructuring-assignment */

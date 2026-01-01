@@ -1,12 +1,4 @@
 import {
-  Assert,
-  CreateBuiltinFunction,
-  markBuiltinFunctionAsConstructor,
-  OrdinaryObjectCreate,
-  Realm,
-  type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
   Descriptor,
   JSStringValue,
   NullValue,
@@ -19,6 +11,14 @@ import {
   type NativeSteps,
 } from '../value.mts';
 import { X } from '../completion.mts';
+import {
+  Assert,
+  CreateBuiltinFunction,
+  markBuiltinFunctionAsConstructor,
+  OrdinaryObjectCreate,
+  Realm,
+  type FunctionObject,
+} from '#self';
 
 type Accessor = [
   getter: NativeSteps | UndefinedValue | FunctionObject,

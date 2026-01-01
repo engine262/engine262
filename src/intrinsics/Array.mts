@@ -10,6 +10,17 @@ import {
   type ValueEvaluator,
 } from '../completion.mts';
 import {
+  NumberValue,
+  ObjectValue,
+  UndefinedValue,
+  Value,
+  wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
+import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import {
   ArrayCreate,
   Assert,
   Call,
@@ -29,7 +40,6 @@ import {
   ToString,
   ToUint32,
   F, R,
-  Realm,
   type FunctionObject,
   IteratorStepValue,
   GetIteratorFromMethod,
@@ -37,19 +47,9 @@ import {
   CreateAsyncFromSyncIterator,
   AsyncIteratorClose,
   IteratorComplete,
-} from '../abstract-ops/all.mts';
+} from '#self';
 import {
-  NumberValue,
-  ObjectValue,
-  UndefinedValue,
-  Value,
-  wellKnownSymbols,
-  type Arguments,
-  type FunctionCallContext,
-} from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
-import {
+  Realm,
   IfAbruptCloseAsyncIterator, IteratorValue, Throw,
 } from '#self';
 

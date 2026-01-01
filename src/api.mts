@@ -1,12 +1,12 @@
 import { ObjectValue, Value, type PropertyKeyValue } from './value.mts';
 import {
   surroundingAgent,
-  ExecutionContext,
-  HostEnqueueFinalizationRegistryCleanupJob,
   ScriptEvaluation,
   type Markable,
-  AgentSignifier,
 } from './host-defined/engine.mts';
+import { HostEnqueueFinalizationRegistryCleanupJob } from './execution-context/WeakReference.mts';
+import { AgentSignifier } from './execution-context/Agent.mts';
+import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
   X,
   ThrowCompletion,
@@ -16,14 +16,6 @@ import {
   NormalCompletion,
   Q,
 } from './completion.mts';
-import {
-  Realm,
-  ClearKeptObjects,
-  CreateIntrinsics,
-  SetDefaultGlobalBindings,
-  OrdinaryObjectCreate,
-  Assert,
-} from './abstract-ops/all.mts';
 import {
   ParseScript,
   ParseModule,
@@ -41,6 +33,14 @@ import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import {
+  ClearKeptObjects,
+  CreateIntrinsics,
+  SetDefaultGlobalBindings,
+  OrdinaryObjectCreate,
+  Assert,
+} from '#self';
+import {
+  Realm,
   EnsureCompletion, GetModuleNamespace, GlobalEnvironmentRecord, type Intrinsics,
   type ValueEvaluator,
 } from '#self';

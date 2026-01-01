@@ -1,9 +1,9 @@
 import { JSStringValue, Value } from '../value.mts';
-import {
-  Assert, ToString, ToLength, R,
-} from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
+import {
+  Assert, ToString, ToLength, R,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-stringpad */
 export function* StringPad(O: Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): ValueEvaluator<JSStringValue> {

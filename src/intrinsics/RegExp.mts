@@ -2,16 +2,6 @@ import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
 import {
-  Get,
-  IsRegExp,
-  Realm,
-  RegExpAlloc,
-  RegExpInitialize,
-  SameValue,
-  type FunctionObject,
-  type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import {
   JSStringValue,
   ObjectValue,
   Value,
@@ -29,6 +19,15 @@ import { isAsciiLetter, isControlEscape, isSyntaxCharacter } from '../parser/Reg
 import { bootstrapConstructor } from './bootstrap.mts';
 import { UnicodeEscape } from './JSON.mts';
 import {
+  Get,
+  IsRegExp,
+  Realm,
+  RegExpAlloc,
+  RegExpInitialize,
+  SameValue,
+  type FunctionObject,
+  type OrdinaryObject,
+
   Assert, isLeadingSurrogate, isTrailingSurrogate, StringToCodePoints, UTF16EncodeCodePoint, type CodePoint, type RegExpMatcher, type RegExpRecord,
 } from '#self';
 

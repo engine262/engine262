@@ -2,7 +2,6 @@
 // use function name for better debug
 
 /* https://tc39.es/ecma262/#sec-pattern */
-import { Assert } from '../abstract-ops/all.mts';
 import { CharacterValue, CodePointsToString } from '../static-semantics/all.mts';
 import { isLineTerminator, isWhitespace } from '../parser/Lexer.mts';
 import {
@@ -20,6 +19,7 @@ import {
   type CodePoint,
   type Table69_NonbinaryUnicodePropertiesCanonicalized,
 } from './all.mts';
+import { Assert } from '#self';
 
 enum Direction {
   Forward = 1,

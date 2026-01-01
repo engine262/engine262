@@ -2,6 +2,7 @@ import type { ArrowInfo } from './Scope.mts';
 import type { Character, UnicodeCharacter } from '#self';
 
 export interface Position {
+  /** 1-based */
   readonly line: number;
   readonly column: number;
 }

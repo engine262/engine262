@@ -3,6 +3,13 @@ import {
   Value, Descriptor, PrivateName, UndefinedValue, type PropertyKeyValue, ObjectValue, BooleanValue,
 } from '../value.mts';
 import {
+  Q, X,
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
+import { ClassElementDefinitionRecord, DefineMethod, Evaluate_PropertyName } from './all.mts';
+import {
   OrdinaryObjectCreate,
   OrdinaryFunctionCreate,
   DefinePropertyOrThrow,
@@ -10,35 +17,31 @@ import {
   MakeMethod,
   sourceTextMatchedBy,
   type FunctionObject,
-} from '../abstract-ops/all.mts';
-import {
-  Q, X,
-} from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import type { PlainEvaluator } from '../evaluator.mts';
-import { ClassElementDefinitionRecord, DefineMethod, Evaluate_PropertyName } from './all.mts';
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
-export class PrivateElementRecord {
+export interface PrivateElementRecord_Value {
   readonly Key: PrivateName;
-
-  readonly Kind: 'method' | 'accessor' | 'field';
-
+  readonly Kind: 'method' | 'field';
   Value?: Value;
-
-  readonly Get?: FunctionObject | UndefinedValue;
-
-  readonly Set?: FunctionObject | UndefinedValue;
-
-  constructor(init: PrivateElementRecord) {
-    this.Key = init.Key;
-    this.Kind = init.Kind;
-    this.Value = init.Value;
-    this.Get = init.Get;
-    this.Set = init.Set;
-  }
+  readonly Get?: undefined;
+  readonly Set?: undefined;
 }
+export interface PrivateElementRecord_Accessor {
+  readonly Key: PrivateName;
+  readonly Kind: 'accessor';
+  Value?: Value;
+  readonly Get?: FunctionObject | UndefinedValue;
+  readonly Set?: FunctionObject | UndefinedValue;
+}
+export type PrivateElementRecord = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
+export const PrivateElementRecord = function PrivateElementRecord(value: PrivateElementRecord) {
+  Object.setPrototypeOf(value, PrivateElementRecord.prototype);
+  return value;
+} as {
+  (value: PrivateElementRecord): PrivateElementRecord;
+  [Symbol.hasInstance](instance: unknown): instance is PrivateElementRecord;
+};
 
 // -decorator
 // +decorator: remove this function
@@ -47,7 +50,7 @@ function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: 
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
     // a. Return PrivateElement { [[Key]]: key, [[Kind]]: method, [[Value]]: closure }.
-    return new PrivateElementRecord({
+    return PrivateElementRecord({
       Key: key,
       Kind: 'method',
       Value: closure,
@@ -114,7 +117,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
         // 9. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
         // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
-          return new PrivateElementRecord({
+          return PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
             Get: Value.undefined,
@@ -162,7 +165,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       if (enumerable) {
         // 10. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
-          return new PrivateElementRecord({
+          return PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
             Get: closure,

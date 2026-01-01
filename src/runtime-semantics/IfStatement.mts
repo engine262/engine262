@@ -1,9 +1,5 @@
 import { Evaluate } from '../evaluator.mts';
 import {
-  GetValue,
-  ToBoolean,
-} from '../abstract-ops/all.mts';
-import {
   Completion,
   EnsureCompletion,
   NormalCompletion,
@@ -12,6 +8,10 @@ import {
 } from '../completion.mts';
 import { Value } from '../value.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  GetValue,
+  ToBoolean,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
 // IfStatement :

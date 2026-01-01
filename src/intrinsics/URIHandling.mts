@@ -1,13 +1,13 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { JSStringValue, Value, type Arguments } from '../value.mts';
+import { CodePointAt, UTF16EncodeCodePoint } from '../static-semantics/all.mts';
+import { Q, type ValueEvaluator } from '../completion.mts';
 import {
   Assert,
   CreateBuiltinFunction,
   Realm,
   ToString,
-} from '../abstract-ops/all.mts';
-import { CodePointAt, UTF16EncodeCodePoint } from '../static-semantics/all.mts';
-import { Q, type ValueEvaluator } from '../completion.mts';
+} from '#self';
 import type { CodePoint } from '#self';
 
 function utf8Encode(codepoint: CodePoint) {

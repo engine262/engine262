@@ -1,7 +1,7 @@
 import { Evaluate } from '../evaluator.mts';
-import { GetValue } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { GetValue } from '#self';
 import type { Value, ValueEvaluator } from '#self';
 
 /** https://tc39.es/ecma262/#sec-comma-operator-runtime-semantics-evaluation */

@@ -1,10 +1,6 @@
 import {
   JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue, UndefinedValue,
 } from '../value.mts';
-import {
-  Call, IsArray, Get, LengthOfArrayLike,
-  EscapeRegExpPattern, R, Realm, type BuiltinFunctionObject,
-} from '../abstract-ops/all.mts';
 import { Completion, X } from '../completion.mts';
 import { isRegExpObject } from '../intrinsics/RegExp.mts';
 import type { DateObject } from '../intrinsics/Date.mts';
@@ -17,6 +13,10 @@ import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
 import { isShadowRealmObject } from '../intrinsics/ShadowRealm.mts';
 import { surroundingAgent } from './engine.mts';
 import {
+  Call, IsArray, Get, LengthOfArrayLike,
+  EscapeRegExpPattern, R, type BuiltinFunctionObject,
+
+  Realm,
   type Descriptor, type ValueCompletion, type PromiseObject, CyclicModuleRecord,
 } from '#self';
 

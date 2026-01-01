@@ -1,8 +1,7 @@
-import { GetValue } from '../abstract-ops/all.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Await, Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { surroundingAgent } from '#self';
+import { GetValue, surroundingAgent } from '#self';
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
 //   AwaitExpression : `await` UnaryExpression

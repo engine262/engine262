@@ -1,14 +1,17 @@
-import { surroundingAgent, HostMakeJobCallback, type JobCallbackRecord } from '../host-defined/engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { HostMakeJobCallback } from '../execution-context/Job.mts';
+import { type JobCallbackRecord } from '../execution-context/Job.mts';
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
-import {
-  IsCallable, OrdinaryCreateFromConstructor, Realm,
-  type BuiltinFunctionObject, type FunctionObject, type OrdinaryObject,
-} from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  IsCallable, OrdinaryCreateFromConstructor,
+  type BuiltinFunctionObject, type FunctionObject, type OrdinaryObject,
+  Realm,
+} from '#self';
 
 export interface FinalizationRegistryCell {
   WeakRefTarget: Value | undefined;

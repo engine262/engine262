@@ -1,7 +1,7 @@
-import { Realm, RequireInternalSlot, WeakRefDeref } from '../abstract-ops/all.mts';
 import { Q, X } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakRefObject } from './WeakRef.mts';
+import { Realm, RequireInternalSlot, WeakRefDeref } from '#self';
 import type { Arguments, ValueCompletion, FunctionCallContext } from '#self';
 
 /** https://tc39.es/ecma262/#sec-weak-ref.prototype.deref */

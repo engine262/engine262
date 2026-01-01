@@ -1,19 +1,6 @@
 import {
   surroundingAgent,
 } from '../host-defined/engine.mts';
-import {
-  AbstractRelationalComparison,
-  Call,
-  GetMethod,
-  GetValue,
-  HasProperty,
-  IsCallable,
-  OrdinaryHasInstance,
-  ToBoolean,
-  ToPropertyKey,
-  ResolvePrivateIdentifier,
-  PrivateElementFind,
-} from '../abstract-ops/all.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import {
   ObjectValue,
@@ -24,7 +11,19 @@ import { Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { PrivateEnvironmentRecord } from '#self';
+import {
+  AbstractRelationalComparison,
+  Call,
+  GetMethod,
+  GetValue,
+  HasProperty,
+  IsCallable,
+  OrdinaryHasInstance,
+  ToBoolean,
+  ToPropertyKey,
+  PrivateElementFind,
+} from '#self';
+import { ResolvePrivateIdentifier, type PrivateEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-instanceofoperator */
 export function* InstanceofOperator(V: Value, target: Value) {

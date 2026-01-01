@@ -1,10 +1,12 @@
 import {
-  HostMakeJobCallback,
-  HostCallJobCallback,
-  HostEnqueuePromiseJob,
   HostPromiseRejectionTracker,
   surroundingAgent,
 } from '../host-defined/engine.mts';
+import {
+  HostEnqueuePromiseJob,
+  HostMakeJobCallback,
+  HostCallJobCallback,
+} from '../execution-context/Job.mts';
 import {
   ObjectValue, Value, UndefinedValue, BooleanValue, NullValue, type Arguments,
 } from '../value.mts';
@@ -30,9 +32,9 @@ import {
   GetFunctionRealm,
   isFunctionObject,
   type BuiltinFunctionObject,
-  Realm,
 } from './all.mts';
 import type {
+  Realm,
   ValueEvaluator, JobCallbackRecord, PromiseObject,
   ValueCompletion,
 } from '#self';

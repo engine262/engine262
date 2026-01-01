@@ -10,6 +10,15 @@ import {
   UndefinedValue,
   NumberValue,
 } from '../value.mts';
+import { RegExpState, GetSubstitution } from '../runtime-semantics/all.mts';
+import { CodePointAt } from '../static-semantics/all.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
+import { isRegExpObject, type RegExpObject } from './RegExp.mts';
 import {
   ArrayCreate,
   Assert,
@@ -40,16 +49,7 @@ import {
   Realm,
   type MatchRecord,
   type OrdinaryObject,
-} from '../abstract-ops/all.mts';
-import { RegExpState, GetSubstitution } from '../runtime-semantics/all.mts';
-import { CodePointAt } from '../static-semantics/all.mts';
-import {
-  Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mts';
-import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
-import { isRegExpObject, type RegExpObject } from './RegExp.mts';
+} from '#self';
 
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.exec */

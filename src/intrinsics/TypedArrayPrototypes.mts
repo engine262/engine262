@@ -1,7 +1,7 @@
-import { F, Realm } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { typedArrayInfoByName, type TypedArrayConstructorNames } from './TypedArray.mts';
+import { F, Realm } from '#self';
 
 /** https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
 export function bootstrapTypedArrayPrototypes(realmRec: Realm) {

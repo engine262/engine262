@@ -1,23 +1,24 @@
 import type { Protocol } from 'devtools-protocol';
 import {
-  DynamicParsedCodeRecord, ExecutionContext, type GCMarker, surroundingAgent,
+  DynamicParsedCodeRecord, type GCMarker, surroundingAgent,
 } from './host-defined/engine.mts';
+import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
   Value, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
   SymbolValue,
 } from './value.mts';
-import {
-  Call,
-  isFunctionObject,
-  isBuiltinFunctionObject,
-  isECMAScriptFunctionObject,
-} from './abstract-ops/all.mts';
 import { Q } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type {
   Evaluator, EvaluatorNextType, ValueEvaluator, YieldEvaluator,
 } from './evaluator.mts';
 import type { ErrorObject } from './intrinsics/Error.mts';
+import {
+  Call,
+  isFunctionObject,
+  isBuiltinFunctionObject,
+  isECMAScriptFunctionObject,
+} from '#self';
 
 export const kInternal = Symbol('kInternal');
 

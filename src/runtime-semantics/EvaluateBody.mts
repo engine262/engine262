@@ -1,20 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
-  Assert,
-  AsyncFunctionStart,
-  Call,
-  GeneratorStart,
-  NewPromiseCapability,
-  OrdinaryCreateFromConstructor,
-  AsyncGeneratorStart,
-  GetValue,
-  type ECMAScriptFunctionObject,
-  type GeneratorObject,
-  type AsyncGeneratorObject,
-  type Body,
-} from '../abstract-ops/all.mts';
-import {
   Completion,
   AbruptCompletion,
   Q, X,
@@ -30,6 +16,20 @@ import {
   FunctionDeclarationInstantiation,
   NamedEvaluation,
 } from './all.mts';
+import {
+  Assert,
+  AsyncFunctionStart,
+  Call,
+  GeneratorStart,
+  NewPromiseCapability,
+  OrdinaryCreateFromConstructor,
+  AsyncGeneratorStart,
+  GetValue,
+  type ECMAScriptFunctionObject,
+  type GeneratorObject,
+  type AsyncGeneratorObject,
+  type Body,
+} from '#self';
 
 export function Evaluate_AnyFunctionBody({ FunctionStatementList }: ParseNode.FunctionBody | ParseNode.AsyncBody | ParseNode.GeneratorBody | ParseNode.AsyncGeneratorBody) {
   return Evaluate_FunctionStatementList(FunctionStatementList);

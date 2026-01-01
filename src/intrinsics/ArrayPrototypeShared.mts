@@ -1,4 +1,16 @@
 import {
+  NormalCompletion,
+  Q, ThrowCompletion, X, type ValueEvaluator,
+  type ValueCompletion,
+} from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
+import {
+  NullValue, NumberValue, ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { assignProps } from './bootstrap.mts';
+import { ValidateTypedArray } from './TypedArray.mts';
+import {
   Assert,
   Call,
   DeletePropertyOrThrow,
@@ -15,20 +27,8 @@ import {
   ToString,
   F, R,
   Realm,
-} from '../abstract-ops/all.mts';
-import {
-  NormalCompletion,
-  Q, ThrowCompletion, X, type ValueEvaluator,
-  type ValueCompletion,
-} from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
-import type { PlainEvaluator } from '../evaluator.mts';
-import {
-  NullValue, NumberValue, ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import { assignProps } from './bootstrap.mts';
-import { ValidateTypedArray } from './TypedArray.mts';
-import { LengthOfArrayLike, skipDebugger, TypedArrayLength } from '#self';
+  LengthOfArrayLike, skipDebugger, TypedArrayLength,
+} from '#self';
 
 // Algorithms and methods shared between %Array.prototype% and
 // %TypedArray.prototype%.

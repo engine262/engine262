@@ -1,20 +1,20 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  UndefinedValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { Q } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import {
   IsDetachedBuffer,
   OrdinaryCreateFromConstructor,
   ToIndex,
   RequireInternalSlot,
   type OrdinaryObject,
   type FunctionObject,
-  Realm,
   type ArrayBufferObject,
-} from '../abstract-ops/all.mts';
-import {
-  UndefinedValue, Value, type Arguments, type FunctionCallContext,
-} from '../value.mts';
-import { Q } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
-import { bootstrapConstructor } from './bootstrap.mts';
+  Realm,
+} from '#self';
 
 export interface DataViewObject extends OrdinaryObject {
   readonly DataView: string;

@@ -1,13 +1,5 @@
 import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
-  Assert,
-  CreateBuiltinFunction,
-  PerformPromiseThen,
-  PromiseCapabilityRecord,
-  PromiseResolve,
-  type IteratorRecord,
-} from './abstract-ops/all.mts';
-import {
   JSStringValue, Value, type Arguments,
 } from './value.mts';
 import {
@@ -17,6 +9,14 @@ import {
   resume,
 } from './helpers.mts';
 import type { Evaluator, ValueEvaluator } from './evaluator.mts';
+import {
+  Assert,
+  CreateBuiltinFunction,
+  PerformPromiseThen,
+  PromiseCapabilityRecord,
+  PromiseResolve,
+  type IteratorRecord,
+} from '#self';
 import { skipDebugger } from '#self';
 
 let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompletionImpl<T>;

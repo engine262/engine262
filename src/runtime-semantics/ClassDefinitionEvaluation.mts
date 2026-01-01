@@ -12,6 +12,28 @@ import {
 } from '../value.mts';
 import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
+  IsStatic,
+  ConstructorMethod,
+  NonConstructorElements,
+  PrivateBoundIdentifiers,
+} from '../static-semantics/all.mts';
+import {
+  Q, X,
+  AbruptCompletion,
+} from '../completion.mts';
+import { __ts_cast__, OutOfRange, type Mutable } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  DefineMethod,
+  MethodDefinitionEvaluation,
+  ClassFieldDefinitionEvaluation,
+  PrivateElementRecord,
+  ClassFieldDefinitionRecord,
+  ClassStaticBlockDefinitionEvaluation,
+  ClassStaticBlockDefinitionRecord,
+  ClassFieldDefinitionEvaluation_decorator,
+} from './all.mts';
+import {
   Assert,
   Call,
   Construct,
@@ -33,34 +55,11 @@ import {
   type FunctionObject,
   DefineMethodProperty,
   IsCallable,
-} from '../abstract-ops/all.mts';
-import {
-  IsStatic,
-  ConstructorMethod,
-  NonConstructorElements,
-  PrivateBoundIdentifiers,
-} from '../static-semantics/all.mts';
+} from '#self';
 import {
   DeclarativeEnvironmentRecord,
   PrivateEnvironmentRecord,
-} from '../environment.mts';
-import {
-  Q, X,
-  AbruptCompletion,
-} from '../completion.mts';
-import { __ts_cast__, OutOfRange, type Mutable } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import {
-  DefineMethod,
-  MethodDefinitionEvaluation,
-  ClassFieldDefinitionEvaluation,
-  PrivateElementRecord,
-  ClassFieldDefinitionRecord,
-  ClassStaticBlockDefinitionEvaluation,
-  ClassStaticBlockDefinitionRecord,
-  ClassFieldDefinitionEvaluation_decorator,
-} from './all.mts';
-import {
+
   CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
 } from '#self';
 
@@ -110,6 +109,11 @@ export interface DefaultConstructorBuiltinFunction extends BuiltinFunctionObject
   readonly Elements: ECMAScriptFunctionObject['Elements'];
   readonly SourceText: ECMAScriptFunctionObject['SourceText'];
   readonly ConstructorKind: ECMAScriptFunctionObject['ConstructorKind'];
+  /**
+   * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
+   * This is only used in the inspector.
+   */
+  readonly HostInitialName: PropertyKeyValue | PrivateName;
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
@@ -241,7 +245,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     SetFunctionName(F, className);
   }
   __ts_cast__<Mutable<DefaultConstructorBuiltinFunction>>(F);
-
+  F.HostInitialName = className;
   F.SourceText = sourceText;
   // 16. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
@@ -451,14 +455,14 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
           // 3. If field.[[Get]] is undefined, then
           let combined;
           if (field.Get === Value.undefined) {
-            combined = new PrivateElementRecord({
+            combined = PrivateElementRecord({
               Key: field.Key,
               Kind: 'accessor',
               Get: existing.Get,
               Set: field.Set,
             });
           } else { // 4. Else
-            combined = new PrivateElementRecord({
+            combined = PrivateElementRecord({
               Key: field.Key,
               Kind: 'accessor',
               Get: field.Get,
