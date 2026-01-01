@@ -177,6 +177,7 @@ export interface Throw {
 '$1 cannot be used as a WeakMap key'
   | '$1 is not a constructor'
   | '$1 is not a function'
+  | '$1 is not an object'
   | '$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer'
   | 'Accessor decorator must return an object or undefined, but $1 was returned'
   | 'Cannot mix BigInt and other types in $1 operation'
