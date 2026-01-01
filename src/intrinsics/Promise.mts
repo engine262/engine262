@@ -218,7 +218,6 @@ function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fu
 
 /** https://tc39.es/proposal-await-dictionary/#sec-promise.allkeyed */
 function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(yield* NewPromiseCapability(C));
@@ -242,7 +241,6 @@ function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue 
   const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all', promises, C, promiseCapability, promiseResolve));
   // 7. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
-  // 8. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
 
@@ -380,22 +378,16 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
     // c. Perform ? Call(resultCapability.[[Resolve]], undefined, « result »).
     Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
   }
-  //  9. Return resultCapability.[[Promise]].
   return resultCapability.Promise;
 }
 
 /** https://tc39.es/proposal-await-dictionary/#sec-createkeyedpromisecombinatorresultobject */
 function CreateKeyedPromiseCombinatorResultObject(keys: readonly PropertyKeyValue[], values: readonly Value[]): OrdinaryObject {
-  // 1. Assert: The number of elements in keys is the same as the number of elements in values.
   Assert(keys.length === values.length);
-  // 2. Let obj be OrdinaryObjectCreate(null).
   const obj = OrdinaryObjectCreate(Value.null);
-  // 3. For each integer i such that 0 ≤ i < the number of elements in keys, in ascending order, do
   for (let i = 0; i < keys.length; i += 1) {
-    // a. Perform ! CreateDataPropertyOrThrow(obj, keys[i], values[i]).
     X(CreateDataPropertyOrThrow(obj, keys[i], values[i]));
   }
-  // 4. Return obj.
   return obj;
 }
 
@@ -533,7 +525,6 @@ function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValu
 
 /** https://tc39.es/proposal-await-dictionary/#sec-promise.allsettledkeyed */
 function* Promise_allSettledKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(yield* NewPromiseCapability(C));
@@ -557,7 +548,6 @@ function* Promise_allSettledKeyed([promises = Value.undefined]: Arguments, { thi
   const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all-settled', promises, C, promiseCapability, promiseResolve));
   // 7. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
-  // 8. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
 
