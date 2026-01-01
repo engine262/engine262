@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 27615a19b32e5ab55bbe815959d5375c0b668e68
+ * engine262 0.0.1 4d5d1d017bb82a002adb06f997d7e0d57bb71226
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, IsCallable, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, PrivateName, isWrappedFunctionExoticObject, ManagedRealm, IsAccessorDescriptor, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
+import { Value, surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, IsCallable, JSStringValue, PrivateName, SymbolDescriptiveString, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, SymbolValue, ArrayExoticObjectInternalMethods, Descriptor, F, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, isWrappedFunctionExoticObject, ManagedRealm, IsAccessorDescriptor, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
 
 /*
 Test code: copy this into the inspector console.
@@ -271,10 +271,43 @@ class ObjectInspector {
     if (!internalProperties.length) {
       return [];
     }
-    return internalProperties.map(([name, val]) => ({
-      name,
-      value: getInspector(val).toRemoteObject(val, getObjectId, generatePreview)
-    }));
+    return internalProperties.map(([name, val]) => {
+      let value;
+      if (val instanceof Value) {
+        value = getInspector(val).toRemoteObject(val, getObjectId, generatePreview);
+      } else {
+        const array = new ObjectValue([]);
+        array.DefineOwnProperty = ArrayExoticObjectInternalMethods.DefineOwnProperty;
+        array.properties.set('length', Descriptor({
+          Value: F(val.length)
+        }));
+        for (const [index, item] of val.entries()) {
+          let value;
+          if (item instanceof Value) {
+            value = item;
+          } else {
+            if (!item?.Key || !item.Value) {
+              continue;
+            }
+            value = new ObjectValue(['InspectorEntry']);
+            value.properties.set('key', Descriptor({
+              Value: item.Key
+            }));
+            value.properties.set('value', Descriptor({
+              Value: item.Value
+            }));
+          }
+          array.properties.set(Value(index.toString()), Descriptor({
+            Value: value
+          }));
+        }
+        value = Array$1.toRemoteObject(array, getObjectId, generatePreview);
+      }
+      return {
+        name,
+        value
+      };
+    });
   }
   toObjectPreview(value) {
     const e = this.toEntries?.(value);
@@ -287,7 +320,18 @@ class ObjectInspector {
     };
   }
 }
-const Default = new ObjectInspector('Object', undefined, () => 'Object');
+const InspectorEntry = new ObjectInspector('Object', 'internal#entry', value => {
+  const key = value.properties.get(Value('key')).Value;
+  const val = value.properties.get(Value('value')).Value;
+  return `{${getInspector(key).toDescription(key)} => ${getInspector(val).toDescription(val)}}`;
+});
+const Default = new ObjectInspector('Object', undefined, object => {
+  const [ctor] = object.ConstructedBy;
+  if (!ctor) {
+    return 'Object';
+  }
+  return propertyNameToString(ctor.HostInitialName);
+});
 const ArrayBuffer = new ObjectInspector('ArrayBuffer', 'arraybuffer', value => `ArrayBuffer(${value.ArrayBufferByteLength})`, {});
 const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(${value.ByteLength})`);
 const Error$1 = new ObjectInspector('SyntaxError', 'error', value => {
@@ -306,6 +350,7 @@ const Error$1 = new ObjectInspector('SyntaxError', 'error', value => {
 });
 const Map$1 = new ObjectInspector('Map', 'map', value => `Map(${value.MapData.filter(x => !!x.Key).length})`, {
   additionalProperties: value => [['size', Value(value.MapData.filter(x => !!x.Key).length)]],
+  internalProperties: value => [['[[Entries]]', value.MapData]],
   entries: value => value.MapData.filter(x => x.Key).map(({
     Key,
     Value
@@ -316,11 +361,13 @@ const Map$1 = new ObjectInspector('Map', 'map', value => `Map(${value.MapData.fi
 });
 const Set = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
   additionalProperties: value => [['size', Value(value.SetData.filter(globalThis.Boolean).length)]],
+  internalProperties: value => [['[[Entries]]', value.SetData]],
   entries: value => value.SetData.filter(globalThis.Boolean).map(Value => ({
     value: getInspector(Value).toObjectPreview(Value)
   }))
 });
 const WeakMap$1 = new ObjectInspector('WeakMap', 'weakmap', () => 'WeakMap', {
+  internalProperties: value => [['[[Entries]]', value.WeakMapData]],
   entries: value => value.WeakMapData.filter(x => x.Key).map(({
     Key,
     Value
@@ -330,6 +377,7 @@ const WeakMap$1 = new ObjectInspector('WeakMap', 'weakmap', () => 'WeakMap', {
   }))
 });
 const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
+  internalProperties: value => [['[[Entries]]', value.WeakSetData]],
   entries: value => value.WeakSetData.filter(globalThis.Boolean).map(Value => ({
     value: getInspector(Value).toObjectPreview(Value)
   }))
@@ -413,15 +461,17 @@ const Array$1 = {
   }
 };
 const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
-function propertyToPropertyPreview(key, desc) {
-  let name;
-  if (key instanceof JSStringValue) {
-    name = key.stringValue();
-  } else if (key instanceof PrivateName) {
-    name = key.Description.stringValue();
+function propertyNameToString(value) {
+  if (value instanceof JSStringValue) {
+    return value.stringValue();
+  } else if (value instanceof PrivateName) {
+    return value.Description.stringValue();
   } else {
-    name = SymbolDescriptiveString(key).stringValue();
+    return SymbolDescriptiveString(value).stringValue();
   }
+}
+function propertyToPropertyPreview(key, desc) {
+  const name = propertyNameToString(key);
   if (desc.Get || desc.Set) {
     return {
       name,
@@ -436,7 +486,10 @@ function propertiesToPropertyPreview(value, extra, max = 5) {
   const properties = [];
   if (extra) {
     for (const [key, value] of extra) {
-      properties.push(getInspector(value).toPropertyPreview(key, value));
+      if (value instanceof Value) {
+        properties.push(getInspector(value).toPropertyPreview(key, value));
+      }
+      // TODO:... handle Value[]
     }
   }
   if (isTypedArrayObject(value) && value.ViewedArrayBuffer instanceof ObjectValue && value.ViewedArrayBuffer.ArrayBufferData instanceof DataBlock) {
@@ -539,6 +592,8 @@ function getInspector(value) {
       return Module;
     case isShadowRealmObject(value):
       return ShadowRealm;
+    case value.internalSlotsList.includes('InspectorEntry'):
+      return InspectorEntry;
     default:
       return Default;
   }
@@ -702,15 +757,15 @@ class InspectorContext {
         set: value.Set ? wrap(value.Set) : undefined
       });
     });
-    const value = evalQ(Q => {
+    (() => {
       let p = object;
       while (p instanceof ObjectValue) {
-        for (const key of Q(skipDebugger(p.OwnPropertyKeys()))) {
+        for (const key of p.properties.keys()) {
           if (nonIndexedPropertiesOnly && isIntegerIndex(key)) {
             continue;
           }
-          const desc = Q(skipDebugger(p.GetOwnProperty(key)));
-          if (desc instanceof UndefinedValue) {
+          const desc = p.properties.get(key);
+          if (!desc) {
             return;
           }
           if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
@@ -733,15 +788,13 @@ class InspectorContext {
         if (ownProperties) {
           break;
         }
-        p = Q(skipDebugger(p.GetPrototypeOf()));
+        if ('Prototype' in p) {
+          p = p.Prototype;
+        } else {
+          p = Value.null;
+        }
       }
-    });
-    if (value.Type === 'throw') {
-      return {
-        result: [],
-        exceptionDetails: this.createExceptionDetails(value, false)
-      };
-    }
+    })();
     const additionalInternalFields = getInspector(object).toInternalProperties?.(object, val => this.#internObject(val, 'default'), generatePreview);
     if (additionalInternalFields) {
       internalProperties.push(...additionalInternalFields);
@@ -953,14 +1006,40 @@ const Debugger = {
   },
   setAsyncCallStackDepth() {},
   setBlackboxPatterns() {},
-  setPauseOnExceptions() {},
   setBlackboxExecutionContexts() {},
-  setBreakpointByUrl() {
+  // #region breakpoints
+  getPossibleBreakpoints() {
+    // getPossibleBreakpoints({ start, end, restrictToFunction }) {
     return {
-      breakpointId: '0',
       locations: []
     };
+    // return { locations: getBreakpointCandidates(start, end, restrictToFunction) };
   },
+  removeBreakpoint({
+    breakpointId
+  }) {
+    surroundingAgent?.removeBreakpoint(breakpointId);
+  },
+  // setBreakpoint({ location, condition }) { },
+  setBreakpointByUrl(req) {
+    return surroundingAgent?.addBreakpointByUrl(req);
+  },
+  // setBreakpointOnFunctionCall({ objectId, condition }) { },
+  setBreakpointsActive({
+    active
+  }) {
+    surroundingAgent.breakpointsEnabled = active;
+  },
+  // setInstrumentationBreakpoint({ instrumentation }) { },
+  setPauseOnExceptions({
+    state
+  }) {
+    if (surroundingAgent) {
+      surroundingAgent.pauseOnExceptions = state === 'none' ? undefined : state;
+    }
+  },
+  // #endregion
+
   stepInto(_, {
     sendEvent
   }) {

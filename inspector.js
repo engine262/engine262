@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 27615a19b32e5ab55bbe815959d5375c0b668e68
+ * engine262 0.0.1 4d5d1d017bb82a002adb06f997d7e0d57bb71226
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -25,7 +25,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('./engine262.mjs')) :
   typeof define === 'function' && define.amd ? define(['exports', './engine262.mjs'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["@engine262/engine262/inspector"] = {}, global["@engine262/engine262"]));
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["@magic-works/engine262/inspector"] = {}, global["@engine262/engine262"]));
 })(this, (function (exports, engine262_mjs) { 'use strict';
 
   /*
@@ -275,10 +275,43 @@
       if (!internalProperties.length) {
         return [];
       }
-      return internalProperties.map(([name, val]) => ({
-        name,
-        value: getInspector(val).toRemoteObject(val, getObjectId, generatePreview)
-      }));
+      return internalProperties.map(([name, val]) => {
+        let value;
+        if (val instanceof engine262_mjs.Value) {
+          value = getInspector(val).toRemoteObject(val, getObjectId, generatePreview);
+        } else {
+          const array = new engine262_mjs.ObjectValue([]);
+          array.DefineOwnProperty = engine262_mjs.ArrayExoticObjectInternalMethods.DefineOwnProperty;
+          array.properties.set('length', engine262_mjs.Descriptor({
+            Value: engine262_mjs.F(val.length)
+          }));
+          for (const [index, item] of val.entries()) {
+            let value;
+            if (item instanceof engine262_mjs.Value) {
+              value = item;
+            } else {
+              if (!item?.Key || !item.Value) {
+                continue;
+              }
+              value = new engine262_mjs.ObjectValue(['InspectorEntry']);
+              value.properties.set('key', engine262_mjs.Descriptor({
+                Value: item.Key
+              }));
+              value.properties.set('value', engine262_mjs.Descriptor({
+                Value: item.Value
+              }));
+            }
+            array.properties.set(engine262_mjs.Value(index.toString()), engine262_mjs.Descriptor({
+              Value: value
+            }));
+          }
+          value = Array$1.toRemoteObject(array, getObjectId, generatePreview);
+        }
+        return {
+          name,
+          value
+        };
+      });
     }
     toObjectPreview(value) {
       const e = this.toEntries?.(value);
@@ -291,7 +324,18 @@
       };
     }
   }
-  const Default = new ObjectInspector('Object', undefined, () => 'Object');
+  const InspectorEntry = new ObjectInspector('Object', 'internal#entry', value => {
+    const key = value.properties.get(engine262_mjs.Value('key')).Value;
+    const val = value.properties.get(engine262_mjs.Value('value')).Value;
+    return `{${getInspector(key).toDescription(key)} => ${getInspector(val).toDescription(val)}}`;
+  });
+  const Default = new ObjectInspector('Object', undefined, object => {
+    const [ctor] = object.ConstructedBy;
+    if (!ctor) {
+      return 'Object';
+    }
+    return propertyNameToString(ctor.HostInitialName);
+  });
   const ArrayBuffer = new ObjectInspector('ArrayBuffer', 'arraybuffer', value => `ArrayBuffer(${value.ArrayBufferByteLength})`, {});
   const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(${value.ByteLength})`);
   const Error$1 = new ObjectInspector('SyntaxError', 'error', value => {
@@ -310,6 +354,7 @@
   });
   const Map$1 = new ObjectInspector('Map', 'map', value => `Map(${value.MapData.filter(x => !!x.Key).length})`, {
     additionalProperties: value => [['size', engine262_mjs.Value(value.MapData.filter(x => !!x.Key).length)]],
+    internalProperties: value => [['[[Entries]]', value.MapData]],
     entries: value => value.MapData.filter(x => x.Key).map(({
       Key,
       Value
@@ -320,11 +365,13 @@
   });
   const Set = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
     additionalProperties: value => [['size', engine262_mjs.Value(value.SetData.filter(globalThis.Boolean).length)]],
+    internalProperties: value => [['[[Entries]]', value.SetData]],
     entries: value => value.SetData.filter(globalThis.Boolean).map(Value => ({
       value: getInspector(Value).toObjectPreview(Value)
     }))
   });
   const WeakMap$1 = new ObjectInspector('WeakMap', 'weakmap', () => 'WeakMap', {
+    internalProperties: value => [['[[Entries]]', value.WeakMapData]],
     entries: value => value.WeakMapData.filter(x => x.Key).map(({
       Key,
       Value
@@ -334,6 +381,7 @@
     }))
   });
   const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
+    internalProperties: value => [['[[Entries]]', value.WeakSetData]],
     entries: value => value.WeakSetData.filter(globalThis.Boolean).map(Value => ({
       value: getInspector(Value).toObjectPreview(Value)
     }))
@@ -417,15 +465,17 @@
     }
   };
   const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
-  function propertyToPropertyPreview(key, desc) {
-    let name;
-    if (key instanceof engine262_mjs.JSStringValue) {
-      name = key.stringValue();
-    } else if (key instanceof engine262_mjs.PrivateName) {
-      name = key.Description.stringValue();
+  function propertyNameToString(value) {
+    if (value instanceof engine262_mjs.JSStringValue) {
+      return value.stringValue();
+    } else if (value instanceof engine262_mjs.PrivateName) {
+      return value.Description.stringValue();
     } else {
-      name = engine262_mjs.SymbolDescriptiveString(key).stringValue();
+      return engine262_mjs.SymbolDescriptiveString(value).stringValue();
     }
+  }
+  function propertyToPropertyPreview(key, desc) {
+    const name = propertyNameToString(key);
     if (desc.Get || desc.Set) {
       return {
         name,
@@ -440,7 +490,10 @@
     const properties = [];
     if (extra) {
       for (const [key, value] of extra) {
-        properties.push(getInspector(value).toPropertyPreview(key, value));
+        if (value instanceof engine262_mjs.Value) {
+          properties.push(getInspector(value).toPropertyPreview(key, value));
+        }
+        // TODO:... handle Value[]
       }
     }
     if (engine262_mjs.isTypedArrayObject(value) && value.ViewedArrayBuffer instanceof engine262_mjs.ObjectValue && value.ViewedArrayBuffer.ArrayBufferData instanceof engine262_mjs.DataBlock) {
@@ -543,6 +596,8 @@
         return Module;
       case engine262_mjs.isShadowRealmObject(value):
         return ShadowRealm;
+      case value.internalSlotsList.includes('InspectorEntry'):
+        return InspectorEntry;
       default:
         return Default;
     }
@@ -706,15 +761,15 @@
           set: value.Set ? wrap(value.Set) : undefined
         });
       });
-      const value = engine262_mjs.evalQ(Q => {
+      (() => {
         let p = object;
         while (p instanceof engine262_mjs.ObjectValue) {
-          for (const key of Q(engine262_mjs.skipDebugger(p.OwnPropertyKeys()))) {
+          for (const key of p.properties.keys()) {
             if (nonIndexedPropertiesOnly && engine262_mjs.isIntegerIndex(key)) {
               continue;
             }
-            const desc = Q(engine262_mjs.skipDebugger(p.GetOwnProperty(key)));
-            if (desc instanceof engine262_mjs.UndefinedValue) {
+            const desc = p.properties.get(key);
+            if (!desc) {
               return;
             }
             if (accessorPropertiesOnly && !engine262_mjs.IsAccessorDescriptor(desc)) {
@@ -737,15 +792,13 @@
           if (ownProperties) {
             break;
           }
-          p = Q(engine262_mjs.skipDebugger(p.GetPrototypeOf()));
+          if ('Prototype' in p) {
+            p = p.Prototype;
+          } else {
+            p = engine262_mjs.Value.null;
+          }
         }
-      });
-      if (value.Type === 'throw') {
-        return {
-          result: [],
-          exceptionDetails: this.createExceptionDetails(value, false)
-        };
-      }
+      })();
       const additionalInternalFields = getInspector(object).toInternalProperties?.(object, val => this.#internObject(val, 'default'), generatePreview);
       if (additionalInternalFields) {
         internalProperties.push(...additionalInternalFields);
@@ -957,14 +1010,40 @@
     },
     setAsyncCallStackDepth() {},
     setBlackboxPatterns() {},
-    setPauseOnExceptions() {},
     setBlackboxExecutionContexts() {},
-    setBreakpointByUrl() {
+    // #region breakpoints
+    getPossibleBreakpoints() {
+      // getPossibleBreakpoints({ start, end, restrictToFunction }) {
       return {
-        breakpointId: '0',
         locations: []
       };
+      // return { locations: getBreakpointCandidates(start, end, restrictToFunction) };
     },
+    removeBreakpoint({
+      breakpointId
+    }) {
+      engine262_mjs.surroundingAgent?.removeBreakpoint(breakpointId);
+    },
+    // setBreakpoint({ location, condition }) { },
+    setBreakpointByUrl(req) {
+      return engine262_mjs.surroundingAgent?.addBreakpointByUrl(req);
+    },
+    // setBreakpointOnFunctionCall({ objectId, condition }) { },
+    setBreakpointsActive({
+      active
+    }) {
+      engine262_mjs.surroundingAgent.breakpointsEnabled = active;
+    },
+    // setInstrumentationBreakpoint({ instrumentation }) { },
+    setPauseOnExceptions({
+      state
+    }) {
+      if (engine262_mjs.surroundingAgent) {
+        engine262_mjs.surroundingAgent.pauseOnExceptions = state === 'none' ? undefined : state;
+      }
+    },
+    // #endregion
+
     stepInto(_, {
       sendEvent
     }) {
