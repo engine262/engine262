@@ -6,7 +6,7 @@ import { CreateTemporalDateTime, type ISODateTimeRecord } from './PlainDateTime.
 import { CreateTemporalTime } from './PlainTime.mts';
 import { CreateTemporalZonedDateTime } from './ZonedDateTime.mts';
 import {
-  type Realm, X, Value, ReturnIfAbrupt as Q, type Arguments, GetGlobalObject, ObjectValue, type PlainCompletion,
+  type Realm, X, Value, Q, type Arguments, GetGlobalObject, ObjectValue, type PlainCompletion,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.timezoneid */

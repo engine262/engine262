@@ -1,6 +1,6 @@
 import { RoundingMode, ToIntegerIfIntegral, type TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import {
-  __IsDateUnit, __IsTimeUnit, FormatFractionalSeconds, IsCalendarUnit, ISODateToEpochDays, LargerOfTwoTemporalUnits, RoundNumberToIncrement, TemporalUnit, TemporalUnitCategory, type DateUnit, type TimeUnit,
+  __IsDateUnit, __IsTimeUnit, FormatFractionalSeconds, IsCalendarUnit, ISODateToEpochDays, LargerOfTwoTemporalUnits, RoundNumberToIncrement, Table21_LengthInNanoSeconds, TemporalUnit, TemporalUnitCategory, type DateUnit, type TimeUnit,
 } from '../../abstract-ops/temporal/temporal.mts';
 import { CalendarDateAdd, type CalendarType } from '../../abstract-ops/temporal/calendar.mts';
 import { abs } from '../../abstract-ops/math.mts';
@@ -14,7 +14,7 @@ import {
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#eqn-maxTimeDuration */
-const maxTimeDuration = 9_007_199_254_740_991_999_999_999n;
+export const maxTimeDuration = 9_007_199_254_740_991_999_999_999n;
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances */
 export interface TemporalDurationObject extends OrdinaryObject {
@@ -628,8 +628,8 @@ export function CompareTimeDuration(one: TimeDuration, two: TimeDuration): -1 | 
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timedurationfromepochnanosecondsdifference */
-export function TimeDurationFromEpochNanosecondsDifference(one: number, two: number): TimeDuration {
-  const result = one - two;
+export function TimeDurationFromEpochNanosecondsDifference(one: bigint, two: bigint): TimeDuration {
+  const result = Number(one) - Number(two);
   Assert(abs(result) <= maxTimeDuration);
   return result as TimeDuration;
 }
@@ -672,12 +672,15 @@ export function DateDurationDays(dateDuration: DateDurationRecord, plainRelative
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-roundtimeduration */
-export declare function RoundTimeDuration(
+export function RoundTimeDuration(
   timeDuration: TimeDuration,
   increment: number,
   unit: TimeUnit,
   roundingMode: RoundingMode
-): PlainCompletion<TimeDuration>;
+): PlainCompletion<TimeDuration> {
+  const divisor = Table21_LengthInNanoSeconds[unit];
+  return RoundTimeDurationToIncrement(timeDuration, divisor * increment, roundingMode);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totaltimeduration */
 export declare function TotalTimeDuration(timeDuration: TimeDuration, unit: TimeUnit | 'day'): number;
@@ -693,6 +696,7 @@ export interface DurationNudgeResultRecord {
 export declare function NudgeToCalendarUnit(
   sign: -1 | 1,
   duration: InternalDurationRecord,
+  originEpochNs: number,
   destEpochNs: number,
   isoDateTime: ISODateTimeRecord,
   timeZone: TimeZoneIdentifier | undefined,
@@ -739,6 +743,7 @@ export declare function BubbleRelativeDuration(
 /** https://tc39.es/proposal-temporal/#sec-temporal-roundrelativeduration */
 export function RoundRelativeDuration(
   duration: InternalDurationRecord,
+  originEpochNs: number,
   destEpochNs: number,
   isoDateTime: ISODateTimeRecord,
   timeZone: TimeZoneIdentifier | undefined,
@@ -763,7 +768,7 @@ export function RoundRelativeDuration(
   }
   let nudgeResult;
   if (irregularLengthUnit) {
-    const record = Q(NudgeToCalendarUnit(sign, duration, destEpochNs, isoDateTime, timeZone, calendar, increment, smallestUnit as DateUnit, roundingMode));
+    const record = Q(NudgeToCalendarUnit(sign, duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, increment, smallestUnit as DateUnit, roundingMode));
     nudgeResult = record.NudgeResult;
   } else if (timeZone !== undefined) {
     Assert(__IsTimeUnit(smallestUnit));
@@ -784,6 +789,7 @@ export function RoundRelativeDuration(
 /** https://tc39.es/proposal-temporal/#sec-temporal-totalrelativeduration */
 export function TotalRelativeDuration(
   duration: InternalDurationRecord,
+  originEpochNs: number,
   destEpochNs: number,
   isoDateTime: ISODateTimeRecord,
   timeZone: TimeZoneIdentifier | undefined,
@@ -793,7 +799,7 @@ export function TotalRelativeDuration(
   if (IsCalendarUnit(unit) || (timeZone !== undefined && unit === TemporalUnit.Day)) {
     const sign = InternalDurationSign(duration);
     // https://github.com/tc39/proposal-temporal/issues/3131
-    const record = Q(NudgeToCalendarUnit(sign as 1, duration, destEpochNs, isoDateTime, timeZone, calendar, 1, unit, RoundingMode.Trunc));
+    const record = Q(NudgeToCalendarUnit(sign as 1, duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, 1, unit, RoundingMode.Trunc));
     return record.Total;
   }
   __ts_cast__<Exclude<TemporalUnit, TemporalUnit.Day | TemporalUnit.Month | TemporalUnit.Week>>(unit);

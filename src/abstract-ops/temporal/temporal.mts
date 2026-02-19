@@ -19,6 +19,7 @@ import { ToPrimitive, ToNumber } from '#self';
 import {
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, surroundingAgent, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
 } from '#self';
+import type { nsPerDay } from '../../intrinsics/Temporal/Instant.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
 // TODO: Review
@@ -224,6 +225,17 @@ export function __IsTimeUnit(unit: TemporalUnit): unit is TimeUnit {
 
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export type DateUnit = TemporalUnit.Year | TemporalUnit.Month | TemporalUnit.Week | TemporalUnit.Day;
+
+/** https://tc39.es/proposal-temporal/#table-temporal-units */
+export const Table21_LengthInNanoSeconds = {
+  [TemporalUnit.Day]: 8.64e13 satisfies typeof nsPerDay,
+  [TemporalUnit.Hour]: 3.6e12,
+  [TemporalUnit.Minute]: 6e10,
+  [TemporalUnit.Second]: 1e9,
+  [TemporalUnit.Millisecond]: 1e6,
+  [TemporalUnit.Microsecond]: 1e3,
+  [TemporalUnit.Nanosecond]: 1,
+} as const
 
 export function __IsDateUnit(unit: TemporalUnit): unit is DateUnit {
   return (unit === TemporalUnit.Year
@@ -494,7 +506,13 @@ export function* GetTemporalUnitValuedOption(
   if (value === 'auto') {
     return 'auto';
   }
-  // TODO: 14. Return the value in the "Value" column of Table 21 corresponding to the row with value in its "Singular property name" or "Plural property name" column.
+  // TODO(temporal): 14. Return the value in the "Value" column of Table 21 corresponding to the row with value in its "Singular property name" or "Plural property name" column.
+  for (const row of table) {
+    if (row.Singular === value || row.Plural === value) {
+      return row.Value;
+    }
+  }
+  Assert(false, 'unreachable');
 }
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporalrelativetooption */
@@ -525,8 +543,8 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
       return { PlainRelativeTo: plainDate, ZonedRelativeTo: undefined };
     }
     calendar = Q(yield* GetTemporalCalendarIdentifierWithISODefault(value));
-    const fields = Q(yield* PrepareCalendarFields(calendar, value, ['Year', 'Month', 'MonthCode', 'Day'], ['Hour', 'Minute', 'Second', 'Millisecond', 'Microsecond', 'Nanosecond', 'OffsetString', 'TimeZone'], []));
-    const result = Q(InterpretTemporalDateTimeFields(calendar, fields, 'constrain'));
+    const fields = Q(yield* PrepareCalendarFields(calendar, value, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset-string', 'time-zone'], []));
+    const result = Q(yield* InterpretTemporalDateTimeFields(calendar, fields, 'constrain'));
     timeZone = fields.TimeZone as TimeZoneIdentifier;
     offsetString = fields.OffsetString;
     if (offsetString === undefined) {
@@ -859,7 +877,7 @@ export function ISODateToFields(
   calendar: CalendarType,
   isoDate: ISODateRecord,
   type: 'date' | 'year-month' | 'month-day',
-): PlainCompletion<CalendarFieldsRecord> {
+): CalendarFieldsRecord {
   const fields: CalendarFieldsRecord = {
     Day: undefined,
     Era: undefined,
@@ -914,19 +932,19 @@ export function* GetDifferenceSettings(
   if (disallowedUnits.includes(smallestUnit as TemporalUnit)) {
     return surroundingAgent.Throw('RangeError', 'OutOfRange', smallestUnit);
   }
-  const defaultLargestUnit = LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit);
+  const defaultLargestUnit = LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit as TemporalUnit);
   if (largestUnit === 'auto') {
     largestUnit = defaultLargestUnit;
   }
-  if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit) !== largestUnit) {
+  if (LargerOfTwoTemporalUnits(largestUnit as TemporalUnit, smallestUnit as TemporalUnit) !== largestUnit) {
     return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
   }
-  const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+  const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
   if (maximum !== 'unset') {
     Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false));
   }
   return {
-    SmallestUnit: smallestUnit,
+    SmallestUnit: smallestUnit as TemporalUnit,
     LargestUnit: largestUnit,
     RoundingMode: roundingMode,
     RoundingIncrement: roundingIncrement,

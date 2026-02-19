@@ -1,6 +1,7 @@
 import { CreateDateDurationRecord, ZeroDateDuration, type DateDurationRecord } from '../../intrinsics/Temporal/Duration.mts';
 import {
-  BalanceISODate, CompareISODate, CreateISODateRecord, ISODateSurpasses, ISODateWithinLimits, isTemporalPlainDateObject, RegulateISODate, type ISODateRecord,
+  AddDaysToISODate,
+  CompareISODate, CreateISODateRecord, ISODateSurpasses, ISODateWithinLimits, isTemporalPlainDateObject, RegulateISODate, type ISODateRecord,
 } from '../../intrinsics/Temporal/PlainDate.mts';
 import { CanonicalizeUValue } from '../../ecma402/not-implemented.mts';
 import { __ts_cast__, isArray, type Mutable } from '../../helpers.mts';
@@ -296,8 +297,8 @@ export function CalendarDateAdd(
   if (calendar === 'iso8601') {
     const intermediate = Q(BalanceISOYearMonth(isoDate.Year + duration.Years, isoDate.Month + duration.Months));
     const regulated = Q(RegulateISODate(intermediate.Year, intermediate.Month, isoDate.Day, overflow));
-    const d = regulated.Day + duration.Days + 7 * duration.Weeks;
-    result = Q(BalanceISODate(regulated.Year, regulated.Month, d));
+    const days = regulated.Day + duration.Days + 7 * duration.Weeks;
+    result = Q(AddDaysToISODate(regulated, days));
   } else {
     result = Q(NonISODateAdd(calendar, isoDate, duration, overflow));
   }

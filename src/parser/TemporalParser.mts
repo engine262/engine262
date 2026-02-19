@@ -31,7 +31,7 @@ export interface ISODateTimeParseRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime */
-export declare function ParseISODateTime(isoString: string, allowedFormats: unknown): PlainCompletion<ISODateTimeParseRecord>;
+export declare function ParseISODateTime(isoString: string, allowedFormats: Array<'TemporalInstantString' | 'TemporalDateTimeString[~Zoned]' | 'TemporalTimeString' | 'TemporalMonthDayString' | 'TemporalYearMonthString' | 'TemporalDateTimeString[+Zoned]'>): PlainCompletion<ISODateTimeParseRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring */
 export declare function ParseTemporalCalendarString(isoString: string): PlainCompletion<string>;
@@ -80,7 +80,7 @@ export declare function ParseDateTimeUTCOffset(offsetString: string): number;
 // https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier
 export declare function ParseTimeZoneIdentifier(identifier: TimeZoneIdentifier): PlainCompletion<{ Name?: TimeZoneIdentifier; OffsetMinutes?: number }>;
 
-class DateParser {
+export class DateParser {
   public input: string;
 
   public pos = 0;
