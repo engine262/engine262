@@ -1,9 +1,12 @@
 import { GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
-import { FormatTimeString, GetDifferenceSettings, GetTemporalOverflowOption, RoundNumberToIncrement, Table21_LengthInNanoSeconds, TemporalUnit, ToIntegerWithTruncation } from '../../abstract-ops/temporal/temporal.mts';
+import {
+  FormatTimeString, GetDifferenceSettings, GetTemporalOverflowOption, RoundNumberToIncrement, Table21_LengthInNanoSeconds, TemporalUnit, ToIntegerWithTruncation,
+} from '../../abstract-ops/temporal/temporal.mts';
 import { GetISODateTimeFor } from '../../abstract-ops/temporal/time-zone.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import type { RoundingMode } from '../../abstract-ops/temporal/addition.mts';
 import type { TimeUnit } from '../../abstract-ops/temporal/temporal.mts';
+import { abs } from '../../abstract-ops/math.mts';
 import {
   CombineDateAndTimeDuration,
   CreateNegatedTemporalDuration,
@@ -22,7 +25,6 @@ import { isTemporalZonedDateTimeObject } from './ZonedDateTime.mts';
 import {
   Assert, Get, JSStringValue, ObjectValue, OrdinaryCreateFromConstructor, Q, surroundingAgent, Throw, UndefinedValue, Value, X, type FunctionObject, type Mutable, type OrdinaryObject, type PlainCompletion, type PlainEvaluator, type ValueEvaluator,
 } from '#self';
-import { abs } from '../../abstract-ops/math.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaintime-instances */
 export interface TemporalPlainTimeObject extends OrdinaryObject {
@@ -176,17 +178,17 @@ export function IsValidTime(hour: number, minute: number, second: number, millis
 /** https://tc39.es/proposal-temporal/#sec-temporal-balancetime */
 export function BalanceTime(hour: number, minute: number, second: number, millisecond: number, microsecond: number, nanosecond: number): TimeRecord {
   microsecond += Math.floor(nanosecond / 1000);
-  nanosecond = nanosecond % 1000;
+  nanosecond %= 1000;
   millisecond += Math.floor(microsecond / 1000);
-  microsecond = microsecond % 1000;
+  microsecond %= 1000;
   second += Math.floor(millisecond / 1000);
-  millisecond = millisecond % 1000;
+  millisecond %= 1000;
   minute += Math.floor(second / 60);
-  second = second % 60;
+  second %= 60;
   hour += Math.floor(minute / 60);
-  minute = minute % 60;
+  minute %= 60;
   const deltaDays = Math.floor(hour / 24);
-  hour = hour % 24;
+  hour %= 24;
   return CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond, deltaDays);
 }
 

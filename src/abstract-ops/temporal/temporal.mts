@@ -37,7 +37,7 @@ export function ISODateToEpochDays(year: number, month: number, date: number): n
     31, 30, 31, 30,
     31, 31, 30, 31, 30, 31,
   ];
-  for (let i = 0; i < m; ++i) {
+  for (let i = 0; i < m; i += 1) {
     t += monthDays[i];
   }
   Assert(EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1);
@@ -235,7 +235,7 @@ export const Table21_LengthInNanoSeconds = {
   [TemporalUnit.Millisecond]: 1e6,
   [TemporalUnit.Microsecond]: 1e3,
   [TemporalUnit.Nanosecond]: 1,
-} as const
+} as const;
 
 export function __IsDateUnit(unit: TemporalUnit): unit is DateUnit {
   return (unit === TemporalUnit.Year

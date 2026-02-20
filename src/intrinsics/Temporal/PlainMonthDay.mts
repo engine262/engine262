@@ -9,7 +9,9 @@ import {
 import { GetOptionsObject, ToZeroPaddedDecimalString } from '../../abstract-ops/temporal/addition.mts';
 import { GetTemporalOverflowOption, ISODateToFields } from '../../abstract-ops/temporal/temporal.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
-import { CreateISODateRecord, ISODateWithinLimits, PadISOYear, type ISODateRecord } from './PlainDate.mts';
+import {
+  CreateISODateRecord, ISODateWithinLimits, PadISOYear, type ISODateRecord,
+} from './PlainDate.mts';
 import {
   JSStringValue,
   ObjectValue,
@@ -39,7 +41,7 @@ export function isTemporalPlainMonthDayObject(o: Value): o is TemporalPlainMonth
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday */
 export function* ToTemporalMonthDay(
   item: Value,
-  options: Value = Value.undefined
+  options: Value = Value.undefined,
 ): ValueEvaluator<TemporalPlainMonthDayObject> {
   if (item instanceof ObjectValue) {
     if (isTemporalPlainMonthDayObject(item)) {
@@ -57,7 +59,7 @@ export function* ToTemporalMonthDay(
   if (!(item instanceof JSStringValue)) {
     return Throw.TypeError('$1 is not a string', item);
   }
-  let result = Q(ParseISODateTime(item.stringValue(), ['TemporalMonthDayString']));
+  const result = Q(ParseISODateTime(item.stringValue(), ['TemporalMonthDayString']));
   const calendar = result.Calendar ?? 'iso8601';
   const calendarType = Q(CanonicalizeCalendar(calendar));
   const resolvedOptions = Q(GetOptionsObject(options));
@@ -80,7 +82,7 @@ export function* ToTemporalMonthDay(
 export function* CreateTemporalMonthDay(
   isoDate: ISODateRecord,
   calendar: CalendarType,
-  newTarget?: FunctionObject
+  newTarget?: FunctionObject,
 ): ValueEvaluator<TemporalPlainMonthDayObject> {
   if (!ISODateWithinLimits(isoDate)) {
     return Throw.RangeError('PlainMonthDay out of range');
@@ -101,7 +103,7 @@ export function* CreateTemporalMonthDay(
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring */
 export function TemporalMonthDayToString(
   monthDay: TemporalPlainMonthDayObject,
-  showCalendar: 'auto' | 'always' | 'never' | 'critical'
+  showCalendar: 'auto' | 'always' | 'never' | 'critical',
 ): string {
   const month = ToZeroPaddedDecimalString(monthDay.ISODate.Month, 2);
   const day = ToZeroPaddedDecimalString(monthDay.ISODate.Day, 2);
