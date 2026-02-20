@@ -8,6 +8,7 @@ import {
   __ts_cast__, isArray, unreachable, type Mutable,
 } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+// @ts-ignore
 import PropertyValueAliases from '../unicode/PropertyValueAliases.json' with { type: 'json' };
 import {
   Table70_BinaryUnicodeProperties,

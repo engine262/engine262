@@ -15,6 +15,7 @@ import {
   UTF16SurrogatePairToCodePoint,
   type CharacterValueAcceptNode,
 } from '../static-semantics/all.mts';
+// @ts-ignore
 import PropertyValueAliases from '../unicode/PropertyValueAliases.json' with { type: 'json' };
 import { __ts_cast__, unreachable } from '../helpers.mts';
 import {

@@ -161,6 +161,8 @@ export interface Throw {
 'Array length must be uint32.'
   | 'Array length too big.'
   | 'BigInt has no unsigned right shift, use >> instead'
+  | 'Calendars are not equal'
+  | 'Cannot add a date to an instant'
   | 'Cannot call addInitializer after decoration is finished'
   | 'Cannot define private element to a non-extensible object'
   | 'Cannot divide by zero'
@@ -168,20 +170,37 @@ export interface Throw {
   | 'Decorators can only be used to decorate classes'
   | 'Decorators cannot appear on both sides of the export keyword'
   | 'Exponent of bigint must be positive'
+  | 'Invalid date'
+  | 'Invalid duration'
   | 'Invalid receiver'
+  | 'Invalid time'
+  | 'Multiple possible epoch nanoseconds'
+  | 'No matching offset found for the given date and time'
+  | 'No possible epoch nanoseconds'
   | 'Offset is out of bound'
+  | 'PlainDateTime outside of range'
+  | 'PlainMonthDay out of range'
+  | 'PlainYearMonth calendars do not match'
+  | 'PlainYearMonth out of range'
   | 'RegExp flags "v" and "u" cannot be used together'
+  | 'Resulting date-time is out of range'
+  | 'Time zones are not equal'
   | 'TypedArray out of bounds'
   ): ThrowCompletion;
   (m:
 '$1 cannot be used as a WeakMap key'
+  | '$1 does not look like a TemporalTimeLike object'
   | '$1 is not a constructor'
   | '$1 is not a function'
+  | '$1 is not a string'
+  | '$1 is not a valid epoch nanoseconds'
   | '$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer'
   | 'Accessor decorator must return an object or undefined, but $1 was returned'
   | 'Cannot mix BigInt and other types in $1 operation'
   | 'Class decorator must return a function or undefined, but $1 was returned'
   | 'Field decorator must return a function or undefined, but $1 was returned'
+  | 'Invalid time string $1'
+  | 'Invalid time zone identifier: $1'
   | 'Method decorator must return a function or undefined, but $1 was returned'
   | 'Private field $1 is not a getter'
   | 'Private field $1 is not a setter'
@@ -196,6 +215,9 @@ export interface Throw {
   | '$1 is not a $2'
   | 'Private element $1 is already defined on $2'
   , $1: Formattable, $2: Formattable): ThrowCompletion;
+  (m:
+'$1-$2-$3 is not a valid date'
+  , $1: Formattable, $2: Formattable, $3: Formattable): ThrowCompletion;
   // auto-generate end
   <const S extends string>(m: S, ...args: ParsePrintFormat<S>): ThrowCompletion;
 }

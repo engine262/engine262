@@ -1,6 +1,8 @@
 import unicodeCaseFoldingCommon from '@unicode/unicode-16.0.0/Case_Folding/C/symbols.js';
 import unicodeCaseFoldingSimple from '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js';
+// @ts-ignore
 import UnicodeSets from '../unicode/CodePointProperties.json' with { type: 'json' };
+// @ts-ignore
 import SequenceProperties from '../unicode/SequenceProperties.json' with { type: 'json' };
 import { Assert, Canonicalize, type RegExpRecord } from '#self';
 
