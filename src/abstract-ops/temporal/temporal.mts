@@ -7,6 +7,7 @@ import {
 import { InterpretTemporalDateTimeFields, isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ParseDateTimeUTCOffset, ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { R } from '../spec-types.mjs';
+import type { nsPerDay } from '../../intrinsics/Temporal/Instant.mts';
 import {
   GetOption, GetRoundingIncrementOption, GetRoundingModeOption, ToZeroPaddedDecimalString, UnsignedRoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
@@ -19,10 +20,9 @@ import { ToPrimitive, ToNumber } from '#self';
 import {
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, surroundingAgent, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
 } from '#self';
-import type { nsPerDay } from '../../intrinsics/Temporal/Instant.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
-// TODO: Review
+// TODO(temporal): Review
 export function ISODateToEpochDays(year: number, month: number, date: number): number {
   const resolvedYear = year + Math.floor(month / 12);
   const resolvedMonth = ((month % 12) + 12) % 12;
@@ -543,7 +543,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
       return { PlainRelativeTo: plainDate, ZonedRelativeTo: undefined };
     }
     calendar = Q(yield* GetTemporalCalendarIdentifierWithISODefault(value));
-    const fields = Q(yield* PrepareCalendarFields(calendar, value, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset-string', 'time-zone'], []));
+    const fields = Q(yield* PrepareCalendarFields(calendar, value, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset', 'time-zone'], []));
     const result = Q(yield* InterpretTemporalDateTimeFields(calendar, fields, 'constrain'));
     timeZone = fields.TimeZone as TimeZoneIdentifier;
     offsetString = fields.OffsetString;
@@ -584,7 +584,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   }
   let offsetNs;
   if (offsetBehaviour === 'option') {
-    offsetNs = ParseDateTimeUTCOffset(offsetString!);
+    offsetNs = X(ParseDateTimeUTCOffset(offsetString!));
   } else {
     offsetNs = 0;
   }

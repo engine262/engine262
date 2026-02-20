@@ -21,13 +21,13 @@ function TemporalNow_instant(): Value {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso */
-function TemporalNow_plainDateTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): Value {
+function TemporalNow_plainDateTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): PlainCompletion<Value> {
   const isoDateTime = Q(SystemDateTime(temporalTimeZoneLike));
   return X(CreateTemporalDateTime(isoDateTime, 'iso8601'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso */
-function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): Value {
+function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): PlainCompletion<Value> {
   let timeZone;
   if (temporalTimeZoneLike === Value.undefined) {
     timeZone = SystemTimeZoneIdentifier();
@@ -39,13 +39,13 @@ function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]: 
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso */
-function TemporalNow_plainDateISO([temporalTimeZoneLike = Value.undefined]: Arguments): Value {
+function TemporalNow_plainDateISO([temporalTimeZoneLike = Value.undefined]: Arguments): PlainCompletion<Value> {
   const isoDateTime = Q(SystemDateTime(temporalTimeZoneLike));
   return X(CreateTemporalDateTime(isoDateTime, 'iso8601'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaintimeiso */
-function TemporalNow_plainTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): Value {
+function TemporalNow_plainTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): PlainCompletion<Value> {
   const isoDateTime = Q(SystemDateTime(temporalTimeZoneLike));
   return X(CreateTemporalTime(isoDateTime.Time));
 }

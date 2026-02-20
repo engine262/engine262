@@ -2,9 +2,13 @@
 // Code here should move elsewhere after Temporal is merged.
 
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
+import { TimeValueToISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
+import { ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
+import { HourFromTime, MinFromTime, SecFromTime } from '../date-objects.mts';
 import { R as MathematicalValue } from '../spec-types.mjs';
 import { __ts_cast__ } from '../../helpers.mts';
-import { ToIntegerWithTruncation } from './temporal.mts';
+import { FormatTimeString, ToIntegerWithTruncation } from './temporal.mts';
+import { FormatOffsetTimeZoneIdentifier, type TimeZoneIdentifierRecord } from './time-zone.mts';
 import {
   Assert,
   Get,
@@ -13,7 +17,7 @@ import {
   MakeDay,
   MakeTime,
   NumberValue,
-  ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToBoolean, ToNumber, ToString, UndefinedValue, Value, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
+  ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToBoolean, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
@@ -164,6 +168,12 @@ export function GetNamedTimeZoneEpochNanoseconds(
   return [epochNanoseconds];
 }
 
+/** https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds */
+export function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier: string, _epochNanoseconds: bigint) {
+  Assert(timeZoneIdentifier === 'UTC');
+  return 0;
+}
+
 /** https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier */
 export function SystemTimeZoneIdentifier(): TimeZoneIdentifier {
   // 1. If the implementation only supports the UTC time zone, return "UTC".
@@ -173,16 +183,71 @@ export function SystemTimeZoneIdentifier(): TimeZoneIdentifier {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-localtime */
-export declare function LocalTime_TemporalEdited(t: number): number;
+export function LocalTime_TemporalEdited(t: number): number {
+  const systemTimeZoneIdentifier = SystemTimeZoneIdentifier();
+  const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
+  let offsetNs: number;
+  if (parseResult.OffsetMinutes !== undefined) {
+    offsetNs = parseResult.OffsetMinutes * (60 * 1e9);
+  } else {
+    offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, BigInt(t * 1e6));
+  }
+  const offsetMs = Math.trunc(offsetNs / 1e6);
+  return t + offsetMs;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-utc-t */
-export declare function UTC_TemporalEdited(t: number): number;
+export function UTC_TemporalEdited(t: number): number {
+  if (!Number.isFinite(t)) {
+    return NaN;
+  }
+  const systemTimeZoneIdentifier = SystemTimeZoneIdentifier();
+  const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
+  let offsetNs: number;
+  if (parseResult.OffsetMinutes !== undefined) {
+    offsetNs = parseResult.OffsetMinutes * (60 * 1e9);
+  } else {
+    const isoDateTime = TimeValueToISODateTimeRecord(t);
+    const possibleInstants = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, isoDateTime);
+    let disambiguatedInstant: bigint;
+    if (possibleInstants.length > 0) {
+      disambiguatedInstant = possibleInstants[0];
+    } else {
+      // TODO(temporal): review
+      // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, ℝ(YearFromTime(tBefore)), ℝ(MonthFromTime(tBefore)) + 1, ℝ(DateFromTime(tBefore)), ℝ(HourFromTime(tBefore)), ℝ(MinFromTime(tBefore)), ℝ(SecFromTime(tBefore)), ℝ(msFromTime(tBefore)), 0, 0TimeValueToISODateTimeRecord(tBefore)), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
+      let tBefore = Math.floor(t) - 1;
+      let possibleInstantsBefore: bigint[] = [];
+      while (possibleInstantsBefore.length === 0) {
+        possibleInstantsBefore = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, TimeValueToISODateTimeRecord(tBefore));
+        tBefore -= 1;
+      }
+      // iii. Let disambiguatedInstant be the last element of possibleInstantsBefore.
+      disambiguatedInstant = possibleInstantsBefore[possibleInstantsBefore.length - 1];
+    }
+    offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, disambiguatedInstant);
+  }
+  const offsetMs = Math.trunc(offsetNs / 1e6);
+  return t - offsetMs;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-timestring */
-export declare function TimeString(tv: number): string;
+export function TimeString(tv: number): string {
+  const timeString = FormatTimeString(R(HourFromTime(Value(tv))), R(MinFromTime(Value(tv))), R(SecFromTime(Value(tv))), 0, 0);
+  return `${timeString} GMT`;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-timezoneestring */
-export declare function TimeZoneString_TemporalEdited(tv: number): string;
+export function TimeZoneString_TemporalEdited(tv: number): string {
+  const systemTimeZoneIdentifier = SystemTimeZoneIdentifier();
+  let offsetMinutes = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier)).OffsetMinutes;
+  if (offsetMinutes === undefined) {
+    const offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, BigInt(tv * 1e6));
+    offsetMinutes = Math.trunc(offsetNs / (60 * 1e9));
+  }
+  const offsetString = FormatOffsetTimeZoneIdentifier(offsetMinutes, 'unseparated');
+  const tzName = '';
+  return offsetString + tzName;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-isoffsettimezoneidentifier */
 export declare function IsOffsetTimeZoneIdentifier(offsetString: string): boolean;
@@ -191,3 +256,6 @@ export declare function IsOffsetTimeZoneIdentifier(offsetString: string): boolea
 export function ToZeroPaddedDecimalString(n: number, minLength: number) {
   return n.toString().padStart(minLength, '0');
 }
+
+/** https://tc39.es/ecma262/#sec-availablenamedtimezoneidentifiers */
+export declare function AvailableNamedTimeZoneIdentifiers(): TimeZoneIdentifierRecord[];

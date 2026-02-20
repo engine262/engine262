@@ -1,10 +1,24 @@
-import { GetOptionsObject, GetUTCEpochNanoseconds, type RoundingMode } from '../../abstract-ops/temporal/addition.mts';
-import { abs } from '../../abstract-ops/math.mts';
-import type { TemporalUnit, TimeUnit } from '../../abstract-ops/temporal/temporal.mts';
-import { GetTemporalOverflowOption, ISODateToEpochDays } from '../../abstract-ops/temporal/temporal.mts';
 import {
+  GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString, type RoundingMode,
+} from '../../abstract-ops/temporal/addition.mts';
+import { abs } from '../../abstract-ops/math.mts';
+import {
+  FormatTimeString,
+  GetDifferenceSettings,
+  GetTemporalOverflowOption,
+  ISODateToEpochDays,
+  LargerOfTwoTemporalUnits,
+  TemporalUnit,
+  type DateUnit,
+  type TimeUnit,
+} from '../../abstract-ops/temporal/temporal.mts';
+import {
+  CalendarDateAdd,
+  CalendarDateUntil,
+  CalendarEquals,
   CalendarDateFromFields,
   CanonicalizeCalendar,
+  FormatCalendarAnnotation,
   GetTemporalCalendarIdentifierWithISODefault,
   PrepareCalendarFields,
   type CalendarFieldsRecord,
@@ -12,19 +26,49 @@ import {
 } from '../../abstract-ops/temporal/calendar.mts';
 import { GetISODateTimeFor } from '../../abstract-ops/temporal/time-zone.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
-import type { InternalDurationRecord, TemporalDurationObject } from './Duration.mts';
-import { AddDaysToISODate, CompareISODate, CreateISODateRecord, isTemporalPlainDateObject, type ISODateRecord } from './PlainDate.mts';
-import { BalanceTime, CompareTimeRecord, MidnightTimeRecord, RegulateTime, type TimeRecord } from './PlainTime.mts';
-import { isTemporalZonedDateTimeObject } from './ZonedDateTime.mts';
 import {
+  Add24HourDaysToTimeDuration,
+  AdjustDateDurationRecord,
+  CombineDateAndTimeDuration,
+  CreateNegatedTemporalDuration,
+  CreateTemporalDuration,
+  RoundRelativeDuration,
+  TemporalDurationFromInternal,
+  TimeDurationSign,
+  ToInternalDurationRecordWith24HourDays,
+  ToTemporalDuration,
+  TotalRelativeDuration,
+  ZeroDateDuration,
+  type InternalDurationRecord,
+  type TemporalDurationObject,
+  type TimeDuration,
+} from './Duration.mts';
+import {
+  AddDaysToISODate, CompareISODate, CreateISODateRecord, isTemporalPlainDateObject, PadISOYear, type ISODateRecord,
+} from './PlainDate.mts';
+import {
+  AddTime, BalanceTime, CompareTimeRecord, CreateTimeRecord, DifferenceTime, MidnightTimeRecord, RegulateTime, RoundTime, type TimeRecord,
+} from './PlainTime.mts';
+import { isTemporalZonedDateTimeObject } from './ZonedDateTime.mts';
+import { nsMaxInstant, nsMinInstant, nsPerDay } from './Instant.mts';
+import {
+  Assert,
+  DateFromTime,
+  HourFromTime,
   JSStringValue,
+  MinFromTime,
+  MonthFromTime,
+  msFromTime,
   ObjectValue,
   OrdinaryCreateFromConstructor,
   Q,
+  R,
+  SecFromTime,
   surroundingAgent,
   Throw,
   Value,
   X,
+  YearFromTime,
   type FunctionObject,
   type Mutable,
   type OrdinaryObject,
@@ -32,7 +76,6 @@ import {
   type PlainEvaluator,
   type ValueEvaluator,
 } from '#self';
-import { nsMaxInstant, nsMinInstant, nsPerDay } from './Instant.mts';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindatetime-instances */
 export interface TemporalPlainDateTimeObject extends OrdinaryObject {
@@ -51,7 +94,15 @@ export interface ISODateTimeRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timevaluetoisodatetimerecord */
-export declare function TimeValueToISODateTimeRecord(t: number): ISODateTimeRecord;
+export function TimeValueToISODateTimeRecord(t: number): ISODateTimeRecord {
+  const isoDate = CreateISODateRecord(
+    R(YearFromTime(t)),
+    R(MonthFromTime(t)) + 1,
+    R(DateFromTime(t)),
+  );
+  const time = CreateTimeRecord(R(HourFromTime(t)), R(MinFromTime(t)), R(SecFromTime(t)), R(msFromTime(t)), 0, 0);
+  return { ISODate: isoDate, Time: time };
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-combineisodateandtimerecord */
 export function CombineISODateAndTimeRecord(isoDate: ISODateRecord, time: TimeRecord): ISODateTimeRecord {
@@ -147,7 +198,15 @@ export function* CreateTemporalDateTime(isoDateTime: ISODateTimeRecord, calendar
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodatetimetostring */
-export declare function ISODateTimeToString(isoDateTime: ISODateTimeRecord, calendar: CalendarType, precision: number | 'minute' | 'auto', showCalendar: 'auto' | 'always' | 'never' | 'critical'): string;
+export function ISODateTimeToString(isoDateTime: ISODateTimeRecord, calendar: CalendarType, precision: number | 'minute' | 'auto', showCalendar: 'auto' | 'always' | 'never' | 'critical'): string {
+  const yearString = PadISOYear(isoDateTime.ISODate.Year);
+  const monthString = ToZeroPaddedDecimalString(isoDateTime.ISODate.Month, 2);
+  const dayString = ToZeroPaddedDecimalString(isoDateTime.ISODate.Day, 2);
+  const subSecondNanoseconds = isoDateTime.Time.Millisecond * 1e6 + isoDateTime.Time.Microsecond * 1e3 + isoDateTime.Time.Nanosecond;
+  const timeString = FormatTimeString(isoDateTime.Time.Hour, isoDateTime.Time.Minute, isoDateTime.Time.Second, subSecondNanoseconds, precision);
+  const calendarString = FormatCalendarAnnotation(calendar, showCalendar);
+  return `${yearString}-${monthString}-${dayString}T${timeString}${calendarString}`;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime */
 export function CompareISODateTime(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord): 1 | -1 | 0 {
@@ -159,19 +218,99 @@ export function CompareISODateTime(isoDateTime1: ISODateTimeRecord, isoDateTime2
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-roundisodatetime */
-export declare function RoundISODateTime(isoDateTime: ISODateTimeRecord, increment: number, unit: TimeUnit | 'day', roundingMode: RoundingMode): ISODateTimeRecord;
+export function RoundISODateTime(isoDateTime: ISODateTimeRecord, increment: number, unit: TimeUnit | TemporalUnit.Day, roundingMode: RoundingMode): ISODateTimeRecord {
+  Assert(ISODateTimeWithinLimits(isoDateTime));
+  const roundedTime = RoundTime(isoDateTime.Time, increment, unit, roundingMode);
+  const balanceResult = AddDaysToISODate(isoDateTime.ISODate, roundedTime.Days);
+  return CombineISODateAndTimeRecord(balanceResult, roundedTime);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime */
-export declare function DifferenceISODateTime(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord, calendar: CalendarType, largestUnit: TemporalUnit): InternalDurationRecord;
+export function DifferenceISODateTime(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord, calendar: CalendarType, largestUnit: TemporalUnit): InternalDurationRecord {
+  Assert(ISODateTimeWithinLimits(isoDateTime1));
+  Assert(ISODateTimeWithinLimits(isoDateTime2));
+  let timeDuration = DifferenceTime(isoDateTime1.Time, isoDateTime2.Time);
+  const timeSign = TimeDurationSign(timeDuration);
+  const dateSign = CompareISODate(isoDateTime1.ISODate, isoDateTime2.ISODate);
+  let adjustedDate = isoDateTime2.ISODate;
+  if (timeSign === dateSign) {
+    adjustedDate = AddDaysToISODate(adjustedDate, timeSign);
+    timeDuration = X(Add24HourDaysToTimeDuration(timeDuration, -timeSign));
+  }
+  const dateLargestUnit = LargerOfTwoTemporalUnits(TemporalUnit.Day, largestUnit);
+  const dateDifference = CalendarDateUntil(calendar, isoDateTime1.ISODate, adjustedDate, dateLargestUnit as DateUnit);
+  if (largestUnit !== dateLargestUnit) {
+    timeDuration = X(Add24HourDaysToTimeDuration(timeDuration, dateDifference.Days));
+    dateDifference.Days = 0;
+  }
+  return CombineDateAndTimeDuration(dateDifference, timeDuration);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithrounding */
-export declare function DifferencePlainDateTimeWithRounding(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord, calendar: CalendarType, largestUnit: TemporalUnit, roundingIncrement: number, smallestUnit: TemporalUnit, roundingMode: RoundingMode): PlainCompletion<InternalDurationRecord>;
+export function DifferencePlainDateTimeWithRounding(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord, calendar: CalendarType, largestUnit: TemporalUnit, roundingIncrement: number, smallestUnit: TemporalUnit, roundingMode: RoundingMode): PlainCompletion<InternalDurationRecord> {
+  if (CompareISODateTime(isoDateTime1, isoDateTime2) === 0) {
+    return CombineDateAndTimeDuration(ZeroDateDuration(), 0 as TimeDuration);
+  }
+  if (!ISODateTimeWithinLimits(isoDateTime1) || !ISODateTimeWithinLimits(isoDateTime2)) {
+    return Throw.RangeError('PlainDateTime outside of range');
+  }
+  const diff = DifferenceISODateTime(isoDateTime1, isoDateTime2, calendar, largestUnit);
+  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1) {
+    return diff;
+  }
+  const originEpochNs = GetUTCEpochNanoseconds(isoDateTime1);
+  const destEpochNs = GetUTCEpochNanoseconds(isoDateTime2);
+  return RoundRelativeDuration(diff, originEpochNs, destEpochNs, isoDateTime1, undefined, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithtotal */
-export declare function DifferencePlainDateTimeWithTotal(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord, calendar: CalendarType, unit: TemporalUnit): PlainCompletion<number>;
+export function DifferencePlainDateTimeWithTotal(isoDateTime1: ISODateTimeRecord, isoDateTime2: ISODateTimeRecord, calendar: CalendarType, unit: TemporalUnit): PlainCompletion<number> {
+  if (CompareISODateTime(isoDateTime1, isoDateTime2) === 0) {
+    return 0;
+  }
+  if (!ISODateTimeWithinLimits(isoDateTime1) || !ISODateTimeWithinLimits(isoDateTime2)) {
+    return Throw.RangeError('PlainDateTime outside of range');
+  }
+  const diff = DifferenceISODateTime(isoDateTime1, isoDateTime2, calendar, unit);
+  if (unit === TemporalUnit.Nanosecond) {
+    return diff.Time;
+  }
+  const originEpochNs = GetUTCEpochNanoseconds(isoDateTime1);
+  const destEpochNs = GetUTCEpochNanoseconds(isoDateTime2);
+  return TotalRelativeDuration(diff, originEpochNs, destEpochNs, isoDateTime1, undefined, calendar, unit);
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime */
-export declare function DifferenceTemporalPlainDateTime(operation: 'since' | 'until', dateTime: TemporalPlainDateTimeObject, other: Value, options: Value): ValueEvaluator<TemporalDurationObject>;
+export function* DifferenceTemporalPlainDateTime(operation: 'since' | 'until', dateTime: TemporalPlainDateTimeObject, _other: Value, options: Value): ValueEvaluator<TemporalDurationObject> {
+  const other = Q(yield* ToTemporalDateTime(_other));
+  if (!CalendarEquals(dateTime.Calendar, other.Calendar)) {
+    return Throw.RangeError('Calendars are not equal');
+  }
+  const resolvedOptions = Q(GetOptionsObject(options));
+  const settings = Q(yield* GetDifferenceSettings(operation, resolvedOptions, 'datetime', [], TemporalUnit.Nanosecond, TemporalUnit.Day));
+  if (CompareISODateTime(dateTime.ISODateTime, other.ISODateTime) === 0) {
+    return X(CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  }
+  const internalDuration = Q(DifferencePlainDateTimeWithRounding(dateTime.ISODateTime, other.ISODateTime, dateTime.Calendar, settings.LargestUnit, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode));
+  let result = X(TemporalDurationFromInternal(internalDuration, settings.LargestUnit));
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtodatetime */
-export declare function AddDurationToDateTime(operation: 'add' | 'subtract', dateTime: TemporalPlainDateTimeObject, temporalDurationLike: Value, options: Value): ValueEvaluator<TemporalPlainDateTimeObject>;
+export function* AddDurationToDateTime(operation: 'add' | 'subtract', dateTime: TemporalPlainDateTimeObject, temporalDurationLike: Value, options: Value): ValueEvaluator<TemporalPlainDateTimeObject> {
+  let duration = Q(yield* ToTemporalDuration(temporalDurationLike));
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  const resolvedOptions = Q(GetOptionsObject(options));
+  const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
+  const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+  const timeResult = AddTime(dateTime.ISODateTime.Time, internalDuration.Time);
+  const dateDuration = Q(AdjustDateDurationRecord(internalDuration.Date, timeResult.Days));
+  const addedDate = Q(CalendarDateAdd(dateTime.Calendar, dateTime.ISODateTime.ISODate, dateDuration, overflow));
+  const result = CombineISODateAndTimeRecord(addedDate, timeResult);
+  return Q(yield* CreateTemporalDateTime(result, dateTime.Calendar));
+}

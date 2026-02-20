@@ -40,7 +40,13 @@ export declare function ParseTemporalCalendarString(isoString: string): PlainCom
 export declare function ParseTemporalDurationString(isoString: string): ValueCompletion<TemporalDurationObject>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring */
-export declare function ParseTemporalTimeZoneString(timeZoneString: string): PlainCompletion<unknown>;
+export declare function ParseTemporalTimeZoneString(timeZoneString: string): PlainCompletion<TimeZoneIdentifierParseRecord>;
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-time-zone-identifier-parse-records */
+export interface TimeZoneIdentifierParseRecord {
+  Name: string | undefined;
+  OffsetMinutes: number | undefined;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsemonthcode */
 export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ MonthNumber: number; IsLeapMonth: boolean }> {
@@ -75,10 +81,10 @@ export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ Mont
 }
 
 /** https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset */
-export declare function ParseDateTimeUTCOffset(offsetString: string): number;
+export declare function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<number>;
 
 // https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier
-export declare function ParseTimeZoneIdentifier(identifier: TimeZoneIdentifier): PlainCompletion<{ Name?: TimeZoneIdentifier; OffsetMinutes?: number }>;
+export declare function ParseTimeZoneIdentifier(identifier: string): PlainCompletion<{ Name?: TimeZoneIdentifier; OffsetMinutes?: number }>;
 
 export class DateParser {
   public input: string;

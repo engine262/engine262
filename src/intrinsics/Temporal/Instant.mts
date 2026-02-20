@@ -64,7 +64,7 @@ export const nsMaxInstant = 8.64e21;
 export const nsMinInstant = -8.64e21;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds */
-export function IsValidEpochNanoseconds(epochNanoseconds: bigint): boolean {
+export function IsValidEpochNanoseconds(epochNanoseconds: bigint | number): boolean {
   if (epochNanoseconds < nsMinInstant || epochNanoseconds > nsMaxInstant) {
     return false;
   }
@@ -103,7 +103,7 @@ export function* ToTemporalInstant(item: Value): ValueEvaluator<TemporalInstantO
     const b = parsed.TimeZone.Z;
     Assert((a || b) && !(a && b));
   }
-  const offsetNanoseconds = parsed.TimeZone.Z ? 0 : ParseDateTimeUTCOffset(parsed.TimeZone.OffsetString!);
+  const offsetNanoseconds = parsed.TimeZone.Z ? 0 : X(ParseDateTimeUTCOffset(parsed.TimeZone.OffsetString!));
   const time = parsed.Time;
   Assert(time !== 'start-of-day');
   const balanced = BalanceISODateTime(parsed.Year!, parsed.Month, parsed.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, time.Nanosecond - offsetNanoseconds);
@@ -164,7 +164,7 @@ export function RoundTemporalInstant(
 export function TemporalInstantToString(
   instant: TemporalInstantObject,
   timeZone: TimeZoneIdentifier | undefined,
-  precision: number | 'minute' | 'auto'
+  precision: number | 'minute' | 'auto',
 ): string {
   let outputTimeZone = timeZone;
   if (outputTimeZone === undefined) {
@@ -188,7 +188,7 @@ export function* DifferenceTemporalInstant(
   operation: 'since' | 'until',
   instant: TemporalInstantObject,
   _other: Value,
-  options: Value
+  options: Value,
 ): ValueEvaluator<TemporalDurationObject> {
   const other = Q(yield* ToTemporalInstant(_other));
   const resolvedOptions = Q(GetOptionsObject(options));
@@ -205,7 +205,7 @@ export function* DifferenceTemporalInstant(
 export function* AddDurationToInstant(
   operation: 'add' | 'subtract',
   instant: TemporalInstantObject,
-  temporalDurationLike: Value
+  temporalDurationLike: Value,
 ): ValueEvaluator<TemporalInstantObject> {
   let duration = Q(yield* ToTemporalDuration(temporalDurationLike));
   if (operation === 'subtract') {

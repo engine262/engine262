@@ -1,6 +1,9 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import { abs } from '../../abstract-ops/math.mts';
 import {
+  CalendarDateAdd,
+  CalendarDateUntil,
+  CalendarEquals,
   CalendarISOToDate,
   CalendarDateFromFields,
   CanonicalizeCalendar,
@@ -11,23 +14,39 @@ import {
 } from '../../abstract-ops/temporal/calendar.mts';
 import { GetISODateTimeFor } from '../../abstract-ops/temporal/time-zone.mts';
 import { ISODaysInMonth } from '../../abstract-ops/temporal/calendar.mts';
-import { GetOptionsObject, ToZeroPaddedDecimalString } from '../../abstract-ops/temporal/addition.mts';
-import { GetTemporalOverflowOption } from '../../abstract-ops/temporal/temporal.mts';
+import { GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from '../../abstract-ops/temporal/addition.mts';
 import {
+  GetDifferenceSettings, GetTemporalOverflowOption, TemporalUnit,
+  EpochDaysToEpochMs,
+  EpochTimeToDate,
+  EpochTimeToEpochYear,
+  EpochTimeToMonthInYear,
+  ISODateToEpochDays,
   ToIntegerWithTruncation,
+  type DateUnit,
 } from '../../abstract-ops/temporal/temporal.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { CombineISODateAndTimeRecord, ISODateTimeWithinLimits, isTemporalPlainDateTimeObject } from './PlainDateTime.mts';
 import { isTemporalZonedDateTimeObject } from './ZonedDateTime.mts';
-import type { TemporalDurationObject } from './Duration.mts';
+import {
+  CombineDateAndTimeDuration,
+  CreateTemporalDuration,
+  CreateNegatedTemporalDuration,
+  RoundRelativeDuration,
+  TemporalDurationFromInternal,
+  ToDateDurationRecordWithoutTime,
+  ToTemporalDuration,
+  type TemporalDurationObject,
+  type TimeDuration,
+} from './Duration.mts';
+import { BalanceISOYearMonth } from './PlainYearMonth.mts';
+import { MidnightTimeRecord, NoonTimeRecord } from './PlainTime.mts';
 import {
   Assert, type Realm, Value, UndefinedValue, surroundingAgent, Q, JSStringValue, type FunctionCallContext, type Arguments, F, type OrdinaryObject, type FunctionObject, type ValueEvaluator, ObjectValue, OrdinaryCreateFromConstructor, type Mutable,
   Throw,
   X,
   type PlainCompletion,
 } from '#self';
-import { BalanceISOYearMonth } from './PlainYearMonth.mts';
-import { NoonTimeRecord } from './PlainTime.mts';
 
 export interface TemporalPlainDateObject extends OrdinaryObject {
   /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindate-instances */
@@ -92,7 +111,7 @@ export function bootstrapTemporalPlainDate(realmRec: Realm) {
 /** https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record */
 export function CreateISODateRecord(y: number, m: number, d: number): ISODateRecord {
   Assert(IsValidISODate(y, m, d));
-  return { Year: y, Month: m, Day: d, };
+  return { Year: y, Month: m, Day: d };
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate */
@@ -163,9 +182,8 @@ export function CompareSurpasses(sign: 1 | -1, year: number, monthOrCode: number
       if (monthOrCode > target.MonthCode) {
         return true;
       }
-    }
-    // If target.[[MonthCode]] is lexicographically greater than monthOrCode, return true.
-    else if (target.MonthCode > monthOrCode) {
+    } else if (target.MonthCode > monthOrCode) {
+      // If target.[[MonthCode]] is lexicographically greater than monthOrCode, return true.
       return true;
     }
   } else if (typeof monthOrCode === 'number' && monthOrCode !== target.Month) {
@@ -233,7 +251,11 @@ export function IsValidISODate(year: number, month: number, day: number): boolea
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-adddaystoisodate */
-export declare function AddDaysToISODate(isoDate: ISODateRecord, days: number): ISODateRecord;
+export function AddDaysToISODate(isoDate: ISODateRecord, days: number): ISODateRecord {
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day) + days;
+  const ms = EpochDaysToEpochMs(epochDays, 0);
+  return CreateISODateRecord(EpochTimeToEpochYear(ms), EpochTimeToMonthInYear(ms) + 1, EpochTimeToDate(ms));
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-padisoyear */
 export function PadISOYear(y: number): string {
@@ -272,7 +294,42 @@ export function CompareISODate(isoDate1: ISODateRecord, isoDate2: ISODateRecord)
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindate */
-export declare function DifferenceTemporalPlainDate(operation: 'since' | 'until', temproalDate: TemporalPlainDateObject, other: Value, options: Value): ValueEvaluator<TemporalDurationObject>;
+export function* DifferenceTemporalPlainDate(operation: 'since' | 'until', temporalDate: TemporalPlainDateObject, _other: Value, options: Value): ValueEvaluator<TemporalDurationObject> {
+  const other = Q(yield* ToTemporalDate(_other));
+  if (!CalendarEquals(temporalDate.Calendar, other.Calendar)) {
+    return Throw.RangeError('Calendars are not equal');
+  }
+  const resolvedOptions = Q(GetOptionsObject(options));
+  const settings = Q(yield* GetDifferenceSettings(operation, resolvedOptions, 'date', [], TemporalUnit.Day, TemporalUnit.Day));
+  if (CompareISODate(temporalDate.ISODate, other.ISODate) === 0) {
+    return X(CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  }
+  const dateDifference = CalendarDateUntil(temporalDate.Calendar, temporalDate.ISODate, other.ISODate, settings.LargestUnit as DateUnit);
+  let duration = CombineDateAndTimeDuration(dateDifference, 0 as TimeDuration);
+  if (settings.SmallestUnit !== TemporalUnit.Day || settings.RoundingIncrement !== 1) {
+    const isoDateTime = CombineISODateAndTimeRecord(temporalDate.ISODate, MidnightTimeRecord());
+    const originEpochNs = GetUTCEpochNanoseconds(isoDateTime);
+    const isoDateTimeOther = CombineISODateAndTimeRecord(other.ISODate, MidnightTimeRecord());
+    const destEpochNs = GetUTCEpochNanoseconds(isoDateTimeOther);
+    duration = Q(RoundRelativeDuration(duration, originEpochNs, destEpochNs, isoDateTime, undefined, temporalDate.Calendar, settings.LargestUnit, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode));
+  }
+  let result = X(TemporalDurationFromInternal(duration, TemporalUnit.Day));
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtodate */
-export declare function AddDurationToDate(operation: 'add' | 'subtract', temporalDate: TemporalPlainDateObject, temporalDurationLike: Value, options: Value): ValueEvaluator<TemporalPlainDateObject>;
+export function* AddDurationToDate(operation: 'add' | 'subtract', temporalDate: TemporalPlainDateObject, temporalDurationLike: Value, options: Value): ValueEvaluator<TemporalPlainDateObject> {
+  const calendar = temporalDate.Calendar;
+  let duration = Q(yield* ToTemporalDuration(temporalDurationLike));
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  const dateDuration = ToDateDurationRecordWithoutTime(duration);
+  const resolvedOptions = Q(GetOptionsObject(options));
+  const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
+  const result = Q(CalendarDateAdd(calendar, temporalDate.ISODate, dateDuration, overflow));
+  return X(CreateTemporalDate(result, calendar));
+}

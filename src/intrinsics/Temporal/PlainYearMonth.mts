@@ -11,7 +11,9 @@ import {
   type CalendarType,
 } from '../../abstract-ops/temporal/calendar.mts';
 import { GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from '../../abstract-ops/temporal/addition.mts';
-import { GetDifferenceSettings, GetTemporalOverflowOption, ISODateToFields, TemporalUnit, type DateUnit } from '../../abstract-ops/temporal/temporal.mts';
+import {
+  GetDifferenceSettings, GetTemporalOverflowOption, ISODateToFields, TemporalUnit, type DateUnit,
+} from '../../abstract-ops/temporal/temporal.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import {
   AdjustDateDurationRecord,
@@ -26,7 +28,9 @@ import {
   type TimeDuration,
 } from './Duration.mts';
 import { CombineISODateAndTimeRecord } from './PlainDateTime.mts';
-import { CompareISODate, CreateISODateRecord, PadISOYear, type ISODateRecord } from './PlainDate.mts';
+import {
+  CompareISODate, CreateISODateRecord, PadISOYear, type ISODateRecord,
+} from './PlainDate.mts';
 import { MidnightTimeRecord } from './PlainTime.mts';
 import {
   JSStringValue,
@@ -63,7 +67,7 @@ export interface ISOYearMonthRecord {
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth */
 export function* ToTemporalYearMonth(
   item: Value,
-  options: Value = Value.undefined
+  options: Value = Value.undefined,
 ): ValueEvaluator<TemporalPlainYearMonthObject> {
   if (item instanceof ObjectValue) {
     if (isTemporalPlainYearMonthObject(item)) {
@@ -97,7 +101,7 @@ export function* ToTemporalYearMonth(
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthwithinlimits */
 export function ISOYearMonthWithinLimits(
-  isoDate: ISODateRecord
+  isoDate: ISODateRecord,
 ): boolean {
   if (isoDate.Year < -271821 || isoDate.Year > 275760) return false;
   if (isoDate.Year === -271821 && isoDate.Month < 4) return false;
@@ -108,10 +112,10 @@ export function ISOYearMonthWithinLimits(
 /** https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth */
 export function BalanceISOYearMonth(
   year: number,
-  month: number
+  month: number,
 ): ISOYearMonthRecord {
   year += Math.floor((month - 1) / 12);
-  month = (month - 1) % 12 + 1;
+  month = ((month - 1) % 12) + 1;
   return {
     Year: year,
     Month: month,
@@ -122,7 +126,7 @@ export function BalanceISOYearMonth(
 export function* CreateTemporalYearMonth(
   isoDate: ISODateRecord,
   calendar: CalendarType,
-  newTarget?: FunctionObject
+  newTarget?: FunctionObject,
 ): ValueEvaluator<TemporalPlainYearMonthObject> {
   if (!ISOYearMonthWithinLimits(isoDate)) {
     return Throw.RangeError('PlainYearMonth out of range');
@@ -143,7 +147,7 @@ export function* CreateTemporalYearMonth(
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring */
 export function TemporalYearMonthToString(
   yearMonth: TemporalPlainYearMonthObject,
-  showCalendar: 'auto' | 'always' | 'never' | 'critical'
+  showCalendar: 'auto' | 'always' | 'never' | 'critical',
 ): string {
   const year = PadISOYear(yearMonth.ISODate.Year);
   const month = ToZeroPaddedDecimalString(yearMonth.ISODate.Month, 2);
@@ -161,7 +165,7 @@ export function* DifferenceTemporalPlainYearMonth(
   operation: 'since' | 'until',
   yearMonth: TemporalPlainYearMonthObject,
   _other: Value,
-  options: Value
+  options: Value,
 ): ValueEvaluator<TemporalDurationObject> {
   const other = Q(yield* ToTemporalYearMonth(_other));
   const calendar = yearMonth.Calendar;
@@ -197,8 +201,8 @@ export function* DifferenceTemporalPlainYearMonth(
     const destEpochNs = GetUTCEpochNanoseconds(isoDateTimeOther);
     duration = Q(RoundRelativeDuration(
       duration,
-      Number(originEpochNs),
-      Number(destEpochNs),
+      originEpochNs,
+      destEpochNs,
       isoDateTime,
       undefined,
       calendar,
@@ -220,7 +224,7 @@ export function* AddDurationToYearMonth(
   operation: 'add' | 'subtract',
   yearMonth: TemporalPlainYearMonthObject,
   temporalDurationLike: Value,
-  options: Value
+  options: Value,
 ): ValueEvaluator<TemporalPlainYearMonthObject> {
   let duration = Q(yield* ToTemporalDuration(temporalDurationLike));
   if (operation === 'subtract') {

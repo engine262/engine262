@@ -10,6 +10,7 @@ import { ParseMonthCode, ParseTemporalCalendarString } from '../../parser/Tempor
 import { isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { isTemporalPlainMonthDayObject } from '../../intrinsics/Temporal/PlainMonthDay.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
+import { ToZeroPaddedDecimalString } from './addition.mts';
 import type { YearWeekRecord } from './addition.mts';
 import {
   EpochDaysToEpochMs,
@@ -60,7 +61,14 @@ export function AvailableCalendars(): CalendarType[] {
 export type MonthCode = string & { __brand: 'MonthCode' };
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createmonthcode */
-export declare function CreateMonthCode(monthNumber: number, isLeapMonth: boolean): MonthCode;
+export function CreateMonthCode(monthNumber: number, isLeapMonth: boolean): MonthCode {
+  if (!isLeapMonth) Assert(monthNumber > 0);
+  const numberPart = ToZeroPaddedDecimalString(monthNumber, 2);
+  if (isLeapMonth) {
+    return `M${numberPart}L` as MonthCode;
+  }
+  return `M${numberPart}` as MonthCode;
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendar-date-records */
 export interface CalendarDateRecord {
@@ -107,7 +115,7 @@ export enum Table19_Conversion {
   ToOffsetString = 'to-offset-string',
 }
 
-export type CalendarFieldsRecordEnumerationKey = 'era' | 'era-year' | 'year' | 'month' | 'month-code' | 'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond' | 'offset-string' | 'time-zone';
+export type CalendarFieldsRecordEnumerationKey = 'era' | 'era-year' | 'year' | 'month' | 'month-code' | 'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond' | 'offset' | 'time-zone';
 
 export const Table19_CalendarFieldsRecordFields = [
   /* eslint-disable object-curly-newline */
@@ -123,7 +131,7 @@ export const Table19_CalendarFieldsRecordFields = [
   { FieldName: 'Millisecond', DefaultValue: 0, PropertyKey: 'millisecond', EnumerationKey: 'millisecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
   { FieldName: 'Microsecond', DefaultValue: 0, PropertyKey: 'microsecond', EnumerationKey: 'microsecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
   { FieldName: 'Nanosecond', DefaultValue: 0, PropertyKey: 'nanosecond', EnumerationKey: 'nanosecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'OffsetString', DefaultValue: undefined, PropertyKey: 'offsetString', EnumerationKey: 'offset-string', Conversion: Table19_Conversion.ToOffsetString },
+  { FieldName: 'OffsetString', DefaultValue: undefined, PropertyKey: 'offsetString', EnumerationKey: 'offset', Conversion: Table19_Conversion.ToOffsetString },
   { FieldName: 'TimeZone', DefaultValue: undefined, PropertyKey: 'timeZone', EnumerationKey: 'time-zone', Conversion: Table19_Conversion.ToTemporalTimeZoneIdentifier },
   /* eslint-enable object-curly-newline */
 ] as const satisfies {
