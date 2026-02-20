@@ -24,7 +24,7 @@ import {
   ToIntegerWithTruncation, ToOffsetString, ToPositiveIntegerWithTruncation, type DateUnit,
 } from './temporal.mts';
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
-import { unreachable_UnsupportedCalendar } from './extra-calendar.mts';
+import { mark_OtherCalendarNotImplemented, unreachable_OtherCalendarNotImplemented } from './not-implemented.mts';
 import {
   Assert,
   F,
@@ -35,6 +35,7 @@ import {
   Q,
   R,
   surroundingAgent,
+  Throw,
   ToString,
   Value,
   X,
@@ -48,13 +49,14 @@ export type CalendarType = 'iso8601';
 export function CanonicalizeCalendar(id: string): PlainCompletion<CalendarType> {
   const calendars = AvailableCalendars();
   if (!calendars.includes(id.toLowerCase() as CalendarType)) {
-    return surroundingAgent.Throw('RangeError', 'InvalidCalendar', id);
+    return Throw.RangeError('$1 is not a supported calendar', id);
   }
   return CanonicalizeUValue('ca', id) as CalendarType;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars */
 export function AvailableCalendars(): CalendarType[] {
+  mark_OtherCalendarNotImplemented();
   return ['iso8601'];
 }
 
@@ -221,7 +223,7 @@ export function* PrepareCalendarFields(
       result[FieldName] = assignValue as any;
     } else if (isArray(requiredFieldNames)) {
       if (requiredFieldNames.includes(key)) {
-        return surroundingAgent.Throw('TypeError', 'MissingRequiredField', key);
+        return Throw.TypeError('$1 is a required on object $2', key, fields);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       result[FieldName] = DefaultValue as any;
@@ -229,7 +231,7 @@ export function* PrepareCalendarFields(
   }
 
   if (requiredFieldNames === 'partial' && !any) {
-    return surroundingAgent.Throw('TypeError', 'NoFieldsPresent');
+    return Throw.TypeError('$1 is not a TemporalTimeLike object', fields);
   }
   return result;
 }
@@ -291,7 +293,8 @@ export function NonISODateAdd(
   _duration: DateDurationRecord,
   _overflow: 'constrain' | 'reject',
 ): never {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd */
@@ -311,7 +314,7 @@ export function CalendarDateAdd(
     result = Q(NonISODateAdd(calendar, isoDate, duration, overflow));
   }
   if (!ISODateWithinLimits(result)) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', 'ISODate');
+    return Throw.RangeError('Resulting ISODate is out of range');
   }
   return result;
 }
@@ -323,7 +326,8 @@ export function NonISODateUntil(
   _two: ISODateRecord,
   _largestUnit: DateUnit,
 ): never {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil */
@@ -386,7 +390,7 @@ export function ToTemporalCalendarIdentifier(temporalCalendarLike: Value): Plain
     }
   }
   if (!(temporalCalendarLike instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', temporalCalendarLike);
+    return Throw.TypeError('temporalCalendarLike must be a string or a Temporal object, but got $1', temporalCalendarLike);
   }
   const identifier = Q(ParseTemporalCalendarString(temporalCalendarLike.stringValue()));
   return Q(CanonicalizeCalendar(identifier));
@@ -417,7 +421,7 @@ export function* CalendarDateFromFields(
   Q(yield* CalendarResolveFields(calendar, fields, 'date'));
   const result = Q(CalendarDateToISO(calendar, fields, overflow));
   if (!ISODateWithinLimits(result)) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', 'ISODate');
+    return Throw.RangeError('Resulting ISODate is out of range');
   }
   return result;
 }
@@ -434,7 +438,7 @@ export function* CalendarYearMonthFromFields(
   fields.Day = firstDayIndex;
   const result = Q(CalendarDateToISO(calendar, fields, overflow));
   if (!ISODateWithinLimits(result)) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', 'ISODate');
+    return Throw.RangeError('Resulting ISODate is out of range');
   }
   return result;
 }
@@ -448,7 +452,7 @@ export function* CalendarMonthDayFromFields(
   Q(yield* CalendarResolveFields(calendar, fields, 'month-day'));
   const result = Q(CalendarMonthDayToISOReferenceDate(calendar, fields, overflow));
   if (!ISODateWithinLimits(result)) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', 'ISODate');
+    return Throw.RangeError('Resulting ISODate is out of range');
   }
   return result;
 }
@@ -545,7 +549,8 @@ export function NonISOCalendarDateToISO(
   _fields: CalendarFieldsRecord,
   _overflow: 'constrain' | 'reject',
 ): PlainCompletion<ISODateRecord> {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendardatetoiso */
@@ -567,7 +572,8 @@ export function NonISOMonthDayToISOReferenceDate(
   _fields: CalendarFieldsRecord,
   _overflow: 'constrain' | 'reject',
 ): never {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdaytoisoreferencedate */
@@ -593,7 +599,8 @@ export function NonISOCalendarISOToDate(
   _calendar: CalendarType,
   _isoDate: ISODateRecord,
 ): CalendarDateRecord {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendarisotodate */
@@ -631,7 +638,8 @@ export function CalendarExtraFields(
   if (calendar === 'iso8601') {
     return [];
   }
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-nonisofieldkeystoignore */
@@ -639,7 +647,8 @@ export function NonISOFieldKeysToIgnore(
   _calendar: CalendarType,
   _keys: readonly CalendarFieldsRecordEnumerationKey[],
 ): CalendarFieldsRecordEnumerationKey[] {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendarfieldkeystoignore */
@@ -668,7 +677,8 @@ export function NonISOResolveFields(
   _fields: CalendarFieldsRecord,
   _type: 'date' | 'year-month' | 'month-day',
 ): CalendarFieldsRecord {
-  unreachable_UnsupportedCalendar();
+  mark_OtherCalendarNotImplemented();
+  unreachable_OtherCalendarNotImplemented();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendarresolvefields */
@@ -679,28 +689,28 @@ export function* CalendarResolveFields(
 ): PlainEvaluator<void> {
   if (calendar === 'iso8601') {
     if ((type === 'date' || type === 'year-month') && fields.Year === undefined) {
-      return surroundingAgent.Throw('TypeError', 'MissingRequiredField', 'year');
+      return Throw.TypeError('"year" is required');
     }
     if ((type === 'date' || type === 'month-day') && fields.Day === undefined) {
-      return surroundingAgent.Throw('TypeError', 'MissingRequiredField', 'day');
+      return Throw.TypeError('"day" is required');
     }
     const month = fields.Month;
     const monthCode = fields.MonthCode;
     if (monthCode === undefined) {
       if (month === undefined) {
-        return surroundingAgent.Throw('TypeError', 'MissingRequiredField', 'month-code or month');
+        return Throw.TypeError('"month-code" or "month" is required');
       }
     }
     Assert(typeof monthCode === 'string');
     const parsedMonthCode = Q(yield* ParseMonthCode(monthCode));
     if (parsedMonthCode.IsLeapMonth) {
-      return surroundingAgent.Throw('RangeError', 'InvalidLeapMonth');
+      return Throw.RangeError('Invalid leap month');
     }
     if (parsedMonthCode.MonthNumber > 12) {
-      return surroundingAgent.Throw('RangeError', 'InvalidMonth');
+      return Throw.RangeError('Invalid month');
     }
     if (month !== undefined && month !== parsedMonthCode.MonthNumber) {
-      return surroundingAgent.Throw('RangeError', 'InvalidMonth');
+      return Throw.RangeError('Invalid month');
     }
     fields.Month = parsedMonthCode.MonthNumber;
   } else {

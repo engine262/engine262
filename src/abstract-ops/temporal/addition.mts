@@ -9,6 +9,7 @@ import { R as MathematicalValue } from '../spec-types.mjs';
 import { __ts_cast__ } from '../../helpers.mts';
 import { FormatTimeString, ToIntegerWithTruncation } from './temporal.mts';
 import { FormatOffsetTimeZoneIdentifier, type TimeZoneIdentifierRecord } from './time-zone.mts';
+import { mark_TimeZoneAwareNotImplemented } from './not-implemented.mts';
 import {
   Assert,
   Get,
@@ -16,8 +17,7 @@ import {
   MakeDate,
   MakeDay,
   MakeTime,
-  NumberValue,
-  ObjectValue, OrdinaryObjectCreate, Q, R, surroundingAgent, ToBoolean, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
+  ObjectValue, OrdinaryObjectCreate, Q, R, Throw, ToBoolean, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
@@ -30,7 +30,7 @@ export interface YearWeekRecord {
 export function* ToIntegerIfIntegral(argument: Value): PlainEvaluator<number> {
   const number = Q(yield* ToNumber(argument));
   if (!Number.isInteger(MathematicalValue(number))) {
-    return surroundingAgent.Throw('RangeError', 'NotAnInteger', number);
+    return Throw.RangeError('$1 is not an integral number', argument);
   }
   return R(number);
 }
@@ -43,7 +43,7 @@ export function GetOptionsObject(options: Value) {
   if (options instanceof ObjectValue) {
     return options;
   }
-  return surroundingAgent.Throw('TypeError', 'NotAnObject', options);
+  return Throw.TypeError('$1 is not an object', options);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-getoption */
@@ -63,7 +63,7 @@ export function* GetOption(options: ObjectValue, property: PropertyKeyValue | st
       } else {
         propertyNameToString = 'Symbol';
       }
-      return surroundingAgent.Throw('RangeError', 'PropertyIsRequired', propertyNameToString);
+      return Throw.RangeError('"$1" is required on object $2', propertyNameToString, options);
     }
     return Value(defaultValue);
   }
@@ -76,7 +76,7 @@ export function* GetOption(options: ObjectValue, property: PropertyKeyValue | st
   if (values !== undefined) {
     const str = (value as JSStringValue).stringValue();
     if (!values.includes(str)) {
-      return surroundingAgent.Throw('RangeError', 'PropertyCanOnlyBe', '', '', '');
+      return Throw.RangeError('"$1" on object $2 is not valid ($3)', property, options, str);
     }
   }
   return value;
@@ -139,7 +139,7 @@ export function* GetRoundingIncrementOption(
   }
   const integerIncrement = Q(yield* ToIntegerWithTruncation(value));
   if (integerIncrement < 1 || integerIncrement > 10 ** 9) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', integerIncrement);
+    return Throw.RangeError('"roundingIncrement" ($1) is out of range', integerIncrement);
   }
   return integerIncrement;
 }
@@ -150,9 +150,9 @@ export function GetUTCEpochNanoseconds(
 ): bigint {
   const date = MakeDay(Value(isoDateTime.ISODate.Year), Value(isoDateTime.ISODate.Month - 1), Value(isoDateTime.ISODate.Day));
   const time = MakeTime(Value(isoDateTime.Time.Hour), Value(isoDateTime.Time.Minute), Value(isoDateTime.Time.Second), Value(isoDateTime.Time.Millisecond));
-  const ms = MakeDate(date, time);
-  Assert(ms instanceof NumberValue && !R(ms).toString().includes('.'));
-  return BigInt(R(ms)) * BigInt(10e6) + BigInt(isoDateTime.Time.Microsecond) * BigInt(10e3) + BigInt(isoDateTime.Time.Nanosecond);
+  const ms = R(MakeDate(date, time));
+  Assert(Math.floor(ms) === ms);
+  return BigInt(ms) * BigInt(10e6) + BigInt(isoDateTime.Time.Microsecond) * BigInt(10e3) + BigInt(isoDateTime.Time.Nanosecond);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
@@ -163,6 +163,7 @@ export function GetNamedTimeZoneEpochNanoseconds(
   timeZoneIdentifier: TimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
 ): bigint[] {
+  mark_TimeZoneAwareNotImplemented();
   Assert(timeZoneIdentifier === 'UTC');
   const epochNanoseconds = GetUTCEpochNanoseconds(isoDateTime);
   return [epochNanoseconds];
@@ -170,12 +171,14 @@ export function GetNamedTimeZoneEpochNanoseconds(
 
 /** https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds */
 export function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier: string, _epochNanoseconds: bigint) {
+  mark_TimeZoneAwareNotImplemented();
   Assert(timeZoneIdentifier === 'UTC');
   return 0;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier */
 export function SystemTimeZoneIdentifier(): TimeZoneIdentifier {
+  mark_TimeZoneAwareNotImplemented();
   // 1. If the implementation only supports the UTC time zone, return "UTC".
   return 'UTC' as TimeZoneIdentifier;
   // 2. Let systemTimeZoneString be the String representing the host environment's current time zone as a time zone identifier in normalized format, either a primary time zone identifier or an offset time zone identifier.
@@ -258,4 +261,10 @@ export function ToZeroPaddedDecimalString(n: number, minLength: number) {
 }
 
 /** https://tc39.es/ecma262/#sec-availablenamedtimezoneidentifiers */
-export declare function AvailableNamedTimeZoneIdentifiers(): TimeZoneIdentifierRecord[];
+export function AvailableNamedTimeZoneIdentifiers(): TimeZoneIdentifierRecord[] {
+  mark_TimeZoneAwareNotImplemented();
+  return [{
+    Identifier: 'UTC' as TimeZoneIdentifier,
+    PrimaryIdentifier: 'UTC' as TimeZoneIdentifier,
+  }];
+}

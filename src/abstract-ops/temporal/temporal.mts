@@ -16,7 +16,7 @@ import {
   CalendarISOToDate, CanonicalizeCalendar, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, type CalendarFieldsRecord, type CalendarType,
 } from './calendar.mts';
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
-import { ToPrimitive, ToNumber } from '#self';
+import { ToPrimitive, ToNumber, Throw } from '#self';
 import {
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, surroundingAgent, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
 } from '#self';
@@ -83,7 +83,7 @@ export function EpochTimeForYear(y: number): number {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-epochtimetoepochyear */
-// TODO: Review
+// TODO(temporal): Review
 export function EpochTimeToEpochYear(t: number): number {
   // EpochTimeToEpochYear(t) = the largest integral Number y (closest to +∞) such that EpochTimeForYear(y) ≤ t
   let lower = -271821;
@@ -108,39 +108,17 @@ export function MathematicalInLeapYear(t: number): number {
 export function EpochTimeToMonthInYear(t: number): number {
   const dayInYear = EpochTimeToDayInYear(t);
   const leap = MathematicalInLeapYear(t);
-  if (dayInYear >= 0 && dayInYear < 31) {
-    return 0;
-  }
-  if (dayInYear >= 31 && dayInYear < 59 + leap) {
-    return 1;
-  }
-  if (59 + leap <= dayInYear && dayInYear < 90 + leap) {
-    return 2;
-  }
-  if (90 + leap <= dayInYear && dayInYear < 120 + leap) {
-    return 3;
-  }
-  if (120 + leap <= dayInYear && dayInYear < 151 + leap) {
-    return 4;
-  }
-  if (151 + leap <= dayInYear && dayInYear < 181 + leap) {
-    return 5;
-  }
-  if (181 + leap <= dayInYear && dayInYear < 212 + leap) {
-    return 6;
-  }
-  if (212 + leap <= dayInYear && dayInYear < 243 + leap) {
-    return 7;
-  }
-  if (243 + leap <= dayInYear && dayInYear < 273 + leap) {
-    return 8;
-  }
-  if (273 + leap <= dayInYear && dayInYear < 304 + leap) {
-    return 9;
-  }
-  if (304 + leap <= dayInYear && dayInYear < 334 + leap) {
-    return 10;
-  }
+  if (dayInYear >= 0 && dayInYear < 31) return 0;
+  if (dayInYear >= 31 && dayInYear < 59 + leap) return 1;
+  if (59 + leap <= dayInYear && dayInYear < 90 + leap) return 2;
+  if (90 + leap <= dayInYear && dayInYear < 120 + leap) return 3;
+  if (120 + leap <= dayInYear && dayInYear < 151 + leap) return 4;
+  if (151 + leap <= dayInYear && dayInYear < 181 + leap) return 5;
+  if (181 + leap <= dayInYear && dayInYear < 212 + leap) return 6;
+  if (212 + leap <= dayInYear && dayInYear < 243 + leap) return 7;
+  if (243 + leap <= dayInYear && dayInYear < 273 + leap) return 8;
+  if (273 + leap <= dayInYear && dayInYear < 304 + leap) return 9;
+  if (304 + leap <= dayInYear && dayInYear < 334 + leap) return 10;
   return 11;
 }
 
@@ -154,39 +132,17 @@ export function EpochTimeToDate(t: number): number {
   const m = EpochTimeToMonthInYear(t);
   const dayInYear = EpochTimeToDayInYear(t);
   const leap = MathematicalInLeapYear(t) ? 1 : 0;
-  if (m === 0) {
-    return dayInYear + 1;
-  }
-  if (m === 1) {
-    return dayInYear - 30;
-  }
-  if (m === 2) {
-    return dayInYear - 58 - leap;
-  }
-  if (m === 3) {
-    return dayInYear - 89 - leap;
-  }
-  if (m === 4) {
-    return dayInYear - 119 - leap;
-  }
-  if (m === 5) {
-    return dayInYear - 150 - leap;
-  }
-  if (m === 6) {
-    return dayInYear - 180 - leap;
-  }
-  if (m === 7) {
-    return dayInYear - 211 - leap;
-  }
-  if (m === 8) {
-    return dayInYear - 242 - leap;
-  }
-  if (m === 9) {
-    return dayInYear - 272 - leap;
-  }
-  if (m === 10) {
-    return dayInYear - 303 - leap;
-  }
+  if (m === 0) return dayInYear + 1;
+  if (m === 1) return dayInYear - 30;
+  if (m === 2) return dayInYear - 58 - leap;
+  if (m === 3) return dayInYear - 89 - leap;
+  if (m === 4) return dayInYear - 119 - leap;
+  if (m === 5) return dayInYear - 150 - leap;
+  if (m === 6) return dayInYear - 180 - leap;
+  if (m === 7) return dayInYear - 211 - leap;
+  if (m === 8) return dayInYear - 242 - leap;
+  if (m === 9) return dayInYear - 272 - leap;
+  if (m === 10) return dayInYear - 303 - leap;
   return dayInYear - 333 - leap;
 }
 
@@ -199,7 +155,7 @@ export function EpochTimeToWeekDay(t: number): number {
 export function CheckISODaysRange(isoDate: ISODateRecord): PlainCompletion<void> {
   const days = Math.abs(ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day));
   if (days > 1e8) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', days);
+    return Throw.RangeError('ISODate is out of range');
   }
   return undefined;
 }
@@ -257,15 +213,9 @@ export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator
 /** https://tc39.es/proposal-temporal/#sec-gettemporaldisambiguationoption */
 export function* GetTemporalDisambiguationOption(options: ObjectValue): PlainEvaluator<'compatible' | 'earlier' | 'later' | 'reject'> {
   const stringValue = Q(yield* GetOption(options, 'disambiguation', 'string', ['compatible', 'earlier', 'later', 'reject'], 'compatible'));
-  if (stringValue === 'compatible') {
-    return 'compatible';
-  }
-  if (stringValue === 'earlier') {
-    return 'earlier';
-  }
-  if (stringValue === 'later') {
-    return 'later';
-  }
+  if (stringValue === 'compatible') return 'compatible';
+  if (stringValue === 'earlier') return 'earlier';
+  if (stringValue === 'later') return 'later';
   return 'reject';
 }
 
@@ -286,15 +236,9 @@ export function* GetTemporalOffsetOption(options: ObjectValue, fallback: Tempora
   // step 1 to 4
   const stringFallback = fallback;
   const stringValue = Q(yield* GetOption(options, 'offset', 'string', ['prefer', 'use', 'ignore', 'reject'], stringFallback));
-  if (stringValue === 'prefer') {
-    return 'prefer';
-  }
-  if (stringValue === 'use') {
-    return 'use';
-  }
-  if (stringValue === 'ignore') {
-    return 'ignore';
-  }
+  if (stringValue === 'prefer') return 'prefer';
+  if (stringValue === 'use') return 'use';
+  if (stringValue === 'ignore') return 'ignore';
   return 'reject';
 }
 
@@ -302,15 +246,9 @@ export type ShowCalendarNameOption = 'auto' | 'always' | 'never' | 'critical';
 /** https://tc39.es/proposal-temporal/#sec-gettemporalshowcalendarnameoption */
 export function* GetTemporalShowCalendarNameOption(options: ObjectValue): PlainEvaluator<ShowCalendarNameOption> {
   const stringValue = Q(yield* GetOption(options, 'calendarName', 'string', ['auto', 'always', 'never', 'critical'], 'auto'));
-  if (stringValue === 'always') {
-    return 'always';
-  }
-  if (stringValue === 'never') {
-    return 'never';
-  }
-  if (stringValue === 'critical') {
-    return 'critical';
-  }
+  if (stringValue === 'always') return 'always';
+  if (stringValue === 'never') return 'never';
+  if (stringValue === 'critical') return 'critical';
   return 'auto';
 }
 
@@ -318,21 +256,15 @@ export type ShowTimeZoneNameOption = 'auto' | 'never' | 'critical';
 /** https://tc39.es/proposal-temporal/#sec-gettemporalshowtimezonenameoption */
 export function* GetTemporalShowTimeZoneNameOption(options: ObjectValue): PlainEvaluator<ShowTimeZoneNameOption> {
   const stringValue = Q(yield* GetOption(options, 'timeZoneName', 'string', ['auto', 'never', 'critical'], 'auto'));
-  if (stringValue === 'never') {
-    return 'never';
-  }
-  if (stringValue === 'critical') {
-    return 'critical';
-  }
+  if (stringValue === 'never') return 'never';
+  if (stringValue === 'critical') return 'critical';
   return 'auto';
 }
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporalshowoffsetoption */
 export function* GetTemporalShowOffsetOption(options: ObjectValue): PlainEvaluator<'auto' | 'never'> {
   const stringValue = Q(yield* GetOption(options, 'offset', 'string', ['auto', 'never'], 'auto'));
-  if (stringValue === 'never') {
-    return 'never';
-  }
+  if (stringValue === 'never') return 'never';
   return 'auto';
 }
 
@@ -340,9 +272,7 @@ export type DirectionOption = 'next' | 'previous';
 /** https://tc39.es/proposal-temporal/#sec-getdirectionoption */
 export function* GetDirectionOption(options: ObjectValue): PlainEvaluator<DirectionOption> {
   const stringValue = Q(yield* GetOption(options, 'direction', 'string', ['next', 'previous'], '~required~'));
-  if (stringValue === 'next') {
-    return 'next';
-  }
+  if (stringValue === 'next') return 'next';
   return 'previous';
 }
 
