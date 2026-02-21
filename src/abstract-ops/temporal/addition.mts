@@ -2,14 +2,13 @@
 // Code here should move elsewhere after Temporal is merged.
 
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
-import { TimeValueToISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
 import { HourFromTime, MinFromTime, SecFromTime } from '../date-objects.mts';
 import { R as MathematicalValue } from '../spec-types.mjs';
 import { __ts_cast__ } from '../../helpers.mts';
 import { FormatTimeString, ToIntegerWithTruncation } from './temporal.mts';
 import { FormatOffsetTimeZoneIdentifier, type TimeZoneIdentifierRecord } from './time-zone.mts';
-import { mark_TimeZoneAwareNotImplemented } from './not-implemented.mts';
+import { mark_TimeZoneAwareNotImplemented, temporal_todo } from './not-implemented.mts';
 import {
   Assert,
   Get,
@@ -17,7 +16,7 @@ import {
   MakeDate,
   MakeDay,
   MakeTime,
-  ObjectValue, OrdinaryObjectCreate, Q, R, Throw, ToBoolean, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator, type PropertyKeyValue, type ValueEvaluator,
+  ObjectValue, OrdinaryObjectCreate, Q, R, Throw, TimeValueToISODateTimeRecord, ToBoolean, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator, type PropertyKeyValue,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
@@ -49,8 +48,11 @@ export function GetOptionsObject(options: Value) {
 /** https://tc39.es/proposal-temporal/#sec-getoption */
 export function GetOption<const T extends readonly string[], D extends T[number] | undefined>(options: ObjectValue, property: PropertyKeyValue | string, type: 'string', values: T | undefined, defaultValue: '~required~' | D): PlainEvaluator<D | T[number]>;
 export function GetOption<D extends boolean | undefined>(options: ObjectValue, property: PropertyKeyValue | string, type: 'boolean', values: undefined, defaultValue: '~required~' | D): PlainEvaluator<D>;
-export function* GetOption(options: ObjectValue, property: PropertyKeyValue | string, type: 'boolean' | 'string', values: readonly string[] | undefined, defaultValue: '~required~' | string | boolean | undefined): ValueEvaluator {
-  let value = Q(yield* Get(options, typeof property === 'string' ? Value(property) : property));
+export function* GetOption(options: ObjectValue, property: PropertyKeyValue | string, type: 'boolean' | 'string', values: readonly string[] | undefined, defaultValue: '~required~' | string | boolean | undefined): PlainEvaluator<string | boolean> {
+  if (typeof property === 'string') {
+    property = Value(property);
+  }
+  let value = Q(yield* Get(options, property));
   if (value === Value.undefined) {
     if (defaultValue === '~required~') {
       let propertyNameToString: string;
@@ -65,7 +67,7 @@ export function* GetOption(options: ObjectValue, property: PropertyKeyValue | st
       }
       return Throw.RangeError('"$1" is required on object $2', propertyNameToString, options);
     }
-    return Value(defaultValue);
+    return defaultValue!;
   }
   if (type === 'boolean') {
     value = Q(ToBoolean(value));
@@ -79,7 +81,7 @@ export function* GetOption(options: ObjectValue, property: PropertyKeyValue | st
       return Throw.RangeError('"$1" on object $2 is not valid ($3)', property, options, str);
     }
   }
-  return value;
+  return value instanceof JSStringValue ? value.stringValue() : value.booleanValue();
 }
 
 /** https://tc39.es/proposal-temporal/#sec-getroundingmodeoption */
@@ -253,7 +255,9 @@ export function TimeZoneString_TemporalEdited(tv: number): string {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-isoffsettimezoneidentifier */
-export declare function IsOffsetTimeZoneIdentifier(offsetString: string): boolean;
+export function IsOffsetTimeZoneIdentifier(_offsetString: string): boolean {
+  temporal_todo();
+}
 
 /** https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring */
 export function ToZeroPaddedDecimalString(n: number, minLength: number) {

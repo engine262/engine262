@@ -5,6 +5,7 @@
 # e.g.:
 # import-defer = import-defer
 decorators = decorators
+Temporal = temporal
 
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Float16Array

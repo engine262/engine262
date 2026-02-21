@@ -1,12 +1,15 @@
 import { SystemTimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
-import { ToTemporalTimeZoneIdentifier, GetISODateTimeFor } from '../../abstract-ops/temporal/time-zone.mts';
+import { ToTemporalTimeZoneIdentifier } from '../../abstract-ops/temporal/time-zone.mts';
 import { bootstrapPrototype } from '../bootstrap.mts';
-import { CreateTemporalInstant } from './Instant.mts';
-import { CreateTemporalDateTime, type ISODateTimeRecord } from './PlainDateTime.mts';
-import { CreateTemporalTime } from './PlainTime.mts';
-import { CreateTemporalZonedDateTime } from './ZonedDateTime.mts';
 import {
-  type Realm, X, Value, Q, type Arguments, GetGlobalObject, ObjectValue, type PlainCompletion,
+  type Realm, X, Value, Q, type Arguments, type PlainCompletion,
+  CreateTemporalInstant,
+  SystemDateTime,
+  SystemUTCEpochNanoseconds,
+  CreateTemporalDate,
+  CreateTemporalZonedDateTime,
+  CreateTemporalDateTime,
+  CreateTemporalTime,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.timezoneid */
@@ -41,7 +44,7 @@ function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]: 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso */
 function TemporalNow_plainDateISO([temporalTimeZoneLike = Value.undefined]: Arguments): PlainCompletion<Value> {
   const isoDateTime = Q(SystemDateTime(temporalTimeZoneLike));
-  return X(CreateTemporalDateTime(isoDateTime, 'iso8601'));
+  return X(CreateTemporalDate(isoDateTime.ISODate, 'iso8601'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.plaintimeiso */
@@ -60,33 +63,4 @@ export function bootstrapTemporalNow(realmRec: Realm) {
     ['plainTimeISO', TemporalNow_plainTimeISO, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.Now');
   return Now;
-}
-
-/** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
-export declare function HostSystemUTCEpochNanoseconds(global: ObjectValue): number;
-
-/** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochmilliseconds */
-export function SystemUTCEpochMilliseconds(): number {
-  const global = GetGlobalObject();
-  const nowNs = HostSystemUTCEpochNanoseconds(global);
-  return Math.floor(nowNs / (10 ** 6));
-}
-
-/** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds */
-export function SystemUTCEpochNanoseconds(): bigint {
-  const global = GetGlobalObject();
-  const nowNs = HostSystemUTCEpochNanoseconds(global);
-  return BigInt(nowNs);
-}
-
-/** https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime */
-export function SystemDateTime(temporalTimeZoneLike: Value): PlainCompletion<ISODateTimeRecord> {
-  let timeZone;
-  if (temporalTimeZoneLike === Value.undefined) {
-    timeZone = SystemTimeZoneIdentifier();
-  } else {
-    timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike));
-  }
-  const epochNs = SystemUTCEpochNanoseconds();
-  return GetISODateTimeFor(timeZone, epochNs);
 }

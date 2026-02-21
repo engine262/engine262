@@ -34,6 +34,15 @@ export { isPromiseObject, type PromiseObject } from './intrinsics/Promise.mts';
 export { isTypedArrayObject, type TypedArrayObject } from './intrinsics/TypedArray.mts';
 export { isProxyExoticObject, type ProxyObject } from './intrinsics/Proxy.mts';
 export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
-export { type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
+export { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 export { isErrorObject } from './intrinsics/Error.mts';
 export { isShadowRealmObject, type ShadowRealmObject } from './intrinsics/ShadowRealm.mts';
+
+export { isTemporalDurationObject, type TemporalDurationObject } from './intrinsics/Temporal/Duration.mts';
+export { isTemporalInstantObject, type TemporalInstantObject } from './intrinsics/Temporal/Instant.mts';
+export { isTemporalPlainDateObject, type TemporalPlainDateObject } from './intrinsics/Temporal/PlainDate.mts';
+export { isTemporalPlainDateTimeObject, type TemporalPlainDateTimeObject } from './intrinsics/Temporal/PlainDateTime.mts';
+export { isTemporalPlainMonthDayObject, type TemporalPlainMonthDayObject } from './intrinsics/Temporal/PlainMonthDay.mts';
+export { isTemporalPlainTimeObject, type TemporalPlainTimeObject } from './intrinsics/Temporal/PlainTime.mts';
+export { isTemporalPlainYearMonthObject, type TemporalPlainYearMonthObject } from './intrinsics/Temporal/PlainYearMonth.mts';
+export { isTemporalZonedDateTimeObject, type TemporalZonedDateTimeObject } from './intrinsics/Temporal/ZonedDateTime.mts';

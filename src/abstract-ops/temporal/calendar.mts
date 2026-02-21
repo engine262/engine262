@@ -1,15 +1,11 @@
-import { CreateDateDurationRecord, ZeroDateDuration, type DateDurationRecord } from '../../intrinsics/Temporal/Duration.mts';
-import {
-  AddDaysToISODate,
-  CompareISODate, CreateISODateRecord, ISODateSurpasses, ISODateWithinLimits, isTemporalPlainDateObject, RegulateISODate, type ISODateRecord,
-} from '../../intrinsics/Temporal/PlainDate.mts';
 import { CanonicalizeUValue } from '../../ecma402/not-implemented.mts';
 import { __ts_cast__, isArray, type Mutable } from '../../helpers.mts';
-import { BalanceISOYearMonth, isTemporalPlainYearMonthObject } from '../../intrinsics/Temporal/PlainYearMonth.mts';
 import { ParseMonthCode, ParseTemporalCalendarString } from '../../parser/TemporalParser.mts';
 import { isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { isTemporalPlainMonthDayObject } from '../../intrinsics/Temporal/PlainMonthDay.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
+import { isTemporalPlainDateObject, type ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
+import { isTemporalPlainYearMonthObject } from '../../intrinsics/Temporal/PlainYearMonth.mts';
 import { ToZeroPaddedDecimalString } from './addition.mts';
 import type { YearWeekRecord } from './addition.mts';
 import {
@@ -26,19 +22,28 @@ import {
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
 import { mark_OtherCalendarNotImplemented, unreachable_OtherCalendarNotImplemented } from './not-implemented.mts';
 import {
+  AddDaysToISODate,
   Assert,
+  BalanceISOYearMonth,
+  CompareISODate,
+  CreateDateDurationRecord,
+  CreateISODateRecord,
   F,
   Get,
+  ISODateSurpasses,
+  ISODateWithinLimits,
   JSStringValue,
   NumberValue,
   ObjectValue,
   Q,
   R,
-  surroundingAgent,
+  RegulateISODate,
   Throw,
   ToString,
   Value,
   X,
+  ZeroDateDuration,
+  type DateDurationRecord,
   type PlainCompletion, type PlainEvaluator,
 } from '#self';
 
@@ -98,13 +103,13 @@ export interface CalendarFieldsRecord {
   Month: number | undefined;
   MonthCode: string | undefined;
   Day: number | undefined;
-  readonly Hour: number | undefined;
-  readonly Minute: number | undefined;
-  readonly Second: number | undefined;
-  readonly Millisecond: number | undefined;
-  readonly Microsecond: number | undefined;
-  readonly Nanosecond: number | undefined;
-  readonly OffsetString: string | undefined;
+  Hour: number | undefined;
+  Minute: number | undefined;
+  Second: number | undefined;
+  Millisecond: number | undefined;
+  Microsecond: number | undefined;
+  Nanosecond: number | undefined;
+  OffsetString: string | undefined;
   readonly TimeZone: string | undefined;
 }
 
