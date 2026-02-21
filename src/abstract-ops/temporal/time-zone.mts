@@ -1,17 +1,12 @@
 import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
-import { AddDaysToISODate, CreateISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
-import { BalanceISODateTime, CombineISODateAndTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ParseTemporalTimeZoneString, ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
-import { AddTime, CreateTimeRecord, MidnightTimeRecord } from '../../intrinsics/Temporal/PlainTime.mts';
-import { IsValidEpochNanoseconds, nsPerDay } from '../../intrinsics/Temporal/Instant.mts';
 import {
   HourFromTime, MinFromTime, SecFromTime, msFromTime,
 } from '../date-objects.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import { R } from '../spec-types.mjs';
 import { abs } from '../math.mts';
-import { TimeDurationFromComponents } from '../../intrinsics/Temporal/Duration.mts';
 import {
   IsOffsetTimeZoneIdentifier, GetNamedTimeZoneEpochNanoseconds, GetUTCEpochNanoseconds, RoundingMode,
   AvailableNamedTimeZoneIdentifiers,
@@ -26,6 +21,16 @@ import {
   Assert, JSStringValue, ObjectValue, Value, type PlainCompletion, Q,
   Throw,
   X,
+  AddDaysToISODate,
+  AddTime,
+  BalanceISODateTime,
+  CombineISODateAndTimeRecord,
+  CreateISODateRecord,
+  CreateTimeRecord,
+  IsValidEpochNanoseconds,
+  MidnightTimeRecord,
+  nsPerDay,
+  TimeDurationFromComponents,
 } from '#self';
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getavailablenamedtimezoneidentifier
@@ -244,7 +249,7 @@ export function GetPossibleEpochNanoseconds(
     const epochNanoseconds = GetUTCEpochNanoseconds(balanced);
     possibleEpochNanoseconds = [epochNanoseconds];
   } else {
-    possibleEpochNanoseconds = GetNamedTimeZoneEpochNanoseconds(parseResult.Name!, isoDateTime);
+    possibleEpochNanoseconds = GetNamedTimeZoneEpochNanoseconds(parseResult.Name! as TimeZoneIdentifier, isoDateTime);
   }
   for (const epochNanoseconds of possibleEpochNanoseconds) {
     if (!IsValidEpochNanoseconds(epochNanoseconds)) {

@@ -103,5 +103,4 @@ staging/sm/String/unicode-braced.js
 staging/sm/syntax/declaration-forbidden-in-label.js
 staging/sm/syntax/linefeed-at-eof-in-unterminated-string-or-template.js
 staging/sm/TypedArray/sort-negative-nan.js
-staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js

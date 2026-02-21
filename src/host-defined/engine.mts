@@ -51,6 +51,11 @@ export const FEATURES = ([
     flag: 'decorators.no-bugfix.1',
     url: '',
   },
+  {
+    name: 'Temporal (wip)',
+    flag: 'temporal',
+    url: 'https://github.com/tc39/proposal-temporal',
+  },
   // stage 2.7
   {
     name: 'Iterator#join',

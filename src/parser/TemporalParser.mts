@@ -1,8 +1,7 @@
 // https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar
 
 import type { TemporalDurationObject } from '../intrinsics/Temporal/Duration.mts';
-import type { TimeRecord } from '../intrinsics/Temporal/PlainTime.mts';
-import type { TimeZoneIdentifier } from '../abstract-ops/temporal/addition.mts';
+import { temporal_todo } from '../abstract-ops/temporal/not-implemented.mts';
 import {
   Assert,
   JSStringValue,
@@ -10,7 +9,7 @@ import {
   surroundingAgent,
   ToPrimitive,
   Value,
-  type PlainCompletion, type PlainEvaluator, type ValueCompletion,
+  type PlainCompletion, type PlainEvaluator, type TimeRecord, type ValueCompletion,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-string-time-zone-parse-records */
@@ -31,16 +30,24 @@ export interface ISODateTimeParseRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime */
-export declare function ParseISODateTime(isoString: string, allowedFormats: Array<'TemporalInstantString' | 'TemporalDateTimeString[~Zoned]' | 'TemporalTimeString' | 'TemporalMonthDayString' | 'TemporalYearMonthString' | 'TemporalDateTimeString[+Zoned]'>): PlainCompletion<ISODateTimeParseRecord>;
+export function ParseISODateTime(_isoString: string, _allowedFormats: Array<'TemporalInstantString' | 'TemporalDateTimeString[~Zoned]' | 'TemporalTimeString' | 'TemporalMonthDayString' | 'TemporalYearMonthString' | 'TemporalDateTimeString[+Zoned]'>): PlainCompletion<ISODateTimeParseRecord> {
+  temporal_todo();
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring */
-export declare function ParseTemporalCalendarString(isoString: string): PlainCompletion<string>;
+export function ParseTemporalCalendarString(_isoString: string): PlainCompletion<string> {
+  temporal_todo();
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring */
-export declare function ParseTemporalDurationString(isoString: string): ValueCompletion<TemporalDurationObject>;
+export function ParseTemporalDurationString(_isoString: string): ValueCompletion<TemporalDurationObject> {
+  temporal_todo();
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring */
-export declare function ParseTemporalTimeZoneString(timeZoneString: string): PlainCompletion<TimeZoneIdentifierParseRecord>;
+export function ParseTemporalTimeZoneString(_timeZoneString: string): PlainCompletion<TimeZoneIdentifierParseRecord> {
+  temporal_todo();
+}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-time-zone-identifier-parse-records */
 export interface TimeZoneIdentifierParseRecord {
@@ -81,10 +88,14 @@ export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ Mont
 }
 
 /** https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset */
-export declare function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<number>;
+export function ParseDateTimeUTCOffset(_offsetString: string): PlainCompletion<number> {
+  temporal_todo();
+}
 
 // https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier
-export declare function ParseTimeZoneIdentifier(identifier: string): PlainCompletion<{ Name?: TimeZoneIdentifier; OffsetMinutes?: number }>;
+export function ParseTimeZoneIdentifier(_identifier: string): PlainCompletion<TimeZoneIdentifierParseRecord> {
+  temporal_todo();
+}
 
 export class DateParser {
   public input: string;

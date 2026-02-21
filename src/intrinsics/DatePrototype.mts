@@ -11,7 +11,7 @@ import {
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import { StringPad } from '../runtime-semantics/all.mts';
+import { NumberToBigInt, StringPad } from '../runtime-semantics/all.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { DateObject } from './Date.mts';
 import {
@@ -40,6 +40,7 @@ import {
   WeekDay,
   YearFromTime,
   F, R,
+  CreateTemporalInstant,
 } from '#self';
 import type { Realm } from '#self';
 
@@ -685,6 +686,13 @@ function DateProto_toTimeString(_args: Arguments, { thisValue }: FunctionCallCon
   return Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
 }
 
+function DateProto_toTemporalInstant(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const dateObject = thisValue;
+  const t = Q(thisTimeValue(dateObject));
+  const ns = R(Q(NumberToBigInt(t))) * BigInt(1e6);
+  return CreateTemporalInstant(ns);
+}
+
 /** https://tc39.es/ecma262/#sec-date.prototype.toutcstring */
 function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
@@ -770,6 +778,7 @@ export function bootstrapDatePrototype(realmRec: Realm) {
     ['toLocaleTimeString', DateProto_toLocaleTimeString, 0],
     ['toString', DateProto_toString, 0],
     ['toTimeString', DateProto_toTimeString, 0],
+    surroundingAgent.feature('temporal') ? ['toTemporalInstant', DateProto_toTemporalInstant, 0] : undefined,
     ['toUTCString', DateProto_toUTCString, 0],
     ['valueOf', DateProto_valueOf, 0],
     [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, { Writable: Value.false, Enumerable: Value.false, Configurable: Value.true }],

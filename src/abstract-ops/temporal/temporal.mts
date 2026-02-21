@@ -1,13 +1,8 @@
-import {
-  CreateISODateRecord, CreateTemporalDate, isTemporalPlainDateObject, type ISODateRecord, type TemporalPlainDateObject,
-} from '../../intrinsics/Temporal/PlainDate.mts';
-import {
-  CreateTemporalZonedDateTime, InterpretISODateTimeOffset, isTemporalZonedDateTimeObject, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour, type TemporalZonedDateTimeObject,
-} from '../../intrinsics/Temporal/ZonedDateTime.mts';
-import { InterpretTemporalDateTimeFields, isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ParseDateTimeUTCOffset, ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { R } from '../spec-types.mjs';
-import type { nsPerDay } from '../../intrinsics/Temporal/Instant.mts';
+import { type ISODateRecord, type TemporalPlainDateObject, isTemporalPlainDateObject } from '../../intrinsics/Temporal/PlainDate.mts';
+import { isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
+import { type TemporalZonedDateTimeObject, isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import {
   GetOption, GetRoundingIncrementOption, GetRoundingModeOption, ToZeroPaddedDecimalString, UnsignedRoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
@@ -16,8 +11,8 @@ import {
   CalendarISOToDate, CanonicalizeCalendar, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, type CalendarFieldsRecord, type CalendarType,
 } from './calendar.mts';
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
-import { ToPrimitive, ToNumber, Throw } from '#self';
 import {
+  ToPrimitive, ToNumber, Throw, CreateISODateRecord, CreateTemporalDate, CreateTemporalZonedDateTime, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, nsPerDay, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour,
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, surroundingAgent, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
 } from '#self';
 
@@ -193,6 +188,19 @@ export const Table21_LengthInNanoSeconds = {
   [TemporalUnit.Nanosecond]: 1,
 } as const;
 
+export const Table21_CategoryByValue = {
+  [TemporalUnit.Year]: 'date',
+  [TemporalUnit.Month]: 'date',
+  [TemporalUnit.Week]: 'date',
+  [TemporalUnit.Day]: 'date',
+  [TemporalUnit.Hour]: 'time',
+  [TemporalUnit.Minute]: 'time',
+  [TemporalUnit.Second]: 'time',
+  [TemporalUnit.Millisecond]: 'time',
+  [TemporalUnit.Microsecond]: 'time',
+  [TemporalUnit.Nanosecond]: 'time',
+} as const;
+
 export function __IsDateUnit(unit: TemporalUnit): unit is DateUnit {
   return (unit === TemporalUnit.Year
     || unit === TemporalUnit.Month
@@ -318,117 +326,86 @@ export function* GetTemporalFractionalSecondDigitsOption(options: ObjectValue): 
 
 /** https://tc39.es/proposal-temporal/#sec-tosecondsstringprecisionrecord */
 export function ToSecondsStringPrecisionRecord(
-  smallestUnit: 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond' | 'unset',
+  smallestUnit: Exclude<TimeUnit, TemporalUnit.Hour> | 'unset',
   fractionalDigitCount: 'auto' | number,
 ): {
-  Precision: 'minute' | 'auto' | number,
-  Unit: 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond',
+  Precision: TemporalUnit.Minute | 'auto' | number,
+  Unit: TemporalUnit.Minute | TemporalUnit.Second | TemporalUnit.Millisecond | TemporalUnit.Microsecond | TemporalUnit.Nanosecond,
   Increment: 1 | 10 | 100
 } {
-  if (smallestUnit === 'minute') {
-    return { Precision: 'minute', Unit: 'minute', Increment: 1 };
+  if (smallestUnit === TemporalUnit.Minute) {
+    return { Precision: TemporalUnit.Minute, Unit: TemporalUnit.Minute, Increment: 1 };
   }
-  if (smallestUnit === 'second') {
-    return { Precision: 0, Unit: 'second', Increment: 1 };
+  if (smallestUnit === TemporalUnit.Second) {
+    return { Precision: 0, Unit: TemporalUnit.Second, Increment: 1 };
   }
-  if (smallestUnit === 'millisecond') {
-    return { Precision: 3, Unit: 'millisecond', Increment: 1 };
+  if (smallestUnit === TemporalUnit.Millisecond) {
+    return { Precision: 3, Unit: TemporalUnit.Millisecond, Increment: 1 };
   }
-  if (smallestUnit === 'microsecond') {
-    return { Precision: 6, Unit: 'microsecond', Increment: 1 };
+  if (smallestUnit === TemporalUnit.Microsecond) {
+    return { Precision: 6, Unit: TemporalUnit.Microsecond, Increment: 1 };
   }
-  if (smallestUnit === 'nanosecond') {
-    return { Precision: 9, Unit: 'nanosecond', Increment: 1 };
+  if (smallestUnit === TemporalUnit.Nanosecond) {
+    return { Precision: 9, Unit: TemporalUnit.Nanosecond, Increment: 1 };
   }
   Assert(smallestUnit === 'unset');
   if (fractionalDigitCount === 'auto') {
-    return { Precision: 'auto', Unit: 'nanosecond', Increment: 1 };
+    return { Precision: 'auto', Unit: TemporalUnit.Nanosecond, Increment: 1 };
   }
   if (fractionalDigitCount === 0) {
-    return { Precision: 0, Unit: 'second', Increment: 1 };
+    return { Precision: 0, Unit: TemporalUnit.Second, Increment: 1 };
   }
   if (fractionalDigitCount >= 1 && fractionalDigitCount <= 3) {
-    return { Precision: fractionalDigitCount, Unit: 'millisecond', Increment: 10 ** (3 - fractionalDigitCount) as 1 | 10 | 100 };
+    return { Precision: fractionalDigitCount, Unit: TemporalUnit.Millisecond, Increment: 10 ** (3 - fractionalDigitCount) as 1 | 10 | 100 };
   }
   if (fractionalDigitCount >= 4 && fractionalDigitCount <= 6) {
-    return { Precision: fractionalDigitCount, Unit: 'microsecond', Increment: 10 ** (6 - fractionalDigitCount) as 1 | 10 | 100 };
+    return { Precision: fractionalDigitCount, Unit: TemporalUnit.Microsecond, Increment: 10 ** (6 - fractionalDigitCount) as 1 | 10 | 100 };
   }
   Assert(fractionalDigitCount >= 7 && fractionalDigitCount <= 9);
-  return { Precision: fractionalDigitCount, Unit: 'nanosecond', Increment: 10 ** (9 - fractionalDigitCount) as 1 | 10 | 100 };
+  return { Precision: fractionalDigitCount, Unit: TemporalUnit.Nanosecond, Increment: 10 ** (9 - fractionalDigitCount) as 1 | 10 | 100 };
 }
 
+const table21 = [
+  {
+    Value: TemporalUnit.Year, Singular: 'year', Plural: 'years',
+  },
+  {
+    Value: TemporalUnit.Month, Singular: 'month', Plural: 'months',
+  },
+  {
+    Value: TemporalUnit.Week, Singular: 'week', Plural: 'weeks',
+  },
+  {
+    Value: TemporalUnit.Day, Singular: 'day', Plural: 'days',
+  },
+  {
+    Value: TemporalUnit.Hour, Singular: 'hour', Plural: 'hours',
+  },
+  {
+    Value: TemporalUnit.Minute, Singular: 'minute', Plural: 'minutes',
+  },
+  {
+    Value: TemporalUnit.Second, Singular: 'second', Plural: 'seconds',
+  },
+  {
+    Value: TemporalUnit.Millisecond, Singular: 'millisecond', Plural: 'milliseconds',
+  },
+  {
+    Value: TemporalUnit.Microsecond, Singular: 'microsecond', Plural: 'microseconds',
+  },
+  {
+    Value: TemporalUnit.Nanosecond, Singular: 'nanosecond', Plural: 'nanoseconds',
+  },
+] as const;
 /** https://tc39.es/proposal-temporal/#sec-gettemporalunitvaluedoption */
 export function* GetTemporalUnitValuedOption(
   options: ObjectValue,
   key: PropertyKeyValue | string,
-  unitGroup: 'date' | 'time' | 'datetime',
-  default_: 'required' | 'unset' | 'auto' | TemporalUnit,
-  extraValues?: (TemporalUnit | 'auto')[],
+  defaultV: 'required' | 'unset',
 ): PlainEvaluator<TemporalUnit | 'unset' | 'auto'> {
-  const table = [
-    {
-      Value: TemporalUnit.Year, Singular: 'year', Plural: 'years', Category: 'date',
-    },
-    {
-      Value: TemporalUnit.Month, Singular: 'month', Plural: 'months', Category: 'date',
-    },
-    {
-      Value: TemporalUnit.Week, Singular: 'week', Plural: 'weeks', Category: 'date',
-    },
-    {
-      Value: TemporalUnit.Day, Singular: 'day', Plural: 'days', Category: 'date',
-    },
-    {
-      Value: TemporalUnit.Hour, Singular: 'hour', Plural: 'hours', Category: 'time',
-    },
-    {
-      Value: TemporalUnit.Minute, Singular: 'minute', Plural: 'minutes', Category: 'time',
-    },
-    {
-      Value: TemporalUnit.Second, Singular: 'second', Plural: 'seconds', Category: 'time',
-    },
-    {
-      Value: TemporalUnit.Millisecond, Singular: 'millisecond', Plural: 'milliseconds', Category: 'time',
-    },
-    {
-      Value: TemporalUnit.Microsecond, Singular: 'microsecond', Plural: 'microseconds', Category: 'time',
-    },
-    {
-      Value: TemporalUnit.Nanosecond, Singular: 'nanosecond', Plural: 'nanoseconds', Category: 'time',
-    },
-  ] as const;
-  let allowedValues: (TemporalUnit | 'auto')[] = [];
-  // TODO: Review
-  for (const row of table) {
-    if ((row.Category === 'date' && (unitGroup === 'date' || unitGroup === 'datetime'))
-        || (row.Category === 'time' && (unitGroup === 'time' || unitGroup === 'datetime'))) {
-      allowedValues.push(row.Value);
-    }
-  }
-  if (extraValues) {
-    allowedValues = allowedValues.concat(extraValues);
-  }
-  let defaultValue: undefined | '~required~' | 'auto' | Lowercase<keyof typeof TemporalUnit>;
-  if (default_ === 'unset') {
-    defaultValue = undefined;
-  } else if (default_ === 'required') {
-    defaultValue = '~required~';
-  } else if (default_ === 'auto') {
-    allowedValues.push('auto');
-    defaultValue = 'auto';
-  } else {
-    Assert(allowedValues.includes(default_));
-    defaultValue = table.find((r) => r.Value === default_)!.Singular;
-  }
-  const allowedStrings: string[] = [];
-  for (const value of allowedValues) {
-    if (value === 'auto') {
-      allowedStrings.push('auto');
-    } else {
-      const row = table.find((r) => r.Value === value)!;
-      allowedStrings.push(row.Singular, row.Plural);
-    }
-  }
+  // 1. Let allowedStrings be a List containing all values in the "Singular property name" and "Plural property name" columns of Table 21, except the header row.
+  const allowedStrings = table21.map<string>((row) => row.Singular).concat(table21.map((row) => row.Plural)).concat('auto');
+  const defaultValue = defaultV === 'unset' ? undefined : defaultV;
   const value = Q(yield* GetOption(options, key, 'string', allowedStrings, defaultValue));
   if (value === undefined) {
     return 'unset';
@@ -436,13 +413,23 @@ export function* GetTemporalUnitValuedOption(
   if (value === 'auto') {
     return 'auto';
   }
-  // TODO(temporal): 14. Return the value in the "Value" column of Table 21 corresponding to the row with value in its "Singular property name" or "Plural property name" column.
-  for (const row of table) {
-    if (row.Singular === value || row.Plural === value) {
-      return row.Value;
-    }
+  // 9. Return the value in the "Value" column of Table 21 corresponding to the row with value in its "Singular property name" or "Plural property name" column.
+  const returnValue = table21.find((row) => row.Singular === value || row.Plural === value)?.Value;
+  Assert(returnValue !== undefined);
+  return returnValue;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitvaluedoption */
+export function ValidateTemporalUnitValue(value: TemporalUnit | 'unset' | 'auto', unitGroup: 'date' | 'time' | 'datetime', extraValues?: Array<TemporalUnit | 'auto'>): PlainCompletion<void> {
+  if (value === 'unset') return undefined;
+  if (extraValues?.includes(value)) return undefined;
+  const category = Table21_CategoryByValue[value as TemporalUnit];
+  if (!category) {
+    return Throw.RangeError('Invalid TemporalUnit value $1', value);
   }
-  Assert(false, 'unreachable');
+  if (category === 'date' && (unitGroup === 'datetime' || unitGroup === 'date')) return undefined;
+  if (category === 'time' && (unitGroup === 'datetime' || unitGroup === 'time')) return undefined;
+  return Throw.RangeError('Invalid TemporalUnit value $1', value);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporalrelativetooption */
@@ -849,16 +836,21 @@ export function* GetDifferenceSettings(
   RoundingMode: RoundingMode,
   RoundingIncrement: number
 }> {
-  let largestUnit = Q(yield* GetTemporalUnitValuedOption(options, 'largestUnit', unitGroup, 'auto'));
+  let largestUnit = Q(yield* GetTemporalUnitValuedOption(options, 'largestUnit', 'unset'));
+  const roundingIncrement = Q(yield* GetRoundingIncrementOption(options));
+  let roundingMode = Q(yield* GetRoundingModeOption(options, RoundingMode.Trunc));
+  let smallestUnit = Q(yield* GetTemporalUnitValuedOption(options, 'smallestUnit', 'unset'));
+  Q(ValidateTemporalUnitValue(smallestUnit, unitGroup, ['auto']));
+  if (largestUnit === 'unset') {
+    largestUnit = 'auto';
+  }
   if (disallowedUnits.includes(largestUnit as TemporalUnit)) {
     return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
   }
-  const roundingIncrement = Q(yield* GetRoundingIncrementOption(options));
-  let roundingMode = Q(yield* GetRoundingModeOption(options, RoundingMode.Trunc));
-  if (operation === 'since') {
-    roundingMode = NegateRoundingMode(roundingMode);
+  Q(ValidateTemporalUnitValue(smallestUnit, unitGroup));
+  if (smallestUnit === 'unset') {
+    smallestUnit = fallbackSmallestUnit;
   }
-  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(options, 'smallestUnit', unitGroup, fallbackSmallestUnit));
   if (disallowedUnits.includes(smallestUnit as TemporalUnit)) {
     return surroundingAgent.Throw('RangeError', 'OutOfRange', smallestUnit);
   }
@@ -866,12 +858,15 @@ export function* GetDifferenceSettings(
   if (largestUnit === 'auto') {
     largestUnit = defaultLargestUnit;
   }
-  if (LargerOfTwoTemporalUnits(largestUnit as TemporalUnit, smallestUnit as TemporalUnit) !== largestUnit) {
+  if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit as TemporalUnit) !== largestUnit) {
     return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
   }
   const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
   if (maximum !== 'unset') {
     Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false));
+  }
+  if (operation === 'since') {
+    roundingMode = NegateRoundingMode(roundingMode);
   }
   return {
     SmallestUnit: smallestUnit as TemporalUnit,
