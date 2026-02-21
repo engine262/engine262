@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 4d5d1d017bb82a002adb06f997d7e0d57bb71226
+ * engine262 0.0.1 86373defd8d1a8980cb95055359231e1b2a45782
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { Value, surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, IsCallable, JSStringValue, PrivateName, SymbolDescriptiveString, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, SymbolValue, ArrayExoticObjectInternalMethods, Descriptor, F, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, isWrappedFunctionExoticObject, ManagedRealm, IsAccessorDescriptor, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
+import { Value, surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, TemporalInstantToString, TemporalDurationToString, TemporalDateToString, ISODateTimeToString, TemporalMonthDayToString, TimeRecordToString, TemporalYearMonthToString, TemporalZonedDateTimeToString, IsCallable, JSStringValue, PrivateName, SymbolDescriptiveString, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, SymbolValue, ArrayExoticObjectInternalMethods, Descriptor, F, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, isWrappedFunctionExoticObject, ManagedRealm, IsAccessorDescriptor, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
 
 /*
 Test code: copy this into the inspector console.
@@ -392,6 +392,14 @@ const Date$1 = new ObjectInspector('Date', 'date', value => {
   });
   return ValueOfNormalCompletion(val).stringValue();
 });
+const TemporalInstant = new ObjectInspector('Temporal.Instant', 'date', value => `Temporal.Instant <${TemporalInstantToString(value, undefined, 'auto')}>`);
+const TemporalDuration = new ObjectInspector('Temporal.Duration', 'date', value => `Temporal.Duration <${TemporalDurationToString(value, 'auto')}>`);
+const TemporalPlainDate = new ObjectInspector('Temporal.PlainDate', 'date', value => `Temporal.PlainDate <${TemporalDateToString(value, 'auto')}>`);
+const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
+const TemporalPlainMonthDay = new ObjectInspector('Temporal.PlainMonthDay', 'date', value => `Temporal.PlainMonthDay <${TemporalMonthDayToString(value, 'auto')}>`);
+const TemporalPlainTime = new ObjectInspector('Temporal.PlainTime', 'date', value => `Temporal.PlainTime <${TimeRecordToString(value.Time, 'auto')}>`);
+const TemporalPlainYearMonth = new ObjectInspector('Temporal.PlainYearMonth', 'date', value => `Temporal.PlainYearMonth <${TemporalYearMonthToString(value, 'auto')}>`);
+const TemporalZonedDateTime = new ObjectInspector('Temporal.ZonedDateTime', 'date', value => `Temporal.ZonedDateTime <${TemporalZonedDateTimeToString(value, 'auto', 'auto', 'auto', 'auto')}>`);
 const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
   internalProperties: value => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]]
 });
@@ -592,6 +600,22 @@ function getInspector(value) {
       return Module;
     case isShadowRealmObject(value):
       return ShadowRealm;
+    case isTemporalInstantObject(value):
+      return TemporalInstant;
+    case isTemporalDurationObject(value):
+      return TemporalDuration;
+    case isTemporalPlainDateObject(value):
+      return TemporalPlainDate;
+    case isTemporalPlainDateTimeObject(value):
+      return TemporalPlainDateTime;
+    case isTemporalPlainMonthDayObject(value):
+      return TemporalPlainMonthDay;
+    case isTemporalPlainTimeObject(value):
+      return TemporalPlainTime;
+    case isTemporalPlainYearMonthObject(value):
+      return TemporalPlainYearMonth;
+    case isTemporalZonedDateTimeObject(value):
+      return TemporalZonedDateTime;
     case value.internalSlotsList.includes('InspectorEntry'):
       return InspectorEntry;
     default:

@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 4d5d1d017bb82a002adb06f997d7e0d57bb71226
+ * engine262 0.0.1 86373defd8d1a8980cb95055359231e1b2a45782
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -396,6 +396,14 @@
     });
     return engine262_mjs.ValueOfNormalCompletion(val).stringValue();
   });
+  const TemporalInstant = new ObjectInspector('Temporal.Instant', 'date', value => `Temporal.Instant <${engine262_mjs.TemporalInstantToString(value, undefined, 'auto')}>`);
+  const TemporalDuration = new ObjectInspector('Temporal.Duration', 'date', value => `Temporal.Duration <${engine262_mjs.TemporalDurationToString(value, 'auto')}>`);
+  const TemporalPlainDate = new ObjectInspector('Temporal.PlainDate', 'date', value => `Temporal.PlainDate <${engine262_mjs.TemporalDateToString(value, 'auto')}>`);
+  const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${engine262_mjs.ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
+  const TemporalPlainMonthDay = new ObjectInspector('Temporal.PlainMonthDay', 'date', value => `Temporal.PlainMonthDay <${engine262_mjs.TemporalMonthDayToString(value, 'auto')}>`);
+  const TemporalPlainTime = new ObjectInspector('Temporal.PlainTime', 'date', value => `Temporal.PlainTime <${engine262_mjs.TimeRecordToString(value.Time, 'auto')}>`);
+  const TemporalPlainYearMonth = new ObjectInspector('Temporal.PlainYearMonth', 'date', value => `Temporal.PlainYearMonth <${engine262_mjs.TemporalYearMonthToString(value, 'auto')}>`);
+  const TemporalZonedDateTime = new ObjectInspector('Temporal.ZonedDateTime', 'date', value => `Temporal.ZonedDateTime <${engine262_mjs.TemporalZonedDateTimeToString(value, 'auto', 'auto', 'auto', 'auto')}>`);
   const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
     internalProperties: value => [['[[PromiseState]]', engine262_mjs.Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || engine262_mjs.Value.undefined]]
   });
@@ -596,6 +604,22 @@
         return Module;
       case engine262_mjs.isShadowRealmObject(value):
         return ShadowRealm;
+      case engine262_mjs.isTemporalInstantObject(value):
+        return TemporalInstant;
+      case engine262_mjs.isTemporalDurationObject(value):
+        return TemporalDuration;
+      case engine262_mjs.isTemporalPlainDateObject(value):
+        return TemporalPlainDate;
+      case engine262_mjs.isTemporalPlainDateTimeObject(value):
+        return TemporalPlainDateTime;
+      case engine262_mjs.isTemporalPlainMonthDayObject(value):
+        return TemporalPlainMonthDay;
+      case engine262_mjs.isTemporalPlainTimeObject(value):
+        return TemporalPlainTime;
+      case engine262_mjs.isTemporalPlainYearMonthObject(value):
+        return TemporalPlainYearMonth;
+      case engine262_mjs.isTemporalZonedDateTimeObject(value):
+        return TemporalZonedDateTime;
       case value.internalSlotsList.includes('InspectorEntry'):
         return InspectorEntry;
       default:

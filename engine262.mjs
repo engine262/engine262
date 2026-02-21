@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 4d5d1d017bb82a002adb06f997d7e0d57bb71226
+ * engine262 0.0.1 86373defd8d1a8980cb95055359231e1b2a45782
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -12653,6 +12653,7 @@ const CannotConvertDecimalToBigInt = n => `Cannot convert ${i(n)} to a BigInt be
 const CannotConvertSymbol = t => `Cannot convert a Symbol value to a ${t}`;
 const CannotConvertToBigInt = v => `Cannot convert ${i(v)} to a BigInt`;
 const CannotConvertToObject = t => `Cannot convert ${t} to object`;
+const CannotConvertToTemporalDuration = t => `Cannot convert ${i(t)} to Temporal.Duration`;
 const CannotDefineProperty = p => `Cannot define property ${i(p)}`;
 const CannotDeleteProperty = p => `Cannot delete property ${i(p)}`;
 const CannotDeleteSuper = () => 'Cannot delete a super property';
@@ -12682,6 +12683,9 @@ const IllegalOctalEscape = () => 'Illegal octal escape';
 const InternalSlotMissing = (_o, s) => `Internal slot ${s} is missing`;
 const InvalidArrayLength = l => `Invalid array length: ${i(l)}`;
 const InvalidAssignmentTarget = () => 'Invalid assignment target';
+const InvalidCalendar = id => `Invalid calendar: ${i(id)}`;
+const InvalidMonth = () => 'Invalid month';
+const InvalidLeapMonth = () => 'Invalid leap month';
 const InvalidCodePoint = () => 'Not a valid code point';
 const InvalidHint = v => `Invalid hint: ${i(v)}`;
 const InvalidMethodName = name => `Method cannot be named '${i(name)}'`;
@@ -12696,6 +12700,8 @@ const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in tagged 
 const InvalidThis = () => 'Invalid `this` access';
 const InvalidUnicodeEscape = () => 'Invalid unicode escape';
 const InvalidAlphabet = () => 'Invalid alphabet';
+const InvalidDate = () => 'Invalid date';
+const InvalidDuration = () => 'Invalid duration';
 const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
 const InvalidBase64String = () => 'Invalid base64 string';
 const InvalidHexString = () => 'Invalid hex string';
@@ -12706,10 +12712,12 @@ const JSONUnexpectedToken = () => 'Unexpected token in JSON';
 const JSONUnexpectedChar = c => `Unexpected character ${c} in JSON`;
 const JSONExpected = (e, a) => `Expected character ${e} but got ${a} in JSON`;
 const LetInLexicalBinding = () => '\'let\' is not allowed to be used as a name in lexical declarations';
+const MissingRequiredField = f => `Missing required field: ${f}`;
 const ModuleExportNameInvalidUnicode = () => 'Export name is not valid unicode';
 const ModuleUndefinedExport = n => `Export '${i(n)}' is not defined in module`;
 const NegativeIndex = n => `${n} cannot be negative`;
 const NewlineAfterThrow = () => 'Illegal newline after throw';
+const NoFieldsPresent = () => 'No fields present';
 const NormalizeInvalidForm = () => 'Invalid normalization form';
 const NotAConstructor = v => `${i(v)} is not a constructor`;
 const NotAFunction = v => `${i(v)} is not a function`;
@@ -12719,6 +12727,7 @@ const NotASymbol = v => `${i(v)} is not a symbol`;
 const NotAWeakKey = v => `${i(v)} is not an object or a symbol`;
 const NotAString = v => `${i(v)} is not a string`;
 const NotANumber = v => `${i(v)} is not a number`;
+const NotAnInteger = v => `${i(v)} is not an integer`;
 const NotDefined = n => `${i(n)} is not defined`;
 const NotEnoughArguments = (numArgs, minArgs) => `${minArgs} argument${minArgs !== 1 ? 's' : ''} required, but only ${numArgs} present`;
 const NotInitialized = n => `${i(n)} cannot be used before initialization`;
@@ -12764,6 +12773,8 @@ const ProxyPreventExtensionsExtensible = () => '\'preventExtensions\' on proxy: 
 const ProxySetPrototypeOfNonExtensible = () => '\'setPrototypeOf\' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target';
 const ProxySetFrozenData = p => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable data property with a different value`;
 const ProxySetFrozenAccessor = p => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
+const PropertyIsRequired = p => `Property ${i(p)} is required`;
+const PropertyCanOnlyBe = (p, valid, given) => `Property ${p} can only be ${valid}, but was given ${given}`;
 const RegExpArgumentNotAllowed = m => `First argument to ${m} must not be a regular expression`;
 const RegExpExecNotObject = o => `${i(o)} is not object or null`;
 const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
@@ -12832,6 +12843,7 @@ var messages = /*#__PURE__*/Object.freeze({
   CannotConvertSymbol: CannotConvertSymbol,
   CannotConvertToBigInt: CannotConvertToBigInt,
   CannotConvertToObject: CannotConvertToObject,
+  CannotConvertToTemporalDuration: CannotConvertToTemporalDuration,
   CannotCreateProxyWith: CannotCreateProxyWith,
   CannotDefineProperty: CannotDefineProperty,
   CannotDeleteProperty: CannotDeleteProperty,
@@ -12863,11 +12875,16 @@ var messages = /*#__PURE__*/Object.freeze({
   InvalidArrayLength: InvalidArrayLength,
   InvalidAssignmentTarget: InvalidAssignmentTarget,
   InvalidBase64String: InvalidBase64String,
+  InvalidCalendar: InvalidCalendar,
   InvalidCodePoint: InvalidCodePoint,
+  InvalidDate: InvalidDate,
+  InvalidDuration: InvalidDuration,
   InvalidHexString: InvalidHexString,
   InvalidHint: InvalidHint,
   InvalidLastChunkHandling: InvalidLastChunkHandling,
+  InvalidLeapMonth: InvalidLeapMonth,
   InvalidMethodName: InvalidMethodName,
+  InvalidMonth: InvalidMonth,
   InvalidPropertyDescriptor: InvalidPropertyDescriptor,
   InvalidRadix: InvalidRadix,
   InvalidReceiver: InvalidReceiver,
@@ -12885,10 +12902,12 @@ var messages = /*#__PURE__*/Object.freeze({
   JSONUnexpectedToken: JSONUnexpectedToken,
   LegacyOctalLiteralInStrictMode: LegacyOctalLiteralInStrictMode,
   LetInLexicalBinding: LetInLexicalBinding,
+  MissingRequiredField: MissingRequiredField,
   ModuleExportNameInvalidUnicode: ModuleExportNameInvalidUnicode,
   ModuleUndefinedExport: ModuleUndefinedExport,
   NegativeIndex: NegativeIndex,
   NewlineAfterThrow: NewlineAfterThrow,
+  NoFieldsPresent: NoFieldsPresent,
   NormalizeInvalidForm: NormalizeInvalidForm,
   NotAConstructor: NotAConstructor,
   NotAFunction: NotAFunction,
@@ -12897,6 +12916,7 @@ var messages = /*#__PURE__*/Object.freeze({
   NotASymbol: NotASymbol,
   NotATypeObject: NotATypeObject,
   NotAWeakKey: NotAWeakKey,
+  NotAnInteger: NotAnInteger,
   NotAnObject: NotAnObject,
   NotDefined: NotDefined,
   NotEnoughArguments: NotEnoughArguments,
@@ -12916,6 +12936,8 @@ var messages = /*#__PURE__*/Object.freeze({
   PromiseCapabilityFunctionAlreadySet: PromiseCapabilityFunctionAlreadySet,
   PromiseRejectFunction: PromiseRejectFunction,
   PromiseResolveFunction: PromiseResolveFunction,
+  PropertyCanOnlyBe: PropertyCanOnlyBe,
+  PropertyIsRequired: PropertyIsRequired,
   ProxyDefinePropertyIncompatible: ProxyDefinePropertyIncompatible,
   ProxyDefinePropertyNonConfigurable: ProxyDefinePropertyNonConfigurable,
   ProxyDefinePropertyNonConfigurableWritable: ProxyDefinePropertyNonConfigurableWritable,
@@ -25370,6 +25392,10 @@ const FEATURES = [
   name: 'Skip bugfix for field initializers in decorator',
   flag: 'decorators.no-bugfix.1',
   url: ''
+}, {
+  name: 'Temporal (wip)',
+  flag: 'temporal',
+  url: 'https://github.com/tc39/proposal-temporal'
 },
 // stage 2.7
 {
@@ -27498,12 +27524,14 @@ const msPerHour = msPerMinute * MinutesPerHour;
 const msPerDay = msPerHour * HoursPerDay;
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
-function Day(t) {
-  return F(Math.floor(R(t) / msPerDay));
+function Day(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(Math.floor(t / msPerDay));
 }
 Day.section = 'https://tc39.es/ecma262/#sec-day-number-and-time-within-day';
-function TimeWithinDay(t) {
-  return F(mod$1(R(t), msPerDay));
+function TimeWithinDay(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod$1(t, msPerDay));
 }
 
 /** https://tc39.es/ecma262/#sec-year-number */
@@ -27530,14 +27558,15 @@ function TimeFromYear(y) {
 }
 const msPerAverageYear = 12 * 30.436875 * msPerDay;
 function YearFromTime(_t) {
-  const t = R(_t);
+  const t = typeof _t === 'number' ? _t : R(_t);
   let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
   if (R(TimeFromYear(F(year))) > t) {
     year -= 1;
   }
   return F(year);
 }
-function InLeapYear(t) {
+function InLeapYear(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   if (R(DaysInYear(YearFromTime(t))) === 366) {
     return F(1);
   }
@@ -27545,7 +27574,8 @@ function InLeapYear(t) {
 }
 
 /** https://tc39.es/ecma262/#sec-month-number */
-function MonthFromTime(t) {
+function MonthFromTime(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   const inLeapYear = R(InLeapYear(t));
   const dayWithinYear = R(DayWithinYear(t));
   if (dayWithinYear < 31) {
@@ -27585,12 +27615,14 @@ function MonthFromTime(t) {
   return F(11);
 }
 MonthFromTime.section = 'https://tc39.es/ecma262/#sec-month-number';
-function DayWithinYear(t) {
+function DayWithinYear(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   return F(R(Day(t)) - R(DayFromYear(YearFromTime(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date-number */
-function DateFromTime(t) {
+function DateFromTime(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   const inLeapYear = R(InLeapYear(t));
   const dayWithinYear = R(DayWithinYear(t));
   const month = R(MonthFromTime(t));
@@ -27649,18 +27681,22 @@ function UTC(t) {
 UTC.section = 'https://tc39.es/ecma262/#sec-utc-t';
 
 /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
-function HourFromTime(t) {
-  return F(mod$1(Math.floor(R(t) / msPerHour), HoursPerDay));
+function HourFromTime(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod$1(Math.floor(t / msPerHour), HoursPerDay));
 }
 HourFromTime.section = 'https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds';
-function MinFromTime(t) {
-  return F(mod$1(Math.floor(R(t) / msPerMinute), MinutesPerHour));
+function MinFromTime(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod$1(Math.floor(t / msPerMinute), MinutesPerHour));
 }
-function SecFromTime(t) {
-  return F(mod$1(Math.floor(R(t) / msPerSecond), SecondsPerMinute));
+function SecFromTime(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod$1(Math.floor(t / msPerSecond), SecondsPerMinute));
 }
-function msFromTime(t) {
-  return F(mod$1(R(t), msPerSecond));
+function msFromTime(_t) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod$1(t, msPerSecond));
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
@@ -36232,6 +36268,10266 @@ function KeyForSymbol(sym) {
 }
 KeyForSymbol.section = 'https://tc39.es/ecma262/#sec-keyforsymbol';
 
+/** https://tc39.es/ecma402/#sec-canonicalizeuvalue */
+function CanonicalizeUValue(_ukey, uvalue) {
+  return uvalue;
+}
+CanonicalizeUValue.section = 'https://tc39.es/ecma402/#sec-canonicalizeuvalue';
+
+function unreachable_OtherCalendarNotImplemented() {
+  throw new Error('Calendar other than ISO8601 is not supported, but this error should never triggered by the user code.');
+}
+function temporal_todo() {
+  throw new Error('This Temporal operation is not implemented yet.');
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-iso-string-time-zone-parse-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-time-parse-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime */
+function ParseISODateTime(_isoString, _allowedFormats) {
+  temporal_todo();
+}
+ParseISODateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring */
+function ParseTemporalCalendarString(_isoString) {
+  temporal_todo();
+}
+ParseTemporalCalendarString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring */
+function ParseTemporalDurationString(_isoString) {
+  temporal_todo();
+}
+ParseTemporalDurationString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring */
+function ParseTemporalTimeZoneString(_timeZoneString) {
+  temporal_todo();
+}
+ParseTemporalTimeZoneString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-time-zone-identifier-parse-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-parsemonthcode */
+function* ParseMonthCode(argument) {
+  let monthCode;
+  if (typeof argument === 'string') {
+    monthCode = Value(argument);
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp = yield* ToPrimitive(argument, 'string');
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    monthCode = _temp;
+  }
+  if (!(monthCode instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', typeof argument === 'string' ? Value(argument) : argument);
+  }
+
+  // If ParseText(StringToCodePoints(monthCode), MonthCode) is a List of errors, throw a RangeError exception.
+
+  //  MonthCode :::
+  //    M00L
+  //    M0 NonZeroDigit L?
+  //    M NonZeroDigit DecimalDigit L?
+
+  if (!monthCode.stringValue().match(/^(M00L|M0[1-9]L?|M[1-9][0-9]L?)$/)) {
+    return surroundingAgent.Throw('RangeError', 'InvalidMonth');
+  }
+  let isLeapMonth = false;
+  if (monthCode.stringValue().length === 4) {
+    // Assert: The fourth code unit of monthCode is 0x004C (LATIN CAPITAL LETTER L).
+    Assert(monthCode.stringValue().charCodeAt(4) === 0x004C, "monthCode.stringValue().charCodeAt(4) === 0x004C");
+    isLeapMonth = true;
+  }
+  const monthCodeDigits = monthCode.stringValue().substring(1, 3);
+  const monthNumber = parseInt(monthCodeDigits, 10);
+  if (monthNumber === 0 && !isLeapMonth) {
+    return surroundingAgent.Throw('RangeError', 'InvalidMonth');
+  }
+  return {
+    MonthNumber: monthNumber,
+    IsLeapMonth: isLeapMonth
+  };
+}
+ParseMonthCode.section = 'https://tc39.es/proposal-temporal/#sec-temporal-parsemonthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset */
+function ParseDateTimeUTCOffset(_offsetString) {
+  temporal_todo();
+}
+ParseDateTimeUTCOffset.section = 'https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier
+function ParseTimeZoneIdentifier(_identifier) {
+  temporal_todo();
+}
+ParseTimeZoneIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier';
+
+function thisTemporalDateValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalDate');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.calendarid */
+function PlainDateProto_calendarIdGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const plainDate = _temp2;
+  return Value(plainDate.Calendar);
+}
+PlainDateProto_calendarIdGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.calendarid';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.era */
+function PlainDateProto_eraGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const plainDate = _temp3;
+  return Value(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Era);
+}
+PlainDateProto_eraGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.era';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.erayear */
+function PlainDateProto_eraYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const plainDate = _temp4;
+  const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).EraYear;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainDateProto_eraYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.erayear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.year */
+function PlainDateProto_yearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const plainDate = _temp5;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Year);
+}
+PlainDateProto_yearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.year';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.month */
+function PlainDateProto_monthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const plainDate = _temp6;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Month);
+}
+PlainDateProto_monthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.month';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthcode */
+function PlainDateProto_monthCodeGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const plainDate = _temp7;
+  return Value(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).MonthCode);
+}
+PlainDateProto_monthCodeGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.day */
+function PlainDateProto_dayGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const plainDate = _temp8;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Day);
+}
+PlainDateProto_dayGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.day';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofweek */
+function PlainDateProto_dayOfWeekGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp9 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const plainDate = _temp9;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DayOfWeek);
+}
+PlainDateProto_dayOfWeekGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofweek';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofyear */
+function PlainDateProto_dayOfYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp0 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const plainDate = _temp0;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DayOfYear);
+}
+PlainDateProto_dayOfYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.weekofyear */
+function PlainDateProto_weekOfYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp1 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const plainDate = _temp1;
+  const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).WeekOfYear.Week;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainDateProto_weekOfYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.weekofyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.yearofweek */
+function PlainDateProto_yearOfWeekGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp10 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const plainDate = _temp10;
+  const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).WeekOfYear.Year;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainDateProto_yearOfWeekGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.yearofweek';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinweek */
+function PlainDateProto_daysInWeekGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp11 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const plainDate = _temp11;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInWeek);
+}
+PlainDateProto_daysInWeekGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinweek';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinmonth */
+function PlainDateProto_daysInMonthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp12 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const plainDate = _temp12;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInMonth);
+}
+PlainDateProto_daysInMonthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinyear */
+function PlainDateProto_daysInYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp13 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const plainDate = _temp13;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInYear);
+}
+PlainDateProto_daysInYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthsinyear */
+function PlainDateProto_monthsInYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp14 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const plainDate = _temp14;
+  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).MonthsInYear);
+}
+PlainDateProto_monthsInYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthsinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.inleapyear */
+function PlainDateProto_inLeapYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const plainDate = _temp15;
+  return Value(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).InLeapYear);
+}
+PlainDateProto_inLeapYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.inleapyear';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainyearmonth */
+function* PlainDateProto_toPlainYearMonth(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp16 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const plainDate = _temp16;
+  const calendar = plainDate.Calendar;
+  const fields = ISODateToFields(calendar, plainDate.ISODate, 'date');
+  /* ReturnIfAbrupt */let _temp17 = yield* CalendarYearMonthFromFields(calendar, fields, 'constrain');
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const isoDate = _temp17;
+  /* X */let _temp18 = CreateTemporalYearMonth(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalYearMonth(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp18
+  }); /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  return _temp18;
+}
+PlainDateProto_toPlainYearMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainyearmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainmonthday */
+function* PlainDateProto_toPlainMonthDay(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp19 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const plainDate = _temp19;
+  const calendar = plainDate.Calendar;
+  const fields = ISODateToFields(calendar, plainDate.ISODate, 'date');
+  /* ReturnIfAbrupt */let _temp20 = yield* CalendarMonthDayFromFields(calendar, fields, 'constrain');
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const isoDate = _temp20;
+  /* X */let _temp21 = CreateTemporalMonthDay(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalMonthDay(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp21
+  }); /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  return _temp21;
+}
+PlainDateProto_toPlainMonthDay.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainmonthday';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.add */
+function* PlainDateProto_add([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp22 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const plainDate = _temp22;
+  return yield* AddDurationToDate('add', plainDate, temporalDurationLike, options);
+}
+PlainDateProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.subtract */
+function* PlainDateProto_subtract([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp23 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const plainDate = _temp23;
+  return yield* AddDurationToDate('subtract', plainDate, temporalDurationLike, options);
+}
+PlainDateProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.with */
+function* PlainDateProto_with([temporalDateLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp24 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const plainDate = _temp24;
+  /* ReturnIfAbrupt */let _temp25 = yield* IsPartialTemporalObject(temporalDateLike);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  if (!_temp25) {
+    return Throw.TypeError('$1 is not a partial Temporal object', temporalDateLike);
+  }
+  const calendar = plainDate.Calendar;
+  let fields = ISODateToFields(calendar, plainDate.ISODate, 'date');
+  /* ReturnIfAbrupt */let _temp26 = yield* PrepareCalendarFields(calendar, temporalDateLike, ['year', 'month', 'month-code', 'day'], [], 'partial');
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const partialDate = _temp26;
+  fields = CalendarMergeFields(calendar, fields, partialDate);
+  /* ReturnIfAbrupt */let _temp27 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  const resolvedOptions = _temp27;
+  /* ReturnIfAbrupt */let _temp28 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const overflow = _temp28;
+  /* ReturnIfAbrupt */let _temp29 = yield* CalendarDateFromFields(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const isoDate = _temp29;
+  /* X */let _temp30 = CreateTemporalDate(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp30
+  }); /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  return _temp30;
+}
+PlainDateProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar */
+function PlainDateProto_withCalendar([calendarLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp31 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const plainDate = _temp31;
+  /* ReturnIfAbrupt */let _temp32 = ToTemporalCalendarIdentifier(calendarLike);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  const calendar = _temp32;
+  /* X */let _temp33 = CreateTemporalDate(plainDate.ISODate, calendar);
+  /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
+  /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(plainDate.ISODate, calendar) returned an abrupt completion", {
+    cause: _temp33
+  }); /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+  return _temp33;
+}
+PlainDateProto_withCalendar.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.until */
+function* PlainDateProto_until([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp34 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) return _temp34; /* node:coverage ignore next */
+  if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  const plainDate = _temp34;
+  return yield* DifferenceTemporalPlainDate('until', plainDate, other, options);
+}
+PlainDateProto_until.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.until';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.since */
+function* PlainDateProto_since([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp35 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  const plainDate = _temp35;
+  return yield* DifferenceTemporalPlainDate('since', plainDate, other, options);
+}
+PlainDateProto_since.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.since';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.equals */
+function* PlainDateProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp36 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) return _temp36; /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  const plainDate = _temp36;
+  /* ReturnIfAbrupt */let _temp37 = yield* ToTemporalDate(_other);
+  /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) return _temp37; /* node:coverage ignore next */
+  if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+  const other = _temp37;
+  if (CompareISODate(plainDate.ISODate, other.ISODate) !== 0) {
+    return Value.false;
+  }
+  return Value(CalendarEquals(plainDate.Calendar, other.Calendar));
+}
+PlainDateProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplaindatetime */
+function* PlainDateProto_toPlainDateTime([temporalTime = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp38 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) return _temp38; /* node:coverage ignore next */
+  if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+  const plainDate = _temp38;
+  /* ReturnIfAbrupt */let _temp39 = yield* ToTimeRecordOrMidnight(temporalTime);
+  /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) return _temp39; /* node:coverage ignore next */
+  if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+  const time = _temp39;
+  const isoDateTime = CombineISODateAndTimeRecord(plainDate.ISODate, time);
+  return yield* CreateTemporalDateTime(isoDateTime, plainDate.Calendar);
+}
+PlainDateProto_toPlainDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplaindatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tozoneddatetime */
+function* PlainDateProto_toZonedDateTime([item = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp40 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) return _temp40; /* node:coverage ignore next */
+  if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+  const plainDate = _temp40;
+  let timeZone;
+  let temporalTime;
+  if (item instanceof ObjectValue) {
+    /* ReturnIfAbrupt */let _temp41 = yield* Get(item, Value('timeZone'));
+    /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) return _temp41; /* node:coverage ignore next */
+    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+    const timeZoneLike = _temp41;
+    if (timeZoneLike === Value.undefined) {
+      /* ReturnIfAbrupt */let _temp42 = ToTemporalTimeZoneIdentifier(item);
+      /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) return _temp42; /* node:coverage ignore next */
+      if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+      timeZone = _temp42;
+      temporalTime = Value.undefined;
+    } else {
+      /* ReturnIfAbrupt */let _temp43 = ToTemporalTimeZoneIdentifier(timeZoneLike);
+      /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) return _temp43; /* node:coverage ignore next */
+      if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+      timeZone = _temp43;
+      /* ReturnIfAbrupt */let _temp44 = yield* Get(item, Value('plainTime'));
+      /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) return _temp44; /* node:coverage ignore next */
+      if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+      temporalTime = _temp44;
+    }
+  } else {
+    /* ReturnIfAbrupt */let _temp45 = ToTemporalTimeZoneIdentifier(item);
+    /* node:coverage ignore next */if (_temp45 instanceof AbruptCompletion) return _temp45; /* node:coverage ignore next */
+    if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+    timeZone = _temp45;
+    temporalTime = Value.undefined;
+  }
+  let epochNs;
+  if (temporalTime === Value.undefined) {
+    /* ReturnIfAbrupt */let _temp46 = GetStartOfDay(timeZone, plainDate.ISODate);
+    /* node:coverage ignore next */if (_temp46 instanceof AbruptCompletion) return _temp46; /* node:coverage ignore next */
+    if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+    epochNs = _temp46;
+  } else {
+    /* ReturnIfAbrupt */let _temp47 = yield* ToTemporalTime(temporalTime);
+    /* node:coverage ignore next */if (_temp47 instanceof AbruptCompletion) return _temp47; /* node:coverage ignore next */
+    if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+    const temporalTime2 = _temp47;
+    const isoDateTime = CombineISODateAndTimeRecord(plainDate.ISODate, temporalTime2.Time);
+    if (!ISODateTimeWithinLimits(isoDateTime)) {
+      return Throw.RangeError('DateTime outside of range');
+    }
+    /* ReturnIfAbrupt */let _temp48 = GetEpochNanosecondsFor(timeZone, isoDateTime, 'compatible');
+    /* node:coverage ignore next */if (_temp48 instanceof AbruptCompletion) return _temp48; /* node:coverage ignore next */
+    if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+    epochNs = _temp48;
+  }
+  /* X */let _temp49 = CreateTemporalZonedDateTime(epochNs, timeZone, plainDate.Calendar);
+  /* node:coverage ignore next */if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) _temp49 = skipDebugger(_temp49);
+  /* node:coverage ignore next */if (_temp49 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNs, timeZone, plainDate.Calendar) returned an abrupt completion", {
+    cause: _temp49
+  }); /* node:coverage ignore next */
+  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+  return _temp49;
+}
+PlainDateProto_toZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tozoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tostring */
+function* PlainDateProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp50 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp50 instanceof AbruptCompletion) return _temp50; /* node:coverage ignore next */
+  if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+  const plainDate = _temp50;
+  /* ReturnIfAbrupt */let _temp51 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp51 instanceof AbruptCompletion) return _temp51; /* node:coverage ignore next */
+  if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
+  const resolvedOptions = _temp51;
+  /* ReturnIfAbrupt */let _temp52 = yield* GetTemporalShowCalendarNameOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp52 instanceof AbruptCompletion) return _temp52; /* node:coverage ignore next */
+  if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
+  const showCalendar = _temp52;
+  return Value(TemporalDateToString(plainDate, showCalendar));
+}
+PlainDateProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tolocalestring */
+function PlainDateProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp53 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp53 instanceof AbruptCompletion) return _temp53; /* node:coverage ignore next */
+  if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
+  const plainDate = _temp53;
+  return Value(TemporalDateToString(plainDate, 'auto'));
+}
+PlainDateProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tojson */
+function PlainDateProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp54 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp54 instanceof AbruptCompletion) return _temp54; /* node:coverage ignore next */
+  if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
+  const plainDate = _temp54;
+  return Value(TemporalDateToString(plainDate, 'auto'));
+}
+PlainDateProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.valueof */
+function PlainDateProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp55 = thisTemporalDateValue(thisValue);
+  /* node:coverage ignore next */if (_temp55 instanceof AbruptCompletion) return _temp55; /* node:coverage ignore next */
+  if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
+  return Throw.TypeError('Temporal.PlainDate cannot be converted to primitive value. If you are comparing two Temporal.PlainDate objects with > or <, use Temporal.PlainDate.compare() instead.');
+}
+PlainDateProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.valueof';
+function bootstrapTemporalPlainDatePrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['calendarId', [PlainDateProto_calendarIdGetter]], ['era', [PlainDateProto_eraGetter]], ['eraYear', [PlainDateProto_eraYearGetter]], ['year', [PlainDateProto_yearGetter]], ['month', [PlainDateProto_monthGetter]], ['monthCode', [PlainDateProto_monthCodeGetter]], ['day', [PlainDateProto_dayGetter]], ['dayOfWeek', [PlainDateProto_dayOfWeekGetter]], ['dayOfYear', [PlainDateProto_dayOfYearGetter]], ['weekOfYear', [PlainDateProto_weekOfYearGetter]], ['yearOfWeek', [PlainDateProto_yearOfWeekGetter]], ['daysInWeek', [PlainDateProto_daysInWeekGetter]], ['daysInMonth', [PlainDateProto_daysInMonthGetter]], ['daysInYear', [PlainDateProto_daysInYearGetter]], ['monthsInYear', [PlainDateProto_monthsInYearGetter]], ['inLeapYear', [PlainDateProto_inLeapYearGetter]], ['toPlainYearMonth', PlainDateProto_toPlainYearMonth, 0], ['toPlainMonthDay', PlainDateProto_toPlainMonthDay, 0], ['add', PlainDateProto_add, 1], ['subtract', PlainDateProto_subtract, 1], ['with', PlainDateProto_with, 1], ['withCalendar', PlainDateProto_withCalendar, 1], ['until', PlainDateProto_until, 1], ['since', PlainDateProto_since, 1], ['equals', PlainDateProto_equals, 1], ['toPlainDateTime', PlainDateProto_toPlainDateTime, 0], ['toZonedDateTime', PlainDateProto_toZonedDateTime, 1], ['toString', PlainDateProto_toString, 0], ['toLocaleString', PlainDateProto_toLocaleString, 0], ['toJSON', PlainDateProto_toJSON, 0], ['valueOf', PlainDateProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainDate');
+  realmRec.Intrinsics['%Temporal.PlainDate.prototype%'] = prototype;
+  return prototype;
+}
+
+function isTemporalPlainDateObject(o) {
+  return 'InitializedTemporalDate' in o;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate */
+function* PlainDateConstructor([isoYear = Value.undefined, isoMonth = Value.undefined, isoDay = Value.undefined, _calendar = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.PlainDate constructor cannot be called without new');
+  }
+  /* ReturnIfAbrupt */let _temp = yield* ToIntegerWithTruncation(isoYear);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const y = _temp;
+  /* ReturnIfAbrupt */let _temp2 = yield* ToIntegerWithTruncation(isoMonth);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const m = _temp2;
+  /* ReturnIfAbrupt */let _temp3 = yield* ToIntegerWithTruncation(isoDay);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const d = _temp3;
+  if (_calendar instanceof UndefinedValue) {
+    _calendar = Value('iso8601');
+  }
+  if (!(_calendar instanceof JSStringValue)) {
+    return Throw.TypeError('calendar must be a string, but $1', _calendar);
+  }
+  /* ReturnIfAbrupt */let _temp4 = CanonicalizeCalendar(_calendar.stringValue());
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const calendar = _temp4;
+  if (!IsValidISODate(y, m, d)) {
+    return Throw.RangeError('Invalid date');
+  }
+  const isoDate = CreateISODateRecord(y, m, d);
+  return yield* CreateTemporalDate(isoDate, calendar, NewTarget);
+}
+PlainDateConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.from */
+function* PlainDate_From([item = Value.undefined, options = Value.undefined]) {
+  return yield* ToTemporalDate(item, options);
+}
+PlainDate_From.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.compare */
+function* PlainDate_Compare([_one = Value.undefined, _two = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp5 = yield* ToTemporalDate(_one);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const one = _temp5;
+  /* ReturnIfAbrupt */let _temp6 = yield* ToTemporalDate(_two);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const two = _temp6;
+  return F(CompareISODate(one.ISODate, two.ISODate));
+}
+PlainDate_Compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindate.compare';
+function bootstrapTemporalPlainDate(realmRec) {
+  const prototype = bootstrapTemporalPlainDatePrototype(realmRec);
+  realmRec.Intrinsics['%Temporal.PlainDate.prototype%'] = prototype;
+  const constructor = bootstrapConstructor(realmRec, PlainDateConstructor, 'PlainDate', 3, prototype, [['from', PlainDate_From, 1], ['compare', PlainDate_Compare, 2]]);
+  realmRec.Intrinsics['%Temporal.PlainDate%'] = constructor;
+  return constructor;
+}
+
+function abs(x) {
+  if (x < 0) {
+    return -x;
+  }
+  return x;
+}
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getavailablenamedtimezoneidentifier
+function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier) {
+  for (const record of AvailableNamedTimeZoneIdentifiers()) {
+    if (record.Identifier.toLowerCase() === timeZoneIdentifier.toLowerCase()) {
+      return record;
+    }
+  }
+  return undefined;
+}
+GetAvailableNamedTimeZoneIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getavailablenamedtimezoneidentifier';
+
+/** https://tc39.es/ecma262/#sec-time-zone-identifier-record */
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getisopartsfromepoch
+function GetISOPartsFromEpoch(epochNanoseconds) {
+  Assert(IsValidEpochNanoseconds(epochNanoseconds), "IsValidEpochNanoseconds(epochNanoseconds)");
+  const remainderNs = epochNanoseconds % 1e6;
+  const epochMilliseconds = (epochNanoseconds - remainderNs) / 1e6;
+  const year = EpochTimeToEpochYear(epochMilliseconds);
+  const month = EpochTimeToMonthInYear(epochMilliseconds) + 1;
+  const day = EpochTimeToDate(epochMilliseconds);
+  const hour = R(HourFromTime(Value(epochMilliseconds)));
+  const minute = R(MinFromTime(Value(epochMilliseconds)));
+  const second = R(SecFromTime(Value(epochMilliseconds)));
+  const millisecond = R(msFromTime(Value(epochMilliseconds)));
+  const microsecond = Math.floor(remainderNs / 1000);
+  Assert(microsecond < 1000, "microsecond < 1000");
+  const nanosecond = remainderNs % 1000;
+  const isoDate = CreateISODateRecord(year, month, day);
+  const time = CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond);
+  return CombineISODateAndTimeRecord(isoDate, time);
+}
+GetISOPartsFromEpoch.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getisopartsfromepoch';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getnamedtimezonenexttransition
+function GetNamedTimeZoneNextTransition(timeZoneIdentifier, _epochNanoseconds) {
+  Assert(timeZoneIdentifier === 'UTC', "timeZoneIdentifier === 'UTC'");
+  return null;
+}
+GetNamedTimeZoneNextTransition.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getnamedtimezonenexttransition';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getnamedtimezoneprevioustransition
+function GetNamedTimeZonePreviousTransition(timeZoneIdentifier, _epochNanoseconds) {
+  Assert(timeZoneIdentifier === 'UTC', "timeZoneIdentifier === 'UTC'");
+  return null;
+}
+GetNamedTimeZonePreviousTransition.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getnamedtimezoneprevioustransition';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-formatoffsettimezoneidentifier
+function FormatOffsetTimeZoneIdentifier(offsetMinutes, style = 'separated') {
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const absoluteMinutes = Math.abs(offsetMinutes);
+  const hour = Math.floor(absoluteMinutes / 60);
+  const minute = absoluteMinutes % 60;
+  const timeString = FormatTimeString(hour, minute, 0, 0, 'minute', style);
+  return sign + timeString;
+}
+FormatOffsetTimeZoneIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-temporal-formatoffsettimezoneidentifier';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-formatutcoffsetnanoseconds
+function FormatUTCOffsetNanoseconds(offsetNanoseconds) {
+  const sign = offsetNanoseconds >= 0 ? '+' : '-';
+  const absoluteNanoseconds = Math.abs(offsetNanoseconds);
+  const hour = Math.floor(absoluteNanoseconds / (3600 * 1e9));
+  const minute = Math.floor(absoluteNanoseconds / (60 * 1e9)) % 60;
+  const second = Math.floor(absoluteNanoseconds / 1e9) % 60;
+  const subSecondNanoseconds = absoluteNanoseconds % 1e9;
+  const precision = second === 0 && subSecondNanoseconds === 0 ? 'minute' : 'auto';
+  const timeString = FormatTimeString(hour, minute, second, subSecondNanoseconds, precision);
+  return sign + timeString;
+}
+FormatUTCOffsetNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-formatutcoffsetnanoseconds';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-formatdatetimeutcoffsetrounded
+function FormatDateTimeUTCOffsetRounded(offsetNanoseconds) {
+  offsetNanoseconds = RoundNumberToIncrement(offsetNanoseconds, 60 * 1e9, RoundingMode.HalfExpand);
+  const offsetMinutes = offsetNanoseconds / (60 * 1e9);
+  return FormatOffsetTimeZoneIdentifier(offsetMinutes);
+}
+FormatDateTimeUTCOffsetRounded.section = 'https://tc39.es/proposal-temporal/#sec-temporal-formatdatetimeutcoffsetrounded';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezoneidentifier
+function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike) {
+  if (temporalTimeZoneLike instanceof ObjectValue && isTemporalZonedDateTimeObject(temporalTimeZoneLike)) {
+    return temporalTimeZoneLike.TimeZone;
+  }
+  if (!(temporalTimeZoneLike instanceof JSStringValue) && typeof temporalTimeZoneLike !== 'string') {
+    return Throw.TypeError('$1 is not a string', temporalTimeZoneLike);
+  }
+  const temporalTimeZoneLikeString = temporalTimeZoneLike instanceof JSStringValue ? temporalTimeZoneLike.stringValue() : temporalTimeZoneLike;
+  /* ReturnIfAbrupt */let _temp = ParseTemporalTimeZoneString();
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const parseResult = _temp;
+  const offsetMinutes = parseResult.OffsetMinutes;
+  if (offsetMinutes !== undefined) {
+    return FormatOffsetTimeZoneIdentifier(offsetMinutes);
+  }
+  const name = parseResult.Name;
+  const timeZoneIdentifierRecord = GetAvailableNamedTimeZoneIdentifier(name);
+  if (timeZoneIdentifierRecord === undefined) {
+    return Throw.RangeError('Invalid time zone identifier: $1', temporalTimeZoneLikeString);
+  }
+  return timeZoneIdentifierRecord.Identifier;
+}
+ToTemporalTimeZoneIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezoneidentifier';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
+function GetOffsetNanosecondsFor(timeZone, epochNs) {
+  /* X */let _temp2 = ParseTimeZoneIdentifier();
+  /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! ParseTimeZoneIdentifier(timeZone) returned an abrupt completion", {
+    cause: _temp2
+  }); /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const parseResult = _temp2;
+  if (parseResult.OffsetMinutes !== undefined) {
+    return parseResult.OffsetMinutes * (60 * 1e9);
+  }
+  return GetNamedTimeZoneOffsetNanoseconds(parseResult.Name);
+}
+GetOffsetNanosecondsFor.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getisodatetimefor
+function GetISODateTimeFor(timeZone, epochNs) {
+  const offsetNanoseconds = GetOffsetNanosecondsFor();
+  const result = GetISOPartsFromEpoch(Number(epochNs));
+  return BalanceISODateTime(result.ISODate.Year, result.ISODate.Month, result.ISODate.Day, result.Time.Hour, result.Time.Minute, result.Time.Second, result.Time.Millisecond, result.Time.Microsecond, result.Time.Nanosecond + offsetNanoseconds);
+}
+GetISODateTimeFor.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getisodatetimefor';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getepochnanosecondsfor
+function GetEpochNanosecondsFor(timeZone, isoDateTime, disambiguation) {
+  /* ReturnIfAbrupt */let _temp3 = GetPossibleEpochNanoseconds(timeZone, isoDateTime);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const possibleEpochNs = _temp3;
+  return DisambiguatePossibleEpochNanoseconds(possibleEpochNs, timeZone, isoDateTime, disambiguation);
+}
+GetEpochNanosecondsFor.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getepochnanosecondsfor';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleepochnanoseconds
+function DisambiguatePossibleEpochNanoseconds(possibleEpochNs, timeZone, isoDateTime, disambiguation) {
+  let n = possibleEpochNs.length;
+  if (n === 1) {
+    return possibleEpochNs[0];
+  }
+  if (n !== 0) {
+    if (disambiguation === 'earlier' || disambiguation === 'compatible') {
+      return possibleEpochNs[0];
+    }
+    if (disambiguation === 'later') {
+      return possibleEpochNs[n - 1];
+    }
+    Assert(disambiguation === 'reject', "disambiguation === 'reject'");
+    return Throw.RangeError('Multiple possible epoch nanoseconds');
+  }
+  Assert(n === 0, "n === 0");
+  if (disambiguation === 'reject') {
+    return Throw.RangeError('No possible epoch nanoseconds');
+  }
+  const before = null;
+  Assert(false, 'TODO(temporal): 6. Let before be the latest possible ISO Date-Time Record for which CompareISODateTime(before, isoDateTime) = -1 and ! GetPossibleEpochNanoseconds(timeZone, before) is not empty.');
+  const after = null;
+  Assert(false, 'TODO(temporal): 7. Let after be the earliest possible ISO Date-Time Record for which CompareISODateTime(after, isoDateTime) = 1 and ! GetPossibleEpochNanoseconds(timeZone, after) is not empty.');
+  /* X */let _temp4 = GetPossibleEpochNanoseconds(timeZone, before);
+  /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! GetPossibleEpochNanoseconds(timeZone, before) returned an abrupt completion", {
+    cause: _temp4
+  }); /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const beforePossible = _temp4;
+  Assert(beforePossible.length === 1, "beforePossible.length === 1");
+  /* X */let _temp5 = GetPossibleEpochNanoseconds(timeZone, after);
+  /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! GetPossibleEpochNanoseconds(timeZone, after) returned an abrupt completion", {
+    cause: _temp5
+  }); /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const afterPossible = _temp5;
+  Assert(afterPossible.length === 1, "afterPossible.length === 1");
+  const offsetBefore = GetOffsetNanosecondsFor(timeZone, beforePossible[0]);
+  const offsetAfter = GetOffsetNanosecondsFor(timeZone, afterPossible[0]);
+  const naneseconds = offsetAfter - offsetBefore;
+  Assert(abs(naneseconds) <= nsPerDay, "abs(naneseconds) <= nsPerDay");
+  if (disambiguation === 'earlier') {
+    const timeDuration = TimeDurationFromComponents(0, 0, 0, 0, 0, -naneseconds);
+    const earlierTime = AddTime(isoDateTime.Time, timeDuration);
+    const earlierDate = AddDaysToISODate(isoDateTime.ISODate, earlierTime.Days);
+    const earlierDateTime = CombineISODateAndTimeRecord(earlierDate, earlierTime);
+    /* ReturnIfAbrupt */let _temp6 = GetPossibleEpochNanoseconds(timeZone, earlierDateTime);
+    /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    possibleEpochNs = _temp6;
+    Assert(possibleEpochNs.length > 0, "possibleEpochNs.length > 0");
+    return possibleEpochNs[0];
+  }
+  Assert(disambiguation === 'compatible' || disambiguation === 'later', "disambiguation === 'compatible' || disambiguation === 'later'");
+  const timeDuration = TimeDurationFromComponents(0, 0, 0, 0, 0, naneseconds);
+  const laterTime = AddTime(isoDateTime.Time, timeDuration);
+  const laterDate = AddDaysToISODate(isoDateTime.ISODate, laterTime.Days);
+  const laterDateTime = CombineISODateAndTimeRecord(laterDate, laterTime);
+  /* ReturnIfAbrupt */let _temp7 = GetPossibleEpochNanoseconds(timeZone, laterDateTime);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  possibleEpochNs = _temp7;
+  n = possibleEpochNs.length;
+  Assert(n > 0, "n > 0");
+  return possibleEpochNs[n - 1];
+}
+DisambiguatePossibleEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleepochnanoseconds';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-getpossibleepochnanoseconds
+function GetPossibleEpochNanoseconds(timeZone, isoDateTime) {
+  /* X */let _temp8 = ParseTimeZoneIdentifier();
+  /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! ParseTimeZoneIdentifier(timeZone) returned an abrupt completion", {
+    cause: _temp8
+  }); /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const parseResult = _temp8;
+  let possibleEpochNanoseconds;
+  if (parseResult.OffsetMinutes !== undefined) {
+    const balanced = BalanceISODateTime(isoDateTime.ISODate.Year, isoDateTime.ISODate.Month, isoDateTime.ISODate.Day, isoDateTime.Time.Hour, isoDateTime.Time.Minute - parseResult.OffsetMinutes, isoDateTime.Time.Second, isoDateTime.Time.Millisecond, isoDateTime.Time.Microsecond, isoDateTime.Time.Nanosecond);
+    /* ReturnIfAbrupt */let _temp9 = CheckISODaysRange(balanced.ISODate);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    const epochNanoseconds = GetUTCEpochNanoseconds(balanced);
+    possibleEpochNanoseconds = [epochNanoseconds];
+  } else {
+    possibleEpochNanoseconds = GetNamedTimeZoneEpochNanoseconds(parseResult.Name, isoDateTime);
+  }
+  for (const epochNanoseconds of possibleEpochNanoseconds) {
+    if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+      return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
+    }
+  }
+  return possibleEpochNanoseconds;
+}
+GetPossibleEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getpossibleepochnanoseconds';
+
+// It determines the exact time that corresponds to the first valid wall-clock time in the calendar date isoDate in timeZone.
+/** https://tc39.es/proposal-temporal/#sec-temporal-getstartofday */
+function GetStartOfDay(timeZone, isoDate) {
+  const isoDateTime = CombineISODateAndTimeRecord(isoDate, MidnightTimeRecord());
+  /* ReturnIfAbrupt */let _temp0 = GetPossibleEpochNanoseconds(timeZone, isoDateTime);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const possibleEpochNs = _temp0;
+  if (possibleEpochNs.length) {
+    return possibleEpochNs[0];
+  }
+  Assert(IsOffsetTimeZoneIdentifier() === false, "IsOffsetTimeZoneIdentifier(timeZone) === false");
+  Assert(false, 'TODO: isoDateTimeAfter is the ISO Date-Time Record for which DifferenceISODateTime(isoDateTime, isoDateTimeAfter, "iso8601", hour).[[Time]] is the smallest possible value > 0 for which possibleEpochNsAfter is not empty (i.e., isoDateTimeAfter represents the first local time after the transition).');
+  // const possibleEpochNsAfter = GetNamedTimeZoneEpochNanoseconds(timeZone, isoDateTimeAfter!);
+  // Assert(possibleEpochNsAfter.length === 1);
+  // return possibleEpochNsAfter[0];
+  return 0n;
+}
+GetStartOfDay.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getstartofday';
+
+// https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
+function TimeZoneEquals(one, two) {
+  if (one === two) {
+    return true;
+  }
+  if (!IsOffsetTimeZoneIdentifier() && !IsOffsetTimeZoneIdentifier()) {
+    const recordOne = GetAvailableNamedTimeZoneIdentifier(one);
+    const recordTwo = GetAvailableNamedTimeZoneIdentifier(two);
+    Assert(recordOne !== undefined, "recordOne !== undefined");
+    Assert(recordTwo !== undefined, "recordTwo !== undefined");
+    if (recordOne.PrimaryIdentifier === recordTwo.PrimaryIdentifier) {
+      return true;
+    }
+  }
+  // TODO(temporal)
+  // 3. Assert: If one and two are both offset time zone identifiers, they do not represent the same number of offset minutes.
+  return false;
+}
+TimeZoneEquals.section = 'https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset */
+function InterpretISODateTimeOffset(isoDate, time, offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour) {
+  if (time === 'start-of-day') {
+    Assert(offsetBehaviour === 'wall', "offsetBehaviour === 'wall'");
+    Assert(offsetNanoseconds === 0, "offsetNanoseconds === 0");
+    return GetStartOfDay(timeZone, isoDate);
+  }
+  const isoDateTime = CombineISODateAndTimeRecord(isoDate, time);
+  if (offsetBehaviour === 'wall' || offsetBehaviour === 'option' && offsetOption === 'ignore') {
+    return GetEpochNanosecondsFor(timeZone, isoDateTime, disambiguation);
+  }
+  if (offsetBehaviour === 'exact' || offsetBehaviour === 'option' && offsetOption === 'use') {
+    const balanced = BalanceISODateTime(isoDate.Year, isoDate.Month, isoDate.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, time.Nanosecond - offsetNanoseconds);
+    /* ReturnIfAbrupt */let _temp = CheckISODaysRange(balanced.ISODate);
+    /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    const epochNanoseconds = GetUTCEpochNanoseconds(balanced);
+    if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+      return Throw.RangeError('Invalid date');
+    }
+    return epochNanoseconds;
+  }
+  Assert(offsetBehaviour === 'option', "offsetBehaviour === 'option'");
+  Assert(offsetOption === 'prefer' || offsetOption === 'reject', "offsetOption === 'prefer' || offsetOption === 'reject'");
+  /* ReturnIfAbrupt */let _temp2 = CheckISODaysRange(isoDate);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const utcEpochNanoseconds = GetUTCEpochNanoseconds(isoDateTime);
+  /* ReturnIfAbrupt */let _temp3 = GetPossibleEpochNanoseconds(timeZone, isoDateTime);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const possibleEpochNs = _temp3;
+  for (const candidate of possibleEpochNs) {
+    const candidateOffset = utcEpochNanoseconds - candidate;
+    if (candidateOffset === BigInt(offsetNanoseconds)) {
+      return candidate;
+    }
+    if (matchBehaviour === 'match-minutes') {
+      const roundedCandidateNanoseconds = RoundNumberToIncrement(Number(candidateOffset), 60 * 1e9, RoundingMode.HalfExpand);
+      if (roundedCandidateNanoseconds === offsetNanoseconds) {
+        return candidate;
+      }
+    }
+  }
+  if (offsetOption === 'reject') {
+    return Throw.RangeError('No matching offset found for the given date and time');
+  }
+  return DisambiguatePossibleEpochNanoseconds(possibleEpochNs, timeZone, isoDateTime, disambiguation);
+}
+InterpretISODateTimeOffset.section = 'https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime */
+function* ToTemporalZonedDateTime(item, options = Value.undefined) {
+  let hasUTCDesignator = false;
+  let matchBehaviour = 'match-exactly';
+  let calendar;
+  let isoDate;
+  let time;
+  let timeZone;
+  let offsetString;
+  let disambiguation;
+  let offsetOption;
+  if (item instanceof ObjectValue) {
+    if (isTemporalZonedDateTimeObject(item)) {
+      /* ReturnIfAbrupt */let _temp4 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      const resolvedOptions = _temp4;
+      /* ReturnIfAbrupt */let _temp5 = yield* GetTemporalDisambiguationOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      /* ReturnIfAbrupt */let _temp6 = yield* GetTemporalOffsetOption(resolvedOptions, 'reject');
+      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      /* ReturnIfAbrupt */let _temp7 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+      if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+      /* X */let _temp8 = CreateTemporalZonedDateTime(item.EpochNanoseconds, item.TimeZone, item.Calendar);
+      /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(item.EpochNanoseconds, item.TimeZone, item.Calendar) returned an abrupt completion", {
+        cause: _temp8
+      }); /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      return _temp8;
+    }
+    /* ReturnIfAbrupt */let _temp9 = yield* GetTemporalCalendarIdentifierWithISODefault(item);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    calendar = _temp9;
+    /* ReturnIfAbrupt */let _temp0 = yield* PrepareCalendarFields(calendar, item, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset', 'time-zone'], ['time-zone']);
+    /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    const fields = _temp0;
+    timeZone = fields.TimeZone;
+    offsetString = fields.OffsetString;
+    /* ReturnIfAbrupt */let _temp1 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+    const resolvedOptions = _temp1;
+    /* ReturnIfAbrupt */let _temp10 = yield* GetTemporalDisambiguationOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+    if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+    disambiguation = _temp10;
+    /* ReturnIfAbrupt */let _temp11 = yield* GetTemporalOffsetOption(resolvedOptions, 'reject');
+    /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    offsetOption = _temp11;
+    /* ReturnIfAbrupt */let _temp12 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    const overflow = _temp12;
+    /* ReturnIfAbrupt */let _temp13 = yield* InterpretTemporalDateTimeFields(calendar, fields, overflow);
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    const result = _temp13;
+    isoDate = result.ISODate;
+    time = result.Time;
+  } else {
+    if (!(item instanceof JSStringValue)) {
+      return Throw.TypeError('$1 is not a string', item);
+    }
+    /* ReturnIfAbrupt */let _temp14 = ParseISODateTime(item.stringValue());
+    /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    const result = _temp14;
+    const annotation = result.TimeZone.TimeZoneAnnotation;
+    Assert(annotation !== undefined, "annotation !== undefined");
+    /* ReturnIfAbrupt */let _temp15 = ToTemporalTimeZoneIdentifier(annotation);
+    /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+    timeZone = _temp15;
+    offsetString = result.TimeZone.OffsetString;
+    if (result.TimeZone.Z) {
+      hasUTCDesignator = true;
+    }
+    let calendar = result.Calendar;
+    if (calendar === undefined) {
+      calendar = 'iso8601';
+    }
+    /* ReturnIfAbrupt */let _temp16 = CanonicalizeCalendar(calendar);
+    /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+    if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+    calendar = _temp16;
+    matchBehaviour = 'match-minutes';
+    /* ReturnIfAbrupt */let _temp17 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+    const resolvedOptions = _temp17;
+    /* ReturnIfAbrupt */let _temp18 = yield* GetTemporalDisambiguationOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+    if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+    disambiguation = _temp18;
+    /* ReturnIfAbrupt */let _temp19 = yield* GetTemporalOffsetOption(resolvedOptions, 'reject');
+    /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    offsetOption = _temp19;
+    /* ReturnIfAbrupt */let _temp20 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+    isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+    time = result.Time;
+  }
+  let offsetBehaviour;
+  if (hasUTCDesignator) {
+    offsetBehaviour = 'exact';
+  } else if (offsetString === undefined) {
+    offsetBehaviour = 'wall';
+  } else {
+    offsetBehaviour = 'option';
+  }
+  let offsetNanoseconds = 0;
+  if (offsetBehaviour === 'option') {
+    /* X */let _temp21 = ParseDateTimeUTCOffset();
+    /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+    /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! ParseDateTimeUTCOffset(offsetString!) returned an abrupt completion", {
+      cause: _temp21
+    }); /* node:coverage ignore next */
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    offsetNanoseconds = _temp21;
+  }
+  /* ReturnIfAbrupt */let _temp22 = InterpretISODateTimeOffset(isoDate, time, offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const epochNanoseconds = _temp22;
+  /* X */let _temp23 = CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar!) returned an abrupt completion", {
+    cause: _temp23
+  }); /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  return _temp23;
+}
+ToTemporalZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime */
+function* CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, newTarget) {
+  Assert(IsValidEpochNanoseconds(epochNanoseconds), "IsValidEpochNanoseconds(epochNanoseconds)");
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.intrinsic('%Temporal.ZonedDateTime%');
+  }
+  /* ReturnIfAbrupt */let _temp24 = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.ZonedDateTime.prototype%', ['InitializedTemporalZonedDateTime', 'EpochNanoseconds', 'TimeZone', 'Calendar']);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const object = _temp24;
+  object.EpochNanoseconds = epochNanoseconds;
+  object.TimeZone = timeZone;
+  object.Calendar = calendar;
+  return object;
+}
+CreateTemporalZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring */
+function TemporalZonedDateTimeToString(zonedDateTime, precision, showCalendar, showTimeZone, showOffset, increment = 1, unit = TemporalUnit.Nanosecond, roundingMode = RoundingMode.Trunc) {
+  let epochNs = zonedDateTime.EpochNanoseconds;
+  epochNs = RoundTemporalInstant(epochNs, increment, unit, roundingMode);
+  const timeZone = zonedDateTime.TimeZone;
+  const offsetNanoseconds = GetOffsetNanosecondsFor();
+  const isoDateTime = GetISODateTimeFor(timeZone, epochNs);
+  const dateTimeString = ISODateTimeToString(isoDateTime, 'iso8601', precision, 'never');
+  const offsetString = showOffset === 'never' ? '' : FormatDateTimeUTCOffsetRounded(offsetNanoseconds);
+  let timeZoneString;
+  if (showTimeZone === 'never') {
+    timeZoneString = '';
+  } else {
+    const flag = showTimeZone === 'critical' ? '!' : '';
+    timeZoneString = `[${flag}${timeZone}]`;
+  }
+  const calendarString = FormatCalendarAnnotation(zonedDateTime.Calendar, showCalendar);
+  return dateTimeString + offsetString + timeZoneString + calendarString;
+}
+TemporalZonedDateTimeToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime */
+function AddZonedDateTime(epochNanoseconds, timeZone, calendar, duration, overflow) {
+  if (DateDurationSign(duration.Date) === 0) {
+    return AddInstant(epochNanoseconds, duration.Time);
+  }
+  const isoDateTime = GetISODateTimeFor(timeZone, epochNanoseconds);
+  /* ReturnIfAbrupt */let _temp25 = CalendarDateAdd(calendar, isoDateTime.ISODate, duration.Date, overflow);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const addedDate = _temp25;
+  const intermediateDateTime = CombineISODateAndTimeRecord(addedDate, isoDateTime.Time);
+  if (!ISODateTimeWithinLimits(intermediateDateTime)) {
+    return Throw.RangeError('Resulting date-time is out of range');
+  }
+  /* X */let _temp26 = GetEpochNanosecondsFor(timeZone, intermediateDateTime, 'compatible');
+  /* node:coverage ignore next */if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! GetEpochNanosecondsFor(timeZone, intermediateDateTime, 'compatible') returned an abrupt completion", {
+    cause: _temp26
+  }); /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const intermediateNs = _temp26;
+  return AddInstant(intermediateNs, duration.Time);
+}
+AddZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime */
+function DifferenceZonedDateTime(ns1, ns2, timeZone, calendar, largestUnit) {
+  if (ns1 === ns2) {
+    return CombineDateAndTimeDuration(ZeroDateDuration(), 0);
+  }
+  const startDateTime = GetISODateTimeFor(timeZone, ns1);
+  const endDateTime = GetISODateTimeFor(timeZone, ns2);
+  if (CompareISODate(startDateTime.ISODate, endDateTime.ISODate) === 0) {
+    const timeDuration = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
+    return CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
+  }
+  const sign = ns2 - ns1 > 0 ? 1 : -1;
+  const maxDayCorrection = sign === -1 ? 2 : 1;
+  let dayCorrection = 0;
+  let timeDuration = DifferenceTime(startDateTime.Time, endDateTime.Time);
+  if (TimeDurationSign(timeDuration) === sign) dayCorrection += 1;
+  let success = false;
+  let intermediateDateTime;
+  while (dayCorrection <= maxDayCorrection && !success) {
+    const intermediateDate = AddDaysToISODate(endDateTime.ISODate, dayCorrection * sign);
+    intermediateDateTime = CombineISODateAndTimeRecord(intermediateDate, startDateTime.Time);
+    /* ReturnIfAbrupt */let _temp27 = GetEpochNanosecondsFor(timeZone, intermediateDateTime, 'compatible');
+    /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+    if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+    const intermediateNs = _temp27;
+    timeDuration = TimeDurationFromEpochNanosecondsDifference(ns2, intermediateNs);
+    const timeSign = TimeDurationSign(timeDuration);
+    if (sign !== timeSign) {
+      success = true;
+    }
+    dayCorrection += 1;
+  }
+  Assert(success, "success");
+  const dateLargestUnit = LargerOfTwoTemporalUnits(largestUnit, TemporalUnit.Day);
+  const dateDifference = CalendarDateUntil(calendar, startDateTime.ISODate, intermediateDateTime.ISODate, dateLargestUnit);
+  return CombineDateAndTimeDuration(dateDifference, timeDuration);
+}
+DifferenceZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetimewithrounding */
+function DifferenceZonedDateTimeWithRounding(ns1, ns2, timeZone, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode) {
+  if (TemporalUnitCategory(largestUnit) === 'time') {
+    return DifferenceInstant(ns1, ns2, roundingIncrement, smallestUnit, roundingMode);
+  }
+  /* ReturnIfAbrupt */let _temp28 = DifferenceZonedDateTime(ns1, ns2, timeZone, calendar, largestUnit);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const difference = _temp28;
+  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1) {
+    return difference;
+  }
+  const dateTime = GetISODateTimeFor(timeZone, ns1);
+  return RoundRelativeDuration(difference, ns1, ns2, dateTime, timeZone, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode);
+}
+DifferenceZonedDateTimeWithRounding.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetimewithrounding';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetimewithtotal */
+function DifferenceZonedDateTimeWithTotal(ns1, ns2, timeZone, calendar, unit) {
+  if (TemporalUnitCategory(unit) === 'time') {
+    const difference = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
+    return TotalTimeDuration(difference, unit);
+  }
+  /* ReturnIfAbrupt */let _temp29 = DifferenceZonedDateTime(ns1, ns2, timeZone, calendar, unit);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const difference = _temp29;
+  const dateTime = GetISODateTimeFor(timeZone, ns1);
+  return TotalRelativeDuration(difference, ns1, ns2, dateTime, timeZone, calendar, unit);
+}
+DifferenceZonedDateTimeWithTotal.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetimewithtotal';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalzoneddatetime */
+function* DifferenceTemporalZonedDateTime(operation, zonedDateTime, _other, options) {
+  /* ReturnIfAbrupt */let _temp30 = yield* ToTemporalZonedDateTime(_other);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const other = _temp30;
+  if (!CalendarEquals(zonedDateTime.Calendar, other.Calendar)) {
+    return Throw.RangeError('Calendars are not equal');
+  }
+  /* ReturnIfAbrupt */let _temp31 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const resolvedOptions = _temp31;
+  /* ReturnIfAbrupt */let _temp32 = yield* GetDifferenceSettings(operation, resolvedOptions, 'datetime', [], TemporalUnit.Nanosecond, TemporalUnit.Hour);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  const settings = _temp32;
+  if (TemporalUnitCategory(settings.LargestUnit) === 'time') {
+    const internalDuration = DifferenceInstant(zonedDateTime.EpochNanoseconds, other.EpochNanoseconds, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+    /* X */let _temp33 = TemporalDurationFromInternal(internalDuration, settings.LargestUnit);
+    /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
+    /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(internalDuration, settings.LargestUnit) returned an abrupt completion", {
+      cause: _temp33
+    }); /* node:coverage ignore next */
+    if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+    let result = _temp33;
+    if (operation === 'since') {
+      result = CreateNegatedTemporalDuration(result);
+    }
+    return result;
+  }
+  if (!TimeZoneEquals(zonedDateTime.TimeZone, other.TimeZone)) {
+    return Throw.RangeError('Time zones are not equal');
+  }
+  if (zonedDateTime.EpochNanoseconds === other.EpochNanoseconds) {
+    /* X */let _temp34 = CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    /* node:coverage ignore next */if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
+    /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0) returned an abrupt completion", {
+      cause: _temp34
+    }); /* node:coverage ignore next */
+    if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+    return _temp34;
+  }
+  /* ReturnIfAbrupt */let _temp35 = DifferenceZonedDateTimeWithRounding(zonedDateTime.EpochNanoseconds, other.EpochNanoseconds, zonedDateTime.TimeZone, zonedDateTime.Calendar, settings.LargestUnit, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+  /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  const internalDuration = _temp35;
+  /* X */let _temp36 = TemporalDurationFromInternal(internalDuration, TemporalUnit.Hour);
+  /* node:coverage ignore next */if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(internalDuration, TemporalUnit.Hour) returned an abrupt completion", {
+    cause: _temp36
+  }); /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  let result = _temp36;
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
+DifferenceTemporalZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalzoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtozoneddatetime */
+function* AddDurationToZonedDateTime(operation, zonedDateTime, temporalDurationLike, options) {
+  /* ReturnIfAbrupt */let _temp37 = yield* ToTemporalDuration(temporalDurationLike);
+  /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) return _temp37; /* node:coverage ignore next */
+  if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+  let duration = _temp37;
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  /* ReturnIfAbrupt */let _temp38 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) return _temp38; /* node:coverage ignore next */
+  if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+  const resolvedOptions = _temp38;
+  /* ReturnIfAbrupt */let _temp39 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) return _temp39; /* node:coverage ignore next */
+  if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+  const overflow = _temp39;
+  const calendar = zonedDateTime.Calendar;
+  const timeZone = zonedDateTime.TimeZone;
+  const internalDuration = ToInternalDurationRecord(duration);
+  /* ReturnIfAbrupt */let _temp40 = AddZonedDateTime(zonedDateTime.EpochNanoseconds, timeZone, calendar, internalDuration, overflow);
+  /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) return _temp40; /* node:coverage ignore next */
+  if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+  const epochNanoseconds = _temp40;
+  /* X */let _temp41 = CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
+  /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar) returned an abrupt completion", {
+    cause: _temp41
+  }); /* node:coverage ignore next */
+  if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+  return _temp41;
+}
+AddDurationToZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurationtozoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record */
+function CreateISODateRecord(y, m, d) {
+  Assert(IsValidISODate(y, m, d), "IsValidISODate(y, m, d)");
+  return {
+    Year: y,
+    Month: m,
+    Day: d
+  };
+}
+CreateISODateRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate */
+function* CreateTemporalDate(isoDate, calendar, NewTarget) {
+  if (!ISODateWithinLimits(isoDate)) {
+    return Throw.RangeError('$1-$2-$3 is not a valid date', isoDate.Year, isoDate.Month, isoDate.Day);
+  }
+  if (NewTarget === undefined) {
+    NewTarget = surroundingAgent.intrinsic('%Temporal.PlainDate%');
+  }
+  /* ReturnIfAbrupt */let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%Temporal.PlainDate.prototype%', ['InitializedTemporalDate', 'ISODate', 'Calendar']);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const object = _temp;
+  object.ISODate = isoDate;
+  object.Calendar = calendar;
+  return object;
+}
+CreateTemporalDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate */
+function* ToTemporalDate(item, options = Value.undefined) {
+  if (item instanceof ObjectValue) {
+    if (isTemporalPlainDateObject(item)) {
+      /* ReturnIfAbrupt */let _temp2 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+      const resolvedOptions = _temp2;
+      /* ReturnIfAbrupt */let _temp3 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      /* X */let _temp4 = CreateTemporalDate(item.ISODate, item.Calendar);
+      /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(item.ISODate, item.Calendar) returned an abrupt completion", {
+        cause: _temp4
+      }); /* node:coverage ignore next */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      return _temp4;
+    }
+    if (isTemporalZonedDateTimeObject(item)) {
+      const isoDateTime = GetISODateTimeFor(item.TimeZone, item.EpochNanoseconds);
+      /* ReturnIfAbrupt */let _temp5 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      const resolvedOptions = _temp5;
+      /* ReturnIfAbrupt */let _temp6 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      /* X */let _temp7 = CreateTemporalDate(isoDateTime.ISODate, item.Calendar);
+      /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDateTime.ISODate, item.Calendar) returned an abrupt completion", {
+        cause: _temp7
+      }); /* node:coverage ignore next */
+      if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+      return _temp7;
+    }
+    if (isTemporalPlainDateTimeObject(item)) {
+      /* ReturnIfAbrupt */let _temp8 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      const resolvedOptions = _temp8;
+      /* ReturnIfAbrupt */let _temp9 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+      if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+      /* X */let _temp0 = CreateTemporalDate(item.ISODateTime.ISODate, item.Calendar);
+      /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+      /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(item.ISODateTime.ISODate, item.Calendar) returned an abrupt completion", {
+        cause: _temp0
+      }); /* node:coverage ignore next */
+      if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+      return _temp0;
+    }
+    /* ReturnIfAbrupt */let _temp1 = yield* GetTemporalCalendarIdentifierWithISODefault(item);
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+    const calendar = _temp1;
+    /* ReturnIfAbrupt */let _temp10 = yield* PrepareCalendarFields(calendar, item, ['year', 'month', 'month-code', 'day'], [], []);
+    /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+    if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+    const fields = _temp10;
+    /* ReturnIfAbrupt */let _temp11 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    const resolvedOptions = _temp11;
+    /* ReturnIfAbrupt */let _temp12 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    const overflow = _temp12;
+    /* ReturnIfAbrupt */let _temp13 = yield* CalendarDateFromFields(calendar, fields, overflow);
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    const isoDate = _temp13;
+    /* X */let _temp14 = CreateTemporalDate(isoDate, calendar);
+    /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+    /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDate, calendar) returned an abrupt completion", {
+      cause: _temp14
+    }); /* node:coverage ignore next */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    return _temp14;
+  }
+  if (!(item instanceof JSStringValue)) {
+    return Throw.TypeError('$1 is not a string', item);
+  }
+  /* ReturnIfAbrupt */let _temp15 = ParseISODateTime(item.stringValue());
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const result = _temp15;
+  const calendar = result.Calendar ?? 'iso8601';
+  /* ReturnIfAbrupt */let _temp16 = CanonicalizeCalendar(calendar);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const calendarType = _temp16;
+  /* ReturnIfAbrupt */let _temp17 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const resolvedOptions = _temp17;
+  /* ReturnIfAbrupt */let _temp18 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+  /* X */let _temp19 = CreateTemporalDate(isoDate, calendarType);
+  /* node:coverage ignore next */if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDate, calendarType) returned an abrupt completion", {
+    cause: _temp19
+  }); /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  return _temp19;
+}
+ToTemporalDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-comparesurpasses */
+function CompareSurpasses(sign, year, monthOrCode, day, target) {
+  if (year !== target.Year) {
+    if (sign * (year - target.Year) > 0) {
+      return true;
+    }
+  } else if (typeof monthOrCode === 'string' && monthOrCode !== target.MonthCode) {
+    if (sign > 0) {
+      // If monthOrCode is lexicographically greater than target.[[MonthCode]], return true.
+      if (monthOrCode > target.MonthCode) {
+        return true;
+      }
+    } else if (target.MonthCode > monthOrCode) {
+      // If target.[[MonthCode]] is lexicographically greater than monthOrCode, return true.
+      return true;
+    }
+  } else if (typeof monthOrCode === 'number' && monthOrCode !== target.Month) {
+    if (sign * (monthOrCode - target.Month) > 0) {
+      return true;
+    }
+  } else if (day !== target.Day) {
+    if (sign * (day - target.Day) > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+CompareSurpasses.section = 'https://tc39.es/proposal-temporal/#sec-temporal-comparesurpasses';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodatesurpasses */
+function ISODateSurpasses(sign, baseDate, isoDate2, years, month, weeks, days) {
+  const parts = CalendarISOToDate('iso8601', baseDate);
+  const target = CalendarISOToDate('iso8601', isoDate2);
+  const y0 = parts.Year + years;
+  if (CompareSurpasses(sign, y0, parts.MonthCode, parts.Day, target)) {
+    return true;
+  }
+  if (month === 0) {
+    return false;
+  }
+  const m0 = parts.Month + month;
+  const monthsAdded = BalanceISOYearMonth(y0, m0);
+  if (CompareSurpasses(sign, monthsAdded.Year, monthsAdded.Month, parts.Day, target)) {
+    return true;
+  }
+  if (weeks === 0 && days === 0) {
+    return false;
+  }
+  /* X */let _temp20 = RegulateISODate(monthsAdded.Year, monthsAdded.Month, parts.Day, 'constrain');
+  /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! RegulateISODate(monthsAdded.Year, monthsAdded.Month, parts.Day, 'constrain') returned an abrupt completion", {
+    cause: _temp20
+  }); /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const regulatedDate = _temp20;
+  const daysInWeek = 7;
+  const balancedDate = AddDaysToISODate(regulatedDate, daysInWeek * weeks + days);
+  return CompareSurpasses(sign, balancedDate.Year, balancedDate.Month, balancedDate.Day, target);
+}
+ISODateSurpasses.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodatesurpasses';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate */
+function RegulateISODate(year, month, day, overflow) {
+  if (overflow === 'constrain') {
+    month = Math.max(1, Math.min(12, month));
+    const daysInMonth = ISODaysInMonth(year, month);
+    day = Math.max(1, Math.min(daysInMonth, day));
+  } else {
+    Assert(overflow === 'reject', "overflow === 'reject'");
+    if (!IsValidISODate(year, month, day)) {
+      return Throw.RangeError('$1-$2-$3 is not a valid date', year, month, day);
+    }
+  }
+  return CreateISODateRecord(year, month, day);
+}
+RegulateISODate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate */
+function IsValidISODate(year, month, day) {
+  if (month < 1 || month > 12) {
+    return false;
+  }
+  const daysInMonth = ISODaysInMonth(year, month);
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
+  return true;
+}
+IsValidISODate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddaystoisodate */
+function AddDaysToISODate(isoDate, days) {
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day) + days;
+  const ms = EpochDaysToEpochMs(epochDays, 0);
+  return CreateISODateRecord(EpochTimeToEpochYear(ms), EpochTimeToMonthInYear(ms) + 1, EpochTimeToDate(ms));
+}
+AddDaysToISODate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddaystoisodate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-padisoyear */
+function PadISOYear(y) {
+  if (y >= 0 && y <= 9999) {
+    return ToZeroPaddedDecimalString(y, 4);
+  }
+  const yearSign = y > 0 ? '+' : '-';
+  const year = ToZeroPaddedDecimalString(abs(y), 6);
+  return yearSign + year;
+}
+PadISOYear.section = 'https://tc39.es/proposal-temporal/#sec-temporal-padisoyear';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetostring */
+function TemporalDateToString(temporalDate, showCalendar) {
+  const year = PadISOYear(temporalDate.ISODate.Year);
+  const month = ToZeroPaddedDecimalString(temporalDate.ISODate.Month, 2);
+  const day = ToZeroPaddedDecimalString(temporalDate.ISODate.Day, 2);
+  const calendar = FormatCalendarAnnotation(temporalDate.Calendar, showCalendar);
+  return `${year}-${month}-${day}${calendar}`;
+}
+TemporalDateToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodatewithinlimits */
+function ISODateWithinLimits(isoDate) {
+  const isoDateTime = CombineISODateAndTimeRecord(isoDate, NoonTimeRecord());
+  return ISODateTimeWithinLimits(isoDateTime);
+}
+ISODateWithinLimits.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodatewithinlimits';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-compareisodate */
+function CompareISODate(isoDate1, isoDate2) {
+  if (isoDate1.Year > isoDate2.Year) return 1;
+  if (isoDate1.Year < isoDate2.Year) return -1;
+  if (isoDate1.Month > isoDate2.Month) return 1;
+  if (isoDate1.Month < isoDate2.Month) return -1;
+  if (isoDate1.Day > isoDate2.Day) return 1;
+  if (isoDate1.Day < isoDate2.Day) return -1;
+  return 0;
+}
+CompareISODate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-compareisodate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindate */
+function* DifferenceTemporalPlainDate(operation, temporalDate, _other, options) {
+  /* ReturnIfAbrupt */let _temp21 = yield* ToTemporalDate(_other);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const other = _temp21;
+  if (!CalendarEquals(temporalDate.Calendar, other.Calendar)) {
+    return Throw.RangeError('Calendars are not equal');
+  }
+  /* ReturnIfAbrupt */let _temp22 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const resolvedOptions = _temp22;
+  /* ReturnIfAbrupt */let _temp23 = yield* GetDifferenceSettings(operation, resolvedOptions, 'date', [], TemporalUnit.Day, TemporalUnit.Day);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const settings = _temp23;
+  if (CompareISODate(temporalDate.ISODate, other.ISODate) === 0) {
+    /* X */let _temp24 = CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    /* node:coverage ignore next */if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
+    /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0) returned an abrupt completion", {
+      cause: _temp24
+    }); /* node:coverage ignore next */
+    if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+    return _temp24;
+  }
+  const dateDifference = CalendarDateUntil(temporalDate.Calendar, temporalDate.ISODate, other.ISODate, settings.LargestUnit);
+  let duration = CombineDateAndTimeDuration(dateDifference, 0);
+  if (settings.SmallestUnit !== TemporalUnit.Day || settings.RoundingIncrement !== 1) {
+    const isoDateTime = CombineISODateAndTimeRecord(temporalDate.ISODate, MidnightTimeRecord());
+    const originEpochNs = GetUTCEpochNanoseconds(isoDateTime);
+    const isoDateTimeOther = CombineISODateAndTimeRecord(other.ISODate, MidnightTimeRecord());
+    const destEpochNs = GetUTCEpochNanoseconds(isoDateTimeOther);
+    /* ReturnIfAbrupt */let _temp25 = RoundRelativeDuration(duration, originEpochNs, destEpochNs, isoDateTime, undefined, temporalDate.Calendar, settings.LargestUnit, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+    /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+    if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+    duration = _temp25;
+  }
+  /* X */let _temp26 = TemporalDurationFromInternal(duration, TemporalUnit.Day);
+  /* node:coverage ignore next */if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(duration, TemporalUnit.Day) returned an abrupt completion", {
+    cause: _temp26
+  }); /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  let result = _temp26;
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
+DifferenceTemporalPlainDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtodate */
+function* AddDurationToDate(operation, temporalDate, temporalDurationLike, options) {
+  const calendar = temporalDate.Calendar;
+  /* ReturnIfAbrupt */let _temp27 = yield* ToTemporalDuration(temporalDurationLike);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  let duration = _temp27;
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  const dateDuration = ToDateDurationRecordWithoutTime(duration);
+  /* ReturnIfAbrupt */let _temp28 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const resolvedOptions = _temp28;
+  /* ReturnIfAbrupt */let _temp29 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const overflow = _temp29;
+  /* ReturnIfAbrupt */let _temp30 = CalendarDateAdd(calendar, temporalDate.ISODate, dateDuration, overflow);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const result = _temp30;
+  /* X */let _temp31 = CreateTemporalDate(result, calendar);
+  /* node:coverage ignore next */if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) _temp31 = skipDebugger(_temp31);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(result, calendar) returned an abrupt completion", {
+    cause: _temp31
+  }); /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  return _temp31;
+}
+AddDurationToDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurationtodate';
+
+function thisTemporalTimeValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalTime');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.hour */
+function PlainTimeProto_hourGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const plainTime = _temp2;
+  return F(plainTime.Time.Hour);
+}
+PlainTimeProto_hourGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.hour';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.minute */
+function PlainTimeProto_minuteGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const plainTime = _temp3;
+  return F(plainTime.Time.Minute);
+}
+PlainTimeProto_minuteGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.minute';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.second */
+function PlainTimeProto_secondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const plainTime = _temp4;
+  return F(plainTime.Time.Second);
+}
+PlainTimeProto_secondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.second';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.millisecond */
+function PlainTimeProto_millisecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const plainTime = _temp5;
+  return F(plainTime.Time.Millisecond);
+}
+PlainTimeProto_millisecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.millisecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.microsecond */
+function PlainTimeProto_microsecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const plainTime = _temp6;
+  return F(plainTime.Time.Microsecond);
+}
+PlainTimeProto_microsecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.microsecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.nanosecond */
+function PlainTimeProto_nanosecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const plainTime = _temp7;
+  return F(plainTime.Time.Nanosecond);
+}
+PlainTimeProto_nanosecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.nanosecond';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.add */
+function* PlainTimeProto_add([temporalDurationLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const plainTime = _temp8;
+  return yield* AddDurationToTime('add', plainTime, temporalDurationLike);
+}
+PlainTimeProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.subtract */
+function* PlainTimeProto_subtract([temporalDurationLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp9 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const plainTime = _temp9;
+  return yield* AddDurationToTime('subtract', plainTime, temporalDurationLike);
+}
+PlainTimeProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.with */
+function* PlainTimeProto_with([temporalTimeLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp0 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const plainTime = _temp0;
+  /* ReturnIfAbrupt */let _temp1 = yield* IsPartialTemporalObject(temporalTimeLike);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  if (!_temp1) {
+    return Throw.TypeError('$1 is not a partial Temporal object', temporalTimeLike);
+  }
+  /* ReturnIfAbrupt */let _temp10 = yield* ToTemporalTimeRecord(temporalTimeLike, 'partial');
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const partialTime = _temp10;
+  const hour = partialTime.Hour ?? plainTime.Time.Hour;
+  const minute = partialTime.Minute ?? plainTime.Time.Minute;
+  const second = partialTime.Second ?? plainTime.Time.Second;
+  const millisecond = partialTime.Millisecond ?? plainTime.Time.Millisecond;
+  const microsecond = partialTime.Microsecond ?? plainTime.Time.Microsecond;
+  const nanosecond = partialTime.Nanosecond ?? plainTime.Time.Nanosecond;
+  /* ReturnIfAbrupt */let _temp11 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const resolvedOptions = _temp11;
+  /* ReturnIfAbrupt */let _temp12 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const overflow = _temp12;
+  /* ReturnIfAbrupt */let _temp13 = RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const result = _temp13;
+  return yield* CreateTemporalTime(result);
+}
+PlainTimeProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.until */
+function* PlainTimeProto_until([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp14 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const plainTime = _temp14;
+  return yield* DifferenceTemporalPlainTime('until', plainTime, other, options);
+}
+PlainTimeProto_until.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.until';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.since */
+function* PlainTimeProto_since([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const plainTime = _temp15;
+  return yield* DifferenceTemporalPlainTime('since', plainTime, other, options);
+}
+PlainTimeProto_since.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.since';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.round */
+function* PlainTimeProto_round([roundTo = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp16 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const plainTime = _temp16;
+  if (roundTo instanceof UndefinedValue) {
+    return Throw.TypeError('Options parameter is required');
+  }
+  if (roundTo instanceof JSStringValue) {
+    const paramString = roundTo;
+    roundTo = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp17 = CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString);
+    /* node:coverage ignore next */if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
+    /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString) returned an abrupt completion", {
+      cause: _temp17
+    }); /* node:coverage ignore next */
+    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp18 = GetOptionsObject$1(roundTo);
+    /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+    if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+    roundTo = _temp18;
+  }
+  /* ReturnIfAbrupt */let _temp19 = yield* GetRoundingIncrementOption(roundTo);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const roundingIncrement = _temp19;
+  /* ReturnIfAbrupt */let _temp20 = yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand);
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const roundingMode = _temp20;
+  /* ReturnIfAbrupt */let _temp21 = yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required');
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const smallestUnit = _temp21;
+  /* ReturnIfAbrupt */let _temp22 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+  Assert(maximum !== 'unset', "maximum !== 'unset'");
+  /* ReturnIfAbrupt */let _temp23 = ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const result = RoundTime(plainTime.Time, roundingIncrement, smallestUnit, roundingMode);
+  return yield* CreateTemporalTime(result);
+}
+PlainTimeProto_round.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.round';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals */
+function* PlainTimeProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp24 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const plainTime = _temp24;
+  /* ReturnIfAbrupt */let _temp25 = yield* ToTemporalTime(_other);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const other = _temp25;
+  return CompareTimeRecord(plainTime.Time, other.Time) === 0 ? Value.true : Value.false;
+}
+PlainTimeProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tostring */
+function* PlainTimeProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp26 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const plainTime = _temp26;
+  /* ReturnIfAbrupt */let _temp27 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  const resolvedOptions = _temp27;
+  /* ReturnIfAbrupt */let _temp28 = yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const digits = _temp28;
+  /* ReturnIfAbrupt */let _temp29 = yield* GetRoundingModeOption(resolvedOptions, 3);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const roundingMode = _temp29;
+  /* ReturnIfAbrupt */let _temp30 = yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const smallestUnit = _temp30;
+  /* ReturnIfAbrupt */let _temp31 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  if (smallestUnit === TemporalUnit.Hour) {
+    return Throw.RangeError('smallestUnit cannot be hour');
+  }
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
+  const roundResult = RoundTime(plainTime.Time, precision.Increment, precision.Unit, roundingMode);
+  return Value(TimeRecordToString(roundResult, precision.Precision));
+}
+PlainTimeProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tolocalestring */
+function PlainTimeProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp32 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  const plainTime = _temp32;
+  /* ReturnIfAbrupt */let _temp33 = TimeRecordToString(plainTime.Time, 'auto');
+  /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) return _temp33; /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+  return Value(_temp33);
+}
+PlainTimeProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tojson */
+function PlainTimeProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp34 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) return _temp34; /* node:coverage ignore next */
+  if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  const plainTime = _temp34;
+  /* ReturnIfAbrupt */let _temp35 = TimeRecordToString(plainTime.Time, 'auto');
+  /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  return Value(_temp35);
+}
+PlainTimeProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof */
+function PlainTimeProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp36 = thisTemporalTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) return _temp36; /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  return Throw.TypeError('Temporal.PlainTime cannot be converted to primitive value. If you are comparing two Temporal.PlainTime objects with > or <, use Temporal.PlainTime.compare() instead.');
+}
+PlainTimeProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof';
+function bootstrapTemporalPlainTimePrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['hour', [PlainTimeProto_hourGetter]], ['minute', [PlainTimeProto_minuteGetter]], ['second', [PlainTimeProto_secondGetter]], ['millisecond', [PlainTimeProto_millisecondGetter]], ['microsecond', [PlainTimeProto_microsecondGetter]], ['nanosecond', [PlainTimeProto_nanosecondGetter]], ['add', PlainTimeProto_add, 1], ['subtract', PlainTimeProto_subtract, 1], ['with', PlainTimeProto_with, 1], ['until', PlainTimeProto_until, 1], ['since', PlainTimeProto_since, 1], ['round', PlainTimeProto_round, 1], ['equals', PlainTimeProto_equals, 1], ['toString', PlainTimeProto_toString, 0], ['toLocaleString', PlainTimeProto_toLocaleString, 0], ['toJSON', PlainTimeProto_toJSON, 0], ['valueOf', PlainTimeProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainTime');
+  realmRec.Intrinsics['%Temporal.PlainTime.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaintime-instances */
+
+function isTemporalPlainTimeObject(value) {
+  return 'InitializedTemporalTime' in value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime */
+function* PlainTimeConstructor([_hour = Value.undefined, _minute = Value.undefined, _second = Value.undefined, _millisecond = Value.undefined, _microsecond = Value.undefined, _nanosecond = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.PlainTime cannot be called without new');
+  }
+  let hour;
+  if (_hour instanceof UndefinedValue) {
+    hour = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp = yield* ToIntegerWithTruncation(_hour);
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    hour = _temp;
+  }
+  let minute;
+  if (_minute instanceof UndefinedValue) {
+    minute = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* ToIntegerWithTruncation(_minute);
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    minute = _temp2;
+  }
+  let second;
+  if (_second instanceof UndefinedValue) {
+    second = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp3 = yield* ToIntegerWithTruncation(_second);
+    /* node:coverage ignore next */
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    /* node:coverage ignore next */
+    if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    second = _temp3;
+  }
+  let millisecond;
+  if (_millisecond instanceof UndefinedValue) {
+    millisecond = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp4 = yield* ToIntegerWithTruncation(_millisecond);
+    /* node:coverage ignore next */
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    millisecond = _temp4;
+  }
+  let microsecond;
+  if (_microsecond instanceof UndefinedValue) {
+    microsecond = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* ToIntegerWithTruncation(_microsecond);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    microsecond = _temp5;
+  }
+  let nanosecond;
+  if (_nanosecond instanceof UndefinedValue) {
+    nanosecond = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp6 = yield* ToIntegerWithTruncation(_nanosecond);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    nanosecond = _temp6;
+  }
+  if (!IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)) {
+    return Throw.RangeError('Invalid time');
+  }
+  const time = CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond);
+  return yield* CreateTemporalTime(time, NewTarget);
+}
+PlainTimeConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from */
+function* PlainTime_from([item = Value.undefined, options = Value.undefined]) {
+  return yield* ToTemporalTime(item, options);
+}
+PlainTime_from.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare */
+function* PlainTime_compare([_one = Value.undefined, _two = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp7 = yield* ToTemporalTime(_one);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const one = _temp7;
+  /* ReturnIfAbrupt */let _temp8 = yield* ToTemporalTime(_two);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const two = _temp8;
+  return F(CompareTimeRecord(one.Time, two.Time));
+}
+PlainTime_compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare';
+function bootstrapTemporalPlainTime(realmRec) {
+  const prototype = bootstrapTemporalPlainTimePrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, PlainTimeConstructor, 'PlainTime', 0, prototype, [['from', PlainTime_from, 1], ['compare', PlainTime_compare, 2]]);
+  realmRec.Intrinsics['%Temporal.PlainTime%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-time-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtimerecord */
+function CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond, deltaDays = 0) {
+  Assert(IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond), "IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)");
+  return {
+    Days: deltaDays,
+    Hour: hour,
+    Minute: minute,
+    Second: second,
+    Millisecond: millisecond,
+    Microsecond: microsecond,
+    Nanosecond: nanosecond
+  };
+}
+CreateTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-midnighttimerecord */
+function MidnightTimeRecord() {
+  return {
+    Days: 0,
+    Hour: 0,
+    Minute: 0,
+    Second: 0,
+    Millisecond: 0,
+    Microsecond: 0,
+    Nanosecond: 0
+  };
+}
+MidnightTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-midnighttimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-noontimerecord */
+function NoonTimeRecord() {
+  return {
+    Days: 0,
+    Hour: 12,
+    Minute: 0,
+    Second: 0,
+    Millisecond: 0,
+    Microsecond: 0,
+    Nanosecond: 0
+  };
+}
+NoonTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-noontimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetime */
+function DifferenceTime(time1, time2) {
+  const hours = time2.Hour - time1.Hour;
+  const minutes = time2.Minute - time1.Minute;
+  const seconds = time2.Second - time1.Second;
+  const milliseconds = time2.Millisecond - time1.Millisecond;
+  const microseconds = time2.Microsecond - time1.Microsecond;
+  const nanoseconds = time2.Nanosecond - time1.Nanosecond;
+  const timeDuration = TimeDurationFromComponents(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+  Assert(abs(timeDuration) < nsPerDay, "abs(timeDuration) < nsPerDay");
+  return timeDuration;
+}
+DifferenceTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime */
+function* ToTemporalTime(item, options = Value.undefined) {
+  let result;
+  if (item instanceof ObjectValue) {
+    if (isTemporalPlainTimeObject(item)) {
+      /* ReturnIfAbrupt */let _temp = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+      if (_temp instanceof Completion) _temp = _temp.Value;
+      const resolvedOptions = _temp;
+      /* ReturnIfAbrupt */let _temp2 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+      /* X */let _temp3 = CreateTemporalTime(item.Time);
+      /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(item.Time) returned an abrupt completion", {
+        cause: _temp3
+      }); /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      return _temp3;
+    }
+    if (isTemporalPlainDateTimeObject(item)) {
+      /* ReturnIfAbrupt */let _temp4 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      const resolvedOptions = _temp4;
+      /* ReturnIfAbrupt */let _temp5 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      /* X */let _temp6 = CreateTemporalTime(item.ISODateTime.Time);
+      /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(item.ISODateTime.Time) returned an abrupt completion", {
+        cause: _temp6
+      }); /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      return _temp6;
+    }
+    if (isTemporalZonedDateTimeObject(item)) {
+      const isoDateTime = GetISODateTimeFor(item.TimeZone, item.EpochNanoseconds);
+      /* ReturnIfAbrupt */let _temp7 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+      if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+      const resolvedOptions = _temp7;
+      /* ReturnIfAbrupt */let _temp8 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      /* X */let _temp9 = CreateTemporalTime(isoDateTime.Time);
+      /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(isoDateTime.Time) returned an abrupt completion", {
+        cause: _temp9
+      }); /* node:coverage ignore next */
+      if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+      return _temp9;
+    }
+    /* ReturnIfAbrupt */let _temp0 = yield* ToTemporalTimeRecord(item);
+    /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    const result2 = _temp0;
+    /* ReturnIfAbrupt */let _temp1 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+    const resolvedOptions = _temp1;
+    /* ReturnIfAbrupt */let _temp10 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+    if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+    const overflow = _temp10;
+    /* ReturnIfAbrupt */let _temp11 = RegulateTime(result2.Hour, result2.Minute, result2.Second, result2.Millisecond, result2.Microsecond, result2.Nanosecond, overflow);
+    /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    result = _temp11;
+  } else {
+    if (!(item instanceof JSStringValue)) {
+      return Throw.TypeError('Invalid time string $1', item);
+    }
+    /* ReturnIfAbrupt */let _temp12 = ParseISODateTime(item.stringValue());
+    /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    const parseResult = _temp12;
+    Assert(parseResult.Time !== 'start-of-day', "parseResult.Time !== 'start-of-day'");
+    result = parseResult.Time;
+    /* ReturnIfAbrupt */let _temp13 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    const resolvedOptions = _temp13;
+    /* ReturnIfAbrupt */let _temp14 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  }
+  /* X */let _temp15 = CreateTemporalTime(result);
+  /* node:coverage ignore next */if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(result) returned an abrupt completion", {
+    cause: _temp15
+  }); /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  return _temp15;
+}
+ToTemporalTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totimerecordormidnight */
+function* ToTimeRecordOrMidnight(item) {
+  if (item instanceof UndefinedValue) {
+    return MidnightTimeRecord();
+  }
+  /* ReturnIfAbrupt */let _temp16 = yield* ToTemporalTime(item);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const plainTime = _temp16;
+  return plainTime.Time;
+}
+ToTimeRecordOrMidnight.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totimerecordormidnight';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-regulatetime */
+function RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow) {
+  if (overflow === 'constrain') {
+    hour = Math.max(0, Math.min(23, hour));
+    minute = Math.max(0, Math.min(59, minute));
+    second = Math.max(0, Math.min(59, second));
+    millisecond = Math.max(0, Math.min(999, millisecond));
+    microsecond = Math.max(0, Math.min(999, microsecond));
+    nanosecond = Math.max(0, Math.min(999, nanosecond));
+  } else {
+    Assert(overflow === 'reject', "overflow === 'reject'");
+    if (!IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)) {
+      return Throw.RangeError('Invalid time');
+    }
+  }
+  return CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond);
+}
+RegulateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-regulatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime */
+function IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) {
+  if (hour < 0 || hour > 23) return false;
+  if (minute < 0 || minute > 59) return false;
+  if (second < 0 || second > 59) return false;
+  if (millisecond < 0 || millisecond > 999) return false;
+  if (microsecond < 0 || microsecond > 999) return false;
+  if (nanosecond < 0 || nanosecond > 999) return false;
+  return true;
+}
+IsValidTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-balancetime */
+function BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond) {
+  microsecond += Math.floor(nanosecond / 1000);
+  nanosecond %= 1000;
+  millisecond += Math.floor(microsecond / 1000);
+  microsecond %= 1000;
+  second += Math.floor(millisecond / 1000);
+  millisecond %= 1000;
+  minute += Math.floor(second / 60);
+  second %= 60;
+  hour += Math.floor(minute / 60);
+  minute %= 60;
+  const deltaDays = Math.floor(hour / 24);
+  hour %= 24;
+  return CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond, deltaDays);
+}
+BalanceTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-balancetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime */
+function* CreateTemporalTime(time, newTarget) {
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.intrinsic('%Temporal.PlainTime%');
+  }
+  /* ReturnIfAbrupt */let _temp17 = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.PlainTime.prototype%', ['InitializedTemporalTime', 'Time']);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const object = _temp17;
+  object.Time = time;
+  return object;
+}
+CreateTemporalTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime';
+
+/** https://tc39.es/proposal-temporal/#table-temporal-temporaltimelike-record-fields */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord */
+function* ToTemporalTimeRecord(temporalTimeLike, completeness = 'complete') {
+  const result = {
+    Hour: undefined,
+    Minute: undefined,
+    Second: undefined,
+    Millisecond: undefined,
+    Microsecond: undefined,
+    Nanosecond: undefined
+  };
+  if (completeness === 'complete') {
+    result.Hour = 0;
+    result.Minute = 0;
+    result.Second = 0;
+    result.Millisecond = 0;
+    result.Microsecond = 0;
+    result.Nanosecond = 0;
+  }
+  let any = false;
+  /* ReturnIfAbrupt */let _temp18 = yield* Get(temporalTimeLike, Value('hour'));
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const hour = _temp18;
+  if (!(hour instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp19 = yield* ToIntegerWithTruncation(hour);
+    /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    result.Hour = _temp19;
+    any = true;
+  }
+  /* ReturnIfAbrupt */let _temp20 = yield* Get(temporalTimeLike, Value('microsecond'));
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const microsecond = _temp20;
+  if (!(microsecond instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp21 = yield* ToIntegerWithTruncation(microsecond);
+    /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    result.Microsecond = _temp21;
+    any = true;
+  }
+  /* ReturnIfAbrupt */let _temp22 = yield* Get(temporalTimeLike, Value('millisecond'));
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const millisecond = _temp22;
+  if (!(millisecond instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp23 = yield* ToIntegerWithTruncation(millisecond);
+    /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+    if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+    result.Millisecond = _temp23;
+    any = true;
+  }
+  /* ReturnIfAbrupt */let _temp24 = yield* Get(temporalTimeLike, Value('minute'));
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const minute = _temp24;
+  if (!(minute instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp25 = yield* ToIntegerWithTruncation(minute);
+    /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+    if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+    result.Minute = _temp25;
+    any = true;
+  }
+  /* ReturnIfAbrupt */let _temp26 = yield* Get(temporalTimeLike, Value('nanosecond'));
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const nanosecond = _temp26;
+  if (!(nanosecond instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp27 = yield* ToIntegerWithTruncation(nanosecond);
+    /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+    if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+    result.Nanosecond = _temp27;
+    any = true;
+  }
+  /* ReturnIfAbrupt */let _temp28 = yield* Get(temporalTimeLike, Value('second'));
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const second = _temp28;
+  if (!(second instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp29 = yield* ToIntegerWithTruncation(second);
+    /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+    if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+    result.Second = _temp29;
+    any = true;
+  }
+  if (!any) {
+    return Throw.TypeError('$1 does not look like a TemporalTimeLike object', temporalTimeLike);
+  }
+  return result;
+}
+ToTemporalTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-timerecordtostring */
+function TimeRecordToString(time, precision) {
+  const subSecondNanoseconds = time.Millisecond * 1e6 + time.Microsecond * 1e3 + time.Nanosecond;
+  return FormatTimeString(time.Hour, time.Minute, time.Second, subSecondNanoseconds, precision);
+}
+TimeRecordToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-timerecordtostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-comparetimerecord */
+function CompareTimeRecord(time1, time2) {
+  if (time1.Hour > time2.Hour) return 1;
+  if (time1.Hour < time2.Hour) return -1;
+  if (time1.Minute > time2.Minute) return 1;
+  if (time1.Minute < time2.Minute) return -1;
+  if (time1.Second > time2.Second) return 1;
+  if (time1.Second < time2.Second) return -1;
+  if (time1.Millisecond > time2.Millisecond) return 1;
+  if (time1.Millisecond < time2.Millisecond) return -1;
+  if (time1.Microsecond > time2.Microsecond) return 1;
+  if (time1.Microsecond < time2.Microsecond) return -1;
+  if (time1.Nanosecond > time2.Nanosecond) return 1;
+  if (time1.Nanosecond < time2.Nanosecond) return -1;
+  return 0;
+}
+CompareTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-comparetimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-addtime */
+function AddTime(time, timeDuration) {
+  return BalanceTime(time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, time.Nanosecond + Number(timeDuration));
+}
+AddTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-addtime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-roundtime */
+function RoundTime(time, increment, unit, roundingMode) {
+  let quantity;
+  if (unit === TemporalUnit.Day || unit === TemporalUnit.Hour) {
+    quantity = ((((time.Hour * 60 + time.Minute) * 60 + time.Second) * 1000 + time.Millisecond) * 1000 + time.Microsecond) * 1000 + time.Nanosecond;
+  } else if (unit === TemporalUnit.Minute) {
+    quantity = (((time.Minute * 60 + time.Second) * 1000 + time.Millisecond) * 1000 + time.Microsecond) * 1000 + time.Nanosecond;
+  } else if (unit === TemporalUnit.Second) {
+    quantity = ((time.Second * 1000 + time.Millisecond) * 1000 + time.Microsecond) * 1000 + time.Nanosecond;
+  } else if (unit === TemporalUnit.Millisecond) {
+    quantity = (time.Millisecond * 1000 + time.Microsecond) * 1000 + time.Nanosecond;
+  } else if (unit === TemporalUnit.Microsecond) {
+    quantity = time.Microsecond * 1000 + time.Nanosecond;
+  } else {
+    Assert(unit === TemporalUnit.Nanosecond, "unit === TemporalUnit.Nanosecond");
+    quantity = time.Nanosecond;
+  }
+  const unitLength = Table21_LengthInNanoSeconds[unit];
+  const result = RoundNumberToIncrement(quantity, increment * unitLength, roundingMode) / unitLength;
+  if (unit === TemporalUnit.Day) return CreateTimeRecord(0, 0, 0, 0, 0, 0, result);
+  if (unit === TemporalUnit.Hour) return BalanceTime(result, 0, 0, 0, 0, 0);
+  if (unit === TemporalUnit.Minute) return BalanceTime(time.Hour, result, 0, 0, 0, 0);
+  if (unit === TemporalUnit.Second) return BalanceTime(time.Hour, time.Minute, result, 0, 0, 0);
+  if (unit === TemporalUnit.Millisecond) return BalanceTime(time.Hour, time.Minute, time.Second, result, 0, 0);
+  if (unit === TemporalUnit.Microsecond) return BalanceTime(time.Hour, time.Minute, time.Second, time.Millisecond, result, 0);
+  Assert(unit === TemporalUnit.Nanosecond, "unit === TemporalUnit.Nanosecond");
+  return BalanceTime(time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, result);
+}
+RoundTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-roundtime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaintime */
+function* DifferenceTemporalPlainTime(operation, temporalTime, _other, options) {
+  /* ReturnIfAbrupt */let _temp30 = yield* ToTemporalTime(_other);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const other = _temp30;
+  /* ReturnIfAbrupt */let _temp31 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const resolvedOptions = _temp31;
+  /* ReturnIfAbrupt */let _temp32 = yield* GetDifferenceSettings(operation, resolvedOptions, 'time', [], TemporalUnit.Nanosecond, TemporalUnit.Hour);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  const settings = _temp32;
+  let timeDuration = DifferenceTime(temporalTime.Time, other.Time);
+  // TODO(temporal): unsafe cast of settings.SmallestUnit
+  /* X */let _temp33 = RoundTimeDuration(timeDuration, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+  /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
+  /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! RoundTimeDuration(timeDuration, settings.RoundingIncrement, settings.SmallestUnit as TimeUnit, settings.RoundingMode) returned an abrupt completion", {
+    cause: _temp33
+  }); /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+  timeDuration = _temp33;
+  const duration = CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
+  /* X */let _temp34 = TemporalDurationFromInternal(duration, settings.LargestUnit);
+  /* node:coverage ignore next */if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
+  /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(duration, settings.LargestUnit) returned an abrupt completion", {
+    cause: _temp34
+  }); /* node:coverage ignore next */
+  if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  let result = _temp34;
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
+DifferenceTemporalPlainTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaintime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtotime */
+function* AddDurationToTime(operation, temporalTime, temporalDurationLike) {
+  /* ReturnIfAbrupt */let _temp35 = yield* ToTemporalDuration(temporalDurationLike);
+  /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  let duration = _temp35;
+  if (operation === 'subtract') duration = CreateNegatedTemporalDuration(duration);
+  const internalDuration = ToInternalDurationRecord(duration);
+  const result = AddTime(temporalTime.Time, internalDuration.Time);
+  /* X */let _temp36 = CreateTemporalTime(result);
+  /* node:coverage ignore next */if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(result) returned an abrupt completion", {
+    cause: _temp36
+  }); /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  return _temp36;
+}
+AddDurationToTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurationtotime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-timevaluetoisodatetimerecord */
+function TimeValueToISODateTimeRecord(t) {
+  const isoDate = CreateISODateRecord(R(YearFromTime(t)), R(MonthFromTime(t)) + 1, R(DateFromTime(t)));
+  const time = CreateTimeRecord(R(HourFromTime(t)), R(MinFromTime(t)), R(SecFromTime(t)), R(msFromTime(t)), 0, 0);
+  return {
+    ISODate: isoDate,
+    Time: time
+  };
+}
+TimeValueToISODateTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-timevaluetoisodatetimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-combineisodateandtimerecord */
+function CombineISODateAndTimeRecord(isoDate, time) {
+  return {
+    ISODate: isoDate,
+    Time: time
+  };
+}
+CombineISODateAndTimeRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-combineisodateandtimerecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits */
+function ISODateTimeWithinLimits(isoDateTime) {
+  if (abs(ISODateToEpochDays(isoDateTime.ISODate.Year, isoDateTime.ISODate.Month - 1, isoDateTime.ISODate.Day)) > 1e8 + 1) {
+    return false;
+  }
+  const ns = GetUTCEpochNanoseconds(isoDateTime);
+  if (ns <= nsMinInstant - nsPerDay) {
+    return false;
+  }
+  if (ns >= nsMaxInstant + nsPerDay) {
+    return false;
+  }
+  return true;
+}
+ISODateTimeWithinLimits.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields */
+function* InterpretTemporalDateTimeFields(calendar, fields, overflow) {
+  /* ReturnIfAbrupt */let _temp = yield* CalendarDateFromFields(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const isoDate = _temp;
+  /* ReturnIfAbrupt */let _temp2 = RegulateTime(fields.Hour, fields.Minute, fields.Second, fields.Millisecond, fields.Microsecond, fields.Nanosecond, overflow);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const time = _temp2;
+  return CombineISODateAndTimeRecord(isoDate, time);
+}
+InterpretTemporalDateTimeFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime */
+function* ToTemporalDateTime(item, options = Value.undefined) {
+  if (item instanceof ObjectValue) {
+    if (isTemporalPlainDateTimeObject(item)) {
+      /* ReturnIfAbrupt */let _temp3 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      const resolvedOptions = _temp3;
+      /* ReturnIfAbrupt */let _temp4 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      /* X */let _temp5 = CreateTemporalDateTime(item.ISODateTime, item.Calendar);
+      /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDateTime(item.ISODateTime, item.Calendar) returned an abrupt completion", {
+        cause: _temp5
+      }); /* node:coverage ignore next */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      return _temp5;
+    }
+    if (isTemporalZonedDateTimeObject(item)) {
+      const isoDateTime = GetISODateTimeFor(item.TimeZone, item.EpochNanoseconds);
+      /* ReturnIfAbrupt */let _temp6 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      const resolvedOptions = _temp6;
+      /* ReturnIfAbrupt */let _temp7 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+      if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+      /* X */let _temp8 = CreateTemporalDateTime(isoDateTime, item.Calendar);
+      /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDateTime(isoDateTime, item.Calendar) returned an abrupt completion", {
+        cause: _temp8
+      }); /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+      return _temp8;
+    }
+    if (isTemporalPlainDateObject(item)) {
+      /* ReturnIfAbrupt */let _temp9 = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+      if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+      const resolvedOptions = _temp9;
+      /* ReturnIfAbrupt */let _temp0 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+      if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+      const isoDateTime = CombineISODateAndTimeRecord(item.ISODate, MidnightTimeRecord());
+      return yield* CreateTemporalDateTime(isoDateTime, item.Calendar);
+    }
+    /* ReturnIfAbrupt */let _temp1 = yield* GetTemporalCalendarIdentifierWithISODefault(item);
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+    const calendar = _temp1;
+    /* ReturnIfAbrupt */let _temp10 = yield* PrepareCalendarFields(calendar, item, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'], []);
+    /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+    if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+    const fields = _temp10;
+    /* ReturnIfAbrupt */let _temp11 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    const resolvedOptions = _temp11;
+    /* ReturnIfAbrupt */let _temp12 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    const overflow = _temp12;
+    /* ReturnIfAbrupt */let _temp13 = yield* InterpretTemporalDateTimeFields(calendar, fields, overflow);
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    const result = _temp13;
+    return yield* CreateTemporalDateTime(result, calendar);
+  }
+  if (!(item instanceof JSStringValue)) {
+    return Throw.TypeError('$1 is not a string', item);
+  }
+  /* ReturnIfAbrupt */let _temp14 = ParseISODateTime(item.stringValue());
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const result = _temp14;
+  const time = result.Time === 'start-of-day' ? MidnightTimeRecord() : result.Time;
+  const calendar = result.Calendar ?? 'iso8601';
+  /* ReturnIfAbrupt */let _temp15 = CanonicalizeCalendar(calendar);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const calendarType = _temp15;
+  /* ReturnIfAbrupt */let _temp16 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const resolvedOptions = _temp16;
+  /* ReturnIfAbrupt */let _temp17 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+  const isoDateTime = CombineISODateAndTimeRecord(isoDate, time);
+  return yield* CreateTemporalDateTime(isoDateTime, calendarType);
+}
+ToTemporalDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime */
+function BalanceISODateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond) {
+  const balancedTime = BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
+  const balancedDate = AddDaysToISODate(CreateISODateRecord(year, month, day), balancedTime.Days);
+  return CombineISODateAndTimeRecord(balancedDate, balancedTime);
+}
+BalanceISODateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldatetime */
+function* CreateTemporalDateTime(isoDateTime, calendar, newTarget) {
+  if (!ISODateTimeWithinLimits(isoDateTime)) {
+    return Throw.RangeError('PlainDateTime outside of range');
+  }
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.intrinsic('%Temporal.PlainDateTime%');
+  }
+  /* ReturnIfAbrupt */let _temp18 = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.PlainDateTime.prototype%', ['InitializedTemporalDateTime', 'ISODateTime', 'Calendar']);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const object = _temp18;
+  object.ISODateTime = isoDateTime;
+  object.Calendar = calendar;
+  return object;
+}
+CreateTemporalDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodatetimetostring */
+function ISODateTimeToString(isoDateTime, calendar, precision, showCalendar) {
+  const yearString = PadISOYear(isoDateTime.ISODate.Year);
+  const monthString = ToZeroPaddedDecimalString(isoDateTime.ISODate.Month, 2);
+  const dayString = ToZeroPaddedDecimalString(isoDateTime.ISODate.Day, 2);
+  const subSecondNanoseconds = isoDateTime.Time.Millisecond * 1e6 + isoDateTime.Time.Microsecond * 1e3 + isoDateTime.Time.Nanosecond;
+  const timeString = FormatTimeString(isoDateTime.Time.Hour, isoDateTime.Time.Minute, isoDateTime.Time.Second, subSecondNanoseconds, precision);
+  const calendarString = FormatCalendarAnnotation(calendar, showCalendar);
+  return `${yearString}-${monthString}-${dayString}T${timeString}${calendarString}`;
+}
+ISODateTimeToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodatetimetostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime */
+function CompareISODateTime(isoDateTime1, isoDateTime2) {
+  const dateResult = CompareISODate(isoDateTime1.ISODate, isoDateTime2.ISODate);
+  if (dateResult !== 0) {
+    return dateResult;
+  }
+  return CompareTimeRecord(isoDateTime1.Time, isoDateTime2.Time);
+}
+CompareISODateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-roundisodatetime */
+function RoundISODateTime(isoDateTime, increment, unit, roundingMode) {
+  Assert(ISODateTimeWithinLimits(isoDateTime), "ISODateTimeWithinLimits(isoDateTime)");
+  const roundedTime = RoundTime(isoDateTime.Time, increment, unit, roundingMode);
+  const balanceResult = AddDaysToISODate(isoDateTime.ISODate, roundedTime.Days);
+  return CombineISODateAndTimeRecord(balanceResult, roundedTime);
+}
+RoundISODateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-roundisodatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime */
+function DifferenceISODateTime(isoDateTime1, isoDateTime2, calendar, largestUnit) {
+  Assert(ISODateTimeWithinLimits(isoDateTime1), "ISODateTimeWithinLimits(isoDateTime1)");
+  Assert(ISODateTimeWithinLimits(isoDateTime2), "ISODateTimeWithinLimits(isoDateTime2)");
+  let timeDuration = DifferenceTime(isoDateTime1.Time, isoDateTime2.Time);
+  const timeSign = TimeDurationSign(timeDuration);
+  const dateSign = CompareISODate(isoDateTime1.ISODate, isoDateTime2.ISODate);
+  let adjustedDate = isoDateTime2.ISODate;
+  if (timeSign === dateSign) {
+    adjustedDate = AddDaysToISODate(adjustedDate, timeSign);
+    /* X */let _temp19 = Add24HourDaysToTimeDuration(timeDuration, -timeSign);
+    /* node:coverage ignore next */if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
+    /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! Add24HourDaysToTimeDuration(timeDuration, -timeSign) returned an abrupt completion", {
+      cause: _temp19
+    }); /* node:coverage ignore next */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    timeDuration = _temp19;
+  }
+  const dateLargestUnit = LargerOfTwoTemporalUnits(TemporalUnit.Day, largestUnit);
+  const dateDifference = CalendarDateUntil(calendar, isoDateTime1.ISODate, adjustedDate, dateLargestUnit);
+  if (largestUnit !== dateLargestUnit) {
+    /* X */let _temp20 = Add24HourDaysToTimeDuration(timeDuration, dateDifference.Days);
+    /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+    /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! Add24HourDaysToTimeDuration(timeDuration, dateDifference.Days) returned an abrupt completion", {
+      cause: _temp20
+    }); /* node:coverage ignore next */
+    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+    timeDuration = _temp20;
+    dateDifference.Days = 0;
+  }
+  return CombineDateAndTimeDuration(dateDifference, timeDuration);
+}
+DifferenceISODateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithrounding */
+function DifferencePlainDateTimeWithRounding(isoDateTime1, isoDateTime2, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode) {
+  if (CompareISODateTime(isoDateTime1, isoDateTime2) === 0) {
+    return CombineDateAndTimeDuration(ZeroDateDuration(), 0);
+  }
+  if (!ISODateTimeWithinLimits(isoDateTime1) || !ISODateTimeWithinLimits(isoDateTime2)) {
+    return Throw.RangeError('PlainDateTime outside of range');
+  }
+  const diff = DifferenceISODateTime(isoDateTime1, isoDateTime2, calendar, largestUnit);
+  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1) {
+    return diff;
+  }
+  const originEpochNs = GetUTCEpochNanoseconds(isoDateTime1);
+  const destEpochNs = GetUTCEpochNanoseconds(isoDateTime2);
+  return RoundRelativeDuration(diff, originEpochNs, destEpochNs, isoDateTime1, undefined, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode);
+}
+DifferencePlainDateTimeWithRounding.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithrounding';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithtotal */
+function DifferencePlainDateTimeWithTotal(isoDateTime1, isoDateTime2, calendar, unit) {
+  if (CompareISODateTime(isoDateTime1, isoDateTime2) === 0) {
+    return 0;
+  }
+  if (!ISODateTimeWithinLimits(isoDateTime1) || !ISODateTimeWithinLimits(isoDateTime2)) {
+    return Throw.RangeError('PlainDateTime outside of range');
+  }
+  const diff = DifferenceISODateTime(isoDateTime1, isoDateTime2, calendar, unit);
+  if (unit === TemporalUnit.Nanosecond) {
+    return diff.Time;
+  }
+  const originEpochNs = GetUTCEpochNanoseconds(isoDateTime1);
+  const destEpochNs = GetUTCEpochNanoseconds(isoDateTime2);
+  return TotalRelativeDuration(diff, originEpochNs, destEpochNs, isoDateTime1, undefined, calendar, unit);
+}
+DifferencePlainDateTimeWithTotal.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithtotal';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime */
+function* DifferenceTemporalPlainDateTime(operation, dateTime, _other, options) {
+  /* ReturnIfAbrupt */let _temp21 = yield* ToTemporalDateTime(_other);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const other = _temp21;
+  if (!CalendarEquals(dateTime.Calendar, other.Calendar)) {
+    return Throw.RangeError('Calendars are not equal');
+  }
+  /* ReturnIfAbrupt */let _temp22 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const resolvedOptions = _temp22;
+  /* ReturnIfAbrupt */let _temp23 = yield* GetDifferenceSettings(operation, resolvedOptions, 'datetime', [], TemporalUnit.Nanosecond, TemporalUnit.Day);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const settings = _temp23;
+  if (CompareISODateTime(dateTime.ISODateTime, other.ISODateTime) === 0) {
+    /* X */let _temp24 = CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    /* node:coverage ignore next */if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
+    /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0) returned an abrupt completion", {
+      cause: _temp24
+    }); /* node:coverage ignore next */
+    if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+    return _temp24;
+  }
+  /* ReturnIfAbrupt */let _temp25 = DifferencePlainDateTimeWithRounding(dateTime.ISODateTime, other.ISODateTime, dateTime.Calendar, settings.LargestUnit, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const internalDuration = _temp25;
+  /* X */let _temp26 = TemporalDurationFromInternal(internalDuration, settings.LargestUnit);
+  /* node:coverage ignore next */if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(internalDuration, settings.LargestUnit) returned an abrupt completion", {
+    cause: _temp26
+  }); /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  let result = _temp26;
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
+DifferenceTemporalPlainDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtodatetime */
+function* AddDurationToDateTime(operation, dateTime, temporalDurationLike, options) {
+  /* ReturnIfAbrupt */let _temp27 = yield* ToTemporalDuration(temporalDurationLike);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  let duration = _temp27;
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  /* ReturnIfAbrupt */let _temp28 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const resolvedOptions = _temp28;
+  /* ReturnIfAbrupt */let _temp29 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const overflow = _temp29;
+  const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+  const timeResult = AddTime(dateTime.ISODateTime.Time, internalDuration.Time);
+  /* ReturnIfAbrupt */let _temp30 = AdjustDateDurationRecord(internalDuration.Date, timeResult.Days);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const dateDuration = _temp30;
+  /* ReturnIfAbrupt */let _temp31 = CalendarDateAdd(dateTime.Calendar, dateTime.ISODateTime.ISODate, dateDuration, overflow);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const addedDate = _temp31;
+  const result = CombineISODateAndTimeRecord(addedDate, timeResult);
+  return yield* CreateTemporalDateTime(result, dateTime.Calendar);
+}
+AddDurationToDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurationtodatetime';
+
+function thisTemporalInstantValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalInstant');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds */
+function InstantProto_epochMillisecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const instant = _temp2;
+  const ns = instant.EpochNanoseconds;
+  const ms = Math.floor(Number(ns) / 10e6);
+  return Value(ms);
+}
+InstantProto_epochMillisecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds */
+function InstantProto_epochNanosecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const instant = _temp3;
+  return Value(instant.EpochNanoseconds);
+}
+InstantProto_epochNanosecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.add */
+function* InstantProto_add([temporalDurationLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const instant = _temp4;
+  return yield* AddDurationToInstant('add', instant, temporalDurationLike);
+}
+InstantProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract */
+function* InstantProto_subtract([temporalDurationLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const instant = _temp5;
+  return yield* AddDurationToInstant('subtract', instant, temporalDurationLike);
+}
+InstantProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until */
+function* InstantProto_until([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const instant = _temp6;
+  return yield* DifferenceTemporalInstant('until', instant, other, options);
+}
+InstantProto_until.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since */
+function* InstantProto_since([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const instant = _temp7;
+  return yield* DifferenceTemporalInstant('since', instant, other, options);
+}
+InstantProto_since.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round */
+function* InstantProto_round([roundTo = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const instant = _temp8;
+  if (roundTo instanceof UndefinedValue) {
+    return Throw.TypeError('roundTo is required');
+  }
+  if (roundTo instanceof JSStringValue) {
+    const paramString = roundTo;
+    roundTo = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp9 = CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString);
+    /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString) returned an abrupt completion", {
+      cause: _temp9
+    }); /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp0 = GetOptionsObject$1(roundTo);
+    /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    roundTo = _temp0;
+  }
+  /* ReturnIfAbrupt */let _temp1 = yield* GetRoundingIncrementOption(roundTo);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const roundingIncrement = _temp1;
+  /* ReturnIfAbrupt */let _temp10 = yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const roundingMode = _temp10;
+  /* ReturnIfAbrupt */let _temp11 = yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required');
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const smallestUnit = _temp11;
+  /* ReturnIfAbrupt */let _temp12 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  let maximum;
+  if (smallestUnit === TemporalUnit.Hour) {
+    maximum = HoursPerDay;
+  } else if (smallestUnit === TemporalUnit.Minute) {
+    maximum = MinutesPerHour * HoursPerDay;
+  } else if (smallestUnit === TemporalUnit.Second) {
+    maximum = SecondsPerMinute * MinutesPerHour * HoursPerDay;
+  } else if (smallestUnit === TemporalUnit.Millisecond) {
+    maximum = msPerDay;
+  } else if (smallestUnit === TemporalUnit.Microsecond) {
+    maximum = 1e3 * msPerDay;
+  } else {
+    Assert(smallestUnit === TemporalUnit.Nanosecond, "smallestUnit === TemporalUnit.Nanosecond");
+    maximum = nsPerDay;
+  }
+  /* ReturnIfAbrupt */let _temp13 = ValidateTemporalRoundingIncrement(roundingIncrement, maximum, true);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const roundedNs = RoundTemporalInstant(instant.EpochNanoseconds, roundingIncrement, smallestUnit, roundingMode);
+  /* X */let _temp14 = CreateTemporalInstant(roundedNs);
+  /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(roundedNs) returned an abrupt completion", {
+    cause: _temp14
+  }); /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  return _temp14;
+}
+InstantProto_round.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals */
+function* InstantProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const instant = _temp15;
+  /* ReturnIfAbrupt */let _temp16 = yield* ToTemporalInstant(_other);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const other = _temp16;
+  return instant.EpochNanoseconds === other.EpochNanoseconds ? Value.true : Value.false;
+}
+InstantProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tostring */
+function* InstantProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp17 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const instant = _temp17;
+  /* ReturnIfAbrupt */let _temp18 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const resolvedOptions = _temp18;
+  /* ReturnIfAbrupt */let _temp19 = yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const digits = _temp19;
+  /* ReturnIfAbrupt */let _temp20 = yield* GetRoundingModeOption(resolvedOptions, RoundingMode.Trunc);
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const roundingMode = _temp20;
+  /* ReturnIfAbrupt */let _temp21 = yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const smallestUnit = _temp21;
+  /* ReturnIfAbrupt */let _temp22 = yield* Get(resolvedOptions, Value('timeZone'));
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const _timeZone = _temp22;
+  /* ReturnIfAbrupt */let _temp23 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  if (smallestUnit === TemporalUnit.Hour) {
+    return Throw.RangeError('smallestUnit cannot be hour');
+  }
+  let timeZone;
+  if (!(_timeZone instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp24 = ToTemporalTimeZoneIdentifier(_timeZone);
+    /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+    if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+    timeZone = _temp24;
+  }
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
+  const roundedNs = RoundTemporalInstant(instant.EpochNanoseconds, precision.Increment, precision.Unit, roundingMode);
+  /* X */let _temp25 = CreateTemporalInstant(roundedNs);
+  /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(roundedNs) returned an abrupt completion", {
+    cause: _temp25
+  }); /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const roundedInstant = _temp25;
+  return Value(TemporalInstantToString(roundedInstant, timeZone, precision.Precision));
+}
+InstantProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring */
+function InstantProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp26 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const instant = _temp26;
+  return Value(TemporalInstantToString(instant, undefined, 'auto'));
+}
+InstantProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson */
+function InstantProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp27 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  const instant = _temp27;
+  return Value(TemporalInstantToString(instant, undefined, 'auto'));
+}
+InstantProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof */
+function InstantProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp28 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  return Throw.TypeError('Temporal.Instant cannot be converted to primitive value If you are comparing two Temporal.Duration objects with > or <, use Temporal.Instant.compare() instead.');
+}
+InstantProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso */
+function InstantProto_toZonedDateTimeISO([_timeZone = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp29 = thisTemporalInstantValue(thisValue);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const instant = _temp29;
+  /* ReturnIfAbrupt */let _temp30 = ToTemporalTimeZoneIdentifier(_timeZone);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const timeZone = _temp30;
+  /* X */let _temp31 = CreateTemporalZonedDateTime(instant.EpochNanoseconds, timeZone, 'iso8601');
+  /* node:coverage ignore next */if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) _temp31 = skipDebugger(_temp31);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(instant.EpochNanoseconds, timeZone, 'iso8601') returned an abrupt completion", {
+    cause: _temp31
+  }); /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  return _temp31;
+}
+InstantProto_toZonedDateTimeISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso';
+function bootstrapTemporalInstantPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['epochMilliseconds', [InstantProto_epochMillisecondsGetter]], ['epochNanoseconds', [InstantProto_epochNanosecondsGetter]], ['add', InstantProto_add, 1], ['subtract', InstantProto_subtract, 1], ['until', InstantProto_until, 1], ['since', InstantProto_since, 1], ['round', InstantProto_round, 1], ['equals', InstantProto_equals, 1], ['toString', InstantProto_toString, 0], ['toLocaleString', InstantProto_toLocaleString, 0], ['toJSON', InstantProto_toJSON, 0], ['valueOf', InstantProto_valueOf, 0], ['toZonedDateTimeISO', InstantProto_toZonedDateTimeISO, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.Instant');
+  realmRec.Intrinsics['%Temporal.Instant.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-instant-instances */
+
+function isTemporalInstantObject(o) {
+  return 'InitializedTemporalInstant' in o;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant */
+function* InstantConstructor([_epochNanoseconds = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.Instant cannot be called without new');
+  }
+  /* ReturnIfAbrupt */let _temp = yield* ToBigInt(_epochNanoseconds);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const epochNanoseconds = R(_temp);
+  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
+  }
+  return yield* CreateTemporalInstant(epochNanoseconds, NewTarget);
+}
+InstantConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.from */
+function* Instant_from([item = Value.undefined]) {
+  return yield* ToTemporalInstant(item);
+}
+Instant_from.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds */
+function* Instant_fromEpochMilliseconds([___epochMilliseconds = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp2 = yield* ToNumber(___epochMilliseconds);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const __epochMilliseconds = _temp2;
+  /* ReturnIfAbrupt */let _temp3 = NumberToBigInt(__epochMilliseconds);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const _epochMilliseconds = R(_temp3);
+  const epochMilliseconds = _epochMilliseconds * BigInt(10e6);
+  if (!IsValidEpochNanoseconds(epochMilliseconds)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochMilliseconds);
+  }
+  /* X */let _temp4 = CreateTemporalInstant(epochMilliseconds);
+  /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(epochMilliseconds) returned an abrupt completion", {
+    cause: _temp4
+  }); /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  return _temp4;
+}
+Instant_fromEpochMilliseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds */
+function* Instant_fromEpochNanoseconds([_epochNanoseconds = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp5 = yield* ToBigInt(_epochNanoseconds);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const epochNanoseconds = R(_temp5);
+  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
+  }
+  /* X */let _temp6 = CreateTemporalInstant(epochNanoseconds);
+  /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(epochNanoseconds) returned an abrupt completion", {
+    cause: _temp6
+  }); /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  return _temp6;
+}
+Instant_fromEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.instant.compare */
+function* Instant_compare([_one = Value.undefined, _two = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp7 = yield* ToTemporalInstant(_one);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const one = _temp7;
+  /* ReturnIfAbrupt */let _temp8 = yield* ToTemporalInstant(_two);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const two = _temp8;
+  return F(CompareEpochNanoseconds(one.EpochNanoseconds, two.EpochNanoseconds));
+}
+Instant_compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.instant.compare';
+function bootstrapTemporalInstant(realmRec) {
+  const prototype = bootstrapTemporalInstantPrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, InstantConstructor, 'Instant', 1, prototype, [['from', Instant_from, 1], ['fromEpochMilliseconds', Instant_fromEpochMilliseconds, 1], ['fromEpochNanoseconds', Instant_fromEpochNanoseconds, 1], ['compare', Instant_compare, 2]]);
+  realmRec.Intrinsics['%Temporal.Instant%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#eqn-nsPerDay */
+const nsPerDay = 8.64e13;
+/** https://tc39.es/proposal-temporal/#eqn-nsMaxInstant */
+const nsMaxInstant = 8.64e21;
+/** https://tc39.es/proposal-temporal/#eqn-nsMinInstant */
+const nsMinInstant = -864e19;
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds */
+function IsValidEpochNanoseconds(epochNanoseconds) {
+  if (epochNanoseconds < nsMinInstant || epochNanoseconds > nsMaxInstant) {
+    return false;
+  }
+  return true;
+}
+IsValidEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant */
+function* CreateTemporalInstant(epochNanoseconds, newTarget) {
+  Assert(IsValidEpochNanoseconds(epochNanoseconds), "IsValidEpochNanoseconds(epochNanoseconds)");
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.intrinsic('%Temporal.Instant%');
+  }
+  /* ReturnIfAbrupt */let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.Instant.prototype%', ['InitializedTemporalInstant', 'EpochNanoseconds']);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const object = _temp;
+  object.EpochNanoseconds = epochNanoseconds;
+  return object;
+}
+CreateTemporalInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalinstant */
+function* ToTemporalInstant(item) {
+  if (item instanceof ObjectValue) {
+    if (isTemporalInstantObject(item) || isTemporalZonedDateTimeObject(item)) {
+      /* X */let _temp2 = CreateTemporalInstant(item.EpochNanoseconds);
+      /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(item.EpochNanoseconds) returned an abrupt completion", {
+        cause: _temp2
+      }); /* node:coverage ignore next */
+      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+      return _temp2;
+    }
+    /* ReturnIfAbrupt */let _temp3 = yield* ToPrimitive(item, 'string');
+    /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+    if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    item = _temp3;
+  }
+  if (!(item instanceof JSStringValue)) {
+    return Throw.TypeError('$1 is not a string', item);
+  }
+  /* ReturnIfAbrupt */let _temp4 = ParseISODateTime(item.stringValue());
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const parsed = _temp4;
+  // Assert: Either parsed.[[TimeZone]].[[OffsetString]] is not empty or parsed.[[TimeZone]].[[Z]] is true, but not both.
+  {
+    const a = parsed.TimeZone.OffsetString !== undefined;
+    const b = parsed.TimeZone.Z;
+    Assert((a || b) && !(a && b), "(a || b) && !(a && b)");
+  }
+  parsed.TimeZone.OffsetString;
+  let offsetNanoseconds;
+  if (parsed.TimeZone.Z) {
+    offsetNanoseconds = 0;
+  } else {
+    /* X */
+    let _temp7 = ParseDateTimeUTCOffset();
+    /* node:coverage ignore next */
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("!  returned an abrupt completion", {
+      cause: _temp7
+    });
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    offsetNanoseconds = _temp7;
+  }
+  const time = parsed.Time;
+  Assert(time !== 'start-of-day', "time !== 'start-of-day'");
+  const balanced = BalanceISODateTime(parsed.Year, parsed.Month, parsed.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, time.Nanosecond - offsetNanoseconds);
+  /* ReturnIfAbrupt */let _temp5 = CheckISODaysRange(balanced.ISODate);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const epochNanoseconds = GetUTCEpochNanoseconds(balanced);
+  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
+  }
+  /* X */let _temp6 = CreateTemporalInstant(epochNanoseconds);
+  /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(epochNanoseconds) returned an abrupt completion", {
+    cause: _temp6
+  }); /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  return _temp6;
+}
+ToTemporalInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds */
+function CompareEpochNanoseconds(epochNanosecondsOne, epochNanosecondsTwo) {
+  if (epochNanosecondsOne > epochNanosecondsTwo) {
+    return 1;
+  }
+  if (epochNanosecondsOne < epochNanosecondsTwo) {
+    return -1;
+  }
+  return 0;
+}
+CompareEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-addinstant */
+function AddInstant(epochNanoseconds, timeDuration) {
+  const result = AddTimeDurationToEpochNanoseconds(timeDuration, epochNanoseconds);
+  if (!IsValidEpochNanoseconds(result)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', result);
+  }
+  return result;
+}
+AddInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-addinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant */
+function DifferenceInstant(ns1, ns2, roundingIncrement, smallestUnit, roundingMode) {
+  let timeDuration = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
+  /* X */let _temp8 = RoundTimeDuration(timeDuration, roundingIncrement, smallestUnit, roundingMode);
+  /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! RoundTimeDuration(timeDuration, roundingIncrement, smallestUnit, roundingMode) returned an abrupt completion", {
+    cause: _temp8
+  }); /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  timeDuration = _temp8;
+  return CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
+}
+DifferenceInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant */
+function RoundTemporalInstant(ns, increment, unit, roundingMode) {
+  const unitLength = Table21_LengthInNanoSeconds[unit];
+  const incrementNs = increment * unitLength;
+  return BigInt(RoundNumberToIncrementAsIfPositive(Number(ns), incrementNs, roundingMode));
+}
+RoundTemporalInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporalinstant-tostring */
+function TemporalInstantToString(instant, timeZone, precision) {
+  let outputTimeZone = timeZone;
+  if (outputTimeZone === undefined) {
+    outputTimeZone = 'UTC';
+  }
+  const epochNs = instant.EpochNanoseconds;
+  const isoDateTime = GetISODateTimeFor(outputTimeZone, epochNs);
+  const dateTimeString = ISODateTimeToString(isoDateTime, 'iso8601', precision, 'never');
+  let timeZoneString;
+  if (timeZone === undefined) {
+    timeZoneString = 'Z';
+  } else {
+    const offsetNanoseconds = GetOffsetNanosecondsFor();
+    timeZoneString = FormatDateTimeUTCOffsetRounded(offsetNanoseconds);
+  }
+  return dateTimeString + timeZoneString;
+}
+TemporalInstantToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporalinstant-tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant */
+function* DifferenceTemporalInstant(operation, instant, _other, options) {
+  /* ReturnIfAbrupt */let _temp9 = yield* ToTemporalInstant(_other);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const other = _temp9;
+  /* ReturnIfAbrupt */let _temp0 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const resolvedOptions = _temp0;
+  /* ReturnIfAbrupt */let _temp1 = yield* GetDifferenceSettings(operation, resolvedOptions, 'time', [], TemporalUnit.Nanosecond, TemporalUnit.Second);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const settings = _temp1;
+  const internalDuration = DifferenceInstant(instant.EpochNanoseconds, other.EpochNanoseconds, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+  /* X */let _temp10 = TemporalDurationFromInternal(internalDuration, settings.LargestUnit);
+  /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(internalDuration, settings.LargestUnit) returned an abrupt completion", {
+    cause: _temp10
+  }); /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  let result = _temp10;
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
+DifferenceTemporalInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoinstant */
+function* AddDurationToInstant(operation, instant, temporalDurationLike) {
+  /* ReturnIfAbrupt */let _temp11 = yield* ToTemporalDuration(temporalDurationLike);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  let duration = _temp11;
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  const largestUnit = DefaultTemporalLargestUnit(duration);
+  if (TemporalUnitCategory(largestUnit) === 'date') {
+    return Throw.RangeError('Cannot add a date to an instant');
+  }
+  const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+  /* ReturnIfAbrupt */let _temp12 = AddInstant(instant.EpochNanoseconds, internalDuration.Time);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const ns = _temp12;
+  /* X */let _temp13 = CreateTemporalInstant(ns);
+  /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(ns) returned an abrupt completion", {
+    cause: _temp13
+  }); /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  return _temp13;
+}
+AddDurationToInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoinstant';
+
+function thisTemporalZonedDateTimeValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalZonedDateTime');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendarid */
+function ZonedDateTimeProto_calendarIdGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  return Value(_temp2.Calendar);
+}
+ZonedDateTimeProto_calendarIdGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendarid';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.timezoneid */
+function ZonedDateTimeProto_timeZoneIdGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  return Value(_temp3.TimeZone);
+}
+ZonedDateTimeProto_timeZoneIdGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.timezoneid';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.year */
+function ZonedDateTimeProto_yearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const zonedDateTime = _temp4;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  return F(CalendarISOToDate(zonedDateTime.Calendar, isoDateTime.ISODate).Year);
+}
+ZonedDateTimeProto_yearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.year';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.month */
+function ZonedDateTimeProto_monthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const zonedDateTime = _temp5;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  return F(CalendarISOToDate(zonedDateTime.Calendar, isoDateTime.ISODate).Month);
+}
+ZonedDateTimeProto_monthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.month';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthcode */
+function ZonedDateTimeProto_monthCodeGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const zonedDateTime = _temp6;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  return Value(CalendarISOToDate(zonedDateTime.Calendar, isoDateTime.ISODate).MonthCode);
+}
+ZonedDateTimeProto_monthCodeGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.day */
+function ZonedDateTimeProto_dayGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const zonedDateTime = _temp7;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  return F(CalendarISOToDate(zonedDateTime.Calendar, isoDateTime.ISODate).Day);
+}
+ZonedDateTimeProto_dayGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.day';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hour */
+function ZonedDateTimeProto_hourGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const zonedDateTime = _temp8;
+  return F(GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds).Time.Hour);
+}
+ZonedDateTimeProto_hourGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hour';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.minute */
+function ZonedDateTimeProto_minuteGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp9 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const zonedDateTime = _temp9;
+  return F(GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds).Time.Minute);
+}
+ZonedDateTimeProto_minuteGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.minute';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.second */
+function ZonedDateTimeProto_secondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp0 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const zonedDateTime = _temp0;
+  return F(GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds).Time.Second);
+}
+ZonedDateTimeProto_secondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.second';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.millisecond */
+function ZonedDateTimeProto_millisecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp1 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const zonedDateTime = _temp1;
+  return F(GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds).Time.Millisecond);
+}
+ZonedDateTimeProto_millisecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.millisecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.microsecond */
+function ZonedDateTimeProto_microsecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp10 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const zonedDateTime = _temp10;
+  return F(GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds).Time.Microsecond);
+}
+ZonedDateTimeProto_microsecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.microsecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.nanosecond */
+function ZonedDateTimeProto_nanosecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp11 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const zonedDateTime = _temp11;
+  return F(GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds).Time.Nanosecond);
+}
+ZonedDateTimeProto_nanosecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.nanosecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochmilliseconds */
+function ZonedDateTimeProto_epochMillisecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp12 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const ns = _temp12.EpochNanoseconds;
+  return F(Number(ns / 1_000_000n));
+}
+ZonedDateTimeProto_epochMillisecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochmilliseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochnanoseconds */
+function ZonedDateTimeProto_epochNanosecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp13 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  return Value(_temp13.EpochNanoseconds);
+}
+ZonedDateTimeProto_epochNanosecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offsetnanoseconds */
+function ZonedDateTimeProto_offsetNanosecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp14 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const zonedDateTime = _temp14;
+  return F(GetOffsetNanosecondsFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds));
+}
+ZonedDateTimeProto_offsetNanosecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offsetnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.with */
+function* ZonedDateTimeProto_with([temporalZonedDateTimeLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const zonedDateTime = _temp15;
+  /* ReturnIfAbrupt */let _temp16 = yield* IsPartialTemporalObject(temporalZonedDateTimeLike);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  if (!_temp16) {
+    return Throw.TypeError('$1 is not a partial Temporal object', temporalZonedDateTimeLike);
+  }
+  const epochNs = zonedDateTime.EpochNanoseconds;
+  const timeZone = zonedDateTime.TimeZone;
+  const calendar = zonedDateTime.Calendar;
+  const offsetNanoseconds = GetOffsetNanosecondsFor();
+  const isoDateTime = GetISODateTimeFor(timeZone, epochNs);
+  let fields = ISODateToFields(calendar, isoDateTime.ISODate, 'date');
+  fields.Hour = isoDateTime.Time.Hour;
+  fields.Minute = isoDateTime.Time.Minute;
+  fields.Second = isoDateTime.Time.Second;
+  fields.Millisecond = isoDateTime.Time.Millisecond;
+  fields.Microsecond = isoDateTime.Time.Microsecond;
+  fields.Nanosecond = isoDateTime.Time.Nanosecond;
+  fields.OffsetString = FormatUTCOffsetNanoseconds(offsetNanoseconds);
+  /* ReturnIfAbrupt */let _temp17 = yield* PrepareCalendarFields(calendar, temporalZonedDateTimeLike, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset'], 'partial');
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const partialZonedDateTime = _temp17;
+  fields = CalendarMergeFields(calendar, fields, partialZonedDateTime);
+  /* ReturnIfAbrupt */let _temp18 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const resolvedOptions = _temp18;
+  /* ReturnIfAbrupt */let _temp19 = yield* GetTemporalDisambiguationOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const disambiguation = _temp19;
+  /* ReturnIfAbrupt */let _temp20 = yield* GetTemporalOffsetOption(resolvedOptions, 'prefer');
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const offset = _temp20;
+  /* ReturnIfAbrupt */let _temp21 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const overflow = _temp21;
+  /* ReturnIfAbrupt */let _temp22 = yield* InterpretTemporalDateTimeFields(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const dateTimeResult = _temp22;
+  fields.OffsetString;
+  /* X */let _temp23 = ParseDateTimeUTCOffset();
+  /* node:coverage ignore next */if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! ParseDateTimeUTCOffset(offsetString) returned an abrupt completion", {
+    cause: _temp23
+  }); /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const newOffsetNanoseconds = _temp23;
+  /* ReturnIfAbrupt */let _temp24 = InterpretISODateTimeOffset(dateTimeResult.ISODate, dateTimeResult.Time, 'option', newOffsetNanoseconds, timeZone, disambiguation, offset, 'match-exactly');
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const epochNanoseconds = _temp24;
+  /* X */let _temp25 = CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar) returned an abrupt completion", {
+    cause: _temp25
+  }); /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  return _temp25;
+}
+ZonedDateTimeProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaintime */
+function* ZonedDateTimeProto_withPlainTime([plainTimeLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp26 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const zonedDateTime = _temp26;
+  const timeZone = zonedDateTime.TimeZone;
+  const calendar = zonedDateTime.Calendar;
+  const isoDateTime = GetISODateTimeFor(timeZone, zonedDateTime.EpochNanoseconds);
+  let epochNs;
+  if (plainTimeLike instanceof UndefinedValue) {
+    /* ReturnIfAbrupt */let _temp27 = GetStartOfDay(timeZone, isoDateTime.ISODate);
+    /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+    if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+    epochNs = _temp27;
+  } else {
+    /* ReturnIfAbrupt */let _temp28 = yield* ToTemporalTime(plainTimeLike);
+    /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+    if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+    const plainTime = _temp28;
+    const resultISODateTime = CombineISODateAndTimeRecord(isoDateTime.ISODate, plainTime.Time);
+    /* ReturnIfAbrupt */let _temp29 = GetEpochNanosecondsFor(timeZone, resultISODateTime, 'compatible');
+    /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+    if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+    epochNs = _temp29;
+  }
+  /* X */let _temp30 = CreateTemporalZonedDateTime(epochNs, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNs, timeZone, calendar) returned an abrupt completion", {
+    cause: _temp30
+  }); /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  return _temp30;
+}
+ZonedDateTimeProto_withPlainTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaintime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withtimezone */
+function* ZonedDateTimeProto_withTimeZone([timeZoneLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp31 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const zonedDateTime = _temp31;
+  /* ReturnIfAbrupt */let _temp32 = ToTemporalTimeZoneIdentifier(timeZoneLike);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  const timeZone = _temp32;
+  /* X */let _temp33 = CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, timeZone, zonedDateTime.Calendar);
+  /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
+  /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, timeZone, zonedDateTime.Calendar) returned an abrupt completion", {
+    cause: _temp33
+  }); /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+  return _temp33;
+}
+ZonedDateTimeProto_withTimeZone.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withtimezone';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withcalendar */
+function ZonedDateTimeProto_withCalendar([calendarLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp34 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) return _temp34; /* node:coverage ignore next */
+  if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  const zonedDateTime = _temp34;
+  /* ReturnIfAbrupt */let _temp35 = ToTemporalCalendarIdentifier(calendarLike);
+  /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  const calendar = _temp35;
+  /* X */let _temp36 = CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, zonedDateTime.TimeZone, calendar);
+  /* node:coverage ignore next */if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, zonedDateTime.TimeZone, calendar) returned an abrupt completion", {
+    cause: _temp36
+  }); /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  return _temp36;
+}
+ZonedDateTimeProto_withCalendar.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withcalendar';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.add */
+function* ZonedDateTimeProto_add([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp37 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) return _temp37; /* node:coverage ignore next */
+  if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+  const zonedDateTime = _temp37;
+  return yield* AddDurationToZonedDateTime('add', zonedDateTime, temporalDurationLike, options);
+}
+ZonedDateTimeProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.subtract */
+function* ZonedDateTimeProto_subtract([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp38 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) return _temp38; /* node:coverage ignore next */
+  if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+  const zonedDateTime = _temp38;
+  return yield* AddDurationToZonedDateTime('subtract', zonedDateTime, temporalDurationLike, options);
+}
+ZonedDateTimeProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.until */
+function* ZonedDateTimeProto_until([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp39 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) return _temp39; /* node:coverage ignore next */
+  if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+  const zonedDateTime = _temp39;
+  return yield* DifferenceTemporalZonedDateTime('until', zonedDateTime, other, options);
+}
+ZonedDateTimeProto_until.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.until';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.since */
+function* ZonedDateTimeProto_since([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp40 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) return _temp40; /* node:coverage ignore next */
+  if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+  const zonedDateTime = _temp40;
+  return yield* DifferenceTemporalZonedDateTime('since', zonedDateTime, other, options);
+}
+ZonedDateTimeProto_since.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.since';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.round */
+function* ZonedDateTimeProto_round([roundTo = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp41 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) return _temp41; /* node:coverage ignore next */
+  if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+  const zonedDateTime = _temp41;
+  if (roundTo instanceof UndefinedValue) {
+    return Throw.TypeError('roundTo is required');
+  }
+  if (roundTo instanceof JSStringValue) {
+    const paramString = roundTo;
+    roundTo = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp42 = CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString);
+    /* node:coverage ignore next */if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) _temp42 = skipDebugger(_temp42);
+    /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString) returned an abrupt completion", {
+      cause: _temp42
+    }); /* node:coverage ignore next */
+    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp43 = GetOptionsObject$1(roundTo);
+    /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) return _temp43; /* node:coverage ignore next */
+    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+    roundTo = _temp43;
+  }
+  /* ReturnIfAbrupt */let _temp44 = yield* GetRoundingIncrementOption(roundTo);
+  /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) return _temp44; /* node:coverage ignore next */
+  if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+  const roundingIncrement = _temp44;
+  /* ReturnIfAbrupt */let _temp45 = yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand);
+  /* node:coverage ignore next */if (_temp45 instanceof AbruptCompletion) return _temp45; /* node:coverage ignore next */
+  if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+  const roundingMode = _temp45;
+  /* ReturnIfAbrupt */let _temp46 = yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required');
+  /* node:coverage ignore next */if (_temp46 instanceof AbruptCompletion) return _temp46; /* node:coverage ignore next */
+  if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+  const smallestUnit = _temp46;
+  /* ReturnIfAbrupt */let _temp47 = ValidateTemporalUnitValue(smallestUnit, 'time', [TemporalUnit.Day]);
+  /* node:coverage ignore next */if (_temp47 instanceof AbruptCompletion) return _temp47; /* node:coverage ignore next */
+  if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+  let maximum;
+  let inclusive;
+  if (smallestUnit === TemporalUnit.Day) {
+    maximum = 1;
+    inclusive = true;
+  } else {
+    maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+    Assert(maximum !== 'unset', "maximum !== 'unset'");
+    inclusive = false;
+  }
+  /* ReturnIfAbrupt */let _temp48 = ValidateTemporalRoundingIncrement(roundingIncrement, maximum, inclusive);
+  /* node:coverage ignore next */if (_temp48 instanceof AbruptCompletion) return _temp48; /* node:coverage ignore next */
+  if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1) {
+    /* X */let _temp49 = CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, zonedDateTime.TimeZone, zonedDateTime.Calendar);
+    /* node:coverage ignore next */if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) _temp49 = skipDebugger(_temp49);
+    /* node:coverage ignore next */if (_temp49 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, zonedDateTime.TimeZone, zonedDateTime.Calendar) returned an abrupt completion", {
+      cause: _temp49
+    }); /* node:coverage ignore next */
+    if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+    return _temp49;
+  }
+  const thisNs = zonedDateTime.EpochNanoseconds;
+  const timeZone = zonedDateTime.TimeZone;
+  const calendar = zonedDateTime.Calendar;
+  const isoDateTime = GetISODateTimeFor(timeZone, thisNs);
+  let epochNanoseconds;
+  if (smallestUnit === TemporalUnit.Day) {
+    const dateStart = isoDateTime.ISODate;
+    const dateEnd = AddDaysToISODate(dateStart, 1);
+    /* ReturnIfAbrupt */let _temp50 = GetStartOfDay(timeZone, dateStart);
+    /* node:coverage ignore next */if (_temp50 instanceof AbruptCompletion) return _temp50; /* node:coverage ignore next */
+    if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+    const startNs = _temp50;
+    Assert(thisNs >= startNs, "thisNs >= startNs");
+    /* ReturnIfAbrupt */let _temp51 = GetStartOfDay(timeZone, dateEnd);
+    /* node:coverage ignore next */if (_temp51 instanceof AbruptCompletion) return _temp51; /* node:coverage ignore next */
+    if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
+    const endNs = _temp51;
+    Assert(thisNs < endNs, "thisNs < endNs");
+    const dayLengthNs = endNs - startNs;
+    const dayProgressNs = TimeDurationFromEpochNanosecondsDifference(thisNs, startNs);
+    /* X */let _temp52 = RoundTimeDurationToIncrement(dayProgressNs, Number(dayLengthNs), roundingMode);
+    /* node:coverage ignore next */if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) _temp52 = skipDebugger(_temp52);
+    /* node:coverage ignore next */if (_temp52 instanceof AbruptCompletion) throw new Assert.Error("! RoundTimeDurationToIncrement(dayProgressNs, Number(dayLengthNs), roundingMode) returned an abrupt completion", {
+      cause: _temp52
+    }); /* node:coverage ignore next */
+    if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
+    const roundedDayNs = _temp52;
+    epochNanoseconds = AddTimeDurationToEpochNanoseconds(roundedDayNs, startNs);
+  } else {
+    const roundResult = RoundISODateTime(isoDateTime, roundingIncrement, smallestUnit, roundingMode);
+    const offsetNanoseconds = GetOffsetNanosecondsFor();
+    /* ReturnIfAbrupt */let _temp53 = InterpretISODateTimeOffset(roundResult.ISODate, roundResult.Time, 'option', offsetNanoseconds, timeZone, 'compatible', 'prefer', 'match-exactly');
+    /* node:coverage ignore next */if (_temp53 instanceof AbruptCompletion) return _temp53; /* node:coverage ignore next */
+    if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
+    epochNanoseconds = _temp53;
+  }
+  /* X */let _temp54 = CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) _temp54 = skipDebugger(_temp54);
+  /* node:coverage ignore next */if (_temp54 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar) returned an abrupt completion", {
+    cause: _temp54
+  }); /* node:coverage ignore next */
+  if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
+  return _temp54;
+}
+ZonedDateTimeProto_round.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.round';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.equals */
+function* ZonedDateTimeProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp55 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp55 instanceof AbruptCompletion) return _temp55; /* node:coverage ignore next */
+  if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
+  const zonedDateTime = _temp55;
+  /* ReturnIfAbrupt */let _temp56 = yield* ToTemporalZonedDateTime(_other);
+  /* node:coverage ignore next */if (_temp56 instanceof AbruptCompletion) return _temp56; /* node:coverage ignore next */
+  if (_temp56 instanceof Completion) _temp56 = _temp56.Value;
+  const other = _temp56;
+  if (zonedDateTime.EpochNanoseconds !== other.EpochNanoseconds) {
+    return Value.false;
+  }
+  if (!TimeZoneEquals(zonedDateTime.TimeZone, other.TimeZone)) {
+    return Value.false;
+  }
+  return Value(CalendarEquals(zonedDateTime.Calendar, other.Calendar));
+}
+ZonedDateTimeProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tostring */
+function* ZonedDateTimeProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp57 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp57 instanceof AbruptCompletion) return _temp57; /* node:coverage ignore next */
+  if (_temp57 instanceof Completion) _temp57 = _temp57.Value;
+  const zonedDateTime = _temp57;
+  /* ReturnIfAbrupt */let _temp58 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp58 instanceof AbruptCompletion) return _temp58; /* node:coverage ignore next */
+  if (_temp58 instanceof Completion) _temp58 = _temp58.Value;
+  const resolvedOptions = _temp58;
+  /* ReturnIfAbrupt */let _temp59 = yield* GetTemporalShowCalendarNameOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp59 instanceof AbruptCompletion) return _temp59; /* node:coverage ignore next */
+  if (_temp59 instanceof Completion) _temp59 = _temp59.Value;
+  const showCalendar = _temp59;
+  /* ReturnIfAbrupt */let _temp60 = yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp60 instanceof AbruptCompletion) return _temp60; /* node:coverage ignore next */
+  if (_temp60 instanceof Completion) _temp60 = _temp60.Value;
+  const digits = _temp60;
+  /* ReturnIfAbrupt */let _temp61 = yield* GetTemporalShowOffsetOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp61 instanceof AbruptCompletion) return _temp61; /* node:coverage ignore next */
+  if (_temp61 instanceof Completion) _temp61 = _temp61.Value;
+  const showOffset = _temp61;
+  /* ReturnIfAbrupt */let _temp62 = yield* GetRoundingModeOption(resolvedOptions, 3);
+  /* node:coverage ignore next */if (_temp62 instanceof AbruptCompletion) return _temp62; /* node:coverage ignore next */
+  if (_temp62 instanceof Completion) _temp62 = _temp62.Value;
+  const roundingMode = _temp62;
+  /* ReturnIfAbrupt */let _temp63 = yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp63 instanceof AbruptCompletion) return _temp63; /* node:coverage ignore next */
+  if (_temp63 instanceof Completion) _temp63 = _temp63.Value;
+  const smallestUnit = _temp63;
+  /* ReturnIfAbrupt */let _temp64 = yield* GetTemporalShowTimeZoneNameOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp64 instanceof AbruptCompletion) return _temp64; /* node:coverage ignore next */
+  if (_temp64 instanceof Completion) _temp64 = _temp64.Value;
+  const showTimeZone = _temp64;
+  /* ReturnIfAbrupt */let _temp65 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp65 instanceof AbruptCompletion) return _temp65; /* node:coverage ignore next */
+  if (_temp65 instanceof Completion) _temp65 = _temp65.Value;
+  if (smallestUnit === TemporalUnit.Hour) {
+    return Throw.RangeError('smallestUnit cannot be hour');
+  }
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
+  return Value(TemporalZonedDateTimeToString(zonedDateTime, precision.Precision, showCalendar, showTimeZone, showOffset, precision.Increment, precision.Unit, roundingMode));
+}
+ZonedDateTimeProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tolocalestring */
+function ZonedDateTimeProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp66 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) return _temp66; /* node:coverage ignore next */
+  if (_temp66 instanceof Completion) _temp66 = _temp66.Value;
+  const zonedDateTime = _temp66;
+  return Value(TemporalZonedDateTimeToString(zonedDateTime, 'auto', 'auto', 'auto', 'auto'));
+}
+ZonedDateTimeProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tojson */
+function ZonedDateTimeProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp67 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) return _temp67; /* node:coverage ignore next */
+  if (_temp67 instanceof Completion) _temp67 = _temp67.Value;
+  const zonedDateTime = _temp67;
+  return Value(TemporalZonedDateTimeToString(zonedDateTime, 'auto', 'auto', 'auto', 'auto'));
+}
+ZonedDateTimeProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof */
+function ZonedDateTimeProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp68 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp68 instanceof AbruptCompletion) return _temp68; /* node:coverage ignore next */
+  if (_temp68 instanceof Completion) _temp68 = _temp68.Value;
+  return Throw.TypeError('Temporal.ZonedDateTime cannot be converted to primitive value. If you are comparing two Temporal.ZonedDateTime objects with > or <, use Temporal.ZonedDateTime.compare() instead.');
+}
+ZonedDateTimeProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.startofday */
+function ZonedDateTimeProto_startOfDay(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp69 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) return _temp69; /* node:coverage ignore next */
+  if (_temp69 instanceof Completion) _temp69 = _temp69.Value;
+  const zonedDateTime = _temp69;
+  const timeZone = zonedDateTime.TimeZone;
+  const calendar = zonedDateTime.Calendar;
+  const isoDateTime = GetISODateTimeFor(timeZone, zonedDateTime.EpochNanoseconds).ISODate;
+  /* ReturnIfAbrupt */let _temp70 = GetStartOfDay(timeZone, isoDateTime);
+  /* node:coverage ignore next */if (_temp70 instanceof AbruptCompletion) return _temp70; /* node:coverage ignore next */
+  if (_temp70 instanceof Completion) _temp70 = _temp70.Value;
+  const epochNanoseconds = _temp70;
+  /* X */let _temp71 = CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) _temp71 = skipDebugger(_temp71);
+  /* node:coverage ignore next */if (_temp71 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar) returned an abrupt completion", {
+    cause: _temp71
+  }); /* node:coverage ignore next */
+  if (_temp71 instanceof Completion) _temp71 = _temp71.Value;
+  return _temp71;
+}
+ZonedDateTimeProto_startOfDay.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.startofday';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.gettimezonetransition */
+function* ZonedDateTimeProto_getTimeZoneTransition([directionParam = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp72 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp72 instanceof AbruptCompletion) return _temp72; /* node:coverage ignore next */
+  if (_temp72 instanceof Completion) _temp72 = _temp72.Value;
+  const zonedDateTime = _temp72;
+  const timeZone = zonedDateTime.TimeZone;
+  if (directionParam instanceof UndefinedValue) {
+    return Throw.TypeError('directionParam is required');
+  }
+  if (directionParam instanceof JSStringValue) {
+    const paramString = directionParam;
+    directionParam = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp73 = CreateDataPropertyOrThrow(directionParam, Value('direction'), paramString);
+    /* node:coverage ignore next */if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) _temp73 = skipDebugger(_temp73);
+    /* node:coverage ignore next */if (_temp73 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(directionParam, Value('direction'), paramString) returned an abrupt completion", {
+      cause: _temp73
+    }); /* node:coverage ignore next */
+    if (_temp73 instanceof Completion) _temp73 = _temp73.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp74 = GetOptionsObject$1(directionParam);
+    /* node:coverage ignore next */if (_temp74 instanceof AbruptCompletion) return _temp74; /* node:coverage ignore next */
+    if (_temp74 instanceof Completion) _temp74 = _temp74.Value;
+    directionParam = _temp74;
+  }
+  /* ReturnIfAbrupt */let _temp75 = yield* GetDirectionOption(directionParam);
+  /* node:coverage ignore next */if (_temp75 instanceof AbruptCompletion) return _temp75; /* node:coverage ignore next */
+  if (_temp75 instanceof Completion) _temp75 = _temp75.Value;
+  const direction = _temp75;
+  if (IsOffsetTimeZoneIdentifier()) {
+    return Value.null;
+  }
+  let transition;
+  if (direction === 'next') {
+    transition = GetNamedTimeZoneNextTransition(timeZone, zonedDateTime.EpochNanoseconds);
+  } else {
+    Assert(direction === 'previous', "direction === 'previous'");
+    transition = GetNamedTimeZonePreviousTransition(timeZone, zonedDateTime.EpochNanoseconds);
+  }
+  if (transition === null) return Value.null;
+  /* X */let _temp76 = CreateTemporalZonedDateTime(transition, timeZone, zonedDateTime.Calendar);
+  /* node:coverage ignore next */if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) _temp76 = skipDebugger(_temp76);
+  /* node:coverage ignore next */if (_temp76 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(transition, timeZone, zonedDateTime.Calendar) returned an abrupt completion", {
+    cause: _temp76
+  }); /* node:coverage ignore next */
+  if (_temp76 instanceof Completion) _temp76 = _temp76.Value;
+  return _temp76;
+}
+ZonedDateTimeProto_getTimeZoneTransition.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.gettimezonetransition';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toinstant */
+function ZonedDateTimeProto_toInstant(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp77 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp77 instanceof AbruptCompletion) return _temp77; /* node:coverage ignore next */
+  if (_temp77 instanceof Completion) _temp77 = _temp77.Value;
+  const zonedDateTime = _temp77;
+  /* X */let _temp78 = CreateTemporalInstant(zonedDateTime.EpochNanoseconds);
+  /* node:coverage ignore next */if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) _temp78 = skipDebugger(_temp78);
+  /* node:coverage ignore next */if (_temp78 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(zonedDateTime.EpochNanoseconds) returned an abrupt completion", {
+    cause: _temp78
+  }); /* node:coverage ignore next */
+  if (_temp78 instanceof Completion) _temp78 = _temp78.Value;
+  return _temp78;
+}
+ZonedDateTimeProto_toInstant.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toinstant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindate */
+function ZonedDateTimeProto_toPlainDate(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp79 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp79 instanceof AbruptCompletion) return _temp79; /* node:coverage ignore next */
+  if (_temp79 instanceof Completion) _temp79 = _temp79.Value;
+  const zonedDateTime = _temp79;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  /* X */let _temp80 = CreateTemporalDate(isoDateTime.ISODate, zonedDateTime.Calendar);
+  /* node:coverage ignore next */if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) _temp80 = skipDebugger(_temp80);
+  /* node:coverage ignore next */if (_temp80 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDateTime.ISODate, zonedDateTime.Calendar) returned an abrupt completion", {
+    cause: _temp80
+  }); /* node:coverage ignore next */
+  if (_temp80 instanceof Completion) _temp80 = _temp80.Value;
+  return _temp80;
+}
+ZonedDateTimeProto_toPlainDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaintime */
+function ZonedDateTimeProto_toPlainTime(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp81 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp81 instanceof AbruptCompletion) return _temp81; /* node:coverage ignore next */
+  if (_temp81 instanceof Completion) _temp81 = _temp81.Value;
+  const zonedDateTime = _temp81;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  /* X */let _temp82 = CreateTemporalTime(isoDateTime.Time);
+  /* node:coverage ignore next */if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) _temp82 = skipDebugger(_temp82);
+  /* node:coverage ignore next */if (_temp82 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(isoDateTime.Time) returned an abrupt completion", {
+    cause: _temp82
+  }); /* node:coverage ignore next */
+  if (_temp82 instanceof Completion) _temp82 = _temp82.Value;
+  return _temp82;
+}
+ZonedDateTimeProto_toPlainTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaintime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindatetime */
+function ZonedDateTimeProto_toPlainDateTime(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp83 = thisTemporalZonedDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp83 instanceof AbruptCompletion) return _temp83; /* node:coverage ignore next */
+  if (_temp83 instanceof Completion) _temp83 = _temp83.Value;
+  const zonedDateTime = _temp83;
+  const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
+  /* X */let _temp84 = CreateTemporalDateTime(isoDateTime, zonedDateTime.Calendar);
+  /* node:coverage ignore next */if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) _temp84 = skipDebugger(_temp84);
+  /* node:coverage ignore next */if (_temp84 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDateTime(isoDateTime, zonedDateTime.Calendar) returned an abrupt completion", {
+    cause: _temp84
+  }); /* node:coverage ignore next */
+  if (_temp84 instanceof Completion) _temp84 = _temp84.Value;
+  return _temp84;
+}
+ZonedDateTimeProto_toPlainDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindatetime';
+function bootstrapTemporalZonedDateTimePrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['calendarId', [ZonedDateTimeProto_calendarIdGetter]], ['timeZoneId', [ZonedDateTimeProto_timeZoneIdGetter]], ['year', [ZonedDateTimeProto_yearGetter]], ['month', [ZonedDateTimeProto_monthGetter]], ['monthCode', [ZonedDateTimeProto_monthCodeGetter]], ['day', [ZonedDateTimeProto_dayGetter]], ['hour', [ZonedDateTimeProto_hourGetter]], ['minute', [ZonedDateTimeProto_minuteGetter]], ['second', [ZonedDateTimeProto_secondGetter]], ['millisecond', [ZonedDateTimeProto_millisecondGetter]], ['microsecond', [ZonedDateTimeProto_microsecondGetter]], ['nanosecond', [ZonedDateTimeProto_nanosecondGetter]], ['epochMilliseconds', [ZonedDateTimeProto_epochMillisecondsGetter]], ['epochNanoseconds', [ZonedDateTimeProto_epochNanosecondsGetter]], ['offsetNanoseconds', [ZonedDateTimeProto_offsetNanosecondsGetter]], ['with', ZonedDateTimeProto_with, 1], ['withTimeZone', ZonedDateTimeProto_withTimeZone, 1], ['withCalendar', ZonedDateTimeProto_withCalendar, 1], ['withPlainTime', ZonedDateTimeProto_withPlainTime, 0], ['add', ZonedDateTimeProto_add, 1], ['subtract', ZonedDateTimeProto_subtract, 1], ['until', ZonedDateTimeProto_until, 1], ['since', ZonedDateTimeProto_since, 1], ['round', ZonedDateTimeProto_round, 1], ['equals', ZonedDateTimeProto_equals, 1], ['toString', ZonedDateTimeProto_toString, 0], ['toLocaleString', ZonedDateTimeProto_toLocaleString, 0], ['toJSON', ZonedDateTimeProto_toJSON, 0], ['valueOf', ZonedDateTimeProto_valueOf, 0], ['startOfDay', ZonedDateTimeProto_startOfDay, 0], ['getTimeZoneTransition', ZonedDateTimeProto_getTimeZoneTransition, 1], ['toInstant', [ZonedDateTimeProto_toInstant]], ['toPlainDate', [ZonedDateTimeProto_toPlainDate]], ['toPlainTime', [ZonedDateTimeProto_toPlainTime]], ['toPlainDateTime', [ZonedDateTimeProto_toPlainDateTime]]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.ZonedDateTime');
+  realmRec.Intrinsics['%Temporal.ZonedDateTime.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-zoneddatetime-instances */
+
+function isTemporalZonedDateTimeObject(o) {
+  return 'InitializedTemporalZonedDateTime' in o;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime */
+function* ZonedDateTimeConstructor([_epochNanoseconds = Value.undefined, _timeZone = Value.undefined, _calendar = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.ZonedDateTime cannot be called without new');
+  }
+  /* ReturnIfAbrupt */let _temp = yield* ToBigInt(_epochNanoseconds);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const epochNanoseconds = R(_temp);
+  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
+  }
+  if (!(_timeZone instanceof JSStringValue)) {
+    return Throw.TypeError('timeZone is not a string');
+  }
+  /* ReturnIfAbrupt */let _temp2 = ParseTimeZoneIdentifier(_timeZone.stringValue());
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const timeZoneParse = _temp2;
+  let timeZone;
+  if (timeZoneParse.OffsetMinutes === undefined) {
+    const identifierRecord = GetAvailableNamedTimeZoneIdentifier(timeZoneParse.Name || '');
+    if (identifierRecord === undefined) {
+      return Throw.RangeError('invalid time zone identifier: $1', timeZoneParse.Name || '');
+    }
+    timeZone = identifierRecord.Identifier;
+  } else {
+    timeZone = FormatOffsetTimeZoneIdentifier(timeZoneParse.OffsetMinutes);
+  }
+  if (_calendar instanceof UndefinedValue) {
+    _calendar = Value('iso8601');
+  }
+  if (!(_calendar instanceof JSStringValue)) {
+    return Throw.TypeError('calendar is not a string');
+  }
+  /* ReturnIfAbrupt */let _temp3 = CanonicalizeCalendar(_calendar.stringValue());
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const calendar = _temp3;
+  return yield* CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget);
+}
+ZonedDateTimeConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from */
+function* ZonedDateTime_from([item = Value.undefined, options = Value.undefined]) {
+  return yield* ToTemporalZonedDateTime(item, options);
+}
+ZonedDateTime_from.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.compare */
+function* ZonedDateTime_compare([_one = Value.undefined, _two = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp4 = yield* ToTemporalZonedDateTime(_one);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const one = _temp4;
+  /* ReturnIfAbrupt */let _temp5 = yield* ToTemporalZonedDateTime(_two);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const two = _temp5;
+  return F(CompareEpochNanoseconds(one.EpochNanoseconds, two.EpochNanoseconds));
+}
+ZonedDateTime_compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.compare';
+function bootstrapTemporalZonedDateTime(realmRec) {
+  const prototype = bootstrapTemporalZonedDateTimePrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, ZonedDateTimeConstructor, 'ZonedDateTime', 2, prototype, [['from', ZonedDateTime_from, 1], ['compare', ZonedDateTime_compare, 2]]);
+  realmRec.Intrinsics['%Temporal.ZonedDateTime%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
+// TODO(temporal): Review
+function ISODateToEpochDays(year, month, date) {
+  const resolvedYear = year + Math.floor(month / 12);
+  const resolvedMonth = (month % 12 + 12) % 12;
+  // Find a time t such that EpochTimeToEpochYear(t) = resolvedYear, EpochTimeToMonthInYear(t) = resolvedMonth, and EpochTimeToDate(t) = 1.
+  const y = resolvedYear;
+  const m = resolvedMonth;
+  let t = EpochDayNumberForYear(y);
+  const isLeap = MathematicalDaysInYear(y) === 366;
+  const monthDays = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  for (let i = 0; i < m; i += 1) {
+    t += monthDays[i];
+  }
+  Assert(EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1, "EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1");
+  return EpochTimeToDayNumber(t) + date - 1;
+}
+ISODateToEpochDays.section = 'https://tc39.es/proposal-temporal/#sec-isodatetoepochdays';
+
+/** https://tc39.es/proposal-temporal/#sec-epochdaystoepochms */
+function EpochDaysToEpochMs(day, time) {
+  return day * 86400000 + time;
+}
+EpochDaysToEpochMs.section = 'https://tc39.es/proposal-temporal/#sec-epochdaystoepochms';
+
+/** https://tc39.es/proposal-temporal/#eqn-EpochTimeToDayNumber */
+function EpochTimeToDayNumber(t) {
+  return Math.floor(t / 86400000);
+}
+
+/** https://tc39.es/proposal-temporal/#sec-mathematicaldaysinyear */
+function MathematicalDaysInYear(y) {
+  if (y % 4 !== 0) {
+    return 365;
+  }
+  if (y % 100 !== 0) {
+    return 366;
+  }
+  if (y % 400 !== 0) {
+    return 365;
+  }
+  return 366;
+}
+MathematicalDaysInYear.section = 'https://tc39.es/proposal-temporal/#sec-mathematicaldaysinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-epochdaynumberforyear */
+function EpochDayNumberForYear(y) {
+  return 365 * (y - 1970) + Math.floor((y - 1969) / 4) - Math.floor((y - 1901) / 100) + Math.floor((y - 1601) / 400);
+}
+EpochDayNumberForYear.section = 'https://tc39.es/proposal-temporal/#sec-epochdaynumberforyear';
+
+/** https://tc39.es/proposal-temporal/#sec-epochtimeforyear */
+function EpochTimeForYear(y) {
+  return 86400000 * EpochDayNumberForYear(y);
+}
+EpochTimeForYear.section = 'https://tc39.es/proposal-temporal/#sec-epochtimeforyear';
+
+/** https://tc39.es/proposal-temporal/#sec-epochtimetoepochyear */
+// TODO(temporal): Review
+function EpochTimeToEpochYear(t) {
+  // EpochTimeToEpochYear(t) = the largest integral Number y (closest to +∞) such that EpochTimeForYear(y) ≤ t
+  let lower = -271821;
+  let upper = 275760;
+  while (lower < upper) {
+    const mid = Math.floor((lower + upper + 1) / 2);
+    if (EpochTimeForYear(mid) <= t) {
+      lower = mid;
+    } else {
+      upper = mid - 1;
+    }
+  }
+  return lower;
+}
+EpochTimeToEpochYear.section = 'https://tc39.es/proposal-temporal/#sec-epochtimetoepochyear';
+
+/** https://tc39.es/proposal-temporal/#sec-mathematicalinleapyear */
+function MathematicalInLeapYear(t) {
+  return MathematicalDaysInYear(EpochTimeToEpochYear(t)) === 366 ? 1 : 0;
+}
+MathematicalInLeapYear.section = 'https://tc39.es/proposal-temporal/#sec-mathematicalinleapyear';
+
+/** https://tc39.es/proposal-temporal/#sec-epochtimetomonthinyear */
+function EpochTimeToMonthInYear(t) {
+  const dayInYear = EpochTimeToDayInYear(t);
+  const leap = MathematicalInLeapYear(t);
+  if (dayInYear >= 0 && dayInYear < 31) return 0;
+  if (dayInYear >= 31 && dayInYear < 59 + leap) return 1;
+  if (59 + leap <= dayInYear && dayInYear < 90 + leap) return 2;
+  if (90 + leap <= dayInYear && dayInYear < 120 + leap) return 3;
+  if (120 + leap <= dayInYear && dayInYear < 151 + leap) return 4;
+  if (151 + leap <= dayInYear && dayInYear < 181 + leap) return 5;
+  if (181 + leap <= dayInYear && dayInYear < 212 + leap) return 6;
+  if (212 + leap <= dayInYear && dayInYear < 243 + leap) return 7;
+  if (243 + leap <= dayInYear && dayInYear < 273 + leap) return 8;
+  if (273 + leap <= dayInYear && dayInYear < 304 + leap) return 9;
+  if (304 + leap <= dayInYear && dayInYear < 334 + leap) return 10;
+  return 11;
+}
+EpochTimeToMonthInYear.section = 'https://tc39.es/proposal-temporal/#sec-epochtimetomonthinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-epochtimetodayinyear */
+function EpochTimeToDayInYear(t) {
+  return EpochTimeToDayNumber(t) - EpochDayNumberForYear(EpochTimeToEpochYear(t));
+}
+EpochTimeToDayInYear.section = 'https://tc39.es/proposal-temporal/#sec-epochtimetodayinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-epochtimetodate */
+function EpochTimeToDate(t) {
+  const m = EpochTimeToMonthInYear(t);
+  const dayInYear = EpochTimeToDayInYear(t);
+  const leap = MathematicalInLeapYear(t) ? 1 : 0;
+  if (m === 0) return dayInYear + 1;
+  if (m === 1) return dayInYear - 30;
+  if (m === 2) return dayInYear - 58 - leap;
+  if (m === 3) return dayInYear - 89 - leap;
+  if (m === 4) return dayInYear - 119 - leap;
+  if (m === 5) return dayInYear - 150 - leap;
+  if (m === 6) return dayInYear - 180 - leap;
+  if (m === 7) return dayInYear - 211 - leap;
+  if (m === 8) return dayInYear - 242 - leap;
+  if (m === 9) return dayInYear - 272 - leap;
+  if (m === 10) return dayInYear - 303 - leap;
+  return dayInYear - 333 - leap;
+}
+EpochTimeToDate.section = 'https://tc39.es/proposal-temporal/#sec-epochtimetodate';
+
+/** https://tc39.es/proposal-temporal/#sec-epochtimetoweekday */
+function EpochTimeToWeekDay(t) {
+  return (EpochTimeToDayNumber(t) + 4) % 7;
+}
+EpochTimeToWeekDay.section = 'https://tc39.es/proposal-temporal/#sec-epochtimetoweekday';
+
+/** https://tc39.es/proposal-temporal/#sec-checkisodaysrange */
+function CheckISODaysRange(isoDate) {
+  const days = Math.abs(ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day));
+  if (days > 1e8) {
+    return Throw.RangeError('ISODate is out of range');
+  }
+  return undefined;
+}
+CheckISODaysRange.section = 'https://tc39.es/proposal-temporal/#sec-checkisodaysrange';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-units */
+let TemporalUnit = /*#__PURE__*/function (TemporalUnit) {
+  TemporalUnit[TemporalUnit["Year"] = 0] = "Year";
+  TemporalUnit[TemporalUnit["Month"] = 1] = "Month";
+  TemporalUnit[TemporalUnit["Week"] = 2] = "Week";
+  TemporalUnit[TemporalUnit["Day"] = 3] = "Day";
+  TemporalUnit[TemporalUnit["Hour"] = 4] = "Hour";
+  TemporalUnit[TemporalUnit["Minute"] = 5] = "Minute";
+  TemporalUnit[TemporalUnit["Second"] = 6] = "Second";
+  TemporalUnit[TemporalUnit["Millisecond"] = 7] = "Millisecond";
+  TemporalUnit[TemporalUnit["Microsecond"] = 8] = "Microsecond";
+  TemporalUnit[TemporalUnit["Nanosecond"] = 9] = "Nanosecond";
+  return TemporalUnit;
+}({});
+
+/** https://tc39.es/proposal-temporal/#table-temporal-units */
+
+function __IsTimeUnit(unit) {
+  return unit === TemporalUnit.Hour || unit === TemporalUnit.Minute || unit === TemporalUnit.Second || unit === TemporalUnit.Millisecond || unit === TemporalUnit.Microsecond || unit === TemporalUnit.Nanosecond;
+}
+
+/** https://tc39.es/proposal-temporal/#table-temporal-units */
+
+/** https://tc39.es/proposal-temporal/#table-temporal-units */
+const Table21_LengthInNanoSeconds = {
+  [TemporalUnit.Day]: 8.64e13,
+  [TemporalUnit.Hour]: 3.6e12,
+  [TemporalUnit.Minute]: 6e10,
+  [TemporalUnit.Second]: 1e9,
+  [TemporalUnit.Millisecond]: 1e6,
+  [TemporalUnit.Microsecond]: 1e3,
+  [TemporalUnit.Nanosecond]: 1
+};
+const Table21_CategoryByValue = {
+  [TemporalUnit.Year]: 'date',
+  [TemporalUnit.Month]: 'date',
+  [TemporalUnit.Week]: 'date',
+  [TemporalUnit.Day]: 'date',
+  [TemporalUnit.Hour]: 'time',
+  [TemporalUnit.Minute]: 'time',
+  [TemporalUnit.Second]: 'time',
+  [TemporalUnit.Millisecond]: 'time',
+  [TemporalUnit.Microsecond]: 'time',
+  [TemporalUnit.Nanosecond]: 'time'
+};
+function __IsDateUnit(unit) {
+  return unit === TemporalUnit.Year || unit === TemporalUnit.Month || unit === TemporalUnit.Week || unit === TemporalUnit.Day;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-gettemporaloverflowoption */
+function* GetTemporalOverflowOption(options) {
+  /* ReturnIfAbrupt */let _temp = yield* GetOption(options, 'overflow', 'string', ['constrain', 'reject'], 'constrain');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const stringValue = _temp;
+  if (stringValue === 'constrain') {
+    return 'constrain';
+  }
+  return 'reject';
+}
+GetTemporalOverflowOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporaloverflowoption';
+
+/** https://tc39.es/proposal-temporal/#sec-gettemporaldisambiguationoption */
+function* GetTemporalDisambiguationOption(options) {
+  /* ReturnIfAbrupt */let _temp2 = yield* GetOption(options, 'disambiguation', 'string', ['compatible', 'earlier', 'later', 'reject'], 'compatible');
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const stringValue = _temp2;
+  if (stringValue === 'compatible') return 'compatible';
+  if (stringValue === 'earlier') return 'earlier';
+  if (stringValue === 'later') return 'later';
+  return 'reject';
+}
+GetTemporalDisambiguationOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporaldisambiguationoption';
+
+/** https://tc39.es/proposal-temporal/#sec-negateroundingmode */
+function NegateRoundingMode(roundingMode) {
+  switch (roundingMode) {
+    case RoundingMode.Ceil:
+      return RoundingMode.Floor;
+    case RoundingMode.Floor:
+      return RoundingMode.Ceil;
+    case RoundingMode.HalfCeil:
+      return RoundingMode.HalfFloor;
+    case RoundingMode.HalfFloor:
+      return RoundingMode.HalfCeil;
+    default:
+      return roundingMode;
+  }
+}
+NegateRoundingMode.section = 'https://tc39.es/proposal-temporal/#sec-negateroundingmode';
+/** https://tc39.es/proposal-temporal/#sec-gettemporaloffsetoption */
+function* GetTemporalOffsetOption(options, fallback) {
+  // step 1 to 4
+  const stringFallback = fallback;
+  /* ReturnIfAbrupt */let _temp3 = yield* GetOption(options, 'offset', 'string', ['prefer', 'use', 'ignore', 'reject'], stringFallback);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const stringValue = _temp3;
+  if (stringValue === 'prefer') return 'prefer';
+  if (stringValue === 'use') return 'use';
+  if (stringValue === 'ignore') return 'ignore';
+  return 'reject';
+}
+GetTemporalOffsetOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporaloffsetoption';
+/** https://tc39.es/proposal-temporal/#sec-gettemporalshowcalendarnameoption */
+function* GetTemporalShowCalendarNameOption(options) {
+  /* ReturnIfAbrupt */let _temp4 = yield* GetOption(options, 'calendarName', 'string', ['auto', 'always', 'never', 'critical'], 'auto');
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const stringValue = _temp4;
+  if (stringValue === 'always') return 'always';
+  if (stringValue === 'never') return 'never';
+  if (stringValue === 'critical') return 'critical';
+  return 'auto';
+}
+GetTemporalShowCalendarNameOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporalshowcalendarnameoption';
+/** https://tc39.es/proposal-temporal/#sec-gettemporalshowtimezonenameoption */
+function* GetTemporalShowTimeZoneNameOption(options) {
+  /* ReturnIfAbrupt */let _temp5 = yield* GetOption(options, 'timeZoneName', 'string', ['auto', 'never', 'critical'], 'auto');
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const stringValue = _temp5;
+  if (stringValue === 'never') return 'never';
+  if (stringValue === 'critical') return 'critical';
+  return 'auto';
+}
+GetTemporalShowTimeZoneNameOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporalshowtimezonenameoption';
+
+/** https://tc39.es/proposal-temporal/#sec-gettemporalshowoffsetoption */
+function* GetTemporalShowOffsetOption(options) {
+  /* ReturnIfAbrupt */let _temp6 = yield* GetOption(options, 'offset', 'string', ['auto', 'never'], 'auto');
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const stringValue = _temp6;
+  if (stringValue === 'never') return 'never';
+  return 'auto';
+}
+GetTemporalShowOffsetOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporalshowoffsetoption';
+/** https://tc39.es/proposal-temporal/#sec-getdirectionoption */
+function* GetDirectionOption(options) {
+  /* ReturnIfAbrupt */let _temp7 = yield* GetOption(options, 'direction', 'string', ['next', 'previous'], '~required~');
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const stringValue = _temp7;
+  if (stringValue === 'next') return 'next';
+  return 'previous';
+}
+GetDirectionOption.section = 'https://tc39.es/proposal-temporal/#sec-getdirectionoption';
+
+/** https://tc39.es/proposal-temporal/#sec-validatetemporalroundingincrement */
+function ValidateTemporalRoundingIncrement(increment, dividend, inclusive) {
+  let maximum;
+  if (inclusive) {
+    maximum = dividend;
+  } else {
+    Assert(dividend > 1, "dividend > 1");
+    maximum = dividend - 1;
+  }
+  if (increment > maximum) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', increment);
+  }
+  if (dividend % increment !== 0) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', increment);
+  }
+  return undefined;
+}
+ValidateTemporalRoundingIncrement.section = 'https://tc39.es/proposal-temporal/#sec-validatetemporalroundingincrement';
+
+/** https://tc39.es/proposal-temporal/#sec-gettemporalfractionalseconddigitsoption */
+function* GetTemporalFractionalSecondDigitsOption(options) {
+  /* ReturnIfAbrupt */let _temp8 = yield* Get(options, Value('fractionalSecondDigits'));
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const digitsValue = _temp8;
+  if (digitsValue instanceof UndefinedValue) {
+    return 'auto';
+  }
+  if (!(digitsValue instanceof NumberValue)) {
+    /* ReturnIfAbrupt */let _temp9 = yield* ToString(digitsValue);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    if (_temp9.stringValue() !== 'auto') {
+      return surroundingAgent.Throw('RangeError', 'OutOfRange', digitsValue);
+    }
+    return 'auto';
+  }
+  if (digitsValue.isNaN() || digitsValue.isInfinity()) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', digitsValue);
+  }
+  const digitCount = Math.floor(R(digitsValue));
+  if (digitCount < 0 || digitCount > 9) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', digitsValue);
+  }
+  return digitCount;
+}
+GetTemporalFractionalSecondDigitsOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporalfractionalseconddigitsoption';
+
+/** https://tc39.es/proposal-temporal/#sec-tosecondsstringprecisionrecord */
+function ToSecondsStringPrecisionRecord(smallestUnit, fractionalDigitCount) {
+  if (smallestUnit === TemporalUnit.Minute) {
+    return {
+      Precision: TemporalUnit.Minute,
+      Unit: TemporalUnit.Minute,
+      Increment: 1
+    };
+  }
+  if (smallestUnit === TemporalUnit.Second) {
+    return {
+      Precision: 0,
+      Unit: TemporalUnit.Second,
+      Increment: 1
+    };
+  }
+  if (smallestUnit === TemporalUnit.Millisecond) {
+    return {
+      Precision: 3,
+      Unit: TemporalUnit.Millisecond,
+      Increment: 1
+    };
+  }
+  if (smallestUnit === TemporalUnit.Microsecond) {
+    return {
+      Precision: 6,
+      Unit: TemporalUnit.Microsecond,
+      Increment: 1
+    };
+  }
+  if (smallestUnit === TemporalUnit.Nanosecond) {
+    return {
+      Precision: 9,
+      Unit: TemporalUnit.Nanosecond,
+      Increment: 1
+    };
+  }
+  Assert(smallestUnit === 'unset', "smallestUnit === 'unset'");
+  if (fractionalDigitCount === 'auto') {
+    return {
+      Precision: 'auto',
+      Unit: TemporalUnit.Nanosecond,
+      Increment: 1
+    };
+  }
+  if (fractionalDigitCount === 0) {
+    return {
+      Precision: 0,
+      Unit: TemporalUnit.Second,
+      Increment: 1
+    };
+  }
+  if (fractionalDigitCount >= 1 && fractionalDigitCount <= 3) {
+    return {
+      Precision: fractionalDigitCount,
+      Unit: TemporalUnit.Millisecond,
+      Increment: 10 ** (3 - fractionalDigitCount)
+    };
+  }
+  if (fractionalDigitCount >= 4 && fractionalDigitCount <= 6) {
+    return {
+      Precision: fractionalDigitCount,
+      Unit: TemporalUnit.Microsecond,
+      Increment: 10 ** (6 - fractionalDigitCount)
+    };
+  }
+  Assert(fractionalDigitCount >= 7 && fractionalDigitCount <= 9, "fractionalDigitCount >= 7 && fractionalDigitCount <= 9");
+  return {
+    Precision: fractionalDigitCount,
+    Unit: TemporalUnit.Nanosecond,
+    Increment: 10 ** (9 - fractionalDigitCount)
+  };
+}
+ToSecondsStringPrecisionRecord.section = 'https://tc39.es/proposal-temporal/#sec-tosecondsstringprecisionrecord';
+const table21 = [{
+  Value: TemporalUnit.Year,
+  Singular: 'year',
+  Plural: 'years'
+}, {
+  Value: TemporalUnit.Month,
+  Singular: 'month',
+  Plural: 'months'
+}, {
+  Value: TemporalUnit.Week,
+  Singular: 'week',
+  Plural: 'weeks'
+}, {
+  Value: TemporalUnit.Day,
+  Singular: 'day',
+  Plural: 'days'
+}, {
+  Value: TemporalUnit.Hour,
+  Singular: 'hour',
+  Plural: 'hours'
+}, {
+  Value: TemporalUnit.Minute,
+  Singular: 'minute',
+  Plural: 'minutes'
+}, {
+  Value: TemporalUnit.Second,
+  Singular: 'second',
+  Plural: 'seconds'
+}, {
+  Value: TemporalUnit.Millisecond,
+  Singular: 'millisecond',
+  Plural: 'milliseconds'
+}, {
+  Value: TemporalUnit.Microsecond,
+  Singular: 'microsecond',
+  Plural: 'microseconds'
+}, {
+  Value: TemporalUnit.Nanosecond,
+  Singular: 'nanosecond',
+  Plural: 'nanoseconds'
+}];
+/** https://tc39.es/proposal-temporal/#sec-gettemporalunitvaluedoption */
+function* GetTemporalUnitValuedOption(options, key, defaultV) {
+  // 1. Let allowedStrings be a List containing all values in the "Singular property name" and "Plural property name" columns of Table 21, except the header row.
+  const allowedStrings = table21.map(row => row.Singular).concat(table21.map(row => row.Plural)).concat('auto');
+  const defaultValue = defaultV === 'unset' ? undefined : defaultV;
+  /* ReturnIfAbrupt */let _temp0 = yield* GetOption(options, key, 'string', allowedStrings, defaultValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const value = _temp0;
+  if (value === undefined) {
+    return 'unset';
+  }
+  if (value === 'auto') {
+    return 'auto';
+  }
+  // 9. Return the value in the "Value" column of Table 21 corresponding to the row with value in its "Singular property name" or "Plural property name" column.
+  const returnValue = table21.find(row => row.Singular === value || row.Plural === value)?.Value;
+  Assert(returnValue !== undefined, "returnValue !== undefined");
+  return returnValue;
+}
+GetTemporalUnitValuedOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporalunitvaluedoption';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitvaluedoption */
+function ValidateTemporalUnitValue(value, unitGroup, extraValues) {
+  if (value === 'unset') return undefined;
+  if (extraValues?.includes(value)) return undefined;
+  const category = Table21_CategoryByValue[value];
+  if (!category) {
+    return Throw.RangeError('Invalid TemporalUnit value $1', value);
+  }
+  if (category === 'date' && (unitGroup === 'datetime' || unitGroup === 'date')) return undefined;
+  if (category === 'time' && (unitGroup === 'datetime' || unitGroup === 'time')) return undefined;
+  return Throw.RangeError('Invalid TemporalUnit value $1', value);
+}
+ValidateTemporalUnitValue.section = 'https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitvaluedoption';
+
+/** https://tc39.es/proposal-temporal/#sec-gettemporalrelativetooption */
+function* GetTemporalRelativeToOption(options) {
+  /* ReturnIfAbrupt */let _temp1 = yield* Get(options, Value('relativeTo'));
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const value = _temp1;
+  if (value instanceof UndefinedValue) {
+    return {
+      PlainRelativeTo: undefined,
+      ZonedRelativeTo: undefined
+    };
+  }
+  let offsetBehaviour = 'option';
+  let matchBehaviour = 'match-exactly';
+  let timeZone;
+  let isoDate;
+  let time;
+  let calendar;
+  let offsetString;
+  if (value instanceof ObjectValue) {
+    if (isTemporalZonedDateTimeObject(value)) {
+      return {
+        PlainRelativeTo: undefined,
+        ZonedRelativeTo: value
+      };
+    }
+    if (isTemporalPlainDateObject(value)) {
+      return {
+        PlainRelativeTo: value,
+        ZonedRelativeTo: undefined
+      };
+    }
+    if (isTemporalPlainDateTimeObject(value)) {
+      /* X */let _temp10 = CreateTemporalDate(value.ISODateTime.ISODate, value.Calendar);
+      /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+      /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(value.ISODateTime.ISODate, value.Calendar) returned an abrupt completion", {
+        cause: _temp10
+      }); /* node:coverage ignore next */
+      if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+      const plainDate = _temp10;
+      return {
+        PlainRelativeTo: plainDate,
+        ZonedRelativeTo: undefined
+      };
+    }
+    /* ReturnIfAbrupt */let _temp11 = yield* GetTemporalCalendarIdentifierWithISODefault(value);
+    /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    calendar = _temp11;
+    /* ReturnIfAbrupt */let _temp12 = yield* PrepareCalendarFields(calendar, value, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset', 'time-zone'], []);
+    /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    const fields = _temp12;
+    /* ReturnIfAbrupt */let _temp13 = yield* InterpretTemporalDateTimeFields(calendar, fields, 'constrain');
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    const result = _temp13;
+    timeZone = fields.TimeZone;
+    offsetString = fields.OffsetString;
+    if (offsetString === undefined) {
+      offsetBehaviour = 'wall';
+    }
+    isoDate = result.ISODate;
+    time = result.Time;
+  } else {
+    if (!(value instanceof JSStringValue)) {
+      return surroundingAgent.Throw('TypeError', 'NotAString', value);
+    }
+    /* ReturnIfAbrupt */let _temp14 = ParseISODateTime(value.stringValue());
+    /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    const result = _temp14;
+    offsetString = result.TimeZone.OffsetString;
+    const annotation = result.TimeZone.TimeZoneAnnotation;
+    if (!annotation) {
+      timeZone = 'unset';
+    } else {
+      /* ReturnIfAbrupt */let _temp15 = ToTemporalTimeZoneIdentifier(annotation);
+      /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+      if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+      timeZone = _temp15;
+      if (result.TimeZone.Z === true) {
+        offsetBehaviour = 'exact';
+      } else if (!offsetString) {
+        offsetBehaviour = 'wall';
+      }
+      matchBehaviour = 'match-minutes';
+    }
+    let _calendar = result.Calendar;
+    if (!_calendar) {
+      _calendar = 'iso8601';
+    }
+    /* ReturnIfAbrupt */let _temp16 = CanonicalizeCalendar(_calendar);
+    /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+    if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+    calendar = _temp16;
+    isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+    time = result.Time;
+  }
+  if (timeZone === 'unset') {
+    /* ReturnIfAbrupt */let _temp17 = yield* CreateTemporalDate(isoDate, calendar);
+    /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+    const plainDate = _temp17;
+    return {
+      PlainRelativeTo: plainDate,
+      ZonedRelativeTo: undefined
+    };
+  }
+  let offsetNs;
+  if (offsetBehaviour === 'option') {
+    /* X */let _temp18 = ParseDateTimeUTCOffset();
+    /* node:coverage ignore next */if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+    /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! ParseDateTimeUTCOffset(offsetString!) returned an abrupt completion", {
+      cause: _temp18
+    }); /* node:coverage ignore next */
+    if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+    offsetNs = _temp18;
+  } else {
+    offsetNs = 0;
+  }
+  /* ReturnIfAbrupt */let _temp19 = InterpretISODateTimeOffset(isoDate, time, offsetBehaviour, offsetNs, timeZone, 'compatible', 'reject', matchBehaviour);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const epochNanoseconds = _temp19;
+  /* X */let _temp20 = CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);
+  /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar) returned an abrupt completion", {
+    cause: _temp20
+  }); /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const zonedRelativeTo = _temp20;
+  return {
+    PlainRelativeTo: undefined,
+    ZonedRelativeTo: zonedRelativeTo
+  };
+}
+GetTemporalRelativeToOption.section = 'https://tc39.es/proposal-temporal/#sec-gettemporalrelativetooption';
+
+/** https://tc39.es/proposal-temporal/#sec-largeroftwotemporalunits */
+function LargerOfTwoTemporalUnits(u1, u2) {
+  const order = [TemporalUnit.Year, TemporalUnit.Month, TemporalUnit.Week, TemporalUnit.Day, TemporalUnit.Hour, TemporalUnit.Minute, TemporalUnit.Second, TemporalUnit.Millisecond, TemporalUnit.Microsecond, TemporalUnit.Nanosecond];
+  for (const unit of order) {
+    if (u1 === unit) {
+      return unit;
+    }
+    if (u2 === unit) {
+      return unit;
+    }
+  }
+  Assert(false, 'unreachable');
+}
+LargerOfTwoTemporalUnits.section = 'https://tc39.es/proposal-temporal/#sec-largeroftwotemporalunits';
+
+/** https://tc39.es/proposal-temporal/#sec-iscalendarunit */
+function IsCalendarUnit(unit) {
+  return unit === TemporalUnit.Year || unit === TemporalUnit.Month || unit === TemporalUnit.Week;
+}
+IsCalendarUnit.section = 'https://tc39.es/proposal-temporal/#sec-iscalendarunit';
+
+/** https://tc39.es/proposal-temporal/#sec-temporalunitcategory */
+function TemporalUnitCategory(unit) {
+  if (unit === TemporalUnit.Year || unit === TemporalUnit.Month || unit === TemporalUnit.Week || unit === TemporalUnit.Day) {
+    return 'date';
+  }
+  return 'time';
+}
+TemporalUnitCategory.section = 'https://tc39.es/proposal-temporal/#sec-temporalunitcategory';
+
+/** https://tc39.es/proposal-temporal/#sec-maximumtemporaldurationroundingincrement */
+function MaximumTemporalDurationRoundingIncrement(unit) {
+  switch (unit) {
+    case TemporalUnit.Hour:
+      return 24;
+    case TemporalUnit.Minute:
+      return 60;
+    case TemporalUnit.Second:
+      return 60;
+    case TemporalUnit.Millisecond:
+      return 1000;
+    case TemporalUnit.Microsecond:
+      return 1000;
+    case TemporalUnit.Nanosecond:
+      return 1000;
+    default:
+      return 'unset';
+  }
+}
+MaximumTemporalDurationRoundingIncrement.section = 'https://tc39.es/proposal-temporal/#sec-maximumtemporaldurationroundingincrement';
+
+/** https://tc39.es/proposal-temporal/#sec-ispartialtemporalobject */
+function* IsPartialTemporalObject(value) {
+  if (!(value instanceof ObjectValue)) {
+    return false;
+  }
+  if ('InitializedTemporalDate' in value || 'InitializedTemporalDateTime' in value || 'InitializedTemporalMonthDay' in value || 'InitializedTemporalTime' in value || 'InitializedTemporalYearMonth' in value || 'InitializedTemporalZonedDateTime' in value) {
+    return false;
+  }
+  /* ReturnIfAbrupt */let _temp21 = yield* Get(value, Value('calendar'));
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const calendarProperty = _temp21;
+  if (!(calendarProperty instanceof UndefinedValue)) {
+    return false;
+  }
+  /* ReturnIfAbrupt */let _temp22 = yield* Get(value, Value('timeZone'));
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const timeZoneProperty = _temp22;
+  if (!(timeZoneProperty instanceof UndefinedValue)) {
+    return false;
+  }
+  return true;
+}
+IsPartialTemporalObject.section = 'https://tc39.es/proposal-temporal/#sec-ispartialtemporalobject';
+
+/** https://tc39.es/proposal-temporal/#sec-formatfractionalseconds */
+function FormatFractionalSeconds(subSecondNanoseconds, precision) {
+  if (precision === 'auto') {
+    if (subSecondNanoseconds === 0) {
+      return '';
+    }
+    let fractionString = ToZeroPaddedDecimalString(subSecondNanoseconds, 9);
+    // Set fractionString to the longest prefix of fractionString ending with a code unit other than 0x0030 (DIGIT ZERO).
+    fractionString = fractionString.replace(/0+$/, '');
+    return `.${fractionString}`;
+  } else {
+    if (precision === 0) {
+      return '';
+    }
+    let fractionString = ToZeroPaddedDecimalString(subSecondNanoseconds, 9);
+    fractionString = fractionString.slice(0, precision);
+    return `.${fractionString}`;
+  }
+}
+FormatFractionalSeconds.section = 'https://tc39.es/proposal-temporal/#sec-formatfractionalseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-formattimestring */
+function FormatTimeString(hour, minute, second, subSecondNanoseconds, precision, style) {
+  const separator = style === 'unseparated' ? '' : ':';
+  const hh = ToZeroPaddedDecimalString(hour, 2);
+  const mm = ToZeroPaddedDecimalString(minute, 2);
+  if (precision === 'minute') {
+    return hh + separator + mm;
+  }
+  const ss = ToZeroPaddedDecimalString(second, 2);
+  const subSecondsPart = FormatFractionalSeconds(subSecondNanoseconds, precision);
+  return hh + separator + mm + separator + ss + subSecondsPart;
+}
+FormatTimeString.section = 'https://tc39.es/proposal-temporal/#sec-formattimestring';
+
+/** https://tc39.es/proposal-temporal/#sec-getunsignedroundingmode */
+function GetUnsignedRoundingMode(roundingMode, sign) {
+  const table = {
+    [RoundingMode.Ceil]: {
+      positive: UnsignedRoundingMode.Infinity,
+      negative: UnsignedRoundingMode.Zero
+    },
+    [RoundingMode.Floor]: {
+      positive: UnsignedRoundingMode.Zero,
+      negative: UnsignedRoundingMode.Infinity
+    },
+    [RoundingMode.Expand]: {
+      positive: UnsignedRoundingMode.Infinity,
+      negative: UnsignedRoundingMode.Infinity
+    },
+    [RoundingMode.Trunc]: {
+      positive: UnsignedRoundingMode.Zero,
+      negative: UnsignedRoundingMode.Zero
+    },
+    [RoundingMode.HalfCeil]: {
+      positive: UnsignedRoundingMode.HalfInfinity,
+      negative: UnsignedRoundingMode.HalfZero
+    },
+    [RoundingMode.HalfFloor]: {
+      positive: UnsignedRoundingMode.HalfZero,
+      negative: UnsignedRoundingMode.HalfInfinity
+    },
+    [RoundingMode.HalfExpand]: {
+      positive: UnsignedRoundingMode.HalfInfinity,
+      negative: UnsignedRoundingMode.HalfInfinity
+    },
+    [RoundingMode.HalfTrunc]: {
+      positive: UnsignedRoundingMode.HalfZero,
+      negative: UnsignedRoundingMode.HalfZero
+    },
+    [RoundingMode.HalfEven]: {
+      positive: UnsignedRoundingMode.HalfEven,
+      negative: UnsignedRoundingMode.HalfEven
+    }
+  };
+  return table[roundingMode][sign];
+}
+GetUnsignedRoundingMode.section = 'https://tc39.es/proposal-temporal/#sec-getunsignedroundingmode';
+
+/** https://tc39.es/proposal-temporal/#sec-applyunsignedroundingmode */
+function ApplyUnsignedRoundingMode(x, r1, r2, unsignedRoundingMode) {
+  if (x === r1) {
+    return r1;
+  }
+  Assert(r1 < x && x < r2, "r1 < x && x < r2");
+  Assert(unsignedRoundingMode !== undefined, "unsignedRoundingMode !== undefined");
+  if (unsignedRoundingMode === UnsignedRoundingMode.Zero) {
+    return r1;
+  }
+  if (unsignedRoundingMode === UnsignedRoundingMode.Infinity) {
+    return r2;
+  }
+  const d1 = x - r1;
+  const d2 = r2 - x;
+  if (d1 < d2) {
+    return r1;
+  }
+  if (d2 < d1) {
+    return r2;
+  }
+  Assert(d1 === d2, "d1 === d2");
+  if (unsignedRoundingMode === UnsignedRoundingMode.HalfZero) {
+    return r1;
+  }
+  if (unsignedRoundingMode === UnsignedRoundingMode.HalfInfinity) {
+    return r2;
+  }
+  Assert(unsignedRoundingMode === UnsignedRoundingMode.HalfEven, "unsignedRoundingMode === UnsignedRoundingMode.HalfEven");
+  const cardinality = r1 / (r2 - r1) % 2;
+  if (cardinality === 0) {
+    return r1;
+  }
+  return r2;
+}
+ApplyUnsignedRoundingMode.section = 'https://tc39.es/proposal-temporal/#sec-applyunsignedroundingmode';
+
+/** https://tc39.es/proposal-temporal/#sec-roundnumbertoincrement */
+function RoundNumberToIncrement(x, increment, roundingMode) {
+  let quotient = x / increment;
+  let isNegative;
+  if (quotient < 0) {
+    isNegative = 'negative';
+    quotient = -quotient;
+  } else {
+    isNegative = 'positive';
+  }
+  const unsignedRoundingMode = GetUnsignedRoundingMode(roundingMode, isNegative);
+  // Let r1 be the largest integer such that r1 ≤ quotient.
+  const r1 = Math.floor(quotient);
+  // Let r2 be the smallest integer such that r2 > quotient.
+  const r2 = r1 + 1;
+  let rounded = ApplyUnsignedRoundingMode(quotient, r1, r2, unsignedRoundingMode);
+  if (isNegative === 'negative') {
+    rounded = -rounded;
+  }
+  return rounded * increment;
+}
+RoundNumberToIncrement.section = 'https://tc39.es/proposal-temporal/#sec-roundnumbertoincrement';
+
+/** https://tc39.es/proposal-temporal/#sec-roundnumbertoincrementasifpositive */
+function RoundNumberToIncrementAsIfPositive(x, increment, roundingMode) {
+  const quotient = x / increment;
+  const unsignedRoundingMode = GetUnsignedRoundingMode(roundingMode, 'positive');
+  // Let r1 be the largest integer such that r1 ≤ quotient.
+  const r1 = Math.floor(quotient);
+  // Let r2 be the smallest integer such that r2 > quotient.
+  const r2 = r1 + 1;
+  const rounded = ApplyUnsignedRoundingMode(quotient, r1, r2, unsignedRoundingMode);
+  return rounded * increment;
+}
+RoundNumberToIncrementAsIfPositive.section = 'https://tc39.es/proposal-temporal/#sec-roundnumbertoincrementasifpositive';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerwithtruncation */
+function* ToPositiveIntegerWithTruncation(argument) {
+  /* ReturnIfAbrupt */let _temp23 = yield* ToIntegerWithTruncation(argument);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const integer = _temp23;
+  if (integer <= 0) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', integer);
+  }
+  return integer;
+}
+ToPositiveIntegerWithTruncation.section = 'https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerwithtruncation';
+
+// TODO: Review
+/** https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithtruncation */
+function* ToIntegerWithTruncation(argument) {
+  /* ReturnIfAbrupt */let _temp24 = yield* ToNumber(argument);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const number = R(_temp24);
+  if (Number.isNaN(number) || number === Infinity || number === -Infinity) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', number);
+  }
+  return Math.trunc(number);
+}
+ToIntegerWithTruncation.section = 'https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithtruncation';
+
+// TODO: Review
+/** https://tc39.es/proposal-temporal/#sec-temporal-tomonthcode */
+function* ToMonthCode(argument) {
+  /* ReturnIfAbrupt */let _temp25 = yield* ToPrimitive(argument, 'string');
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const monthCode = _temp25;
+  if (!(monthCode instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', monthCode);
+  }
+  const s = monthCode.stringValue();
+  if (s.length !== 3 && s.length !== 4) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+  }
+  if (s.charCodeAt(0) !== 0x004D) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+  }
+  if (s.charCodeAt(1) < 0x0030 || s.charCodeAt(1) > 0x0039) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+  }
+  if (s.charCodeAt(2) < 0x0030 || s.charCodeAt(2) > 0x0039) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+  }
+  if (s.length === 4 && s.charCodeAt(3) !== 0x004C) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+  }
+  const monthCodeDigits = s.slice(1, 3);
+  const monthCodeInteger = Number(monthCodeDigits);
+  if (monthCodeInteger === 0 && s.length !== 4) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+  }
+  return s;
+}
+ToMonthCode.section = 'https://tc39.es/proposal-temporal/#sec-temporal-tomonthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-tooffsetstring */
+function* ToOffsetString(argument) {
+  /* ReturnIfAbrupt */let _temp26 = yield* ToPrimitive(argument, 'string');
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const offset = _temp26;
+  if (!(offset instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', offset);
+  }
+  /* ReturnIfAbrupt */let _temp27 = ParseDateTimeUTCOffset(offset.stringValue());
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  return offset.stringValue();
+}
+ToOffsetString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-tooffsetstring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodatetofields */
+function ISODateToFields(calendar, isoDate, type) {
+  const fields = {
+    Day: undefined,
+    Era: undefined,
+    EraYear: undefined,
+    Hour: undefined,
+    Microsecond: undefined,
+    Millisecond: undefined,
+    Minute: undefined,
+    Month: undefined,
+    MonthCode: undefined,
+    Nanosecond: undefined,
+    OffsetString: undefined,
+    Second: undefined,
+    TimeZone: undefined,
+    Year: undefined
+  };
+  const calendarDate = CalendarISOToDate(calendar, isoDate);
+  fields.MonthCode = calendarDate.MonthCode;
+  if (type === 'month-day' || type === 'date') {
+    fields.Day = calendarDate.Day;
+  }
+  if (type === 'year-month' || type === 'date') {
+    fields.Year = calendarDate.Year;
+  }
+  return fields;
+}
+ISODateToFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodatetofields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-getdifferencesettings */
+function* GetDifferenceSettings(operation, options, unitGroup, disallowedUnits, fallbackSmallestUnit, smallestLargestDefaultUnit) {
+  /* ReturnIfAbrupt */let _temp28 = yield* GetTemporalUnitValuedOption(options, 'largestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  let largestUnit = _temp28;
+  /* ReturnIfAbrupt */let _temp29 = yield* GetRoundingIncrementOption(options);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const roundingIncrement = _temp29;
+  /* ReturnIfAbrupt */let _temp30 = yield* GetRoundingModeOption(options, RoundingMode.Trunc);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  let roundingMode = _temp30;
+  /* ReturnIfAbrupt */let _temp31 = yield* GetTemporalUnitValuedOption(options, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  let smallestUnit = _temp31;
+  /* ReturnIfAbrupt */let _temp32 = ValidateTemporalUnitValue(smallestUnit, unitGroup, ['auto']);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  if (largestUnit === 'unset') {
+    largestUnit = 'auto';
+  }
+  if (disallowedUnits.includes(largestUnit)) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
+  }
+  /* ReturnIfAbrupt */let _temp33 = ValidateTemporalUnitValue(smallestUnit, unitGroup);
+  /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) return _temp33; /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+  if (smallestUnit === 'unset') {
+    smallestUnit = fallbackSmallestUnit;
+  }
+  if (disallowedUnits.includes(smallestUnit)) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', smallestUnit);
+  }
+  const defaultLargestUnit = LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit);
+  if (largestUnit === 'auto') {
+    largestUnit = defaultLargestUnit;
+  }
+  if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit) !== largestUnit) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
+  }
+  const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+  if (maximum !== 'unset') {
+    /* ReturnIfAbrupt */let _temp34 = ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false);
+    /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) return _temp34; /* node:coverage ignore next */
+    if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  }
+  if (operation === 'since') {
+    roundingMode = NegateRoundingMode(roundingMode);
+  }
+  return {
+    SmallestUnit: smallestUnit,
+    LargestUnit: largestUnit,
+    RoundingMode: roundingMode,
+    RoundingIncrement: roundingIncrement
+  };
+}
+GetDifferenceSettings.section = 'https://tc39.es/proposal-temporal/#sec-temporal-getdifferencesettings';
+
+/** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
+
+/** https://tc39.es/proposal-temporal/#sec-tointegerifintegral */
+function* ToIntegerIfIntegral(argument) {
+  /* ReturnIfAbrupt */let _temp = yield* ToNumber(argument);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const number = _temp;
+  if (!Number.isInteger(R(number))) {
+    return Throw.RangeError('$1 is not an integral number', argument);
+  }
+  return R(number);
+}
+ToIntegerIfIntegral.section = 'https://tc39.es/proposal-temporal/#sec-tointegerifintegral';
+
+/** https://tc39.es/proposal-temporal/#sec-getoptionsobject */
+function GetOptionsObject$1(options) {
+  if (options instanceof UndefinedValue) {
+    return OrdinaryObjectCreate(Value.null);
+  }
+  if (options instanceof ObjectValue) {
+    return options;
+  }
+  return Throw.TypeError('$1 is not an object', options);
+}
+GetOptionsObject$1.section = 'https://tc39.es/proposal-temporal/#sec-getoptionsobject';
+
+/** https://tc39.es/proposal-temporal/#sec-getoption */
+
+function* GetOption(options, property, type, values, defaultValue) {
+  if (typeof property === 'string') {
+    property = Value(property);
+  }
+  /* ReturnIfAbrupt */let _temp2 = yield* Get(options, property);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  let value = _temp2;
+  if (value === Value.undefined) {
+    if (defaultValue === '~required~') {
+      let propertyNameToString;
+      if (typeof property === 'string') {
+        propertyNameToString = property;
+      } else if (property instanceof JSStringValue) {
+        propertyNameToString = property.stringValue();
+      } else if (property.Description instanceof JSStringValue) {
+        propertyNameToString = `Symbol(${property.Description.stringValue()})`;
+      } else {
+        propertyNameToString = 'Symbol';
+      }
+      return Throw.RangeError('"$1" is required on object $2', propertyNameToString, options);
+    }
+    return defaultValue;
+  }
+  {
+    Assert(type === 'string', "type === 'string'");
+    /* ReturnIfAbrupt */let _temp4 = yield* ToString(value);
+    /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    value = _temp4;
+  }
+  if (values !== undefined) {
+    const str = value.stringValue();
+    if (!values.includes(str)) {
+      return Throw.RangeError('"$1" on object $2 is not valid ($3)', property, options, str);
+    }
+  }
+  return value instanceof JSStringValue ? value.stringValue() : value.booleanValue();
+}
+
+/** https://tc39.es/proposal-temporal/#sec-getroundingmodeoption */
+function* GetRoundingModeOption(options, fallback) {
+  const allowedStrings = ['ceil', 'floor', 'expand', 'trunc', 'halfCeil', 'halfFloor', 'halfExpand', 'halfTrunc', 'halfEven'];
+  const stringFallback = {
+    [RoundingMode.Ceil]: 'ceil',
+    [RoundingMode.Floor]: 'floor',
+    [RoundingMode.Expand]: 'expand',
+    [RoundingMode.Trunc]: 'trunc',
+    [RoundingMode.HalfCeil]: 'halfCeil',
+    [RoundingMode.HalfFloor]: 'halfFloor',
+    [RoundingMode.HalfExpand]: 'halfExpand',
+    [RoundingMode.HalfTrunc]: 'halfTrunc',
+    [RoundingMode.HalfEven]: 'halfEven'
+  }[fallback];
+  /* ReturnIfAbrupt */let _temp5 = yield* GetOption(options, Value('roundingMode'), 'string', allowedStrings, stringFallback);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const stringValue = _temp5;
+  return {
+    ceil: RoundingMode.Ceil,
+    floor: RoundingMode.Floor,
+    expand: RoundingMode.Expand,
+    trunc: RoundingMode.Trunc,
+    halfCeil: RoundingMode.HalfCeil,
+    halfFloor: RoundingMode.HalfFloor,
+    halfExpand: RoundingMode.HalfExpand,
+    halfTrunc: RoundingMode.HalfTrunc,
+    halfEven: RoundingMode.HalfEven
+  }[stringValue];
+}
+GetRoundingModeOption.section = 'https://tc39.es/proposal-temporal/#sec-getroundingmodeoption';
+
+/** https://tc39.es/proposal-temporal/#table-temporal-rounding-modes */
+let RoundingMode = /*#__PURE__*/function (RoundingMode) {
+  RoundingMode[RoundingMode["Ceil"] = 0] = "Ceil";
+  RoundingMode[RoundingMode["Floor"] = 1] = "Floor";
+  RoundingMode[RoundingMode["Expand"] = 2] = "Expand";
+  RoundingMode[RoundingMode["Trunc"] = 3] = "Trunc";
+  RoundingMode[RoundingMode["HalfCeil"] = 4] = "HalfCeil";
+  RoundingMode[RoundingMode["HalfFloor"] = 5] = "HalfFloor";
+  RoundingMode[RoundingMode["HalfExpand"] = 6] = "HalfExpand";
+  RoundingMode[RoundingMode["HalfTrunc"] = 7] = "HalfTrunc";
+  RoundingMode[RoundingMode["HalfEven"] = 8] = "HalfEven";
+  return RoundingMode;
+}({});
+/** https://tc39.es/proposal-temporal/#table-unsigned-rounding-modes */
+let UnsignedRoundingMode = /*#__PURE__*/function (UnsignedRoundingMode) {
+  UnsignedRoundingMode[UnsignedRoundingMode["Infinity"] = 0] = "Infinity";
+  UnsignedRoundingMode[UnsignedRoundingMode["Zero"] = 1] = "Zero";
+  UnsignedRoundingMode[UnsignedRoundingMode["HalfInfinity"] = 2] = "HalfInfinity";
+  UnsignedRoundingMode[UnsignedRoundingMode["HalfZero"] = 3] = "HalfZero";
+  UnsignedRoundingMode[UnsignedRoundingMode["HalfEven"] = 4] = "HalfEven";
+  return UnsignedRoundingMode;
+}({});
+/** https://tc39.es/proposal-temporal/#sec-getroundingincrementoption */
+function* GetRoundingIncrementOption(options) {
+  /* ReturnIfAbrupt */let _temp6 = yield* Get(options, Value('roundingIncrement'));
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const value = _temp6;
+  if (value === Value.undefined) {
+    return 1;
+  }
+  /* ReturnIfAbrupt */let _temp7 = yield* ToIntegerWithTruncation(value);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const integerIncrement = _temp7;
+  if (integerIncrement < 1 || integerIncrement > 10 ** 9) {
+    return Throw.RangeError('"roundingIncrement" ($1) is out of range', integerIncrement);
+  }
+  return integerIncrement;
+}
+GetRoundingIncrementOption.section = 'https://tc39.es/proposal-temporal/#sec-getroundingincrementoption';
+
+/** https://tc39.es/proposal-temporal/#sec-getutcepochnanoseconds */
+function GetUTCEpochNanoseconds(isoDateTime) {
+  const date = MakeDay(Value(isoDateTime.ISODate.Year), Value(isoDateTime.ISODate.Month - 1), Value(isoDateTime.ISODate.Day));
+  const time = MakeTime(Value(isoDateTime.Time.Hour), Value(isoDateTime.Time.Minute), Value(isoDateTime.Time.Second), Value(isoDateTime.Time.Millisecond));
+  const ms = R(MakeDate(date, time));
+  Assert(Math.floor(ms) === ms, "Math.floor(ms) === ms");
+  return BigInt(ms) * BigInt(10e6) + BigInt(isoDateTime.Time.Microsecond) * BigInt(10e3) + BigInt(isoDateTime.Time.Nanosecond);
+}
+GetUTCEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-getutcepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+
+/** https://tc39.es/proposal-temporal/#sec-getnamedtimezoneepochnanoseconds */
+function GetNamedTimeZoneEpochNanoseconds(timeZoneIdentifier, isoDateTime) {
+  Assert(timeZoneIdentifier === 'UTC', "timeZoneIdentifier === 'UTC'");
+  const epochNanoseconds = GetUTCEpochNanoseconds(isoDateTime);
+  return [epochNanoseconds];
+}
+GetNamedTimeZoneEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-getnamedtimezoneepochnanoseconds';
+
+/** https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds */
+function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier, _epochNanoseconds) {
+  Assert(timeZoneIdentifier === 'UTC', "timeZoneIdentifier === 'UTC'");
+  return 0;
+}
+GetNamedTimeZoneOffsetNanoseconds.section = 'https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier */
+function SystemTimeZoneIdentifier() {
+  // 1. If the implementation only supports the UTC time zone, return "UTC".
+  return 'UTC';
+  // 2. Let systemTimeZoneString be the String representing the host environment's current time zone as a time zone identifier in normalized format, either a primary time zone identifier or an offset time zone identifier.
+  // 3. Return systemTimeZoneString.
+}
+SystemTimeZoneIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier';
+
+/** https://tc39.es/proposal-temporal/#sec-isoffsettimezoneidentifier */
+function IsOffsetTimeZoneIdentifier(_offsetString) {
+  temporal_todo();
+}
+IsOffsetTimeZoneIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-isoffsettimezoneidentifier';
+
+/** https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring */
+function ToZeroPaddedDecimalString(n, minLength) {
+  return n.toString().padStart(minLength, '0');
+}
+ToZeroPaddedDecimalString.section = 'https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring';
+
+/** https://tc39.es/ecma262/#sec-availablenamedtimezoneidentifiers */
+function AvailableNamedTimeZoneIdentifiers() {
+  return [{
+    Identifier: 'UTC',
+    PrimaryIdentifier: 'UTC'
+  }];
+}
+AvailableNamedTimeZoneIdentifiers.section = 'https://tc39.es/ecma262/#sec-availablenamedtimezoneidentifiers';
+
+function thisTemporalDateTimeValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalDateTime');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.calendarid */
+function PlainDateTimeProto_calendarIdGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const plainDateTime = _temp2;
+  return Value(plainDateTime.Calendar);
+}
+PlainDateTimeProto_calendarIdGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.calendarid';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.era */
+function PlainDateTimeProto_eraGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const plainDateTime = _temp3;
+  return Value(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Era);
+}
+PlainDateTimeProto_eraGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.era';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.erayear */
+function PlainDateTimeProto_eraYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const plainDateTime = _temp4;
+  const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).EraYear;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainDateTimeProto_eraYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.erayear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year */
+function PlainDateTimeProto_yearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const plainDateTime = _temp5;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Year);
+}
+PlainDateTimeProto_yearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.month */
+function PlainDateTimeProto_monthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const plainDateTime = _temp6;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Month);
+}
+PlainDateTimeProto_monthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.month';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthcode */
+function PlainDateTimeProto_monthCodeGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const plainDateTime = _temp7;
+  return Value(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).MonthCode);
+}
+PlainDateTimeProto_monthCodeGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.day */
+function PlainDateTimeProto_dayGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const plainDateTime = _temp8;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Day);
+}
+PlainDateTimeProto_dayGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.day';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.hour */
+function PlainDateTimeProto_hourGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp9 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const plainDateTime = _temp9;
+  return F(plainDateTime.ISODateTime.Time.Hour);
+}
+PlainDateTimeProto_hourGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.hour';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.minute */
+function PlainDateTimeProto_minuteGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp0 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const plainDateTime = _temp0;
+  return F(plainDateTime.ISODateTime.Time.Minute);
+}
+PlainDateTimeProto_minuteGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.minute';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.second */
+function PlainDateTimeProto_secondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp1 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const plainDateTime = _temp1;
+  return F(plainDateTime.ISODateTime.Time.Second);
+}
+PlainDateTimeProto_secondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.second';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.millisecond */
+function PlainDateTimeProto_millisecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp10 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const plainDateTime = _temp10;
+  return F(plainDateTime.ISODateTime.Time.Millisecond);
+}
+PlainDateTimeProto_millisecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.millisecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.microsecond */
+function PlainDateTimeProto_microsecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp11 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const plainDateTime = _temp11;
+  return F(plainDateTime.ISODateTime.Time.Microsecond);
+}
+PlainDateTimeProto_microsecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.microsecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.nanosecond */
+function PlainDateTimeProto_nanosecondGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp12 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const plainDateTime = _temp12;
+  return F(plainDateTime.ISODateTime.Time.Nanosecond);
+}
+PlainDateTimeProto_nanosecondGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.nanosecond';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofweek */
+function PlainDateTimeProto_dayOfWeekGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp13 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const plainDateTime = _temp13;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfWeek);
+}
+PlainDateTimeProto_dayOfWeekGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofweek';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofyear */
+function PlainDateTimeProto_dayOfYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp14 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const plainDateTime = _temp14;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfYear);
+}
+PlainDateTimeProto_dayOfYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.weekofyear */
+function PlainDateTimeProto_weekOfYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const plainDateTime = _temp15;
+  const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).WeekOfYear.Week;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainDateTimeProto_weekOfYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.weekofyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.yearofweek */
+function PlainDateTimeProto_yearOfWeekGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp16 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const plainDateTime = _temp16;
+  const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).WeekOfYear.Year;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainDateTimeProto_yearOfWeekGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.yearofweek';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinweek */
+function PlainDateTimeProto_daysInWeekGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp17 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const plainDateTime = _temp17;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInWeek);
+}
+PlainDateTimeProto_daysInWeekGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinweek';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinmonth */
+function PlainDateTimeProto_daysInMonthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp18 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const plainDateTime = _temp18;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInMonth);
+}
+PlainDateTimeProto_daysInMonthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinyear */
+function PlainDateTimeProto_daysInYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp19 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const plainDateTime = _temp19;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInYear);
+}
+PlainDateTimeProto_daysInYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthsinyear */
+function PlainDateTimeProto_monthsInYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp20 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const plainDateTime = _temp20;
+  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).MonthsInYear);
+}
+PlainDateTimeProto_monthsInYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthsinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.inleapyear */
+function PlainDateTimeProto_inLeapYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp21 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const plainDateTime = _temp21;
+  return Value(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).InLeapYear);
+}
+PlainDateTimeProto_inLeapYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.inleapyear';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.with */
+function* PlainDateTimeProto_with([temporalDateTimeLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp22 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const plainDateTime = _temp22;
+  /* ReturnIfAbrupt */let _temp23 = yield* IsPartialTemporalObject(temporalDateTimeLike);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  if (!_temp23) {
+    return Throw.TypeError('$1 is not a partial Temporal object', temporalDateTimeLike);
+  }
+  const calendar = plainDateTime.Calendar;
+  let fields = ISODateToFields(calendar, plainDateTime.ISODateTime.ISODate, 'date');
+  fields.Hour = plainDateTime.ISODateTime.Time.Hour;
+  fields.Minute = plainDateTime.ISODateTime.Time.Minute;
+  fields.Second = plainDateTime.ISODateTime.Time.Second;
+  fields.Millisecond = plainDateTime.ISODateTime.Time.Millisecond;
+  fields.Microsecond = plainDateTime.ISODateTime.Time.Microsecond;
+  fields.Nanosecond = plainDateTime.ISODateTime.Time.Nanosecond;
+  /* ReturnIfAbrupt */let _temp24 = yield* PrepareCalendarFields(calendar, temporalDateTimeLike, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'], 'partial');
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const partialDateTime = _temp24;
+  fields = CalendarMergeFields(calendar, fields, partialDateTime);
+  /* ReturnIfAbrupt */let _temp25 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const resolvedOptions = _temp25;
+  /* ReturnIfAbrupt */let _temp26 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const overflow = _temp26;
+  /* ReturnIfAbrupt */let _temp27 = yield* InterpretTemporalDateTimeFields(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  const result = _temp27;
+  return yield* CreateTemporalDateTime(result, calendar);
+}
+PlainDateTimeProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaintime */
+function* PlainDateTimeProto_withPlainTime([plainTimeLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp28 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const plainDateTime = _temp28;
+  /* ReturnIfAbrupt */let _temp29 = yield* ToTimeRecordOrMidnight(plainTimeLike);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const time = _temp29;
+  const isoDateTime = CombineISODateAndTimeRecord(plainDateTime.ISODateTime.ISODate, time);
+  return yield* CreateTemporalDateTime(isoDateTime, plainDateTime.Calendar);
+}
+PlainDateTimeProto_withPlainTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaintime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withcalendar */
+function PlainDateTimeProto_withCalendar([calendarLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp30 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const plainDateTime = _temp30;
+  /* ReturnIfAbrupt */let _temp31 = ToTemporalCalendarIdentifier(calendarLike);
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const calendar = _temp31;
+  /* X */let _temp32 = CreateTemporalDateTime(plainDateTime.ISODateTime, calendar);
+  /* node:coverage ignore next */if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDateTime(plainDateTime.ISODateTime, calendar) returned an abrupt completion", {
+    cause: _temp32
+  }); /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  return _temp32;
+}
+PlainDateTimeProto_withCalendar.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withcalendar';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.add */
+function* PlainDateTimeProto_add([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp33 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) return _temp33; /* node:coverage ignore next */
+  if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+  const plainDateTime = _temp33;
+  return yield* AddDurationToDateTime('add', plainDateTime, temporalDurationLike, options);
+}
+PlainDateTimeProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.subtract */
+function* PlainDateTimeProto_subtract([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp34 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) return _temp34; /* node:coverage ignore next */
+  if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+  const plainDateTime = _temp34;
+  return yield* AddDurationToDateTime('subtract', plainDateTime, temporalDurationLike, options);
+}
+PlainDateTimeProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.until */
+function* PlainDateTimeProto_until([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp35 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+  if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+  const plainDateTime = _temp35;
+  return yield* DifferenceTemporalPlainDateTime('until', plainDateTime, other, options);
+}
+PlainDateTimeProto_until.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.until';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.since */
+function* PlainDateTimeProto_since([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp36 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) return _temp36; /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  const plainDateTime = _temp36;
+  return yield* DifferenceTemporalPlainDateTime('since', plainDateTime, other, options);
+}
+PlainDateTimeProto_since.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.since';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.round */
+function* PlainDateTimeProto_round([roundTo = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp37 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) return _temp37; /* node:coverage ignore next */
+  if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+  const plainDateTime = _temp37;
+  if (roundTo instanceof UndefinedValue) {
+    return Throw.TypeError('roundTo is required');
+  }
+  if (roundTo instanceof JSStringValue) {
+    const paramString = roundTo;
+    roundTo = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp38 = CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString);
+    /* node:coverage ignore next */if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) _temp38 = skipDebugger(_temp38);
+    /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString) returned an abrupt completion", {
+      cause: _temp38
+    }); /* node:coverage ignore next */
+    if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp39 = GetOptionsObject$1(roundTo);
+    /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) return _temp39; /* node:coverage ignore next */
+    if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+    roundTo = _temp39;
+  }
+  /* ReturnIfAbrupt */let _temp40 = yield* GetRoundingIncrementOption(roundTo);
+  /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) return _temp40; /* node:coverage ignore next */
+  if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+  const roundingIncrement = _temp40;
+  /* ReturnIfAbrupt */let _temp41 = yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand);
+  /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) return _temp41; /* node:coverage ignore next */
+  if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+  const roundingMode = _temp41;
+  /* ReturnIfAbrupt */let _temp42 = yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required');
+  /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) return _temp42; /* node:coverage ignore next */
+  if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+  const smallestUnit = _temp42;
+  /* ReturnIfAbrupt */let _temp43 = ValidateTemporalUnitValue(smallestUnit, 'time', [TemporalUnit.Day]);
+  /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) return _temp43; /* node:coverage ignore next */
+  if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+  let maximum;
+  let inclusive;
+  if (smallestUnit === TemporalUnit.Day) {
+    maximum = 1;
+    inclusive = true;
+  } else {
+    const maximum2 = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+    Assert(maximum2 !== 'unset', "maximum2 !== 'unset'");
+    maximum = maximum2;
+    inclusive = false;
+  }
+  /* ReturnIfAbrupt */let _temp44 = ValidateTemporalRoundingIncrement(roundingIncrement, maximum, inclusive);
+  /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) return _temp44; /* node:coverage ignore next */
+  if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1) {
+    /* X */let _temp45 = CreateTemporalDateTime(plainDateTime.ISODateTime, plainDateTime.Calendar);
+    /* node:coverage ignore next */if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) _temp45 = skipDebugger(_temp45);
+    /* node:coverage ignore next */if (_temp45 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDateTime(plainDateTime.ISODateTime, plainDateTime.Calendar) returned an abrupt completion", {
+      cause: _temp45
+    }); /* node:coverage ignore next */
+    if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+    return _temp45;
+  }
+  const result = RoundISODateTime(plainDateTime.ISODateTime, roundingIncrement, smallestUnit, roundingMode);
+  return yield* CreateTemporalDateTime(result, plainDateTime.Calendar);
+}
+PlainDateTimeProto_round.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.round';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.equals */
+function* PlainDateTimeProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp46 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp46 instanceof AbruptCompletion) return _temp46; /* node:coverage ignore next */
+  if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+  const plainDateTime = _temp46;
+  /* ReturnIfAbrupt */let _temp47 = yield* ToTemporalDateTime(_other);
+  /* node:coverage ignore next */if (_temp47 instanceof AbruptCompletion) return _temp47; /* node:coverage ignore next */
+  if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+  const other = _temp47;
+  if (CompareISODateTime(plainDateTime.ISODateTime, other.ISODateTime) !== 0) {
+    return Value.false;
+  }
+  return Value(CalendarEquals(plainDateTime.Calendar, other.Calendar));
+}
+PlainDateTimeProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tostring */
+function* PlainDateTimeProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp48 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp48 instanceof AbruptCompletion) return _temp48; /* node:coverage ignore next */
+  if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+  const plainDateTime = _temp48;
+  /* ReturnIfAbrupt */let _temp49 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp49 instanceof AbruptCompletion) return _temp49; /* node:coverage ignore next */
+  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+  const resolvedOptions = _temp49;
+  /* ReturnIfAbrupt */let _temp50 = yield* GetTemporalShowCalendarNameOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp50 instanceof AbruptCompletion) return _temp50; /* node:coverage ignore next */
+  if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+  const showCalendar = _temp50;
+  /* ReturnIfAbrupt */let _temp51 = yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp51 instanceof AbruptCompletion) return _temp51; /* node:coverage ignore next */
+  if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
+  const digits = _temp51;
+  /* ReturnIfAbrupt */let _temp52 = yield* GetRoundingModeOption(resolvedOptions, 3);
+  /* node:coverage ignore next */if (_temp52 instanceof AbruptCompletion) return _temp52; /* node:coverage ignore next */
+  if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
+  const roundingMode = _temp52;
+  /* ReturnIfAbrupt */let _temp53 = yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp53 instanceof AbruptCompletion) return _temp53; /* node:coverage ignore next */
+  if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
+  const smallestUnit = _temp53;
+  /* ReturnIfAbrupt */let _temp54 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp54 instanceof AbruptCompletion) return _temp54; /* node:coverage ignore next */
+  if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
+  if (smallestUnit === TemporalUnit.Hour) {
+    return Throw.RangeError('smallestUnit cannot be hour');
+  }
+  Assert(smallestUnit !== 'auto' && (smallestUnit === 'unset' || __IsTimeUnit(smallestUnit)), "smallestUnit !== 'auto' && (smallestUnit === 'unset' || __IsTimeUnit(smallestUnit))"); // TODO(temporal): not in spec
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
+  const result = RoundISODateTime(plainDateTime.ISODateTime, precision.Increment, precision.Unit, roundingMode);
+  if (!ISODateTimeWithinLimits(result)) {
+    return Throw.RangeError('DateTime outside of range');
+  }
+  return Value(ISODateTimeToString(result, plainDateTime.Calendar, precision.Precision, showCalendar));
+}
+PlainDateTimeProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tolocalestring */
+function PlainDateTimeProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp55 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp55 instanceof AbruptCompletion) return _temp55; /* node:coverage ignore next */
+  if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
+  const plainDateTime = _temp55;
+  return Value(ISODateTimeToString(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
+}
+PlainDateTimeProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tojson */
+function PlainDateTimeProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp56 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp56 instanceof AbruptCompletion) return _temp56; /* node:coverage ignore next */
+  if (_temp56 instanceof Completion) _temp56 = _temp56.Value;
+  const plainDateTime = _temp56;
+  return Value(ISODateTimeToString(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
+}
+PlainDateTimeProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof */
+function PlainDateTimeProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp57 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp57 instanceof AbruptCompletion) return _temp57; /* node:coverage ignore next */
+  if (_temp57 instanceof Completion) _temp57 = _temp57.Value;
+  return Throw.TypeError('Temporal.PlainDateTime cannot be converted to primitive value. If you are comparing two Temporal.PlainDateTime objects with > or <, use Temporal.PlainDateTime.compare() instead.');
+}
+PlainDateTimeProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime */
+function* PlainDateTimeProto_toZonedDateTime([temporalTimeZoneLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp58 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp58 instanceof AbruptCompletion) return _temp58; /* node:coverage ignore next */
+  if (_temp58 instanceof Completion) _temp58 = _temp58.Value;
+  const plainDateTime = _temp58;
+  /* ReturnIfAbrupt */let _temp59 = ToTemporalTimeZoneIdentifier(temporalTimeZoneLike);
+  /* node:coverage ignore next */if (_temp59 instanceof AbruptCompletion) return _temp59; /* node:coverage ignore next */
+  if (_temp59 instanceof Completion) _temp59 = _temp59.Value;
+  const timeZone = _temp59;
+  /* ReturnIfAbrupt */let _temp60 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp60 instanceof AbruptCompletion) return _temp60; /* node:coverage ignore next */
+  if (_temp60 instanceof Completion) _temp60 = _temp60.Value;
+  const resolvedOptions = _temp60;
+  /* ReturnIfAbrupt */let _temp61 = yield* GetTemporalDisambiguationOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp61 instanceof AbruptCompletion) return _temp61; /* node:coverage ignore next */
+  if (_temp61 instanceof Completion) _temp61 = _temp61.Value;
+  const disambiguation = _temp61;
+  /* ReturnIfAbrupt */let _temp62 = GetEpochNanosecondsFor(timeZone, plainDateTime.ISODateTime, disambiguation);
+  /* node:coverage ignore next */if (_temp62 instanceof AbruptCompletion) return _temp62; /* node:coverage ignore next */
+  if (_temp62 instanceof Completion) _temp62 = _temp62.Value;
+  const epochNs = _temp62;
+  /* X */let _temp63 = CreateTemporalZonedDateTime(epochNs, timeZone, plainDateTime.Calendar);
+  /* node:coverage ignore next */if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) _temp63 = skipDebugger(_temp63);
+  /* node:coverage ignore next */if (_temp63 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(epochNs, timeZone, plainDateTime.Calendar) returned an abrupt completion", {
+    cause: _temp63
+  }); /* node:coverage ignore next */
+  if (_temp63 instanceof Completion) _temp63 = _temp63.Value;
+  return _temp63;
+}
+PlainDateTimeProto_toZonedDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate */
+function PlainDateTimeProto_toPlainDate(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp64 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp64 instanceof AbruptCompletion) return _temp64; /* node:coverage ignore next */
+  if (_temp64 instanceof Completion) _temp64 = _temp64.Value;
+  const plainDateTime = _temp64;
+  /* X */let _temp65 = CreateTemporalDate(plainDateTime.ISODateTime.ISODate, plainDateTime.Calendar);
+  /* node:coverage ignore next */if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) _temp65 = skipDebugger(_temp65);
+  /* node:coverage ignore next */if (_temp65 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(plainDateTime.ISODateTime.ISODate, plainDateTime.Calendar) returned an abrupt completion", {
+    cause: _temp65
+  }); /* node:coverage ignore next */
+  if (_temp65 instanceof Completion) _temp65 = _temp65.Value;
+  return _temp65;
+}
+PlainDateTimeProto_toPlainDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime */
+function PlainDateTimeProto_toPlainTime(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp66 = thisTemporalDateTimeValue(thisValue);
+  /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) return _temp66; /* node:coverage ignore next */
+  if (_temp66 instanceof Completion) _temp66 = _temp66.Value;
+  const plainDateTime = _temp66;
+  /* X */let _temp67 = CreateTemporalTime(plainDateTime.ISODateTime.Time);
+  /* node:coverage ignore next */if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) _temp67 = skipDebugger(_temp67);
+  /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(plainDateTime.ISODateTime.Time) returned an abrupt completion", {
+    cause: _temp67
+  }); /* node:coverage ignore next */
+  if (_temp67 instanceof Completion) _temp67 = _temp67.Value;
+  return _temp67;
+}
+PlainDateTimeProto_toPlainTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime';
+function bootstrapTemporalPlainDateTimePrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['calendarId', [PlainDateTimeProto_calendarIdGetter]], ['era', [PlainDateTimeProto_eraGetter]], ['eraYear', [PlainDateTimeProto_eraYearGetter]], ['year', [PlainDateTimeProto_yearGetter]], ['month', [PlainDateTimeProto_monthGetter]], ['monthCode', [PlainDateTimeProto_monthCodeGetter]], ['day', [PlainDateTimeProto_dayGetter]], ['hour', [PlainDateTimeProto_hourGetter]], ['minute', [PlainDateTimeProto_minuteGetter]], ['second', [PlainDateTimeProto_secondGetter]], ['millisecond', [PlainDateTimeProto_millisecondGetter]], ['microsecond', [PlainDateTimeProto_microsecondGetter]], ['nanosecond', [PlainDateTimeProto_nanosecondGetter]], ['dayOfWeek', [PlainDateTimeProto_dayOfWeekGetter]], ['dayOfYear', [PlainDateTimeProto_dayOfYearGetter]], ['weekOfYear', [PlainDateTimeProto_weekOfYearGetter]], ['yearOfWeek', [PlainDateTimeProto_yearOfWeekGetter]], ['daysInWeek', [PlainDateTimeProto_daysInWeekGetter]], ['daysInMonth', [PlainDateTimeProto_daysInMonthGetter]], ['daysInYear', [PlainDateTimeProto_daysInYearGetter]], ['monthsInYear', [PlainDateTimeProto_monthsInYearGetter]], ['inLeapYear', [PlainDateTimeProto_inLeapYearGetter]], ['with', PlainDateTimeProto_with, 1], ['withPlainTime', PlainDateTimeProto_withPlainTime, 0], ['withCalendar', PlainDateTimeProto_withCalendar, 1], ['add', PlainDateTimeProto_add, 1], ['subtract', PlainDateTimeProto_subtract, 1], ['until', PlainDateTimeProto_until, 1], ['since', PlainDateTimeProto_since, 1], ['round', PlainDateTimeProto_round, 1], ['equals', PlainDateTimeProto_equals, 1], ['toString', PlainDateTimeProto_toString, 0], ['toLocaleString', PlainDateTimeProto_toLocaleString, 0], ['toJSON', PlainDateTimeProto_toJSON, 0], ['valueOf', PlainDateTimeProto_valueOf, 0], ['toZonedDateTime', PlainDateTimeProto_toZonedDateTime, 1], ['toPlainDate', PlainDateTimeProto_toPlainDate, 0], ['toPlainTime', PlainDateTimeProto_toPlainTime, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainDateTime');
+  realmRec.Intrinsics['%Temporal.PlainDateTime.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindatetime-instances */
+
+function isTemporalPlainDateTimeObject(o) {
+  return 'InitializedTemporalDateTime' in o;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-time-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime */
+function* PlainDateTimeConstructor([_isoYear = Value.undefined, _isoMonth = Value.undefined, _isoDay = Value.undefined, _hour = Value.undefined, _minute = Value.undefined, _second = Value.undefined, _millisecond = Value.undefined, _microsecond = Value.undefined, _nanosecond = Value.undefined, _calendar = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.PlainDateTime cannot be called without new');
+  }
+  /* ReturnIfAbrupt */let _temp = yield* ToIntegerWithTruncation(_isoYear);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const isoYear = _temp;
+  /* ReturnIfAbrupt */let _temp2 = yield* ToIntegerWithTruncation(_isoMonth);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const isoMonth = _temp2;
+  /* ReturnIfAbrupt */let _temp3 = yield* ToIntegerWithTruncation(_isoDay);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const isoDay = _temp3;
+  let hour;
+  if (_hour instanceof UndefinedValue) {
+    hour = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* ToIntegerWithTruncation(_hour);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    hour = _temp5;
+  }
+  let minute;
+  if (_minute instanceof UndefinedValue) {
+    minute = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp6 = yield* ToIntegerWithTruncation(_minute);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    minute = _temp6;
+  }
+  let second;
+  if (_second instanceof UndefinedValue) {
+    second = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp7 = yield* ToIntegerWithTruncation(_second);
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    second = _temp7;
+  }
+  let millisecond;
+  if (_millisecond instanceof UndefinedValue) {
+    millisecond = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp8 = yield* ToIntegerWithTruncation(_millisecond);
+    /* node:coverage ignore next */
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    /* node:coverage ignore next */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    millisecond = _temp8;
+  }
+  let microsecond;
+  if (_microsecond instanceof UndefinedValue) {
+    microsecond = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp9 = yield* ToIntegerWithTruncation(_microsecond);
+    /* node:coverage ignore next */
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    microsecond = _temp9;
+  }
+  let nanosecond;
+  if (_nanosecond instanceof UndefinedValue) {
+    nanosecond = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp0 = yield* ToIntegerWithTruncation(_nanosecond);
+    /* node:coverage ignore next */
+    if (_temp0 instanceof AbruptCompletion) return _temp0;
+    /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    nanosecond = _temp0;
+  }
+  if (_calendar instanceof UndefinedValue) {
+    _calendar = Value('iso8601');
+  }
+  if (!(_calendar instanceof JSStringValue)) {
+    return Throw.TypeError('calendar is not a string');
+  }
+  /* ReturnIfAbrupt */let _temp4 = CanonicalizeCalendar(_calendar.stringValue());
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const calendar = _temp4;
+  if (!IsValidISODate(isoYear, isoMonth, isoDay)) {
+    return Throw.RangeError('$1-$2-$3 is not a valid date', isoYear, isoMonth, isoDay);
+  }
+  const isoDate = CreateISODateRecord(isoYear, isoMonth, isoDay);
+  if (!IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)) {
+    return Throw.RangeError('Invalid time');
+  }
+  const time = CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond);
+  const isoDateTime = CombineISODateAndTimeRecord(isoDate, time);
+  return yield* CreateTemporalDateTime(isoDateTime, calendar, NewTarget);
+}
+PlainDateTimeConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.from */
+function* PlainDateTime_from([item = Value.undefined, options = Value.undefined]) {
+  return yield* ToTemporalDateTime(item, options);
+}
+PlainDateTime_from.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.compare */
+function* PlainDateTime_compare([_one = Value.undefined, _two = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp1 = yield* ToTemporalDateTime(_one);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const one = _temp1;
+  /* ReturnIfAbrupt */let _temp10 = yield* ToTemporalDateTime(_two);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const two = _temp10;
+  return F(CompareISODateTime(one.ISODateTime, two.ISODateTime));
+}
+PlainDateTime_compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.compare';
+function bootstrapTemporalPlainDateTime(realmRec) {
+  const prototype = bootstrapTemporalPlainDateTimePrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, PlainDateTimeConstructor, 'PlainDateTime', 3, prototype, [['from', PlainDateTime_from, 1], ['compare', PlainDateTime_compare, 2]]);
+  realmRec.Intrinsics['%Temporal.PlainDateTime%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday */
+function* ToTemporalMonthDay(item, options = Value.undefined) {
+  if (item instanceof ObjectValue) {
+    if (isTemporalPlainMonthDayObject(item)) {
+      /* ReturnIfAbrupt */let _temp = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+      if (_temp instanceof Completion) _temp = _temp.Value;
+      const resolvedOptions = _temp;
+      /* ReturnIfAbrupt */let _temp2 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+      /* X */let _temp3 = CreateTemporalMonthDay(item.ISODate, item.Calendar);
+      /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalMonthDay(item.ISODate, item.Calendar) returned an abrupt completion", {
+        cause: _temp3
+      }); /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      return _temp3;
+    }
+    /* ReturnIfAbrupt */let _temp4 = yield* GetTemporalCalendarIdentifierWithISODefault(item);
+    /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    const calendar = _temp4;
+    /* ReturnIfAbrupt */let _temp5 = yield* PrepareCalendarFields(calendar, item, ['year', 'month', 'month-code', 'day'], [], []);
+    /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    const fields = _temp5;
+    /* ReturnIfAbrupt */let _temp6 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    const resolvedOptions = _temp6;
+    /* ReturnIfAbrupt */let _temp7 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    const overflow = _temp7;
+    /* ReturnIfAbrupt */let _temp8 = yield* CalendarMonthDayFromFields(calendar, fields, overflow);
+    /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    const isoDate = _temp8;
+    /* X */let _temp9 = CreateTemporalMonthDay(isoDate, calendar);
+    /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalMonthDay(isoDate, calendar) returned an abrupt completion", {
+      cause: _temp9
+    }); /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    return _temp9;
+  }
+  if (!(item instanceof JSStringValue)) {
+    return Throw.TypeError('$1 is not a string', item);
+  }
+  /* ReturnIfAbrupt */let _temp0 = ParseISODateTime(item.stringValue());
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const result = _temp0;
+  const calendar = result.Calendar ?? 'iso8601';
+  /* ReturnIfAbrupt */let _temp1 = CanonicalizeCalendar(calendar);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const calendarType = _temp1;
+  /* ReturnIfAbrupt */let _temp10 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const resolvedOptions = _temp10;
+  /* ReturnIfAbrupt */let _temp11 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  if (calendarType === 'iso8601') {
+    const referenceISOYear = 1972;
+    const isoDate = CreateISODateRecord(referenceISOYear, result.Month, result.Day);
+    /* X */let _temp12 = CreateTemporalMonthDay(isoDate, calendarType);
+    /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+    /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalMonthDay(isoDate, calendarType) returned an abrupt completion", {
+      cause: _temp12
+    }); /* node:coverage ignore next */
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    return _temp12;
+  }
+  let isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+  if (!ISODateWithinLimits(isoDate)) {
+    return Throw.RangeError('PlainMonthDay out of range');
+  }
+  /* ReturnIfAbrupt */let _temp13 = ISODateToFields(calendarType, isoDate, 'month-day');
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const result2 = _temp13;
+  /* ReturnIfAbrupt */let _temp14 = yield* CalendarMonthDayFromFields(calendarType, result2, 'constrain');
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  isoDate = _temp14;
+  /* X */let _temp15 = CreateTemporalMonthDay(isoDate, calendarType);
+  /* node:coverage ignore next */if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalMonthDay(isoDate, calendarType) returned an abrupt completion", {
+    cause: _temp15
+  }); /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  return _temp15;
+}
+ToTemporalMonthDay.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday */
+function* CreateTemporalMonthDay(isoDate, calendar, newTarget) {
+  if (!ISODateWithinLimits(isoDate)) {
+    return Throw.RangeError('PlainMonthDay out of range');
+  }
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.intrinsic('%Temporal.PlainMonthDay%');
+  }
+  /* ReturnIfAbrupt */let _temp16 = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.PlainMonthDay.prototype%', ['InitializedTemporalMonthDay', 'ISODate', 'Calendar']);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const object = _temp16;
+  object.ISODate = isoDate;
+  object.Calendar = calendar;
+  return object;
+}
+CreateTemporalMonthDay.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring */
+function TemporalMonthDayToString(monthDay, showCalendar) {
+  const month = ToZeroPaddedDecimalString(monthDay.ISODate.Month, 2);
+  const day = ToZeroPaddedDecimalString(monthDay.ISODate.Day, 2);
+  let result = `${month}-${day}`;
+  if (showCalendar === 'always' || showCalendar === 'critical' || monthDay.Calendar !== 'iso8601') {
+    const year = PadISOYear(monthDay.ISODate.Year);
+    result = `${year}-${result}`;
+  }
+  const calendarString = FormatCalendarAnnotation(monthDay.Calendar, showCalendar);
+  return result + calendarString;
+}
+TemporalMonthDayToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring';
+
+function thisTemporalMonthDayValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalMonthDay');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendarid */
+function PlainMonthDayProto_calendarIdGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const plainMonthDay = _temp2;
+  return Value(plainMonthDay.Calendar);
+}
+PlainMonthDayProto_calendarIdGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendarid';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.monthcode */
+function PlainMonthDayProto_monthCodeGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const plainMonthDay = _temp3;
+  return Value(CalendarISOToDate(plainMonthDay.Calendar, plainMonthDay.ISODate).MonthCode);
+}
+PlainMonthDayProto_monthCodeGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.monthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.day */
+function PlainMonthDayProto_dayGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const plainMonthDay = _temp4;
+  return F(CalendarISOToDate(plainMonthDay.Calendar, plainMonthDay.ISODate).Day);
+}
+PlainMonthDayProto_dayGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.day';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.with */
+function* PlainMonthDayProto_with([temporalMonthDayLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const plainMonthDay = _temp5;
+  /* ReturnIfAbrupt */let _temp6 = yield* IsPartialTemporalObject(temporalMonthDayLike);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  if (!_temp6) {
+    return Throw.TypeError('$1 is not a partial Temporal object', temporalMonthDayLike);
+  }
+  const calendar = plainMonthDay.Calendar;
+  let fields = ISODateToFields(calendar, plainMonthDay.ISODate, 'month-day');
+  /* ReturnIfAbrupt */let _temp7 = yield* PrepareCalendarFields(calendar, temporalMonthDayLike, ['year', 'month', 'month-code', 'day'], [], 'partial');
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const partialMonthDay = _temp7;
+  fields = CalendarMergeFields(calendar, fields, partialMonthDay);
+  /* ReturnIfAbrupt */let _temp8 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const resolvedOptions = _temp8;
+  /* ReturnIfAbrupt */let _temp9 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const overflow = _temp9;
+  /* ReturnIfAbrupt */let _temp0 = yield* CalendarMonthDayFromFields(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const isoDate = _temp0;
+  /* X */let _temp1 = CreateTemporalMonthDay(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalMonthDay(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp1
+  }); /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  return _temp1;
+}
+PlainMonthDayProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals */
+function* PlainMonthDayProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp10 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const plainMonthDay = _temp10;
+  /* ReturnIfAbrupt */let _temp11 = yield* ToTemporalMonthDay(_other);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const other = _temp11;
+  if (CompareISODate(plainMonthDay.ISODate, other.ISODate) !== 0) {
+    return Value.false;
+  }
+  return Value(CalendarEquals(plainMonthDay.Calendar, other.Calendar));
+}
+PlainMonthDayProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tostring */
+function* PlainMonthDayProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp12 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const plainMonthDay = _temp12;
+  /* ReturnIfAbrupt */let _temp13 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const resolvedOptions = _temp13;
+  /* ReturnIfAbrupt */let _temp14 = yield* GetTemporalShowCalendarNameOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const showCalendar = _temp14;
+  return Value(TemporalMonthDayToString(plainMonthDay, showCalendar));
+}
+PlainMonthDayProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tolocalestring */
+function PlainMonthDayProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const plainMonthDay = _temp15;
+  return Value(TemporalMonthDayToString(plainMonthDay, 'auto'));
+}
+PlainMonthDayProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tojson */
+function PlainMonthDayProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp16 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const plainMonthDay = _temp16;
+  return Value(TemporalMonthDayToString(plainMonthDay, 'auto'));
+}
+PlainMonthDayProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.valueof */
+function PlainMonthDayProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp17 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  return Throw.TypeError('Temporal.PlainMonthDay cannot be converted to primitive value. If you are comparing two Temporal.PlainMonthDay objects with > or <, use Temporal.PlainMonthDay.compare() instead.');
+}
+PlainMonthDayProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.valueof';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.toplaindate */
+function* PlainMonthDayProto_toPlainDate([item = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp18 = thisTemporalMonthDayValue(thisValue);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const plainMonthDay = _temp18;
+  if (!(item instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', item);
+  }
+  const calendar = plainMonthDay.Calendar;
+  const fields = ISODateToFields(calendar, plainMonthDay.ISODate, 'month-day');
+  /* ReturnIfAbrupt */let _temp19 = yield* PrepareCalendarFields(calendar, item, ['year'], [], []);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const inputFields = _temp19;
+  const mergedFields = CalendarMergeFields(calendar, fields, inputFields);
+  /* ReturnIfAbrupt */let _temp20 = yield* CalendarDateFromFields(calendar, mergedFields, 'constrain');
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const isoDate = _temp20;
+  /* X */let _temp21 = CreateTemporalDate(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp21
+  }); /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  return _temp21;
+}
+PlainMonthDayProto_toPlainDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.toplaindate';
+function bootstrapTemporalPlainMonthDayPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['calendarId', [PlainMonthDayProto_calendarIdGetter]], ['monthCode', [PlainMonthDayProto_monthCodeGetter]], ['day', [PlainMonthDayProto_dayGetter]], ['with', PlainMonthDayProto_with, 1], ['equals', PlainMonthDayProto_equals, 1], ['toString', PlainMonthDayProto_toString, 0], ['toLocaleString', PlainMonthDayProto_toLocaleString, 0], ['toJSON', PlainMonthDayProto_toJSON, 0], ['valueOf', PlainMonthDayProto_valueOf, 0], ['toPlainDate', PlainMonthDayProto_toPlainDate, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainMonthDay');
+  realmRec.Intrinsics['%Temporal.PlainMonthDay.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plainmonthday-instances */
+
+function isTemporalPlainMonthDayObject(o) {
+  return 'InitializedTemporalMonthDay' in o;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday */
+function* PlainMonthDayConstructor([isoMonth = Value.undefined, isoDay = Value.undefined, _calendar = Value.undefined, referenceISOYear = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.PlainMonthDay cannot be called without new');
+  }
+  if (referenceISOYear instanceof UndefinedValue) {
+    referenceISOYear = F(1972);
+  }
+  /* ReturnIfAbrupt */let _temp = yield* ToIntegerWithTruncation(isoMonth);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const m = _temp;
+  /* ReturnIfAbrupt */let _temp2 = yield* ToIntegerWithTruncation(isoDay);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const d = _temp2;
+  if (_calendar instanceof UndefinedValue) {
+    _calendar = Value('iso8601');
+  }
+  if (!(_calendar instanceof JSStringValue)) {
+    return Throw.TypeError('calendar is not a string');
+  }
+  /* ReturnIfAbrupt */let _temp3 = CanonicalizeCalendar(_calendar.stringValue());
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const calendar = _temp3;
+  /* ReturnIfAbrupt */let _temp4 = yield* ToIntegerWithTruncation(referenceISOYear);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const y = _temp4;
+  if (!IsValidISODate(y, m, d)) {
+    return Throw.RangeError('$1-$2-$3 is not a valid date', y, m, d);
+  }
+  const isoDate = CreateISODateRecord(y, m, d);
+  return yield* CreateTemporalMonthDay(isoDate, calendar, NewTarget);
+}
+PlainMonthDayConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from */
+function* PlainMonthDay_from([item = Value.undefined, options = Value.undefined]) {
+  return yield* ToTemporalMonthDay(item, options);
+}
+PlainMonthDay_from.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from';
+function bootstrapTemporalPlainMonthDay(realmRec) {
+  const prototype = bootstrapTemporalPlainMonthDayPrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, PlainMonthDayConstructor, 'PlainMonthDay', 2, prototype, [['from', PlainMonthDay_from, 1]]);
+  realmRec.Intrinsics['%Temporal.PlainMonthDay%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth */
+function* ToTemporalYearMonth(item, options = Value.undefined) {
+  if (item instanceof ObjectValue) {
+    if (isTemporalPlainYearMonthObject(item)) {
+      /* ReturnIfAbrupt */let _temp = GetOptionsObject$1(options);
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+      if (_temp instanceof Completion) _temp = _temp.Value;
+      const resolvedOptions = _temp;
+      /* ReturnIfAbrupt */let _temp2 = yield* GetTemporalOverflowOption(resolvedOptions);
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+      /* X */let _temp3 = CreateTemporalYearMonth(item.ISODate, item.Calendar);
+      /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalYearMonth(item.ISODate, item.Calendar) returned an abrupt completion", {
+        cause: _temp3
+      }); /* node:coverage ignore next */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+      return _temp3;
+    }
+    /* ReturnIfAbrupt */let _temp4 = yield* GetTemporalCalendarIdentifierWithISODefault(item);
+    /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    const calendar = _temp4;
+    /* ReturnIfAbrupt */let _temp5 = yield* PrepareCalendarFields(calendar, item, ['year', 'month', 'month-code'], [], []);
+    /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    const fields = _temp5;
+    /* ReturnIfAbrupt */let _temp6 = GetOptionsObject$1(options);
+    /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    const resolvedOptions = _temp6;
+    /* ReturnIfAbrupt */let _temp7 = yield* GetTemporalOverflowOption(resolvedOptions);
+    /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    const overflow = _temp7;
+    /* ReturnIfAbrupt */let _temp8 = yield* CalendarYearMonthFromFields(calendar, fields, overflow);
+    /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    const isoDate = _temp8;
+    /* X */let _temp9 = CreateTemporalYearMonth(isoDate, calendar);
+    /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalYearMonth(isoDate, calendar) returned an abrupt completion", {
+      cause: _temp9
+    }); /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    return _temp9;
+  }
+  if (!(item instanceof JSStringValue)) {
+    return Throw.TypeError('$1 is not a string', item);
+  }
+  /* ReturnIfAbrupt */let _temp0 = ParseISODateTime(item.stringValue());
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const result = _temp0;
+  const calendar = result.Calendar ?? 'iso8601';
+  /* ReturnIfAbrupt */let _temp1 = CanonicalizeCalendar(calendar);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const calendarType = _temp1;
+  /* ReturnIfAbrupt */let _temp10 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const resolvedOptions = _temp10;
+  /* ReturnIfAbrupt */let _temp11 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  let isoDate = CreateISODateRecord(result.Year, result.Month, result.Day);
+  if (!ISOYearMonthWithinLimits(isoDate)) {
+    return Throw.RangeError('PlainYearMonth out of range');
+  }
+  const result2 = ISODateToFields(calendarType, isoDate, 'year-month');
+  /* ReturnIfAbrupt */let _temp12 = yield* CalendarYearMonthFromFields(calendarType, result2, 'constrain');
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  isoDate = _temp12;
+  /* X */let _temp13 = CreateTemporalYearMonth(isoDate, calendarType);
+  /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalYearMonth(isoDate, calendarType) returned an abrupt completion", {
+    cause: _temp13
+  }); /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  return _temp13;
+}
+ToTemporalYearMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthwithinlimits */
+function ISOYearMonthWithinLimits(isoDate) {
+  if (isoDate.Year < -271821 || isoDate.Year > 275760) return false;
+  if (isoDate.Year === -271821 && isoDate.Month < 4) return false;
+  if (isoDate.Year === 275760 && isoDate.Month > 9) return false;
+  return true;
+}
+ISOYearMonthWithinLimits.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthwithinlimits';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth */
+function BalanceISOYearMonth(year, month) {
+  year += Math.floor((month - 1) / 12);
+  month = (month - 1) % 12 + 1;
+  return {
+    Year: year,
+    Month: month
+  };
+}
+BalanceISOYearMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth */
+function* CreateTemporalYearMonth(isoDate, calendar, newTarget) {
+  if (!ISOYearMonthWithinLimits(isoDate)) {
+    return Throw.RangeError('PlainYearMonth out of range');
+  }
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.intrinsic('%Temporal.PlainYearMonth%');
+  }
+  /* ReturnIfAbrupt */let _temp14 = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.PlainYearMonth.prototype%', ['InitializedTemporalYearMonth', 'ISODate', 'Calendar']);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const object = _temp14;
+  object.ISODate = isoDate;
+  object.Calendar = calendar;
+  return object;
+}
+CreateTemporalYearMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring */
+function TemporalYearMonthToString(yearMonth, showCalendar) {
+  const year = PadISOYear(yearMonth.ISODate.Year);
+  const month = ToZeroPaddedDecimalString(yearMonth.ISODate.Month, 2);
+  let result = `${year}-${month}`;
+  if (showCalendar === 'always' || showCalendar === 'critical' || yearMonth.Calendar !== 'iso8601') {
+    const day = ToZeroPaddedDecimalString(yearMonth.ISODate.Day, 2);
+    result = `${result}-${day}`;
+  }
+  const calendarString = FormatCalendarAnnotation(yearMonth.Calendar, showCalendar);
+  return result + calendarString;
+}
+TemporalYearMonthToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth */
+function* DifferenceTemporalPlainYearMonth(operation, yearMonth, _other, options) {
+  /* ReturnIfAbrupt */let _temp15 = yield* ToTemporalYearMonth(_other);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const other = _temp15;
+  const calendar = yearMonth.Calendar;
+  if (!CalendarEquals(calendar, other.Calendar)) {
+    return Throw.RangeError('PlainYearMonth calendars do not match');
+  }
+  /* ReturnIfAbrupt */let _temp16 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const resolvedOptions = _temp16;
+  /* ReturnIfAbrupt */let _temp17 = yield* GetDifferenceSettings(operation, resolvedOptions, 'date', [TemporalUnit.Week, TemporalUnit.Day], TemporalUnit.Month, TemporalUnit.Year);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const settings = _temp17;
+  if (CompareISODate(yearMonth.ISODate, other.ISODate) === 0) {
+    /* X */let _temp18 = CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    /* node:coverage ignore next */if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+    /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0) returned an abrupt completion", {
+      cause: _temp18
+    }); /* node:coverage ignore next */
+    if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+    return _temp18;
+  }
+  const thisFields = ISODateToFields(calendar, yearMonth.ISODate, 'year-month');
+  thisFields.Day = 1;
+  /* ReturnIfAbrupt */let _temp19 = yield* CalendarDateFromFields(calendar, thisFields, 'constrain');
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const thisDate = _temp19;
+  const otherFields = ISODateToFields(calendar, other.ISODate, 'year-month');
+  otherFields.Day = 1;
+  /* ReturnIfAbrupt */let _temp20 = yield* CalendarDateFromFields(calendar, otherFields, 'constrain');
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const otherDate = _temp20;
+  // TODO(temporal): unsafe cast of settings.LargestUnit
+  const dateDifference = CalendarDateUntil(calendar, thisDate, otherDate, settings.LargestUnit);
+  /* X */let _temp21 = AdjustDateDurationRecord(dateDifference, 0, 0);
+  /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(dateDifference, 0, 0) returned an abrupt completion", {
+    cause: _temp21
+  }); /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const yearsMonthsDifference = _temp21;
+  let duration = CombineDateAndTimeDuration(yearsMonthsDifference, 0);
+  if (settings.SmallestUnit !== TemporalUnit.Month || settings.RoundingIncrement !== 1) {
+    const isoDateTime = CombineISODateAndTimeRecord(thisDate, MidnightTimeRecord());
+    const originEpochNs = GetUTCEpochNanoseconds(isoDateTime);
+    const isoDateTimeOther = CombineISODateAndTimeRecord(otherDate, MidnightTimeRecord());
+    const destEpochNs = GetUTCEpochNanoseconds(isoDateTimeOther);
+    /* ReturnIfAbrupt */let _temp22 = RoundRelativeDuration(duration, originEpochNs, destEpochNs, isoDateTime, undefined, calendar, settings.LargestUnit, settings.RoundingIncrement, settings.SmallestUnit, settings.RoundingMode);
+    /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+    if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+    duration = _temp22;
+  }
+  /* X */let _temp23 = TemporalDurationFromInternal(duration, TemporalUnit.Day);
+  /* node:coverage ignore next */if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! TemporalDurationFromInternal(duration, TemporalUnit.Day) returned an abrupt completion", {
+    cause: _temp23
+  }); /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  let result = _temp23;
+  if (operation === 'since') {
+    result = CreateNegatedTemporalDuration(result);
+  }
+  return result;
+}
+DifferenceTemporalPlainYearMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoyearmonth */
+function* AddDurationToYearMonth(operation, yearMonth, temporalDurationLike, options) {
+  /* ReturnIfAbrupt */let _temp24 = yield* ToTemporalDuration(temporalDurationLike);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  let duration = _temp24;
+  if (operation === 'subtract') {
+    duration = CreateNegatedTemporalDuration(duration);
+  }
+  const internalDuration = ToInternalDurationRecord(duration);
+  /* ReturnIfAbrupt */let _temp25 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const resolvedOptions = _temp25;
+  /* ReturnIfAbrupt */let _temp26 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const overflow = _temp26;
+  const durationToAdd = internalDuration.Date;
+  if (durationToAdd.Weeks !== 0 || durationToAdd.Days !== 0 || internalDuration.Time !== 0) {
+    return Throw.RangeError('Invalid duration');
+  }
+  const calendar = yearMonth.Calendar;
+  const fields = ISODateToFields(calendar, yearMonth.ISODate, 'year-month');
+  fields.Day = 1;
+  /* ReturnIfAbrupt */let _temp27 = yield* CalendarDateFromFields(calendar, fields, 'constrain');
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  const date = _temp27;
+  /* ReturnIfAbrupt */let _temp28 = CalendarDateAdd(calendar, date, durationToAdd, overflow);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const addedDate = _temp28;
+  const addedDateFields = ISODateToFields(calendar, addedDate, 'year-month');
+  /* ReturnIfAbrupt */let _temp29 = yield* CalendarYearMonthFromFields(calendar, addedDateFields, overflow);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const isoDate = _temp29;
+  /* X */let _temp30 = CreateTemporalYearMonth(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalYearMonth(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp30
+  }); /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  return _temp30;
+}
+AddDurationToYearMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoyearmonth';
+
+function thisTemporalYearMonthValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalYearMonth');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.calendarid */
+function PlainYearMonthProto_calendarIdGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const plainYearMonth = _temp2;
+  return Value(plainYearMonth.Calendar);
+}
+PlainYearMonthProto_calendarIdGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.calendarid';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.era */
+function PlainYearMonthProto_eraGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const plainYearMonth = _temp3;
+  return Value(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Era);
+}
+PlainYearMonthProto_eraGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.era';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.erayear */
+function PlainYearMonthProto_eraYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const plainYearMonth = _temp4;
+  const result = CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).EraYear;
+  return result === undefined ? Value.undefined : F(result);
+}
+PlainYearMonthProto_eraYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.erayear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.year */
+function PlainYearMonthProto_yearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const plainYearMonth = _temp5;
+  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Year);
+}
+PlainYearMonthProto_yearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.year';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.month */
+function PlainYearMonthProto_monthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const plainYearMonth = _temp6;
+  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Month);
+}
+PlainYearMonthProto_monthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.month';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthcode */
+function PlainYearMonthProto_monthCodeGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const plainYearMonth = _temp7;
+  return Value(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).MonthCode);
+}
+PlainYearMonthProto_monthCodeGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear */
+function PlainYearMonthProto_daysInYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const plainYearMonth = _temp8;
+  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).DaysInYear);
+}
+PlainYearMonthProto_daysInYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinmonth */
+function PlainYearMonthProto_daysInMonthGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp9 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const plainYearMonth = _temp9;
+  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).DaysInMonth);
+}
+PlainYearMonthProto_daysInMonthGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthsinyear */
+function PlainYearMonthProto_monthsInYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp0 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const plainYearMonth = _temp0;
+  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).MonthsInYear);
+}
+PlainYearMonthProto_monthsInYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthsinyear';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.inleapyear */
+function PlainYearMonthProto_inLeapYearGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp1 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const plainYearMonth = _temp1;
+  return Value(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).InLeapYear);
+}
+PlainYearMonthProto_inLeapYearGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.inleapyear';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.with */
+function* PlainYearMonthProto_with([temporalYearMonthLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp10 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const plainYearMonth = _temp10;
+  /* ReturnIfAbrupt */let _temp11 = yield* IsPartialTemporalObject(temporalYearMonthLike);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  if (!_temp11) {
+    return Throw.TypeError('$1 is not a partial Temporal object', temporalYearMonthLike);
+  }
+  const calendar = plainYearMonth.Calendar;
+  let fields = ISODateToFields(calendar, plainYearMonth.ISODate, 'year-month');
+  /* ReturnIfAbrupt */let _temp12 = yield* PrepareCalendarFields(calendar, temporalYearMonthLike, ['year', 'month', 'month-code'], [], 'partial');
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const partialYearMonth = _temp12;
+  fields = CalendarMergeFields(calendar, fields, partialYearMonth);
+  /* ReturnIfAbrupt */let _temp13 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const resolvedOptions = _temp13;
+  /* ReturnIfAbrupt */let _temp14 = yield* GetTemporalOverflowOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const overflow = _temp14;
+  /* ReturnIfAbrupt */let _temp15 = yield* CalendarYearMonthFromFields(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const isoDate = _temp15;
+  /* X */let _temp16 = CreateTemporalYearMonth(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalYearMonth(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp16
+  }); /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  return _temp16;
+}
+PlainYearMonthProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.add */
+function* PlainYearMonthProto_add([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp17 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const plainYearMonth = _temp17;
+  return yield* AddDurationToYearMonth('add', plainYearMonth, temporalDurationLike, options);
+}
+PlainYearMonthProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.subtract */
+function* PlainYearMonthProto_subtract([temporalDurationLike = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp18 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const plainYearMonth = _temp18;
+  return yield* AddDurationToYearMonth('subtract', plainYearMonth, temporalDurationLike, options);
+}
+PlainYearMonthProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.until */
+function* PlainYearMonthProto_until([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp19 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const plainYearMonth = _temp19;
+  return yield* DifferenceTemporalPlainYearMonth('until', plainYearMonth, other, options);
+}
+PlainYearMonthProto_until.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.until';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.since */
+function* PlainYearMonthProto_since([other = Value.undefined, options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp20 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const plainYearMonth = _temp20;
+  return yield* DifferenceTemporalPlainYearMonth('since', plainYearMonth, other, options);
+}
+PlainYearMonthProto_since.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.since';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals */
+function* PlainYearMonthProto_equals([_other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp21 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const plainYearMonth = _temp21;
+  /* ReturnIfAbrupt */let _temp22 = yield* ToTemporalYearMonth(_other);
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const other = _temp22;
+  if (CompareISODate(plainYearMonth.ISODate, other.ISODate) !== 0) {
+    return Value.false;
+  }
+  return Value(CalendarEquals(plainYearMonth.Calendar, other.Calendar));
+}
+PlainYearMonthProto_equals.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring */
+function* PlainYearMonthProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp23 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const plainYearMonth = _temp23;
+  /* ReturnIfAbrupt */let _temp24 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const resolvedOptions = _temp24;
+  /* ReturnIfAbrupt */let _temp25 = yield* GetTemporalShowCalendarNameOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const showCalendar = _temp25;
+  return Value(TemporalYearMonthToString(plainYearMonth, showCalendar));
+}
+PlainYearMonthProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring */
+function PlainYearMonthProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp26 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const plainYearMonth = _temp26;
+  return Value(TemporalYearMonthToString(plainYearMonth, 'auto'));
+}
+PlainYearMonthProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tojson */
+function PlainYearMonthProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp27 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  const plainYearMonth = _temp27;
+  return Value(TemporalYearMonthToString(plainYearMonth, 'auto'));
+}
+PlainYearMonthProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof */
+function PlainYearMonthProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp28 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  return Throw.TypeError('Temporal.PlainYearMonth cannot be converted to primitive value. If you are comparing two Temporal.PlainYearMonth objects with > or <, use Temporal.PlainYearMonth.compare() instead.');
+}
+PlainYearMonthProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.toplaindate */
+function* PlainYearMonthProto_toPlainDate([item = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp29 = thisTemporalYearMonthValue(thisValue);
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const plainYearMonth = _temp29;
+  if (!(item instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', item);
+  }
+  const calendar = plainYearMonth.Calendar;
+  const fields = ISODateToFields(calendar, plainYearMonth.ISODate, 'year-month');
+  /* ReturnIfAbrupt */let _temp30 = yield* PrepareCalendarFields(calendar, item, ['day'], [], []);
+  /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+  if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+  const inputFields = _temp30;
+  const mergedFields = CalendarMergeFields(calendar, fields, inputFields);
+  /* ReturnIfAbrupt */let _temp31 = yield* CalendarDateFromFields(calendar, mergedFields, 'constrain');
+  /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+  if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+  const isoDate = _temp31;
+  /* X */let _temp32 = CreateTemporalDate(isoDate, calendar);
+  /* node:coverage ignore next */if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
+  /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDate, calendar) returned an abrupt completion", {
+    cause: _temp32
+  }); /* node:coverage ignore next */
+  if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+  return _temp32;
+}
+PlainYearMonthProto_toPlainDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.toplaindate';
+function bootstrapTemporalPlainYearMonthPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['calendarId', [PlainYearMonthProto_calendarIdGetter]], ['era', [PlainYearMonthProto_eraGetter]], ['eraYear', [PlainYearMonthProto_eraYearGetter]], ['year', [PlainYearMonthProto_yearGetter]], ['month', [PlainYearMonthProto_monthGetter]], ['monthCode', [PlainYearMonthProto_monthCodeGetter]], ['daysInYear', [PlainYearMonthProto_daysInYearGetter]], ['daysInMonth', [PlainYearMonthProto_daysInMonthGetter]], ['monthsInYear', [PlainYearMonthProto_monthsInYearGetter]], ['inLeapYear', [PlainYearMonthProto_inLeapYearGetter]], ['with', PlainYearMonthProto_with, 1], ['add', PlainYearMonthProto_add, 1], ['subtract', PlainYearMonthProto_subtract, 1], ['until', PlainYearMonthProto_until, 1], ['since', PlainYearMonthProto_since, 1], ['equals', PlainYearMonthProto_equals, 1], ['toString', PlainYearMonthProto_toString, 0], ['toLocaleString', PlainYearMonthProto_toLocaleString, 0], ['toJSON', PlainYearMonthProto_toJSON, 0], ['valueOf', PlainYearMonthProto_valueOf, 0], ['toPlainDate', PlainYearMonthProto_toPlainDate, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainYearMonth');
+  realmRec.Intrinsics['%Temporal.PlainYearMonth.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plainyearmonth-instances */
+
+function isTemporalPlainYearMonthObject(o) {
+  return 'InitializedTemporalYearMonth' in o;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-iso-year-month-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth */
+function* PlainYearMonthConstructor([isoYear = Value.undefined, isoMonth = Value.undefined, _calendar = Value.undefined, referenceISODay = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.PlainYearMonth cannot be called without new');
+  }
+  if (referenceISODay instanceof UndefinedValue) {
+    referenceISODay = F(1);
+  }
+  /* ReturnIfAbrupt */let _temp = yield* ToIntegerWithTruncation(isoYear);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const y = _temp;
+  /* ReturnIfAbrupt */let _temp2 = yield* ToIntegerWithTruncation(isoMonth);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const m = _temp2;
+  if (_calendar instanceof UndefinedValue) {
+    _calendar = Value('iso8601');
+  }
+  if (!(_calendar instanceof JSStringValue)) {
+    return Throw.TypeError('calendar is not a string');
+  }
+  /* ReturnIfAbrupt */let _temp3 = CanonicalizeCalendar(_calendar.stringValue());
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const calendar = _temp3;
+  /* ReturnIfAbrupt */let _temp4 = yield* ToIntegerWithTruncation(referenceISODay);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const ref = _temp4;
+  if (!IsValidISODate(y, m, ref)) {
+    return Throw.RangeError('$1-$2-$3 is not a valid date', y, m, ref);
+  }
+  const isoDate = CreateISODateRecord(y, m, ref);
+  return yield* CreateTemporalYearMonth(isoDate, calendar, NewTarget);
+}
+PlainYearMonthConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from */
+function* PlainYearMonth_from([item = Value.undefined, options = Value.undefined]) {
+  return yield* ToTemporalYearMonth(item, options);
+}
+PlainYearMonth_from.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare */
+function* PlainYearMonth_compare([_one = Value.undefined, _two = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp5 = yield* ToTemporalYearMonth(_one);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const one = _temp5;
+  /* ReturnIfAbrupt */let _temp6 = yield* ToTemporalYearMonth(_two);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const two = _temp6;
+  return F(CompareISODate(one.ISODate, two.ISODate));
+}
+PlainYearMonth_compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare';
+function bootstrapTemporalPlainYearMonth(realmRec) {
+  const prototype = bootstrapTemporalPlainYearMonthPrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, PlainYearMonthConstructor, 'PlainYearMonth', 2, prototype, [['from', PlainYearMonth_from, 1], ['compare', PlainYearMonth_compare, 2]]);
+  realmRec.Intrinsics['%Temporal.PlainYearMonth%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-calendar-types */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-canonicalizecalendar */
+function CanonicalizeCalendar(id) {
+  const calendars = AvailableCalendars();
+  if (!calendars.includes(id.toLowerCase())) {
+    return Throw.RangeError('$1 is not a supported calendar', id);
+  }
+  return CanonicalizeUValue('ca', id);
+}
+CanonicalizeCalendar.section = 'https://tc39.es/proposal-temporal/#sec-temporal-canonicalizecalendar';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars */
+function AvailableCalendars() {
+  return ['iso8601'];
+}
+AvailableCalendars.section = 'https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars';
+/** https://tc39.es/proposal-temporal/#sec-temporal-createmonthcode */
+function CreateMonthCode(monthNumber, isLeapMonth) {
+  if (!isLeapMonth) Assert(monthNumber > 0, "monthNumber > 0");
+  const numberPart = ToZeroPaddedDecimalString(monthNumber, 2);
+  if (isLeapMonth) {
+    return `M${numberPart}L`;
+  }
+  return `M${numberPart}`;
+}
+CreateMonthCode.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createmonthcode';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendar-date-records */
+
+/** https://tc39.es/proposal-temporal/#table-temporal-calendar-fields-record-fields */
+
+let Table19_Conversion = /*#__PURE__*/function (Table19_Conversion) {
+  Table19_Conversion["ToString"] = "to-string";
+  Table19_Conversion["ToIntegerWithTruncation"] = "to-integer-with-truncation";
+  Table19_Conversion["ToPositiveIntegerWithTruncation"] = "to-positive-integer-with-truncation";
+  Table19_Conversion["ToTemporalTimeZoneIdentifier"] = "to-temporal-time-zone-identifier";
+  Table19_Conversion["ToMonthCode"] = "to-month-code";
+  Table19_Conversion["ToOffsetString"] = "to-offset-string";
+  return Table19_Conversion;
+}({});
+const Table19_CalendarFieldsRecordFields = [/* eslint-disable object-curly-newline */
+{
+  FieldName: 'Era',
+  DefaultValue: undefined,
+  PropertyKey: 'era',
+  EnumerationKey: 'era',
+  Conversion: Table19_Conversion.ToString
+}, {
+  FieldName: 'EraYear',
+  DefaultValue: undefined,
+  PropertyKey: 'eraYear',
+  EnumerationKey: 'era-year',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Year',
+  DefaultValue: undefined,
+  PropertyKey: 'year',
+  EnumerationKey: 'year',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Month',
+  DefaultValue: undefined,
+  PropertyKey: 'month',
+  EnumerationKey: 'month',
+  Conversion: Table19_Conversion.ToPositiveIntegerWithTruncation
+}, {
+  FieldName: 'MonthCode',
+  DefaultValue: undefined,
+  PropertyKey: 'monthCode',
+  EnumerationKey: 'month-code',
+  Conversion: Table19_Conversion.ToMonthCode
+}, {
+  FieldName: 'Day',
+  DefaultValue: undefined,
+  PropertyKey: 'day',
+  EnumerationKey: 'day',
+  Conversion: Table19_Conversion.ToPositiveIntegerWithTruncation
+}, {
+  FieldName: 'Hour',
+  DefaultValue: 0,
+  PropertyKey: 'hour',
+  EnumerationKey: 'hour',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Minute',
+  DefaultValue: 0,
+  PropertyKey: 'minute',
+  EnumerationKey: 'minute',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Second',
+  DefaultValue: 0,
+  PropertyKey: 'second',
+  EnumerationKey: 'second',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Millisecond',
+  DefaultValue: 0,
+  PropertyKey: 'millisecond',
+  EnumerationKey: 'millisecond',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Microsecond',
+  DefaultValue: 0,
+  PropertyKey: 'microsecond',
+  EnumerationKey: 'microsecond',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'Nanosecond',
+  DefaultValue: 0,
+  PropertyKey: 'nanosecond',
+  EnumerationKey: 'nanosecond',
+  Conversion: Table19_Conversion.ToIntegerWithTruncation
+}, {
+  FieldName: 'OffsetString',
+  DefaultValue: undefined,
+  PropertyKey: 'offsetString',
+  EnumerationKey: 'offset',
+  Conversion: Table19_Conversion.ToOffsetString
+}, {
+  FieldName: 'TimeZone',
+  DefaultValue: undefined,
+  PropertyKey: 'timeZone',
+  EnumerationKey: 'time-zone',
+  Conversion: Table19_Conversion.ToTemporalTimeZoneIdentifier
+}
+/* eslint-enable object-curly-newline */];
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-preparecalendarfields */
+function* PrepareCalendarFields(calendar, fields, calendarFieldNames, nonCalendarFieldNames, requiredFieldNames) {
+  // Assert: If requiredFieldNames is a List, requiredFieldNames contains zero or one of each of the elements of calendarFieldNames and nonCalendarFieldNames.
+  if (isArray(requiredFieldNames)) {
+    Assert(calendarFieldNames.every(name => requiredFieldNames.filter(requiredName => name === requiredName).length <= 1), "calendarFieldNames.every((name) => requiredFieldNames.filter((requiredName) => name === requiredName).length <= 1)");
+    Assert(nonCalendarFieldNames.every(name => requiredFieldNames.filter(requiredName => name === requiredName).length <= 1), "nonCalendarFieldNames.every((name) => requiredFieldNames.filter((requiredName) => name === requiredName).length <= 1)");
+  }
+  let fieldNames = [...calendarFieldNames, ...nonCalendarFieldNames];
+  const extraFieldNames = CalendarExtraFields(calendar);
+  fieldNames = [...fieldNames, ...extraFieldNames];
+  // Assert: fieldNames contains no duplicate elements.
+  Assert(fieldNames.length === new Set(fieldNames).size, "fieldNames.length === new Set(fieldNames).size");
+  const result = {
+    Era: undefined,
+    EraYear: undefined,
+    Year: undefined,
+    Month: undefined,
+    MonthCode: undefined,
+    Day: undefined,
+    Hour: undefined,
+    Minute: undefined,
+    Second: undefined,
+    Millisecond: undefined,
+    Microsecond: undefined,
+    Nanosecond: undefined,
+    OffsetString: undefined,
+    TimeZone: undefined
+  };
+  let any = false;
+
+  // Let sortedPropertyNames be a List whose elements are the values in the Property Key column of Table 19 corresponding to the elements of fieldNames, sorted according to lexicographic code unit order.
+  const sortedPropertyNames = [...Table19_CalendarFieldsRecordFields].sort((a, b) => a.PropertyKey < b.PropertyKey ? -1 : 1);
+  for (const {
+    FieldName,
+    PropertyKey,
+    Conversion,
+    DefaultValue,
+    EnumerationKey
+  } of sortedPropertyNames) {
+    // Let key be the value in the Enumeration Key column of Table 19 corresponding to the row whose Property Key value is property.
+    const key = EnumerationKey;
+    /* ReturnIfAbrupt */let _temp = yield* Get(fields, Value(PropertyKey));
+    /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    let value = _temp;
+    if (value !== Value.undefined) {
+      any = true;
+      if (Conversion === Table19_Conversion.ToIntegerWithTruncation) {
+        /* ReturnIfAbrupt */let _temp2 = yield* ToIntegerWithTruncation(value);
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+        if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+        value = F(_temp2);
+      } else if (Conversion === Table19_Conversion.ToPositiveIntegerWithTruncation) {
+        /* ReturnIfAbrupt */let _temp3 = yield* ToPositiveIntegerWithTruncation(value);
+        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+        if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+        value = F(_temp3);
+      } else if (Conversion === Table19_Conversion.ToString) {
+        /* ReturnIfAbrupt */let _temp4 = yield* ToString(value);
+        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+        if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+        value = _temp4;
+      } else if (Conversion === Table19_Conversion.ToTemporalTimeZoneIdentifier) {
+        /* ReturnIfAbrupt */let _temp5 = ToTemporalTimeZoneIdentifier(value);
+        /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+        if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+        value = Value(_temp5);
+      } else if (Conversion === Table19_Conversion.ToMonthCode) {
+        /* ReturnIfAbrupt */let _temp6 = yield* ParseMonthCode(value);
+        /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+        if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+        const parsed = _temp6;
+        value = Value(CreateMonthCode(parsed.MonthNumber, parsed.IsLeapMonth));
+      } else {
+        Assert(Conversion === Table19_Conversion.ToOffsetString, "Conversion === Table19_Conversion.ToOffsetString");
+        /* ReturnIfAbrupt */let _temp7 = yield* ToOffsetString(value);
+        /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+        if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+        value = Value(_temp7);
+      }
+      let assignValue;
+      if (value instanceof NumberValue) {
+        assignValue = R(value);
+      } else if (value instanceof JSStringValue) {
+        assignValue = value.stringValue();
+      }
+      if (assignValue === undefined) {
+        throw new Error('invalid type');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      result[FieldName] = assignValue;
+    } else if (isArray(requiredFieldNames)) {
+      if (requiredFieldNames.includes(key)) {
+        return Throw.TypeError('$1 is a required on object $2', key, fields);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      result[FieldName] = DefaultValue;
+    }
+  }
+  if (requiredFieldNames === 'partial' && !any) {
+    return Throw.TypeError('$1 is not a TemporalTimeLike object', fields);
+  }
+  return result;
+}
+PrepareCalendarFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-preparecalendarfields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarfieldkeyspresent */
+function CalendarFieldKeysPresent(fields) {
+  const list = [];
+  for (const {
+    FieldName,
+    EnumerationKey
+  } of Table19_CalendarFieldsRecordFields) {
+    const value = fields[FieldName];
+    const enumerationKey = EnumerationKey;
+    if (value !== undefined) {
+      list.push(enumerationKey);
+    }
+  }
+  return list;
+}
+CalendarFieldKeysPresent.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarfieldkeyspresent';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields */
+function CalendarMergeFields(calendar, fields, additionalFields) {
+  const additionalKeys = CalendarFieldKeysPresent(additionalFields);
+  const overriddenKeys = CalendarFieldKeysToIgnore(calendar, additionalKeys);
+  const merged = {
+    Era: undefined,
+    EraYear: undefined,
+    Year: undefined,
+    Month: undefined,
+    MonthCode: undefined,
+    Day: undefined,
+    Hour: undefined,
+    Minute: undefined,
+    Second: undefined,
+    Millisecond: undefined,
+    Microsecond: undefined,
+    Nanosecond: undefined,
+    OffsetString: undefined,
+    TimeZone: undefined
+  };
+  const fieldsKeys = CalendarFieldKeysPresent(fields);
+  for (const {
+    EnumerationKey,
+    FieldName
+  } of Table19_CalendarFieldsRecordFields) {
+    const key = EnumerationKey;
+    if (fieldsKeys.includes(key) && !overriddenKeys.includes(key)) {
+      const propValue = fields[FieldName];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      merged[FieldName] = propValue;
+    }
+    if (additionalKeys.includes(key)) {
+      const propValue = additionalFields[FieldName];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      merged[FieldName] = propValue;
+    }
+  }
+  return merged;
+}
+CalendarMergeFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisodateadd */
+function NonISODateAdd(_calendar, _isoDate, _duration, _overflow) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISODateAdd.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisodateadd';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd */
+function CalendarDateAdd(calendar, isoDate, duration, overflow) {
+  let result;
+  if (calendar === 'iso8601') {
+    /* ReturnIfAbrupt */let _temp8 = BalanceISOYearMonth(isoDate.Year + duration.Years, isoDate.Month + duration.Months);
+    /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    const intermediate = _temp8;
+    /* ReturnIfAbrupt */let _temp9 = RegulateISODate(intermediate.Year, intermediate.Month, isoDate.Day, overflow);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    const regulated = _temp9;
+    const days = regulated.Day + duration.Days + 7 * duration.Weeks;
+    /* ReturnIfAbrupt */let _temp0 = AddDaysToISODate(regulated, days);
+    /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    result = _temp0;
+  } else {
+    /* ReturnIfAbrupt */let _temp1 = NonISODateAdd();
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+    result = _temp1;
+  }
+  if (!ISODateWithinLimits(result)) {
+    return Throw.RangeError('Resulting ISODate is out of range');
+  }
+  return result;
+}
+CalendarDateAdd.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisodateuntil */
+function NonISODateUntil(_calendar, _one, _two, _largestUnit) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISODateUntil.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisodateuntil';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil */
+function CalendarDateUntil(calendar, one, two, largestUnit) {
+  if (calendar === 'iso8601') {
+    const sign = -CompareISODate(one, two);
+    if (sign === 0) {
+      return ZeroDateDuration();
+    }
+    let years = 0;
+    if (largestUnit === TemporalUnit.Year) {
+      let candidateYears = sign;
+      while (!ISODateSurpasses(sign, one, two, candidateYears, 0, 0, 0)) {
+        years = candidateYears;
+        candidateYears += sign;
+      }
+    }
+    let months = 0;
+    if (largestUnit === TemporalUnit.Month) {
+      let candidateMonths = sign;
+      while (!ISODateSurpasses(sign, one, two, years, candidateMonths, 0, 0)) {
+        months = candidateMonths;
+        candidateMonths += sign;
+      }
+    }
+    let weeks = 0;
+    if (largestUnit === TemporalUnit.Week) {
+      let candidateWeeks = sign;
+      while (!ISODateSurpasses(sign, one, two, years, months, candidateWeeks, 0)) {
+        weeks = candidateWeeks;
+        candidateWeeks += sign;
+      }
+    }
+    let days = 0;
+    let candidateDays = sign;
+    while (!ISODateSurpasses(sign, one, two, years, months, weeks, candidateDays)) {
+      days = candidateDays;
+      candidateDays += sign;
+    }
+    /* X */let _temp10 = CreateDateDurationRecord(years, months, weeks, days);
+    /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+    /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! CreateDateDurationRecord(years, months, weeks, days) returned an abrupt completion", {
+      cause: _temp10
+    }); /* node:coverage ignore next */
+    if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+    return _temp10;
+  }
+  return NonISODateUntil();
+}
+CalendarDateUntil.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendaridentifier */
+function ToTemporalCalendarIdentifier(temporalCalendarLike) {
+  if (temporalCalendarLike instanceof ObjectValue) {
+    if (isTemporalPlainDateObject(temporalCalendarLike) || isTemporalPlainDateTimeObject(temporalCalendarLike) || isTemporalPlainMonthDayObject(temporalCalendarLike) || isTemporalPlainYearMonthObject(temporalCalendarLike) || isTemporalZonedDateTimeObject(temporalCalendarLike)) {
+      return temporalCalendarLike.Calendar;
+    }
+  }
+  if (!(temporalCalendarLike instanceof JSStringValue)) {
+    return Throw.TypeError('temporalCalendarLike must be a string or a Temporal object, but got $1', temporalCalendarLike);
+  }
+  /* ReturnIfAbrupt */let _temp11 = ParseTemporalCalendarString(temporalCalendarLike.stringValue());
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const identifier = _temp11;
+  return CanonicalizeCalendar(identifier);
+}
+ToTemporalCalendarIdentifier.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendaridentifier';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendaridentifierwithisodefault */
+function* GetTemporalCalendarIdentifierWithISODefault(item) {
+  if (isTemporalPlainDateObject(item) || isTemporalPlainDateTimeObject(item) || isTemporalPlainMonthDayObject(item) || isTemporalPlainYearMonthObject(item) || isTemporalZonedDateTimeObject(item)) {
+    return item.Calendar;
+  }
+  /* ReturnIfAbrupt */let _temp12 = yield* Get(item, Value('calendar'));
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const calendarLike = _temp12;
+  if (calendarLike === Value.undefined) {
+    return 'iso8601';
+  }
+  return ToTemporalCalendarIdentifier(calendarLike);
+}
+GetTemporalCalendarIdentifierWithISODefault.section = 'https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendaridentifierwithisodefault';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields */
+function* CalendarDateFromFields(calendar, fields, overflow) {
+  /* ReturnIfAbrupt */let _temp13 = yield* CalendarResolveFields(calendar, fields, 'date');
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  /* ReturnIfAbrupt */let _temp14 = CalendarDateToISO(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const result = _temp14;
+  if (!ISODateWithinLimits(result)) {
+    return Throw.RangeError('Resulting ISODate is out of range');
+  }
+  return result;
+}
+CalendarDateFromFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields */
+function* CalendarYearMonthFromFields(calendar, fields, overflow) {
+  /* ReturnIfAbrupt */let _temp15 = yield* CalendarResolveFields(calendar, fields, 'year-month');
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  // Let firstDayIndex be the 1-based index of the first day of the month described by fields (i.e., 1 unless the month's first day is skipped by this calendar.)
+  const firstDayIndex = 1;
+  fields.Day = firstDayIndex;
+  /* ReturnIfAbrupt */let _temp16 = CalendarDateToISO(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const result = _temp16;
+  if (!ISODateWithinLimits(result)) {
+    return Throw.RangeError('Resulting ISODate is out of range');
+  }
+  return result;
+}
+CalendarYearMonthFromFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields */
+function* CalendarMonthDayFromFields(calendar, fields, overflow) {
+  /* ReturnIfAbrupt */let _temp17 = yield* CalendarResolveFields(calendar, fields, 'month-day');
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  /* ReturnIfAbrupt */let _temp18 = CalendarMonthDayToISOReferenceDate(calendar, fields, overflow);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const result = _temp18;
+  if (!ISODateWithinLimits(result)) {
+    return Throw.RangeError('Resulting ISODate is out of range');
+  }
+  return result;
+}
+CalendarMonthDayFromFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation */
+function FormatCalendarAnnotation(id, showCalendar) {
+  if (showCalendar === 'never') {
+    return '';
+  }
+  if (showCalendar === 'auto' && id === 'iso8601') {
+    return '';
+  }
+  const flag = showCalendar === 'critical' ? '!' : '';
+  return `[${flag}u-ca=${id}]`;
+}
+FormatCalendarAnnotation.section = 'https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarequals */
+function CalendarEquals(one, two) {
+  if (CanonicalizeUValue('ca', one) === CanonicalizeUValue('ca', two)) {
+    return true;
+  }
+  return false;
+}
+CalendarEquals.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarequals';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth */
+function ISODaysInMonth(year, month) {
+  if (month === 1 || month === 3 || month === 5 || month === 7 || month === 8 || month === 10 || month === 12) {
+    return 31;
+  }
+  if (month === 4 || month === 6 || month === 9 || month === 11) {
+    return 30;
+  }
+  Assert(month === 2, "month === 2");
+  return 28 + MathematicalInLeapYear(EpochTimeForYear(year));
+}
+ISODaysInMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isoweekofyear */
+function ISOWeekOfYear(isoDate) {
+  const year = isoDate.Year;
+  const wednesday = 3;
+  const thursday = 4;
+  const friday = 5;
+  const saturday = 6;
+  const daysInWeek = 7;
+  const maxWeekNumber = 53;
+  const dayOfYear = ISODayOfYear(isoDate);
+  const dayOfWeek = ISODayOfWeek(isoDate);
+  const week = Math.floor((dayOfYear + daysInWeek - dayOfWeek + wednesday) / daysInWeek);
+  if (week < 1) {
+    // NOTE: This is the last week of the previous year.
+    const jan1st = CreateISODateRecord(year, 1, 1);
+    const dayOfJan1st = ISODayOfWeek(jan1st);
+    if (dayOfJan1st === friday) {
+      return {
+        Week: maxWeekNumber,
+        Year: year - 1
+      };
+    }
+    if (dayOfJan1st === saturday && MathematicalInLeapYear(EpochTimeForYear(year - 1)) === 1) {
+      return {
+        Week: maxWeekNumber,
+        Year: year - 1
+      };
+    }
+    return {
+      Week: maxWeekNumber - 1,
+      Year: year - 1
+    };
+  }
+  if (week === maxWeekNumber) {
+    const daysInYear = MathematicalDaysInYear(year);
+    const daysLaterInYear = daysInYear - dayOfYear;
+    const daysAfterThursday = thursday - dayOfWeek;
+    if (daysLaterInYear < daysAfterThursday) {
+      return {
+        Week: 1,
+        Year: year + 1
+      };
+    }
+  }
+  return {
+    Week: week,
+    Year: year
+  };
+}
+ISOWeekOfYear.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isoweekofyear';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodayofyear */
+function ISODayOfYear(isoDate) {
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day);
+  return EpochTimeToDayInYear(EpochDaysToEpochMs(epochDays, 0)) + 1;
+}
+ISODayOfYear.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodayofyear';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isodayofweek */
+function ISODayOfWeek(isoDate) {
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day);
+  const dayOfWeek = EpochTimeToWeekDay(EpochDaysToEpochMs(epochDays, 0));
+  if (dayOfWeek === 0) {
+    return 7;
+  }
+  return dayOfWeek;
+}
+ISODayOfWeek.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodayofweek';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisocalendardatetoiso */
+function NonISOCalendarDateToISO(_calendar, _fields, _overflow) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISOCalendarDateToISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisocalendardatetoiso';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendardatetoiso */
+function CalendarDateToISO(calendar, fields, overflow) {
+  if (calendar === 'iso8601') {
+    Assert(fields.Year !== undefined && fields.Month !== undefined && fields.Day !== undefined, "fields.Year !== undefined && fields.Month !== undefined && fields.Day !== undefined");
+    return RegulateISODate(fields.Year, fields.Month, fields.Day, overflow);
+  }
+  return NonISOCalendarDateToISO();
+}
+CalendarDateToISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendardatetoiso';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisomonthdaytoisoreferencedate */
+function NonISOMonthDayToISOReferenceDate(_calendar, _fields, _overflow) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISOMonthDayToISOReferenceDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisomonthdaytoisoreferencedate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdaytoisoreferencedate */
+function CalendarMonthDayToISOReferenceDate(calendar, fields, overflow) {
+  if (calendar === 'iso8601') {
+    Assert(fields.Month !== undefined && fields.Day !== undefined, "fields.Month !== undefined && fields.Day !== undefined");
+    const referenceISOYear = 1972;
+    const year = fields.Year === undefined ? referenceISOYear : fields.Year;
+    /* ReturnIfAbrupt */let _temp19 = RegulateISODate(year, fields.Month, fields.Day, overflow);
+    /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    const result = _temp19;
+    return CreateISODateRecord(referenceISOYear, result.Month, result.Day);
+  }
+  return NonISOMonthDayToISOReferenceDate();
+}
+CalendarMonthDayToISOReferenceDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdaytoisoreferencedate';
+
+// NonISOCalendarISOToDate
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisocalendarisotodate */
+function NonISOCalendarISOToDate(_calendar, _isoDate) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISOCalendarISOToDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisocalendarisotodate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarisotodate */
+function CalendarISOToDate(calendar, isoDate) {
+  if (calendar === 'iso8601') {
+    const inLeapYear = MathematicalInLeapYear(EpochTimeForYear(isoDate.Year)) === 1;
+    return {
+      Era: undefined,
+      EraYear: undefined,
+      Year: isoDate.Year,
+      Month: isoDate.Month,
+      MonthCode: CreateMonthCode(isoDate.Month, false),
+      Day: isoDate.Day,
+      DayOfWeek: ISODayOfWeek(isoDate),
+      DayOfYear: ISODayOfYear(isoDate),
+      WeekOfYear: ISOWeekOfYear(isoDate),
+      DaysInWeek: 7,
+      DaysInMonth: ISODaysInMonth(isoDate.Year, isoDate.Month),
+      DaysInYear: MathematicalDaysInYear(isoDate.Year),
+      MonthsInYear: 12,
+      InLeapYear: inLeapYear
+    };
+  }
+  return NonISOCalendarISOToDate();
+}
+CalendarISOToDate.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarisotodate';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarextrafields */
+function CalendarExtraFields(calendar, _fields) {
+  if (calendar === 'iso8601') {
+    return [];
+  }
+  unreachable_OtherCalendarNotImplemented();
+}
+CalendarExtraFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarextrafields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisofieldkeystoignore */
+function NonISOFieldKeysToIgnore(_calendar, _keys) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISOFieldKeysToIgnore.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisofieldkeystoignore';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarfieldkeystoignore */
+function CalendarFieldKeysToIgnore(calendar, keys) {
+  if (calendar === 'iso8601') {
+    const ignoredKeys = [];
+    for (const key of keys) {
+      ignoredKeys.push(key);
+      if (key === 'month') {
+        ignoredKeys.push('month-code');
+      } else if (key === 'month-code') {
+        ignoredKeys.push('month');
+      }
+    }
+    return ignoredKeys;
+  }
+  return NonISOFieldKeysToIgnore();
+}
+CalendarFieldKeysToIgnore.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarfieldkeystoignore';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nonisoresolvefields */
+function NonISOResolveFields(_calendar, _fields, _type) {
+  unreachable_OtherCalendarNotImplemented();
+}
+NonISOResolveFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nonisoresolvefields';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-calendarresolvefields */
+function* CalendarResolveFields(calendar, fields, type) {
+  if (calendar === 'iso8601') {
+    if ((type === 'date' || type === 'year-month') && fields.Year === undefined) {
+      return Throw.TypeError('"year" is required');
+    }
+    if ((type === 'date' || type === 'month-day') && fields.Day === undefined) {
+      return Throw.TypeError('"day" is required');
+    }
+    const month = fields.Month;
+    const monthCode = fields.MonthCode;
+    if (monthCode === undefined) {
+      if (month === undefined) {
+        return Throw.TypeError('"month-code" or "month" is required');
+      }
+    }
+    Assert(typeof monthCode === 'string', "typeof monthCode === 'string'");
+    /* ReturnIfAbrupt */let _temp20 = yield* ParseMonthCode(monthCode);
+    /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+    const parsedMonthCode = _temp20;
+    if (parsedMonthCode.IsLeapMonth) {
+      return Throw.RangeError('Invalid leap month');
+    }
+    if (parsedMonthCode.MonthNumber > 12) {
+      return Throw.RangeError('Invalid month');
+    }
+    if (month !== undefined && month !== parsedMonthCode.MonthNumber) {
+      return Throw.RangeError('Invalid month');
+    }
+    fields.Month = parsedMonthCode.MonthNumber;
+  } else {
+    /* ReturnIfAbrupt */let _temp21 = NonISOResolveFields();
+    /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  }
+}
+CalendarResolveFields.section = 'https://tc39.es/proposal-temporal/#sec-temporal-calendarresolvefields';
+
+function thisTemporalDurationValue(value) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(value, 'InitializedTemporalDuration');
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return value;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years */
+function DurationProto_yearsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp2 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const duration = _temp2;
+  return F(duration.Years);
+}
+DurationProto_yearsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.months */
+function DurationProto_monthsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) return _temp3; /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const duration = _temp3;
+  return F(duration.Months);
+}
+DurationProto_monthsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.months';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.weeks */
+function DurationProto_weeksGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp4 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const duration = _temp4;
+  return F(duration.Weeks);
+}
+DurationProto_weeksGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.weeks';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.days */
+function DurationProto_daysGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) return _temp5; /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const duration = _temp5;
+  return F(duration.Days);
+}
+DurationProto_daysGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.days';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.hours */
+function DurationProto_hoursGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const duration = _temp6;
+  return F(duration.Hours);
+}
+DurationProto_hoursGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.hours';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.minutes */
+function DurationProto_minutesGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const duration = _temp7;
+  return F(duration.Minutes);
+}
+DurationProto_minutesGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.minutes';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.seconds */
+function DurationProto_secondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const duration = _temp8;
+  return F(duration.Seconds);
+}
+DurationProto_secondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.seconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.milliseconds */
+function DurationProto_millisecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp9 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const duration = _temp9;
+  return F(duration.Milliseconds);
+}
+DurationProto_millisecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.milliseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.microseconds */
+function DurationProto_microsecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp0 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const duration = _temp0;
+  return F(duration.Microseconds);
+}
+DurationProto_microsecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.microseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.nanoseconds */
+function DurationProto_nanosecondsGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp1 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const duration = _temp1;
+  return F(duration.Nanoseconds);
+}
+DurationProto_nanosecondsGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.nanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.sign */
+function DurationProto_signGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp10 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const duration = _temp10;
+  return F(DurationSign(duration));
+}
+DurationProto_signGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.sign';
+
+/** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.blank */
+function DurationProto_blankGetter(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp11 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const duration = _temp11;
+  return DurationSign(duration) === 0 ? Value.true : Value.false;
+}
+DurationProto_blankGetter.section = 'https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.blank';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.with */
+function* DurationProto_with([_temporalDurationLike = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp12 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const duration = _temp12;
+  /* ReturnIfAbrupt */let _temp13 = yield* ToTemporalPartialDurationRecord(_temporalDurationLike);
+  /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const temporalDurationLike = _temp13;
+  const years = temporalDurationLike.Years ?? duration.Years;
+  const months = temporalDurationLike.Months ?? duration.Months;
+  const weeks = temporalDurationLike.Weeks ?? duration.Weeks;
+  const days = temporalDurationLike.Days ?? duration.Days;
+  const hours = temporalDurationLike.Hours ?? duration.Hours;
+  const minutes = temporalDurationLike.Minutes ?? duration.Minutes;
+  const seconds = temporalDurationLike.Seconds ?? duration.Seconds;
+  const milliseconds = temporalDurationLike.Milliseconds ?? duration.Milliseconds;
+  const microseconds = temporalDurationLike.Microseconds ?? duration.Microseconds;
+  const nanoseconds = temporalDurationLike.Nanoseconds ?? duration.Nanoseconds;
+  return yield* CreateTemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+}
+DurationProto_with.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.with';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.negated */
+function DurationProto_negated(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp14 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const duration = _temp14;
+  return CreateNegatedTemporalDuration(duration);
+}
+DurationProto_negated.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.negated';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.abs */
+function* DurationProto_abs(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp15 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  const duration = _temp15;
+  /* X */let _temp16 = CreateTemporalDuration(abs(duration.Years), abs(duration.Months), abs(duration.Weeks), abs(duration.Days), abs(duration.Hours), abs(duration.Minutes), abs(duration.Seconds), abs(duration.Milliseconds), abs(duration.Microseconds), abs(duration.Nanoseconds));
+  /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(\n    abs(duration.Years),\n    abs(duration.Months),\n    abs(duration.Weeks),\n    abs(duration.Days),\n    abs(duration.Hours),\n    abs(duration.Minutes),\n    abs(duration.Seconds),\n    abs(duration.Milliseconds),\n    abs(duration.Microseconds),\n    abs(duration.Nanoseconds),\n  ) returned an abrupt completion", {
+    cause: _temp16
+  }); /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  return _temp16;
+}
+DurationProto_abs.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.abs';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.add */
+function* DurationProto_add([other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp17 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const duration = _temp17;
+  return yield* AddDurations('add', duration, other);
+}
+DurationProto_add.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.add';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.subtract */
+function* DurationProto_subtract([other = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp18 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const duration = _temp18;
+  return yield* AddDurations('subtract', duration, other);
+}
+DurationProto_subtract.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.subtract';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round */
+function* DurationProto_round([roundTo = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp19 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const duration = _temp19;
+  if (roundTo instanceof UndefinedValue) {
+    return Throw.TypeError('roundTo is required');
+  }
+  if (roundTo instanceof JSStringValue) {
+    const paramString = roundTo;
+    roundTo = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp20 = CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString);
+    /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+    /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString) returned an abrupt completion", {
+      cause: _temp20
+    }); /* node:coverage ignore next */
+    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp21 = GetOptionsObject$1(roundTo);
+    /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    roundTo = _temp21;
+  }
+  let smallestUnitPresent = true;
+  let largestUnitPresent = true;
+  /* ReturnIfAbrupt */let _temp22 = yield* GetTemporalUnitValuedOption(roundTo, 'largestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const largestUnitOption = _temp22;
+  /* ReturnIfAbrupt */let _temp23 = yield* GetTemporalRelativeToOption(roundTo);
+  /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const relativeToRecord = _temp23;
+  const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
+  const plainRelativeTo = relativeToRecord.PlainRelativeTo;
+  /* ReturnIfAbrupt */let _temp24 = yield* GetRoundingIncrementOption(roundTo);
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const roundingIncrement = _temp24;
+  /* ReturnIfAbrupt */let _temp25 = yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand);
+  /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const roundingMode = _temp25;
+  /* ReturnIfAbrupt */let _temp26 = yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  let smallestUnit = _temp26;
+  /* ReturnIfAbrupt */let _temp27 = ValidateTemporalUnitValue(smallestUnit, 'datetime');
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) return _temp27; /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  if (smallestUnit === 'unset') {
+    smallestUnitPresent = false;
+    smallestUnit = TemporalUnit.Nanosecond;
+  }
+  const existingLargestUnit = DefaultTemporalLargestUnit(duration);
+  // TODO(temporal): this assert does not in the spec.
+  Assert(smallestUnit !== 'auto', "smallestUnit !== 'auto'");
+  const defaultLargestUnit = LargerOfTwoTemporalUnits(existingLargestUnit, smallestUnit);
+  let largestUnit;
+  if (largestUnitOption === 'unset') {
+    largestUnitPresent = false;
+    largestUnit = defaultLargestUnit;
+  } else if (largestUnitOption === 'auto') {
+    largestUnit = defaultLargestUnit;
+  } else {
+    largestUnit = largestUnitOption;
+  }
+  if (!smallestUnitPresent && !largestUnitPresent) {
+    return Throw.RangeError('smallestUnit and largestUnit cannot both be omitted');
+  }
+  if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit) !== largestUnit) {
+    return Throw.RangeError('largestUnit must be larger than smallestUnit');
+  }
+  const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+  if (maximum !== 'unset') {
+    /* ReturnIfAbrupt */let _temp28 = ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false);
+    /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) return _temp28; /* node:coverage ignore next */
+    if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  }
+  if (roundingIncrement > 1 && largestUnit !== smallestUnit && TemporalUnitCategory(smallestUnit) === 'date') {
+    return Throw.RangeError('roundingIncrement must be 1 when rounding a date unit to a larger unit');
+  }
+  if (zonedRelativeTo !== undefined) {
+    let internalDuration = ToInternalDurationRecord(duration);
+    const timeZone = zonedRelativeTo.TimeZone;
+    const calendar = zonedRelativeTo.Calendar;
+    const relativeEpochNs = zonedRelativeTo.EpochNanoseconds;
+    /* ReturnIfAbrupt */let _temp29 = AddZonedDateTime(relativeEpochNs, timeZone, calendar, internalDuration, 'constrain');
+    /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+    if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+    const targetEpochNs = _temp29;
+    /* ReturnIfAbrupt */let _temp30 = DifferenceZonedDateTimeWithRounding(relativeEpochNs, targetEpochNs, timeZone, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode);
+    /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+    if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+    internalDuration = _temp30;
+    if (TemporalUnitCategory(largestUnit) === 'date') {
+      largestUnit = TemporalUnit.Hour;
+    }
+    return yield* TemporalDurationFromInternal(internalDuration, largestUnit);
+  }
+  if (plainRelativeTo !== undefined) {
+    let internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+    const targetTime = AddTime(MidnightTimeRecord(), internalDuration.Time);
+    const calendar = plainRelativeTo.Calendar;
+    /* X */let _temp31 = AdjustDateDurationRecord(internalDuration.Date, targetTime.Days);
+    /* node:coverage ignore next */if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) _temp31 = skipDebugger(_temp31);
+    /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(internalDuration.Date, targetTime.Days) returned an abrupt completion", {
+      cause: _temp31
+    }); /* node:coverage ignore next */
+    if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+    const dateDuration = _temp31;
+    /* ReturnIfAbrupt */let _temp32 = CalendarDateAdd(calendar, plainRelativeTo.ISODate, dateDuration, 'constrain');
+    /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+    if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+    const targetDate = _temp32;
+    const isoDateTime = CombineISODateAndTimeRecord(plainRelativeTo.ISODate, MidnightTimeRecord());
+    const targetDateTime = CombineISODateAndTimeRecord(targetDate, targetTime);
+    /* ReturnIfAbrupt */let _temp33 = DifferencePlainDateTimeWithRounding(isoDateTime, targetDateTime, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode);
+    /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) return _temp33; /* node:coverage ignore next */
+    if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+    internalDuration = _temp33;
+    return yield* TemporalDurationFromInternal(internalDuration, largestUnit);
+  }
+  if (IsCalendarUnit(existingLargestUnit) || IsCalendarUnit(largestUnit)) {
+    return Throw.RangeError('relativeTo is required for calendar units');
+  }
+  Assert(IsCalendarUnit(smallestUnit) === false, "IsCalendarUnit(smallestUnit) === false");
+  let internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+  if (smallestUnit === TemporalUnit.Day) {
+    const fractionalDays = TotalTimeDuration(internalDuration.Time, TemporalUnit.Day);
+    const days = RoundNumberToIncrement(fractionalDays, roundingIncrement, roundingMode);
+    /* ReturnIfAbrupt */let _temp34 = CreateDateDurationRecord(0, 0, 0, days);
+    /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) return _temp34; /* node:coverage ignore next */
+    if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+    const dateDuration = _temp34;
+    internalDuration = CombineDateAndTimeDuration(dateDuration, 0);
+  } else {
+    /* ReturnIfAbrupt */let _temp35 = RoundTimeDuration(internalDuration.Time, roundingIncrement, smallestUnit, roundingMode);
+    /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+    if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+    const timeDuration = _temp35;
+    internalDuration = CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
+  }
+  return yield* TemporalDurationFromInternal(internalDuration, largestUnit);
+}
+DurationProto_round.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total */
+function* DurationProto_total([totalOf = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp36 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) return _temp36; /* node:coverage ignore next */
+  if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+  const duration = _temp36;
+  if (totalOf instanceof UndefinedValue) {
+    return Throw.TypeError('totalOf is required');
+  }
+  if (totalOf instanceof JSStringValue) {
+    const paramString = totalOf;
+    totalOf = OrdinaryObjectCreate(Value.null);
+    /* X */let _temp37 = CreateDataPropertyOrThrow(totalOf, Value('unit'), paramString);
+    /* node:coverage ignore next */if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) _temp37 = skipDebugger(_temp37);
+    /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(totalOf, Value('unit'), paramString) returned an abrupt completion", {
+      cause: _temp37
+    }); /* node:coverage ignore next */
+    if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+  } else {
+    /* ReturnIfAbrupt */let _temp38 = GetOptionsObject$1(totalOf);
+    /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) return _temp38; /* node:coverage ignore next */
+    if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+    totalOf = _temp38;
+  }
+  /* ReturnIfAbrupt */let _temp39 = yield* GetTemporalRelativeToOption(totalOf);
+  /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) return _temp39; /* node:coverage ignore next */
+  if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+  const relativeToRecord = _temp39;
+  const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
+  const plainRelativeTo = relativeToRecord.PlainRelativeTo;
+  /* ReturnIfAbrupt */let _temp40 = yield* GetTemporalUnitValuedOption(totalOf, 'unit', 'required');
+  /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) return _temp40; /* node:coverage ignore next */
+  if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+  const unit = _temp40;
+  /* ReturnIfAbrupt */let _temp41 = ValidateTemporalUnitValue(unit, 'datetime');
+  /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) return _temp41; /* node:coverage ignore next */
+  if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+  Assert(unit !== 'auto' && unit !== 'unset', "unit !== 'auto' && unit !== 'unset'"); // TODO(temporal): missing assert in spec?
+
+  let total;
+  if (zonedRelativeTo !== undefined) {
+    const internalDuration = ToInternalDurationRecord(duration);
+    const timeZone = zonedRelativeTo.TimeZone;
+    const calendar = zonedRelativeTo.Calendar;
+    const relativeEpochNs = zonedRelativeTo.EpochNanoseconds;
+    /* ReturnIfAbrupt */let _temp42 = AddZonedDateTime(relativeEpochNs, timeZone, calendar, internalDuration, 'constrain');
+    /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) return _temp42; /* node:coverage ignore next */
+    if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+    const targetEpochNs = _temp42;
+    /* ReturnIfAbrupt */let _temp43 = DifferenceZonedDateTimeWithTotal(relativeEpochNs, targetEpochNs, timeZone, calendar, unit);
+    /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) return _temp43; /* node:coverage ignore next */
+    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+    total = _temp43;
+  } else if (plainRelativeTo !== undefined) {
+    const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+    const targetTime = AddTime(MidnightTimeRecord(), internalDuration.Time);
+    const calendar = plainRelativeTo.Calendar;
+    /* X */let _temp44 = AdjustDateDurationRecord(internalDuration.Date, targetTime.Days);
+    /* node:coverage ignore next */if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) _temp44 = skipDebugger(_temp44);
+    /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(internalDuration.Date, targetTime.Days) returned an abrupt completion", {
+      cause: _temp44
+    }); /* node:coverage ignore next */
+    if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+    const dateDuration = _temp44;
+    /* ReturnIfAbrupt */let _temp45 = CalendarDateAdd(calendar, plainRelativeTo.ISODate, dateDuration, 'constrain');
+    /* node:coverage ignore next */if (_temp45 instanceof AbruptCompletion) return _temp45; /* node:coverage ignore next */
+    if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+    const targetDate = _temp45;
+    const isoDateTime = CombineISODateAndTimeRecord(plainRelativeTo.ISODate, MidnightTimeRecord());
+    const targetDateTime = CombineISODateAndTimeRecord(targetDate, targetTime);
+    /* ReturnIfAbrupt */let _temp46 = DifferencePlainDateTimeWithTotal(isoDateTime, targetDateTime, calendar, unit);
+    /* node:coverage ignore next */if (_temp46 instanceof AbruptCompletion) return _temp46; /* node:coverage ignore next */
+    if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+    total = _temp46;
+  } else {
+    const largestUnit = DefaultTemporalLargestUnit(duration);
+    if (IsCalendarUnit(largestUnit) || IsCalendarUnit(unit)) {
+      return Throw.RangeError('relativeTo is required for calendar units');
+    }
+    const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+    total = TotalTimeDuration(internalDuration.Time, unit);
+  }
+  return F(total);
+}
+DurationProto_total.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring */
+function* DurationProto_toString([options = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp47 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp47 instanceof AbruptCompletion) return _temp47; /* node:coverage ignore next */
+  if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+  const duration = _temp47;
+  /* ReturnIfAbrupt */let _temp48 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp48 instanceof AbruptCompletion) return _temp48; /* node:coverage ignore next */
+  if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+  const resolvedOptions = _temp48;
+  /* ReturnIfAbrupt */let _temp49 = yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp49 instanceof AbruptCompletion) return _temp49; /* node:coverage ignore next */
+  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+  const digits = _temp49;
+  /* ReturnIfAbrupt */let _temp50 = yield* GetRoundingModeOption(resolvedOptions, RoundingMode.Trunc);
+  /* node:coverage ignore next */if (_temp50 instanceof AbruptCompletion) return _temp50; /* node:coverage ignore next */
+  if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+  const roundingMode = _temp50;
+  /* ReturnIfAbrupt */let _temp51 = yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset');
+  /* node:coverage ignore next */if (_temp51 instanceof AbruptCompletion) return _temp51; /* node:coverage ignore next */
+  if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
+  const smallestUnit = _temp51;
+  /* ReturnIfAbrupt */let _temp52 = ValidateTemporalUnitValue(smallestUnit, 'time');
+  /* node:coverage ignore next */if (_temp52 instanceof AbruptCompletion) return _temp52; /* node:coverage ignore next */
+  if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
+  if (smallestUnit === TemporalUnit.Hour || smallestUnit === TemporalUnit.Minute) {
+    return Throw.RangeError('smallestUnit cannot be hour or minute');
+  }
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
+  if (precision.Unit === TemporalUnit.Nanosecond && precision.Increment === 1) {
+    return Value(TemporalDurationToString(duration, precision.Precision));
+  }
+  const largestUnit = DefaultTemporalLargestUnit(duration);
+  let internalDuration = ToInternalDurationRecord(duration);
+  /* ReturnIfAbrupt */let _temp53 = RoundTimeDuration(internalDuration.Time, precision.Increment, precision.Unit, roundingMode);
+  /* node:coverage ignore next */if (_temp53 instanceof AbruptCompletion) return _temp53; /* node:coverage ignore next */
+  if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
+  const timeDuration = _temp53;
+  internalDuration = CombineDateAndTimeDuration(internalDuration.Date, timeDuration);
+  const roundedLargestUnit = LargerOfTwoTemporalUnits(largestUnit, TemporalUnit.Second);
+  /* ReturnIfAbrupt */let _temp54 = yield* TemporalDurationFromInternal(internalDuration, roundedLargestUnit);
+  /* node:coverage ignore next */if (_temp54 instanceof AbruptCompletion) return _temp54; /* node:coverage ignore next */
+  if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
+  const roundedDuration = _temp54;
+  return Value(TemporalDurationToString(roundedDuration, precision.Precision));
+}
+DurationProto_toString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson */
+function DurationProto_toJSON(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp55 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp55 instanceof AbruptCompletion) return _temp55; /* node:coverage ignore next */
+  if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
+  const duration = _temp55;
+  return Value(TemporalDurationToString(duration, 'auto'));
+}
+DurationProto_toJSON.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tolocalestring */
+function DurationProto_toLocaleString(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp56 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp56 instanceof AbruptCompletion) return _temp56; /* node:coverage ignore next */
+  if (_temp56 instanceof Completion) _temp56 = _temp56.Value;
+  const duration = _temp56;
+  return Value(TemporalDurationToString(duration, 'auto'));
+}
+DurationProto_toLocaleString.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tolocalestring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof */
+function DurationProto_valueOf(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp57 = thisTemporalDurationValue(thisValue);
+  /* node:coverage ignore next */if (_temp57 instanceof AbruptCompletion) return _temp57; /* node:coverage ignore next */
+  if (_temp57 instanceof Completion) _temp57 = _temp57.Value;
+  return Throw.TypeError('Temporal.Duration cannot be converted to primitive value. If you are comparing two Temporal.Duration objects with > or <, use Temporal.Duration.compare() instead.');
+}
+DurationProto_valueOf.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof';
+function bootstrapTemporalDurationPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['years', [DurationProto_yearsGetter]], ['months', [DurationProto_monthsGetter]], ['weeks', [DurationProto_weeksGetter]], ['days', [DurationProto_daysGetter]], ['hours', [DurationProto_hoursGetter]], ['minutes', [DurationProto_minutesGetter]], ['seconds', [DurationProto_secondsGetter]], ['milliseconds', [DurationProto_millisecondsGetter]], ['microseconds', [DurationProto_microsecondsGetter]], ['nanoseconds', [DurationProto_nanosecondsGetter]], ['sign', [DurationProto_signGetter]], ['blank', [DurationProto_blankGetter]], ['with', DurationProto_with, 1], ['negated', DurationProto_negated, 0], ['abs', DurationProto_abs, 0], ['add', DurationProto_add, 1], ['subtract', DurationProto_subtract, 1], ['round', DurationProto_round, 1], ['total', DurationProto_total, 1], ['toString', DurationProto_toString, 0], ['toJSON', DurationProto_toJSON, 0], ['toLocaleString', DurationProto_toLocaleString, 0], ['valueOf', DurationProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.Duration');
+  realmRec.Intrinsics['%Temporal.Duration.prototype%'] = prototype;
+  return prototype;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances */
+
+function isTemporalDurationObject(item) {
+  return item instanceof ObjectValue && 'InitializedTemporalDuration' in item;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration */
+function* DurationConstructor([years = Value.undefined, months = Value.undefined, weeks = Value.undefined, days = Value.undefined, hours = Value.undefined, minutes = Value.undefined, seconds = Value.undefined, milliseconds = Value.undefined, microseconds = Value.undefined, nanoseconds = Value.undefined], {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('Temporal.Duration constructor cannot be called without new');
+  }
+  let y;
+  if (years instanceof UndefinedValue) {
+    y = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp = yield* ToIntegerIfIntegral(years);
+    /* node:coverage ignore next */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    y = _temp;
+  }
+  let mo;
+  if (months instanceof UndefinedValue) {
+    mo = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* ToIntegerIfIntegral(months);
+    /* node:coverage ignore next */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* node:coverage ignore next */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    mo = _temp2;
+  }
+  let w;
+  if (weeks instanceof UndefinedValue) {
+    w = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp3 = yield* ToIntegerIfIntegral(weeks);
+    /* node:coverage ignore next */
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    /* node:coverage ignore next */
+    if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    w = _temp3;
+  }
+  let d;
+  if (days instanceof UndefinedValue) {
+    d = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp4 = yield* ToIntegerIfIntegral(days);
+    /* node:coverage ignore next */
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    d = _temp4;
+  }
+  let h;
+  if (hours instanceof UndefinedValue) {
+    h = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp5 = yield* ToIntegerIfIntegral(hours);
+    /* node:coverage ignore next */
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    /* node:coverage ignore next */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    h = _temp5;
+  }
+  let m;
+  if (minutes instanceof UndefinedValue) {
+    m = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp6 = yield* ToIntegerIfIntegral(minutes);
+    /* node:coverage ignore next */
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    m = _temp6;
+  }
+  let s;
+  if (seconds instanceof UndefinedValue) {
+    s = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp7 = yield* ToIntegerIfIntegral(seconds);
+    /* node:coverage ignore next */
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    /* node:coverage ignore next */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    s = _temp7;
+  }
+  let ms;
+  if (milliseconds instanceof UndefinedValue) {
+    ms = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp8 = yield* ToIntegerIfIntegral(milliseconds);
+    /* node:coverage ignore next */
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    /* node:coverage ignore next */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    ms = _temp8;
+  }
+  let mis;
+  if (microseconds instanceof UndefinedValue) {
+    mis = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp9 = yield* ToIntegerIfIntegral(microseconds);
+    /* node:coverage ignore next */
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    mis = _temp9;
+  }
+  let ns;
+  if (nanoseconds instanceof UndefinedValue) {
+    ns = 0;
+  } else {
+    /* ReturnIfAbrupt */
+    let _temp0 = yield* ToIntegerIfIntegral(nanoseconds);
+    /* node:coverage ignore next */
+    if (_temp0 instanceof AbruptCompletion) return _temp0;
+    /* node:coverage ignore next */
+    if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+    ns = _temp0;
+  }
+  return yield* CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget);
+}
+DurationConstructor.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.from */
+function* Duration_From([item = Value.undefined]) {
+  return yield* ToTemporalDuration(item);
+}
+Duration_From.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.from';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.duration.compare */
+function* Duration_Compare([_one = Value.undefined, _two = Value.undefined, options = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp1 = yield* ToTemporalDuration(_one);
+  /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+  if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+  const one = _temp1;
+  /* ReturnIfAbrupt */let _temp10 = yield* ToTemporalDuration(_two);
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const two = _temp10;
+  /* ReturnIfAbrupt */let _temp11 = GetOptionsObject$1(options);
+  /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  const resolvedOptions = _temp11;
+  /* ReturnIfAbrupt */let _temp12 = yield* GetTemporalRelativeToOption(resolvedOptions);
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const relativeToRecord = _temp12;
+  if (one.Years === two.Years && one.Months === two.Months && one.Weeks === two.Weeks && one.Days === two.Days && one.Hours === two.Hours && one.Minutes === two.Minutes && one.Seconds === two.Seconds && one.Milliseconds === two.Milliseconds && one.Microseconds === two.Microseconds && one.Nanoseconds === two.Nanoseconds) {
+    return F(0);
+  }
+  const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
+  const plainRelativeTo = relativeToRecord.PlainRelativeTo;
+  const largestUnit1 = DefaultTemporalLargestUnit(one);
+  const largestUnit2 = DefaultTemporalLargestUnit(two);
+  const duration1 = ToInternalDurationRecord(one);
+  const duration2 = ToInternalDurationRecord(two);
+  if (zonedRelativeTo !== undefined && (TemporalUnitCategory(largestUnit1) === 'date' || TemporalUnitCategory(largestUnit2) === 'date')) {
+    const timeZone = zonedRelativeTo.TimeZone;
+    const calendar = zonedRelativeTo.Calendar;
+    /* ReturnIfAbrupt */let _temp13 = AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, duration1, 'constrain');
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    const after1 = _temp13;
+    /* ReturnIfAbrupt */let _temp14 = AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, duration2, 'constrain');
+    /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    const after2 = _temp14;
+    if (after1 > after2) return F(1);
+    if (after1 < after2) return F(-1);
+    return F(0);
+  }
+  let days1;
+  let days2;
+  if (IsCalendarUnit(largestUnit1) || IsCalendarUnit(largestUnit2)) {
+    if (plainRelativeTo === undefined) {
+      return Throw.RangeError('relativeTo option is required when comparing durations with calendar units');
+    }
+    /* ReturnIfAbrupt */let _temp15 = DateDurationDays(duration1.Date, plainRelativeTo);
+    /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+    days1 = _temp15;
+    /* ReturnIfAbrupt */let _temp16 = DateDurationDays(duration2.Date, plainRelativeTo);
+    /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+    if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+    days2 = _temp16;
+  } else {
+    days1 = one.Days;
+    days2 = two.Days;
+  }
+  /* ReturnIfAbrupt */let _temp17 = Add24HourDaysToTimeDuration(duration1.Time, days1);
+  /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  const timeDuration1 = _temp17;
+  /* ReturnIfAbrupt */let _temp18 = Add24HourDaysToTimeDuration(duration2.Time, days2);
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const timeDuration2 = _temp18;
+  return F(CompareTimeDuration(timeDuration1, timeDuration2));
+}
+Duration_Compare.section = 'https://tc39.es/proposal-temporal/#sec-temporal.duration.compare';
+function bootstrapTemporalDuration(realmRec) {
+  const prototype = bootstrapTemporalDurationPrototype(realmRec);
+  const constructor = bootstrapConstructor(realmRec, DurationConstructor, 'Duration', 0, prototype, [['from', Duration_From, 1], ['compare', Duration_Compare, 2]]);
+  realmRec.Intrinsics['%Temporal.Duration%'] = constructor;
+  return constructor;
+}
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-date-duration-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-partial-duration-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-internal-duration-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-internal-duration-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-zerodateduration */
+function ZeroDateDuration() {
+  /* X */let _temp = CreateDateDurationRecord(0, 0, 0, 0);
+  /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateDateDurationRecord(0, 0, 0, 0) returned an abrupt completion", {
+    cause: _temp
+  }); /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return _temp;
+}
+ZeroDateDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-zerodateduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-tointernaldurationrecord */
+function ToInternalDurationRecord(duration) {
+  /* X */let _temp2 = CreateDateDurationRecord(duration.Years, duration.Months, duration.Weeks, duration.Days);
+  /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! CreateDateDurationRecord(duration.Years, duration.Months, duration.Weeks, duration.Days) returned an abrupt completion", {
+    cause: _temp2
+  }); /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const dateDuration = _temp2;
+  const timeDuration = TimeDurationFromComponents(duration.Hours, duration.Minutes, duration.Seconds, duration.Milliseconds, duration.Microseconds, duration.Nanoseconds);
+  return CombineDateAndTimeDuration(dateDuration, timeDuration);
+}
+ToInternalDurationRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-tointernaldurationrecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-tointernaldurationrecordwith24hourdays */
+function ToInternalDurationRecordWith24HourDays(duration) {
+  let timeDuration = TimeDurationFromComponents(duration.Hours, duration.Minutes, duration.Seconds, duration.Milliseconds, duration.Microseconds, duration.Nanoseconds);
+  /* X */let _temp3 = Add24HourDaysToTimeDuration(timeDuration, duration.Days);
+  /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! Add24HourDaysToTimeDuration(timeDuration, duration.Days) returned an abrupt completion", {
+    cause: _temp3
+  }); /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  timeDuration = _temp3;
+  /* X */let _temp4 = CreateDateDurationRecord(duration.Years, duration.Months, duration.Weeks, 0);
+  /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+  /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateDateDurationRecord(duration.Years, duration.Months, duration.Weeks, 0) returned an abrupt completion", {
+    cause: _temp4
+  }); /* node:coverage ignore next */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const dateDuration = _temp4;
+  return CombineDateAndTimeDuration(dateDuration, timeDuration);
+}
+ToInternalDurationRecordWith24HourDays.section = 'https://tc39.es/proposal-temporal/#sec-temporal-tointernaldurationrecordwith24hourdays';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-todatedurationrecordwithouttime */
+function ToDateDurationRecordWithoutTime(duration) {
+  const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+  const days = Math.trunc(internalDuration.Time / nsPerDay);
+  /* X */let _temp5 = CreateDateDurationRecord(internalDuration.Date.Years, internalDuration.Date.Months, internalDuration.Date.Weeks, days);
+  /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateDateDurationRecord(internalDuration.Date.Years, internalDuration.Date.Months, internalDuration.Date.Weeks, days) returned an abrupt completion", {
+    cause: _temp5
+  }); /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  return _temp5;
+}
+ToDateDurationRecordWithoutTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-todatedurationrecordwithouttime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationfrominternal */
+function TemporalDurationFromInternal(internalDuration, largestUnit) {
+  let days = 0n;
+  let hours = 0n;
+  let minutes = 0n;
+  let seconds = 0n;
+  let milliseconds = 0n;
+  let microseconds = 0n;
+  const sign = TimeDurationSign(internalDuration.Time);
+  let nanoseconds = BigInt(abs(internalDuration.Time));
+  if (TemporalUnitCategory(largestUnit) === 'date') {
+    microseconds = nanoseconds / 1000n;
+    nanoseconds %= 1000n;
+    milliseconds = microseconds / 1000n;
+    microseconds %= 1000n;
+    seconds = milliseconds / 1000n;
+    milliseconds %= 1000n;
+    minutes = seconds / 60n;
+    seconds %= 60n;
+    hours = minutes / 60n;
+    minutes %= 60n;
+    days = hours / 24n;
+    hours %= 24n;
+  } else if (largestUnit === TemporalUnit.Hour) {
+    microseconds = nanoseconds / 1000n;
+    nanoseconds %= 1000n;
+    milliseconds = microseconds / 1000n;
+    microseconds %= 1000n;
+    seconds = milliseconds / 1000n;
+    milliseconds %= 1000n;
+    minutes = seconds / 60n;
+    seconds %= 60n;
+    hours = minutes / 60n;
+    minutes %= 60n;
+  } else if (largestUnit === TemporalUnit.Minute) {
+    microseconds = nanoseconds / 1000n;
+    nanoseconds %= 1000n;
+    milliseconds = microseconds / 1000n;
+    microseconds %= 1000n;
+    seconds = milliseconds / 1000n;
+    milliseconds %= 1000n;
+    minutes = seconds / 60n;
+    seconds %= 60n;
+  } else if (largestUnit === TemporalUnit.Second) {
+    microseconds = nanoseconds / 1000n;
+    nanoseconds %= 1000n;
+    milliseconds = microseconds / 1000n;
+    microseconds %= 1000n;
+    seconds = milliseconds / 1000n;
+    milliseconds %= 1000n;
+  } else if (largestUnit === TemporalUnit.Millisecond) {
+    microseconds = nanoseconds / 1000n;
+    nanoseconds %= 1000n;
+    milliseconds = microseconds / 1000n;
+    microseconds %= 1000n;
+  } else if (largestUnit === TemporalUnit.Microsecond) {
+    microseconds = nanoseconds / 1000n;
+    nanoseconds %= 1000n;
+  } else {
+    Assert(largestUnit === TemporalUnit.Nanosecond, "largestUnit === TemporalUnit.Nanosecond");
+  }
+  return CreateTemporalDuration(internalDuration.Date.Years, internalDuration.Date.Months, internalDuration.Date.Weeks, internalDuration.Date.Days + Number(days) * sign, Number(hours) * sign, Number(minutes) * sign, Number(seconds) * sign, Number(milliseconds) * sign, Number(microseconds) * sign, Number(nanoseconds) * sign);
+}
+TemporalDurationFromInternal.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationfrominternal';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createdatedurationrecord */
+function CreateDateDurationRecord(years, months, weeks, days) {
+  if (!IsValidDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0)) {
+    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+  }
+  return {
+    Years: years,
+    Months: months,
+    Weeks: weeks,
+    Days: days
+  };
+}
+CreateDateDurationRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createdatedurationrecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adjustdatedurationrecord */
+function AdjustDateDurationRecord(dateDuration, days, weeks, months) {
+  weeks ||= dateDuration.Weeks;
+  months ||= dateDuration.Months;
+  return CreateDateDurationRecord(dateDuration.Years, months, weeks, days);
+}
+AdjustDateDurationRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adjustdatedurationrecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-combinedateandtimeduration */
+function CombineDateAndTimeDuration(dateDuration, timeDuration) {
+  const dateSign = DateDurationSign(dateDuration);
+  const timeSign = TimeDurationSign(timeDuration);
+  if (dateSign !== 0 && timeSign !== 0) {
+    Assert(dateSign === timeSign, "dateSign === timeSign");
+  }
+  return {
+    Date: dateDuration,
+    Time: timeDuration
+  };
+}
+CombineDateAndTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-combinedateandtimeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration */
+function* ToTemporalDuration(item) {
+  if (isTemporalDurationObject(item)) {
+    /* X */let _temp6 = CreateTemporalDuration(item.Years, item.Months, item.Weeks, item.Days, item.Hours, item.Minutes, item.Seconds, item.Milliseconds, item.Microseconds, item.Nanoseconds);
+    /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+    /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(item.Years, item.Months, item.Weeks, item.Days, item.Hours, item.Minutes, item.Seconds, item.Milliseconds, item.Microseconds, item.Nanoseconds) returned an abrupt completion", {
+      cause: _temp6
+    }); /* node:coverage ignore next */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    return _temp6;
+  }
+  if (!(item instanceof ObjectValue)) {
+    if (!(item instanceof JSStringValue)) {
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToTemporalDuration', item);
+    }
+    return ParseTemporalDurationString(item.stringValue());
+  }
+  const result = {
+    Years: 0,
+    Months: 0,
+    Weeks: 0,
+    Days: 0,
+    Hours: 0,
+    Microseconds: 0,
+    Milliseconds: 0,
+    Minutes: 0,
+    Nanoseconds: 0,
+    Seconds: 0
+  };
+  /* ReturnIfAbrupt */let _temp7 = yield* ToTemporalPartialDurationRecord(item);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) return _temp7; /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const partial = _temp7;
+  if (partial.Years !== undefined) {
+    result.Years = partial.Years;
+  }
+  if (partial.Months !== undefined) {
+    result.Months = partial.Months;
+  }
+  if (partial.Weeks !== undefined) {
+    result.Weeks = partial.Weeks;
+  }
+  if (partial.Days !== undefined) {
+    result.Days = partial.Days;
+  }
+  if (partial.Hours !== undefined) {
+    result.Hours = partial.Hours;
+  }
+  if (partial.Minutes !== undefined) {
+    result.Minutes = partial.Minutes;
+  }
+  if (partial.Seconds !== undefined) {
+    result.Seconds = partial.Seconds;
+  }
+  if (partial.Milliseconds !== undefined) {
+    result.Milliseconds = partial.Milliseconds;
+  }
+  if (partial.Microseconds !== undefined) {
+    result.Microseconds = partial.Microseconds;
+  }
+  if (partial.Nanoseconds !== undefined) {
+    result.Nanoseconds = partial.Nanoseconds;
+  }
+  return yield* CreateTemporalDuration(result.Years, result.Months, result.Weeks, result.Days, result.Hours, result.Minutes, result.Seconds, result.Milliseconds, result.Microseconds, result.Nanoseconds);
+}
+ToTemporalDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-durationsign */
+function DurationSign(duration) {
+  if (duration.Years < 0) {
+    return -1;
+  }
+  if (duration.Years > 0) {
+    return 1;
+  }
+  if (duration.Months < 0) {
+    return -1;
+  }
+  if (duration.Months > 0) {
+    return 1;
+  }
+  if (duration.Weeks < 0) {
+    return -1;
+  }
+  if (duration.Weeks > 0) {
+    return 1;
+  }
+  if (duration.Days < 0) {
+    return -1;
+  }
+  if (duration.Days > 0) {
+    return 1;
+  }
+  if (duration.Hours < 0) {
+    return -1;
+  }
+  if (duration.Hours > 0) {
+    return 1;
+  }
+  if (duration.Minutes < 0) {
+    return -1;
+  }
+  if (duration.Minutes > 0) {
+    return 1;
+  }
+  if (duration.Seconds < 0) {
+    return -1;
+  }
+  if (duration.Seconds > 0) {
+    return 1;
+  }
+  if (duration.Milliseconds < 0) {
+    return -1;
+  }
+  if (duration.Milliseconds > 0) {
+    return 1;
+  }
+  if (duration.Microseconds < 0) {
+    return -1;
+  }
+  if (duration.Microseconds > 0) {
+    return 1;
+  }
+  if (duration.Nanoseconds < 0) {
+    return -1;
+  }
+  if (duration.Nanoseconds > 0) {
+    return 1;
+  }
+  return 0;
+}
+DurationSign.section = 'https://tc39.es/proposal-temporal/#sec-temporal-durationsign';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-datedurationsign */
+function DateDurationSign(dateDuration) {
+  if (dateDuration.Years < 0) {
+    return -1;
+  }
+  if (dateDuration.Years > 0) {
+    return 1;
+  }
+  if (dateDuration.Months < 0) {
+    return -1;
+  }
+  if (dateDuration.Months > 0) {
+    return 1;
+  }
+  if (dateDuration.Weeks < 0) {
+    return -1;
+  }
+  if (dateDuration.Weeks > 0) {
+    return 1;
+  }
+  if (dateDuration.Days < 0) {
+    return -1;
+  }
+  if (dateDuration.Days > 0) {
+    return 1;
+  }
+  return 0;
+}
+DateDurationSign.section = 'https://tc39.es/proposal-temporal/#sec-temporal-datedurationsign';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-internaldurationsign */
+function InternalDurationSign(internalDuration) {
+  const dateSign = DateDurationSign(internalDuration.Date);
+  if (dateSign !== 0) {
+    return dateSign;
+  }
+  return TimeDurationSign(internalDuration.Time);
+}
+InternalDurationSign.section = 'https://tc39.es/proposal-temporal/#sec-temporal-internaldurationsign';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-isvalidduration */
+function IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) {
+  let sign = 0;
+  for (const v of [years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds]) {
+    if (!Number.isFinite(v)) {
+      return false;
+    }
+    if (v < 0) {
+      if (sign > 0) {
+        return false;
+      }
+      sign = -1;
+    } else if (v > 0) {
+      if (sign < 0) {
+        return false;
+      }
+      sign = 1;
+    }
+  }
+  if (Math.abs(years) >= 2 ** 32) {
+    return false;
+  }
+  if (Math.abs(months) >= 2 ** 32) {
+    return false;
+  }
+  if (Math.abs(weeks) >= 2 ** 32) {
+    return false;
+  }
+  // Let normalizedSeconds be days × 86,400 + hours × 3600 + minutes × 60 + seconds + ℝ(𝔽(milliseconds)) × 10**-3 + ℝ(𝔽(microseconds)) × 10**-6 + ℝ(𝔽(nanoseconds)) × 10**-9.
+  // If abs(normalizedSeconds) ≥ 2**53, return false.
+  let normalizedSeconds = BigInt(days) * 86400n + BigInt(hours) * 3600n + BigInt(minutes) * 60n + BigInt(seconds);
+  if (abs(normalizedSeconds) >= 2 ** 53) {
+    return false;
+  }
+  normalizedSeconds *= BigInt(10e9); // Convert to nanoseconds
+  normalizedSeconds += BigInt(milliseconds) * 1000000n + BigInt(microseconds) * 1000n + BigInt(nanoseconds);
+  if (abs(normalizedSeconds) >= BigInt(2 ** 53) * BigInt(10e9)) {
+    return false;
+  }
+  return true;
+}
+IsValidDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isvalidduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-defaulttemporallargestunit */
+function DefaultTemporalLargestUnit(duration) {
+  if (duration.Years !== 0) {
+    return TemporalUnit.Year;
+  }
+  if (duration.Months !== 0) {
+    return TemporalUnit.Month;
+  }
+  if (duration.Weeks !== 0) {
+    return TemporalUnit.Week;
+  }
+  if (duration.Days !== 0) {
+    return TemporalUnit.Day;
+  }
+  if (duration.Hours !== 0) {
+    return TemporalUnit.Hour;
+  }
+  if (duration.Minutes !== 0) {
+    return TemporalUnit.Minute;
+  }
+  if (duration.Seconds !== 0) {
+    return TemporalUnit.Second;
+  }
+  if (duration.Milliseconds !== 0) {
+    return TemporalUnit.Millisecond;
+  }
+  if (duration.Microseconds !== 0) {
+    return TemporalUnit.Microsecond;
+  }
+  return TemporalUnit.Nanosecond;
+}
+DefaultTemporalLargestUnit.section = 'https://tc39.es/proposal-temporal/#sec-temporal-defaulttemporallargestunit';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totemporalpartialdurationrecord */
+function* ToTemporalPartialDurationRecord(temporalDurationLike) {
+  if (!(temporalDurationLike instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', temporalDurationLike);
+  }
+  const result = {
+    Days: undefined,
+    Hours: undefined,
+    Microseconds: undefined,
+    Milliseconds: undefined,
+    Minutes: undefined,
+    Months: undefined,
+    Nanoseconds: undefined,
+    Seconds: undefined,
+    Weeks: undefined,
+    Years: undefined
+  };
+  /* ReturnIfAbrupt */let _temp8 = yield* Get(temporalDurationLike, Value('days'));
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const days = _temp8;
+  if (days !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp9 = yield* ToIntegerIfIntegral(days);
+    /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) return _temp9; /* node:coverage ignore next */
+    if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+    result.Days = _temp9;
+  }
+  /* ReturnIfAbrupt */let _temp0 = yield* Get(temporalDurationLike, Value('hours'));
+  /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) return _temp0; /* node:coverage ignore next */
+  if (_temp0 instanceof Completion) _temp0 = _temp0.Value;
+  const hours = _temp0;
+  if (days !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp1 = yield* ToIntegerIfIntegral(hours);
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) return _temp1; /* node:coverage ignore next */
+    if (_temp1 instanceof Completion) _temp1 = _temp1.Value;
+    result.Hours = _temp1;
+  }
+  /* ReturnIfAbrupt */let _temp10 = yield* Get(temporalDurationLike, Value('microseconds'));
+  /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) return _temp10; /* node:coverage ignore next */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  const microseconds = _temp10;
+  if (microseconds !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp11 = yield* ToIntegerIfIntegral(microseconds);
+    /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) return _temp11; /* node:coverage ignore next */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    result.Microseconds = _temp11;
+  }
+  /* ReturnIfAbrupt */let _temp12 = yield* Get(temporalDurationLike, Value('milliseconds'));
+  /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) return _temp12; /* node:coverage ignore next */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const milliseconds = _temp12;
+  if (milliseconds !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp13 = yield* ToIntegerIfIntegral(milliseconds);
+    /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) return _temp13; /* node:coverage ignore next */
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    result.Milliseconds = _temp13;
+  }
+  /* ReturnIfAbrupt */let _temp14 = yield* Get(temporalDurationLike, Value('minutes'));
+  /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) return _temp14; /* node:coverage ignore next */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const minutes = _temp14;
+  if (minutes !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp15 = yield* ToIntegerIfIntegral(minutes);
+    /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) return _temp15; /* node:coverage ignore next */
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+    result.Minutes = _temp15;
+  }
+  /* ReturnIfAbrupt */let _temp16 = yield* Get(temporalDurationLike, Value('months'));
+  /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) return _temp16; /* node:coverage ignore next */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const months = _temp16;
+  if (months !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp17 = yield* ToIntegerIfIntegral(months);
+    /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) return _temp17; /* node:coverage ignore next */
+    if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+    result.Months = _temp17;
+  }
+  /* ReturnIfAbrupt */let _temp18 = yield* Get(temporalDurationLike, Value('nanoseconds'));
+  /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) return _temp18; /* node:coverage ignore next */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  const nanoseconds = _temp18;
+  if (nanoseconds !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp19 = yield* ToIntegerIfIntegral(nanoseconds);
+    /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) return _temp19; /* node:coverage ignore next */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    result.Nanoseconds = _temp19;
+  }
+  /* ReturnIfAbrupt */let _temp20 = yield* Get(temporalDurationLike, Value('seconds'));
+  /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) return _temp20; /* node:coverage ignore next */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const seconds = _temp20;
+  if (seconds !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp21 = yield* ToIntegerIfIntegral(seconds);
+    /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) return _temp21; /* node:coverage ignore next */
+    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    result.Seconds = _temp21;
+  }
+  /* ReturnIfAbrupt */let _temp22 = yield* Get(temporalDurationLike, Value('weeks'));
+  /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) return _temp22; /* node:coverage ignore next */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const weeks = _temp22;
+  if (weeks !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp23 = yield* ToIntegerIfIntegral(weeks);
+    /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) return _temp23; /* node:coverage ignore next */
+    if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+    result.Weeks = _temp23;
+  }
+  /* ReturnIfAbrupt */let _temp24 = yield* Get(temporalDurationLike, Value('years'));
+  /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) return _temp24; /* node:coverage ignore next */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  const years = _temp24;
+  if (years !== Value.undefined) {
+    /* ReturnIfAbrupt */let _temp25 = yield* ToIntegerIfIntegral(years);
+    /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) return _temp25; /* node:coverage ignore next */
+    if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+    result.Years = _temp25;
+  }
+  if (years === Value.undefined && months === Value.undefined && weeks === Value.undefined && days === Value.undefined && hours === Value.undefined && minutes === Value.undefined && seconds === Value.undefined && milliseconds === Value.undefined && microseconds === Value.undefined && nanoseconds === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'InvalidDuration');
+  }
+  return result;
+}
+ToTemporalPartialDurationRecord.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totemporalpartialdurationrecord';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalduration */
+function* CreateTemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, newTarget) {
+  if (!IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds)) {
+    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+  }
+  if (newTarget === undefined) {
+    newTarget = surroundingAgent.currentRealmRecord.Intrinsics['%Temporal.Duration%'];
+  }
+  /* ReturnIfAbrupt */let _temp26 = yield* OrdinaryCreateFromConstructor(newTarget, '%Temporal.Duration.prototype%', ['InitializedTemporalDuration', 'Years', 'Months', 'Weeks', 'Days', 'Hours', 'Minutes', 'Seconds', 'Milliseconds', 'Microseconds', 'Nanoseconds']);
+  /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) return _temp26; /* node:coverage ignore next */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const object = _temp26;
+  object.Years = years;
+  object.Months = months;
+  object.Weeks = weeks;
+  object.Days = days;
+  object.Hours = hours;
+  object.Minutes = minutes;
+  object.Seconds = seconds;
+  object.Milliseconds = milliseconds;
+  object.Microseconds = microseconds;
+  object.Nanoseconds = nanoseconds;
+  return object;
+}
+CreateTemporalDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createtemporalduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-createnegatedtemporalduration */
+function CreateNegatedTemporalDuration(duration) {
+  /* X */let _temp27 = CreateTemporalDuration(-duration.Years, -duration.Months, -duration.Weeks, -duration.Days, -duration.Hours, -duration.Minutes, -duration.Seconds, -duration.Milliseconds, -duration.Microseconds, -duration.Nanoseconds);
+  /* node:coverage ignore next */if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) _temp27 = skipDebugger(_temp27);
+  /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDuration(\n    -duration.Years,\n    -duration.Months,\n    -duration.Weeks,\n    -duration.Days,\n    -duration.Hours,\n    -duration.Minutes,\n    -duration.Seconds,\n    -duration.Milliseconds,\n    -duration.Microseconds,\n    -duration.Nanoseconds,\n  ) returned an abrupt completion", {
+    cause: _temp27
+  }); /* node:coverage ignore next */
+  if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+  return _temp27;
+}
+CreateNegatedTemporalDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-createnegatedtemporalduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-timedurationfromcomponents */
+function TimeDurationFromComponents(hours, minutes, seconds, milliseconds, microseconds, nanoseconds) {
+  minutes += hours * 60;
+  seconds += minutes * 60;
+  milliseconds += seconds * 1000;
+  microseconds += milliseconds * 1000;
+  nanoseconds += microseconds * 1000;
+  Assert(abs(nanoseconds) <= maxTimeDuration, "abs(nanoseconds) <= maxTimeDuration");
+  return nanoseconds;
+}
+TimeDurationFromComponents.section = 'https://tc39.es/proposal-temporal/#sec-temporal-timedurationfromcomponents';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-addtimeduration */
+function AddTimeDuration(one, two) {
+  const result = BigInt(one) + BigInt(two);
+  if (abs(result) > maxTimeDuration) {
+    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+  }
+  return Number(result);
+}
+AddTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-addtimeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-add24hourdaystotimeduration */
+function Add24HourDaysToTimeDuration(d, days) {
+  const result = BigInt(d) + BigInt(days) * BigInt(nsPerDay);
+  if (abs(result) > maxTimeDuration) {
+    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+  }
+  return Number(result);
+}
+Add24HourDaysToTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-add24hourdaystotimeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-addtimedurationtoepochnanoseconds */
+function AddTimeDurationToEpochNanoseconds(d, epochNs) {
+  return epochNs + BigInt(d);
+}
+AddTimeDurationToEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-addtimedurationtoepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-comparetimeduration */
+function CompareTimeDuration(one, two) {
+  if (one > two) {
+    return 1;
+  }
+  if (one < two) {
+    return -1;
+  }
+  return 0;
+}
+CompareTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-comparetimeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-timedurationfromepochnanosecondsdifference */
+function TimeDurationFromEpochNanosecondsDifference(one, two) {
+  const result = Number(one) - Number(two);
+  Assert(abs(result) <= maxTimeDuration, "abs(result) <= maxTimeDuration");
+  return result;
+}
+TimeDurationFromEpochNanosecondsDifference.section = 'https://tc39.es/proposal-temporal/#sec-temporal-timedurationfromepochnanosecondsdifference';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-roundtimedurationtoincrement */
+function RoundTimeDurationToIncrement(d, increment, roundingMode) {
+  const rounded = RoundNumberToIncrement(d, increment, roundingMode);
+  if (abs(rounded) > maxTimeDuration) {
+    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+  }
+  return rounded;
+}
+RoundTimeDurationToIncrement.section = 'https://tc39.es/proposal-temporal/#sec-temporal-roundtimedurationtoincrement';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-timedurationsign */
+function TimeDurationSign(d) {
+  if (d < 0) {
+    return -1;
+  }
+  if (d > 0) {
+    return 1;
+  }
+  return 0;
+}
+TimeDurationSign.section = 'https://tc39.es/proposal-temporal/#sec-temporal-timedurationsign';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-datedurationdays */
+function DateDurationDays(dateDuration, plainRelativeTo) {
+  /* X */let _temp28 = AdjustDateDurationRecord(dateDuration, 0);
+  /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
+  /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(dateDuration, 0) returned an abrupt completion", {
+    cause: _temp28
+  }); /* node:coverage ignore next */
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
+  const yearsMonthsWeeksDuration = _temp28;
+  if (DateDurationSign(yearsMonthsWeeksDuration) === 0) {
+    return dateDuration.Days;
+  }
+  /* ReturnIfAbrupt */let _temp29 = CalendarDateAdd(plainRelativeTo.Calendar, plainRelativeTo.ISODate, yearsMonthsWeeksDuration, 'constrain');
+  /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) return _temp29; /* node:coverage ignore next */
+  if (_temp29 instanceof Completion) _temp29 = _temp29.Value;
+  const later = _temp29;
+  const epochDays1 = ISODateToEpochDays(plainRelativeTo.ISODate.Year, plainRelativeTo.ISODate.Month - 1, plainRelativeTo.ISODate.Day);
+  const epochDays2 = ISODateToEpochDays(later.Year, later.Month - 1, later.Day);
+  const yearsMonthsWeeksInDays = epochDays2 - epochDays1;
+  return dateDuration.Days + Number(yearsMonthsWeeksInDays);
+}
+DateDurationDays.section = 'https://tc39.es/proposal-temporal/#sec-temporal-datedurationdays';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-roundtimeduration */
+function RoundTimeDuration(timeDuration, increment, unit, roundingMode) {
+  const divisor = Table21_LengthInNanoSeconds[unit];
+  return RoundTimeDurationToIncrement(timeDuration, divisor * increment, roundingMode);
+}
+RoundTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-roundtimeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totaltimeduration */
+function TotalTimeDuration(timeDuration, unit) {
+  const divisor = Table21_LengthInNanoSeconds[unit];
+  // TODO(temporal): Floating point problem
+  // 2. NOTE: The following step cannot be implemented directly using floating-point arithmetic when 𝔽(timeDuration) is not a safe integer. The division can be implemented in C++ with the __float128 type if the compiler supports it, or with software emulation such as in the SoftFP library.
+  return timeDuration / divisor;
+}
+TotalTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totaltimeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-duration-nudge-result-records */
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-computenudgewindow */
+function ComputeNudgeWindow(sign, duration, originEpochNs, isoDateTime, timeZone, calendar, increment, unit, additionalShift) {
+  let r1;
+  let r2;
+  let startDuration;
+  let endDuration;
+  if (unit === TemporalUnit.Year) {
+    const years = RoundNumberToIncrement(duration.Date.Years, increment, RoundingMode.Trunc);
+    if (!additionalShift) {
+      r1 = years;
+    } else {
+      r1 = years + increment * sign;
+    }
+    r2 = r1 + increment * sign;
+    /* ReturnIfAbrupt */let _temp30 = CreateDateDurationRecord(r1, 0, 0, 0);
+    /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) return _temp30; /* node:coverage ignore next */
+    if (_temp30 instanceof Completion) _temp30 = _temp30.Value;
+    startDuration = _temp30;
+    /* ReturnIfAbrupt */let _temp31 = CreateDateDurationRecord(r2, 0, 0, 0);
+    /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) return _temp31; /* node:coverage ignore next */
+    if (_temp31 instanceof Completion) _temp31 = _temp31.Value;
+    endDuration = _temp31;
+  } else if (unit === TemporalUnit.Month) {
+    const months = RoundNumberToIncrement(duration.Date.Months, increment, RoundingMode.Trunc);
+    if (!additionalShift) {
+      r1 = months;
+    } else {
+      r1 = months + increment * sign;
+    }
+    r2 = r1 + increment * sign;
+    /* ReturnIfAbrupt */let _temp32 = AdjustDateDurationRecord(duration.Date, 0, 0, r1);
+    /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) return _temp32; /* node:coverage ignore next */
+    if (_temp32 instanceof Completion) _temp32 = _temp32.Value;
+    startDuration = _temp32;
+    /* ReturnIfAbrupt */let _temp33 = AdjustDateDurationRecord(duration.Date, 0, 0, r2);
+    /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) return _temp33; /* node:coverage ignore next */
+    if (_temp33 instanceof Completion) _temp33 = _temp33.Value;
+    endDuration = _temp33;
+  } else if (unit === TemporalUnit.Week) {
+    /* X */let _temp34 = AdjustDateDurationRecord(duration.Date, 0, 0);
+    /* node:coverage ignore next */if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
+    /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(duration.Date, 0, 0) returned an abrupt completion", {
+      cause: _temp34
+    }); /* node:coverage ignore next */
+    if (_temp34 instanceof Completion) _temp34 = _temp34.Value;
+    const yearsMonths = _temp34;
+    /* ReturnIfAbrupt */let _temp35 = CalendarDateAdd(calendar, isoDateTime.ISODate, yearsMonths, 'constrain');
+    /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) return _temp35; /* node:coverage ignore next */
+    if (_temp35 instanceof Completion) _temp35 = _temp35.Value;
+    const weeksStart = _temp35;
+    const weeksEnd = AddDaysToISODate(weeksStart, duration.Date.Days);
+    const untilResult = CalendarDateUntil(calendar, weeksStart, weeksEnd, TemporalUnit.Week);
+    const weeks = RoundNumberToIncrement(duration.Date.Weeks + untilResult.Weeks, increment, RoundingMode.Trunc);
+    r1 = weeks;
+    r2 = weeks + increment * sign;
+    /* ReturnIfAbrupt */let _temp36 = AdjustDateDurationRecord(duration.Date, 0, r1);
+    /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) return _temp36; /* node:coverage ignore next */
+    if (_temp36 instanceof Completion) _temp36 = _temp36.Value;
+    startDuration = _temp36;
+    /* ReturnIfAbrupt */let _temp37 = AdjustDateDurationRecord(duration.Date, 0, r2);
+    /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) return _temp37; /* node:coverage ignore next */
+    if (_temp37 instanceof Completion) _temp37 = _temp37.Value;
+    endDuration = _temp37;
+  } else {
+    Assert(unit === TemporalUnit.Day, "unit === TemporalUnit.Day");
+    const days = RoundNumberToIncrement(duration.Date.Days, increment, RoundingMode.Trunc);
+    r1 = days;
+    r2 = days + increment * sign;
+    /* ReturnIfAbrupt */let _temp38 = AdjustDateDurationRecord(duration.Date, r1);
+    /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) return _temp38; /* node:coverage ignore next */
+    if (_temp38 instanceof Completion) _temp38 = _temp38.Value;
+    startDuration = _temp38;
+    /* ReturnIfAbrupt */let _temp39 = AdjustDateDurationRecord(duration.Date, r2);
+    /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) return _temp39; /* node:coverage ignore next */
+    if (_temp39 instanceof Completion) _temp39 = _temp39.Value;
+    endDuration = _temp39;
+  }
+  if (sign === 1) Assert(r1 >= 0 && r1 < r2, "r1 >= 0 && r1 < r2");
+  if (sign === -1) Assert(r1 <= 0 && r1 > r2, "r1 <= 0 && r1 > r2");
+  let startEpochNs;
+  if (r1 === 0) {
+    startEpochNs = originEpochNs;
+  } else {
+    /* ReturnIfAbrupt */let _temp40 = CalendarDateAdd(calendar, isoDateTime.ISODate, startDuration, 'constrain');
+    /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) return _temp40; /* node:coverage ignore next */
+    if (_temp40 instanceof Completion) _temp40 = _temp40.Value;
+    const start = _temp40;
+    const startDateTime = CombineISODateAndTimeRecord(start, isoDateTime.Time);
+    if (timeZone === undefined) {
+      startEpochNs = GetUTCEpochNanoseconds(startDateTime);
+    } else {
+      /* ReturnIfAbrupt */let _temp41 = GetEpochNanosecondsFor(timeZone, startDateTime, 'compatible');
+      /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) return _temp41; /* node:coverage ignore next */
+      if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+      startEpochNs = _temp41;
+    }
+  }
+  /* ReturnIfAbrupt */let _temp42 = CalendarDateAdd(calendar, isoDateTime.ISODate, endDuration, 'constrain');
+  /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) return _temp42; /* node:coverage ignore next */
+  if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+  const end = _temp42;
+  const endDateTime = CombineISODateAndTimeRecord(end, isoDateTime.Time);
+  let endEpochNs;
+  if (timeZone === undefined) {
+    endEpochNs = GetUTCEpochNanoseconds(endDateTime);
+  } else {
+    /* ReturnIfAbrupt */let _temp43 = GetEpochNanosecondsFor(timeZone, endDateTime, 'compatible');
+    /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) return _temp43; /* node:coverage ignore next */
+    if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+    endEpochNs = _temp43;
+  }
+  return {
+    R1: r1,
+    R2: r2,
+    StartEpochNs: startEpochNs,
+    EndEpochNs: endEpochNs,
+    StartDuration: startDuration,
+    EndDuration: endDuration
+  };
+}
+ComputeNudgeWindow.section = 'https://tc39.es/proposal-temporal/#sec-temporal-computenudgewindow';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nudgetocalendarunit */
+function NudgeToCalendarUnit(sign, duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, increment, unit, roundingMode) {
+  let didExpandCalendarUnit = false;
+  /* ReturnIfAbrupt */let _temp44 = ComputeNudgeWindow(sign, duration, originEpochNs, isoDateTime, timeZone, calendar, increment, unit, false);
+  /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) return _temp44; /* node:coverage ignore next */
+  if (_temp44 instanceof Completion) _temp44 = _temp44.Value;
+  let nudgeWindow = _temp44;
+  let startEpochNs = nudgeWindow.StartEpochNs;
+  let endEpochNs = nudgeWindow.EndEpochNs;
+  if (sign === 1) {
+    if (!(startEpochNs <= destEpochNs && destEpochNs <= endEpochNs)) {
+      /* ReturnIfAbrupt */let _temp45 = ComputeNudgeWindow(sign, duration, originEpochNs, isoDateTime, timeZone, calendar, increment, unit, true);
+      /* node:coverage ignore next */if (_temp45 instanceof AbruptCompletion) return _temp45; /* node:coverage ignore next */
+      if (_temp45 instanceof Completion) _temp45 = _temp45.Value;
+      nudgeWindow = _temp45;
+      Assert(nudgeWindow.StartEpochNs <= destEpochNs && destEpochNs <= nudgeWindow.EndEpochNs, "nudgeWindow.StartEpochNs <= destEpochNs && destEpochNs <= nudgeWindow.EndEpochNs");
+      didExpandCalendarUnit = true;
+    }
+  } else if (!(endEpochNs <= destEpochNs && destEpochNs <= startEpochNs)) {
+    /* ReturnIfAbrupt */let _temp46 = ComputeNudgeWindow(sign, duration, originEpochNs, isoDateTime, timeZone, calendar, increment, unit, true);
+    /* node:coverage ignore next */if (_temp46 instanceof AbruptCompletion) return _temp46; /* node:coverage ignore next */
+    if (_temp46 instanceof Completion) _temp46 = _temp46.Value;
+    nudgeWindow = _temp46;
+    Assert(nudgeWindow.EndEpochNs <= destEpochNs && destEpochNs <= nudgeWindow.StartEpochNs, "nudgeWindow.EndEpochNs <= destEpochNs && destEpochNs <= nudgeWindow.StartEpochNs");
+    didExpandCalendarUnit = true;
+  }
+  const r1 = nudgeWindow.R1;
+  const r2 = nudgeWindow.R2;
+  startEpochNs = nudgeWindow.StartEpochNs;
+  endEpochNs = nudgeWindow.EndEpochNs;
+  const startDuration = nudgeWindow.StartDuration;
+  const endDuration = nudgeWindow.EndDuration;
+  Assert(startEpochNs !== endEpochNs, "startEpochNs !== endEpochNs");
+  // TODO(temporal): Floating point problem
+  const progress = Number(destEpochNs - startEpochNs) / Number(endEpochNs - startEpochNs);
+  const total = r1 + Number(progress) * increment * sign;
+  // 16. NOTE: The above two steps cannot be implemented directly using floating-point arithmetic. This division can be implemented as if expressing total as the quotient of two time durations (which may not be safe integers), performing all other calculations before the division, and finally performing one division operation with a floating-point result for total. The division can be implemented in C++ with the __float128 type if the compiler supports it, or with software emulation such as in the SoftFP library.
+  Assert(0 <= progress && progress <= 1, "0 <= progress && progress <= 1");
+  const isNegative = sign < 0 ? 'negative' : 'positive';
+  const unsignedRoundingMode = GetUnsignedRoundingMode(roundingMode, isNegative);
+  let roundedUnit;
+  if (progress === 1) {
+    roundedUnit = abs(r2);
+  } else {
+    Assert(abs(r1) <= abs(total) && abs(total) <= abs(r2), "abs(r1) <= abs(total) && abs(total) <= abs(r2)");
+    roundedUnit = ApplyUnsignedRoundingMode(abs(total), abs(r1), abs(r2), unsignedRoundingMode);
+  }
+  let resultDuration;
+  let nudgedEpochNs;
+  if (roundedUnit === abs(r2)) {
+    didExpandCalendarUnit = true;
+    resultDuration = endDuration;
+    nudgedEpochNs = endEpochNs;
+  } else {
+    resultDuration = startDuration;
+    nudgedEpochNs = startEpochNs;
+  }
+  resultDuration = CombineDateAndTimeDuration(resultDuration, 0);
+  const nudgeResult = {
+    Duration: resultDuration,
+    NudgedEpochNs: nudgedEpochNs,
+    DidExpandCalendarUnit: didExpandCalendarUnit
+  };
+  return {
+    NudgeResult: nudgeResult,
+    Total: total
+  };
+}
+NudgeToCalendarUnit.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nudgetocalendarunit';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nudgetozonedtime */
+function NudgeToZonedTime(sign, duration, isoDateTime, timeZone, calendar, increment, unit, roundingMode) {
+  /* ReturnIfAbrupt */let _temp47 = CalendarDateAdd(calendar, isoDateTime.ISODate, duration.Date, 'constrain');
+  /* node:coverage ignore next */if (_temp47 instanceof AbruptCompletion) return _temp47; /* node:coverage ignore next */
+  if (_temp47 instanceof Completion) _temp47 = _temp47.Value;
+  const start = _temp47;
+  const startDateTime = CombineISODateAndTimeRecord(start, isoDateTime.Time);
+  const endDate = AddDaysToISODate(start, sign);
+  const endDateTime = CombineISODateAndTimeRecord(endDate, isoDateTime.Time);
+  /* ReturnIfAbrupt */let _temp48 = GetEpochNanosecondsFor(timeZone, startDateTime, 'compatible');
+  /* node:coverage ignore next */if (_temp48 instanceof AbruptCompletion) return _temp48; /* node:coverage ignore next */
+  if (_temp48 instanceof Completion) _temp48 = _temp48.Value;
+  const startEpochNs = _temp48;
+  /* ReturnIfAbrupt */let _temp49 = GetEpochNanosecondsFor(timeZone, endDateTime, 'compatible');
+  /* node:coverage ignore next */if (_temp49 instanceof AbruptCompletion) return _temp49; /* node:coverage ignore next */
+  if (_temp49 instanceof Completion) _temp49 = _temp49.Value;
+  const endEpochNs = _temp49;
+  const daySpan = TimeDurationFromEpochNanosecondsDifference(endEpochNs, startEpochNs);
+  Assert(TimeDurationSign(daySpan) === sign, "TimeDurationSign(daySpan) === sign");
+  const unitLength = Table21_LengthInNanoSeconds[unit];
+  /* ReturnIfAbrupt */let _temp50 = RoundTimeDurationToIncrement(duration.Time, increment * unitLength, roundingMode);
+  /* node:coverage ignore next */if (_temp50 instanceof AbruptCompletion) return _temp50; /* node:coverage ignore next */
+  if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
+  let roundedTimeDuration = _temp50;
+  /* X */let _temp51 = AddTimeDuration(roundedTimeDuration, -daySpan);
+  /* node:coverage ignore next */if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) _temp51 = skipDebugger(_temp51);
+  /* node:coverage ignore next */if (_temp51 instanceof AbruptCompletion) throw new Assert.Error("! AddTimeDuration(roundedTimeDuration, (-daySpan) as TimeDuration) returned an abrupt completion", {
+    cause: _temp51
+  }); /* node:coverage ignore next */
+  if (_temp51 instanceof Completion) _temp51 = _temp51.Value;
+  const beyondDaySpan = _temp51;
+  let didRoundBeyondDay;
+  let dayDelta;
+  let nudgedEpochNs;
+  if (TimeDurationSign(beyondDaySpan) !== -sign) {
+    didRoundBeyondDay = true;
+    dayDelta = sign;
+    /* ReturnIfAbrupt */let _temp52 = RoundTimeDurationToIncrement(beyondDaySpan, increment * unitLength, roundingMode);
+    /* node:coverage ignore next */if (_temp52 instanceof AbruptCompletion) return _temp52; /* node:coverage ignore next */
+    if (_temp52 instanceof Completion) _temp52 = _temp52.Value;
+    roundedTimeDuration = _temp52;
+    nudgedEpochNs = AddTimeDurationToEpochNanoseconds(roundedTimeDuration, endEpochNs);
+  } else {
+    didRoundBeyondDay = false;
+    dayDelta = 0;
+    nudgedEpochNs = AddTimeDurationToEpochNanoseconds(roundedTimeDuration, startEpochNs);
+  }
+  /* X */let _temp53 = AdjustDateDurationRecord(duration.Date, duration.Date.Days + dayDelta);
+  /* node:coverage ignore next */if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) _temp53 = skipDebugger(_temp53);
+  /* node:coverage ignore next */if (_temp53 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(duration.Date, duration.Date.Days + dayDelta) returned an abrupt completion", {
+    cause: _temp53
+  }); /* node:coverage ignore next */
+  if (_temp53 instanceof Completion) _temp53 = _temp53.Value;
+  const dateDuration = _temp53;
+  const resultDuration = CombineDateAndTimeDuration(dateDuration, roundedTimeDuration);
+  return {
+    Duration: resultDuration,
+    NudgedEpochNs: nudgedEpochNs,
+    DidExpandCalendarUnit: didRoundBeyondDay
+  };
+}
+NudgeToZonedTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nudgetozonedtime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-nudgetodayortime */
+function NudgeToDayOrTime(duration, destEpochNs, largestUnit, increment, smallestUnit, roundingMode) {
+  /* X */let _temp54 = Add24HourDaysToTimeDuration(duration.Time, duration.Date.Days);
+  /* node:coverage ignore next */if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) _temp54 = skipDebugger(_temp54);
+  /* node:coverage ignore next */if (_temp54 instanceof AbruptCompletion) throw new Assert.Error("! Add24HourDaysToTimeDuration(duration.Time, duration.Date.Days) returned an abrupt completion", {
+    cause: _temp54
+  }); /* node:coverage ignore next */
+  if (_temp54 instanceof Completion) _temp54 = _temp54.Value;
+  const timeDuration = _temp54;
+  const unitLength = Table21_LengthInNanoSeconds[smallestUnit];
+  /* ReturnIfAbrupt */let _temp55 = RoundTimeDurationToIncrement(timeDuration, unitLength * increment, roundingMode);
+  /* node:coverage ignore next */if (_temp55 instanceof AbruptCompletion) return _temp55; /* node:coverage ignore next */
+  if (_temp55 instanceof Completion) _temp55 = _temp55.Value;
+  const roundedTime = _temp55;
+  /* X */let _temp56 = AddTimeDuration(roundedTime, -timeDuration);
+  /* node:coverage ignore next */if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) _temp56 = skipDebugger(_temp56);
+  /* node:coverage ignore next */if (_temp56 instanceof AbruptCompletion) throw new Assert.Error("! AddTimeDuration(roundedTime, (-timeDuration) as TimeDuration) returned an abrupt completion", {
+    cause: _temp56
+  }); /* node:coverage ignore next */
+  if (_temp56 instanceof Completion) _temp56 = _temp56.Value;
+  const diffTime = _temp56;
+  const wholeDays = Math.trunc(TotalTimeDuration(timeDuration, TemporalUnit.Day));
+  const roundedWholeDays = Math.trunc(TotalTimeDuration(roundedTime, TemporalUnit.Day));
+  const dayDelta = roundedWholeDays - wholeDays;
+  let dayDeltaSign;
+  if (dayDelta < 0) dayDeltaSign = -1;else if (dayDelta > 0) dayDeltaSign = 1;else dayDeltaSign = 0;
+  const didExpandDays = dayDeltaSign === TimeDurationSign(timeDuration);
+  const nudgedEpochNs = AddTimeDurationToEpochNanoseconds(diffTime, destEpochNs);
+  let days = 0;
+  let remainder = roundedTime;
+  if (TemporalUnitCategory(largestUnit) === 'date') {
+    days = roundedWholeDays;
+    /* X */let _temp57 = AddTimeDuration(roundedTime, TimeDurationFromComponents(-roundedWholeDays * HoursPerDay, 0, 0, 0, 0, 0));
+    /* node:coverage ignore next */if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) _temp57 = skipDebugger(_temp57);
+    /* node:coverage ignore next */if (_temp57 instanceof AbruptCompletion) throw new Assert.Error("! AddTimeDuration(roundedTime, TimeDurationFromComponents(-roundedWholeDays * HoursPerDay, 0, 0, 0, 0, 0)) returned an abrupt completion", {
+      cause: _temp57
+    }); /* node:coverage ignore next */
+    if (_temp57 instanceof Completion) _temp57 = _temp57.Value;
+    remainder = _temp57;
+  }
+  /* X */let _temp58 = AdjustDateDurationRecord(duration.Date, days);
+  /* node:coverage ignore next */if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) _temp58 = skipDebugger(_temp58);
+  /* node:coverage ignore next */if (_temp58 instanceof AbruptCompletion) throw new Assert.Error("! AdjustDateDurationRecord(duration.Date, days) returned an abrupt completion", {
+    cause: _temp58
+  }); /* node:coverage ignore next */
+  if (_temp58 instanceof Completion) _temp58 = _temp58.Value;
+  const dateDuration = _temp58;
+  const resultDuration = CombineDateAndTimeDuration(dateDuration, remainder);
+  return {
+    Duration: resultDuration,
+    NudgedEpochNs: nudgedEpochNs,
+    DidExpandCalendarUnit: didExpandDays
+  };
+}
+NudgeToDayOrTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-nudgetodayortime';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-bubblerelativeduration */
+function BubbleRelativeDuration(sign, duration, nudgedEpochNs, isoDateTime, timeZone, calendar, largestUnit, smallestUnit) {
+  if (smallestUnit === largestUnit) {
+    return duration;
+  }
+  const order = [TemporalUnit.Year, TemporalUnit.Month, TemporalUnit.Week, TemporalUnit.Day];
+  const largestUnitIndex = order.indexOf(largestUnit);
+  const smallestUnitIndex = order.indexOf(smallestUnit);
+  let unitIndex = smallestUnitIndex - 1;
+  let done = false;
+  while (unitIndex >= largestUnitIndex && !done) {
+    const unit = order[unitIndex];
+    if (unit !== TemporalUnit.Week || largestUnit === TemporalUnit.Week) {
+      let endDuration;
+      if (unit === TemporalUnit.Year) {
+        const years = duration.Date.Years + sign;
+        /* ReturnIfAbrupt */let _temp59 = CreateDateDurationRecord(years, 0, 0, 0);
+        /* node:coverage ignore next */if (_temp59 instanceof AbruptCompletion) return _temp59; /* node:coverage ignore next */
+        if (_temp59 instanceof Completion) _temp59 = _temp59.Value;
+        endDuration = _temp59;
+      } else if (unit === TemporalUnit.Month) {
+        const months = duration.Date.Months + sign;
+        /* ReturnIfAbrupt */let _temp60 = AdjustDateDurationRecord(duration.Date, 0, 0, months);
+        /* node:coverage ignore next */if (_temp60 instanceof AbruptCompletion) return _temp60; /* node:coverage ignore next */
+        if (_temp60 instanceof Completion) _temp60 = _temp60.Value;
+        endDuration = _temp60;
+      } else {
+        Assert(unit === TemporalUnit.Week, "unit === TemporalUnit.Week");
+        const weeks = duration.Date.Weeks + sign;
+        /* ReturnIfAbrupt */let _temp61 = AdjustDateDurationRecord(duration.Date, 0, weeks);
+        /* node:coverage ignore next */if (_temp61 instanceof AbruptCompletion) return _temp61; /* node:coverage ignore next */
+        if (_temp61 instanceof Completion) _temp61 = _temp61.Value;
+        endDuration = _temp61;
+      }
+      /* ReturnIfAbrupt */let _temp62 = CalendarDateAdd(calendar, isoDateTime.ISODate, endDuration, 'constrain');
+      /* node:coverage ignore next */if (_temp62 instanceof AbruptCompletion) return _temp62; /* node:coverage ignore next */
+      if (_temp62 instanceof Completion) _temp62 = _temp62.Value;
+      const end = _temp62;
+      const endDateTime = CombineISODateAndTimeRecord(end, isoDateTime.Time);
+      let endEpochNs;
+      if (timeZone === undefined) {
+        endEpochNs = GetUTCEpochNanoseconds(endDateTime);
+      } else {
+        /* ReturnIfAbrupt */let _temp63 = GetEpochNanosecondsFor(timeZone, endDateTime, 'compatible');
+        /* node:coverage ignore next */if (_temp63 instanceof AbruptCompletion) return _temp63; /* node:coverage ignore next */
+        if (_temp63 instanceof Completion) _temp63 = _temp63.Value;
+        endEpochNs = _temp63;
+      }
+      const beyondEnd = nudgedEpochNs - endEpochNs;
+      let beyondEndSign;
+      if (beyondEnd < 0) beyondEndSign = -1;else if (beyondEnd > 0) beyondEndSign = 1;else beyondEndSign = 0;
+      if (beyondEndSign !== -sign) {
+        duration = CombineDateAndTimeDuration(endDuration, 0);
+      } else {
+        done = true;
+      }
+    }
+    unitIndex -= 1;
+  }
+  return duration;
+}
+BubbleRelativeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-bubblerelativeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-roundrelativeduration */
+function RoundRelativeDuration(duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, largestUnit, increment, smallestUnit, roundingMode) {
+  let irregularLengthUnit = false;
+  if (IsCalendarUnit(smallestUnit)) {
+    irregularLengthUnit = true;
+  }
+  if (timeZone !== undefined && smallestUnit === TemporalUnit.Day) {
+    irregularLengthUnit = true;
+  }
+  let sign;
+  if (InternalDurationSign(duration) < 0) {
+    sign = -1;
+  } else {
+    sign = 1;
+  }
+  let nudgeResult;
+  if (irregularLengthUnit) {
+    /* ReturnIfAbrupt */let _temp64 = NudgeToCalendarUnit(sign, duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, increment, smallestUnit, roundingMode);
+    /* node:coverage ignore next */if (_temp64 instanceof AbruptCompletion) return _temp64; /* node:coverage ignore next */
+    if (_temp64 instanceof Completion) _temp64 = _temp64.Value;
+    const record = _temp64;
+    nudgeResult = record.NudgeResult;
+  } else if (timeZone !== undefined) {
+    Assert(__IsTimeUnit(smallestUnit), "__IsTimeUnit(smallestUnit)");
+    /* ReturnIfAbrupt */let _temp65 = NudgeToZonedTime(sign, duration, isoDateTime, timeZone, calendar, increment, smallestUnit, roundingMode);
+    /* node:coverage ignore next */if (_temp65 instanceof AbruptCompletion) return _temp65; /* node:coverage ignore next */
+    if (_temp65 instanceof Completion) _temp65 = _temp65.Value;
+    nudgeResult = _temp65;
+  } else {
+    Assert(__IsTimeUnit(smallestUnit) || smallestUnit === TemporalUnit.Day, "__IsTimeUnit(smallestUnit) || smallestUnit === TemporalUnit.Day");
+    /* ReturnIfAbrupt */let _temp66 = NudgeToDayOrTime(duration, destEpochNs, largestUnit, increment, smallestUnit, roundingMode);
+    /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) return _temp66; /* node:coverage ignore next */
+    if (_temp66 instanceof Completion) _temp66 = _temp66.Value;
+    nudgeResult = _temp66;
+  }
+  duration = nudgeResult.Duration;
+  if (nudgeResult.DidExpandCalendarUnit && smallestUnit !== TemporalUnit.Week) {
+    const startUnit = LargerOfTwoTemporalUnits(smallestUnit, TemporalUnit.Day);
+    Assert(__IsDateUnit(startUnit) && __IsDateUnit(largestUnit), "__IsDateUnit(startUnit) && __IsDateUnit(largestUnit)");
+    /* ReturnIfAbrupt */let _temp67 = BubbleRelativeDuration(sign, duration, nudgeResult.NudgedEpochNs, isoDateTime, timeZone, calendar, largestUnit, startUnit);
+    /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) return _temp67; /* node:coverage ignore next */
+    if (_temp67 instanceof Completion) _temp67 = _temp67.Value;
+    duration = _temp67;
+  }
+  return duration;
+}
+RoundRelativeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-roundrelativeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-totalrelativeduration */
+function TotalRelativeDuration(duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, unit) {
+  if (IsCalendarUnit(unit) || timeZone !== undefined && unit === TemporalUnit.Day) {
+    const sign = InternalDurationSign(duration);
+    // https://github.com/tc39/proposal-temporal/issues/3131
+    /* ReturnIfAbrupt */let _temp68 = NudgeToCalendarUnit(sign, duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, 1, unit, RoundingMode.Trunc);
+    /* node:coverage ignore next */if (_temp68 instanceof AbruptCompletion) return _temp68; /* node:coverage ignore next */
+    if (_temp68 instanceof Completion) _temp68 = _temp68.Value;
+    const record = _temp68;
+    return record.Total;
+  }
+  /* X */let _temp69 = Add24HourDaysToTimeDuration(duration.Time, duration.Date.Days);
+  /* node:coverage ignore next */if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) _temp69 = skipDebugger(_temp69);
+  /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) throw new Assert.Error("! Add24HourDaysToTimeDuration(duration.Time, duration.Date.Days) returned an abrupt completion", {
+    cause: _temp69
+  }); /* node:coverage ignore next */
+  if (_temp69 instanceof Completion) _temp69 = _temp69.Value;
+  const timeDuration = _temp69;
+  return TotalTimeDuration(timeDuration, unit);
+}
+TotalRelativeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totalrelativeduration';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationtostring */
+function TemporalDurationToString(duration, precision) {
+  const sign = DurationSign(duration);
+  let datePart = '';
+  if (duration.Years !== 0) {
+    datePart += `${Math.abs(duration.Years)}Y`;
+  }
+  if (duration.Months !== 0) {
+    datePart += `${Math.abs(duration.Months)}M`;
+  }
+  if (duration.Weeks !== 0) {
+    datePart += `${Math.abs(duration.Weeks)}W`;
+  }
+  if (duration.Days !== 0) {
+    datePart += `${Math.abs(duration.Days)}D`;
+  }
+  let timePart = '';
+  if (duration.Hours !== 0) {
+    timePart += `${Math.abs(duration.Hours)}H`;
+  }
+  if (duration.Minutes !== 0) {
+    timePart += `${Math.abs(duration.Minutes)}M`;
+  }
+  let zeroMinutesAndHigher = false;
+  const _ = DefaultTemporalLargestUnit(duration);
+  if (_ === TemporalUnit.Second || _ === TemporalUnit.Millisecond || _ === TemporalUnit.Microsecond || _ === TemporalUnit.Nanosecond) {
+    zeroMinutesAndHigher = true;
+  }
+  const secondsDuration = TimeDurationFromComponents(0, 0, duration.Seconds, duration.Milliseconds, duration.Microseconds, duration.Nanoseconds);
+  if (secondsDuration !== 0 || zeroMinutesAndHigher || precision !== 'auto') {
+    const secondsPart = Math.abs(Math.trunc(secondsDuration / 10e9)).toString();
+    const subSecondsPart = FormatFractionalSeconds(Math.abs(secondsDuration % 10e9), precision);
+    timePart += `${secondsPart + subSecondsPart}S`;
+  }
+  const signPart = sign < 0 ? '-' : '';
+  let result = `${signPart}P${datePart}`;
+  if (timePart !== '') {
+    result += `T${timePart}`;
+  }
+  return result;
+}
+TemporalDurationToString.section = 'https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationtostring';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-adddurations */
+function* AddDurations(operation, duration, _other) {
+  /* ReturnIfAbrupt */let _temp70 = yield* ToTemporalDuration(_other);
+  /* node:coverage ignore next */if (_temp70 instanceof AbruptCompletion) return _temp70; /* node:coverage ignore next */
+  if (_temp70 instanceof Completion) _temp70 = _temp70.Value;
+  const other = _temp70;
+  if (operation === 'subtract') {
+    _other = CreateNegatedTemporalDuration(other);
+  }
+  const largestUnit1 = DefaultTemporalLargestUnit(duration);
+  const largestUnit2 = DefaultTemporalLargestUnit(other);
+  const largestUnit = LargerOfTwoTemporalUnits(largestUnit1, largestUnit2);
+  if (IsCalendarUnit(largestUnit)) {
+    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+  }
+  const d1 = ToInternalDurationRecordWith24HourDays(duration);
+  const d2 = ToInternalDurationRecordWith24HourDays(other);
+  /* ReturnIfAbrupt */let _temp71 = AddTimeDuration(d1.Time, d2.Time);
+  /* node:coverage ignore next */if (_temp71 instanceof AbruptCompletion) return _temp71; /* node:coverage ignore next */
+  if (_temp71 instanceof Completion) _temp71 = _temp71.Value;
+  const timeResult = _temp71;
+  const result = CombineDateAndTimeDuration(ZeroDateDuration(), timeResult);
+  return yield* TemporalDurationFromInternal(result, largestUnit);
+}
+AddDurations.section = 'https://tc39.es/proposal-temporal/#sec-temporal-adddurations';
+
+/** https://tc39.es/proposal-temporal/#eqn-maxTimeDuration */
+
+const maxTimeDuration = 9007199254740991999999999n;
+
+/** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
+function HostSystemUTCEpochNanoseconds(_global) {
+  temporal_todo();
+}
+HostSystemUTCEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochmilliseconds */
+function SystemUTCEpochMilliseconds() {
+  GetGlobalObject();
+  const nowNs = HostSystemUTCEpochNanoseconds();
+  return Math.floor(nowNs / 10 ** 6);
+}
+SystemUTCEpochMilliseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochmilliseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds */
+function SystemUTCEpochNanoseconds() {
+  GetGlobalObject();
+  const nowNs = HostSystemUTCEpochNanoseconds();
+  return BigInt(nowNs);
+}
+SystemUTCEpochNanoseconds.section = 'https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime */
+function SystemDateTime(temporalTimeZoneLike) {
+  let timeZone;
+  if (temporalTimeZoneLike === Value.undefined) {
+    timeZone = SystemTimeZoneIdentifier();
+  } else {
+    /* ReturnIfAbrupt */let _temp = ToTemporalTimeZoneIdentifier(temporalTimeZoneLike);
+    /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) return _temp; /* node:coverage ignore next */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    timeZone = _temp;
+  }
+  const epochNs = SystemUTCEpochNanoseconds();
+  return GetISODateTimeFor(timeZone, epochNs);
+}
+SystemDateTime.section = 'https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime';
+
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-testing-and-comparison-operations */
 
@@ -44200,6 +54496,20 @@ function DateProto_toTimeString(_args, {
   return Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
 }
 DateProto_toTimeString.section = 'https://tc39.es/ecma262/#sec-date.prototype.totimestring';
+function DateProto_toTemporalInstant(_args, {
+  thisValue
+}) {
+  const dateObject = thisValue;
+  /* ReturnIfAbrupt */let _temp86 = thisTimeValue(dateObject);
+  /* node:coverage ignore next */if (_temp86 instanceof AbruptCompletion) return _temp86; /* node:coverage ignore next */
+  if (_temp86 instanceof Completion) _temp86 = _temp86.Value;
+  const t = _temp86;
+  /* ReturnIfAbrupt */let _temp87 = NumberToBigInt(t);
+  /* node:coverage ignore next */if (_temp87 instanceof AbruptCompletion) return _temp87; /* node:coverage ignore next */
+  if (_temp87 instanceof Completion) _temp87 = _temp87.Value;
+  const ns = R(_temp87) * BigInt(1e6);
+  return CreateTemporalInstant(ns);
+}
 
 /** https://tc39.es/ecma262/#sec-date.prototype.toutcstring */
 function DateProto_toUTCString(_args, {
@@ -44209,10 +54519,10 @@ function DateProto_toUTCString(_args, {
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
-  /* ReturnIfAbrupt */let _temp86 = thisTimeValue(O);
-  /* node:coverage ignore next */if (_temp86 instanceof AbruptCompletion) return _temp86; /* node:coverage ignore next */
-  if (_temp86 instanceof Completion) _temp86 = _temp86.Value;
-  const tv = _temp86;
+  /* ReturnIfAbrupt */let _temp88 = thisTimeValue(O);
+  /* node:coverage ignore next */if (_temp88 instanceof AbruptCompletion) return _temp88; /* node:coverage ignore next */
+  if (_temp88 instanceof Completion) _temp88 = _temp88.Value;
+  const tv = _temp88;
   if (tv.isNaN()) {
     return Value('Invalid Date');
   }
@@ -44222,13 +54532,13 @@ function DateProto_toUTCString(_args, {
   const yv = R(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(Math.abs(yv)));
-  /* X */let _temp87 = StringPad(year, F(4), Value('0'), 'start');
-  /* node:coverage ignore next */if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) _temp87 = skipDebugger(_temp87);
-  /* node:coverage ignore next */if (_temp87 instanceof AbruptCompletion) throw new Assert.Error("! StringPad(year, F(4), Value('0'), 'start') returned an abrupt completion", {
-    cause: _temp87
+  /* X */let _temp89 = StringPad(year, F(4), Value('0'), 'start');
+  /* node:coverage ignore next */if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) _temp89 = skipDebugger(_temp89);
+  /* node:coverage ignore next */if (_temp89 instanceof AbruptCompletion) throw new Assert.Error("! StringPad(year, F(4), Value('0'), 'start') returned an abrupt completion", {
+    cause: _temp89
   }); /* node:coverage ignore next */
-  if (_temp87 instanceof Completion) _temp87 = _temp87.Value;
-  const paddedYear = _temp87.stringValue();
+  if (_temp89 instanceof Completion) _temp89 = _temp89.Value;
+  const paddedYear = _temp89.stringValue();
   return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }
 DateProto_toUTCString.section = 'https://tc39.es/ecma262/#sec-date.prototype.toutcstring';
@@ -44261,7 +54571,7 @@ function* DateProto_toPrimitive([hint = Value.undefined], {
 }
 DateProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive';
 function bootstrapDatePrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
+  const proto = bootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], surroundingAgent.feature('temporal') ? ['toTemporalInstant', DateProto_toTemporalInstant, 0] : undefined, ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true
@@ -55320,6 +65630,107 @@ function bootstrapWrapForValidIteratorPrototype(realmRec) {
   realmRec.Intrinsics['%WrapForValidIteratorPrototype%'] = proto;
 }
 
+/** https://tc39.es/proposal-temporal/#sec-temporal.now.timezoneid */
+function TemporalNow_timeZoneId() {
+  return Value(SystemTimeZoneIdentifier());
+}
+TemporalNow_timeZoneId.section = 'https://tc39.es/proposal-temporal/#sec-temporal.now.timezoneid';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.now.instant */
+function TemporalNow_instant() {
+  const ns = SystemUTCEpochNanoseconds();
+  /* X */let _temp = CreateTemporalInstant(ns);
+  /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalInstant(ns) returned an abrupt completion", {
+    cause: _temp
+  }); /* node:coverage ignore next */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  return _temp;
+}
+TemporalNow_instant.section = 'https://tc39.es/proposal-temporal/#sec-temporal.now.instant';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso */
+function TemporalNow_plainDateTimeISO([temporalTimeZoneLike = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp2 = SystemDateTime(temporalTimeZoneLike);
+  /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) return _temp2; /* node:coverage ignore next */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const isoDateTime = _temp2;
+  /* X */let _temp3 = CreateTemporalDateTime(isoDateTime, 'iso8601');
+  /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+  /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDateTime(isoDateTime, 'iso8601') returned an abrupt completion", {
+    cause: _temp3
+  }); /* node:coverage ignore next */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  return _temp3;
+}
+TemporalNow_plainDateTimeISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso */
+function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]) {
+  let timeZone;
+  if (temporalTimeZoneLike === Value.undefined) {
+    timeZone = SystemTimeZoneIdentifier();
+  } else {
+    /* ReturnIfAbrupt */let _temp4 = ToTemporalTimeZoneIdentifier(temporalTimeZoneLike);
+    /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) return _temp4; /* node:coverage ignore next */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    timeZone = _temp4;
+  }
+  const ns = SystemUTCEpochNanoseconds();
+  /* X */let _temp5 = CreateTemporalZonedDateTime(ns, timeZone, 'iso8601');
+  /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+  /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalZonedDateTime(ns, timeZone, 'iso8601') returned an abrupt completion", {
+    cause: _temp5
+  }); /* node:coverage ignore next */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  return _temp5;
+}
+TemporalNow_zonedDateTimeISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso */
+function TemporalNow_plainDateISO([temporalTimeZoneLike = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp6 = SystemDateTime(temporalTimeZoneLike);
+  /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) return _temp6; /* node:coverage ignore next */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  const isoDateTime = _temp6;
+  /* X */let _temp7 = CreateTemporalDate(isoDateTime.ISODate, 'iso8601');
+  /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+  /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalDate(isoDateTime.ISODate, 'iso8601') returned an abrupt completion", {
+    cause: _temp7
+  }); /* node:coverage ignore next */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  return _temp7;
+}
+TemporalNow_plainDateISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso';
+
+/** https://tc39.es/proposal-temporal/#sec-temporal.now.plaintimeiso */
+function TemporalNow_plainTimeISO([temporalTimeZoneLike = Value.undefined]) {
+  /* ReturnIfAbrupt */let _temp8 = SystemDateTime(temporalTimeZoneLike);
+  /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) return _temp8; /* node:coverage ignore next */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  const isoDateTime = _temp8;
+  /* X */let _temp9 = CreateTemporalTime(isoDateTime.Time);
+  /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+  /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateTemporalTime(isoDateTime.Time) returned an abrupt completion", {
+    cause: _temp9
+  }); /* node:coverage ignore next */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  return _temp9;
+}
+TemporalNow_plainTimeISO.section = 'https://tc39.es/proposal-temporal/#sec-temporal.now.plaintimeiso';
+function bootstrapTemporalNow(realmRec) {
+  const Now = bootstrapPrototype(realmRec, [['timeZoneId', TemporalNow_timeZoneId, 0], ['instant', TemporalNow_instant, 0], ['plainDateTimeISO', TemporalNow_plainDateTimeISO, 0], ['zonedDateTimeISO', TemporalNow_zonedDateTimeISO, 0], ['plainDateISO', TemporalNow_plainDateISO, 0], ['plainTimeISO', TemporalNow_plainTimeISO, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.Now');
+  return Now;
+}
+
+// Using spec: 87c74ec2ae7d55cf10c58674478784d09f323ff1
+
+function bootstrapTemporal(realmRec) {
+  const TemporalObject = bootstrapPrototype(realmRec, [['Duration', bootstrapTemporalDuration(realmRec)], ['Instant', bootstrapTemporalInstant(realmRec)], ['PlainDateTime', bootstrapTemporalPlainDateTime(realmRec)], ['Now', bootstrapTemporalNow(realmRec)], ['PlainDate', bootstrapTemporalPlainDate(realmRec)], ['PlainTime', bootstrapTemporalPlainTime(realmRec)], ['PlainYearMonth', bootstrapTemporalPlainYearMonth(realmRec)], ['PlainMonthDay', bootstrapTemporalPlainMonthDay(realmRec)], ['ZonedDateTime', bootstrapTemporalZonedDateTime(realmRec)]], realmRec.Intrinsics['%Object.prototype%'], 'Temporal');
+  realmRec.Intrinsics['%Temporal%'] = TemporalObject;
+  return TemporalObject;
+}
+
 /** https://tc39.es/ecma262/#sec-code-realms */
 class Realm {
   LoadedModules = [];
@@ -55433,6 +65844,9 @@ function CreateIntrinsics(realmRec) {
   bootstrapFinalizationRegistry(realmRec);
   bootstrapShadowRealmPrototype(realmRec);
   bootstrapShadowRealm(realmRec);
+  if (surroundingAgent.feature('temporal')) {
+    bootstrapTemporal(realmRec);
+  }
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
   return intrinsics;
 }
@@ -55473,18 +65887,22 @@ function SetDefaultGlobalBindings(realmRec) {
   // Constructor Properties of the Global Object
   'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Iterator', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', 'ShadowRealm',
   // 'SharedArrayBuffer',
-  'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet',
+  'String', 'Symbol', 'SyntaxError', 'Temporal', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet',
   // Other Properties of the Global Object
   // 'Atomics',
   'JSON', 'Math', 'Reflect']) {
+    const value = realmRec.Intrinsics[`%${name}%`];
+    if (!value) {
+      continue;
+    }
     /* X */let _temp3 = DefinePropertyOrThrow(global, Value(name), _Descriptor({
-      Value: realmRec.Intrinsics[`%${name}%`],
+      Value: value,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-    /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: realmRec.Intrinsics[`%${name}%`],\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+    /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: value,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
       cause: _temp3
     }); /* node:coverage ignore next */
     if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
@@ -56683,5 +67101,5 @@ function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
   return result;
 }
 
-export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddRestrictedFunctionProperties, AddToKeptObjects, Agent, AgentCanSuspend, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyDecoratorsAndDefineMethod, ApplyDecoratorsToClassDefinition, ApplyDecoratorsToElementDefinition, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, InternalMethods$5 as ArrayExoticObjectInternalMethods, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorRequestRecord, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallFrame, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeKeyedCollectionKey, CharacterValue, ClassDefinitionEvaluation, ClassElementDefinitionRecord, ClassFieldDefinitionEvaluation, ClassFieldDefinitionEvaluation_decorator, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompilePattern, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CopyNameAndLength, CountLeftCapturingParensWithin, CreateAddInitializerFunction, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDecoratorAccessObject, CreateDecoratorContextObject, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateFieldInitializerFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateTypeErrorCopy, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DecoratorEvaluation, DecoratorListEvaluation, DefineField, DefineMethod, DefineMethodProperty, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, DynamicParsedCodeRecord, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExecutionContextStack, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GatherAsynchronousTransitiveDependencies, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetShadowRealmContext, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GetWrappedValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeFieldOrAccessor, InitializeInstanceElements, InitializePrivateMethods, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorCloseAll, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeAutoAccessorGetter, MakeAutoAccessorSetter, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeRealm, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsEqual, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, OrdinaryWrappedFunctionCall, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PerformShadowRealmEval, PrepareForOrdinaryCall, PrepareForTailCall, PrepareForWrappedFunctionCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, ShadowRealmImportValue, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateShadowRealmObject, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, WrappedFunctionCreate, X, YearFromTime, Yield, Z, boostTest262Harness, captureStack, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getActiveScriptId, getBreakpointCandidates, getCurrentStack, getHostDefinedErrorStack, hasSourceTextInternalSlot, inspect, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, IsError as isErrorObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isOrdinaryObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isShadowRealmObject, isStrictModeCode, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, isWrappedFunctionExoticObject, kInternal, markBuiltinFunctionAsConstructor, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, Add24HourDaysToTimeDuration, AddDaysToISODate, AddDurationToDate, AddDurationToDateTime, AddDurationToInstant, AddDurationToTime, AddDurationToYearMonth, AddDurationToZonedDateTime, AddDurations, AddInstant, AddRestrictedFunctionProperties, AddTime, AddTimeDuration, AddTimeDurationToEpochNanoseconds, AddToKeptObjects, AddZonedDateTime, AdjustDateDurationRecord, Agent, AgentCanSuspend, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyDecoratorsAndDefineMethod, ApplyDecoratorsToClassDefinition, ApplyDecoratorsToElementDefinition, ApplyStringOrNumericBinaryOperator, ApplyUnsignedRoundingMode, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, InternalMethods$5 as ArrayExoticObjectInternalMethods, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorRequestRecord, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, AvailableCalendars, Await, BalanceISODateTime, BalanceISOYearMonth, BalanceTime, BigIntValue, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, BubbleRelativeDuration, CalendarDateAdd, CalendarDateFromFields, CalendarDateToISO, CalendarDateUntil, CalendarEquals, CalendarExtraFields, CalendarFieldKeysPresent, CalendarFieldKeysToIgnore, CalendarISOToDate, CalendarMergeFields, CalendarMonthDayFromFields, CalendarMonthDayToISOReferenceDate, CalendarResolveFields, CalendarYearMonthFromFields, Call, CallFrame, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeCalendar, CanonicalizeKeyedCollectionKey, CharacterValue, CheckISODaysRange, ClassDefinitionEvaluation, ClassElementDefinitionRecord, ClassFieldDefinitionEvaluation, ClassFieldDefinitionEvaluation_decorator, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CombineDateAndTimeDuration, CombineISODateAndTimeRecord, CompareArrayElements, CompareEpochNanoseconds, CompareISODate, CompareISODateTime, CompareSurpasses, CompareTimeDuration, CompareTimeRecord, CompilePattern, CompletePropertyDescriptor, Completion, ComputeNudgeWindow, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CopyNameAndLength, CountLeftCapturingParensWithin, CreateAddInitializerFunction, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDateDurationRecord, CreateDecoratorAccessObject, CreateDecoratorContextObject, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateFieldInitializerFunction, CreateISODateRecord, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateMonthCode, CreateNegatedTemporalDuration, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateTemporalDate, CreateTemporalDateTime, CreateTemporalDuration, CreateTemporalInstant, CreateTemporalMonthDay, CreateTemporalTime, CreateTemporalYearMonth, CreateTemporalZonedDateTime, CreateTimeRecord, CreateTypeErrorCopy, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateDurationDays, DateDurationSign, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DecoratorEvaluation, DecoratorListEvaluation, DefaultTemporalLargestUnit, DefineField, DefineMethod, DefineMethodProperty, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, DifferenceISODateTime, DifferenceInstant, DifferencePlainDateTimeWithRounding, DifferencePlainDateTimeWithTotal, DifferenceTemporalInstant, DifferenceTemporalPlainDate, DifferenceTemporalPlainDateTime, DifferenceTemporalPlainTime, DifferenceTemporalPlainYearMonth, DifferenceTemporalZonedDateTime, DifferenceTime, DifferenceZonedDateTime, DifferenceZonedDateTimeWithRounding, DifferenceZonedDateTimeWithTotal, DisambiguatePossibleEpochNanoseconds, DurationSign, DynamicParsedCodeRecord, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EpochDayNumberForYear, EpochDaysToEpochMs, EpochTimeForYear, EpochTimeToDate, EpochTimeToDayInYear, EpochTimeToDayNumber, EpochTimeToEpochYear, EpochTimeToMonthInYear, EpochTimeToWeekDay, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExecutionContextStack, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FormatCalendarAnnotation, FormatDateTimeUTCOffsetRounded, FormatFractionalSeconds, FormatOffsetTimeZoneIdentifier, FormatTimeString, FormatUTCOffsetNanoseconds, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GatherAsynchronousTransitiveDependencies, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAvailableNamedTimeZoneIdentifier, GetDifferenceSettings, GetDirectionOption, GetEpochNanosecondsFor, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetISODateTimeFor, GetISOPartsFromEpoch, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNamedTimeZoneNextTransition, GetNamedTimeZonePreviousTransition, GetNewTarget, GetOffsetNanosecondsFor, GetPossibleEpochNanoseconds, GetPrototypeFromConstructor, GetShadowRealmContext, GetStartOfDay, GetStringIndex, GetSubstitution, GetTemporalCalendarIdentifierWithISODefault, GetTemporalDisambiguationOption, GetTemporalFractionalSecondDigitsOption, GetTemporalOffsetOption, GetTemporalOverflowOption, GetTemporalRelativeToOption, GetTemporalShowCalendarNameOption, GetTemporalShowOffsetOption, GetTemporalShowTimeZoneNameOption, GetTemporalUnitValuedOption, GetThisEnvironment, GetThisValue, GetUnsignedRoundingMode, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GetWrappedValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HostSystemUTCEpochNanoseconds, HourFromTime, HoursPerDay, ISODateSurpasses, ISODateTimeToString, ISODateTimeWithinLimits, ISODateToEpochDays, ISODateToFields, ISODateWithinLimits, ISODayOfWeek, ISODayOfYear, ISODaysInMonth, ISOWeekOfYear, ISOYearMonthWithinLimits, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeFieldOrAccessor, InitializeInstanceElements, InitializePrivateMethods, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, InternalDurationSign, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCalendarUnit, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPartialTemporalObject, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidDuration, IsValidEpochNanoseconds, IsValidISODate, IsValidIntegerIndex, IsValidTime, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorCloseAll, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LargerOfTwoTemporalUnits, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeAutoAccessorGetter, MakeAutoAccessorSetter, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeRealm, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MathematicalDaysInYear, MathematicalInLeapYear, MaximumTemporalDurationRoundingIncrement, MethodDefinitionEvaluation, MidnightTimeRecord, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsEqual, MonthFromTime, NamedEvaluation, NegateRoundingMode, NewPromiseCapability, NonConstructorElements, NonISOCalendarDateToISO, NonISOCalendarISOToDate, NonISODateAdd, NonISODateUntil, NonISOFieldKeysToIgnore, NonISOMonthDayToISOReferenceDate, NonISOResolveFields, NoonTimeRecord, NormalCompletion, NudgeToCalendarUnit, NudgeToDayOrTime, NudgeToZonedTime, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, OrdinaryWrappedFunctionCall, PadISOYear, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PerformShadowRealmEval, PrepareCalendarFields, PrepareForOrdinaryCall, PrepareForTailCall, PrepareForWrappedFunctionCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RegulateISODate, RegulateTime, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, RoundISODateTime, RoundNumberToIncrement, RoundNumberToIncrementAsIfPositive, RoundRelativeDuration, RoundTemporalInstant, RoundTime, RoundTimeDuration, RoundTimeDurationToIncrement, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, ShadowRealmImportValue, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, SystemDateTime, SystemUTCEpochMilliseconds, SystemUTCEpochNanoseconds, TV, Table19_CalendarFieldsRecordFields, Table19_Conversion, Table21_CategoryByValue, Table21_LengthInNanoSeconds, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TemporalDateToString, TemporalDurationFromInternal, TemporalDurationToString, TemporalInstantToString, TemporalMonthDayToString, TemporalUnit, TemporalUnitCategory, TemporalYearMonthToString, TemporalZonedDateTimeToString, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeDurationFromComponents, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, TimeFromYear, TimeRecordToString, TimeValueToISODateTimeRecord, TimeWithinDay, TimeZoneEquals, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToDateDurationRecordWithoutTime, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToIntegerWithTruncation, ToInternalDurationRecord, ToInternalDurationRecordWith24HourDays, ToLength, ToMonthCode, ToNumber, ToNumeric, ToObject, ToOffsetString, ToPositiveIntegerWithTruncation, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToSecondsStringPrecisionRecord, ToString, ToTemporalCalendarIdentifier, ToTemporalDate, ToTemporalDateTime, ToTemporalDuration, ToTemporalInstant, ToTemporalMonthDay, ToTemporalPartialDurationRecord, ToTemporalTime, ToTemporalTimeRecord, ToTemporalTimeZoneIdentifier, ToTemporalYearMonth, ToTemporalZonedDateTime, ToTimeRecordOrMidnight, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TotalRelativeDuration, TotalTimeDuration, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateShadowRealmObject, ValidateTemporalRoundingIncrement, ValidateTemporalUnitValue, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, WrappedFunctionCreate, X, YearFromTime, Yield, Z, ZeroDateDuration, __IsDateUnit, __IsTimeUnit, boostTest262Harness, captureStack, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getActiveScriptId, getBreakpointCandidates, getCurrentStack, getHostDefinedErrorStack, hasSourceTextInternalSlot, inspect, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, IsError as isErrorObject, isFinalizationRegistryObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isOrdinaryObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isShadowRealmObject, isStrictModeCode, isTemporalDurationObject, isTemporalInstantObject, isTemporalPlainDateObject, isTemporalPlainDateTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainTimeObject, isTemporalPlainYearMonthObject, isTemporalZonedDateTimeObject, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, isWrappedFunctionExoticObject, kInternal, markBuiltinFunctionAsConstructor, maxTimeDuration, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, nsMaxInstant, nsMinInstant, nsPerDay, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
