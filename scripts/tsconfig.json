@@ -3,6 +3,7 @@
   "include": ["."],
   "compilerOptions": {
     "noEmit": true,
-    "erasableSyntaxOnly": true
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
   }
 }

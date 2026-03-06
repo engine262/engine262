@@ -1,6 +1,7 @@
 import {
   opendir, readFile, stat, writeFile,
 } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import * as path from 'path';
 
 const nodeModules = path.resolve(path.resolve(import.meta.dirname, '..'), 'node_modules');
@@ -71,7 +72,7 @@ async function writeUnicodeStringsMapping() {
   ]) {
     const file = path.resolve(unicodeDir, 'Sequence_Property', cat, 'index.js');
     // eslint-disable-next-line no-await-in-loop
-    const { default: strings } = await import(file);
+    const { default: strings } = await import(pathToFileURL(file).href);
     data[cat] = strings.join(',');
   }
   await writeFile(path.resolve(path.resolve(import.meta.dirname, '..'), 'src', 'unicode/SequenceProperties.json'), JSON.stringify(data));
