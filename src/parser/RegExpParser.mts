@@ -294,6 +294,14 @@ export class RegExpParser {
       this.position += 2;
       return { type: 'Assertion', production: 'B' };
     }
+    if (this.inUnicodeMode && peek2 === '\\A') {
+      this.position += 2;
+      return { type: 'Assertion', production: 'A' };
+    }
+    if (this.inUnicodeMode && peek2 === '\\z') {
+      this.position += 2;
+      return { type: 'Assertion', production: 'z' };
+    }
 
     const peek3 = this.peek(3);
     if (peek3 === '(?=') {
