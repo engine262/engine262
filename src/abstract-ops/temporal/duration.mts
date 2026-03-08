@@ -3,7 +3,7 @@ import { type TemporalDurationObject, isTemporalDurationObject } from '../../int
 import { type TemporalPlainDateObject } from '../../intrinsics/Temporal/PlainDate.mts';
 import { type ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ParseTemporalDurationString } from '../../parser/TemporalParser.mts';
-import { abs } from '../math.mts';
+import { abs, remainder } from '../math.mts';
 import {
   type TimeZoneIdentifier, GetUTCEpochNanoseconds, RoundingMode, ToIntegerIfIntegral,
 } from './addition.mts';
@@ -161,8 +161,8 @@ export function AdjustDateDurationRecord(
   weeks?: number,
   months?: number,
 ): PlainCompletion<DateDurationRecord> {
-  weeks ||= dateDuration.Weeks;
-  months ||= dateDuration.Months;
+  weeks ??= dateDuration.Weeks;
+  months ??= dateDuration.Months;
   return CreateDateDurationRecord(dateDuration.Years, months, weeks, days);
 }
 
@@ -188,7 +188,7 @@ export function* ToTemporalDuration(item: Value): ValueEvaluator<TemporalDuratio
     if (!(item instanceof JSStringValue)) {
       return surroundingAgent.Throw('TypeError', 'CannotConvertToTemporalDuration', item);
     }
-    return ParseTemporalDurationString(item.stringValue());
+    return yield* ParseTemporalDurationString(item.stringValue());
   }
   const result: Mutable<PartialDurationRecord> = {
     Years: 0,
@@ -384,9 +384,9 @@ export function IsValidDuration(
   if (abs(normalizedSeconds) >= 2 ** 53) {
     return false;
   }
-  normalizedSeconds *= BigInt(10e9); // Convert to nanoseconds
+  normalizedSeconds *= BigInt(1e9); // Convert to nanoseconds
   normalizedSeconds += BigInt(milliseconds) * 1000000n + BigInt(microseconds) * 1000n + BigInt(nanoseconds);
-  if (abs(normalizedSeconds) >= BigInt(2 ** 53) * BigInt(10e9)) {
+  if (abs(normalizedSeconds) >= BigInt(2 ** 53) * BigInt(1e9)) {
     return false;
   }
   return true;
@@ -613,9 +613,9 @@ export function CompareTimeDuration(one: TimeDuration, two: TimeDuration): -1 | 
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timedurationfromepochnanosecondsdifference */
 export function TimeDurationFromEpochNanosecondsDifference(one: bigint, two: bigint): TimeDuration {
-  const result = Number(one) - Number(two);
+  const result = one - two;
   Assert(abs(result) <= maxTimeDuration);
-  return result as TimeDuration;
+  return Number(result) as TimeDuration;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-roundtimedurationtoincrement */
@@ -1088,8 +1088,8 @@ export function TemporalDurationToString(
   }
   const secondsDuration = TimeDurationFromComponents(0, 0, duration.Seconds, duration.Milliseconds, duration.Microseconds, duration.Nanoseconds);
   if (secondsDuration !== 0 || zeroMinutesAndHigher || precision !== 'auto') {
-    const secondsPart = Math.abs(Math.trunc(secondsDuration / 10e9)).toString();
-    const subSecondsPart = FormatFractionalSeconds(Math.abs(secondsDuration % 10e9), precision);
+    const secondsPart = Math.abs(Math.trunc(secondsDuration / 1e9)).toString();
+    const subSecondsPart = FormatFractionalSeconds(Math.abs(remainder(secondsDuration, 1e9)), precision);
     timePart += `${secondsPart + subSecondsPart}S`;
   }
   const signPart = sign < 0 ? '-' : '';

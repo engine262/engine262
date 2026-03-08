@@ -2,13 +2,13 @@
 // Code here should move elsewhere after Temporal is merged.
 
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
-import { ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
+import { DateParser, ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
 import { HourFromTime, MinFromTime, SecFromTime } from '../date-objects.mts';
 import { R as MathematicalValue } from '../spec-types.mjs';
 import { __ts_cast__ } from '../../helpers.mts';
 import { FormatTimeString, ToIntegerWithTruncation } from './temporal.mts';
 import { FormatOffsetTimeZoneIdentifier, type TimeZoneIdentifierRecord } from './time-zone.mts';
-import { mark_TimeZoneAwareNotImplemented, temporal_todo } from './not-implemented.mts';
+import { mark_TimeZoneAwareNotImplemented } from './not-implemented.mts';
 import {
   Assert,
   Get,
@@ -154,7 +154,7 @@ export function GetUTCEpochNanoseconds(
   const time = MakeTime(Value(isoDateTime.Time.Hour), Value(isoDateTime.Time.Minute), Value(isoDateTime.Time.Second), Value(isoDateTime.Time.Millisecond));
   const ms = R(MakeDate(date, time));
   Assert(Math.floor(ms) === ms);
-  return BigInt(ms) * BigInt(10e6) + BigInt(isoDateTime.Time.Microsecond) * BigInt(10e3) + BigInt(isoDateTime.Time.Nanosecond);
+  return BigInt(ms) * BigInt(1e6) + BigInt(isoDateTime.Time.Microsecond) * BigInt(1e3) + BigInt(isoDateTime.Time.Nanosecond);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
@@ -255,8 +255,10 @@ export function TimeZoneString_TemporalEdited(tv: number): string {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-isoffsettimezoneidentifier */
-export function IsOffsetTimeZoneIdentifier(_offsetString: string): boolean {
-  temporal_todo();
+export function IsOffsetTimeZoneIdentifier(offsetString: string): boolean {
+  const parseResult = DateParser.parse(offsetString, (parser) => parser.parseUTCOffset());
+  if (Array.isArray(parseResult)) return false;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-tozeropaddeddecimalstring */

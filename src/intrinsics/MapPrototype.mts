@@ -119,7 +119,7 @@ function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: Functio
   return Value.undefined;
 }
 
-/**  https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsert */
+/** https://tc39.es/ecma262/#sec-map.prototype.getorinsert */
 function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
@@ -143,7 +143,7 @@ function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: 
   return value;
 }
 
-/**  https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsertComputed */
+/** https://tc39.es/ecma262/#sec-map.prototype.getorinsertcomputed */
 function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;

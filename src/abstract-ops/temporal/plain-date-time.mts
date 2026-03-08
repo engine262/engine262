@@ -34,10 +34,10 @@ export function ISODateTimeWithinLimits(isoDateTime: ISODateTimeRecord): boolean
     return false;
   }
   const ns = GetUTCEpochNanoseconds(isoDateTime);
-  if (ns <= nsMinInstant - nsPerDay) {
+  if (ns <= nsMinInstant - BigInt(nsPerDay)) {
     return false;
   }
-  if (ns >= nsMaxInstant + nsPerDay) {
+  if (ns >= nsMaxInstant + BigInt(nsPerDay)) {
     return false;
   }
   return true;
@@ -117,7 +117,7 @@ export function* CreateTemporalDateTime(isoDateTime: ISODateTimeRecord, calendar
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodatetimetostring */
-export function ISODateTimeToString(isoDateTime: ISODateTimeRecord, calendar: CalendarType, precision: number | 'minute' | 'auto', showCalendar: 'auto' | 'always' | 'never' | 'critical'): string {
+export function ISODateTimeToString(isoDateTime: ISODateTimeRecord, calendar: CalendarType, precision: number | TemporalUnit.Minute | 'auto', showCalendar: 'auto' | 'always' | 'never' | 'critical'): string {
   const yearString = PadISOYear(isoDateTime.ISODate.Year);
   const monthString = ToZeroPaddedDecimalString(isoDateTime.ISODate.Month, 2);
   const dayString = ToZeroPaddedDecimalString(isoDateTime.ISODate.Day, 2);

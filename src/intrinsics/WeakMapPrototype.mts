@@ -68,7 +68,7 @@ function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: Fun
   return Value.undefined;
 }
 
-/** https://tc39.es/proposal-upsert/#sec-weakmap.prototype.getOrInsert */
+/** https://tc39.es/ecma262/#sec-weakmap.prototype.getorinsert */
 function WeakMapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let m be the this value.
   const M = thisValue as WeakMapObject;
@@ -94,7 +94,7 @@ function WeakMapProto_getOrInsert([key = Value.undefined, value = Value.undefine
   return value;
 }
 
-/**  https://tc39.es/proposal-upsert/#sec-weakmap.prototype.getOrInsertComputed */
+/** https://tc39.es/ecma262/#sec-weakmap.prototype.getorinsertcomputed */
 function* WeakMapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let m be the this value.
   const M = thisValue as WeakMapObject;

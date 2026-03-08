@@ -224,10 +224,9 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
     smallestUnitPresent = false;
     smallestUnit = TemporalUnit.Nanosecond;
   }
+  __ts_cast__<TemporalUnit>(smallestUnit);
 
   const existingLargestUnit = DefaultTemporalLargestUnit(duration);
-  // TODO(temporal): this assert does not in the spec.
-  Assert(smallestUnit !== 'auto');
   const defaultLargestUnit = LargerOfTwoTemporalUnits(existingLargestUnit, smallestUnit);
   let largestUnit;
   if (largestUnitOption === 'unset') {
@@ -316,7 +315,7 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
   const plainRelativeTo = relativeToRecord.PlainRelativeTo;
   const unit = Q(yield* GetTemporalUnitValuedOption(totalOf, 'unit', 'required'));
   Q(ValidateTemporalUnitValue(unit, 'datetime'));
-  Assert(unit !== 'auto' && unit !== 'unset'); // TODO(temporal): missing assert in spec?
+  __ts_cast__<TemporalUnit>(unit);
 
   let total;
   if (zonedRelativeTo !== undefined) {
@@ -372,7 +371,7 @@ function* DurationProto_toString([options = Value.undefined]: Arguments, { thisV
   internalDuration = CombineDateAndTimeDuration(internalDuration.Date, timeDuration);
   const roundedLargestUnit = LargerOfTwoTemporalUnits(largestUnit, TemporalUnit.Second);
   const roundedDuration = Q(yield* TemporalDurationFromInternal(internalDuration, roundedLargestUnit));
-  return Value(TemporalDurationToString(roundedDuration, precision.Precision));
+  return Value(TemporalDurationToString(roundedDuration, precision.Precision as number | 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson */

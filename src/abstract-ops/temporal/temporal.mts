@@ -1,10 +1,11 @@
-import { ParseDateTimeUTCOffset, ParseISODateTime } from '../../parser/TemporalParser.mts';
+import { DateParser, ParseDateTimeUTCOffset, ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { R } from '../spec-types.mjs';
 import { type ISODateRecord, type TemporalPlainDateObject, isTemporalPlainDateObject } from '../../intrinsics/Temporal/PlainDate.mts';
 import { isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { type TemporalZonedDateTimeObject, isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
+import { modulo } from '../math.mts';
 import {
-  GetOption, GetRoundingIncrementOption, GetRoundingModeOption, ToZeroPaddedDecimalString, UnsignedRoundingMode, type TimeZoneIdentifier,
+  GetOption, GetRoundingIncrementOption, GetRoundingModeOption, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString, UnsignedRoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
 import { RoundingMode } from './addition.mts';
 import {
@@ -14,51 +15,49 @@ import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
 import {
   ToPrimitive, ToNumber, Throw, CreateISODateRecord, CreateTemporalDate, CreateTemporalZonedDateTime, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, nsPerDay, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour,
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, surroundingAgent, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
+  msPerDay,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
-// TODO(temporal): Review
 export function ISODateToEpochDays(year: number, month: number, date: number): number {
   const resolvedYear = year + Math.floor(month / 12);
-  const resolvedMonth = ((month % 12) + 12) % 12;
+  const resolvedMonth = modulo(month, 12);
   // Find a time t such that EpochTimeToEpochYear(t) = resolvedYear, EpochTimeToMonthInYear(t) = resolvedMonth, and EpochTimeToDate(t) = 1.
-  const y = resolvedYear;
-  const m = resolvedMonth;
-  let t = EpochDayNumberForYear(y);
-  const isLeap = MathematicalDaysInYear(y) === 366;
-  const monthDays = [
-    31,
-    isLeap ? 29 : 28,
-    31, 30, 31, 30,
-    31, 31, 30, 31, 30, 31,
-  ];
-  for (let i = 0; i < m; i += 1) {
-    t += monthDays[i];
-  }
-  Assert(EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1);
 
+  // t = GetUTCEpochNanoseconds(resolvedYear, resolvedMonth + 1, date) / 1e6 - (date - 1) * msPerDay
+  const t = Number(
+    GetUTCEpochNanoseconds({
+      ISODate: { Year: resolvedYear, Month: resolvedMonth + 1, Day: date },
+      Time: {
+        Days: 0, Hour: 0, Microsecond: 0, Millisecond: 0, Minute: 0, Nanosecond: 0, Second: 0,
+      },
+    }) / BigInt(1e6)
+    - (BigInt(date) - 1n) * BigInt(msPerDay),
+  );
+
+  Assert(EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1);
   return EpochTimeToDayNumber(t) + date - 1;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-epochdaystoepochms */
 export function EpochDaysToEpochMs(day: number, time: number): number {
-  return day * 86400000 + time;
+  return day * msPerDay + time;
 }
 
 /** https://tc39.es/proposal-temporal/#eqn-EpochTimeToDayNumber */
 export function EpochTimeToDayNumber(t: number): number {
-  return Math.floor(t / 86400000);
+  return Math.floor(t / msPerDay);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-mathematicaldaysinyear */
 export function MathematicalDaysInYear(y: number): number {
-  if (y % 4 !== 0) {
+  if (modulo(y, 4) !== 0) {
     return 365;
   }
-  if (y % 100 !== 0) {
+  if (modulo(y, 100) !== 0) {
     return 366;
   }
-  if (y % 400 !== 0) {
+  if (modulo(y, 400) !== 0) {
     return 365;
   }
   return 366;
@@ -74,12 +73,12 @@ export function EpochDayNumberForYear(y: number): number {
 
 /** https://tc39.es/proposal-temporal/#sec-epochtimeforyear */
 export function EpochTimeForYear(y: number): number {
-  return 86400000 * EpochDayNumberForYear(y);
+  return msPerDay * EpochDayNumberForYear(y);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-epochtimetoepochyear */
 // TODO(temporal): Review
-export function EpochTimeToEpochYear(t: number): number {
+export function EpochTimeToEpochYear(t: bigint | number): number {
   // EpochTimeToEpochYear(t) = the largest integral Number y (closest to +∞) such that EpochTimeForYear(y) ≤ t
   let lower = -271821;
   let upper = 275760;
@@ -95,7 +94,7 @@ export function EpochTimeToEpochYear(t: number): number {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-mathematicalinleapyear */
-export function MathematicalInLeapYear(t: number): number {
+export function MathematicalInLeapYear(t: bigint | number): number {
   return MathematicalDaysInYear(EpochTimeToEpochYear(t)) === 366 ? 1 : 0;
 }
 
@@ -143,7 +142,7 @@ export function EpochTimeToDate(t: number): number {
 
 /** https://tc39.es/proposal-temporal/#sec-epochtimetoweekday */
 export function EpochTimeToWeekDay(t: number): number {
-  return (EpochTimeToDayNumber(t) + 4) % 7;
+  return modulo(EpochTimeToDayNumber(t) + 4, 7);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-checkisodaysrange */
@@ -157,8 +156,8 @@ export function CheckISODaysRange(isoDate: ISODateRecord): PlainCompletion<void>
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-units */
 export enum TemporalUnit {
-  Year, Month, Week, Day,
-  Hour, Minute, Second, Millisecond, Microsecond, Nanosecond
+  Year = 'Year', Month = 'Month', Week = 'Week', Day = 'Day',
+  Hour = 'Hour', Minute = 'Minute', Second = 'Second', Millisecond = 'Millisecond', Microsecond = 'Microsecond', Nanosecond = 'Nanosecond'
 }
 
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
@@ -325,14 +324,10 @@ export function* GetTemporalFractionalSecondDigitsOption(options: ObjectValue): 
 }
 
 /** https://tc39.es/proposal-temporal/#sec-tosecondsstringprecisionrecord */
-export function ToSecondsStringPrecisionRecord(
-  smallestUnit: Exclude<TimeUnit, TemporalUnit.Hour> | 'unset',
-  fractionalDigitCount: 'auto' | number,
-): {
-  Precision: TemporalUnit.Minute | 'auto' | number,
-  Unit: TemporalUnit.Minute | TemporalUnit.Second | TemporalUnit.Millisecond | TemporalUnit.Microsecond | TemporalUnit.Nanosecond,
-  Increment: 1 | 10 | 100
-} {
+export function ToSecondsStringPrecisionRecord(smallestUnit: Exclude<TimeUnit, TemporalUnit.Hour> | 'unset', fractionalDigitCount: 'auto' | number):
+  | { Precision: TemporalUnit.Minute, Unit: TemporalUnit.Minute, Increment: 1 }
+  | { Precision: number, Unit: TemporalUnit.Minute | TemporalUnit.Second | TemporalUnit.Millisecond | TemporalUnit.Microsecond | TemporalUnit.Nanosecond, Increment: number }
+  | { Precision: 'auto' | number, Unit: TemporalUnit.Nanosecond, Increment: 1 | 10 | 100 } {
   if (smallestUnit === TemporalUnit.Minute) {
     return { Precision: TemporalUnit.Minute, Unit: TemporalUnit.Minute, Increment: 1 };
   }
@@ -443,7 +438,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   }
   let offsetBehaviour: ISODateTimeOffsetBehaviour = 'option';
   let matchBehaviour: ISODateTimeMatchBehaviour = 'match-exactly';
-  let timeZone: TimeZoneIdentifier | 'unset';
+  let timeZone: TimeZoneIdentifier | undefined;
   let isoDate;
   let time;
   let calendar: CalendarType | undefined;
@@ -477,7 +472,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
     offsetString = result.TimeZone.OffsetString;
     const annotation = result.TimeZone.TimeZoneAnnotation;
     if (!annotation) {
-      timeZone = 'unset';
+      timeZone = undefined;
     } else {
       timeZone = Q(ToTemporalTimeZoneIdentifier(annotation));
       if (result.TimeZone.Z === true) {
@@ -486,6 +481,15 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
         offsetBehaviour = 'wall';
       }
       matchBehaviour = 'match-minutes';
+      if (offsetString) {
+        const offsetParseResult = DateParser.parse(offsetString, (parser) => parser.with({ SubMinutePrecision: true }, () => parser.parseUTCOffset()));
+        if (Array.isArray(offsetParseResult)) {
+          Assert(false, 'offsetParseResult is a Parse Node');
+        }
+        if (offsetParseResult.Minute || offsetParseResult.Second) {
+          matchBehaviour = 'match-exactly';
+        }
+      }
     }
     let _calendar = result.Calendar;
     if (!_calendar) {
@@ -495,7 +499,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
     isoDate = CreateISODateRecord(result.Year!, result.Month, result.Day);
     time = result.Time;
   }
-  if (timeZone === 'unset') {
+  if (timeZone === undefined) {
     const plainDate = Q(yield* CreateTemporalDate(isoDate, calendar));
     return { PlainRelativeTo: plainDate, ZonedRelativeTo: undefined };
   }
@@ -613,13 +617,13 @@ export function FormatTimeString(
   minute: number,
   second: number,
   subSecondNanoseconds: number,
-  precision: number | 'minute' | 'auto',
+  precision: number | TemporalUnit.Minute | 'auto',
   style?: 'separated' | 'unseparated',
 ): string {
   const separator = style === 'unseparated' ? '' : ':';
   const hh = ToZeroPaddedDecimalString(hour, 2);
   const mm = ToZeroPaddedDecimalString(minute, 2);
-  if (precision === 'minute') {
+  if (precision === TemporalUnit.Minute) {
     return hh + separator + mm;
   }
   const ss = ToZeroPaddedDecimalString(second, 2);

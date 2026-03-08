@@ -178,7 +178,7 @@ export function* CreateTemporalZonedDateTime(
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring */
 export function TemporalZonedDateTimeToString(
   zonedDateTime: TemporalZonedDateTimeObject,
-  precision: number | 'minute' | 'auto',
+  precision: number | TemporalUnit.Minute | 'auto',
   showCalendar: 'auto' | 'always' | 'never' | 'critical',
   showTimeZone: 'auto' | 'never' | 'critical',
   showOffset: 'auto' | 'never',
@@ -242,7 +242,7 @@ export function DifferenceZonedDateTime(
     const timeDuration = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
     return CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
   }
-  const sign = ns2 - ns1 > 0 ? 1 : -1;
+  const sign = ns2 - ns1 < 0 ? 1 : -1;
   const maxDayCorrection = sign === -1 ? 2 : 1;
   let dayCorrection = 0;
   let timeDuration = DifferenceTime(startDateTime.Time, endDateTime.Time);

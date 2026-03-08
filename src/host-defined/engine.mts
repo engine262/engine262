@@ -98,6 +98,7 @@ export class ExecutionContextStack extends Array<ExecutionContext> {
 export interface HostHooks {
   HostInitializeShadowRealm?(realmRec: Realm, innerContext: ExecutionContext, O: ShadowRealmObject): PlainEvaluator | PlainCompletion<void>;
   HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator | PlainCompletion<void>;
+  HostSystemUTCEpochNanoseconds?(global: ObjectValue): bigint;
 }
 export interface AgentHostDefined {
   hostHooks?: HostHooks;

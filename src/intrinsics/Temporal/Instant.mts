@@ -53,7 +53,7 @@ function* Instant_from([item = Value.undefined]: Arguments): ValueEvaluator {
 function* Instant_fromEpochMilliseconds([___epochMilliseconds = Value.undefined]: Arguments): ValueEvaluator {
   const __epochMilliseconds = Q(yield* ToNumber(___epochMilliseconds));
   const _epochMilliseconds = R(Q(NumberToBigInt(__epochMilliseconds)));
-  const epochMilliseconds = _epochMilliseconds * BigInt(10e6);
+  const epochMilliseconds = _epochMilliseconds * BigInt(1e6);
   if (!IsValidEpochNanoseconds(epochMilliseconds)) {
     return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochMilliseconds);
   }

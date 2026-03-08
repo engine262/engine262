@@ -10,7 +10,7 @@ import { BarChart } from '@pppp606/ink-chart';
 import { link, type Test } from './base.mts';
 
 const { createElement: h } = React;
-export const isCI = process.env.CI || process.env.CONTINUOUS_INTEGRATION;
+export const isCI = process.env.CI || process.env.CONTINUOUS_INTEGRATION || !process.stdout.isTTY;
 export const supportColor = !isCI && styleText('red', 'test') !== 'test';
 
 function Fragment(...children: (React.JSX.Element | null)[]) {
@@ -205,7 +205,7 @@ export abstract class TestReporter extends EventTarget {
 
   protected stats: { total: number; pending: number; passed: number; failed: number; skipped: number; ready: boolean } = this.getStats();
 
-  protected statsStale = false;
+  protected statsStale = true;
 
   getStats() {
     if (!this.statsStale) {
@@ -378,7 +378,7 @@ class TerminalUIReporter extends TestReporter {
   }
 
   start() {
-    render(h(TerminalUI, { runner: this }), { incrementalRendering: true, exitOnCtrlC: false }).waitUntilExit().then(this.onExit.resolve);
+    render(h(TerminalUI, { runner: this }), { incrementalRendering: true, exitOnCtrlC: false, maxFps: process.env.SSH_CONNECTION ? 5 : undefined }).waitUntilExit().then(this.onExit.resolve);
     this.startSlowTimer();
   }
 

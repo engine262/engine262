@@ -36,6 +36,7 @@ import {
   Z,
   F, R,
 } from './all.mts';
+import { modulo } from './math.mts';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
 export function* ToPrimitive(input: Value, preferredType?: 'string' | 'number'): ValueEvaluator<PrimitiveValue> {
@@ -187,6 +188,12 @@ export function* ToNumber(argument: Value): ValueEvaluator<NumberValue> {
     return Q(yield* ToNumber(primValue));
   }
   throw new OutOfRange('ToNumber', { argument });
+}
+
+/** https://tc39.es/ecma262/#sec-stringtonumber */
+export function StringToNumber(str: string) {
+  // Note: this function should parse strings like 1_000 or 0x111, but we currently not using them.
+  return parseFloat(str);
 }
 
 const mod = (n: number, m: number) => {
@@ -409,7 +416,7 @@ export function* ToBigInt64(argument: Value): ValueEvaluator<BigIntValue> {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(yield* (ToBigInt(argument)));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = R(n) % (2n ** 64n);
+  const int64bit = modulo(R(n), BigInt(2n ** 64n));
   // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
   if (int64bit >= 2n ** 63n) {
     return Z(int64bit - (2n ** 64n));

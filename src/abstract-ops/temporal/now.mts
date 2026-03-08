@@ -1,20 +1,28 @@
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
+import { clamp } from '../math.mts';
 import { SystemTimeZoneIdentifier } from './addition.mts';
-import { temporal_todo } from './not-implemented.mts';
 import {
   ObjectValue, GetGlobalObject, Value, type PlainCompletion, Q, ToTemporalTimeZoneIdentifier, GetISODateTimeFor,
+  surroundingAgent,
+  nsMinInstant,
+  nsMaxInstant,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
-export function HostSystemUTCEpochNanoseconds(_global: ObjectValue): number {
-  temporal_todo();
+export function HostSystemUTCEpochNanoseconds(global: ObjectValue): bigint {
+  let host = surroundingAgent.hostDefinedOptions.hostHooks?.HostSystemUTCEpochNanoseconds?.(global);
+  if (host === undefined) {
+    host = BigInt(Date.now()) * BigInt(1e6);
+  }
+  return clamp(nsMinInstant, host, nsMaxInstant);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochmilliseconds */
 export function SystemUTCEpochMilliseconds(): number {
   const global = GetGlobalObject();
   const nowNs = HostSystemUTCEpochNanoseconds(global);
-  return Math.floor(nowNs / (10 ** 6));
+  // Return 𝔽(floor(nowNs / 10**6)).
+  return Number(nowNs / BigInt(1e6));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds */

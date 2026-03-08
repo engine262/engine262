@@ -2,6 +2,7 @@ import type { TemporalDurationObject } from '../../intrinsics/Temporal/Duration.
 import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import { type TemporalPlainYearMonthObject, isTemporalPlainYearMonthObject, type ISOYearMonthRecord } from '../../intrinsics/Temporal/PlainYearMonth.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
+import { modulo } from '../math.mts';
 import { GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from './addition.mts';
 import {
   Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarYearMonthFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateToFields, type CalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation, CalendarEquals, GetDifferenceSettings, TemporalUnit, CompareISODate, CreateTemporalDuration, CalendarDateFromFields, CalendarDateUntil, type DateUnit, AdjustDateDurationRecord, CombineDateAndTimeDuration, type TimeDuration, RoundRelativeDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord, CalendarDateAdd,
@@ -60,7 +61,7 @@ export function BalanceISOYearMonth(
   month: number,
 ): ISOYearMonthRecord {
   year += Math.floor((month - 1) / 12);
-  month = ((month - 1) % 12) + 1;
+  month = modulo(month - 1, 12) + 1;
   return {
     Year: year,
     Month: month,
@@ -135,7 +136,6 @@ export function* DifferenceTemporalPlainYearMonth(
   const otherFields = ISODateToFields(calendar, other.ISODate, 'year-month');
   otherFields.Day = 1;
   const otherDate = Q(yield* CalendarDateFromFields(calendar, otherFields, 'constrain'));
-  // TODO(temporal): unsafe cast of settings.LargestUnit
   const dateDifference = CalendarDateUntil(calendar, thisDate, otherDate, settings.LargestUnit as DateUnit);
   const yearsMonthsDifference = X(AdjustDateDurationRecord(dateDifference, 0, 0));
   let duration = CombineDateAndTimeDuration(yearsMonthsDifference, 0 as TimeDuration);

@@ -244,7 +244,7 @@ export function* ToTemporalTimeRecord(temporalTimeLike: ObjectValue, completenes
 
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timerecordtostring */
-export function TimeRecordToString(time: TimeRecord, precision: number | 'minute' | 'auto'): string {
+export function TimeRecordToString(time: TimeRecord, precision: number | TemporalUnit.Minute | 'auto'): string {
   const subSecondNanoseconds = time.Millisecond * 1e6 + time.Microsecond * 1e3 + time.Nanosecond;
   return FormatTimeString(time.Hour, time.Minute, time.Second, subSecondNanoseconds, precision);
 }
@@ -306,7 +306,6 @@ export function* DifferenceTemporalPlainTime(operation: 'since' | 'until', tempo
   const resolvedOptions = Q(GetOptionsObject(options));
   const settings = Q(yield* GetDifferenceSettings(operation, resolvedOptions, 'time', [], TemporalUnit.Nanosecond, TemporalUnit.Hour));
   let timeDuration = DifferenceTime(temporalTime.Time, other.Time);
-  // TODO(temporal): unsafe cast of settings.SmallestUnit
   timeDuration = X(RoundTimeDuration(timeDuration, settings.RoundingIncrement, settings.SmallestUnit as TimeUnit, settings.RoundingMode));
   const duration = CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
   let result = X(TemporalDurationFromInternal(duration, settings.LargestUnit));

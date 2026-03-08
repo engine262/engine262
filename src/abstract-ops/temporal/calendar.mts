@@ -313,7 +313,7 @@ export function CalendarDateAdd(
   if (calendar === 'iso8601') {
     const intermediate = Q(BalanceISOYearMonth(isoDate.Year + duration.Years, isoDate.Month + duration.Months));
     const regulated = Q(RegulateISODate(intermediate.Year, intermediate.Month, isoDate.Day, overflow));
-    const days = regulated.Day + duration.Days + 7 * duration.Weeks;
+    const days = duration.Days + 7 * duration.Weeks;
     result = Q(AddDaysToISODate(regulated, days));
   } else {
     result = Q(NonISODateAdd(calendar, isoDate, duration, overflow));
@@ -342,11 +342,10 @@ export function CalendarDateUntil(
   two: ISODateRecord,
   largestUnit: DateUnit,
 ): DateDurationRecord {
+  let sign = CompareISODate(one, two);
+  if (sign === 0) return ZeroDateDuration();
   if (calendar === 'iso8601') {
-    const sign = -CompareISODate(one, two) as 1 | -1 | 0;
-    if (sign === 0) {
-      return ZeroDateDuration();
-    }
+    sign = -sign as 1 | -1;
     let years = 0;
     if (largestUnit === TemporalUnit.Year) {
       let candidateYears = sign;
@@ -356,7 +355,7 @@ export function CalendarDateUntil(
       }
     }
     let months = 0;
-    if (largestUnit === TemporalUnit.Month) {
+    if (largestUnit === TemporalUnit.Year || largestUnit === TemporalUnit.Month) {
       let candidateMonths = sign;
       while (!ISODateSurpasses(sign, one, two, years, candidateMonths, 0, 0)) {
         months = candidateMonths;
@@ -693,31 +692,28 @@ export function* CalendarResolveFields(
   type: 'date' | 'year-month' | 'month-day',
 ): PlainEvaluator<void> {
   if (calendar === 'iso8601') {
-    if ((type === 'date' || type === 'year-month') && fields.Year === undefined) {
+    let needsYear = false;
+    if (type === 'date' || type === 'year-month') needsYear = true;
+    let needsDay = false;
+    if (type === 'date' || type === 'month-day') needsDay = true;
+
+    if (needsYear && fields.Year === undefined) {
       return Throw.TypeError('"year" is required');
     }
-    if ((type === 'date' || type === 'month-day') && fields.Day === undefined) {
+    if (needsDay && fields.Day === undefined) {
       return Throw.TypeError('"day" is required');
     }
-    const month = fields.Month;
-    const monthCode = fields.MonthCode;
-    if (monthCode === undefined) {
-      if (month === undefined) {
-        return Throw.TypeError('"month-code" or "month" is required');
-      }
+    if (fields.Month === undefined && fields.MonthCode === undefined) {
+      return Throw.TypeError('"month-code" or "month" is required');
     }
-    Assert(typeof monthCode === 'string');
-    const parsedMonthCode = Q(yield* ParseMonthCode(monthCode));
-    if (parsedMonthCode.IsLeapMonth) {
-      return Throw.RangeError('Invalid leap month');
+    if (fields.MonthCode !== undefined) {
+      const parsedMonthCode = X(ParseMonthCode(fields.MonthCode));
+      if (parsedMonthCode.IsLeapMonth) return Throw.RangeError('Invalid leap month');
+      const month = parsedMonthCode.MonthNumber;
+      if (month > 12) return Throw.RangeError('Invalid month');
+      if (fields.Month !== undefined && fields.Month !== month) return Throw.RangeError('Mismatching month and month code');
+      fields.Month = parsedMonthCode.MonthNumber;
     }
-    if (parsedMonthCode.MonthNumber > 12) {
-      return Throw.RangeError('Invalid month');
-    }
-    if (month !== undefined && month !== parsedMonthCode.MonthNumber) {
-      return Throw.RangeError('Invalid month');
-    }
-    fields.Month = parsedMonthCode.MonthNumber;
   } else {
     Q(NonISOResolveFields(calendar, fields, type));
   }

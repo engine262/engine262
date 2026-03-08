@@ -112,7 +112,7 @@ export function ISODateSurpasses(sign: 1 | -1, baseDate: ISODateRecord, isoDate2
   if (CompareSurpasses(sign, y0, parts.MonthCode, parts.Day, target)) {
     return true;
   }
-  if (month === 0) {
+  if (month === 0 && weeks === 0 && days === 0) {
     return false;
   }
   const m0 = parts.Month + month;

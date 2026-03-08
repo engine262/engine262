@@ -59,7 +59,7 @@ function thisTemporalInstantValue(value: Value): PlainCompletion<TemporalInstant
 function InstantProto_epochMillisecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
   const ns = instant.EpochNanoseconds;
-  const ms = Math.floor(Number(ns) / 10e6);
+  const ms = Math.floor(Number(ns) / 1e6);
   return Value(ms);
 }
 

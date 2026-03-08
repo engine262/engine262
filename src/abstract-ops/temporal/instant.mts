@@ -14,9 +14,9 @@ import {
 /** https://tc39.es/proposal-temporal/#eqn-nsPerDay */
 export const nsPerDay = 8.64e13;
 /** https://tc39.es/proposal-temporal/#eqn-nsMaxInstant */
-export const nsMaxInstant = 8.64e21;
+export const nsMaxInstant = BigInt(8.64e21);
 /** https://tc39.es/proposal-temporal/#eqn-nsMinInstant */
-export const nsMinInstant = -8.64e21;
+export const nsMinInstant = BigInt(-8.64e21);
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds */
 export function IsValidEpochNanoseconds(epochNanoseconds: bigint | number): boolean {
@@ -120,7 +120,7 @@ export function RoundTemporalInstant(
 export function TemporalInstantToString(
   instant: TemporalInstantObject,
   timeZone: TimeZoneIdentifier | undefined,
-  precision: number | 'minute' | 'auto',
+  precision: number | TemporalUnit.Minute | 'auto',
 ): string {
   let outputTimeZone = timeZone;
   if (outputTimeZone === undefined) {

@@ -9,6 +9,12 @@
 built-ins/RegExp/property-escapes/generated
 built-ins/RegExp/CharacterClassEscapes
 
+built-ins/Temporal/PlainDate/prototype/since/argument-string-limits.js
+built-ins/Temporal/PlainDate/prototype/until/argument-string-limits.js
+built-ins/Temporal/PlainDateTime/prototype/since/argument-string-limits.js
+built-ins/Temporal/PlainDateTime/prototype/until/argument-string-limits.js
+built-ins/Temporal/ZonedDateTime/prototype/until/argument-at-limits.js
+
 # Slow on CI
 built-ins/Array/prototype/concat/Array.prototype.concat_small-typed-array.js
 built-ins/Array/prototype/every/15.4.4.16-7-c-ii-2.js

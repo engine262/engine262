@@ -23,5 +23,4 @@ Temporal = temporal
 -caller
 -SharedArrayBuffer
 -tail-call-optimization
--Temporal
 -resizable-arraybuffer

@@ -324,8 +324,7 @@ function* PlainDateTimeProto_toString([options = Value.undefined]: Arguments, { 
   if (smallestUnit === TemporalUnit.Hour) {
     return Throw.RangeError('smallestUnit cannot be hour');
   }
-  Assert(smallestUnit !== 'auto' && (smallestUnit === 'unset' || __IsTimeUnit(smallestUnit))); // TODO(temporal): not in spec
-  const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit as Exclude<TimeUnit, TemporalUnit.Hour> | 'unset', digits);
   const result = RoundISODateTime(plainDateTime.ISODateTime, precision.Increment, precision.Unit, roundingMode);
   if (!ISODateTimeWithinLimits(result)) {
     return Throw.RangeError('DateTime outside of range');
