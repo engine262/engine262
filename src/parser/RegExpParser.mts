@@ -24,7 +24,7 @@ import {
   isHexDigit,
 } from './Lexer.mts';
 import type { ParseNode } from './ParseNode.mts';
-import { Assert, type Mutable } from '#self';
+import { Assert, surroundingAgent, type Mutable } from '#self';
 
 export const isSyntaxCharacter = (c: string) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c: string) => ')]}|'.includes(c);
@@ -294,13 +294,15 @@ export class RegExpParser {
       this.position += 2;
       return { type: 'Assertion', production: 'B' };
     }
-    if (this.inUnicodeMode && peek2 === '\\A') {
-      this.position += 2;
-      return { type: 'Assertion', production: 'A' };
-    }
-    if (this.inUnicodeMode && peek2 === '\\z') {
-      this.position += 2;
-      return { type: 'Assertion', production: 'z' };
+    if (surroundingAgent.feature('regexp-buffer-boundaries')) {
+      if (this.inUnicodeMode && peek2 === '\\A') {
+        this.position += 2;
+        return { type: 'Assertion', production: 'A' };
+      }
+      if (this.inUnicodeMode && peek2 === '\\z') {
+        this.position += 2;
+        return { type: 'Assertion', production: 'z' };
+      }
     }
 
     const peek3 = this.peek(3);
