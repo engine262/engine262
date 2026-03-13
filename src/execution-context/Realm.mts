@@ -80,6 +80,7 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mts';
 import { bootstrapWeakSet } from '../intrinsics/WeakSet.mts';
 import { bootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mts';
 import { bootstrapWrapForValidIteratorPrototype } from '../intrinsics/WrapForValidIteratorPrototype.mts';
+import { bootstrapTemporal } from '../intrinsics/Temporal/Temporal.mts';
 import {
   type ObjectValue, type GlobalEnvironmentRecord, type ParseNode, type LoadedModuleRequestRecord, type ManagedRealmHostDefined, type GCMarker,
   ManagedRealm,
@@ -89,6 +90,7 @@ import {
   F as toNumberValue,
   Value,
   X,
+  surroundingAgent,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-code-realms */
@@ -250,6 +252,10 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapShadowRealmPrototype(realmRec);
   bootstrapShadowRealm(realmRec);
 
+  if (surroundingAgent.feature('temporal')) {
+    bootstrapTemporal(realmRec);
+  }
+
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 
   return intrinsics;
@@ -326,6 +332,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
     'String',
     'Symbol',
     'SyntaxError',
+    'Temporal',
     'TypeError',
     'Uint8Array',
     'Uint8ClampedArray',
@@ -342,8 +349,12 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
     'Math',
     'Reflect',
   ] as const) {
+    const value = realmRec.Intrinsics[`%${name}%`];
+    if (!value) {
+      continue;
+    }
     X(DefinePropertyOrThrow(global, Value(name), Descriptor({
-      Value: realmRec.Intrinsics[`%${name}%`],
+      Value: value,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,

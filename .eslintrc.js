@@ -49,6 +49,8 @@ module.exports = {
         'no-fallthrough': 'off',
         'import/export': 'off',
         'no-dupe-class-members': 'off',
+        'curly': 'off',
+        'yoda': 'off',
         // false positive
         'no-shadow': 'off',
         // we need it for now

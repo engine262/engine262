@@ -21,6 +21,30 @@ import {
   isWrappedFunctionExoticObject,
   ArrayExoticObjectInternalMethods,
   F,
+  type TemporalInstantObject,
+  TemporalInstantToString,
+  isTemporalInstantObject,
+  TemporalDurationToString,
+  type TemporalDurationObject,
+  isTemporalDurationObject,
+  isTemporalPlainDateObject,
+  type TemporalPlainDateObject,
+  ISODateTimeToString,
+  isTemporalPlainDateTimeObject,
+  type TemporalPlainDateTimeObject,
+  TemporalMonthDayToString,
+  isTemporalPlainMonthDayObject,
+  type TemporalPlainMonthDayObject,
+  TimeRecordToString,
+  isTemporalPlainTimeObject,
+  type TemporalPlainTimeObject,
+  TemporalYearMonthToString,
+  isTemporalPlainYearMonthObject,
+  type TemporalPlainYearMonthObject,
+  TemporalDateToString,
+  TemporalZonedDateTimeToString,
+  isTemporalZonedDateTimeObject,
+  type TemporalZonedDateTimeObject,
 } from '#self';
 
 /*
@@ -363,6 +387,34 @@ const Date = new ObjectInspector<DateObject>('Date', 'date', ((value: DateObject
   const val = DateProto_toISOString([], { thisValue: value, NewTarget: Value.undefined });
   return ValueOfNormalCompletion(val as NormalCompletion<JSStringValue>).stringValue();
 }));
+const TemporalInstant = new ObjectInspector<TemporalInstantObject>(
+  'Temporal.Instant',
+  'date',
+  (value) => `Temporal.Instant <${TemporalInstantToString(value, undefined, 'auto')}>`,
+);
+const TemporalDuration = new ObjectInspector<TemporalDurationObject>('Temporal.Duration', 'date', (value) => `Temporal.Duration <${TemporalDurationToString(value, 'auto')}>`);
+const TemporalPlainDate = new ObjectInspector<TemporalPlainDateObject>('Temporal.PlainDate', 'date', (value) => `Temporal.PlainDate <${TemporalDateToString(value, 'auto')}>`);
+const TemporalPlainDateTime = new ObjectInspector<TemporalPlainDateTimeObject>(
+  'Temporal.PlainDateTime',
+  'date',
+  (value) => `Temporal.PlainDateTime <${ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`,
+);
+const TemporalPlainMonthDay = new ObjectInspector<TemporalPlainMonthDayObject>(
+  'Temporal.PlainMonthDay',
+  'date',
+  (value) => `Temporal.PlainMonthDay <${TemporalMonthDayToString(value, 'auto')}>`,
+);
+const TemporalPlainTime = new ObjectInspector<TemporalPlainTimeObject>('Temporal.PlainTime', 'date', (value) => `Temporal.PlainTime <${TimeRecordToString(value.Time, 'auto')}>`);
+const TemporalPlainYearMonth = new ObjectInspector<TemporalPlainYearMonthObject>(
+  'Temporal.PlainYearMonth',
+  'date',
+  (value) => `Temporal.PlainYearMonth <${TemporalYearMonthToString(value, 'auto')}>`,
+);
+const TemporalZonedDateTime = new ObjectInspector<TemporalZonedDateTimeObject>(
+  'Temporal.ZonedDateTime',
+  'date',
+  (value) => `Temporal.ZonedDateTime <${TemporalZonedDateTimeToString(value, 'auto', 'auto', 'auto', 'auto')}>`,
+);
 const Promise = new ObjectInspector<PromiseObject>('Promise', 'promise', () => 'Promise', {
   internalProperties: (value) => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]],
 });
@@ -548,6 +600,22 @@ export function getInspector(value: Value): Inspector<Value> {
       return Module;
     case isShadowRealmObject(value):
       return ShadowRealm;
+    case isTemporalInstantObject(value):
+      return TemporalInstant;
+    case isTemporalDurationObject(value):
+      return TemporalDuration;
+    case isTemporalPlainDateObject(value):
+      return TemporalPlainDate;
+    case isTemporalPlainDateTimeObject(value):
+      return TemporalPlainDateTime;
+    case isTemporalPlainMonthDayObject(value):
+      return TemporalPlainMonthDay;
+    case isTemporalPlainTimeObject(value):
+      return TemporalPlainTime;
+    case isTemporalPlainYearMonthObject(value):
+      return TemporalPlainYearMonth;
+    case isTemporalZonedDateTimeObject(value):
+      return TemporalZonedDateTime;
     case (value as ObjectValue).internalSlotsList.includes('InspectorEntry'):
       return InspectorEntry;
     default:

@@ -30,6 +30,7 @@ export * from './shadow-realm.mts';
 export * from './spec-types.mts';
 export * from './string-objects.mts';
 export * from './symbol-objects.mts';
+export * from './temporal/all.mts';
 export * from './testing-comparison.mts';
 export * from './type-conversion.mts';
 export * from './typedarray-objects.mts';

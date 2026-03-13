@@ -23,12 +23,14 @@ export const msPerHour = msPerMinute * MinutesPerHour;
 export const msPerDay = msPerHour * HoursPerDay;
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
-export function Day(t: NumberValue) {
-  return F(Math.floor(R(t) / msPerDay));
+export function Day(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(Math.floor(t / msPerDay));
 }
 
-export function TimeWithinDay(t: NumberValue) {
-  return F(mod(R(t), msPerDay));
+export function TimeWithinDay(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod(t, msPerDay));
 }
 
 /** https://tc39.es/ecma262/#sec-year-number */
@@ -57,8 +59,8 @@ export function TimeFromYear(y: NumberValue) {
 
 export const msPerAverageYear = 12 * 30.436875 * msPerDay;
 
-export function YearFromTime(_t: NumberValue) {
-  const t = R(_t);
+export function YearFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
   if (R(TimeFromYear(F(year))) > t) {
     year -= 1;
@@ -66,7 +68,8 @@ export function YearFromTime(_t: NumberValue) {
   return F(year);
 }
 
-export function InLeapYear(t: NumberValue) {
+export function InLeapYear(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   if (R(DaysInYear(YearFromTime(t))) === 366) {
     return F(1);
   }
@@ -74,7 +77,8 @@ export function InLeapYear(t: NumberValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-month-number */
-export function MonthFromTime(t: NumberValue) {
+export function MonthFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   const inLeapYear = R(InLeapYear(t));
   const dayWithinYear = R(DayWithinYear(t));
   if (dayWithinYear < 31) {
@@ -114,12 +118,14 @@ export function MonthFromTime(t: NumberValue) {
   return F(11);
 }
 
-export function DayWithinYear(t: NumberValue) {
+export function DayWithinYear(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   return F(R(Day(t)) - R(DayFromYear(YearFromTime(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date-number */
-export function DateFromTime(t: NumberValue) {
+export function DateFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
   const inLeapYear = R(InLeapYear(t));
   const dayWithinYear = R(DayWithinYear(t));
   const month = R(MonthFromTime(t));
@@ -163,20 +169,24 @@ export function UTC(t: NumberValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
-export function HourFromTime(t: NumberValue) {
-  return F(mod(Math.floor(R(t) / msPerHour), HoursPerDay));
+export function HourFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod(Math.floor(t / msPerHour), HoursPerDay));
 }
 
-export function MinFromTime(t: NumberValue) {
-  return F(mod(Math.floor(R(t) / msPerMinute), MinutesPerHour));
+export function MinFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod(Math.floor(t / msPerMinute), MinutesPerHour));
 }
 
-export function SecFromTime(t: NumberValue) {
-  return F(mod(Math.floor(R(t) / msPerSecond), SecondsPerMinute));
+export function SecFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod(Math.floor(t / msPerSecond), SecondsPerMinute));
 }
 
-export function msFromTime(t: NumberValue) {
-  return F(mod(R(t), msPerSecond));
+export function msFromTime(_t: NumberValue | number) {
+  const t = typeof _t === 'number' ? _t : R(_t);
+  return F(mod(t, msPerSecond));
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
