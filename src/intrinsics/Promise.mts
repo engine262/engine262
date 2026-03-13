@@ -261,7 +261,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
     // a. Let desc be ? promises.[[GetOwnProperty]](key).
     const desc = Q(yield* promises.GetOwnProperty(key));
     // b. If desc is not undefined and desc.[[Enumerable]] is true, then
-    if (desc !== Value.undefined && (desc as Descriptor).Enumerable === Value.true) {
+    if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
       // i. Let value be ? Get(promises, key).
       const value = Q(yield* Get(promises, key));
       // ii. Append key to keys.
