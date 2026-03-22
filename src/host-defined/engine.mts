@@ -68,6 +68,11 @@ export const FEATURES = ([
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
+  {
+    name: 'RegExp Buffer Boundaries',
+    flag: 'regexp-buffer-boundaries',
+    url: 'https://github.com/tc39/proposal-regexp-buffer-boundaries',
+  },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);

@@ -2448,7 +2448,7 @@ export namespace ParseNode.RegExp {
   export type Assertion = Assertion_Plain | Assertion_LookaheadOrLookbehind;
   export interface Assertion_Plain {
     readonly type: 'Assertion';
-    readonly production: '^' | '$' | 'b' | 'B';
+    readonly production: '^' | '$' | 'b' | 'B' | 'A' | 'z';
   }
   export interface Assertion_LookaheadOrLookbehind {
     readonly type: 'Assertion';
