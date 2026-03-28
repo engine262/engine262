@@ -1,5 +1,5 @@
 import type { Protocol } from 'devtools-protocol';
-import { getInspector } from './inspect.mts';
+import { getInspector } from './objects/index.mts';
 import type { Inspector } from './index.mts';
 import {
   EnsureCompletion, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, Value,
@@ -22,9 +22,6 @@ import {
   surroundingAgent,
   IsAccessorDescriptor,
   isIntegerIndex,
-  isBuiltinFunctionObject,
-  isArrayBufferObject,
-  DataBlock,
   CallSite,
   CallFrame,
   type OrdinaryObject,
@@ -132,9 +129,6 @@ export class InspectorContext {
 
   #idToObject = new Map<string, ObjectValue | SymbolValue>();
 
-  // id 0 is falsy, skip it
-  #idToArrayBufferBlock: (undefined | ArrayBuffer)[] = [undefined];
-
   #objectToId = new Map<ObjectValue | SymbolValue, string>();
 
   #objectCounter = 1;
@@ -172,7 +166,7 @@ export class InspectorContext {
   }
 
   toRemoteObject(value: Value, options: { objectGroup?: string, generatePreview?: boolean }): Protocol.Runtime.RemoteObject {
-    return getInspector(value).toRemoteObject(value, (val) => this.#internObject(val, options.objectGroup), options.generatePreview);
+    return getInspector(value).toRemoteObject(value, (val) => this.#internObject(val, options.objectGroup), this, options.generatePreview);
   }
 
   getProperties({
@@ -196,6 +190,11 @@ export class InspectorContext {
         set: value.Set ? wrap(value.Set) : undefined,
       });
     });
+
+    const exoticProperties = getInspector(object).exoticProperties?.(object, (val) => this.#internObject(val), this, generatePreview);
+    if (exoticProperties) {
+      properties.push(...exoticProperties);
+    }
 
     (() => {
       let p: NullValue | ObjectValue = object;
@@ -239,7 +238,7 @@ export class InspectorContext {
       }
     })();
 
-    const additionalInternalFields = getInspector(object).toInternalProperties?.(object, (val) => this.#internObject(val, 'default'), generatePreview);
+    const additionalInternalFields = getInspector(object).toInternalProperties?.(object, (val) => this.#internObject(val, 'default'), this, generatePreview);
     if (additionalInternalFields) {
       internalProperties.push(...additionalInternalFields);
     }
@@ -248,32 +247,6 @@ export class InspectorContext {
       internalProperties.push({
         name: '[[Prototype]]',
         value: wrap(object.Prototype as Value),
-      });
-    }
-    if (isBuiltinFunctionObject(object) && object.nativeFunction.section) {
-      internalProperties.push({
-        name: '[[Section]]',
-        value: {
-          type: 'string',
-          value: object.nativeFunction.section,
-        },
-      });
-    }
-    if (isArrayBufferObject(object) && object.ArrayBufferData instanceof DataBlock) {
-      internalProperties.push({
-        name: '[[ArrayBufferByteLength]]',
-        value: {
-          type: 'number',
-          value: object.ArrayBufferByteLength,
-        },
-      });
-      this.#idToArrayBufferBlock.push(object.ArrayBufferData.buffer);
-      internalProperties.push({
-        name: '[[ArrayBufferData]]',
-        value: {
-          type: 'number',
-          value: this.#idToArrayBufferBlock.length - 1,
-        },
       });
     }
 
@@ -292,7 +265,7 @@ export class InspectorContext {
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
       stackTrace: stack ? { callFrames: frames } : undefined,
-      exception: getInspector(value).toRemoteObject(value, (val) => this.#internObject(val), false),
+      exception: getInspector(value).toRemoteObject(value, (val) => this.#internObject(val), this, false),
       lineNumber: frames[0]?.lineNumber || 0,
       columnNumber: frames[0]?.columnNumber || 0,
       exceptionId,

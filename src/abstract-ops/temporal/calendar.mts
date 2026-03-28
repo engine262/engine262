@@ -52,11 +52,10 @@ export type CalendarType = 'iso8601';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-canonicalizecalendar */
 export function CanonicalizeCalendar(id: string): PlainCompletion<CalendarType> {
-  const calendars = AvailableCalendars();
-  if (!calendars.includes(id.toLowerCase() as CalendarType)) {
+  if (id.toLowerCase() !== 'iso8601') {
     return Throw.RangeError('$1 is not a supported calendar', id);
   }
-  return CanonicalizeUValue('ca', id) as CalendarType;
+  return 'iso8601';
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars */
@@ -124,7 +123,8 @@ export enum Table19_Conversion {
 
 export type CalendarFieldsRecordEnumerationKey = 'era' | 'era-year' | 'year' | 'month' | 'month-code' | 'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond' | 'offset' | 'time-zone';
 
-export const Table19_CalendarFieldsRecordFields = [
+/** https://tc39.es/ecma262/pr/3759/#table-calendar-fields-record-fields */
+export const Table63_CalendarFieldsRecordFields = [
   /* eslint-disable object-curly-newline */
   { FieldName: 'Era', DefaultValue: undefined, PropertyKey: 'era', EnumerationKey: 'era', Conversion: Table19_Conversion.ToString },
   { FieldName: 'EraYear', DefaultValue: undefined, PropertyKey: 'eraYear', EnumerationKey: 'era-year', Conversion: Table19_Conversion.ToIntegerWithTruncation },
@@ -186,7 +186,7 @@ export function* PrepareCalendarFields(
   let any = false;
 
   // Let sortedPropertyNames be a List whose elements are the values in the Property Key column of Table 19 corresponding to the elements of fieldNames, sorted according to lexicographic code unit order.
-  const sortedPropertyNames = [...Table19_CalendarFieldsRecordFields].sort((a, b) => (a.PropertyKey < b.PropertyKey ? -1 : 1));
+  const sortedPropertyNames = [...Table63_CalendarFieldsRecordFields].filter((a) => (fieldNames as string[]).includes(a.PropertyKey)).sort((a, b) => (a.PropertyKey < b.PropertyKey ? -1 : 1));
 
   for (const {
     FieldName, PropertyKey, Conversion, DefaultValue, EnumerationKey,
@@ -244,7 +244,7 @@ export function* PrepareCalendarFields(
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendarfieldkeyspresent */
 export function CalendarFieldKeysPresent(fields: CalendarFieldsRecord): CalendarFieldsRecordEnumerationKey[] {
   const list: CalendarFieldsRecordEnumerationKey[] = [];
-  for (const { FieldName, EnumerationKey } of Table19_CalendarFieldsRecordFields) {
+  for (const { FieldName, EnumerationKey } of Table63_CalendarFieldsRecordFields) {
     const value = fields[FieldName];
     const enumerationKey = EnumerationKey;
     if (value !== undefined) {
@@ -275,7 +275,7 @@ export function CalendarMergeFields(calendar: CalendarType, fields: CalendarFiel
     TimeZone: undefined,
   };
   const fieldsKeys = CalendarFieldKeysPresent(fields);
-  for (const { EnumerationKey, FieldName } of Table19_CalendarFieldsRecordFields) {
+  for (const { EnumerationKey, FieldName } of Table63_CalendarFieldsRecordFields) {
     const key = EnumerationKey;
     if (fieldsKeys.includes(key) && !overriddenKeys.includes(key)) {
       const propValue = fields[FieldName];

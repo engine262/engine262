@@ -1,5 +1,6 @@
 // defined intrinsics that used in test262
 import { isArray } from '../helpers.mts';
+import harness from '../../lib/test262-harness.json' with { type: 'json' };
 import {
   CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, skipDebugger, surroundingAgent, ToString, Value, type Arguments, type ValueCompletion, gc,
   ParseScript,
@@ -118,6 +119,18 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       $262,
     };
   });
+}
+
+export function importBundledTest262Harness(
+  realm: ManagedRealm,
+  nameMapper = (str: string) => `https://github.com/tc39/test262/blob/main/harness/${str}`,
+) {
+  for (const [specifier, file] of Object.entries(harness)) {
+    const script = X(
+      realm.compileScript(file, { specifier: nameMapper(specifier) }),
+    );
+    realm.evaluateScript(script);
+  }
 }
 
 export function boostTest262Harness(realm: ManagedRealm) {

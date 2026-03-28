@@ -92,6 +92,7 @@ export interface ParseScriptHostDefined {
   readonly [kInternal]?: {
     json?: boolean;
     /** only used in inspector.compileScript */ allowAllPrivateNames?: boolean;
+    /** only used in inspector.compileScript */ allowAwait?: boolean;
   };
   scriptId?: string;
   readonly doNotTrackScriptId?: boolean;
@@ -110,7 +111,12 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined: Parse
     specifier: hostDefined.specifier,
     json: hostDefined[kInternal]?.json,
     allowAllPrivateNames: hostDefined[kInternal]?.allowAllPrivateNames,
-  }, (p) => p.parseScript());
+  }, (p) => {
+    if (hostDefined[kInternal]?.allowAwait) {
+      return p.try(() => p.parseScript()) || p.scope.with({ await: true }, () => p.parseScript());
+    }
+    return p.parseScript();
+  });
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     const scriptId = hostDefined.doNotTrackScriptId ? undefined : surroundingAgent.addDynamicParsedSource(realm, sourceText);

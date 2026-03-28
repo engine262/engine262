@@ -5,7 +5,7 @@ import { babel, type RollupBabelInputPluginOptions } from '@rollup/plugin-babel'
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import { defineConfig, type Plugin } from 'rollup';
+import { defineConfig, type Plugin, type RollupOptions } from 'rollup';
 import packageJson from '../package.json' with { type: 'json' };
 
 const commitHash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
@@ -38,6 +38,16 @@ const babelOptions: RollupBabelInputPluginOptions = {
     },
   ]],
   extensions: ['.mts'],
+};
+
+const onLog: RollupOptions['onLog'] = function onLog(level, log, handler) {
+  if (log.code === 'CIRCULAR_DEPENDENCY' || log.code === 'SOURCEMAP_BROKEN') {
+    return;
+  }
+  if (level === 'warn') {
+    process.exitCode = 1;
+  }
+  handler(level, log);
 };
 
 export default defineConfig([
@@ -87,6 +97,7 @@ export default defineConfig([
         banner,
       },
     ],
+    onLog,
   },
   {
     input: './src/index.mts',
@@ -135,14 +146,7 @@ export default defineConfig([
         banner,
       },
     ],
-    onwarn(warning, warn) {
-      if (warning.code === 'CIRCULAR_DEPENDENCY' || warning.code === 'SOURCEMAP_BROKEN') {
-        // Squelch.
-        return;
-      }
-      process.exitCode = 1;
-      warn(warning);
-    },
+    onLog,
   }]);
 
 /**

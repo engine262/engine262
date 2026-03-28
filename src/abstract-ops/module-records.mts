@@ -187,6 +187,9 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
 export function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefined> {
   // 1. Assert: If module is a Cyclic Module Record, ReadyForSyncExecution(module) is true.
   Assert(module instanceof CyclicModuleRecord ? ReadyForSyncExecution(module) === Value.true : true);
+  if (!(module instanceof CyclicModuleRecord && module.Status === 'evaluated')) {
+    Q(surroundingAgent.debugger_cannotPreview);
+  }
   // 2. Let promise be module.Evaluate()./
   const promise = yield* module.Evaluate();
   // 3. Assert: promise.[[PromiseState]] is either fulfilled or rejected.

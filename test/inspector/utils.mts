@@ -66,6 +66,7 @@ export class TestInspector extends Inspector {
     );
     this.runtime = object('Runtime');
     this.debugger = object('Debugger');
+    this.debugger.enable({});
   }
 
   // helpers

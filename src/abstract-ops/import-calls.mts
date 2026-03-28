@@ -54,8 +54,6 @@ export function ContinueDynamicImport(
     }
 
     let evaluatePromise: PromiseObject;
-    // c. Let evaluatePromise be module.Evaluate().
-    evaluatePromise = yield* module.Evaluate();
 
     // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {

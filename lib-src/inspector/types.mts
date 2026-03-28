@@ -7,7 +7,8 @@ export interface DebuggerPreference {
 
 export interface DebuggerContext {
   sendEvent: DevtoolEvents;
-  onDebuggerAttached(): void;
+  onDebuggerConnect(): void;
+  onDebuggerDisconnect(): void;
   preference: DebuggerPreference;
   context: InspectorContext;
 }

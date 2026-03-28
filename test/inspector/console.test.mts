@@ -192,7 +192,7 @@ test('call function on', async () => {
         },
       },
       {
-        "id": 0,
+        "id": 1,
         "method": "Runtime.evaluate",
         "params": {
           "expression": "const a = { x: 1 }; a",
@@ -201,6 +201,12 @@ test('call function on', async () => {
       },
       {
         "id": 0,
+        "result": {
+          "debuggerId": "debugger.0",
+        },
+      },
+      {
+        "id": 1,
         "result": {
           "exceptionDetails": undefined,
           "result": {

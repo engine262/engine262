@@ -6,11 +6,6 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
-# TODO: import defer
-language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/main.js
-language/expressions/dynamic-import/import-defer/sync/main.js
-language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js
-
 # Non-strict mode
 # Annex B
 ## RegExp.prototype.compile

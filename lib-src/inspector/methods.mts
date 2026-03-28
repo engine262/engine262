@@ -19,9 +19,12 @@ import {
 } from '#self';
 
 export const Debugger: DebuggerNamespace = {
-  enable(_req, { onDebuggerAttached }) {
-    onDebuggerAttached();
+  enable(_req, context) {
+    context.onDebuggerConnect();
     return { debuggerId: 'debugger.0' };
+  },
+  disable(_req, context) {
+    context.onDebuggerDisconnect();
   },
   getScriptSource({ scriptId }) {
     const source = surroundingAgent.parsedSources.get(scriptId);
@@ -110,7 +113,7 @@ export const Runtime: RuntimeNamespace = {
       if (context.evaluateMode === 'module') {
         parsed = ParseModule(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript });
       } else {
-        parsed = ParseScript(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript, [kInternal]: { allowAllPrivateNames: true } });
+        parsed = ParseScript(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript, [kInternal]: { allowAllPrivateNames: true, allowAwait: true } });
       }
     });
     if (!parsed) {

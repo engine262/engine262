@@ -16,7 +16,7 @@ export {
   gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
-export { createTest262Intrinsics, boostTest262Harness } from './host-defined/test262-intrinsics.mts';
+export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';
 export { performDevtoolsEval } from './host-defined/debugger-eval.mts';
 export {
   getHostDefinedErrorStack, skipDebugger, getCurrentStack, JSStringMap, JSStringSet, CallSite, CallFrame, type Mutable, PropertyKeyMap, kInternal,

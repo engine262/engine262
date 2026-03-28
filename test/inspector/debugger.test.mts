@@ -26,6 +26,11 @@ test('evaluate on frame', async () => {
   expect(inspector.flush()).toMatchInlineSnapshot(`
     [
       {
+        "id": 0,
+        "method": "Debugger.enable",
+        "params": {},
+      },
+      {
         "method": "Runtime.executionContextCreated",
         "params": {
           "context": {
@@ -361,7 +366,7 @@ test('evaluate on frame', async () => {
         },
       },
       {
-        "id": 0,
+        "id": 1,
         "method": "Runtime.evaluate",
         "params": {
           "expression": "

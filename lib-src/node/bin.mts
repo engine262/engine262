@@ -25,6 +25,8 @@ import {
   ValueOfNormalCompletion,
   ScriptEvaluation,
   type PlainEvaluator,
+  importBundledTest262Harness,
+  boostTest262Harness,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -39,15 +41,16 @@ Usage:
 
 Options:
 
-    -h, --help      Show help (this screen)
-    -m, --module    Evaluate contents of input-file as a module.
-    -e, --eval      Evaluate the given string.
-    --features=...  A comma separated list of features.
-    --features=all  Enable all features.
-    --list-features List available features.
-    --no-test262    Do not expose $ and $262 for test262.
-    --no-inspector  Do not attach an inspector.
-    --no-preview    Do not enable preview in the inspector.
+    -h, --help         Show help (this screen)
+    -m, --module       Evaluate contents of input-file as a module.
+    -e, --eval         Evaluate the given string.
+    --features=...     A comma separated list of features.
+    --features=all     Enable all features.
+    --list-features    List available features.
+    --no-test262       Do not expose $ and $262 for test262.
+    --[no-]inspect     Do [not] attach an inspector.
+    --no-preview       Do not enable preview in the inspector.
+    --test262-harness  Import test262 harness files.
 `;
 
 const argv = parseArgs({
@@ -61,8 +64,9 @@ const argv = parseArgs({
     'module': { type: 'boolean', short: 'm' },
     'features': { type: 'string' },
     'list-features': { type: 'boolean' },
-    'inspector': { type: 'boolean' },
+    'inspect': { type: 'boolean' },
     'test262': { type: 'boolean', default: true },
+    'test262-harness': { type: 'boolean' },
     // hidden options
     'preview-debug': { type: 'boolean' },
   },
@@ -132,31 +136,46 @@ const realm = new ManagedRealm({ resolverCache: new Map(), name: 'repl', specifi
     },
   });
 }
+
 if (argv.values.test262) {
   createTest262Intrinsics(realm, argv.values.test262);
 }
 
-let inspector: NodeWebsocketInspector | undefined;
-if (argv.values.inspector !== false) {
+if (argv.values['test262-harness']) {
+  importBundledTest262Harness(realm);
+  boostTest262Harness(realm);
+}
+
+async function setupInspector(mode: 'file' | 'eval' | 'pipe' | 'repl') {
+  const inspectArg = argv.values.inspect;
+  if (mode !== 'repl' && !inspectArg) return undefined;
+  if (inspectArg === false) return undefined;
+
   let has_ws = false;
   try {
     await import('ws');
     has_ws = true;
   } catch {
-    if (argv.values.inspector === true) {
-      process.stderr.write('--inspector requires the "ws" package to be installed.\n');
+    if (inspectArg) {
+      process.stderr.write('--inspect requires the "ws" package to be installed.\n');
       process.exit(1);
     }
   }
-  if (has_ws) {
-    const { NodeWebsocketInspector } = await import('./inspector.mts');
-    inspector = await NodeWebsocketInspector.new();
-    inspector.attachAgent(surroundingAgent, [realm]);
-    inspector.preference.previewDebug = argv.values['preview-debug'] || false;
-  }
+  if (!has_ws) return undefined;
+  const { NodeWebsocketInspector } = await import('./inspector.mts');
+  const inspector = await NodeWebsocketInspector.new();
+  inspector.attachAgent(surroundingAgent, [realm]);
+  inspector.preference.previewDebug = argv.values['preview-debug'] || false;
+  process.stdout.write([
+    `Inspector attached at 127.0.0.1:${inspector.port}${inspectArg ? '' : ', use --no-inspect to disable'}`,
+    'Paste this URL into Chromium to open DevTools:',
+    `    ${inspector.devtoolsFrontendUrl}`,
+    '\n',
+  ].join('\n'));
+  return inspector;
 }
 
-function oneShotEval(source: string, filename: string) {
+function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: string, filename: string) {
   realm.scope(() => {
     const completion = evalQ((Q) => {
       if (argv.values.module || filename.endsWith('.mjs')) {
@@ -188,22 +207,26 @@ function oneShotEval(source: string, filename: string) {
 }
 
 if (argv.positionals[0]) {
+  const inspector = await setupInspector('file');
   const source = readFileSync(argv.positionals[0], 'utf8');
-  oneShotEval(source, resolve(argv.positionals[0]));
+  oneShotEval(inspector, source, resolve(argv.positionals[0]));
 } else if (!process.stdin.isTTY) {
+  const inspector = await setupInspector('pipe');
   process.stdin.setEncoding('utf8');
   let source = '';
   process.stdin.on('data', (data) => {
     source += data;
   });
   process.stdin.once('end', () => {
-    oneShotEval(source, process.cwd());
+    oneShotEval(inspector, source, process.cwd());
   });
 } else if (argv.values.eval) {
-  oneShotEval(argv.values.eval, process.cwd());
+  const inspector = await setupInspector('eval');
+  oneShotEval(inspector, argv.values.eval, process.cwd());
 } else {
-  process.stdout.write(`${packageJson.name} v${String(packageJson.version).replace('0.0.1-', '')}
-Type ".help" for more information. Please report bugs to ${packageJson.bugs.url}
+  const inspector = await setupInspector('repl');
+  process.stdout.write(`Welcome to ${packageJson.name} v${String(packageJson.version).replace('0.0.1-', '')} Please report bugs to ${packageJson.bugs.url}
+Type ".help" for more information.
 `);
   const server = start({
     prompt: '> ',

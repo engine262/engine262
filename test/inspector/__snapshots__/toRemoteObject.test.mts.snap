@@ -305,7 +305,18 @@ exports[`array buffer > new ArrayBuffer(0) 1`] = `
     "description": "ArrayBuffer(0)",
     "entries": undefined,
     "overflow": false,
-    "properties": [],
+    "properties": [
+      {
+        "name": "[[ArrayBufferByteLength]]",
+        "type": "number",
+        "value": "0",
+      },
+      {
+        "name": "[[ArrayBufferData]]",
+        "type": "number",
+        "value": "1001",
+      },
+    ],
     "subtype": "arraybuffer",
     "type": "object",
   },
@@ -320,6 +331,7 @@ exports[`array buffer > new ArrayBuffer(0) properties 1`] = `
     {
       "name": "[[ArrayBufferByteLength]]",
       "value": {
+        "description": "0",
         "type": "number",
         "value": 0,
       },
@@ -327,8 +339,9 @@ exports[`array buffer > new ArrayBuffer(0) properties 1`] = `
     {
       "name": "[[ArrayBufferData]]",
       "value": {
+        "description": "1001",
         "type": "number",
-        "value": 1,
+        "value": 1001,
       },
     },
   ],
@@ -346,7 +359,18 @@ exports[`array buffer > new ArrayBuffer(10) 1`] = `
     "description": "ArrayBuffer(10)",
     "entries": undefined,
     "overflow": false,
-    "properties": [],
+    "properties": [
+      {
+        "name": "[[ArrayBufferByteLength]]",
+        "type": "number",
+        "value": "10",
+      },
+      {
+        "name": "[[ArrayBufferData]]",
+        "type": "number",
+        "value": "1002",
+      },
+    ],
     "subtype": "arraybuffer",
     "type": "object",
   },
@@ -361,6 +385,7 @@ exports[`array buffer > new ArrayBuffer(10) properties 1`] = `
     {
       "name": "[[ArrayBufferByteLength]]",
       "value": {
+        "description": "10",
         "type": "number",
         "value": 10,
       },
@@ -368,8 +393,9 @@ exports[`array buffer > new ArrayBuffer(10) properties 1`] = `
     {
       "name": "[[ArrayBufferData]]",
       "value": {
+        "description": "1002",
         "type": "number",
-        "value": 2,
+        "value": 1002,
       },
     },
   ],
@@ -388,6 +414,16 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x 1`] = `
     "entries": undefined,
     "overflow": false,
     "properties": [
+      {
+        "name": "[[ArrayBufferByteLength]]",
+        "type": "number",
+        "value": "10",
+      },
+      {
+        "name": "[[ArrayBufferData]]",
+        "type": "number",
+        "value": "1003",
+      },
       {
         "name": "a",
         "type": "number",
@@ -408,6 +444,7 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x properties 1`] =
     {
       "name": "[[ArrayBufferByteLength]]",
       "value": {
+        "description": "10",
         "type": "number",
         "value": 10,
       },
@@ -415,8 +452,9 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x properties 1`] =
     {
       "name": "[[ArrayBufferData]]",
       "value": {
+        "description": "1003",
         "type": "number",
-        "value": 3,
+        "value": 1003,
       },
     },
   ],
@@ -2102,6 +2140,11 @@ exports[`module namespace > export const a = 1 1`] = `
     "overflow": false,
     "properties": [
       {
+        "name": "a",
+        "type": "number",
+        "value": "1",
+      },
+      {
         "name": "Symbol(Symbol.toStringTag)",
         "type": "string",
         "value": "Module",
@@ -2120,6 +2163,18 @@ exports[`module namespace > export const a = 1 properties 1`] = `
   "internalProperties": [],
   "privateProperties": [],
   "result": [
+    {
+      "configurable": false,
+      "enumerable": true,
+      "isOwn": true,
+      "name": "a",
+      "value": {
+        "description": "1",
+        "type": "number",
+        "value": 1,
+      },
+      "writable": false,
+    },
     {
       "configurable": false,
       "enumerable": false,
@@ -2154,6 +2209,16 @@ exports[`module namespace > export const b = 2; export { b as c } 1`] = `
     "overflow": false,
     "properties": [
       {
+        "name": "b",
+        "type": "number",
+        "value": "2",
+      },
+      {
+        "name": "c",
+        "type": "number",
+        "value": "2",
+      },
+      {
         "name": "Symbol(Symbol.toStringTag)",
         "type": "string",
         "value": "Module",
@@ -2172,6 +2237,30 @@ exports[`module namespace > export const b = 2; export { b as c } properties 1`]
   "internalProperties": [],
   "privateProperties": [],
   "result": [
+    {
+      "configurable": false,
+      "enumerable": true,
+      "isOwn": true,
+      "name": "b",
+      "value": {
+        "description": "2",
+        "type": "number",
+        "value": 2,
+      },
+      "writable": false,
+    },
+    {
+      "configurable": false,
+      "enumerable": true,
+      "isOwn": true,
+      "name": "c",
+      "value": {
+        "description": "2",
+        "type": "number",
+        "value": 2,
+      },
+      "writable": false,
+    },
     {
       "configurable": false,
       "enumerable": false,
@@ -2206,6 +2295,11 @@ exports[`module namespace > export default 42 1`] = `
     "overflow": false,
     "properties": [
       {
+        "name": "default",
+        "type": "number",
+        "value": "42",
+      },
+      {
         "name": "Symbol(Symbol.toStringTag)",
         "type": "string",
         "value": "Module",
@@ -2224,6 +2318,18 @@ exports[`module namespace > export default 42 properties 1`] = `
   "internalProperties": [],
   "privateProperties": [],
   "result": [
+    {
+      "configurable": false,
+      "enumerable": true,
+      "isOwn": true,
+      "name": "default",
+      "value": {
+        "description": "42",
+        "type": "number",
+        "value": 42,
+      },
+      "writable": false,
+    },
     {
       "configurable": false,
       "enumerable": false,
@@ -2258,6 +2364,11 @@ exports[`module namespace > export default function() {} 1`] = `
     "overflow": false,
     "properties": [
       {
+        "name": "default",
+        "type": "function",
+        "value": "",
+      },
+      {
         "name": "Symbol(Symbol.toStringTag)",
         "type": "string",
         "value": "Module",
@@ -2276,6 +2387,19 @@ exports[`module namespace > export default function() {} properties 1`] = `
   "internalProperties": [],
   "privateProperties": [],
   "result": [
+    {
+      "configurable": false,
+      "enumerable": true,
+      "isOwn": true,
+      "name": "default",
+      "value": {
+        "className": "Function",
+        "description": "function() {}",
+        "objectId": "default:7",
+        "type": "function",
+      },
+      "writable": false,
+    },
     {
       "configurable": false,
       "enumerable": false,

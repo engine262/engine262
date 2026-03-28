@@ -86,8 +86,15 @@ export abstract class Inspector {
     }
     const ns = (impl as Record<string, object>)[namespace];
     if (!(method in ns)) {
-      // eslint-disable-next-line no-console
-      console.error(`Unknown method requested: ${namespace}.${method}`);
+      this.sendEvent['Runtime.consoleAPICalled']({
+        timestamp: Date.now(),
+        type: 'warning',
+        executionContextId: 0,
+        args: [{
+          type: 'string',
+          value: `engine262 internal error: Method not implemented: ${namespace}.${method}`,
+        }],
+      });
       return;
     }
 
@@ -102,7 +109,9 @@ export abstract class Inspector {
   sendEvent: DevtoolEvents = Object.create(new Proxy({}, {
     get: (_, key: string) => {
       const f = (params: Record<string, unknown>) => {
-        this.send({ method: key, params });
+        if (this.#debuggerAttached) {
+          this.send({ method: key, params });
+        }
       };
       Object.defineProperty(this.sendEvent, key, { value: f });
       return f;
@@ -122,18 +131,43 @@ export abstract class Inspector {
     });
   }
 
+  #debuggerAttached = false;
+
+  onDebuggerDisconnect() {
+    this.#debuggerAttached = false;
+  }
+
+  #onDebuggerConnected() {
+    this.#context.realms.forEach((realm) => {
+      if (realm) {
+        this.sendEvent['Runtime.executionContextCreated']({
+          context: realm.descriptor,
+        });
+      }
+    });
+    this.#agents.forEach(({ agent }) => {
+      agent.parsedSources.forEach((script, id) => {
+        const realmId = this.#context.getRealm(script.Realm as ManagedRealm)?.descriptor.id;
+        if (realmId === undefined) {
+          return;
+        }
+        this.sendEvent['Debugger.scriptParsed'](getParsedEvent(script, id, realmId));
+      });
+    });
+  }
+
   #debugContext: DebuggerContext = {
     sendEvent: this.sendEvent,
     preference: this.preference,
     context: this.#context,
-    onDebuggerAttached: () => {
-      this.#context.realms.forEach((realm) => {
-        if (realm) {
-          this.sendEvent['Runtime.executionContextCreated']({
-            context: realm.descriptor,
-          });
-        }
-      });
+    onDebuggerConnect: () => {
+      if (!this.#debuggerAttached) {
+        this.#debuggerAttached = true;
+        this.#onDebuggerConnected();
+      }
+    },
+    onDebuggerDisconnect: () => {
+      this.#debuggerAttached = false;
     },
   };
 }

@@ -54,6 +54,7 @@
     "watch": "run-p \"watch:*\"",
     "build": "run-s gen-err \"build:*\"",
     "build:regex_data": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types scripts/gen_regex_sets.mts",
+    "build:bundle_test262_harness": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types scripts/bundle_test262_harness.mts",
     "build:dts": "tsc -b .",
     "watch:dts": "tsc -b . -w",
     "build:engine": "cross-env NODE_OPTIONS=\"--enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types\" rollup -c ./scripts/rollup.config.mts",

@@ -1,6 +1,6 @@
 import http from 'node:http';
 import https from 'node:https';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, type AddressInfo } from 'ws';
 import packageJson from '../../package.json' with { type: 'json' };
 // Note: typescript will not copy json files, so it will not appear in the lib directory
 // eslint-disable-next-line import/no-useless-path-segments
@@ -29,12 +29,13 @@ export class NodeWebsocketInspector extends Inspector {
     });
   }
 
-  protected constructor(server: http.Server | https.Server, isDebug: boolean) {
+  protected constructor(httpServer: http.Server | https.Server, isDebug: boolean) {
     super();
-    this._server = server;
-    const ws = new WebSocketServer({ server });
-    this._ws = ws;
-    ws.on('connection', (ws) => {
+    this._server = httpServer;
+    httpServer.on('request', this.onRequest);
+    const websocketServer = new WebSocketServer({ server: httpServer });
+    this._ws = websocketServer;
+    websocketServer.on('connection', (ws) => {
       const send = (obj: unknown) => {
         const s = JSON.stringify(obj);
         ws.send(s);
@@ -57,10 +58,17 @@ export class NodeWebsocketInspector extends Inspector {
         }
         this.onMessage(id, method, params);
       });
+      ws.on('close', () => {
+        this.onDebuggerDisconnect();
+      });
     });
   }
 
-  static inspectorHTTPServer(req: http.IncomingMessage, res: http.ServerResponse<http.IncomingMessage>) {
+  get devtoolsFrontendUrl() {
+    return `devtools://devtools/bundled/js_app.html?experiments=true&v8only=true&ws=localhost:${this.port}`;
+  }
+
+  private onRequest = (req: http.IncomingMessage, res: http.ServerResponse<http.IncomingMessage>) => {
     if (req.method !== 'GET') {
       res.writeHead(405);
       res.end();
@@ -78,19 +86,21 @@ export class NodeWebsocketInspector extends Inspector {
 
     switch (req.url) {
       case '/json':
-      case '/json/list':
+      case '/json/list': {
+        const devtoolsFrontendUrl = this.devtoolsFrontendUrl;
         json([{
           description: `${packageJson.name} instance`,
-          devtoolsFrontendUrl: 'chrome-devtools://devtools/bundled/js_app.html?experiments=true&v8only=true&ws=localhost:9229/',
-          devtoolsFrontendUrlCompat: 'chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:9229/',
+          devtoolsFrontendUrl,
+          devtoolsFrontendUrlCompat: devtoolsFrontendUrl,
           faviconUrl: 'https://avatars0.githubusercontent.com/u/51185628',
           id: 'inspector.0',
           title: 'engine262',
           type: 'node',
           url: `file://${process.cwd()}`,
-          webSocketDebuggerUrl: 'ws://localhost:9229/',
+          webSocketDebuggerUrl: `ws://localhost:${this.port}/`,
         }]);
         break;
+      }
       case '/json/version':
         json({
           'Browser': `${packageJson.name}/v${packageJson.version}`,
@@ -105,16 +115,35 @@ export class NodeWebsocketInspector extends Inspector {
         res.end();
         break;
     }
+  };
+
+  get port() {
+    return (this._server.address() as AddressInfo).port;
   }
 
-  static new(port = 9229, host = '127.0.0.1', isDebug = !!process.env.DEBUG) {
-    const server = http.createServer(NodeWebsocketInspector.inspectorHTTPServer);
-    const inspector = new NodeWebsocketInspector(server, isDebug);
-    return new Promise<NodeWebsocketInspector>((resolve) => {
-      server.listen(port, host, () => {
-        resolve(inspector);
-      });
+  static async new(port: number | 'auto' = 'auto', host = '127.0.0.1', isDebug = !!process.env.DEBUG) {
+    const server = http.createServer();
+    await new Promise<void>((resolve, reject) => {
+      if (typeof port === 'number') {
+        server.listen(port, host, () => {
+          resolve();
+        });
+      } else {
+        server.once('error', (error: NodeJS.ErrnoException) => {
+          if (error.code !== 'EADDRINUSE') {
+            reject(error);
+            return;
+          }
+
+          server.listen(0, host, () => {
+            resolve();
+          });
+        }).listen(9229, host, () => {
+          resolve();
+        });
+      }
     });
+    return new NodeWebsocketInspector(server, isDebug);
   }
 
   stop() {

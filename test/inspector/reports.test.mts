@@ -60,7 +60,7 @@ test('console', async () => {
         },
       },
       {
-        "id": 0,
+        "id": 1,
         "method": "Runtime.evaluate",
         "params": {
           "expression": "console.log("hello", "world")",
@@ -69,6 +69,12 @@ test('console', async () => {
       },
       {
         "id": 0,
+        "result": {
+          "debuggerId": "debugger.0",
+        },
+      },
+      {
+        "id": 1,
         "result": {
           "exceptionDetails": undefined,
           "result": {
@@ -157,7 +163,7 @@ test('unhandled promise rejection', async () => {
         },
       },
       {
-        "id": 0,
+        "id": 1,
         "method": "Runtime.evaluate",
         "params": {
           "expression": "var a = Promise.reject(new Error())",
@@ -166,6 +172,12 @@ test('unhandled promise rejection', async () => {
       },
       {
         "id": 0,
+        "result": {
+          "debuggerId": "debugger.0",
+        },
+      },
+      {
+        "id": 1,
         "result": {
           "exceptionDetails": undefined,
           "result": {
@@ -203,7 +215,7 @@ test('unhandled promise rejection', async () => {
         },
       },
       {
-        "id": 1,
+        "id": 2,
         "method": "Runtime.evaluate",
         "params": {
           "expression": "void a.catch(() => {});",
@@ -211,7 +223,7 @@ test('unhandled promise rejection', async () => {
         },
       },
       {
-        "id": 1,
+        "id": 2,
         "result": {
           "exceptionDetails": undefined,
           "result": {
