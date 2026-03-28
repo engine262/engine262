@@ -36,7 +36,6 @@ import {
   IsCallable,
   IsConstructor,
   IteratorClose,
-  type NativeSteps,
   NewPromiseCapability,
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
@@ -222,126 +221,112 @@ function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue 
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(yield* NewPromiseCapability(C));
   __ts_cast__<FunctionObject>(C);
+
   // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
   const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(C));
-  // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   __ts_cast__<FunctionObject>(promiseResolve);
+
   // 5. If promises is not an Object, then
   if (!(promises instanceof ObjectValue)) {
     // a. Let error be a newly created TypeError object.
     const error = Throw.TypeError('$1 is not an object', promises).Value;
     // b. Perform ? Call(promiseCapability.[[Reject]], undefined, « error »).
     Q(yield* Call(promiseCapability.Reject, Value.undefined, [error]));
-    // c. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
   }
 
   // 6. Let result be Completion(PerformPromiseAllKeyed(all, promises, C, promiseCapability, promiseResolve)).
   const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all', promises, C, promiseCapability, promiseResolve));
-  // 7. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
   return promiseCapability.Promise;
 }
 
 /** https://tc39.es/proposal-await-dictionary/#sec-performpromiseallkeyed */
 function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: ObjectValue, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
-  // 1. Let allKeys be ? promises.[[OwnPropertyKeys]]().
   const allKeys: PropertyKeyValue[] = Q(yield* promises.OwnPropertyKeys());
-  // 2. Let keys be a new empty List.
   const keys: PropertyKeyValue[] = [];
-  // 3. Let values be a new empty List.
   const values: Value[] = [];
-  // 4. Let remainingElementsCount be the Record { [[Value]]: 1 }.
   const remainingElementsCount = { Value: 1 };
-  // 5. Let index be 0.
   let index: number = 0;
+
   // 6. For each element key of allKeys, do
   for (const key of allKeys) {
     // a. Let desc be ? promises.[[GetOwnProperty]](key).
     const desc = Q(yield* promises.GetOwnProperty(key));
-    // b. If desc is not undefined and desc.[[Enumerable]] is true, then
     if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
       // i. Let value be ? Get(promises, key).
       const value = Q(yield* Get(promises, key));
-      // ii. Append key to keys.
+
       keys.push(key);
-      // iii. Append undefined to values.
       values.push(Value.undefined);
+
       // iv. Let nextPromise be ? Call(promiseResolve, constructor, « value »).
       const nextPromise = Q(yield* Call(promiseResolve, constructor, [value]));
-      // v. Let alreadyCalled be the Record { [[Value]]: false }.
       const alreadyCalled = { Value: false };
-      // vi. Let onFulfilled be a new Abstract Closure with parameters (x) that captures variant, alreadyCalled, index, keys, values, resultCapability, and remainingElementsCount and performs the following steps when called:
-      const onFulfilledNative: NativeSteps = ((index: number) => function* onFulfilledNative([x = Value.undefined]: Arguments): ValueEvaluator {
-        // 1. If alreadyCalled.[[Value]] is true, return undefined.
-        if (alreadyCalled.Value === true) {
+
+
+      // vi. Let onFulfilledSteps be a new Abstract Closure with parameters (x) that captures variant, keys, values,
+      //     resultCapability, and remainingElementsCount and performs the following steps when called:
+      const onFulfilledSteps = function* onFulfilledSteps([x = Value.undefined]: Arguments): ValueEvaluator {
+        const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
+        if (F.AlreadyCalled.Value === true)
           return Value.undefined;
-        }
-        // 2. Set alreadyCalled.[[Value]] to true.
-        alreadyCalled.Value = true;
-        // 3. If variant is all, then
-        //   a. Set values[index] to x.
-        // 4. Else,
+        F.AlreadyCalled.Value = true;
+
+        const thisIndex: number = F.Index;
         if (variant === 'all') {
-          values[index] = x!;
+          values[thisIndex] = x!
         } else {
-          // a. Assert: variant is all-settled.
           Assert(variant === 'all-settled');
-          // b. Let obj be OrdinaryObjectCreate(%Object.prototype%).
           const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
           // c. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
           X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
           // d. Perform ! CreateDataPropertyOrThrow(obj, "value", x).
           X(CreateDataProperty(obj, Value('value'), x));
-          // e. Set values[index] to obj.
-          values[index] = obj;
+          values[thisIndex] = obj;
         }
-        // 5. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+
         remainingElementsCount.Value -= 1;
-        // 6. If remainingElementsCount.[[Value]] = 0, then
         if (remainingElementsCount.Value === 0) {
-          // a. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
           const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(keys, values);
           // b. Return ? Call(resultCapability.[[Resolve]], undefined, « result »).
           return Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
         }
 
-        // 7. Return undefined.
         return Value.undefined;
-      })(index);
-      // vii. Set onFulfilled.[[Length]] to 1.
-      const onFulfilled = X(CreateBuiltinFunction(onFulfilledNative, 1, Value(''), []));
-      // CODEREVIEW: come back here
+      };
+
+      // vii. Let onFulfilled be CreateBuiltinFunction(onFulfilledSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
+      const onFulfilled = CreateBuiltinFunction(onFulfilledSteps, 1, Value(''), ["AlreadyCalled", "Index"]) as Mutable<PromiseAllResolveElementFunctionObject>;
+      onFulfilled.AlreadyCalled = alreadyCalled;
+      onFulfilled.Index = index;
 
       let onRejected: Value;
       // viii. If variant is all, then
       if (variant === 'all') {
         onRejected = resultCapability.Reject;
       } else {
-        // 1. Assert: variant is all-settled.
         Assert(variant === 'all-settled');
-        // 2. Let onRejected be a new Abstract Closure with parameters (x) that captures alreadyCalled, index, keys, values, resultCapability, and remainingElementsCount and performs the following steps when called:
-        const onRejectedNative: NativeSteps = ((index: number) => function* onRejectedNative([x = Value.undefined]: Arguments): ValueEvaluator {
-          // a. If alreadyCalled.[[Value]] is true, return undefined.
-          if (alreadyCalled.Value === true) {
-            return Value.undefined;
-          }
-          // b. Set alreadyCalled.[[Value]] to true.
-          alreadyCalled.Value = true;
+        // 2. Let onRejectedSteps be a new Abstract Closure with parameters (x) that captures keys, values,
+        //    resultCapability, and remainingElementsCount and performs the following steps when called:
+        const onRejectedSteps = function* onRejectedSteps([x = Value.undefined]: Arguments): ValueEvaluator {
+          const F = surroundingAgent.activeFunctionObject as PromiseAllRejectElementFunctionObject;
 
-          // c. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+          if (F.AlreadyCalled.Value === true)
+            return Value.undefined;
+          F.AlreadyCalled.Value = true;
+
+          const thisIndex: number = F.Index;
           const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
           // d. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
           X(CreateDataProperty(obj, Value('status'), Value('rejected')));
           // e. Perform ! CreateDataPropertyOrThrow(obj, "reason", x).
           X(CreateDataProperty(obj, Value('reason'), x));
-          // f. Set values[index] to obj.
-          values[index] = obj;
-          // g. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
-          remainingElementsCount.Value -= 1;
 
-          // h. If remainingElementsCount.[[Value]] = 0, then
+          values[thisIndex] = obj;
+
+          remainingElementsCount.Value -= 1;
           if (remainingElementsCount.Value === 0) {
             // i. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
             const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(keys, values);
@@ -349,26 +334,24 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
             return Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
           }
 
-          // i. Return undefined.
           return Value.undefined;
-        })(index);
-        // 3. Set onRejected.[[Length]] to 1.
-        onRejected = X(CreateBuiltinFunction(onRejectedNative, 1, Value(''), []));
+        }
+
+        const onRejectNative = CreateBuiltinFunction(onRejectedSteps, 1, Value(''), ["AlreadyCalled", "Index"]) as Mutable<PromiseAllRejectElementFunctionObject>;
+        onRejectNative.AlreadyCalled = alreadyCalled;
+        onRejectNative.Index = index;
+        onRejected = onRejectNative;
       }
 
-      // x. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
       remainingElementsCount.Value += 1;
       // xi. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
       Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
-      // xii. Set index to index + 1.
       index += 1;
     }
   }
 
-  // 7. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
   remainingElementsCount.Value -= 1;
 
-  // 8. If remainingElementsCount.[[Value]] = 0, then
   if (remainingElementsCount.Value === 0) {
     /*
     a. NOTE: This can happen even if keys was non-empty if an ill-behaved thenable synchronously invoked the callback passed to its "then" method.
@@ -378,6 +361,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
     // c. Perform ? Call(resultCapability.[[Resolve]], undefined, « result »).
     Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
   }
+
   return resultCapability.Promise;
 }
 
@@ -391,42 +375,65 @@ function CreateKeyedPromiseCombinatorResultObject(keys: readonly PropertyKeyValu
   return obj;
 }
 
+/** https://tc39.es/ecma262/#sec-promise.allsettled */
+function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const C = thisValue;
+  const promiseCapability = Q(yield* NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
+
+  const promiseResolve = yield* GetPromiseResolve(C);
+  __ts_cast__<FunctionObject>(promiseResolve);
+
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
+
+  const iteratorRecord = yield* GetIterator(iterable, 'sync');
+  IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  __ts_cast__<IteratorRecord>(iteratorRecord);
+
+  // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
+  let result: ValueCompletion = yield* PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve);
+
+  if (result instanceof AbruptCompletion) {
+    if (iteratorRecord.Done === Value.false) {
+      result = yield* IteratorClose(iteratorRecord, result);
+    }
+    IfAbruptRejectPromise(result, promiseCapability);
+  }
+
+  return result;
+}
+
+
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
-  // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor));
-  // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
-  // 3. Assert: IsCallable(promiseResolve) is true.
   Assert(IsCallable(promiseResolve));
-  // 4. Let values be a new empty List.
   const values: Value[] = [];
-  // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
   const remainingElementsCount = { Value: 1 };
-  // 6. Let index be 0.
   let index = 0;
+
   // 7. Repeat,
   while (true) {
     // a. Let next be ? IteratorStepValue(iteratorRecord).
     const next = Q(yield* IteratorStepValue(iteratorRecord));
     // d. If next is done,
     if (next === 'done') {
-      // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
-      // iii. If remainingElementsCount.[[Value]] is 0, then
       if (remainingElementsCount.Value === 0) {
         // 1. Let valuesArray be ! CreateArrayFromList(values).
         const valuesArray = X(CreateArrayFromList(values));
         // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
         Q(yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
       }
-      // iv. Return resultCapability.[[Promise]].
+
       return resultCapability.Promise;
     }
-    // h. Append undefined to values.
+
     values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
     const nextPromise = Q(yield* Call(promiseResolve, constructor, [next]));
+
     // j. Let fulfilledSteps be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
     const fulfilledSteps = function* PromiseAllSettledResolveElementFunctions([value = Value.undefined]: Arguments): ValueEvaluator {
       const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
@@ -447,6 +454,7 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       }
       return Value.undefined;
     };
+
     // l. Let onFulfilled be ! CreateBuiltinFunction(fulfilledSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
     const onFulfilled = X(CreateBuiltinFunction(fulfilledSteps, 1, Value(''), [
       'AlreadyCalled',
@@ -455,12 +463,11 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       'Capability',
       'RemainingElements',
     ])) as Mutable<PromiseAllResolveElementFunctionObject>;
-    // m. Let alreadyCalled be the Record { [[Value]]: false }.
+
     const alreadyCalled = { Value: false };
-    // n. Set onFulfilled.[[AlreadyCalled]] to alreadyCalled.
     onFulfilled.AlreadyCalled = alreadyCalled;
-    // o. Set onFulfilled.[[Index]] to index.
     onFulfilled.Index = index;
+
     // s. Let rejectedSteps be the algorithm steps defined in Promise.allSettled Reject Element Functions.
     const rejectedSteps = function* PromiseAllSettledRejectElementFunctions([error = Value.undefined]: Arguments): ValueEvaluator {
       const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
@@ -481,6 +488,7 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       }
       return Value.undefined;
     };
+
     // u. Let onRejected be ! CreateBuiltinFunction(rejectedSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
     const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllResolveElementFunctionObject>;
     onRejected.AlreadyCalled = alreadyCalled;
@@ -491,62 +499,25 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
   }
 }
 
-/** https://tc39.es/ecma262/#sec-promise.allsettled */
-function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let C be the this value.
-  const C = thisValue;
-  // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
-  // 3. Let promiseResolve be GetPromiseResolve(C).
-  const promiseResolve = yield* GetPromiseResolve(C);
-  __ts_cast__<FunctionObject>(promiseResolve);
-  // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
-  IfAbruptRejectPromise(promiseResolve, promiseCapability);
-  // 5. Let iteratorRecord be GetIterator(iterable).
-  const iteratorRecord = yield* GetIterator(iterable, 'sync');
-  // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
-  IfAbruptRejectPromise(iteratorRecord, promiseCapability);
-  __ts_cast__<IteratorRecord>(iteratorRecord);
-  // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ValueCompletion = yield* PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve);
-  // 8. If result is an abrupt completion, then
-  if (result instanceof AbruptCompletion) {
-    // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === Value.false) {
-      result = yield* IteratorClose(iteratorRecord, result);
-    }
-    // b. IfAbruptRejectPromise(result, promiseCapability).
-    IfAbruptRejectPromise(result, promiseCapability);
-  }
-  // 9. Return ? result.
-  return result;
-}
 
 /** https://tc39.es/proposal-await-dictionary/#sec-promise.allsettledkeyed */
 function* Promise_allSettledKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const C = thisValue;
-  // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(yield* NewPromiseCapability(C));
   __ts_cast__<FunctionObject>(C);
-  // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
+
   const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(C));
-  // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   __ts_cast__<FunctionObject>(promiseResolve);
-  // 5. If promises is not an Object, then
+
   if (!(promises instanceof ObjectValue)) {
-    // a. Let error be a newly created TypeError object.
     const error = Throw.TypeError('$1 is not an object', promises).Value;
-    // b. Perform ? Call(promiseCapability.[[Reject]], undefined, « error »).
     Q(yield* Call(promiseCapability.Reject, Value.undefined, [error]));
-    // c. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
   }
 
   // 6. Let result be Completion(PerformPromiseAllKeyed(all, promises, C, promiseCapability, promiseResolve)).
   const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all-settled', promises, C, promiseCapability, promiseResolve));
-  // 7. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
   return promiseCapability.Promise;
 }
