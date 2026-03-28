@@ -575,6 +575,23 @@ function CompileAssertion(node: ParseNode.RegExp.Assertion, rer: RegExpRecord): 
       }
       return 'failure';
     };
+  } else if (node.production === 'A') {
+    return function* Assertion_BufferStart(x, c) {
+      const e = x.endIndex;
+      if (e === 0) {
+        return yield () => c(x);
+      }
+      return 'failure';
+    };
+  } else if (node.production === 'z') {
+    return function* Assertion_BufferEnd(x, c) {
+      const Input = x.input;
+      const e = x.endIndex;
+      if (e === Input.length) {
+        return yield () => c(x);
+      }
+      return 'failure';
+    };
   } else if (node.production === '?=') {
     const m = CompileSubPattern(node.Disjunction, rer, Direction.Forward);
     return function* Assertion_PositiveLookahead(x, c) {
