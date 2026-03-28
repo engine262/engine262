@@ -1,6 +1,7 @@
 import fs from 'fs';
 
 const harnessDir = new URL('../test/test262/test262/harness/', import.meta.url);
+fs.mkdirSync(new URL('../lib', import.meta.url), { recursive: true });
 const outputFile = new URL('../lib/test262-harness.json', import.meta.url);
 
 const harnessFiles = fs.readdirSync(harnessDir).filter((file) => file.endsWith('.js')).concat(
