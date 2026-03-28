@@ -270,13 +270,14 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
       //     resultCapability, and remainingElementsCount and performs the following steps when called:
       const onFulfilledSteps = function* onFulfilledSteps([x = Value.undefined]: Arguments): ValueEvaluator {
         const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
-        if (F.AlreadyCalled.Value === true)
+        if (F.AlreadyCalled.Value === true) {
           return Value.undefined;
+        }
         F.AlreadyCalled.Value = true;
 
         const thisIndex: number = F.Index;
         if (variant === 'all') {
-          values[thisIndex] = x!
+          values[thisIndex] = x!;
         } else {
           Assert(variant === 'all-settled');
           const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
@@ -298,7 +299,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
       };
 
       // vii. Let onFulfilled be CreateBuiltinFunction(onFulfilledSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
-      const onFulfilled = CreateBuiltinFunction(onFulfilledSteps, 1, Value(''), ["AlreadyCalled", "Index"]) as Mutable<PromiseAllResolveElementFunctionObject>;
+      const onFulfilled = CreateBuiltinFunction(onFulfilledSteps, 1, Value(''), ['AlreadyCalled', 'Index']) as Mutable<PromiseAllResolveElementFunctionObject>;
       onFulfilled.AlreadyCalled = alreadyCalled;
       onFulfilled.Index = index;
 
@@ -313,8 +314,9 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
         const onRejectedSteps = function* onRejectedSteps([x = Value.undefined]: Arguments): ValueEvaluator {
           const F = surroundingAgent.activeFunctionObject as PromiseAllRejectElementFunctionObject;
 
-          if (F.AlreadyCalled.Value === true)
+          if (F.AlreadyCalled.Value === true) {
             return Value.undefined;
+          }
           F.AlreadyCalled.Value = true;
 
           const thisIndex: number = F.Index;
@@ -335,9 +337,9 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
           }
 
           return Value.undefined;
-        }
+        };
 
-        const onRejectNative = CreateBuiltinFunction(onRejectedSteps, 1, Value(''), ["AlreadyCalled", "Index"]) as Mutable<PromiseAllRejectElementFunctionObject>;
+        const onRejectNative = CreateBuiltinFunction(onRejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index']) as Mutable<PromiseAllRejectElementFunctionObject>;
         onRejectNative.AlreadyCalled = alreadyCalled;
         onRejectNative.Index = index;
         onRejected = onRejectNative;
