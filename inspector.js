@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 ae71998cc5a8315700555135b1ac202a0d6d0b31
+ * engine262 0.0.1 661889ca61f8cee584c73338e2c8e8ff39bd7778
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -27,26 +27,6 @@
   typeof define === 'function' && define.amd ? define(['exports', './engine262.mjs'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["@magic-works/engine262/inspector"] = {}, global["@engine262/engine262"]));
 })(this, (function (exports, engine262_mjs) { 'use strict';
-
-  /*
-  Test code: copy this into the inspector console.
-  primitive: console.log('primitive:', null, undefined, true, false, 0, -0, NaN, Infinity, -Infinity, 1n, 'string', Symbol(), Symbol('text'), Symbol.for('global'), Symbol.iterator);
-  fn: console.log('builtin:', eval, '\nfunction:', function() { code }, '\ngenerator:', function*() { code }, '\nasync:', async function() { code }, '\nasync generator:', async function*() { code }, '\narrow:', () => { code }, '\narrow async:', async () => { code });
-
-  normal: console.log('normal:', {}, new (class T { #a }), globalThis);
-  arraybuffer: console.log('arraybuffer:', new ArrayBuffer(8));
-  dataview: console.log('dataview:', new DataView(new ArrayBuffer(8)));
-  map: console.log('map:', new Map(), new Map([[eval, globalThis], [1, 2]]));
-  set: console.log('set:', new Set(), new Set([1, globalThis]));
-  weakmap: console.log('weakmap:', new WeakMap(), new WeakMap([[{}, 1]]));
-  weakset: console.log('weakset:', new WeakSet(), new WeakSet([{}]));
-  date: console.log('date:', new Date());
-  promise: console.log('promise:', new Promise(() => {}), Promise.resolve(globalThis), Promise.reject(globalThis));
-  proxy: {  const x = Proxy.revocable({}, {}); x.revoke(); console.log('proxy:', new Proxy({}, {}), new Proxy(function() {}, {}), x.proxy); }
-  regexp: console.log('regexp:', /pattern/, new RegExp('pattern', 'g'));
-  array: console.log('array:', [], [1, 2], Object.assign([1, 2], { a: 1 }), [0, ,,, 3]);
-  typedarray: console.log('typedarray:', new Int8Array(8), new Int16Array(8), new Int32Array(8), new Uint8Array(8), new Uint16Array(8), new Uint32Array(8), new Uint8ClampedArray(8), new Float32Array(8), new Float64Array(8), new BigInt64Array(8), new BigUint64Array(8));
-  */
 
   const Null = {
     toRemoteObject: () => ({
@@ -173,17 +153,17 @@
         description
       };
     },
-    toPropertyPreview(name, value) {
+    toPropertyPreview(name, value, context) {
       return {
         name,
         type: 'number',
-        value: this.toDescription(value)
+        value: this.toDescription(value, context)
       };
     },
-    toObjectPreview(value) {
+    toObjectPreview(value, context) {
       return {
         type: 'number',
-        description: this.toDescription(value),
+        description: this.toDescription(value, context),
         overflow: false,
         properties: []
       };
@@ -193,6 +173,7 @@
       return value instanceof engine262_mjs.BigIntValue ? `${r}n` : r.toString();
     }
   };
+
   function unwrapFunction(value) {
     if (engine262_mjs.isWrappedFunctionExoticObject(value)) {
       return unwrapFunction(value.WrappedTargetFunction);
@@ -235,8 +216,37 @@
         properties: []
       };
     },
+    toInternalProperties(value) {
+      if (engine262_mjs.isECMAScriptFunctionObject(value)) {
+        return [{
+          name: '[[FunctionLocation]]',
+          value: value.ECMAScriptCode ? {
+            type: 'object',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            subtype: 'internal#location',
+            description: 'Object',
+            value: {
+              columnNumber: value.ECMAScriptCode.location.start.column,
+              lineNumber: value.ECMAScriptCode.location.start.line - 1,
+              scriptId: value.scriptId
+            }
+          } : undefined
+        }];
+      }
+      if (engine262_mjs.isBuiltinFunctionObject(value) && value.nativeFunction.section) {
+        return [{
+          name: '[[Section]]',
+          value: {
+            type: 'string',
+            value: value.nativeFunction.section
+          }
+        }];
+      }
+      return [];
+    },
     toDescription: () => 'Function'
   };
+
   class ObjectInspector {
     subtype;
     className;
@@ -244,6 +254,7 @@
     toEntries;
     additionalProperties;
     internalProperties;
+    exoticProperties;
     constructor(className, subtype, toDescription, additionalOptions) {
       this.className = className;
       this.subtype = subtype;
@@ -251,34 +262,35 @@
       this.toEntries = additionalOptions?.entries;
       this.additionalProperties = additionalOptions?.additionalProperties;
       this.internalProperties = additionalOptions?.internalProperties;
+      this.exoticProperties = additionalOptions?.exoticProperties;
     }
-    toRemoteObject(value, getObjectId) {
+    toRemoteObject(value, getObjectId, context) {
       return {
         type: 'object',
         subtype: this.subtype,
         objectId: getObjectId(value),
         className: typeof this.className === 'string' ? this.className : this.className(value),
-        description: this.toDescription(value),
-        preview: this.toObjectPreview(value)
+        description: this.toDescription(value, context),
+        preview: this.toObjectPreview(value, context)
       };
     }
-    toPropertyPreview(name, value) {
+    toPropertyPreview(name, value, context) {
       return {
         name,
         type: 'object',
         subtype: this.subtype,
-        value: this.toDescription(value)
+        value: this.toDescription(value, context)
       };
     }
-    toInternalProperties(value, getObjectId, generatePreview) {
-      const internalProperties = [...(this.internalProperties?.(value) || [])];
+    toInternalProperties(value, getObjectId, context, generatePreview) {
+      const internalProperties = [...(this.internalProperties?.(value, context) || [])];
       if (!internalProperties.length) {
         return [];
       }
       return internalProperties.map(([name, val]) => {
         let value;
         if (val instanceof engine262_mjs.Value) {
-          value = getInspector(val).toRemoteObject(val, getObjectId, generatePreview);
+          value = getInspector(val).toRemoteObject(val, getObjectId, context, generatePreview);
         } else {
           const array = new engine262_mjs.ObjectValue([]);
           array.DefineOwnProperty = engine262_mjs.ArrayExoticObjectInternalMethods.DefineOwnProperty;
@@ -305,7 +317,7 @@
               Value: value
             }));
           }
-          value = Array$1.toRemoteObject(array, getObjectId, generatePreview);
+          value = getInspector(array).toRemoteObject(array, getObjectId, context, generatePreview);
         }
         return {
           name,
@@ -313,166 +325,29 @@
         };
       });
     }
-    toObjectPreview(value) {
-      const e = this.toEntries?.(value);
+    toObjectPreview(value, context) {
+      const e = this.toEntries?.(value, context);
       return {
         type: 'object',
         subtype: this.subtype,
-        description: this.toDescription(value),
+        description: this.toDescription(value, context),
         entries: e?.length ? e : undefined,
-        ...propertiesToPropertyPreview(value, [...(this.internalProperties?.(value) || []), ...(this.additionalProperties?.(value) || [])])
+        ...propertiesToPropertyPreview(value, [...(this.internalProperties?.(value, context) || []), ...(this.additionalProperties?.(value, context) || [])], context)
       };
     }
   }
-  const InspectorEntry = new ObjectInspector('Object', 'internal#entry', value => {
-    const key = value.properties.get(engine262_mjs.Value('key')).Value;
-    const val = value.properties.get(engine262_mjs.Value('value')).Value;
-    return `{${getInspector(key).toDescription(key)} => ${getInspector(val).toDescription(val)}}`;
-  });
-  const Default = new ObjectInspector('Object', undefined, object => {
+  const DefaultObject = new ObjectInspector('Object', undefined, object => {
     const [ctor] = object.ConstructedBy;
     if (!ctor) {
       return 'Object';
     }
     return propertyNameToString(ctor.HostInitialName);
   });
-  const ArrayBuffer = new ObjectInspector('ArrayBuffer', 'arraybuffer', value => `ArrayBuffer(${value.ArrayBufferByteLength})`, {});
-  const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(${value.ByteLength})`);
-  const Error$1 = new ObjectInspector('SyntaxError', 'error', value => {
-    let text = '';
-    engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
-      engine262_mjs.evalQ(Q => {
-        if (value instanceof engine262_mjs.ObjectValue) {
-          const stack = Q(engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))));
-          if (stack !== engine262_mjs.Value.undefined) {
-            text += Q(engine262_mjs.skipDebugger(engine262_mjs.ToString(stack))).stringValue();
-          }
-        }
-      });
-    });
-    return text;
+  const InternalInspectorEntry = new ObjectInspector('Object', 'internal#entry', (value, context) => {
+    const key = value.properties.get(engine262_mjs.Value('key')).Value;
+    const val = value.properties.get(engine262_mjs.Value('value')).Value;
+    return `{${getInspector(key).toDescription(key, context)} => ${getInspector(val).toDescription(val, context)}}`;
   });
-  const Map$1 = new ObjectInspector('Map', 'map', value => `Map(${value.MapData.filter(x => !!x.Key).length})`, {
-    additionalProperties: value => [['size', engine262_mjs.Value(value.MapData.filter(x => !!x.Key).length)]],
-    internalProperties: value => [['[[Entries]]', value.MapData]],
-    entries: value => value.MapData.filter(x => x.Key).map(({
-      Key,
-      Value
-    }) => ({
-      key: getInspector(Key).toObjectPreview(Key),
-      value: getInspector(Value).toObjectPreview(Value)
-    }))
-  });
-  const Set = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
-    additionalProperties: value => [['size', engine262_mjs.Value(value.SetData.filter(globalThis.Boolean).length)]],
-    internalProperties: value => [['[[Entries]]', value.SetData]],
-    entries: value => value.SetData.filter(globalThis.Boolean).map(Value => ({
-      value: getInspector(Value).toObjectPreview(Value)
-    }))
-  });
-  const WeakMap$1 = new ObjectInspector('WeakMap', 'weakmap', () => 'WeakMap', {
-    internalProperties: value => [['[[Entries]]', value.WeakMapData]],
-    entries: value => value.WeakMapData.filter(x => x.Key).map(({
-      Key,
-      Value
-    }) => ({
-      key: getInspector(Key).toObjectPreview(Key),
-      value: getInspector(Value).toObjectPreview(Value)
-    }))
-  });
-  const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
-    internalProperties: value => [['[[Entries]]', value.WeakSetData]],
-    entries: value => value.WeakSetData.filter(globalThis.Boolean).map(Value => ({
-      value: getInspector(Value).toObjectPreview(Value)
-    }))
-  });
-  const Date$1 = new ObjectInspector('Date', 'date', value => {
-    if (!globalThis.Number.isFinite(engine262_mjs.R(value.DateValue))) {
-      return 'Invalid Date';
-    }
-    const val = engine262_mjs.DateProto_toISOString([], {
-      thisValue: value,
-      NewTarget: engine262_mjs.Value.undefined
-    });
-    return engine262_mjs.ValueOfNormalCompletion(val).stringValue();
-  });
-  const TemporalInstant = new ObjectInspector('Temporal.Instant', 'date', value => `Temporal.Instant <${engine262_mjs.TemporalInstantToString(value, undefined, 'auto')}>`);
-  const TemporalDuration = new ObjectInspector('Temporal.Duration', 'date', value => `Temporal.Duration <${engine262_mjs.TemporalDurationToString(value, 'auto')}>`);
-  const TemporalPlainDate = new ObjectInspector('Temporal.PlainDate', 'date', value => `Temporal.PlainDate <${engine262_mjs.TemporalDateToString(value, 'auto')}>`);
-  const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${engine262_mjs.ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
-  const TemporalPlainMonthDay = new ObjectInspector('Temporal.PlainMonthDay', 'date', value => `Temporal.PlainMonthDay <${engine262_mjs.TemporalMonthDayToString(value, 'auto')}>`);
-  const TemporalPlainTime = new ObjectInspector('Temporal.PlainTime', 'date', value => `Temporal.PlainTime <${engine262_mjs.TimeRecordToString(value.Time, 'auto')}>`);
-  const TemporalPlainYearMonth = new ObjectInspector('Temporal.PlainYearMonth', 'date', value => `Temporal.PlainYearMonth <${engine262_mjs.TemporalYearMonthToString(value, 'auto')}>`);
-  const TemporalZonedDateTime = new ObjectInspector('Temporal.ZonedDateTime', 'date', value => `Temporal.ZonedDateTime <${engine262_mjs.TemporalZonedDateTimeToString(value, 'auto', 'auto', 'auto', 'auto')}>`);
-  const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
-    internalProperties: value => [['[[PromiseState]]', engine262_mjs.Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || engine262_mjs.Value.undefined]]
-  });
-  const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
-    if (engine262_mjs.IsCallable(value.ProxyTarget)) {
-      return 'Proxy(Function)';
-    }
-    if (value.ProxyTarget instanceof engine262_mjs.ObjectValue) {
-      return 'Proxy(Object)';
-    }
-    return 'Proxy';
-  });
-  const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
-  const Module = new ObjectInspector('Module', undefined, () => 'Module', {});
-  const ShadowRealm = new ObjectInspector('ShadowRealm', undefined, () => 'ShadowRealm', {
-    internalProperties: realm => [['[[GlobalObject]]', realm.ShadowRealm.GlobalObject]]
-  });
-  const Array$1 = {
-    toRemoteObject(value, getObjectId) {
-      return {
-        type: 'object',
-        className: 'Array',
-        subtype: 'array',
-        objectId: getObjectId(value),
-        description: getInspector(value).toDescription(value),
-        preview: this.toObjectPreview?.(value)
-      };
-    },
-    toPropertyPreview(name, value) {
-      return {
-        name,
-        type: 'object',
-        subtype: 'array',
-        value: this.toDescription(value)
-      };
-    },
-    toObjectPreview(value) {
-      const result = {
-        type: 'object',
-        subtype: 'array',
-        overflow: false,
-        properties: [],
-        description: this.toDescription(value)
-      };
-      const indexProp = [];
-      const otherProp = [];
-      for (const [key, desc] of value.properties) {
-        if (indexProp.length > 100) {
-          result.overflow = true;
-          break;
-        }
-        if (engine262_mjs.isIntegerIndex(key)) {
-          indexProp.push(propertyToPropertyPreview(key, desc));
-        } else if (!(key instanceof engine262_mjs.JSStringValue && key.stringValue() === 'length')) {
-          otherProp.push(propertyToPropertyPreview(key, desc));
-        }
-      }
-      result.properties = indexProp.concat(otherProp).slice(0, 100);
-      return result;
-    },
-    toDescription(value) {
-      const length = [...value.properties.entries()].find(([key]) => key instanceof engine262_mjs.JSStringValue && key.stringValue() === 'length');
-      if (!length || !(length[1].Value instanceof engine262_mjs.NumberValue)) {
-        throw new TypeError('Bad ArrayExoticObject');
-      }
-      return `Array(${engine262_mjs.R(length[1].Value)})`;
-    }
-  };
-  const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
   function propertyNameToString(value) {
     if (value instanceof engine262_mjs.JSStringValue) {
       return value.stringValue();
@@ -482,7 +357,7 @@
       return engine262_mjs.SymbolDescriptiveString(value).stringValue();
     }
   }
-  function propertyToPropertyPreview(key, desc) {
+  function propertyToPropertyPreview(key, desc, context) {
     const name = propertyNameToString(key);
     if (desc.Get || desc.Set) {
       return {
@@ -490,16 +365,16 @@
         type: 'accessor'
       };
     } else {
-      return getInspector(desc.Value).toPropertyPreview(name, desc.Value);
+      return getInspector(desc.Value).toPropertyPreview(name, desc.Value, context);
     }
   }
-  function propertiesToPropertyPreview(value, extra, max = 5) {
+  function propertiesToPropertyPreview(value, extra, context, max = 5) {
     let overflow = false;
     const properties = [];
     if (extra) {
       for (const [key, value] of extra) {
         if (value instanceof engine262_mjs.Value) {
-          properties.push(getInspector(value).toPropertyPreview(key, value));
+          properties.push(getInspector(value).toPropertyPreview(key, value, context));
         }
         // TODO:... handle Value[]
       }
@@ -516,7 +391,7 @@
           overflow = true;
           break;
         }
-        properties.push(getInspector(index_value).toPropertyPreview(index.toString(), index_value));
+        properties.push(getInspector(index_value).toPropertyPreview(index.toString(), index_value, context));
       }
       properties.push({
         name: 'buffer',
@@ -542,20 +417,240 @@
         overflow = true;
         break;
       }
-      properties.push(propertyToPropertyPreview(key, desc));
+      properties.push(propertyToPropertyPreview(key, desc, context));
     }
     for (const desc of value.PrivateElements) {
       if (properties.length > max) {
         overflow = true;
         break;
       }
-      properties.push(propertyToPropertyPreview(desc.Key, desc));
+      properties.push(propertyToPropertyPreview(desc.Key, desc, context));
     }
     return {
       overflow,
       properties
     };
   }
+
+  const ShadowRealm = new ObjectInspector('ShadowRealm', undefined, () => 'ShadowRealm', {
+    internalProperties: realm => [['[[GlobalObject]]', realm.ShadowRealm.GlobalObject]]
+  });
+
+  const Module = new ObjectInspector('Module', undefined, () => 'Module', {
+    additionalProperties: module => {
+      const result = [];
+      engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
+        engine262_mjs.skipDebugger(engine262_mjs.performDevtoolsEval(function* accessModuleExports() {
+          for (const key of module.Exports) {
+            const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
+            if (completion instanceof engine262_mjs.NormalCompletion) {
+              result.push([key.stringValue(), completion.Value]);
+            }
+          }
+          return engine262_mjs.Value.undefined;
+        }, module.Module.Realm, true, true));
+      });
+      return result;
+    },
+    exoticProperties(module, getObjectId, context, generatePreview) {
+      const result = [];
+      engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
+        engine262_mjs.skipDebugger(engine262_mjs.performDevtoolsEval(function* accessModuleExports() {
+          for (const key of module.Exports) {
+            const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
+            if (completion instanceof engine262_mjs.NormalCompletion) {
+              result.push({
+                name: key.stringValue(),
+                value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
+                writable: false,
+                configurable: false,
+                enumerable: true,
+                isOwn: true
+              });
+            } else {
+              const realm = module.Module.Realm;
+              const evaluate = engine262_mjs.CreateBuiltinFunction(function* evaluate() {
+                return yield* engine262_mjs.Get(module, key);
+              }, 0, 'Module.evaluate', [], realm);
+              result.push({
+                name: key.stringValue(),
+                get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
+                set: {
+                  type: 'undefined'
+                },
+                writable: false,
+                configurable: false,
+                enumerable: true,
+                isOwn: true
+              });
+            }
+          }
+          return engine262_mjs.Value.undefined;
+        }, module.Module.Realm, true, true));
+      });
+      return result;
+    }
+  });
+
+  const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
+
+  const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
+    if (engine262_mjs.IsCallable(value.ProxyTarget)) {
+      return 'Proxy(Function)';
+    }
+    if (value.ProxyTarget instanceof engine262_mjs.ObjectValue) {
+      return 'Proxy(Object)';
+    }
+    return 'Proxy';
+  });
+
+  const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
+    internalProperties: value => [['[[PromiseState]]', engine262_mjs.Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || engine262_mjs.Value.undefined]]
+  });
+
+  const Array$1 = {
+    toRemoteObject(value, getObjectId, context) {
+      return {
+        type: 'object',
+        className: 'Array',
+        subtype: 'array',
+        objectId: getObjectId(value),
+        description: getInspector(value).toDescription(value, context),
+        preview: this.toObjectPreview?.(value, context)
+      };
+    },
+    toPropertyPreview(name, value, context) {
+      return {
+        name,
+        type: 'object',
+        subtype: 'array',
+        value: this.toDescription(value, context)
+      };
+    },
+    toObjectPreview(value, context) {
+      const result = {
+        type: 'object',
+        subtype: 'array',
+        overflow: false,
+        properties: [],
+        description: this.toDescription(value, context)
+      };
+      const indexProp = [];
+      const otherProp = [];
+      for (const [key, desc] of value.properties) {
+        if (indexProp.length > 100) {
+          result.overflow = true;
+          break;
+        }
+        if (engine262_mjs.isIntegerIndex(key)) {
+          indexProp.push(propertyToPropertyPreview(key, desc, context));
+        } else if (!(key instanceof engine262_mjs.JSStringValue && key.stringValue() === 'length')) {
+          otherProp.push(propertyToPropertyPreview(key, desc, context));
+        }
+      }
+      result.properties = indexProp.concat(otherProp).slice(0, 100);
+      return result;
+    },
+    toDescription(value) {
+      const length = [...value.properties.entries()].find(([key]) => key instanceof engine262_mjs.JSStringValue && key.stringValue() === 'length');
+      if (!length || !(length[1].Value instanceof engine262_mjs.NumberValue)) {
+        throw new TypeError('Bad ArrayExoticObject');
+      }
+      return `Array(${engine262_mjs.R(length[1].Value)})`;
+    }
+  };
+  const globalId = new WeakMap();
+  const id = new WeakMap();
+  const ArrayBuffer = new ObjectInspector('ArrayBuffer', 'arraybuffer', value => `ArrayBuffer(${value.ArrayBufferByteLength})`, {
+    internalProperties(value, context) {
+      if (value.ArrayBufferData instanceof engine262_mjs.DataBlock) {
+        if (!id.has(value.ArrayBufferData)) id.set(value.ArrayBufferData, (globalId.get(context) ?? 1000) + 1);
+        const blockId = id.get(value.ArrayBufferData);
+        globalId.set(context, blockId);
+        return [['[[ArrayBufferByteLength]]', engine262_mjs.Value(value.ArrayBufferByteLength)], ['[[ArrayBufferData]]', engine262_mjs.Value(blockId)]];
+      }
+      return [];
+    }
+  });
+  const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(${value.ByteLength})`);
+  const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
+
+  const Date$1 = new ObjectInspector('Date', 'date', value => {
+    if (!globalThis.Number.isFinite(engine262_mjs.R(value.DateValue))) {
+      return 'Invalid Date';
+    }
+    const val = engine262_mjs.DateProto_toISOString([], {
+      thisValue: value,
+      NewTarget: engine262_mjs.Value.undefined
+    });
+    return engine262_mjs.ValueOfNormalCompletion(val).stringValue();
+  });
+  const TemporalInstant = new ObjectInspector('Temporal.Instant', 'date', value => `Temporal.Instant <${engine262_mjs.TemporalInstantToString(value, undefined, 'auto')}>`);
+  const TemporalDuration = new ObjectInspector('Temporal.Duration', 'date', value => `Temporal.Duration <${engine262_mjs.TemporalDurationToString(value, 'auto')}>`);
+  const TemporalPlainDate = new ObjectInspector('Temporal.PlainDate', 'date', value => `Temporal.PlainDate <${engine262_mjs.TemporalDateToString(value, 'auto')}>`);
+  const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${engine262_mjs.ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
+  const TemporalPlainMonthDay = new ObjectInspector('Temporal.PlainMonthDay', 'date', value => `Temporal.PlainMonthDay <${engine262_mjs.TemporalMonthDayToString(value, 'auto')}>`);
+  const TemporalPlainTime = new ObjectInspector('Temporal.PlainTime', 'date', value => `Temporal.PlainTime <${engine262_mjs.TimeRecordToString(value.Time, 'auto')}>`);
+  const TemporalPlainYearMonth = new ObjectInspector('Temporal.PlainYearMonth', 'date', value => `Temporal.PlainYearMonth <${engine262_mjs.TemporalYearMonthToString(value, 'auto')}>`);
+  const TemporalZonedDateTime = new ObjectInspector('Temporal.ZonedDateTime', 'date', value => `Temporal.ZonedDateTime <${engine262_mjs.TemporalZonedDateTimeToString(value, 'auto', 'auto', 'auto', 'auto')}>`);
+
+  const Map$1 = new ObjectInspector('Map', 'map', value => `Map(${value.MapData.filter(x => !!x.Key).length})`, {
+    additionalProperties: value => [['size', engine262_mjs.Value(value.MapData.filter(x => !!x.Key).length)]],
+    internalProperties: value => [['[[Entries]]', value.MapData]],
+    entries: (value, context) => value.MapData.filter(x => x.Key).map(({
+      Key,
+      Value
+    }) => ({
+      key: getInspector(Key).toObjectPreview(Key, context),
+      value: getInspector(Value).toObjectPreview(Value, context)
+    }))
+  });
+  const Set = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
+    additionalProperties: value => [['size', engine262_mjs.Value(value.SetData.filter(globalThis.Boolean).length)]],
+    internalProperties: value => [['[[Entries]]', value.SetData]],
+    entries: (value, context) => value.SetData.filter(globalThis.Boolean).map(Value => ({
+      value: getInspector(Value).toObjectPreview(Value, context)
+    }))
+  });
+  const WeakMap$1 = new ObjectInspector('WeakMap', 'weakmap', () => 'WeakMap', {
+    internalProperties: value => [['[[Entries]]', value.WeakMapData]],
+    entries: (value, context) => value.WeakMapData.filter(x => x.Key).map(({
+      Key,
+      Value
+    }) => ({
+      key: getInspector(Key).toObjectPreview(Key, context),
+      value: getInspector(Value).toObjectPreview(Value, context)
+    }))
+  });
+  const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
+    internalProperties: value => [['[[Entries]]', value.WeakSetData]],
+    entries: (value, context) => value.WeakSetData.filter(globalThis.Boolean).map(Value => ({
+      value: getInspector(Value).toObjectPreview(Value, context)
+    }))
+  });
+
+  const Error$1 = new ObjectInspector('SyntaxError', 'error', (value, context) => {
+    let text = '';
+    const realm = engine262_mjs.surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
+    if (!realm) {
+      return text;
+    }
+    engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
+      engine262_mjs.skipDebugger(engine262_mjs.performDevtoolsEval(function* getErrorStack() {
+        engine262_mjs.evalQ(Q => {
+          if (value instanceof engine262_mjs.ObjectValue) {
+            const stack = Q(engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))));
+            if (stack !== engine262_mjs.Value.undefined) {
+              text += Q(engine262_mjs.skipDebugger(engine262_mjs.ToString(stack))).stringValue();
+            }
+          }
+        });
+        return engine262_mjs.Value.undefined;
+      }, realm, true, true));
+    });
+    return text;
+  });
+
   function getInspector(value) {
     switch (true) {
       case value === engine262_mjs.Value.null:
@@ -621,9 +716,9 @@
       case engine262_mjs.isTemporalZonedDateTimeObject(value):
         return TemporalZonedDateTime;
       case value.internalSlotsList.includes('InspectorEntry'):
-        return InspectorEntry;
+        return InternalInspectorEntry;
       default:
-        return Default;
+        return DefaultObject;
     }
   }
 
@@ -722,9 +817,6 @@
       return this.realms.find(Boolean);
     }
     #idToObject = new Map();
-
-    // id 0 is falsy, skip it
-    #idToArrayBufferBlock = [undefined];
     #objectToId = new Map();
     #objectCounter = 1;
     #internObject(object, group = 'default') {
@@ -756,7 +848,7 @@
       return this.#idToObject.get(objectId);
     }
     toRemoteObject(value, options) {
-      return getInspector(value).toRemoteObject(value, val => this.#internObject(val, options.objectGroup), options.generatePreview);
+      return getInspector(value).toRemoteObject(value, val => this.#internObject(val, options.objectGroup), this, options.generatePreview);
     }
     getProperties({
       objectId,
@@ -785,6 +877,10 @@
           set: value.Set ? wrap(value.Set) : undefined
         });
       });
+      const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
+      if (exoticProperties) {
+        properties.push(...exoticProperties);
+      }
       (() => {
         let p = object;
         while (p instanceof engine262_mjs.ObjectValue) {
@@ -823,7 +919,7 @@
           }
         }
       })();
-      const additionalInternalFields = getInspector(object).toInternalProperties?.(object, val => this.#internObject(val, 'default'), generatePreview);
+      const additionalInternalFields = getInspector(object).toInternalProperties?.(object, val => this.#internObject(val, 'default'), this, generatePreview);
       if (additionalInternalFields) {
         internalProperties.push(...additionalInternalFields);
       }
@@ -831,32 +927,6 @@
         internalProperties.push({
           name: '[[Prototype]]',
           value: wrap(object.Prototype)
-        });
-      }
-      if (engine262_mjs.isBuiltinFunctionObject(object) && object.nativeFunction.section) {
-        internalProperties.push({
-          name: '[[Section]]',
-          value: {
-            type: 'string',
-            value: object.nativeFunction.section
-          }
-        });
-      }
-      if (engine262_mjs.isArrayBufferObject(object) && object.ArrayBufferData instanceof engine262_mjs.DataBlock) {
-        internalProperties.push({
-          name: '[[ArrayBufferByteLength]]',
-          value: {
-            type: 'number',
-            value: object.ArrayBufferByteLength
-          }
-        });
-        this.#idToArrayBufferBlock.push(object.ArrayBufferData.buffer);
-        internalProperties.push({
-          name: '[[ArrayBufferData]]',
-          value: {
-            type: 'number',
-            value: this.#idToArrayBufferBlock.length - 1
-          }
         });
       }
       return {
@@ -878,7 +948,7 @@
         stackTrace: stack ? {
           callFrames: frames
         } : undefined,
-        exception: getInspector(value).toRemoteObject(value, val => this.#internObject(val), false),
+        exception: getInspector(value).toRemoteObject(value, val => this.#internObject(val), this, false),
         lineNumber: frames[0]?.lineNumber || 0,
         columnNumber: frames[0]?.columnNumber || 0,
         exceptionId,
@@ -1013,13 +1083,14 @@
   }
 
   const Debugger = {
-    enable(_req, {
-      onDebuggerAttached
-    }) {
-      onDebuggerAttached();
+    enable(_req, context) {
+      context.onDebuggerConnect();
       return {
         debuggerId: 'debugger.0'
       };
+    },
+    disable(_req, context) {
+      context.onDebuggerDisconnect();
     },
     getScriptSource({
       scriptId
@@ -1147,7 +1218,8 @@
             specifier: options.sourceURL,
             doNotTrackScriptId: !options.persistScript,
             [engine262_mjs.kInternal]: {
-              allowAllPrivateNames: true
+              allowAllPrivateNames: true,
+              allowAwait: true
             }
           });
         }
@@ -1556,8 +1628,15 @@
       }
       const ns = impl[namespace];
       if (!(method in ns)) {
-        // eslint-disable-next-line no-console
-        console.error(`Unknown method requested: ${namespace}.${method}`);
+        this.sendEvent['Runtime.consoleAPICalled']({
+          timestamp: Date.now(),
+          type: 'warning',
+          executionContextId: 0,
+          args: [{
+            type: 'string',
+            value: `engine262 internal error: Method not implemented: ${namespace}.${method}`
+          }]
+        });
         return;
       }
       const f = ns[method];
@@ -1573,10 +1652,12 @@
     sendEvent = Object.create(new Proxy({}, {
       get: (_, key) => {
         const f = params => {
-          this.send({
-            method: key,
-            params
-          });
+          if (this.#debuggerAttached) {
+            this.send({
+              method: key,
+              params
+            });
+          }
         };
         Object.defineProperty(this.sendEvent, key, {
           value: f
@@ -1596,18 +1677,42 @@
         timestamp: Date.now()
       });
     }
+    #debuggerAttached = false;
+    onDebuggerDisconnect() {
+      this.#debuggerAttached = false;
+    }
+    #onDebuggerConnected() {
+      this.#context.realms.forEach(realm => {
+        if (realm) {
+          this.sendEvent['Runtime.executionContextCreated']({
+            context: realm.descriptor
+          });
+        }
+      });
+      this.#agents.forEach(({
+        agent
+      }) => {
+        agent.parsedSources.forEach((script, id) => {
+          const realmId = this.#context.getRealm(script.Realm)?.descriptor.id;
+          if (realmId === undefined) {
+            return;
+          }
+          this.sendEvent['Debugger.scriptParsed'](getParsedEvent(script, id, realmId));
+        });
+      });
+    }
     #debugContext = {
       sendEvent: this.sendEvent,
       preference: this.preference,
       context: this.#context,
-      onDebuggerAttached: () => {
-        this.#context.realms.forEach(realm => {
-          if (realm) {
-            this.sendEvent['Runtime.executionContextCreated']({
-              context: realm.descriptor
-            });
-          }
-        });
+      onDebuggerConnect: () => {
+        if (!this.#debuggerAttached) {
+          this.#debuggerAttached = true;
+          this.#onDebuggerConnected();
+        }
+      },
+      onDebuggerDisconnect: () => {
+        this.#debuggerAttached = false;
       }
     };
   }
