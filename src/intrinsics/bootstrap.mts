@@ -122,7 +122,7 @@ export function bootstrapPrototype(realmRec: Realm, props: readonly (Props | und
   return proto;
 }
 
-export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, name: string, length: number, Prototype: ObjectValue, props: readonly Props[] = []) {
+export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, name: string, length: number, Prototype: ObjectValue, props: readonly (Props | undefined)[] = []) {
   const cons = CreateBuiltinFunction(
     markBuiltinFunctionAsConstructor(Constructor),
     length,
