@@ -11,7 +11,7 @@ export function getActiveScriptId(): string | undefined {
       return e.HostDefined.scriptId;
     }
     if (!(e.ScriptOrModule instanceof NullValue)) {
-      const fromScript = e.ScriptOrModule.HostDefined.scriptId;
+      const fromScript = e.ScriptOrModule.HostDefined?.scriptId;
       if (fromScript) {
         return fromScript;
       }

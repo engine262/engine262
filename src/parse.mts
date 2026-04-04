@@ -235,10 +235,10 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: ModuleRecordHostDefined): PlainCompletion<SyntheticModuleRecord> {
+export function ParseJSONModule(sourceText: Value): PlainCompletion<SyntheticModuleRecord> {
   const string = Q(skipDebugger(ToString(sourceText)));
-  const result = Q(ParseJSON(string.stringValue()));
-  return CreateDefaultExportSyntheticModule(result.Value, realm, hostDefined);
+  const parseResult = Q(ParseJSON(string.stringValue()));
+  return CreateDefaultExportSyntheticModule(parseResult.Value);
 }
 
 function setNodeParent(node: ParseNode, parent: ParseNode | undefined) {

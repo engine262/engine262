@@ -83,7 +83,7 @@ function run(test: Test): WorkerToSupervisor {
       }
       const source = parsedScripts.get(scriptId);
       const record = agent.parsedSources.get(scriptId);
-      if (record?.HostDefined.specifier?.includes('harness')) {
+      if (record?.HostDefined?.specifier?.includes('harness')) {
         continue;
       }
       reportStack.push({

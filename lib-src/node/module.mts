@@ -25,7 +25,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
     const realm = (referrer instanceof Realm ? referrer : referrer.Realm) as ManagedRealm;
     const cache = getCache(realm);
 
-    if (!referrer.HostDefined.specifier) {
+    if (!referrer.HostDefined?.specifier) {
       finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
       return;
     }
@@ -35,7 +35,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
     }
 
     evalQ(async (Q) => {
-      const base = path.dirname(referrer.HostDefined.specifier!);
+      const base = path.dirname(referrer.HostDefined!.specifier!);
       const resolved = path.resolve(base, specifier);
       if (cache?.has(resolved)) {
         finish(cache.get(resolved)!);

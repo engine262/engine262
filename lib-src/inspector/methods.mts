@@ -129,7 +129,7 @@ export const Runtime: RuntimeNamespace = {
       if (realm?.descriptor.id === undefined) {
         throw new Error('No realm id found');
       }
-      const event = getParsedEvent(parsed, parsed.HostDefined.scriptId!, realm.descriptor.id);
+      const event = getParsedEvent(parsed, parsed.HostDefined!.scriptId!, realm.descriptor.id);
       sendEvent['Debugger.scriptParsed'](event);
       return { scriptId: event.scriptId };
     }

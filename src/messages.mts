@@ -165,8 +165,8 @@ export const RegExpArgumentNotAllowed = (m: string) => `First argument to ${m} m
 export const RegExpExecNotObject = (o: Value) => `${i(o)} is not object or null`;
 export const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
 export const ResolutionNullOrAmbiguous = (r: string | null, n: Value, m: AbstractModuleRecord) => (r === null
-  ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
-  : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
+  ? `Could not resolve import ${i(n)} from ${m.HostDefined!.specifier}`
+  : `Star export ${i(n)} from ${m.HostDefined!.specifier} is ambiguous`);
 export const SizeIsNaN = () => 'size property must not be undefined, as it will be NaN';
 export const SeparatorIsNotAllowed = () => 'Numeric separators are not allowed here';
 export const SizeMustBePositiveInteger = () => 'size property must be a positive integer';

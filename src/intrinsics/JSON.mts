@@ -251,7 +251,7 @@ class JSONValidator {
   }
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-json-parse-record */
+/** https://tc39.es/ecma262/#sec-json-parse-record */
 interface JSONParseRecord {
   readonly ParseNode: ParseNode;
   readonly Key: PropertyKeyValue;
@@ -260,7 +260,7 @@ interface JSONParseRecord {
   readonly Entries: readonly JSONParseRecord[];
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-internalizejsonproperty */
+/** https://tc39.es/ecma262/#sec-internalizejsonproperty */
 function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, reviver: Value, parseRecord: JSONParseRecord | undefined): ValueEvaluator {
   const val = Q(yield* Get(holder, name));
   const context = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
@@ -284,25 +284,24 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
     if (isArray === Value.true) {
       // Let _elementRecordsLen_ be the number of elements in _elementRecords_.
       const elementRecordsLen = elementRecords.length;
-      let I = 0;
       const len = Q(yield* LengthOfArrayLike(val));
-      while (I < len) {
-        const prop = X(ToString(F(I)));
-        const elementRecord = I < elementRecordsLen ? elementRecords[I] : undefined;
+      let index = 0;
+      while (index < len) {
+        const prop = X(ToString(F(index)));
+        const elementRecord = index < elementRecordsLen ? elementRecords[index] : undefined;
         const newElement = Q(yield* InternalizeJSONProperty(val, prop, reviver, elementRecord));
         if (newElement instanceof UndefinedValue) {
           Q(yield* val.Delete(prop));
         } else {
           Q(yield* CreateDataProperty(val, prop, newElement));
         }
-        I += 1;
+        index += 1;
       }
     } else {
       const keys = Q(yield* EnumerableOwnProperties(val, 'key'));
       for (const P of keys) {
         const entryRecord = entryRecords.find((record) => SameValue(record.Key, P) === Value.true);
         const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver, entryRecord));
-        // const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver));
         if (newElement instanceof UndefinedValue) {
           Q(yield* val.Delete(P));
         } else {
@@ -314,7 +313,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
   return Q(yield* Call(reviver, holder, [name, val, context]));
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-createjsonparserecord */
+/** https://tc39.es/ecma262/#sec-createjsonparserecord */
 function CreateJSONParseRecord(parseNode: ParseNode, key: PropertyKeyValue, val: Value): JSONParseRecord {
   const typedValNode = ShallowestContainedJSONValue(parseNode);
   Assert(!!typedValNode);
@@ -328,12 +327,12 @@ function CreateJSONParseRecord(parseNode: ParseNode, key: PropertyKeyValue, val:
       const len = contentNodes.length;
       const valLen = X(LengthOfArrayLike(val));
       Assert(valLen === len);
-      let I = 0;
-      while (I < len) {
-        const propName = X(ToString(F(I)));
-        const elementParseRecord = CreateJSONParseRecord(contentNodes[I], propName, X(Get(val, propName)));
+      let index = 0;
+      while (index < len) {
+        const propName = X(ToString(F(index)));
+        const elementParseRecord = CreateJSONParseRecord(contentNodes[index], propName, X(Get(val, propName)));
         elements.push(elementParseRecord);
-        I += 1;
+        index += 1;
       }
     } else {
       Assert(typedValNode.type === 'ObjectLiteral');
@@ -473,7 +472,7 @@ export function UnicodeEscape(C: string) {
   return `\u005Cu${n.toString(16).padStart(4, '0')}`;
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-quotejsonstring */
+/** https://tc39.es/ecma262/#sec-quotejsonstring */
 function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shadow
   let product = '\u0022';
   const cpList = [...value.stringValue()].map((c) => c.codePointAt(0)!);
@@ -681,7 +680,7 @@ function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
   return obj;
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-json.israwjson */
+/** https://tc39.es/ecma262/#sec-json.israwjson */
 function JSON_isRawJSON([value = Value.undefined]: Arguments) {
   if (value instanceof ObjectValue && 'IsRawJSON' in value) {
     return Value.true;
@@ -689,15 +688,15 @@ function JSON_isRawJSON([value = Value.undefined]: Arguments) {
   return Value.false;
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-shallowestcontainedjsonvalue */
-function ShallowestContainedJSONValue(node: ParseNode): ParseNode | undefined {
+/** https://tc39.es/ecma262/#sec-static-semantics-shallowestcontainedjsonvalue */
+function ShallowestContainedJSONValue(root: ParseNode): ParseNode | undefined {
   const F = surroundingAgent.activeFunctionObject;
   Assert((F as BuiltinFunctionObject).nativeFunction === JSON_parse);
   const types: ParseNode['type'][] = [
     'NullLiteral', 'BooleanLiteral', 'NumericLiteral', 'StringLiteral', 'ArrayLiteral', 'ObjectLiteral', 'UnaryExpression',
   ];
   let unaryExpression: ParseNode | undefined;
-  let queue = [node];
+  let queue = [root];
   while (queue.length > 0) {
     const candidate = queue.shift()!;
     let queuedChildren = false;

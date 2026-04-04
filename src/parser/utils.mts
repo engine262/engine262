@@ -77,12 +77,12 @@ export function Contains(node: ParseNode, symbol: TargetSymbol): boolean {
   return false;
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-arrayliteralcontentnodes */
+/** https://tc39.es/ecma262/#sec-static-semantics-arrayliteralcontentnodes */
 export function ArrayLiteralContentNodes(node: ParseNode.ArrayLiteral) {
   return node.ElementList;
 }
 
-/** https://tc39.es/ecma262/pr/3714/#sec-static-semantics-propertydefinitionnodes */
+/** https://tc39.es/ecma262/#sec-static-semantics-propertydefinitionnodes */
 export function PropertyDefinitionNodes(node: ParseNode.ObjectLiteral) {
   return node.PropertyDefinitionList;
 }

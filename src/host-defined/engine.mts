@@ -259,7 +259,7 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
 export function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.getImportMetaProperties) {
-    return X(realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public));
+    return X(realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined?.public));
   }
   return [];
 }
@@ -268,7 +268,7 @@ export function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord) 
 export function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.finalizeImportMeta) {
-    return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public));
+    return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined?.public));
   }
   return Value.undefined;
 }

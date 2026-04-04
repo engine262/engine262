@@ -370,7 +370,7 @@ export class CallSite {
       return null;
     }
     if (!(this.context.ScriptOrModule instanceof NullValue)) {
-      return this.context.ScriptOrModule.HostDefined.specifier;
+      return this.context.ScriptOrModule.HostDefined?.specifier;
     }
     return null;
   }
@@ -381,7 +381,7 @@ export class CallSite {
       return context;
     }
     if (!(this.context.ScriptOrModule instanceof NullValue)) {
-      return this.context.ScriptOrModule.HostDefined.scriptId;
+      return this.context.ScriptOrModule.HostDefined?.scriptId;
     }
     return undefined;
   }

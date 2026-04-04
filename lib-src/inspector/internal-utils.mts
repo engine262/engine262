@@ -6,7 +6,7 @@ export function getParsedEvent(source: ScriptRecord | SourceTextModuleRecord | D
   return {
     isModule: source instanceof SourceTextModuleRecord,
     scriptId: id,
-    url: source.HostDefined.specifier || `vm:///${id}`,
+    url: source.HostDefined?.specifier || `vm:///${id}`,
     startLine: 0,
     startColumn: 0,
     endLine: lines.length,

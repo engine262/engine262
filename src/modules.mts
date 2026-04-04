@@ -107,7 +107,7 @@ export abstract class AbstractModuleRecord {
 
   readonly DeferredNamespace: ObjectValue | undefined = undefined;
 
-  readonly HostDefined: ModuleRecordHostDefined;
+  readonly HostDefined: ModuleRecordHostDefined | undefined;
 
   constructor(init: AbstractModuleInit) {
     this.Realm = init.Realm;
