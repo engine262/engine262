@@ -85,18 +85,16 @@ export class PromiseReactionRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-createresolvingfunctions */
-export function CreateResolvingFunctions(promise: PromiseObject) {
-  // 1. Let alreadyResolved be the Record { [[Value]]: false }.
-  const alreadyResolved = { Value: false };
+export function CreateResolvingFunctions(toResolve: PromiseObject) {
+  const promiseOrEmpty: { Value: PromiseObject | undefined } = { Value: toResolve };
   // 2. Let resolveSteps be the algorithm steps defined in Promise Resolve Functions.
   const resolveSteps = function* PromiseResolveFunctions([resolution = Value.undefined]: Arguments): ValueEvaluator {
-    // 5. If alreadyResolved.[[Value]] is true, return undefined.
-    if (alreadyResolved.Value) {
+    if (!promiseOrEmpty.Value) {
       return Value.undefined;
     }
+    const promise = promiseOrEmpty.Value;
     Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
-    // 6. Set alreadyResolved.[[Value]] to true.
-    alreadyResolved.Value = true;
+    promiseOrEmpty.Value = undefined;
     // 7. If SameValue(resolution, promise) is true, then
     if (SameValue(resolution, promise) === Value.true) {
       // a. Let selfResolutionError be a newly created TypeError object.
@@ -143,11 +141,12 @@ export function CreateResolvingFunctions(promise: PromiseObject) {
   const resolve = CreateBuiltinFunction(resolveSteps, 1, Value(''), []);
   // 7. Let rejectSteps be the algorithm steps defined in Promise Reject Functions.
   const rejectSteps = function PromiseRejectFunctions([reason = Value.undefined]: Arguments): ValueCompletion<UndefinedValue> {
-    if (alreadyResolved.Value) {
+    if (!promiseOrEmpty.Value) {
       return Value.undefined;
     }
+    const promise = promiseOrEmpty.Value;
     Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
-    alreadyResolved.Value = true;
+    promiseOrEmpty.Value = undefined;
     RejectPromise(promise, reason);
     return Value.undefined;
   };
