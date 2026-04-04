@@ -261,8 +261,6 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       for (const m of stack) {
         // i. Assert: m.[[Status]] is evaluating.
         Assert(m.Status === 'evaluating');
-        // ii. Assert: m.[[AsyncEvaluationOrder]] is unset.
-        Assert(m.AsyncEvaluationOrder === 'unset');
         // iii. Set m.[[Status]] to evaluated.
         m.Status = 'evaluated';
         // iv. Set m.[[EvaluationError]] to result.
