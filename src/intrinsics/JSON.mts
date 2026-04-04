@@ -19,7 +19,7 @@ import {
 } from '../completion.mts';
 import { isArray, JSStringSet, kInternal } from '../helpers.mts';
 import {
-  BigIntValue, F, ParseScript, Realm, ScriptEvaluation, ThrowCompletion, skipDebugger, type Arguments,
+  BigIntValue, F, ParseScript, Realm, ScriptEvaluation, ThrowCompletion, type Arguments,
   type CodePoint,
   type FunctionObject,
   type PlainCompletion,
@@ -53,6 +53,7 @@ import {
   ToIntegerOrInfinity,
   ToNumber,
   ToString,
+  Throw,
 } from '#self';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -76,7 +77,7 @@ class JSONValidator {
     X(this.eatWhitespace());
     Q(this.parseValue());
     if (this.pos < this.input.length) {
-      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+      return Throw.SyntaxError('Unexpected token in JSON');
     }
     return NormalCompletion(undefined);
   }
@@ -86,7 +87,7 @@ class JSONValidator {
     if (this.pos === this.input.length) {
       this.char = null;
     } else if (this.pos > this.input.length) {
-      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+      return Throw.SyntaxError('Unexpected token in JSON');
     } else {
       this.char = this.input.charAt(this.pos);
     }
@@ -113,7 +114,7 @@ class JSONValidator {
   expect(c: string | readonly string[]) {
     const { char } = this;
     if (!this.eat(c)) {
-      return surroundingAgent.Throw('SyntaxError', 'JSONExpected', c, this.char);
+      return Throw.SyntaxError('Expected character $1 but got $2 in JSON', JSON.stringify(c), JSON.stringify(this.char || ''));
     }
     return char;
   }
@@ -158,7 +159,7 @@ class JSONValidator {
         Q(this.expect('l'));
         return X(this.eatWhitespace());
       default:
-        return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
+        return Throw.SyntaxError('Unexpected character $1 in JSON', JSON.stringify(this.char));
     }
   }
 
@@ -175,7 +176,7 @@ class JSONValidator {
         }
       } else {
         if (this.char! < ' ') {
-          return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
+          return Throw.SyntaxError('Unexpected character $1 in JSON', JSON.stringify(this.char));
         }
         Q(this.advance());
       }
@@ -366,7 +367,7 @@ export function ParseJSON(text: string): PlainCompletion<{ ParseNode: ParseNode,
   const scriptString = `(${text});`;
   const script = ParseScript(scriptString, surroundingAgent.currentRealmRecord, { [kInternal]: { json: true } });
   Assert(!isArray(script)); // array means parse error
-  const result = X(skipDebugger(ScriptEvaluation(script)));
+  const result = X(ScriptEvaluation(script));
   Assert(result instanceof JSStringValue || result instanceof NumberValue || result instanceof BooleanValue || result instanceof ObjectValue || result === Value.null);
   return { ParseNode: script.ECMAScriptCode, Value: result };
 }
@@ -454,7 +455,7 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
     return Value('null');
   }
   if (value instanceof BigIntValue) {
-    return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
+    return Throw.TypeError('Cannot serialize a BigInt to JSON');
   }
   if (value instanceof ObjectValue && !IsCallable(value)) {
     const isArray = Q(IsArray(value));
@@ -493,7 +494,7 @@ function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shado
 /** https://tc39.es/ecma262/#sec-serializejsonobject */
 function* SerializeJSONObject(state: State, value: ObjectValue): ValueEvaluator<JSStringValue> {
   if (state.Stack.includes(value)) {
-    return surroundingAgent.Throw('TypeError', 'JSONCircular');
+    return Throw.TypeError('Cannot JSON stringify a circular structure');
   }
   state.Stack.push(value);
   const stepback = state.Indent;
@@ -538,7 +539,7 @@ function* SerializeJSONObject(state: State, value: ObjectValue): ValueEvaluator<
 /** https://tc39.es/ecma262/#sec-serializejsonarray */
 function* SerializeJSONArray(state: State, value: ObjectValue): PlainEvaluator<JSStringValue | ThrowCompletion> {
   if (state.Stack.includes(value)) {
-    return surroundingAgent.Throw('TypeError', 'JSONCircular');
+    return Throw.TypeError('Cannot JSON stringify a circular structure');
   }
   state.Stack.push(value);
   const stepback = state.Indent;
@@ -648,11 +649,11 @@ function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
   const jsonString = Q(yield* ToString(text));
   const str = jsonString.stringValue();
   if (str === '') {
-    return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+    return Throw.SyntaxError('Unexpected token in JSON');
   }
   const forbiddenChar = ['\u0009', '\u000A', '\u000D', '\u0020', '\u005B', '\u007B'];
   if (forbiddenChar.includes(str[0]) || forbiddenChar.includes(str[str.length - 1])) {
-    return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
+    return Throw.SyntaxError('Unexpected token in JSON');
   }
   const parseResult = Q(ParseJSON(jsonString.stringValue()));
   const value = parseResult.Value;

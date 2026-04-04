@@ -27,6 +27,7 @@ import {
   type FunctionObject,
   type IteratorObject,
   type Realm,
+  Throw,
   type YieldEvaluator,
 } from '#self';
 
@@ -39,10 +40,10 @@ function* IteratorConstructor(
 ): ValueEvaluator<ObjectValue> {
   // 1. If NewTarget is either undefined or the active function object, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('Iterator cannot be invoked without new');
   }
   if (NewTarget === surroundingAgent.activeFunctionObject) {
-    return surroundingAgent.Throw('TypeError', 'CannotConstructAbstractFunction', NewTarget);
+    return Throw.TypeError('Cannot construct abstract $1', NewTarget);
   }
 
   // 2. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Iterator.prototype%").
@@ -78,11 +79,11 @@ function* Iterator_concat(items: Arguments): ValueEvaluator {
   const iterables: { OpenMethod: FunctionObject, Iterable: ObjectValue }[] = [];
   for (const item of items.values()) {
     if (!(item instanceof ObjectValue)) {
-      return surroundingAgent.Throw('TypeError', 'NotAnObject', item);
+      return Throw.TypeError('$1 is not an object', item);
     }
     const method = Q(yield* GetMethod(item, wellKnownSymbols.iterator));
     if (method instanceof UndefinedValue) {
-      return surroundingAgent.Throw('TypeError', 'NotIterable', item);
+      return Throw.TypeError('$1 is not iterable', item);
     }
     iterables.push({ OpenMethod: method, Iterable: item });
   }
@@ -90,7 +91,7 @@ function* Iterator_concat(items: Arguments): ValueEvaluator {
     for (const iterable of iterables) {
       const iter = Q(yield* Call(iterable.OpenMethod, iterable.Iterable));
       if (!(iter instanceof ObjectValue)) {
-        return surroundingAgent.Throw('TypeError', 'NotIterable', iter);
+        return Throw.TypeError('$1 is not iterable', iter);
       }
       const iteratorRecord = Q(yield* GetIteratorDirect(iter));
       let innerAlive = true;

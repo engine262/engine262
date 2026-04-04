@@ -3,11 +3,12 @@ import isUnicodeIDContinueRegex from '@unicode/unicode-16.0.0/Binary_Property/ID
 import isSpaceSeparatorRegex from '@unicode/unicode-16.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mts';
 import {
-  Assert, CallFrame, isLeadingSurrogate, isTrailingSurrogate, ObjectValue, surroundingAgent,
+  Assert, CallFrame, isErrorObject, isLeadingSurrogate, isTrailingSurrogate, ObjectValue, surroundingAgent,
+  Throw,
   ThrowCompletion,
 } from '../index.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
-import { __ts_cast__, getHostDefinedErrorStack } from '../helpers.mts';
+import { __ts_cast__, getHostDefinedErrorDetails } from '../helpers.mts';
 import {
   Token,
   TokenNames,
@@ -224,18 +225,16 @@ export abstract class Lexer {
 
   protected escapeIndex = -1;
 
-  earlyErrors2 = new Set<ErrorObject>();
+  protected abstract readonly specifier?: string;
+
+  earlyErrors = new Set<ErrorObject>();
 
   decorateSyntaxError(error: ErrorObject, location: number | Locatable) {
-    // if (template === 'UnexpectedToken' && typeof context !== 'number' && 'type' in context && context.type === Token.EOS) {
-    //   return this.createSyntaxError(context, 'UnexpectedEOS', []);
-    // }
-
-    let startIndex;
+    let startIndex: number;
     // @ts-ignore unused
-    let endIndex;
-    let line;
-    let column;
+    let endIndex: number;
+    let line: number;
+    let column: number | undefined;
     if (typeof location === 'number') {
       line = this.line;
       if (location === this.source.length) {
@@ -302,33 +301,46 @@ export abstract class Lexer {
     const callFrame = new CallFrame();
     callFrame.columnNumber = column;
     callFrame.lineNumber = line;
-    error.HostDefinedErrorStack = [callFrame];
+    const decoration = `\
+${this.specifier ? `${this.specifier}:${line}:${column}\n` : ''}${this.source.slice(lineStart, lineEnd)}
+${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
+    if (typeof error.HostDefinedMessageString === 'string') {
+      error.HostDefinedMessageString += `\n${decoration}`;
+    }
+    error.HostDefinedStack = [callFrame];
   }
 
   static decorateSyntaxErrorWithScriptId(error: ObjectValue, scriptId: string | undefined) {
-    const stack = getHostDefinedErrorStack(error);
-    if (stack?.[0] instanceof CallFrame) {
-      stack[0].scriptId = scriptId;
+    const { callStack } = getHostDefinedErrorDetails(error);
+    if (callStack?.[0] instanceof CallFrame) {
+      callStack[0].scriptId = scriptId;
     }
   }
 
   // parseFailure(completion: ThrowCompletion): never;
 
-  addEarlyError({ Value: error }: ThrowCompletion, location: Locatable): void {
-    __ts_cast__<ErrorObject>(error);
+  addEarlyError({ Value: error }: ThrowCompletion, location: Locatable = this.peek()) {
+    if (!isErrorObject(error)) {
+      throw new RangeError('Non-syntax error added as early error');
+    }
     this.decorateSyntaxError(error, location);
-    this.earlyErrors2.add(error);
+    this.earlyErrors.add(error);
+    return error;
   }
 
   abstract isStrictMode(): boolean;
 
-  abstract createSyntaxError<K extends keyof typeof import('../messages.mjs')>(context: number | Locatable | undefined, template: K, templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
+  raise(error: ThrowCompletion, context: number | Locatable = this.peek()): never {
+    if (!isErrorObject(error.Value)) {
+      throw new RangeError('Non-syntax error thrown');
+    }
+    this.decorateSyntaxError(error.Value, context);
+    throw error.Value;
+  }
 
-  abstract raiseEarly<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
-
-  abstract raise<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): never;
-
-  abstract unexpected(...args: [(number | Locatable)?, ...Parameters<typeof import('../messages.mjs')['UnexpectedToken']>]): never;
+  unexpected(location: number | Locatable = this.peek()): never {
+    this.raise(Throw.SyntaxError('Unexpected token'), location);
+  }
 
   try<T>(callback: () => T): T | undefined {
     const currentToken = this.currentToken;
@@ -340,7 +352,7 @@ export abstract class Lexer {
     const lineForNextToken = this.lineForNextToken;
     const columnForNextToken = this.columnForNextToken;
     const position = this.position;
-    const earlyErrors = [...this.earlyErrors2];
+    const earlyErrors = [...this.earlyErrors];
     let result: T | undefined;
     try {
       result = callback();
@@ -355,7 +367,7 @@ export abstract class Lexer {
       this.lineForNextToken = lineForNextToken;
       this.columnForNextToken = columnForNextToken;
       this.position = position;
-      this.earlyErrors2 = new Set(earlyErrors);
+      this.earlyErrors = new Set(earlyErrors);
     }
     return result;
   }
@@ -509,7 +521,7 @@ export abstract class Lexer {
   skipBlockComment() {
     const end = this.source.indexOf('*/', this.position + 2);
     if (end === -1) {
-      this.raise('UnterminatedComment', this.position);
+      this.raise(Throw.SyntaxError('Unterminated comment'), this.position);
     }
     this.position += 2;
     for (const match of this.source.slice(this.position, end).matchAll(/\r\n?|[\n\u2028\u2029]/ug)) {
@@ -815,7 +827,7 @@ export abstract class Lexer {
           }
           // Legacy octal literal (0123)
           if (this.isStrictMode()) {
-            this.raise('LegacyOctalLiteralInStrictMode', start);
+            this.raise(Throw.SyntaxError('Legacy octal literal in strict mode'), start);
           }
           this.position -= 1;
           nonDecimalPrefixLength = 1;
@@ -857,7 +869,7 @@ export abstract class Lexer {
         this.position += 1;
       } else if (c === '_') {
         if (zeroLeading) {
-          this.raise('SeparatorIsNotAllowed', this.position);
+          this.raise(Throw.SyntaxError('Separator is not allowed after leading zero'), this.position);
         }
         if (!check(this.source[this.position + 1])) {
           this.unexpected(this.position + 1);
@@ -869,7 +881,7 @@ export abstract class Lexer {
     }
     if (this.source[this.position] === 'n') {
       if (zeroLeading) {
-        this.raise('BigIntLiteralCannotLeadingZero', this.position);
+        this.raise(Throw.SyntaxError('BigInt literal cannot have leading zero'), this.position);
       }
       const buffer = this.source.slice(start, this.position).replace(/_/g, '');
       this.position += 1;
@@ -936,7 +948,7 @@ export abstract class Lexer {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
-        this.raise('UnterminatedString', this.position);
+        this.raise(Throw.SyntaxError('Unterminated string literal'), this.position);
       }
       const c = this.source[this.position];
       if (c === char) {
@@ -944,7 +956,7 @@ export abstract class Lexer {
         break;
       }
       if (c === '\r' || c === '\n') {
-        this.raise('UnterminatedString', this.position);
+        this.raise(Throw.SyntaxError('Unterminated string literal'), this.position);
       }
       this.position += 1;
       if (c === '\\') {
@@ -1001,7 +1013,7 @@ export abstract class Lexer {
           return '\u{0000}';
         } else if (isDecimalDigit(c)) {
           if (this.isStrictMode()) {
-            this.raise('IllegalOctalEscape', this.position);
+            this.raise(Throw.SyntaxError('Illegal octal escape'), this.position);
           }
           const lookahead2 = this.source[this.position + 2];
           if (c === '0' && (lookahead === '8' || lookahead === '9')) {
@@ -1046,7 +1058,7 @@ export abstract class Lexer {
       const code = this.scanHex(end - this.position);
       this.position += 1;
       if (code > 0x10FFFF) {
-        this.raise('InvalidCodePoint', this.position);
+        this.raise(Throw.SyntaxError('Invalid code point'), this.position);
       }
       return code;
     }
@@ -1055,7 +1067,7 @@ export abstract class Lexer {
 
   scanHex(length: number) {
     if (length === 0) {
-      this.raise('InvalidCodePoint', this.position);
+      this.raise(Throw.SyntaxError('Invalid code point'), this.position);
     }
     let n = 0;
     for (let i = 0; i < length; i += 1) {
@@ -1083,23 +1095,23 @@ export abstract class Lexer {
         }
         this.position += 1;
         if (this.source[this.position] !== 'u') {
-          this.raise('InvalidUnicodeEscape', this.position);
+          this.raise(Throw.SyntaxError('Invalid Unicode escape'), this.position);
         }
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
         if (!check(raw)) {
-          this.raise('InvalidUnicodeEscape', this.position);
+          this.raise(Throw.SyntaxError('Invalid Unicode escape'), this.position);
         }
         buffer += raw;
       } else if (isLeadingSurrogate(code)) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
         if (!isTrailingSurrogate(lowSurrogate)) {
-          this.raise('InvalidUnicodeEscape', this.position);
+          this.raise(Throw.SyntaxError('Invalid Unicode escape'), this.position);
         }
         const codePoint = UTF16SurrogatePairToCodePoint(code, lowSurrogate);
         const raw = String.fromCodePoint(codePoint);
         if (!check(raw)) {
-          this.raise('InvalidUnicodeEscape', this.position);
+          this.raise(Throw.SyntaxError('Invalid Unicode escape'), this.position);
         }
         this.position += 2;
         buffer += raw;
@@ -1129,7 +1141,7 @@ export abstract class Lexer {
     let buffer = this.peek().type === Token.ASSIGN_DIV ? '=' : '';
     while (true) {
       if (this.position >= this.source.length) {
-        this.raise('UnterminatedRegExp', this.position);
+        this.raise(Throw.SyntaxError('Unterminated regular expression'), this.position);
       }
       const c = this.source[this.position];
       switch (c) {
@@ -1157,14 +1169,14 @@ export abstract class Lexer {
           buffer += c;
           this.position += 1;
           if (isLineTerminator(this.source[this.position])) {
-            this.raise('UnterminatedRegExp', this.position);
+            this.raise(Throw.SyntaxError('Unterminated regular expression'), this.position);
           }
           buffer += this.source[this.position];
           this.position += 1;
           break;
         default:
           if (isLineTerminator(c)) {
-            this.raise('UnterminatedRegExp', this.position);
+            this.raise(Throw.SyntaxError('Unterminated regular expression'), this.position);
           }
           this.position += 1;
           buffer += c;

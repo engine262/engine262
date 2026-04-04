@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
 import { AbstractModuleRecord, CyclicModuleRecord, ResolvedBindingRecord } from '../modules.mts';
 import {
@@ -35,7 +34,7 @@ import {
   EvaluateModuleSync,
   GetImportedModule,
 } from './all.mts';
-import type { ModuleRecord, PlainEvaluator } from '#self';
+import { Throw, type ModuleRecord, type PlainEvaluator } from '#self';
 
 export interface ModuleNamespaceObject extends ExoticObject {
   readonly Module: AbstractModuleRecord;
@@ -153,7 +152,7 @@ const InternalMethods = {
     const targetEnv = targetModule.Environment;
     // 12. If targetEnv is undefined, throw a ReferenceError exception.
     if (!targetEnv) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', P);
+      return Throw.ReferenceError('$1 is not defined', P);
     }
     // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
@@ -268,7 +267,7 @@ function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<JSStrin
   if (O.Deferred) {
     const m = O.Module;
     if (ReadyForSyncExecution(m) === Value.false) {
-      return surroundingAgent.Throw('TypeError', 'DeferredModuleNotReady', m);
+      return Throw.TypeError('Module "$1" is not ready for synchronous execution', m.HostDefined?.specifier ?? '<anonymous module>');
     }
     Q(yield* EvaluateModuleSync(m));
   }

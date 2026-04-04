@@ -14,7 +14,7 @@ import {
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
 import {
   ToPrimitive, ToNumber, Throw, CreateISODateRecord, CreateTemporalDate, CreateTemporalZonedDateTime, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, nsPerDay, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour,
-  Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, surroundingAgent, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
+  Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
   msPerDay,
 } from '#self';
 
@@ -293,10 +293,10 @@ export function ValidateTemporalRoundingIncrement(increment: number, dividend: n
     maximum = dividend - 1;
   }
   if (increment > maximum) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', increment);
+    return Throw.RangeError('$1 is out of range', increment);
   }
   if (dividend % increment !== 0) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', increment);
+    return Throw.RangeError('$1 is out of range', increment);
   }
   return undefined;
 }
@@ -309,16 +309,16 @@ export function* GetTemporalFractionalSecondDigitsOption(options: ObjectValue): 
   }
   if (!(digitsValue instanceof NumberValue)) {
     if (Q(yield* ToString(digitsValue)).stringValue() !== 'auto') {
-      return surroundingAgent.Throw('RangeError', 'OutOfRange', digitsValue);
+      return Throw.RangeError('$1 is out of range', digitsValue);
     }
     return 'auto';
   }
   if (digitsValue.isNaN() || digitsValue.isInfinity()) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', digitsValue);
+    return Throw.RangeError('$1 is out of range', digitsValue);
   }
   const digitCount = Math.floor(R(digitsValue));
   if (digitCount < 0 || digitCount > 9) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', digitsValue);
+    return Throw.RangeError('$1 is out of range', digitsValue);
   }
   return digitCount;
 }
@@ -466,7 +466,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
     time = result.Time;
   } else {
     if (!(value instanceof JSStringValue)) {
-      return surroundingAgent.Throw('TypeError', 'NotAString', value);
+      return Throw.TypeError('$1 is not a string', value);
     }
     const result = Q(ParseISODateTime(value.stringValue(), ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]']));
     offsetString = result.TimeZone.OffsetString;
@@ -737,7 +737,7 @@ export function RoundNumberToIncrementAsIfPositive(
 export function* ToPositiveIntegerWithTruncation(argument: Value): PlainEvaluator<number> {
   const integer = Q(yield* ToIntegerWithTruncation(argument));
   if (integer <= 0) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', integer);
+    return Throw.RangeError('$1 is out of range', integer);
   }
   return integer;
 }
@@ -747,7 +747,7 @@ export function* ToPositiveIntegerWithTruncation(argument: Value): PlainEvaluato
 export function* ToIntegerWithTruncation(argument: Value): PlainEvaluator<number> {
   const number = R(Q(yield* ToNumber(argument)));
   if (Number.isNaN(number) || number === Infinity || number === -Infinity) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', number);
+    return Throw.RangeError('$1 is out of range', number);
   }
   return Math.trunc(number);
 }
@@ -757,28 +757,28 @@ export function* ToIntegerWithTruncation(argument: Value): PlainEvaluator<number
 export function* ToMonthCode(argument: Value): PlainEvaluator<string> {
   const monthCode = Q(yield* ToPrimitive(argument, 'string'));
   if (!(monthCode instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', monthCode);
+    return Throw.TypeError('$1 is not a string', monthCode);
   }
   const s = monthCode.stringValue();
   if (s.length !== 3 && s.length !== 4) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+    return Throw.RangeError('$1 is out of range', s);
   }
   if (s.charCodeAt(0) !== 0x004D) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+    return Throw.RangeError('$1 is out of range', s);
   }
   if (s.charCodeAt(1) < 0x0030 || s.charCodeAt(1) > 0x0039) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+    return Throw.RangeError('$1 is out of range', s);
   }
   if (s.charCodeAt(2) < 0x0030 || s.charCodeAt(2) > 0x0039) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+    return Throw.RangeError('$1 is out of range', s);
   }
   if (s.length === 4 && s.charCodeAt(3) !== 0x004C) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+    return Throw.RangeError('$1 is out of range', s);
   }
   const monthCodeDigits = s.slice(1, 3);
   const monthCodeInteger = Number(monthCodeDigits);
   if (monthCodeInteger === 0 && s.length !== 4) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', s);
+    return Throw.RangeError('$1 is out of range', s);
   }
   return s;
 }
@@ -787,7 +787,7 @@ export function* ToMonthCode(argument: Value): PlainEvaluator<string> {
 export function* ToOffsetString(argument: Value): PlainEvaluator<string> {
   const offset = Q(yield* ToPrimitive(argument, 'string'));
   if (!(offset instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', offset);
+    return Throw.TypeError('$1 is not a string', offset);
   }
   Q(ParseDateTimeUTCOffset(offset.stringValue()));
   return offset.stringValue();
@@ -849,21 +849,21 @@ export function* GetDifferenceSettings(
     largestUnit = 'auto';
   }
   if (disallowedUnits.includes(largestUnit as TemporalUnit)) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
+    return Throw.RangeError('$1 is out of range', largestUnit);
   }
   Q(ValidateTemporalUnitValue(smallestUnit, unitGroup));
   if (smallestUnit === 'unset') {
     smallestUnit = fallbackSmallestUnit;
   }
   if (disallowedUnits.includes(smallestUnit as TemporalUnit)) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', smallestUnit);
+    return Throw.RangeError('$1 is out of range', smallestUnit);
   }
   const defaultLargestUnit = LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit as TemporalUnit);
   if (largestUnit === 'auto') {
     largestUnit = defaultLargestUnit;
   }
   if (LargerOfTwoTemporalUnits(largestUnit, smallestUnit as TemporalUnit) !== largestUnit) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', largestUnit);
+    return Throw.RangeError('$1 is out of range', largestUnit);
   }
   const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
   if (maximum !== 'unset') {

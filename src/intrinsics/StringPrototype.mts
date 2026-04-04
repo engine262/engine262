@@ -40,6 +40,7 @@ import {
   ToString,
   ToUint32,
   StringCreate,
+  Throw,
   Yield,
   F, R, R as MathematicalValue,
   Realm,
@@ -55,7 +56,7 @@ function thisStringValue(value: Value) {
     Assert(s instanceof JSStringValue);
     return s;
   }
-  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String', value);
+  return Throw.TypeError('$1 is not a $2 object', value, 'String');
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.charat */
@@ -120,7 +121,7 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
   const S = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.endsWith');
+    return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.endsWith');
   }
   const searchStr = Q(yield* ToString(searchString)).stringValue();
   const len = S.length;
@@ -151,7 +152,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   const S = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.includes');
+    return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.includes');
   }
   const searchStr = Q(yield* ToString(searchString)).stringValue();
   const pos = Q(yield* ToIntegerOrInfinity(position));
@@ -293,7 +294,7 @@ function* StringProto_matchAll([regexp = Value.undefined]: Arguments, { thisValu
       Q(RequireObjectCoercible(flags));
       // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
       if (!Q(yield* ToString(flags)).stringValue().includes('g')) {
-        return surroundingAgent.Throw('TypeError', 'StringPrototypeMethodGlobalRegExp', 'matchAll');
+        return Throw.TypeError('The RegExp passed to String.prototype.$1 must have the global flag', 'matchAll');
       }
     }
     // c. Let matcher be ? GetMethod(regexp, @@matchAll).
@@ -324,7 +325,7 @@ function* StringProto_normalize([form = Value.undefined]: Arguments, { thisValue
   }
   const f = form.stringValue();
   if (!['NFC', 'NFD', 'NFKC', 'NFKD'].includes(f)) {
-    return surroundingAgent.Throw('RangeError', 'NormalizeInvalidForm');
+    return Throw.RangeError('Invalid normalization form');
   }
   const ns = S.stringValue().normalize(f);
   return Value(ns);
@@ -351,10 +352,10 @@ function* StringProto_repeat([count = Value.undefined]: Arguments, { thisValue }
   const S = Q(yield* ToString(O));
   const n = Q(yield* ToIntegerOrInfinity(count));
   if (n < 0) {
-    return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
+    return Throw.RangeError('Count $1 is invalid', n);
   }
   if (n === Infinity || n === -Infinity) {
-    return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
+    return Throw.RangeError('Count $1 is invalid', n);
   }
   if (n === 0) {
     return Value('');
@@ -416,7 +417,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
       Q(RequireObjectCoercible(flags));
       // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
       if (!Q(yield* ToString(flags)).stringValue().includes('g')) {
-        return surroundingAgent.Throw('TypeError', 'StringPrototypeMethodGlobalRegExp', 'replaceAll');
+        return Throw.TypeError('The RegExp passed to String.prototype.$1 must have the global flag', 'replaceAll');
       }
     }
     // c. Let replacer be ? GetMethod(searchValue, @@replace).
@@ -617,7 +618,7 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
   const S = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.startsWith');
+    return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.startsWith');
   }
   const searchStr = Q(yield* ToString(searchString)).stringValue();
   const pos = Q(yield* ToIntegerOrInfinity(position));

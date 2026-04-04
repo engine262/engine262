@@ -5,7 +5,6 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
@@ -18,6 +17,7 @@ import {
   ToString,
   F, R,
   Realm,
+  Throw,
 } from '#self';
 
 function thisNumberValue(value: Value) {
@@ -29,7 +29,7 @@ function thisNumberValue(value: Value) {
     Assert(n instanceof NumberValue);
     return n;
   }
-  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
+  return Throw.TypeError('$1 is not a $2 object', value, 'Number');
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
@@ -41,7 +41,7 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined]: Argument
     return NumberValue.toString(x, 10);
   }
   if (f < 0 || f > 100) {
-    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
+    return Throw.RangeError('Invalid format range for $1', 'toExponential');
   }
   return Value(R(x).toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
@@ -52,7 +52,7 @@ function* NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { t
   const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
-    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
+    return Throw.RangeError('Invalid format range for $1', 'toFixed');
   }
   if (!x.isFinite()) {
     return X(NumberValue.toString(x, 10));
@@ -76,7 +76,7 @@ function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { th
     return X(NumberValue.toString(x, 10));
   }
   if (p < 1 || p > 100) {
-    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
+    return Throw.RangeError('Invalid format range for $1', 'toPrecision');
   }
   return Value(R(x).toPrecision(p));
 }
@@ -91,7 +91,7 @@ function* NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue
     radixNumber = Q(yield* ToIntegerOrInfinity(radix));
   }
   if (radixNumber < 2 || radixNumber > 36) {
-    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toString');
+    return Throw.RangeError('Invalid format range for $1', 'toString');
   }
   if (radixNumber === 10) {
     return X(ToString(x));

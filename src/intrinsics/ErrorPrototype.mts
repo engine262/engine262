@@ -19,6 +19,7 @@ import {
   ToString,
   type BuiltinFunctionObject,
   Realm,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
@@ -27,7 +28,7 @@ function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallConte
   const O = thisValue;
   // 2. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('this value $1 is not an object', O);
   }
   // 3. Let name be ? Get(O, "name").
   let name = Q(yield* Get(O, Value('name')));
@@ -58,37 +59,37 @@ function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/proposal-error-stack-accessor/#sec-get-error.prototype.stack */
-function* ErrorProto_getStack(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<JSStringValue | UndefinedValue> {
+function* ErrorProto_stack_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<JSStringValue | UndefinedValue> {
   // 1. Let E be the this value.
   const E = thisValue;
   // 2. If E is not an Object, throw a TypeError exception.
   if (!(E instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', E);
+    return Throw.TypeError('this value $1 is not an object', E);
   }
   // 3. If E does not have an [[ErrorData]] internal slot, return undefined.
   if (!isErrorObject(E)) {
     return Value.undefined;
   }
   // 4. Return an implementation-defined string that represents the stack trace of E.
-  Assert(E.ErrorData instanceof JSStringValue);
-  return E.ErrorData;
+  Assert(typeof E.HostDefinedFormattedStack === 'string');
+  return Value(E.HostDefinedMessageString + E.HostDefinedFormattedStack);
 }
 
 /** https://tc39.es/proposal-error-stack-accessor/#sec-set-error.prototype.stack */
-function* ErrorProto_setStack(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
+function* ErrorProto_stack_setter(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   const [v = Value.undefined] = args;
 
   // 1. Let E be the this value.
   const E = thisValue;
   // 2. If E is not an Object, throw a TypeError exception.
   if (!(E instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', E);
+    return Throw.TypeError('this value $1 is not an object', E);
   }
   // 3. Let numberOfArgs be the number of arguments passed to this function call.
   const numberOfArgs = args.length;
   // 4. If numberOfArgs is 0, throw a TypeError exception.
   if (numberOfArgs === 0) {
-    return surroundingAgent.Throw('TypeError', 'NotEnoughArguments', numberOfArgs, 1);
+    return Throw.TypeError('$1 argument required, but only $2 present', 1, numberOfArgs);
   }
   // 5. If E does not have an [[ErrorData]] internal slot, return undefined.
   if (!isErrorObject(E)) {
@@ -105,7 +106,7 @@ export function bootstrapErrorPrototype(realmRec: Realm) {
     ['toString', ErrorProto_toString, 0],
     ['message', Value('')],
     ['name', Value('Error')],
-    ['stack', [ErrorProto_getStack, ErrorProto_setStack]],
+    ['stack', [ErrorProto_stack_getter, ErrorProto_stack_setter]],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Error.prototype%'] = proto;

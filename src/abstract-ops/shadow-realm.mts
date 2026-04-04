@@ -1,7 +1,7 @@
-import { captureStack, isArray, callSiteToErrorStack } from '../helpers.mts';
+import { captureStack, isArray, setErrorHostInternalSlot } from '../helpers.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
 import {
-  Assert, Call, Construct, CopyNameAndLength, CreateBuiltinFunction, DeclarativeEnvironmentRecord, EnvironmentRecord, EvalDeclarationInstantiation, Evaluate, ExecutionContext, Get, GetFunctionRealm, HasOwnProperty, HostEnsureCanCompileStrings, HostLoadImportedModule, IsCallable, isErrorObject, isModuleNamespaceObject, JSStringValue, MakeBasicObject, NewPromiseCapability, NormalCompletion, ObjectValue, Parser, PerformPromiseThen, Q, RequireInternalSlot, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type Arguments, type BuiltinFunctionObject, type ExoticObject, type FunctionObject, type Mutable, type PlainCompletion, type Realm, type ValueEvaluator,
+  Assert, Call, Construct, CopyNameAndLength, CreateBuiltinFunction, DeclarativeEnvironmentRecord, EnvironmentRecord, EvalDeclarationInstantiation, Evaluate, ExecutionContext, Get, GetFunctionRealm, HasOwnProperty, HostEnsureCanCompileStrings, HostLoadImportedModule, IsCallable, isErrorObject, isModuleNamespaceObject, JSStringValue, MakeBasicObject, NewPromiseCapability, NormalCompletion, ObjectValue, Parser, PerformPromiseThen, Q, RequireInternalSlot, surroundingAgent, Throw, ThrowCompletion, Value, wrappedParse, X, type Arguments, type BuiltinFunctionObject, type ExoticObject, type FunctionObject, type Mutable, type PlainCompletion, type Realm, type ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/proposal-shadowrealm/#table-internal-slots-of-wrapped-function-exotic-objects */
@@ -30,32 +30,29 @@ function* WrappedFunction_Call(this: WrappedFunctionExoticObject, thisArgument: 
 export function CreateTypeErrorCopy(realmRecord: Realm, non_spec_evalRealm: Realm, originalError: Value): ObjectValue {
   realmRecord.HostDefined.attachingInspectorReportError?.(non_spec_evalRealm, originalError);
   let message = 'An error occurred in a ShadowRealm.';
-  let errorData: string | undefined;
-  let hostStack: ErrorObject['HostDefinedErrorStack'];
-  let stack = '';
+  const newError = X(Construct(realmRecord.Intrinsics['%TypeError%'], [Value(message)])) as ErrorObject;
   if (originalError instanceof ObjectValue) {
     if (isErrorObject(originalError)) {
-      errorData = originalError.ErrorData.stringValue();
-      hostStack = originalError.HostDefinedErrorStack;
+      newError.HostDefinedFormattedStack = originalError.HostDefinedFormattedStack;
+      newError.HostDefinedStack = originalError.HostDefinedStack;
+      newError.HostDefinedMessage = originalError.HostDefinedMessage;
+      newError.HostDefinedMessageString = originalError.HostDefinedMessageString;
     } else {
       const S = captureStack();
-      stack = callSiteToErrorStack(S.stack, S.nativeStack);
-    }
-    if (originalError.properties.has('message')) {
-      const messageProp = originalError.properties.get('message');
-      if (messageProp && messageProp.Value && messageProp.Value instanceof JSStringValue) {
-        message = messageProp.Value.stringValue();
+      if (originalError.properties.has('message')) {
+        const messageProp = originalError.properties.get('message');
+        if (messageProp && messageProp.Value && messageProp.Value instanceof JSStringValue) {
+          message = messageProp.Value.stringValue();
+        }
       }
+      X(setErrorHostInternalSlot(newError, S, message));
     }
   }
-  const newError = X(Construct(realmRecord.Intrinsics['%TypeError%'], [Value(message)])) as ErrorObject;
-  newError.ErrorData = errorData ? Value(errorData) : Value(message + stack);
-  newError.HostDefinedErrorStack ??= hostStack;
   return newError;
 }
 
 /** https://tc39.es/proposal-shadowrealm/#sec-ordinary-wrapped-function-call */
-export function* OrdinaryWrappedFunctionCall(F: WrappedFunctionExoticObject, thisArgument: Value, argumentList: Arguments) {
+export function* OrdinaryWrappedFunctionCall(F: WrappedFunctionExoticObject, thisArgument: Value, argumentList: Arguments): ValueEvaluator {
   const target = F.WrappedTargetFunction;
   Assert(IsCallable(target));
   const callerRealm = F.Realm;
@@ -99,7 +96,7 @@ export function* WrappedFunctionCreate(callerRealm: Realm, Target: FunctionObjec
   wrapped.Realm = callerRealm;
   const result = yield* CopyNameAndLength(wrapped, Target);
   if (result instanceof ThrowCompletion) {
-    return surroundingAgent.Throw('TypeError', 'Raw', 'Cannot create wrapped function');
+    return Throw.TypeError('Cannot create a ShadowRealm wrapped function on $1', Target);
   }
   return wrapped;
 }
@@ -166,7 +163,7 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
     const string = exportNameString;
     const hasOwn = Q(yield* HasOwnProperty(exports, string));
     if (hasOwn === Value.false) {
-      return surroundingAgent.Throw('TypeError', 'Raw', `The module does not define an export named ${string.stringValue()}.`);
+      return Throw.TypeError('Module $1 does not have an export named $2', specifierString, string);
     }
     const value = Q(yield* Get(exports, string));
     const realm = f.Realm;
@@ -186,7 +183,7 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
 export function* GetWrappedValue(callerRealm: Realm, value: Value): ValueEvaluator {
   if (value instanceof ObjectValue) {
     if (!IsCallable(value)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', value);
+      return Throw.TypeError('Only primitive values and functions can be passed across the ShadowRealm boundary, but $1 is an object', value);
     }
     return Q(yield* WrappedFunctionCreate(callerRealm, value));
   }

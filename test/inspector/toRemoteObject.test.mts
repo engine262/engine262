@@ -32,8 +32,7 @@ test('primitive values', async () => {
     'Symbol.for("symbol")',
     'Symbol.iterator',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -45,13 +44,6 @@ test('functions', async () => {
   inspector.attachAgent(agent, [realm]);
 
   for (const value of [
-    // function declaration
-    'function f() { /* comment */ }; f',
-    'function* f() { /* comment */ }; f',
-    'function *f() { /* comment */ }; f',
-    'async function f() { /* comment */ }; f',
-    'async function* f() { /* comment */ }; f',
-    'async function *f() { /* comment */ }; f',
     // function expression
     '(function f() { /* comment */ })',
     '(function* f() { /* comment */ })',
@@ -65,33 +57,46 @@ test('functions', async () => {
     '(async () => { /* comment */ })',
     '(async () => 42)',
     // computed function name
-    'var a = 1; ({ [a]() {} })[a]',
+    '({ [1]() {} })[1]',
     '({ *[Symbol.iterator]() {} })[Symbol.iterator]',
     // getter & setter
-    'var o = { get f() { /* comment */ } }; Reflect.getOwnPropertyDescriptor(o, "f").get',
-    'var o = { set f(v) { /* comment */ } }; Reflect.getOwnPropertyDescriptor(o, "f").set',
+    'Reflect.getOwnPropertyDescriptor({ get f() { /* comment */ } }, "f").get',
+    'Reflect.getOwnPropertyDescriptor({ set f(v) { /* comment */ } }, "f").set',
     // getter & setter with computed name
-    'var o = { get [Symbol.iterator]() { /* comment */ } }; Reflect.getOwnPropertyDescriptor(o, Symbol.iterator).get',
-    'var o = { set [Symbol.iterator](v) { /* comment */ } }; Reflect.getOwnPropertyDescriptor(o, Symbol.iterator).set',
+    'Reflect.getOwnPropertyDescriptor({ get [Symbol.iterator]() { /* comment */ } }, Symbol.iterator).get',
+    'Reflect.getOwnPropertyDescriptor({ set [Symbol.iterator](v) { /* comment */ } }, Symbol.iterator).set',
     // built-in function
     'Array.prototype.map',
     // built-in getter
     'Reflect.getOwnPropertyDescriptor(Function.prototype, "caller").get',
+    // built-in constructor
+    '(class C { static #f })',
+    // bound functions
+    '[].join.bind([])',
+    '(() => {}).bind(globalThis)',
     // method
-    'class C { static method() {} }; C.method',
-    'class C { constructor() {}; #f }; C.prototype.constructor',
+    '(class C { static method() {} }).method',
+    '(class C { constructor() {}; #f })',
   ]) {
-    // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value), value).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
 async function snapshotObject(inspector: TestInspector, value: string) {
   const result = await inspector.eval(value);
   expect(result).toMatchSnapshot(value);
-  const properties = await inspector.runtime.getProperties({ objectId: (result as any).objectId!, ownProperties: true, generatePreview: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
-  properties.internalProperties = properties.internalProperties?.filter((prop) => prop.name !== '[[Prototype]]');
-  expect(properties).toMatchSnapshot(`${value} properties`);
+  const objectId = (result as any)?.objectId;
+  if (objectId) {
+    const properties = await inspector.runtime.getProperties({ objectId, ownProperties: true, generatePreview: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
+    properties.internalProperties = properties.internalProperties?.filter((prop) => prop.name !== '[[Prototype]]');
+    expect(properties).toMatchSnapshot(`${value} properties`);
+
+    const properties2 = await inspector.runtime.getProperties({ objectId, accessorPropertiesOnly: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
+    expect([properties2.result, properties2.privateProperties]).toMatchSnapshot(`${value} accessor properties`);
+
+    const properties3 = await inspector.runtime.getProperties({ objectId, nonIndexedPropertiesOnly: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
+    expect([properties3.result, properties3.privateProperties]).toMatchSnapshot(`${value} non-indexed properties`);
+  }
 }
 
 test('array', async () => {
@@ -125,7 +130,7 @@ test('regex', async () => {
     '/cat/i',
     'var a = /cat/; a.lastIndex = 1; a',
   ]) {
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -142,7 +147,7 @@ test('date', async () => {
     'new Date(-1)',
     'new Date(9999999999999)',
   ]) {
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 
@@ -186,10 +191,12 @@ test('error', async () => {
     'new Error("message", { cause: new Error("cause") })',
     'new RangeError()',
     'new (class MyError extends Error {})()',
-    // TODO: className should not be syntaxError
     'new (class MyError extends Error { constructor() { super(); this.message = "hello" } })()',
+    'try { Reflect.get(); } catch (e) { e; }',
+    'try { Reflect.get(); } catch (e) { e.stack = ""; e; }',
+    'try { Reflect.get(); } catch (e) { e.stack = "Error\\n    at <anonymous>:1:1"; e; }',
   ]) {
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    await snapshotObject(inspector, value);
   }
 });
 

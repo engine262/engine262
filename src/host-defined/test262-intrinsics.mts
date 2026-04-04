@@ -5,6 +5,7 @@ import {
   CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, skipDebugger, surroundingAgent, ToString, Value, type Arguments, type ValueCompletion, gc,
   ParseScript,
   ThrowCompletion,
+  Throw,
   ScriptEvaluation,
   CreateNonEnumerableDataPropertyOrThrow,
   type ValueEvaluator,
@@ -71,14 +72,14 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       },
       detachArrayBuffer: function* detachArrayBuffer(arrayBuffer = Value.undefined) {
         if (!isArrayBufferObject(arrayBuffer)) {
-          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
+          return Throw.TypeError('argument[0] must be an ArrayBuffer');
         }
         Q(DetachArrayBuffer(arrayBuffer));
         return Value.undefined;
       },
       evalScript: function* evalScript(sourceText) {
         if (!(sourceText instanceof JSStringValue)) {
-          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be a string');
+          return Throw.TypeError('argument[0] must be a string');
         }
         const s = ParseScript(sourceText.stringValue(), surroundingAgent.currentRealmRecord);
         if (isArray(s)) {

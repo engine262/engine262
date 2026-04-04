@@ -3,11 +3,11 @@ import {
   Q, ThrowCompletion, X, type ValueEvaluator,
   type ValueCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
   NullValue, NumberValue, ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { sort } from '../host-defined/sort.mts';
 import { assignProps } from './bootstrap.mts';
 import { ValidateTypedArray } from './TypedArray.mts';
 import {
@@ -27,102 +27,16 @@ import {
   ToString,
   F, R,
   Realm,
-  LengthOfArrayLike, skipDebugger, TypedArrayLength,
+  Throw,
+  LengthOfArrayLike, TypedArrayLength,
 } from '#self';
 
 // Algorithms and methods shared between %Array.prototype% and
 // %TypedArray.prototype%.
 
-/** https://tc39.es/ecma262/#sec-array.prototype.sort */
-/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
-//
-// If internalMethodsRestricted is true, then Asserts are used to ensure that
-// "The only internal methods of the this object that the algorithm may call
-// are [[Get]] and [[Set]]," a requirement of %TypedArray%.prototype.sort.
-export function* ArrayProto_sortBody(obj: ObjectValue, len: number, SortCompare: (x: Value, y: Value) => ValueEvaluator<NumberValue>, internalMethodsRestricted = false): ValueEvaluator {
-  const items = [];
-  let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(F(k)));
-    if (internalMethodsRestricted) {
-      items.push(Q(yield* Get(obj, Pk)));
-    } else {
-      const kPresent = Q(yield* HasProperty(obj, Pk));
-      if (kPresent === Value.true) {
-        const kValue = Q(yield* Get(obj, Pk));
-        items.push(kValue);
-      }
-    }
-    k += 1;
-  }
-  const itemCount = items.length;
-
-  // Mergesort.
-  const lBuffer = [];
-  const rBuffer = [];
-  for (let step = 1; step < items.length; step *= 2) {
-    for (let start = 0; start < items.length - 1; start += 2 * step) {
-      const sizeLeft = step;
-      const mid = start + sizeLeft;
-      const sizeRight = Math.min(step, items.length - mid);
-      if (sizeRight < 0) {
-        continue;
-      }
-
-      // Merge.
-      for (let l = 0; l < sizeLeft; l += 1) {
-        lBuffer[l] = items[start + l];
-      }
-      for (let r = 0; r < sizeRight; r += 1) {
-        rBuffer[r] = items[mid + r];
-      }
-
-      {
-        let l = 0;
-        let r = 0;
-        let o = start;
-        while (l < sizeLeft && r < sizeRight) {
-          const cmp = R(Q(yield* SortCompare(lBuffer[l], rBuffer[r])));
-          if (cmp <= 0) {
-            items[o] = lBuffer[l];
-            o += 1;
-            l += 1;
-          } else {
-            items[o] = rBuffer[r];
-            o += 1;
-            r += 1;
-          }
-        }
-        while (l < sizeLeft) {
-          items[o] = lBuffer[l];
-          o += 1;
-          l += 1;
-        }
-        while (r < sizeRight) {
-          items[o] = rBuffer[r];
-          o += 1;
-          r += 1;
-        }
-      }
-    }
-  }
-
-  let j = 0;
-  while (j < itemCount) {
-    Q(yield* Set(obj, X(ToString(F(j))), items[j], Value.true));
-    j += 1;
-  }
-  while (j < len) {
-    Q(yield* DeletePropertyOrThrow(obj, X(ToString(F(j)))));
-    j += 1;
-  }
-
-  return obj;
-}
-
 /** https://tc39.es/ecma262/#sec-sortindexedproperties */
 export function* SortIndexedProperties(obj: ObjectValue, len: number, SortCompare: (x: Value, y: Value) => ValueEvaluator<NumberValue>, holes: 'skip-holes' | 'read-through-holes'): PlainEvaluator<Value[]> {
-  const items = [];
+  const items: Value[] = [];
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
@@ -140,17 +54,16 @@ export function* SortIndexedProperties(obj: ObjectValue, len: number, SortCompar
     k += 1;
   }
   let completion: ValueCompletion<NumberValue> = NormalCompletion(Value(0));
-  items.sort((a, b) => {
+  yield* sort(items, function* sort(a, b): PlainEvaluator<number> {
     if (completion instanceof ThrowCompletion) {
       return 0;
     }
-    // TODO: remove skipDebugger
-    completion = skipDebugger(SortCompare(a, b));
+    Assert(a && b && true);
+    completion = yield* SortCompare(a, b);
     if (completion instanceof ThrowCompletion) {
       return 0;
     }
-    const cmp = R(X(completion));
-    return cmp;
+    return R(X(completion));
   });
   if (completion instanceof ThrowCompletion) {
     return completion;
@@ -175,7 +88,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackFn)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
+      return Throw.TypeError('$1 is not a function', callbackFn);
     }
     let k = 0;
     while (k < len) {
@@ -205,7 +118,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(predicate)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+      return Throw.TypeError('$1 is not a function', predicate);
     }
     let k = 0;
     while (k < len) {
@@ -227,7 +140,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(predicate)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+      return Throw.TypeError('$1 is not a function', predicate);
     }
     let k = 0;
     while (k < len) {
@@ -252,7 +165,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const len = Q(yield* ToLength(O));
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!IsCallable(predicate)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+      return Throw.TypeError('$1 is not a function', predicate);
     }
     // 4. Let k be len - 1.
     let k = len - 1;
@@ -285,7 +198,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const len = Q(yield* ToLength(O));
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!IsCallable(predicate)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+      return Throw.TypeError('$1 is not a function', predicate);
     }
     // 4. Let k be len - 1.
     let k = len - 1;
@@ -315,7 +228,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+      return Throw.TypeError('$1 is not a function', callbackfn);
     }
     let k = 0;
     while (k < len) {
@@ -483,10 +396,10 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+      return Throw.TypeError('$1 is not a function', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
-      return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
+      return Throw.TypeError('Cannot reduce an empty array with no initial value');
     }
     let k = 0;
     let accumulator: Value = Value.undefined;
@@ -507,7 +420,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
         k += 1;
       }
       if (kPresent === false) {
-        return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
+        return Throw.TypeError('Cannot reduce an empty array with no initial value');
       }
     }
     while (k < len) {
@@ -534,10 +447,10 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+      return Throw.TypeError('$1 is not a function', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
-      return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
+      return Throw.TypeError('Cannot reduce an empty array with no initial value');
     }
     let k = len - 1;
     let accumulator: Value = Value.undefined;
@@ -558,7 +471,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
         k -= 1;
       }
       if (kPresent === false) {
-        return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
+        return Throw.TypeError('Cannot reduce an empty array with no initial value');
       }
     }
     while (k >= 0) {
@@ -624,7 +537,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     const O = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(O));
     if (!IsCallable(callbackfn)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+      return Throw.TypeError('$1 is not a function', callbackfn);
     }
     let k = 0;
     while (k < len) {

@@ -9,12 +9,13 @@ import {
   type Arguments,
   type ValueEvaluator,
   surroundingAgent,
+  type PlainEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#job */
 export interface Job {
   readonly queueName: string;
-  readonly job: () => void;
+  readonly job: () => PlainEvaluator;
   readonly callerRealm: Realm;
   readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
 }
@@ -44,7 +45,7 @@ export function* HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, a
 // Atomics: HostEnqueueGenericJob
 
 /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
-export function HostEnqueuePromiseJob(job: () => void, _realm: Realm | NullValue) {
+export function HostEnqueuePromiseJob(job: () => PlainEvaluator, _realm: Realm | NullValue) {
   if (surroundingAgent.debugger_isPreviewing) {
     return;
   }

@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -13,6 +12,7 @@ import {
   IteratorStepValue,
   OrdinaryCreateFromConstructor,
   Realm,
+  Throw,
   type FunctionObject,
   type OrdinaryObject,
 } from '#self';
@@ -27,7 +27,7 @@ export function isSetObject(value: Value): value is SetObject {
 function* SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('Set cannot be invoked without new');
   }
   // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%Set.prototype%", « [[SetData]] »).
   const set = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData'])) as Mutable<SetObject>;
@@ -41,7 +41,7 @@ function* SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
   const adder = Q(yield* Get(set, Value('add')));
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
   if (!IsCallable(adder)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+    return Throw.TypeError('this.add ($1) is not a function', adder);
   }
   // 7. Let iteratorRecord be ? GetIterator(iterable).
   const iteratorRecord = Q(yield* GetIterator(iterable, 'sync'));

@@ -88,13 +88,13 @@ export function* GetV(V: Value, P: PropertyKeyValue): ValueEvaluator {
 }
 
 /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
-export function* Set(O: ObjectValue, P: PropertyKeyValue, V: Value, Throw: BooleanValue) {
+export function* Set(O: ObjectValue, P: PropertyKeyValue, V: Value, throws: BooleanValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  Assert(Throw instanceof BooleanValue);
+  Assert(throws instanceof BooleanValue);
   const success = Q(yield* O.Set(P, V, O));
-  if (success === Value.false && Throw === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'CannotSetProperty', P, O);
+  if (success === Value.false && throws === Value.true) {
+    return Throw.TypeError('Cannot set property $1 on $2', P, O);
   }
   return success;
 }
@@ -133,7 +133,7 @@ export function* CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, 
   Assert(IsPropertyKey(P));
   const success = Q(yield* CreateDataProperty(O, P, V));
   if (success === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
+    return Throw.TypeError('Cannot define property $1', P);
   }
   return success;
 }
@@ -155,7 +155,7 @@ export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc
   Assert(IsPropertyKey(P));
   const success = Q(yield* O.DefineOwnProperty(P, desc));
   if (success === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
+    return Throw.TypeError('Cannot define property $1', P);
   }
   return success;
 }
@@ -166,7 +166,7 @@ export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
   Assert(IsPropertyKey(P));
   const success = Q(yield* O.Delete(P));
   if (success === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'CannotDeleteProperty', P);
+    return Throw.TypeError('Cannot delete property $1', P);
   }
   return success;
 }
@@ -207,7 +207,7 @@ export function* Call(F: Value, V: Value, argumentsList: Arguments = []): ValueE
   Assert(argumentsList.every((a) => a instanceof Value));
 
   if (!IsCallable(F)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
+    return Throw.TypeError('$1 is not a function', F);
   }
 
   return EnsureCompletion(Q(yield* F.Call(V, argumentsList)));
@@ -311,7 +311,7 @@ export function CreateListFromArrayLike(obj: Value, validElementTypes: 'property
 export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'all' | 'property-key' = 'all'): PlainEvaluator<Value[]> {
   // 2. If Type(obj) is not Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
+    return Throw.TypeError('$1 is not an object', obj);
   }
   // 3. Let len be ? LengthOfArrayLike(obj).
   const len = Q(yield* LengthOfArrayLike(obj));
@@ -327,7 +327,7 @@ export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'all' | 
     const next = Q(yield* Get(obj, indexName));
     // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.
     if (validElementTypes === 'property-key' && !IsPropertyKey(next)) {
-      return surroundingAgent.Throw('TypeError', 'NotPropertyName', next);
+      return Throw.TypeError('$1 is not a valid property name', next);
     }
     // d. Append next as the last element of list.
     list.push(next);
@@ -359,7 +359,7 @@ export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<Boolean
   }
   const P = Q(yield* Get(C, Value('prototype')));
   if (!(P instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
+    return Throw.TypeError('$1 is not an object', P);
   }
   while (true) {
     O = Q(yield* O.GetPrototypeOf());
@@ -380,7 +380,7 @@ export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: Function
     return defaultConstructor;
   }
   if (!(C instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', C);
+    return Throw.TypeError('$1 is not an object', C);
   }
   const S = Q(yield* Get(C, wellKnownSymbols.species));
   if (S === Value.undefined || S === Value.null) {
@@ -389,7 +389,7 @@ export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: Function
   if (IsConstructor(S)) {
     return S;
   }
-  return surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
+  return Throw.TypeError('object.constructor[Symbol.species] is not a constructor');
 }
 
 /** https://tc39.es/ecma262/#sec-enumerableownpropertynames */
@@ -435,7 +435,7 @@ export function GetFunctionRealm(obj: FunctionObject): PlainCompletion<Realm> {
 
   if (isProxyExoticObject(obj)) {
     if (obj.ProxyHandler instanceof NullValue) {
-      return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'GetFunctionRealm');
+      return Throw.TypeError("Cannot perform '$1' on a proxy that has been revoked", 'GetFunctionRealm');
     }
     const proxyTarget = obj.ProxyTarget as FunctionObject;
     return Q(GetFunctionRealm(proxyTarget));
@@ -476,13 +476,13 @@ export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: Ob
   // 1. If thisValue is not an Object, then
   if (!(thisValue instanceof ObjectValue)) {
     // a. Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', thisValue);
+    return Throw.TypeError('$1 is not an object', thisValue);
   }
   // 2. If SameValue(thisValue, home) is true, then
   if (SameValue(thisValue, home) === Value.true) {
     // a. NOTE: Throwing here emulates assignment to a non-writable data property on the home object in strict mode code.
     // b. Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotSetProperty', p, thisValue);
+    return Throw.TypeError('Cannot set property $1 on $2', p, thisValue);
   }
   // 3. Let desc be ? thisValue.[[GetOwnProperty]](p).
   const desc = Q(yield* thisValue.GetOwnProperty(p));
@@ -543,7 +543,7 @@ export function* GroupBy(items: Value, callback: Value, keyCoercion: 'property' 
   */
   Q(RequireObjectCoercible(items));
   if (!IsCallable(callback)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
+    return Throw.TypeError('$1 is not a function', callback);
   }
   const groups: KeyedGroupRecord[] = [];
   const iteratorRecord = Q(yield* GetIterator(items, 'sync'));
@@ -572,7 +572,7 @@ export function* GroupBy(items: Value, callback: Value, keyCoercion: 'property' 
       j. Set k to k + 1.
     */
     if (k >= MAX_SAFE_INTEGER) {
-      const error = surroundingAgent.Throw('TypeError', 'OutOfRange', k);
+      const error = Throw.TypeError('$1 is out of range', k);
       return Q(yield* IteratorClose(iteratorRecord, error));
     }
     const next: Value | 'done' = Q(yield* IteratorStepValue(iteratorRecord));

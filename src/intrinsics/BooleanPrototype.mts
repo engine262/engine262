@@ -5,14 +5,11 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { Q, type ValueCompletion } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { BooleanObject } from './Boolean.mts';
-import { Assert } from '#self';
+import { Assert, Throw } from '#self';
 import type { Realm } from '#self';
 
 
@@ -27,7 +24,7 @@ function thisBooleanValue(value: Value) {
     return b;
   }
 
-  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Boolean', value);
+  return Throw.TypeError('$1 is not a $2 object', value, 'Boolean');
 }
 
 /** https://tc39.es/ecma262/#sec-boolean.prototype.tostring */

@@ -26,6 +26,36 @@ function getEnclosingConditionalExpression(path: NodePath) {
   return null;
 }
 
+/**
+ * We cannot transform for the following cases:
+ *
+ * while (Q(...))
+ * switch (Q(...)) { case Q(...): }
+ * for (; Q(...);) { }
+ *
+ * For if (...), we can do this: if (Q(...)), but not this: if (x && Q(...)) {}
+ */
+function withinNotTransformablePosition(path: NodePath) {
+  const paths = [path.node];
+  while (path) {
+    const parent = path.parentPath;
+    if (!parent) return false;
+    if (parent.isWhileStatement() || parent.isForStatement()) {
+      if (parent.node.test === path.node) return true;
+      if (parent.node.body === path.node) return false;
+    }
+    if (parent.isIfStatement()) {
+      if (parent.node.consequent === path.node || parent.node.alternate === path.node) return false;
+      if (parent.node.test.type === 'BinaryExpression' && paths.includes(parent.node.test.right)) {
+        return true;
+      }
+    }
+    paths.push(parent.node);
+    path = parent;
+  }
+  return false;
+}
+
 type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger';
 
 interface State extends PluginPass {
@@ -309,6 +339,11 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
 
         const macroName = callee.name;
         if (MACRO_NAMES.includes(macroName)) {
+          const isWithinNotTransformablePosition = withinNotTransformablePosition(path);
+          if (isWithinNotTransformablePosition) {
+            throw path.buildCodeFrameError('Macros may not be used within the test of if statements, while statements, for statements, or switch statements');
+          }
+
           const enclosingConditional = getEnclosingConditionalExpression(path);
           if (enclosingConditional !== null) {
             if (enclosingConditional.parentPath.isVariableDeclarator()) {

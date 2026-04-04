@@ -166,7 +166,7 @@ function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Plai
   return precedingArgs as Arguments;
 }
 
-export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral: ParseNode | ParseNode.Arguments) {
+export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral: ParseNode.TemplateLiteral | ParseNode.Arguments) {
   switch (true) {
     case isArray(ArgumentsOrTemplateLiteral):
       return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);

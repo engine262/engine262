@@ -3,7 +3,7 @@
 import { expect, test } from 'vitest';
 import { TestInspector } from './utils.mts';
 import {
-  Agent, Construct, CreateBuiltinFunction, Descriptor, evalQ, getHostDefinedErrorStack, ManagedRealm, setSurroundingAgent,
+  Agent, Construct, CreateBuiltinFunction, Descriptor, evalQ, getHostDefinedErrorDetails, ManagedRealm, setSurroundingAgent,
   surroundingAgent,
   Value,
   type ShadowRealmObject,
@@ -19,7 +19,7 @@ test('code in eval', async () => {
   realm.scope(() => {
     realm.GlobalObject.properties.set('e', new Descriptor({
       Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-        messages.push(getHostDefinedErrorStack(e)?.map((f) => f.toCallFrame()));
+        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
       }),
     }));
   });
@@ -44,7 +44,7 @@ test('code in new Function', async () => {
   realm.scope(() => {
     realm.GlobalObject.properties.set('e', new Descriptor({
       Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-        messages.push(getHostDefinedErrorStack(e)?.map((f) => f.toCallFrame()));
+        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
       }),
     }));
   });
@@ -77,7 +77,7 @@ test('code in ShadowRealm', async () => {
       }));
       shadowRealm.ShadowRealm.GlobalObject.properties.set('e', new Descriptor({
         Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-          messages.push(getHostDefinedErrorStack(e)?.map((f) => f.toCallFrame()));
+          messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
         }),
       }));
     });

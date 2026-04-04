@@ -16,7 +16,8 @@ import { GetValue, MakePrivateReference } from '#self';
 //     MemberExpression OptionalChain
 //     CallExpression OptionalChain
 //     OptionalExpression OptionalChain
-export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }: ParseNode.OptionalExpression) {
+export function* Evaluate_OptionalExpression(node: ParseNode.OptionalExpression) {
+  const { MemberExpression, OptionalChain } = node;
   // 1. Let baseReference be the result of evaluating MemberExpression.
   const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -27,7 +28,7 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
     return Value.undefined;
   }
   // 4. Return the result of performing ChainEvaluation of OptionalChain with arguments baseValue and baseReference.
-  return yield* ChainEvaluation(OptionalChain, baseValue, X(baseReference));
+  return yield* ChainEvaluation(OptionalChain, baseValue, X(baseReference), node);
 }
 
 /** https://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation */
@@ -40,7 +41,7 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
 //     OptionalChain `[` Expression `]`
 //     OptionalChain `.` IdentifierName
 //     OptionalChain `.` PrivateIdentifier
-function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseReference: Value | ReferenceRecord): ExpressionEvaluator {
+function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseReference: Value | ReferenceRecord, topExpression?: ParseNode.OptionalExpression): ExpressionEvaluator {
   const {
     OptionalChain,
     Arguments,
@@ -53,7 +54,7 @@ function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseR
       // 1. Let optionalChain be OptionalChain.
       const optionalChain = OptionalChain;
       // 2. Let newReference be ? ChainEvaluation of optionalChain with arguments baseValue and baseReference.
-      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference));
+      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference, topExpression));
       // 3. Let newValue be ? GetValue(newReference).
       const newValue = Q(yield* GetValue(newReference));
       // 4. Let thisChain be this OptionalChain.
@@ -61,21 +62,21 @@ function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseR
       // 5. Let tailCall be IsInTailPosition(thisChain).
       const tailCall = IsInTailPosition(thisChain);
       // 6. Return ? EvaluateCall(newValue, newReference, Arguments, tailCall).
-      return Q(yield* EvaluateCall(newValue, newReference, Arguments, tailCall));
+      return Q(yield* EvaluateCall(newValue, newReference, Arguments, tailCall, topExpression));
     }
     // 1. Let thisChain be this OptionalChain.
     const thisChain = node;
     // 2. Let tailCall be IsInTailPosition(thisChain).
     const tailCall = IsInTailPosition(thisChain);
     // 3. Return ? EvaluateCall(baseValue, baseReference, Arguments, tailCall).
-    return Q(yield* EvaluateCall(baseValue, baseReference, Arguments, tailCall));
+    return Q(yield* EvaluateCall(baseValue, baseReference, Arguments, tailCall, topExpression));
   }
   if (Expression) {
     if (OptionalChain) {
       // 1. Let optionalChain be OptionalChain.
       const optionalChain = OptionalChain;
       // 2. Let newReference be ? ChainEvaluation of optionalChain with arguments baseValue and baseReference.
-      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference));
+      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference, topExpression));
       // 3. Let newValue be ? GetValue(newReference).
       const newValue = Q(yield* GetValue(newReference));
       // 4. If the code matched by this OptionalChain is strict mode code, let strict be true; else let strict be false.
@@ -93,7 +94,7 @@ function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseR
       // 1. Let optionalChain be OptionalChain.
       const optionalChain = OptionalChain;
       // 2. Let newReference be ? ChainEvaluation of optionalChain with arguments baseValue and baseReference.
-      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference));
+      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference, topExpression));
       // 3. Let newValue be ? GetValue(newReference).
       const newValue = Q(yield* GetValue(newReference));
       // 4. If the code matched by this OptionalChain is strict mode code, let strict be true; else let strict be false.
@@ -111,7 +112,7 @@ function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseR
       // 1. Let optionalChain be OptionalChain.
       const optionalChain = OptionalChain;
       // 2. Let newReference be ? ChainEvaluation of optionalChain with arguments baseValue and baseReference.
-      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference));
+      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference, topExpression));
       // 3. Let newValue be ? GetValue(newReference).
       const newValue = Q(yield* GetValue(newReference));
       // 4. Let fieldNameString be the StringValue of PrivateIdentifier.

@@ -3,7 +3,7 @@ import { getInspector } from './objects/index.mts';
 import type { Inspector } from './index.mts';
 import {
   EnsureCompletion, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, Value,
-  getHostDefinedErrorStack,
+  getHostDefinedErrorDetails,
   type ValueCompletion,
   getCurrentStack,
   isECMAScriptFunctionObject,
@@ -33,6 +33,7 @@ interface InspectedRealmDescriptor {
   readonly agent: Agent;
   detach(): void;
 }
+
 export class InspectorContext {
   #io: Inspector;
 
@@ -182,18 +183,21 @@ export class InspectorContext {
     const internalProperties: Protocol.Runtime.InternalPropertyDescriptor[] = [];
     const privateProperties: Protocol.Runtime.PrivatePropertyDescriptor[] = [];
 
-    object.PrivateElements.forEach((value) => {
-      privateProperties.push({
-        name: value.Key.Description.stringValue(),
-        value: value.Value ? wrap(value.Value) : undefined,
-        get: value.Get ? wrap(value.Get) : undefined,
-        set: value.Set ? wrap(value.Set) : undefined,
+    if (!accessorPropertiesOnly) {
+      object.PrivateElements.forEach((value) => {
+        const desc: Protocol.Runtime.PrivatePropertyDescriptor = {
+          name: value.Key.Description.stringValue(),
+        };
+        if (value.Value) desc.value = wrap(value.Value);
+        if (value.Get) desc.get = wrap(value.Get);
+        if (value.Set) desc.set = wrap(value.Set);
+        privateProperties.push(desc);
       });
-    });
 
-    const exoticProperties = getInspector(object).exoticProperties?.(object, (val) => this.#internObject(val), this, generatePreview);
-    if (exoticProperties) {
-      properties.push(...exoticProperties);
+      const exoticProperties = getInspector(object).exoticProperties?.(object, (val) => this.#internObject(val), this, generatePreview);
+      if (exoticProperties) {
+        properties.push(...exoticProperties);
+      }
     }
 
     (() => {
@@ -214,16 +218,15 @@ export class InspectorContext {
             name: key instanceof JSStringValue
               ? key.stringValue()
               : SymbolDescriptiveString(key).stringValue(),
-            value: desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value) ? wrap(desc.Value) : undefined,
             writable: desc.Writable === Value.true,
-            get: desc.Get ? wrap(desc.Get) : undefined,
-            set: desc.Set ? wrap(desc.Set) : undefined,
             configurable: desc.Configurable === Value.true,
             enumerable: desc.Enumerable === Value.true,
-            wasThrown: false,
             isOwn: p === object,
-            symbol: key instanceof SymbolValue ? wrap(key) : undefined,
           };
+          if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
+          if (desc.Get) descriptor.get = wrap(desc.Get);
+          if (desc.Set) descriptor.set = wrap(desc.Set);
+          if (key instanceof SymbolValue) descriptor.symbol = wrap(key);
           properties.push(descriptor);
         }
 
@@ -257,14 +260,14 @@ export class InspectorContext {
 
   createExceptionDetails(completion: ThrowCompletion | Value, isPromise: boolean): Protocol.Runtime.ExceptionDetails {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
-    const stack = getHostDefinedErrorStack(value);
-    const frames = InspectorContext.callSiteToCallFrame(stack);
+    const { callStack } = getHostDefinedErrorDetails(value);
+    const frames = InspectorContext.callSiteToCallFrame(callStack);
     const exceptionId = this.#objectCounter;
     this.#objectCounter += 1;
     this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
-      stackTrace: stack ? { callFrames: frames } : undefined,
+      stackTrace: callStack ? { callFrames: frames } : undefined,
       exception: getInspector(value).toRemoteObject(value, (val) => this.#internObject(val), this, false),
       lineNumber: frames[0]?.lineNumber || 0,
       columnNumber: frames[0]?.columnNumber || 0,
@@ -345,7 +348,7 @@ function HostGetThisEnvironment(env: EnvironmentRecord | NullValue): Value {
   throw new ReferenceError('No this environment found');
 }
 
-function getDisplayObjectFromEnvironmentRecord(record: EnvironmentRecord): undefined | { type: Protocol.Debugger.Scope['type'], object: ObjectValue } {
+export function getDisplayObjectFromEnvironmentRecord(record: EnvironmentRecord): undefined | { type: Protocol.Debugger.Scope['type'], object: ObjectValue } {
   if (record instanceof DeclarativeEnvironmentRecord) {
     const object = OrdinaryObjectCreate(Value.null, ['HostInspectorScopePreview']);
     for (const [key, binding] of record.bindings) {

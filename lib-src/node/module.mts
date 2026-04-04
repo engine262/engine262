@@ -8,7 +8,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
   const validateType = (attributes: Map<string, string>, finish: (completion: ThrowCompletion) => void) => {
     const type = attributes.get('type');
     if (type && type !== 'json') {
-      finish(Throw('TypeError', 'UnsupportedModuleType', type));
+      finish(Throw.TypeError('Unsupported import type "$1" (only "json" is supported)', type));
       return false;
     }
     return true;
@@ -26,7 +26,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
     const cache = getCache(realm);
 
     if (!referrer.HostDefined?.specifier) {
-      finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+      finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
       return;
     }
 
@@ -44,7 +44,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
       try {
         readFile(resolved, (err, data) => {
           if (err) {
-            finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+            finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
             return;
           }
           const m = Q(parseModule(realm, resolved, attributes, data));
@@ -52,7 +52,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
           finish(m);
         });
       } catch (error) {
-        finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+        finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
       }
     });
   };

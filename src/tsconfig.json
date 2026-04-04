@@ -5,7 +5,8 @@
       "rootDir": "./",
       "emitDeclarationOnly": true,
       "declarationDir": "../declaration/",
-      "tsBuildInfoFile": "../declaration/.tsbuildinfo"
+      "tsBuildInfoFile": "../declaration/.tsbuildinfo",
+      "stripInternal": true
     },
     "include": ["./"]
 }

@@ -172,7 +172,16 @@ export function runJobQueue() {
     newContext.Realm = callerRealm;
     newContext.ScriptOrModule = callerScriptOrModule;
     // 2. Call the abstract closure.
-    X(abstractClosure());
+    let c;
+    surroundingAgent.evaluate((function* job(): ValueEvaluator {
+      Q(yield* abstractClosure());
+      return Value.undefined;
+    }()), (completion) => {
+      c = completion;
+    });
+    if (!c) {
+      surroundingAgent.resumeEvaluate();
+    }
     // 3. Perform any host-defined cleanup steps, after which the execution context stack must be empty.
     ClearKeptObjects();
     gc();

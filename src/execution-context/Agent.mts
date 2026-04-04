@@ -2,10 +2,9 @@ import type { Protocol } from 'devtools-protocol';
 import { shouldStepOnNode } from '../host-defined/debugger-util.mts';
 import {
 } from '../host-defined/engine.mts';
-import * as messages from '../messages.mts';
 import { isArray } from '../helpers.mts';
 import {
-  ObjectValue, SymbolValue, type Job, type Intrinsics, type ErrorType, Value, ThrowCompletion, Throw, GetActiveScriptOrModule, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
+  ObjectValue, SymbolValue, type Job, type Intrinsics, Value, ThrowCompletion, GetActiveScriptOrModule, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
   ExecutionContextStack,
   type AgentHostDefined,
   DynamicParsedCodeRecord,
@@ -15,6 +14,7 @@ import {
   type ResumeEvaluateOptions,
   type ParseNode,
   getBreakpointCandidates,
+  type PlainEvaluator,
 } from '#self';
 
 let agentSignifier = 0;
@@ -86,16 +86,7 @@ export class Agent {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
-  // Generate a throw completion using message templates
-  /** @deprecated Use Throw */
-  Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<(typeof messages)[K]>): ThrowCompletion {
-    if (type instanceof Value) {
-      return ThrowCompletion(type);
-    }
-    return Throw(type, template, ...templateArgs);
-  }
-
-  queueJob(queueName: string, job: () => void) {
+  queueJob(queueName: string, job: () => PlainEvaluator) {
     const callerContext = this.runningExecutionContext;
     const callerRealm = callerContext.Realm;
     const callerScriptOrModule = GetActiveScriptOrModule();

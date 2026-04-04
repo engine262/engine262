@@ -12,6 +12,14 @@ const harnessContent: Record<string, string> = {};
 for (const file of harnessFiles) {
   const content = fs.readFileSync(new URL(file, harnessDir), 'utf-8');
   harnessContent[file] = content;
+  if (file.endsWith('sta.js')) {
+    harnessContent[file] = content.replace(
+      `function Test262Error(message) {
+  this.message = message || "";
+}`,
+      'class Test262Error extends Error {}',
+    );
+  }
 }
 
 fs.writeFileSync(outputFile, JSON.stringify(harnessContent, null, 2));

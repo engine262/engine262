@@ -71,11 +71,11 @@ export function isPromiseObject(value: Value): value is PromiseObject {
 function* PromiseConstructor(this: FunctionObject, [executor = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('Promise cannot be invoked without new');
   }
   // 2. If IsCallable(executor) is false, throw a TypeError exception.
   if (!IsCallable(executor)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', executor);
+    return Throw.TypeError('$1 is not a function', executor);
   }
   // 3. Let promise be ? OrdinaryCreateFromConstructor(NewTarget, "%Promise.prototype%", « [[PromiseState]], [[PromiseResult]], [[PromiseFulfillReactions]], [[PromiseRejectReactions]], [[PromiseIsHandled]] »).
   const promise = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', [
@@ -116,7 +116,7 @@ function* GetPromiseResolve(promiseConstructor: FunctionObject) {
   const promiseResolve = Q(yield* Get(promiseConstructor, Value('resolve')));
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
   if (!IsCallable(promiseResolve)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
+    return Throw.TypeError('$1 is not a function', promiseResolve);
   }
   // 4. Return promiseResolve.
   return promiseResolve;
@@ -549,7 +549,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
       // iii. If remainingElementsCount.[[Value]] is 0, then
       if (remainingElementsCount.Value === 0) {
         // 1. Let aggregateError be a newly created AggregateError object.
-        const aggregateError = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
+        const aggregateError = Throw.AggregateError('No promises passed to Promise.any were fulfilled').Value as ObjectValue;
         // 2. Perform ! DefinePropertyOrThrow(aggregateError, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
         X(DefinePropertyOrThrow(aggregateError, Value('errors'), Descriptor({
           Configurable: Value.true,
@@ -578,7 +578,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
       errors[thisIndex] = error;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
-        const aggregateError = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
+        const aggregateError = Throw.AggregateError('No promises passed to Promise.any were fulfilled').Value as ObjectValue;
         X(DefinePropertyOrThrow(aggregateError, Value('errors'), Descriptor({
           Configurable: Value.true,
           Enumerable: Value.false,
@@ -704,7 +704,7 @@ function* Promise_resolve([x = Value.undefined]: Arguments, { thisValue }: Funct
   const C = thisValue;
   // 2. If Type(C) is not Object, throw a TypeError exception.
   if (!(C instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.resolve', C);
+    return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.resolve', C);
   }
   // 3. Return ? PromiseResolve(C, x).
   return Q(yield* PromiseResolve(C, x));
@@ -722,7 +722,7 @@ function* Promise_try([callback = Value.undefined, ...args]: Arguments, { thisVa
   const C = thisValue;
   // 2. If C is not an Object, throw a TypeError exception.
   if (!(C instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.try', C);
+    return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.try', C);
   }
   // 3. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(C));

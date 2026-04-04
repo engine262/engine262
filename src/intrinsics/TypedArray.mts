@@ -64,6 +64,7 @@ import {
   IsFixedLengthArrayBuffer,
   IsDetachedBuffer,
   ArrayBufferByteLength,
+  Throw,
 } from '#self';
 
 export const typedArrayInfoByName = {
@@ -182,7 +183,7 @@ export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentLis
   Assert('TypedArrayName' in result && 'ContentType' in result);
   // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
   if (result.ContentType !== exemplar.ContentType) {
-    return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+    return Throw.TypeError('Newly created TypedArray did not match exemplar\'s content type');
   }
   // 7. Return result.
   return result;
@@ -194,12 +195,11 @@ export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, ar
   const taRecord = Q(ValidateTypedArray(newTypedArray, 'seq-cst'));
   if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
     if (IsTypedArrayOutOfBounds(taRecord)) {
-      // TODO: error message
-      return surroundingAgent.Throw('TypeError', 'Raw', 'TypedArrayCreateFromConstructor:IsTypedArrayOutOfBounds');
+      return Throw.TypeError('TypedArray index out of bounds');
     }
     const length = TypedArrayLength(taRecord);
     if (length < R(argumentList[0])) {
-      return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
+      return Throw.TypeError('Derived TypedArray constructor created an array which was too small');
     }
   }
   return newTypedArray;
@@ -220,7 +220,7 @@ export function ValidateTypedArray(O: Value, order: 'seq-cst' | 'unordered'): Pl
   Assert('ViewedArrayBuffer' in O);
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(O as TypedArrayObject, order);
   if (IsTypedArrayOutOfBounds(taRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    return Throw.TypeError('TypedArray index out of bounds');
   }
   return taRecord;
 }
@@ -277,7 +277,7 @@ export function* CompareTypedArrayElements(x: NumberValue | BigIntValue, y: Numb
 /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
 function TypedArrayConstructor(this: BuiltinFunctionObject) {
   // 1. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
+  return Throw.TypeError('$1 is not a constructor', this);
 }
 
 /** https://tc39.es/ecma262/#sec-allocatetypedarray */
@@ -323,7 +323,7 @@ export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>
   const srcByteOffset = srcArray.ByteOffset;
   const srcRecord = MakeTypedArrayWithBufferWitnessRecord(srcArray, 'seq-cst');
   if (IsTypedArrayOutOfBounds(srcRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    return Throw.TypeError('TypedArray index out of bounds');
   }
   const elementLength = TypedArrayLength(srcRecord);
   const byteLength = elementSize * elementLength;
@@ -333,7 +333,7 @@ export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>
   } else {
     data = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength));
     if (srcArray.ContentType !== O.ContentType) {
-      return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+      return Throw.TypeError('Newly created TypedArray did not match exemplar\'s content type');
     }
     let srcByteIndex = srcByteOffset;
     let targetByteIndex = 0;
@@ -357,7 +357,7 @@ export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject
   const elementSize = TypedArrayElementSize(O);
   const offset = Q(yield* ToIndex(byteOffset));
   if (offset % elementSize !== 0) {
-    return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', offset, elementSize);
+    return Throw.RangeError('Start offset of $1 should be a multiple of $2', offset, elementSize);
   }
   const bufferIsFixedLength = IsFixedLengthArrayBuffer(buffer);
   let newLength;
@@ -365,12 +365,12 @@ export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject
     newLength = Q(yield* ToIndex(length));
   }
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   const bufferByteLength = ArrayBufferByteLength(buffer, 'seq-cst');
   if (length === Value.undefined && !bufferIsFixedLength) {
     if (offset > bufferByteLength) {
-      return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+      return Throw.RangeError('Sum of start offset and byte length should be less than the size of underlying buffer');
     }
     O.ByteLength = 'auto';
     O.ArrayLength = 'auto';
@@ -378,17 +378,17 @@ export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject
     let newByteLength;
     if (length === Value.undefined) {
       if (bufferByteLength % elementSize !== 0) {
-        return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', bufferByteLength, elementSize);
+        return Throw.RangeError('Size of $1 should be a multiple of $2', bufferByteLength, elementSize);
       }
       newByteLength = bufferByteLength - offset;
       if (newByteLength < 0) {
-        return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+        return Throw.RangeError('Sum of start offset and byte length should be less than the size of underlying buffer');
       }
     } else {
       Assert(newLength !== undefined);
       newByteLength = newLength * elementSize;
       if (offset + newByteLength > bufferByteLength) {
-        return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+        return Throw.RangeError('Sum of start offset and byte length should be less than the size of underlying buffer');
       }
     }
     O.ByteLength = newByteLength;
@@ -460,7 +460,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   const C = thisValue;
   // 2. If IsConstructor(C) is false, throw a TypeError exception.
   if (!IsConstructor(C)) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
+    return Throw.TypeError('$1 is not a constructor', C);
   }
   // 3. If mapfn is undefined, let mapping be false.
   let mapping;
@@ -469,7 +469,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   } else {
     // a. If IsCallable(mapfn) is false, throw a TypeError exception.
     if (!IsCallable(mapper)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+      return Throw.TypeError('mapper ($1) is not a function', mapper);
     }
     // b. Let mapping be true.
     mapping = true;
@@ -539,7 +539,7 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
   const C = thisValue;
   // 4. If IsConstructor(C) is false, throw a TypeError exception.
   if (!IsConstructor(C)) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
+    return Throw.TypeError('$1 is not a constructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
   const newObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));

@@ -1,6 +1,8 @@
 import { expect, test } from 'vitest';
 import {
-  Agent, isPromiseObject, JSStringValue, ManagedRealm, NormalCompletion, setSurroundingAgent,
+  Agent, CallSite, CreateBuiltinFunction, CreateDataPropertyOrThrow, isFunctionObject, isPromiseObject, JSStringValue, ManagedRealm, NormalCompletion, setSurroundingAgent,
+  unwrapCompletion,
+  Value,
   type PromiseObject,
 } from '#self';
 
@@ -53,20 +55,87 @@ test('native stack', () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
+  // built-in functions
+  {
+    const result = realm.evaluateScript(`
+      function x() { Reflect.get(); }
+      try {
+        x();
+      } catch (e) {
+        e.stack;
+      }
+    `) as NormalCompletion<JSStringValue>;
+    expect(result).toBeInstanceOf(NormalCompletion);
+    expect(result.Value).toBeInstanceOf(JSStringValue);
+    expect(result.Value.stringValue()).toMatchInlineSnapshot(`
+      "TypeError: undefined is not an object
+          at Reflect.get (native)
+          at x (<anonymous>:2:22)
+          at <anonymous>:4:9"
+    `);
+  }
+
+  // derived class constructors
+  {
+    const result = realm.evaluateScript(`
+      class T {}
+      try { T() } catch (e) { e.stack; }
+    `) as NormalCompletion<JSStringValue>;
+    expect(result).toBeInstanceOf(NormalCompletion);
+    expect(result.Value).toBeInstanceOf(JSStringValue);
+    expect(result.Value.stringValue()).toMatchInlineSnapshot(`
+      "TypeError: [Function T] cannot be invoked without new
+          at T (native)
+          at <anonymous>:3:13"
+    `);
+  }
+});
+
+test('native function names', () => {
+  const agent = new Agent();
+  setSurroundingAgent(agent);
+  const realm = new ManagedRealm();
+  realm.scope(() => {
+    const f = CreateBuiltinFunction.from((f = Value.null) => {
+      if (isFunctionObject(f)) {
+        return Value(CallSite.getFunctionName(f) || '<CallSite.getFunctionName returned null>');
+      }
+      return Value('<not a function object>');
+    });
+    unwrapCompletion(CreateDataPropertyOrThrow(realm.GlobalObject, Value('getName'), f));
+  });
   const result = realm.evaluateScript(`
-    function x() { Reflect.get(); }
-    try {
-      x();
-    } catch (e) {
-      e.stack;
+  (${() => {
+    // @ts-expect-error
+    declare const getName: (f: object) => string;
+    const seen = new WeakSet();
+    const names: Record<string, string> = {};
+    function collect(object: unknown, tree: Record<string, string>, key: string) {
+      if (!object || (typeof object !== 'object' && typeof object !== 'function')) return;
+      if (seen.has(object)) return;
+      seen.add(object);
+
+      if (typeof object === 'function') {
+        tree[`${key}()`] = getName(object);
+      }
+
+      const proto = Object.getPrototypeOf(object);
+      if (proto) {
+        collect(proto, tree, `${key}.[[Prototype]]`);
+      }
+
+      Object.entries(Object.getOwnPropertyDescriptors(object)).forEach(([subKey, desc]) => {
+        if ('value' in desc) collect(desc.value, tree, `${key}.${String(subKey)}`);
+        if (desc.get) collect(desc.get, tree, `${key}.get ${String(subKey)}`);
+        if (desc.set) collect(desc.set, tree, `${key}.set ${String(subKey)}`);
+      });
     }
+    collect(Object, names, 'Object');
+    collect(globalThis, names, '');
+    return JSON.stringify(names);
+  }})()
   `) as NormalCompletion<JSStringValue>;
   expect(result).toBeInstanceOf(NormalCompletion);
   expect(result.Value).toBeInstanceOf(JSStringValue);
-  expect(result.Value.stringValue()).toMatchInlineSnapshot(`
-    "TypeError: undefined is not an object
-        at get (native)
-        at x (<anonymous>:2:20)
-        at <anonymous>:4:7"
-  `);
+  expect(JSON.parse(result.Value.stringValue())).matchSnapshot();
 });

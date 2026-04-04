@@ -10,6 +10,7 @@ import {
   F,
   type ArrayBufferObject,
   Realm,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
@@ -20,7 +21,7 @@ function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCa
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
   if (IsSharedArrayBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
+    return Throw.TypeError('Attempt to access shared ArrayBuffer');
   }
   // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
   if (IsDetachedBuffer(O)) {
@@ -40,11 +41,11 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
   if (IsSharedArrayBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
+    return Throw.TypeError('Attempt to access shared ArrayBuffer');
   }
   // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
   if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
   const len = O.ArrayBufferByteLength;
@@ -81,24 +82,24 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
   if (IsSharedArrayBuffer(newO)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
+    return Throw.TypeError('Attempt to access shared ArrayBuffer');
   }
   // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
   if (IsDetachedBuffer(newO)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
   if (SameValue(newO, O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'SubclassSameValue', newO);
+    return Throw.TypeError('Subclass constructor returned the same object $1', newO);
   }
   // 17. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
   if (newO.ArrayBufferByteLength < newLen) {
-    return surroundingAgent.Throw('TypeError', 'SubclassLengthTooSmall', newO);
+    return Throw.TypeError('Subclass constructor returned a smaller-than-requested object $1', newO);
   }
   // 18. NOTE: Side-effects of the above steps may have detached O.
   // 19. If IsDetachedBuffer(O) is true, throw a TypeError exception.
   if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 20. Let fromBuf be O.[[ArrayBufferData]].
   const fromBuf = O.ArrayBufferData as DataBlock;

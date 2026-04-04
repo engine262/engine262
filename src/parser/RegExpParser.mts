@@ -24,7 +24,9 @@ import {
   isHexDigit,
 } from './Lexer.mts';
 import type { ParseNode } from './ParseNode.mts';
-import { Assert, surroundingAgent, type Mutable } from '#self';
+import {
+  Assert, isErrorObject, surroundingAgent, Throw, ThrowCompletion, type ErrorObject, type Mutable,
+} from '#self';
 
 export const isSyntaxCharacter = (c: string) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c: string) => ')]}|'.includes(c);
@@ -43,6 +45,7 @@ enum ParserContext {
 }
 
 export interface RegExpParserContext { UnicodeMode?: boolean; NamedCaptureGroups?: boolean; UnicodeSetsMode?: boolean; }
+
 export class RegExpParser {
   private source: string;
 
@@ -69,7 +72,7 @@ export class RegExpParser {
 
   private state = ParserContext.None;
 
-  constructor(source: string) {
+  constructor(source: string, private decorateError?: (error: ErrorObject, position: number) => void) {
     this.source = source;
   }
 
@@ -113,10 +116,11 @@ export class RegExpParser {
     return (this.state & ParserContext.UnicodeSetMode) === ParserContext.UnicodeSetMode;
   }
 
-  private raise(message: string, position = this.position): never {
-    const e = new SyntaxError(message);
-    e.position = position;
-    throw e;
+  private raise(error: ThrowCompletion, position = this.position): never {
+    if (isErrorObject(error.Value)) {
+      this.decorateError?.(error.Value, position);
+    }
+    throw error.Value;
   }
 
   private peek(length = 1) {
@@ -138,7 +142,7 @@ export class RegExpParser {
   private next() {
     const c = this.source[this.position];
     if (!c) {
-      this.raise('Unexpected end of input', this.position - 1);
+      this.raise(Throw.SyntaxError('Unexpected end of input'), this.position - 1);
     }
     this.position += 1;
     return c;
@@ -146,7 +150,7 @@ export class RegExpParser {
 
   private expect(c: string) {
     if (!this.eat(c)) {
-      this.raise(`Expected ${c} but got ${this.peek()}`);
+      this.raise(Throw.SyntaxError('Expected $1 but got $2', c, this.peek()));
     }
   }
 
@@ -159,25 +163,25 @@ export class RegExpParser {
       Disjunction: this.parseDisjunction(),
     };
     if (this.position < this.source.length) {
-      this.raise('Unexpected token');
+      this.raise(Throw.SyntaxError('Unexpected token'));
     }
     // AtomEscape :: DecimalEscape
     // EE: It is a Syntax Error if the CapturingGroupNumber of DecimalEscape is strictly greater than CountLeftCapturingParensWithin(the Pattern containing AtomEscape).
     this.decimalEscapes.forEach((d) => {
       if (d.value > node.capturingGroups.length) {
-        this.raise(`There is no ${d.value} capture groups`, d.position);
+        this.raise(Throw.SyntaxError('There is no $1 capture groups', d.value), d.position);
       }
     });
     // AtomEscape :: k GroupName
     // EE: It is a Syntax Error if GroupSpecifiersThatMatch(GroupName) is empty.
     this.groupNameRefs.forEach((g) => {
       if (!node.capturingGroups.find((x) => g.production === 'CaptureGroupName' && x.GroupName === g.GroupName)) {
-        this.raise(`There is no capture group called ${JSON.stringify(g.GroupName)}`, g.position);
+        this.raise(Throw.SyntaxError('There is no capture group called $1', JSON.stringify(g.GroupName)), g.position);
       }
     });
     // EE: It is a Syntax Error if CountLeftCapturingParensWithin(Pattern) ≥ 2**32 - 1.
     if (CountLeftCapturingParensWithin(node) >= 2 ** 32 - 1) {
-      this.raise('Too many capturing groups');
+      this.raise(Throw.SyntaxError('Too many capturing groups'));
     }
     return node;
   }
@@ -209,7 +213,7 @@ export class RegExpParser {
       }
       if (x.GroupName) {
         if (alternativeSeenNameGroups.has(x.GroupName)) {
-          this.raise(`Duplicated capture group ${JSON.stringify(x.GroupName)}`, x.position);
+          this.raise(Throw.SyntaxError('Duplicated capture group $1', JSON.stringify(x.GroupName)), x.position);
         }
         alternativeSeenNameGroups.add(x.GroupName);
       }
@@ -223,7 +227,7 @@ export class RegExpParser {
       }
       if (x.GroupName) {
         if (disjunctionSeenNameGroups.has(x.GroupName)) {
-          this.raise(`Duplicated capture group ${JSON.stringify(x.GroupName)}`, x.position);
+          this.raise(Throw.SyntaxError('Duplicated capture group $1', JSON.stringify(x.GroupName)), x.position);
         }
         disjunctionSeenNameGroups.add(x.GroupName);
       }
@@ -383,7 +387,7 @@ export class RegExpParser {
         }
         // EE: It is a Syntax Error if the MV of the first DecimalDigits is strictly greater than the MV of the second DecimalDigits.
         if (DecimalDigits_a > DecimalDigits_b) {
-          this.raise('Numbers out of order in quantifier', quantifierPos);
+          this.raise(Throw.SyntaxError('Numbers out of order in quantifier'), quantifierPos);
         }
       }
       QuantifierPrefix = {
@@ -470,7 +474,7 @@ export class RegExpParser {
       };
     }
     if (isSyntaxCharacter(this.peek())) {
-      this.raise(`Expected a character but got ${this.peek()}`);
+      this.raise(Throw.SyntaxError('Expected a character but got $1', this.peek()));
     }
     return {
       type: 'Atom',
@@ -512,14 +516,14 @@ export class RegExpParser {
       } else if (this.eat('-')) {
         modifiers ??= [];
         if (seenMinus) {
-          this.raise('Unexpected - in modifiers', this.position - 1);
+          this.raise(Throw.SyntaxError('Unexpected - in modifiers'), this.position - 1);
         }
         seenMinus = true;
         result.PlusModifiers = modifiers;
         modifiers = [];
         result.MinusModifiers = modifiers;
       } else {
-        this.raise(`${JSON.stringify(this.peek())} is not a valid modifier`);
+        this.raise(Throw.SyntaxError('$1 is not a valid modifier', JSON.stringify(this.peek())));
       }
     }
     if (!seenMinus) {
@@ -528,14 +532,14 @@ export class RegExpParser {
     const allModifiers = result.PlusModifiers?.concat(result.MinusModifiers || []);
     // EE: It is a Syntax Error if the source text matched by the first RegularExpressionModifiers and the source text matched by the second RegularExpressionModifiers are both empty.
     if (result.PlusModifiers && result.MinusModifiers && result.PlusModifiers.length + result.MinusModifiers.length === 0) {
-      this.raise('PlusModifiers and MinusModifiers cannot be both empty.', this.position - 2);
+      this.raise(Throw.SyntaxError('PlusModifiers and MinusModifiers cannot be both empty.'), this.position - 2);
     }
     // EE: It is a Syntax Error if the source text matched by RegularExpressionModifiers contains the same code point more than once.
     // EE: It is a Syntax Error if the source text matched by the first RegularExpressionModifiers contains the same code point more than once.
     // EE: It is a Syntax Error if the source text matched by the second RegularExpressionModifiers contains the same code point more than once.
     // EE: It is a Syntax Error if any code point in the source text matched by the first RegularExpressionModifiers is also contained in the source text matched by the second RegularExpressionModifiers.
     if (allModifiers?.length && allModifiers.length !== new Set(allModifiers).size) {
-      this.raise('Repeated modifiers in modifier group', modifierPos);
+      this.raise(Throw.SyntaxError('Repeated modifiers in modifier group'), modifierPos);
     }
     return result;
   }
@@ -611,7 +615,7 @@ export class RegExpParser {
         const c = this.next();
         if (c === undefined) {
           if (this.inUnicodeMode) {
-            this.raise('Invalid identity escape');
+            this.raise(Throw.SyntaxError('Invalid identity escape'));
           }
           return {
             type: 'CharacterEscape',
@@ -628,7 +632,7 @@ export class RegExpParser {
           };
         }
         if (this.inUnicodeMode) {
-          this.raise('Invalid identity escape', this.position - 2);
+          this.raise(Throw.SyntaxError('Invalid identity escape'), this.position - 2);
         }
         return {
           type: 'CharacterEscape',
@@ -645,7 +649,7 @@ export class RegExpParser {
           };
         }
         if (this.inUnicodeMode) {
-          this.raise('Invalid identity escape');
+          this.raise(Throw.SyntaxError('Invalid identity escape'));
         }
         this.next();
         return {
@@ -663,7 +667,7 @@ export class RegExpParser {
           };
         }
         if (this.inUnicodeMode) {
-          this.raise('Invalid identity escape');
+          this.raise(Throw.SyntaxError('Invalid identity escape'));
         }
         this.next();
         return {
@@ -675,7 +679,7 @@ export class RegExpParser {
       default: {
         const c = this.peek();
         if (c === '') {
-          this.raise('Unexpected escape');
+          this.raise(Throw.SyntaxError('Unexpected escape'));
         }
         if (c === '0' && !isDecimalDigit(this.source[this.position + 1])) {
           this.position += 1;
@@ -686,11 +690,11 @@ export class RegExpParser {
         }
         if (this.inUnicodeMode) {
           if (c !== '/' && !isSyntaxCharacter(c)) {
-            this.raise('Invalid identity escape');
+            this.raise(Throw.SyntaxError('Invalid identity escape'));
           }
         } else {
           if (isIdentifierContinue(c)) {
-            this.raise('Invalid identity escape');
+            this.raise(Throw.SyntaxError('Invalid identity escape'));
           }
         }
         return {
@@ -758,7 +762,7 @@ export class RegExpParser {
         const namePos = this.position;
         while (true) {
           if (this.position >= this.source.length) {
-            this.raise('Invalid unicode property name or value');
+            this.raise(Throw.SyntaxError('Invalid unicode property name or value'));
           }
           const c = this.source[this.position];
           if (c === '_' || isDecimalDigit(c)) {
@@ -773,7 +777,7 @@ export class RegExpParser {
           LoneUnicodePropertyNameOrValue += c;
         }
         if (LoneUnicodePropertyNameOrValue.length === 0) {
-          this.raise('Invalid unicode property name or value');
+          this.raise(Throw.SyntaxError('Invalid unicode property name or value'));
         }
         let UnicodePropertyValue;
         let valuePos;
@@ -783,7 +787,7 @@ export class RegExpParser {
           UnicodePropertyValue = '';
           while (true) {
             if (this.position >= this.source.length) {
-              this.raise('Invalid unicode property value', valuePos);
+              this.raise(Throw.SyntaxError('Invalid unicode property value'), valuePos);
             }
             const c = this.source[this.position];
             if (!isControlLetter(c) && !isDecimalDigit(c) && c !== '_') {
@@ -793,7 +797,7 @@ export class RegExpParser {
             UnicodePropertyValue += c;
           }
           if (UnicodePropertyValue.length === 0) {
-            this.raise('Invalid unicode property value', valuePos);
+            this.raise(Throw.SyntaxError('Invalid unicode property value'), valuePos);
           }
         }
         this.expect('}');
@@ -801,17 +805,17 @@ export class RegExpParser {
           const UnicodePropertyName = LoneUnicodePropertyNameOrValue;
           // EE: It is a Syntax Error if the source text matched by UnicodePropertyName is not a Unicode property name or property alias listed in the “Property name and aliases” column of Table 69.
           if (!(UnicodePropertyName in Table69_NonbinaryUnicodeProperties)) {
-            this.raise('Invalid unicode property name', namePos);
+            this.raise(Throw.SyntaxError('Invalid unicode property name'), namePos);
           }
           __ts_cast__<keyof typeof Table69_NonbinaryUnicodeProperties>(UnicodePropertyName);
           if (UnicodePropertyName !== 'Script_Extensions' && UnicodePropertyName !== 'scx') {
             // EE: It is a Syntax Error if the source text matched by UnicodePropertyName is neither Script_Extensions nor scx and the source text matched by UnicodePropertyValue is not a property value or property value alias for the Unicode property or property alias given by the source text matched by UnicodePropertyName listed in PropertyValueAliases.txt.
             if (!((UnicodePropertyValue in PropertyValueAliases[Table69_NonbinaryUnicodeProperties[UnicodePropertyName]]))) {
-              this.raise('Invalid unicode property value', valuePos);
+              this.raise(Throw.SyntaxError('Invalid unicode property value'), valuePos);
             }
           } else if (!(UnicodePropertyValue in PropertyValueAliases.Script)) {
             // EE: It is a Syntax Error if the source text matched by UnicodePropertyName is either Script_Extensions or scx and the source text matched by UnicodePropertyValue is not a property value or property value alias for the Unicode property Script (sc) listed in PropertyValueAliases.txt.
-            this.raise('Invalid unicode property value', valuePos);
+            this.raise(Throw.SyntaxError('Invalid unicode property value'), valuePos);
           }
           return {
             type: 'CharacterClassEscape',
@@ -831,15 +835,15 @@ export class RegExpParser {
           && !(LoneUnicodePropertyNameOrValue in Table70_BinaryUnicodeProperties)
           && !(LoneUnicodePropertyNameOrValue in Table71_BinaryPropertyOfStrings)
         ) {
-          this.raise('Invalid unicode property', namePos);
+          this.raise(Throw.SyntaxError('Invalid unicode property'), namePos);
         }
         // EE: It is a Syntax Error if the enclosing Pattern does not have a [UnicodeSetsMode] parameter and the source text matched by LoneUnicodePropertyNameOrValue is a binary property of strings listed in the “Property name” column of Table 71.
         if (LoneUnicodePropertyNameOrValue in Table71_BinaryPropertyOfStrings && !this.inUnicodeSetMode) {
-          this.raise(`${LoneUnicodePropertyNameOrValue} can only be used with v flag`, namePos);
+          this.raise(Throw.SyntaxError('$1 can only be used with v flag', LoneUnicodePropertyNameOrValue), namePos);
         }
         // EE: It is a Syntax Error if MayContainStrings of the UnicodePropertyValueExpression is true.
         if (peek === 'P' && LoneUnicodePropertyNameOrValue in Table71_BinaryPropertyOfStrings) {
-          this.raise(`${LoneUnicodePropertyNameOrValue} cannot be inverted`, namePos - 2);
+          this.raise(Throw.SyntaxError('$1 cannot be inverted', LoneUnicodePropertyNameOrValue), namePos - 2);
         }
         return {
           type: 'CharacterClassEscape',
@@ -871,7 +875,7 @@ export class RegExpParser {
     // CharacterClass :: [^ ClassContents ]
     // EE: It is a Syntax Error if MayContainStrings of the ClassContents is true.
     if (invert && MayContainStrings(node.ClassContents)) {
-      this.raise('This class cannot be inverted', invertPos);
+      this.raise(Throw.SyntaxError('This class cannot be inverted'), invertPos);
     }
     this.expect(']');
     return node;
@@ -911,7 +915,7 @@ export class RegExpParser {
     const ranges: Mutable<ParseNode.RegExp.NonEmptyClassRanges> = [];
     while (!this.test(']')) {
       if (this.position >= this.source.length) {
-        this.raise('Unexpected end of CharacterClass');
+        this.raise(Throw.SyntaxError('Unexpected end of CharacterClass'));
       }
       const atomPos = this.position;
       const atom = this.parseClassAtom();
@@ -923,21 +927,21 @@ export class RegExpParser {
         } else {
           // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is true or IsCharacterClass of the second ClassAtom is true.
           if (atom.production === 'ClassEscape' && atom.ClassEscape.production === 'CharacterClassEscape') {
-            this.raise('Invalid class range', atomPos);
+            this.raise(Throw.SyntaxError('Invalid class range'), atomPos);
           }
           const atom2Pos = this.position;
           const atom2 = this.parseClassAtom();
           // EE: It is a Syntax Error if IsCharacterClass of the first ClassAtom is false, IsCharacterClass of the second ClassAtom is false, and the CharacterValue of the first ClassAtom is strictly greater than the CharacterValue of the second ClassAtom.
           // EE: It is a Syntax Error if IsCharacterClass of ClassAtomNoDash is false, IsCharacterClass of ClassAtom is false, and the CharacterValue of ClassAtomNoDash is strictly greater than the CharacterValue of ClassAtom.
           if (!IsCharacterClass(atom) && !IsCharacterClass(atom2) && CharacterValue(atom as CharacterValueAcceptNode) > CharacterValue(atom2 as CharacterValueAcceptNode)) {
-            this.raise('Invalid class range', atomPos);
+            this.raise(Throw.SyntaxError('Invalid class range'), atomPos);
           }
           // EE: It is a Syntax Error if IsCharacterClass of ClassAtomNoDash is true or IsCharacterClass of ClassAtom is true.
           if (IsCharacterClass(atom)) {
-            this.raise('Invalid class range', atomPos);
+            this.raise(Throw.SyntaxError('Invalid class range'), atomPos);
           }
           if (IsCharacterClass(atom2)) {
-            this.raise('Invalid class range', atom2Pos);
+            this.raise(Throw.SyntaxError('Invalid class range'), atom2Pos);
           }
           ranges.push([atom, atom2]);
         }
@@ -1023,26 +1027,26 @@ export class RegExpParser {
         this.position += 1;
         const RegExpUnicodeEscapeSequence = this.scope({ UnicodeMode: true }, () => this.maybeParseRegExpUnicodeEscapeSequence());
         if (!RegExpUnicodeEscapeSequence) {
-          this.raise('Invalid unicode escape');
+          this.raise(Throw.SyntaxError('Invalid unicode escape'));
         }
         const raw = String.fromCodePoint(CharacterValue(RegExpUnicodeEscapeSequence));
         // EE: It is a Syntax Error if the CharacterValue of RegExpUnicodeEscapeSequence is not the numeric value of some code point matched by the IdentifierStartChar lexical grammar production.
         // EE: It is a Syntax Error if the CharacterValue of RegExpUnicodeEscapeSequence is not the numeric value of some code point matched by the IdentifierPartChar lexical grammar production.
         // EE: It is a Syntax Error if the RegExpIdentifierCodePoint of RegExpIdentifierPart is not matched by the UnicodeIDContinue lexical grammar production.
         if (!check(raw)) {
-          this.raise('Invalid identifier escape');
+          this.raise(Throw.SyntaxError('Invalid identifier escape'));
         }
         buffer += raw;
       } else if (isLeadingSurrogate(code)) {
         // EE: It is a Syntax Error if the RegExpIdentifierCodePoint of RegExpIdentifierStart is not matched by the UnicodeIDStart lexical grammar production.
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
         if (!isTrailingSurrogate(lowSurrogate)) {
-          this.raise('Invalid trailing surrogate');
+          this.raise(Throw.SyntaxError('Invalid trailing surrogate'));
         }
         const codePoint = UTF16SurrogatePairToCodePoint(code, lowSurrogate);
         const raw = String.fromCodePoint(codePoint);
         if (!check(raw)) {
-          this.raise('Invalid surrogate pair');
+          this.raise(Throw.SyntaxError('Invalid surrogate pair'));
         }
         this.position += 2;
         buffer += raw;
@@ -1055,7 +1059,7 @@ export class RegExpParser {
       check = isIdentifierPart;
     }
     if (buffer.length === 0) {
-      this.raise('Invalid empty identifier');
+      this.raise(Throw.SyntaxError('Invalid empty identifier'));
     }
     return buffer;
   }
@@ -1066,7 +1070,7 @@ export class RegExpParser {
   private parseDecimalDigits(): string {
     let n = '';
     if (!isDecimalDigit(this.peek())) {
-      this.raise('Invalid decimal digits');
+      this.raise(Throw.SyntaxError('Invalid decimal digits'));
     }
     while (isDecimalDigit(this.peek())) {
       n += this.next();
@@ -1080,11 +1084,11 @@ export class RegExpParser {
     this.expect('x');
     const HexDigit_a = this.next();
     if (!isHexDigit(HexDigit_a)) {
-      this.raise('Not a hex digit');
+      this.raise(Throw.SyntaxError('Not a hex digit'));
     }
     const HexDigit_b = this.next();
     if (!isHexDigit(HexDigit_b)) {
-      this.raise('Not a hex digit');
+      this.raise(Throw.SyntaxError('Not a hex digit'));
     }
     return {
       type: 'HexEscapeSequence',
@@ -1095,7 +1099,7 @@ export class RegExpParser {
 
   private scanHex(length: number) {
     if (length === 0) {
-      this.raise('Invalid code point');
+      this.raise(Throw.SyntaxError('Invalid code point'));
     }
     let n = 0;
     let oldN = 0;
@@ -1107,10 +1111,10 @@ export class RegExpParser {
         n = (n << 4) | Number.parseInt(c, 16);
         if (oldN > n) {
           // overflow
-          this.raise('Invalid hex digit');
+          this.raise(Throw.SyntaxError('Invalid hex digit'));
         }
       } else {
-        this.raise('Invalid hex digit');
+        this.raise(Throw.SyntaxError('Invalid hex digit'));
       }
     }
     return n;
@@ -1132,11 +1136,11 @@ export class RegExpParser {
     if (this.inUnicodeMode && this.eat('{')) {
       const end = this.source.indexOf('}' as Character, this.position);
       if (end === -1) {
-        this.raise('Invalid code point');
+        this.raise(Throw.SyntaxError('Invalid code point'));
       }
       const code = this.scanHex(end - this.position);
       if (code > 0x10FFFF) {
-        this.raise('Invalid code point');
+        this.raise(Throw.SyntaxError('Invalid code point'));
       }
       this.position += 1;
       return {
@@ -1217,11 +1221,11 @@ export class RegExpParser {
         if (this.eat('-')) {
           const char2 = this.maybeParseClassSetCharacter();
           if (char2 === undefined) {
-            this.raise('Unterminated range');
+            this.raise(Throw.SyntaxError('Unterminated range'));
           }
           // EE: It is a Syntax Error if the CharacterValue of the first ClassSetCharacter is strictly greater than the CharacterValue of the second ClassSetCharacter.
           if (CharacterValue(char) > CharacterValue(char2)) {
-            this.raise(`Invalid range: ${String.fromCodePoint(CharacterValue(char))} is bigger than ${String.fromCodePoint(CharacterValue(char2))}`, charPos);
+            this.raise(Throw.SyntaxError('Invalid range: $1 is bigger than $2', String.fromCodePoint(CharacterValue(char)), String.fromCodePoint(CharacterValue(char2))), charPos);
           }
           union.push({ type: 'ClassSetRange', left: char, right: char2 });
           continue;
@@ -1268,7 +1272,7 @@ export class RegExpParser {
       // NestedClass :: [^ ClassContents ]
       // EE: It is a Syntax Error if MayContainStrings of the ClassContents is true.
       if (invert && MayContainStrings(ClassContents)) {
-        this.raise('This class cannot be inverted', invertPos);
+        this.raise(Throw.SyntaxError('This class cannot be inverted'), invertPos);
       }
       this.expect(']');
       return {
@@ -1297,7 +1301,7 @@ export class RegExpParser {
         () => this.maybeParseCharacterClassEscape(),
       );
       if (!escape) {
-        this.raise(`Expect a CharacterClassEscape but ${this.peek()}`);
+        this.raise(Throw.SyntaxError('Expect a CharacterClassEscape but $1 found', this.peek()));
       }
       return {
         type: 'ClassSetOperand',
@@ -1307,7 +1311,7 @@ export class RegExpParser {
     }
     const ClassSetCharacter = this.maybeParseClassSetCharacter();
     if (!ClassSetCharacter) {
-      this.raise(`Unexpected ${this.peek()}`);
+      this.raise(Throw.SyntaxError('Unexpected $1', this.peek()));
     }
     return { type: 'ClassSetOperand', production: 'ClassSetCharacter', ClassSetCharacter };
   }

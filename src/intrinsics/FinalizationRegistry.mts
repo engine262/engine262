@@ -11,6 +11,7 @@ import {
   IsCallable, OrdinaryCreateFromConstructor,
   type BuiltinFunctionObject, type FunctionObject, type OrdinaryObject,
   Realm,
+  Throw,
 } from '#self';
 
 export interface FinalizationRegistryCell {
@@ -30,11 +31,11 @@ export function isFinalizationRegistryObject(object: object): object is Finaliza
 function* FinalizationRegistryConstructor(this: BuiltinFunctionObject, [cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('FinalizationRegistry cannot be invoked without new');
   }
   // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
   if (!IsCallable(cleanupCallback)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
+    return Throw.TypeError('$1 is not a function', cleanupCallback);
   }
   // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
   const finalizationGroup = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', [

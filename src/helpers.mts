@@ -4,13 +4,13 @@ import {
 } from './host-defined/engine.mts';
 import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
-  Value, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
+  Value, JSStringValue, UndefinedValue, NullValue, type PropertyKeyValue,
   SymbolValue,
 } from './value.mts';
 import { Q } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type {
-  Evaluator, EvaluatorNextType, ValueEvaluator, YieldEvaluator,
+  Evaluator, EvaluatorNextType, YieldEvaluator,
 } from './evaluator.mts';
 import type { ErrorObject } from './intrinsics/Error.mts';
 import {
@@ -18,6 +18,10 @@ import {
   isFunctionObject,
   isBuiltinFunctionObject,
   isECMAScriptFunctionObject,
+  type ValueCompletion,
+  isErrorObject,
+  type PlainEvaluator,
+  type FunctionObject,
 } from '#self';
 
 export const kInternal = Symbol('kInternal');
@@ -355,14 +359,27 @@ export class CallSite {
     return isBuiltinFunctionObject(this.context.Function);
   }
 
-  getFunctionName(): string | null {
-    if (isFunctionObject(this.context.Function)) {
-      const name = this.context.Function.properties.get('name');
+  static getFunctionName(func: FunctionObject | NullValue) {
+    if (isFunctionObject(func)) {
+      if (isBuiltinFunctionObject(func)) {
+        const name = func.nativeFunction.name;
+        if (name !== 'defaultConstructor') {
+          return name.replace('Proto_', '#').replace(/(Constructor|_getter|_setter|Getter|Setter)$/, '').replaceAll(/([a-zA-Z])_([a-zA-Z])/g, '$1.$2');
+        }
+      }
+      if (func.InitialName instanceof JSStringValue) {
+        return func.InitialName.stringValue();
+      }
+      const name = func.properties.get('name');
       if (name && name.Value && name.Value instanceof JSStringValue) {
         return name.Value.stringValue();
       }
     }
     return null;
+  }
+
+  getFunctionName(): string | null {
+    return CallSite.getFunctionName(this.context.Function);
   }
 
   getSpecifier() {
@@ -540,11 +557,24 @@ function captureAsyncStack(stack: CallSite[]) {
   }
 }
 
-export function getHostDefinedErrorStack(O: Value): (CallSite | CallFrame)[] | undefined {
-  if (O instanceof ObjectValue && 'HostDefinedErrorStack' in O && isArray((O as ErrorObject).HostDefinedErrorStack)) {
-    return (O as ErrorObject).HostDefinedErrorStack as (CallSite | CallFrame)[];
+export function getHostDefinedErrorDetails(O: Value) {
+  let callStack: readonly (CallSite | CallFrame)[] | undefined;
+  let message: readonly (string | Value)[] | undefined;
+  let stack: string | undefined;
+  let stackGetterValue: string | undefined;
+  if (isErrorObject(O)) {
+    if (isArray(O.HostDefinedStack)) callStack = O.HostDefinedStack;
+    if (isArray(O.HostDefinedMessage)) message = O.HostDefinedMessage;
+    if (typeof O.HostDefinedFormattedStack === 'string') {
+      stack = O.HostDefinedFormattedStack;
+      if (typeof O.HostDefinedMessageString === 'string') {
+        stackGetterValue = O.HostDefinedMessageString + O.HostDefinedFormattedStack;
+      }
+    }
   }
-  return undefined;
+  return {
+    callStack, message, stack, stackGetterValue,
+  };
 }
 
 export function getCurrentStack(excludeGlobalStack = true) {
@@ -591,10 +621,12 @@ export function captureStack() {
   };
 }
 
-export function* callSiteToErrorString(O: ErrorObject, stack: readonly CallSite[], nativeStack?: string): ValueEvaluator<JSStringValue> {
-  const errorString = (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+export function* setErrorHostInternalSlot(O: ErrorObject, { nativeStack, stack }: ReturnType<typeof captureStack>, errorStringPredefined?: string): PlainEvaluator {
+  const errorString = errorStringPredefined ?? (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
   const errorStack = callSiteToErrorStack(stack, nativeStack);
-  return Value(errorString + errorStack);
+  O.HostDefinedStack = stack;
+  O.HostDefinedFormattedStack = errorStack;
+  O.HostDefinedMessageString = errorString;
 }
 
 export function callSiteToErrorStack(stack: readonly CallSite[], nativeStack: string | undefined) {
@@ -629,3 +661,8 @@ export function unreachable(_: never): never {
   throw new Error('Unreachable');
 }
 export function __ts_cast__<T>(_value: unknown): asserts _value is T { }
+
+/** A helper to parse a JSON string into a ECMAScript value. */
+export function parseJson(jsonString: string): ValueCompletion {
+  return Q(skipDebugger(Call(surroundingAgent.intrinsic('%JSON.parse%'), Value.null, [Value(jsonString)])));
+}

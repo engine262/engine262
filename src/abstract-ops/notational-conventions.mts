@@ -1,9 +1,9 @@
 import {
   ThrowCompletion, type Completion, type Value,
 } from '../index.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ObjectValue } from '../value.mts';
+import { Throw } from '#self';
 
 class AssertError extends Error {}
 export function Assert(invariant: boolean, source?: string, completion?: Completion<unknown>): asserts invariant {
@@ -23,10 +23,10 @@ Assert.Throw = (source?: string, completion?: Completion<unknown>) => {
 /** https://tc39.es/ecma262/#sec-requireinternalslot */
 export function RequireInternalSlot(O: Value, internalSlot: string): ThrowCompletion | undefined {
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   if (!(internalSlot in O)) {
-    return surroundingAgent.Throw('TypeError', 'InternalSlotMissing', O, internalSlot);
+    return Throw.TypeError('Object $1 does not have internal slot [[$2]]', O, internalSlot);
   }
   return undefined;
 }

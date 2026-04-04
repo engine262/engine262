@@ -17,6 +17,7 @@ import {
   nsPerDay,
   AddDaysToISODate,
   CombineISODateAndTimeRecord,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-date-duration-records */
@@ -144,7 +145,7 @@ export function TemporalDurationFromInternal(internalDuration: InternalDurationR
 /** https://tc39.es/proposal-temporal/#sec-temporal-createdatedurationrecord */
 export function CreateDateDurationRecord(years: number, months: number, weeks: number, days: number): PlainCompletion<DateDurationRecord> {
   if (!IsValidDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0)) {
-    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+    return Throw.RangeError('Duration($1, $2, $3, $4) is not a valid duration', years, months, weeks, days);
   }
   return {
     Years: years,
@@ -186,7 +187,7 @@ export function* ToTemporalDuration(item: Value): ValueEvaluator<TemporalDuratio
   }
   if (!(item instanceof ObjectValue)) {
     if (!(item instanceof JSStringValue)) {
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToTemporalDuration', item);
+      return Throw.TypeError('Cannot convert $1 to Temporal.Duration', item);
     }
     return yield* ParseTemporalDurationString(item.stringValue());
   }
@@ -427,7 +428,7 @@ export function DefaultTemporalLargestUnit(duration: TemporalDurationObject): Te
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalpartialdurationrecord */
 export function* ToTemporalPartialDurationRecord(temporalDurationLike: Value): PlainEvaluator<PartialDurationRecord> {
   if (!(temporalDurationLike instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', temporalDurationLike);
+    return Throw.TypeError('$1 is not an object', temporalDurationLike);
   }
   const result: Mutable<PartialDurationRecord> = {
     Days: undefined,
@@ -492,7 +493,7 @@ export function* ToTemporalPartialDurationRecord(temporalDurationLike: Value): P
     && milliseconds === Value.undefined
     && microseconds === Value.undefined
     && nanoseconds === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'InvalidDuration');
+    return Throw.TypeError('Invalid duration');
   }
   return result;
 }
@@ -512,7 +513,7 @@ export function* CreateTemporalDuration(
   newTarget?: FunctionObject,
 ): ValueEvaluator<TemporalDurationObject> {
   if (!IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds)) {
-    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+    return Throw.RangeError('Invalid duration');
   }
   if (newTarget === undefined) {
     newTarget = surroundingAgent.currentRealmRecord.Intrinsics['%Temporal.Duration%'];
@@ -581,7 +582,7 @@ export function TimeDurationFromComponents(
 export function AddTimeDuration(one: TimeDuration, two: TimeDuration): PlainCompletion<TimeDuration> {
   const result = BigInt(one) + BigInt(two);
   if (abs(result) > maxTimeDuration) {
-    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+    return Throw.RangeError('Invalid duration');
   }
   return Number(result) as TimeDuration;
 }
@@ -590,7 +591,7 @@ export function AddTimeDuration(one: TimeDuration, two: TimeDuration): PlainComp
 export function Add24HourDaysToTimeDuration(d: TimeDuration, days: number): PlainCompletion<TimeDuration> {
   const result = BigInt(d) + BigInt(days) * BigInt(nsPerDay);
   if (abs(result) > maxTimeDuration) {
-    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+    return Throw.RangeError('Invalid duration');
   }
   return Number(result) as TimeDuration;
 }
@@ -626,7 +627,7 @@ export function RoundTimeDurationToIncrement(
 ): PlainCompletion<TimeDuration> {
   const rounded = RoundNumberToIncrement(d, increment, roundingMode);
   if (abs(rounded) > maxTimeDuration) {
-    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+    return Throw.RangeError('Invalid duration');
   }
   return rounded as TimeDuration;
 }
@@ -1114,7 +1115,7 @@ export function* AddDurations(
   const largestUnit2 = DefaultTemporalLargestUnit(other);
   const largestUnit = LargerOfTwoTemporalUnits(largestUnit1, largestUnit2);
   if (IsCalendarUnit(largestUnit)) {
-    return surroundingAgent.Throw('RangeError', 'InvalidDuration');
+    return Throw.RangeError('Invalid duration');
   }
   const d1 = ToInternalDurationRecordWith24HourDays(duration);
   const d2 = ToInternalDurationRecordWith24HourDays(other);

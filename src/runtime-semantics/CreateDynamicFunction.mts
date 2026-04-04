@@ -22,9 +22,10 @@ import {
   ToString,
   type FunctionObject,
   type Intrinsics,
+  type ValueEvaluator,
 } from '#self';
 
-export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value) {
+export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value): ValueEvaluator {
   // 6. If newTarget is undefined, set newTarget to constructor.
   if (newTarget instanceof UndefinedValue) {
     newTarget = constructor;

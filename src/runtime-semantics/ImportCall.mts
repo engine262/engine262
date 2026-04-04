@@ -13,6 +13,7 @@ import {
   ToString,
   NewPromiseCapability,
   GetActiveScriptOrModule,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-import-calls */
@@ -64,7 +65,7 @@ function* EvaluateImportCall(
     if (!(options instanceof ObjectValue)) {
       // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
       X(Call(promiseCapability.Reject, Value.undefined, [
-        surroundingAgent.Throw('TypeError', 'NotAnObject', options).Value,
+        Throw.TypeError('The second argument to import() must be an object, but $1', options).Value,
       ]));
       // ii. Return promiseCapability.[[Promise]].
       return promiseCapability.Promise;
@@ -80,7 +81,7 @@ function* EvaluateImportCall(
       if (!(attributesObj instanceof ObjectValue)) {
         // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
         X(Call(promiseCapability.Reject, Value.undefined, [
-          surroundingAgent.Throw('TypeError', 'NotAnObject', attributesObj).Value,
+          Throw.TypeError('The "with" option in import() must be an object, but $1', attributesObj).Value,
         ]));
         // 2. Return promiseCapability.[[Promise]].
         return promiseCapability.Promise;
@@ -102,7 +103,7 @@ function* EvaluateImportCall(
           if (!(value instanceof JSStringValue)) {
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
             X(Call(promiseCapability.Reject, Value.undefined, [
-              surroundingAgent.Throw('TypeError', 'NotAString', value).Value,
+              Throw.TypeError('Import attribute value must be a string, but $1', value).Value,
             ]));
             // ii. Return promiseCapability.[[Promise]].
             return promiseCapability.Promise;
@@ -116,7 +117,7 @@ function* EvaluateImportCall(
       if (unsupportedAttributeKey) {
         // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
         X(Call(promiseCapability.Reject, Value.undefined, [
-          surroundingAgent.Throw('TypeError', 'UnsupportedImportAttribute', unsupportedAttributeKey).Value,
+          Throw.TypeError('Unsupported import attribute "$1"', unsupportedAttributeKey.stringValue()).Value,
         ]));
         // ii. Return promiseCapability.[[Promise]].
         return promiseCapability.Promise;

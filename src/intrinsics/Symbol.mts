@@ -7,15 +7,13 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   KeyForSymbol,
   Realm,
   SameValue,
+  Throw,
   ToString,
   type FunctionObject,
   type OrdinaryObject,
@@ -37,7 +35,7 @@ export function isSymbolObject(o: Value): o is SymbolObject {
 function* SymbolConstructor(this: FunctionObject, [description = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
+    return Throw.TypeError('Symbol is not a constructor');
   }
   // 2. If description is undefined, let descString be undefined.
   let descString;
@@ -74,7 +72,7 @@ function* Symbol_for([key = Value.undefined]: Arguments): ValueEvaluator {
 function Symbol_keyFor([sym = Value.undefined]: Arguments) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
   if (!(sym instanceof SymbolValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotASymbol', sym);
+    return Throw.TypeError('arguments[0] ($1) is not a symbol', sym);
   }
   // 2. Return KeyForSymbol(sym).
   return KeyForSymbol(sym);

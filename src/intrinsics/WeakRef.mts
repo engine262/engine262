@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue,
   SymbolValue,
@@ -8,7 +7,7 @@ import { Q } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
-  AddToKeptObjects, CanBeHeldWeakly, OrdinaryCreateFromConstructor, Realm, type FunctionObject, type OrdinaryObject,
+  AddToKeptObjects, CanBeHeldWeakly, OrdinaryCreateFromConstructor, Realm, Throw, type FunctionObject, type OrdinaryObject,
 } from '#self';
 
 export interface WeakRefObject extends OrdinaryObject {
@@ -21,11 +20,11 @@ export function isWeakRef(object: object): object is WeakRefObject {
 function* WeakRefConstructor(this: FunctionObject, [target = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('WeakRef cannot be invoked without new');
   }
   // 2. If CanBeHeldWeakly(target) is false, throw a TypeError exception.
   if (!CanBeHeldWeakly(target)) {
-    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', target);
+    return Throw.TypeError('$1 cannot be weakly referenced', target);
   }
   // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).
   const weakRef = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget'])) as Mutable<WeakRefObject>;

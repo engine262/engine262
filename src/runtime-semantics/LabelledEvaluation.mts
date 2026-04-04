@@ -49,6 +49,7 @@ import {
   ToBoolean,
   ToObject,
   SameValue,
+  Throw,
   type IteratorRecord,
 } from '#self';
 import { DeclarativeEnvironmentRecord } from '#self';
@@ -605,7 +606,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
     }
     // c. If Type(nextResult) is not Object, throw a TypeError exception.
     if (!(nextResult instanceof ObjectValue)) {
-      return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
+      return Throw.TypeError('The return value ($1) of the next() on an iterator ($2) must be an object', nextResult, iteratorRecord.Iterator);
     }
     // d. Let done be ? IteratorComplete(nextResult).
     const done = Q(yield* IteratorComplete(nextResult));

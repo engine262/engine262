@@ -21,6 +21,7 @@ import {
   IsPropertyKey,
   IsPrivateReference,
   ToPropertyKey,
+  Throw,
 } from '#self';
 import { EnvironmentRecord } from '#self';
 
@@ -48,7 +49,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     Assert(!IsPrivateReference(ref));
     // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
     if (IsSuperReference(ref) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
+      return Throw.ReferenceError('Cannot delete a super property');
     }
     // c. Let baseObj be ? ToObject(ref.[[Base]]).
     const baseObj = Q(ToObject(ref.Base as Value));
@@ -61,7 +62,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     const deleteStatus = Q(yield* baseObj.Delete(ref.ReferencedName as JSStringValue));
     // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
     if (deleteStatus === Value.false && ref.Strict === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
+      return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);
     }
     // g. Return deleteStatus.
     return deleteStatus;

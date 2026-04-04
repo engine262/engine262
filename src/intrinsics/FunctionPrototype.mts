@@ -1,5 +1,4 @@
 import {
-  surroundingAgent,
   HostHasSourceTextAvailable,
 } from '../host-defined/engine.mts';
 import {
@@ -35,6 +34,7 @@ import {
   hasSourceTextInternalSlot,
   CopyNameAndLength,
   Realm,
+  Throw,
 } from '#self';
 
 export interface BoundFunctionObject extends ExoticObject, BuiltinFunctionObject {
@@ -59,7 +59,7 @@ function* FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undef
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (!IsCallable(func)) {
-    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
+    return Throw.TypeError("Expected 'this' value to be a function but got $1", func);
   }
   // 3. If argArray is undefined or null, then
   if (argArray === Value.undefined || argArray === Value.null) {
@@ -140,7 +140,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args]: Arguments, { 
   const Target = thisValue;
   // 2. If IsCallable(Target) is false, throw a TypeError exception.
   if (!IsCallable(Target)) {
-    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', Target);
+    return Throw.TypeError("Expected 'this' value to be a function but got $1", Target);
   }
   __ts_cast__<ObjectValue>(Target);
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
@@ -155,7 +155,7 @@ function* FunctionProto_call([thisArg = Value.undefined, ...args]: Arguments, { 
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (!IsCallable(func)) {
-    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
+    return Throw.TypeError("Expected 'this' value to be a function but got $1", func);
   }
   // 3. Let argList be a new empty List.
   const argList: Value[] = [];
@@ -199,7 +199,7 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
     return Value('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+  return Throw.TypeError('$1 is not a function', func);
 }
 
 /** https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */

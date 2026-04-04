@@ -47,6 +47,7 @@ import {
   RegExpHasFlag,
   F, R, R as MathematicalValue,
   Realm,
+  Throw,
   type MatchRecord,
   type OrdinaryObject,
 } from '#self';
@@ -69,7 +70,7 @@ export function* RegExpExec(R: ObjectValue, S: JSStringValue) {
   if (IsCallable(exec)) {
     const result = Q(yield* Call(exec, R, [S]));
     if (!(result instanceof ObjectValue) && !(result instanceof NullValue)) {
-      return surroundingAgent.Throw('TypeError', 'RegExpExecNotObject', result);
+      return Throw.TypeError('$1 is not object or null', result);
     }
     return result;
   }
@@ -240,7 +241,7 @@ function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallC
 function* RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   let result = '';
   const hasIndices = ToBoolean(Q(yield* Get(R, Value('hasIndices'))));
@@ -282,13 +283,13 @@ function* RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallC
 function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const R = thisValue as RegExpObject;
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('g')) {
@@ -323,7 +324,7 @@ function* RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }
   const rx = thisValue;
   // 2. If Type(rx) is not Object, throw a TypeError exception.
   if (!(rx instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
+    return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
   }
   // 3. Let S be ? ToString(string).
   const S = Q(yield* ToString(string));
@@ -379,7 +380,7 @@ function* RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }
 function* RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   const S = Q(yield* ToString(string));
   const C = Q(yield* SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%')));
@@ -408,7 +409,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
   const rx = thisValue;
   // 2. If rx is not an Object, throw a TypeError exception.
   if (!(rx instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
+    return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
   }
   // 3. Let S be ? ToString(string).
   const S = Q(yield* ToString(string));
@@ -552,7 +553,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
 function* RegExpProto_search([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
+    return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
   }
   const S = Q(yield* ToString(string));
 
@@ -578,13 +579,13 @@ function* RegExpProto_search([string = Value.undefined]: Arguments, { thisValue 
 function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   if (!('OriginalSource' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value('(?:)');
     }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   Assert(isRegExpObject(R));
   const src = R.OriginalSource;
@@ -596,7 +597,7 @@ function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallC
 function* RegExpProto_split([string = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
+    return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
   }
   const S = Q(yield* ToString(string));
 
@@ -689,7 +690,7 @@ function RegExpProto_stickyGetter(_args: Arguments, { thisValue }: FunctionCallC
 function* RegExpProto_test([S = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   const string = Q(yield* ToString(S));
   const match = Q(yield* RegExpExec(R, string));
@@ -703,7 +704,7 @@ function* RegExpProto_test([S = Value.undefined]: Arguments, { thisValue }: Func
 function* RegExpProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   const pattern = Q(yield* ToString(Q(yield* Get(R, Value('source')))));
   const flags = Q(yield* ToString(Q(yield* Get(R, Value('flags')))));

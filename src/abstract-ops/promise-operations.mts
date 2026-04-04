@@ -18,7 +18,6 @@ import {
   ThrowCompletion,
   X,
 } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,
@@ -33,10 +32,12 @@ import {
   isFunctionObject,
   type BuiltinFunctionObject,
 } from './all.mts';
-import type {
-  Realm,
-  ValueEvaluator, JobCallbackRecord, PromiseObject,
-  ValueCompletion,
+import {
+  Throw,
+  type Realm,
+  type ValueEvaluator, type JobCallbackRecord, type PromiseObject,
+  type ValueCompletion,
+  type FunctionObject,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -57,11 +58,17 @@ export interface PromiseAllRejectElementFunctionObject extends BuiltinFunctionOb
 
 /** https://tc39.es/ecma262/#sec-promisecapability-records */
 export class PromiseCapabilityRecord {
-  readonly Promise!: PromiseObject;
+  constructor(value: PromiseCapabilityRecord) {
+    this.Promise = value.Promise;
+    this.Resolve = value.Resolve;
+    this.Reject = value.Reject;
+  }
 
-  readonly Resolve: Value = Value.undefined;
+  readonly Promise: PromiseObject;
 
-  readonly Reject: Value = Value.undefined;
+  readonly Resolve: FunctionObject;
+
+  readonly Reject: FunctionObject;
 }
 
 /** https://tc39.es/ecma262/#sec-promisereaction-records */
@@ -98,7 +105,7 @@ export function CreateResolvingFunctions(toResolve: PromiseObject) {
     // 7. If SameValue(resolution, promise) is true, then
     if (SameValue(resolution, promise) === Value.true) {
       // a. Let selfResolutionError be a newly created TypeError object.
-      const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
+      const selfResolutionError = Throw.TypeError('Cannot resolve a promise $1 with itself', promise).Value;
       // b. Return RejectPromise(promise, selfResolutionError).
       RejectPromise(promise, selfResolutionError);
       return Value.undefined;
@@ -163,20 +170,18 @@ export function CreateResolvingFunctions(toResolve: PromiseObject) {
 function NewPromiseResolveThenableJob(promiseToResolve: PromiseObject, thenable: Value, then: JobCallbackRecord) {
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    promiseToResolve, thenable, and then and performs the following steps when called:
-  function* job() {
+  function* job(): PlainEvaluator {
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
     const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
     // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
     const thenCallResult = yield* HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
     // c. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
-      // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-      const status = yield* Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
-      // ii. Return Completion(status).
-      return status;
+      Q(yield* Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]));
+      return;
     }
-    // d. Return Completion(thenCallResult).
-    return EnsureCompletion(thenCallResult);
+    // d. Return ! thenCallResult.
+    X(thenCallResult);
   }
   // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
   const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
@@ -206,46 +211,34 @@ function FulfillPromise(promise: PromiseObject, value: Value) {
 
 /** https://tc39.es/ecma262/#sec-newpromisecapability */
 export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilityRecord> {
-  // 1. If IsConstructor(C) is false, throw a TypeError exception.
   if (!IsConstructor(C)) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
+    return Throw.TypeError('$1 is not a Promise constructor', C);
   }
-  // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
-  // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
-  const promiseCapability = new PromiseCapabilityRecord() as Mutable<PromiseCapabilityRecord>;
-  // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
+  const resolvingFunctions: Record<'Resolve' | 'Reject', Value | undefined> = { Resolve: undefined, Reject: undefined };
   const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]: Arguments) => {
-    // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
-    if (!(promiseCapability.Resolve instanceof UndefinedValue)) {
-      return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
+    if (resolvingFunctions.Resolve) {
+      return Throw.TypeError('Promise resolve function already set');
     }
-    // b. If promiseCapability.[[Reject]] is not undefined, throw a TypeError exception.
-    if (!(promiseCapability.Reject instanceof UndefinedValue)) {
-      return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
+    if (resolvingFunctions.Reject) {
+      return Throw.TypeError('Promise reject function already set');
     }
-    // c. Set promiseCapability.[[Resolve]] to resolve.
-    promiseCapability.Resolve = resolve;
-    // d. Set promiseCapability.[[Reject]] to reject.
-    promiseCapability.Reject = reject;
-    // e. Return undefined.
+    resolvingFunctions.Resolve = resolve;
+    resolvingFunctions.Reject = reject;
     return Value.undefined;
   };
-  // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
   const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), []));
-  // 8. Let promise be ? Construct(C, « executor »).
   const promise = Q(yield* Construct(C, [executor])) as PromiseObject;
-  // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-  if (!IsCallable(promiseCapability.Resolve)) {
-    return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
+  if (!resolvingFunctions.Resolve || !IsCallable(resolvingFunctions.Resolve)) {
+    return Throw.TypeError('Promise resolve function $1 is not callable', resolvingFunctions.Resolve || Value.undefined);
   }
-  // 10. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-  if (!IsCallable(promiseCapability.Reject)) {
-    return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
+  if (!resolvingFunctions.Reject || !IsCallable(resolvingFunctions.Reject)) {
+    return Throw.TypeError('Promise reject function $1 is not callable', resolvingFunctions.Reject || Value.undefined);
   }
-  // 11. Set promiseCapability.[[Promise]] to promise.
-  promiseCapability.Promise = promise;
-  // 12. Return promiseCapability.
-  return NormalCompletion(promiseCapability);
+  return new PromiseCapabilityRecord({
+    Promise: promise,
+    Resolve: resolvingFunctions.Resolve,
+    Reject: resolvingFunctions.Reject,
+  });
 }
 
 /** https://tc39.es/ecma262/#sec-ispromise */
@@ -304,7 +297,7 @@ export function* PromiseResolve(C: ObjectValue, x: Value): ValueEvaluator<Promis
 function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value) {
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    reaction and argument and performs the following steps when called:
-  function* job() {
+  function* job(): PlainEvaluator {
     // a. Assert: reaction is a PromiseReaction Record.
     Assert(reaction instanceof PromiseReactionRecord);
     // b. Let promiseCapability be reaction.[[Capability]].
@@ -340,13 +333,14 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
     // h. If handlerResult is an abrupt completion, then
     if (handlerResult instanceof AbruptCompletion) {
       // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
-      status = yield* Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
+      status = Q(yield* Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]));
     } else {
       // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
-      status = yield* Call(promiseCapability.Resolve, Value.undefined, [X(handlerResult)]);
+      status = Q(yield* Call(promiseCapability.Resolve, Value.undefined, [X(handlerResult)]));
     }
     // j. Return Completion(status).
-    return status;
+    Q(status);
+    return undefined;
   }
   // 2. Let handlerRealm be null.
   let handlerRealm: NullValue | Realm = Value.null;

@@ -6,16 +6,18 @@ import type {
 } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
 import { InspectorContext } from './context.mts';
+import { performDevtoolsEval } from './eval.mts';
 import {
   Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
   ParseModule,
-  SourceTextModuleRecord, performDevtoolsEval,
+  SourceTextModuleRecord,
   ValueOfNormalCompletion,
   JSStringValue,
   evalQ,
   Assert,
   kInternal,
   captureStack,
+  isEvaluator,
 } from '#self';
 
 export const Debugger: DebuggerNamespace = {
@@ -249,8 +251,8 @@ function evaluate(options: {
   throwOnSideEffect?: boolean,
   awaitPromise?: boolean,
   callFrameId?: string,
-}, _context: DebuggerContext): Protocol.Runtime.EvaluateResponse | Promise<Protocol.Runtime.EvaluateResponse> {
-  const { context } = _context;
+}, inspectorContext: DebuggerContext): Protocol.Runtime.EvaluateResponse | Promise<Protocol.Runtime.EvaluateResponse> {
+  const { context } = inspectorContext;
   const isPreview = options.throwOnSideEffect;
   if (options.awaitPromise) {
     return unsupportedError;
@@ -266,8 +268,15 @@ function evaluate(options: {
   if (isCallOnFrame) {
     const frame = surroundingAgent.executionContextStack[options.callFrameId as `${number}`];
     if (!frame) {
-      // eslint-disable-next-line no-console
-      console.error('Execution context not found: ', options.callFrameId);
+      inspectorContext.sendEvent['Runtime.exceptionThrown']({
+        timestamp: Date.now(),
+        exceptionDetails: {
+          columnNumber: 0,
+          exceptionId: 0,
+          lineNumber: 0,
+          text: `Execution context not found for callFrameId ${options.callFrameId}`,
+        },
+      });
       return unsupportedError;
     }
     for (const currentFrame of [...surroundingAgent.executionContextStack].reverse()) {
@@ -301,7 +310,7 @@ function evaluate(options: {
     }
 
     const noDebuggerEvaluate = () => {
-      if (!('next' in toBeEvaluated)) {
+      if (!isEvaluator(toBeEvaluated)) {
         throw new Assert.Error('Unexpected');
       }
       resolve(context.createEvaluationResult(skipDebugger(toBeEvaluated)));
@@ -336,9 +345,9 @@ function evaluate(options: {
       }
     }
   }, (err): Protocol.Runtime.EvaluateResponse => {
-    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText;
+    const expr = surroundingAgent.runningExecutionContext?.callSite.lastNode?.sourceText;
     const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
-    _context.sendEvent['Runtime.exceptionThrown']({
+    inspectorContext.sendEvent['Runtime.exceptionThrown']({
       timestamp: Date.now(),
       exceptionDetails: {
         stackTrace: frame.length ? { callFrames: frame } : undefined,

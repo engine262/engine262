@@ -4,6 +4,7 @@ import { ExpressionParser } from './ExpressionParser.mts';
 import { FunctionKind } from './FunctionParser.mts';
 import { getDeclarations, type LabelType } from './Scope.mts';
 import type { ParseNode } from './ParseNode.mts';
+import { Throw } from '#self';
 
 export abstract class StatementParser extends ExpressionParser {
   eatSemicolonWithASI() {
@@ -41,7 +42,7 @@ export abstract class StatementParser extends ExpressionParser {
           this.state.strict = true;
           directiveData.forEach((d) => {
             if (/\\([1-9]|0\d)/.test(d.directive)) {
-              this.raiseEarly('IllegalOctalEscape', d.token);
+              this.addEarlyError(Throw.SyntaxError('Illegal octal escape'), d.token);
             }
           });
         }
@@ -132,7 +133,7 @@ export abstract class StatementParser extends ExpressionParser {
     this.scope.declare(node.BindingList, 'lexical');
     node.BindingList.forEach((b) => {
       if (node.LetOrConst === 'const' && !b.Initializer) {
-        this.raiseEarly('ConstDeclarationMissingInitializer', b);
+        this.addEarlyError(Throw.SyntaxError('Missing initializer in const declaration'), b);
       }
     });
 
@@ -535,7 +536,7 @@ export abstract class StatementParser extends ExpressionParser {
         getDeclarations(node.ForDeclaration)
           .forEach((d) => {
             if (d.name === 'let') {
-              this.raiseEarly('UnexpectedToken', d.node);
+              this.addEarlyError(Throw.SyntaxError('Unexpected token let'), d.node);
             }
           });
         if (!isAwait && this.eat(Token.IN)) {
@@ -594,7 +595,7 @@ export abstract class StatementParser extends ExpressionParser {
       const expression = this.scope.with({ in: false }, () => this.parseExpression());
       const validateLHS = (n: ParseNode) => {
         if (n.type === 'AssignmentExpression') {
-          this.raiseEarly('UnexpectedToken', n);
+          this.addEarlyError(Throw.SyntaxError('Invalid left-hand side in for-in/of statement'), n);
         } else {
           this.validateAssignmentTarget(n);
         }
@@ -781,7 +782,7 @@ export abstract class StatementParser extends ExpressionParser {
       }
     }
     if (i === this.scope.labels.length) {
-      this.raiseEarly('IllegalBreakContinue', node, isBreak);
+      this.addEarlyError(Throw.SyntaxError('Label $1 not found', node.LabelIdentifier?.name ?? ''), node.LabelIdentifier || node);
     }
   }
 
@@ -807,7 +808,7 @@ export abstract class StatementParser extends ExpressionParser {
   //   `with` `(` Expression `)` Statement
   parseWithStatement(): ParseNode.WithStatement {
     if (this.isStrictMode()) {
-      this.raiseEarly('UnexpectedToken');
+      this.addEarlyError(Throw.SyntaxError('with statement cannot be used in strict mode'));
     }
     const node = this.startNode<ParseNode.WithStatement>();
     this.expect(Token.WITH);
@@ -824,7 +825,7 @@ export abstract class StatementParser extends ExpressionParser {
     const node = this.startNode<ParseNode.ThrowStatement>();
     this.expect(Token.THROW);
     if (this.peek().hadLineTerminatorBefore) {
-      this.raise('NewlineAfterThrow', node);
+      this.raise(Throw.SyntaxError('Newline after throw statement'), node);
     }
     node.Expression = this.parseExpression();
     this.semicolon();
@@ -880,7 +881,7 @@ export abstract class StatementParser extends ExpressionParser {
       node.Finally = null;
     }
     if (!node.Catch && !node.Finally) {
-      this.raise('TryMissingCatchOrFinally');
+      this.raise(Throw.SyntaxError('Missing catch or finally clause in try statement'));
     }
     return this.finishNode(node, 'TryStatement');
   }
@@ -919,7 +920,7 @@ export abstract class StatementParser extends ExpressionParser {
       node.LabelIdentifier = LabelIdentifier;
 
       if (this.scope.labels.find((l) => l.name === LabelIdentifier.name)) {
-        this.raiseEarly('AlreadyDeclared', node.LabelIdentifier, node.LabelIdentifier.name);
+        this.addEarlyError(Throw.SyntaxError('$1 is already declared', node.LabelIdentifier.name), node.LabelIdentifier);
       }
       let type: LabelType | null = null;
       switch (this.peek().type) {

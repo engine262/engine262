@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue, NumberValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -9,6 +8,7 @@ import {
   ToBigInt,
   ToIndex,
   ToPrimitive,
+  Throw,
   Z, R,
   type OrdinaryObject,
   Realm,
@@ -24,7 +24,7 @@ export function isBigIntObject(o: Value): o is BigIntObject {
 function* BigIntConstructor([value = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
+    return Throw.TypeError('BigInt is not a constructor');
   }
   // 2. Let prim be ? ToPrimitive(value, number).
   const prim = Q(yield* ToPrimitive(value, 'number'));

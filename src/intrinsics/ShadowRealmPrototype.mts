@@ -3,7 +3,7 @@ import { PerformShadowRealmEval, ShadowRealmImportValue, ValidateShadowRealmObje
 import { bootstrapPrototype } from './bootstrap.mts';
 import { type ShadowRealmObject } from './ShadowRealm.mts';
 import {
-  Realm,
+  Realm, Throw,
 } from '#self';
 import {
   JSStringValue, Q, surroundingAgent, ToString, Value, type Arguments, type FunctionCallContext, type ValueEvaluator,
@@ -16,7 +16,7 @@ function* ShadowRealmPrototype_evaluate([sourceText = Value.undefined]: Argument
   Q(ValidateShadowRealmObject(O));
   __ts_cast__<ShadowRealmObject>(O);
   if (!(sourceText instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', sourceText);
+    return Throw.TypeError('$1 is not a string', sourceText);
   }
   const callerRealm = surroundingAgent.currentRealmRecord;
   const evalRealm = O.ShadowRealm;
@@ -31,7 +31,7 @@ function* ShadowRealmPrototype_importValue([specifier = Value.undefined, exportN
   __ts_cast__<ShadowRealmObject>(O);
   const specifierString = Q(yield* ToString(specifier));
   if (!(exportName instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', exportName);
+    return Throw.TypeError('$1 is not a string', exportName);
   }
   const callerRealm = surroundingAgent.currentRealmRecord;
   const evalRealm = O.ShadowRealm;

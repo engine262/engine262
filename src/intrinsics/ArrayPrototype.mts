@@ -16,7 +16,7 @@ import {
 import { __ts_cast__ } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { assignProps } from './bootstrap.mts';
-import { ArrayProto_sortBody, bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
+import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
 import {
   ArrayCreate,
   ArraySpeciesCreate,
@@ -39,6 +39,7 @@ import {
   ToIntegerOrInfinity,
   ToObject,
   ToString,
+  Throw,
   F,
   type FunctionObject,
   Realm,
@@ -58,7 +59,7 @@ function* ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext)
       let k = 0;
       const len = Q(yield* LengthOfArrayLike(E));
       if (n + len > (2 ** 53) - 1) {
-        return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+        return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
       }
       while (k < len) {
         const P = X(ToString(F(k)));
@@ -73,7 +74,7 @@ function* ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext)
       }
     } else {
       if (n >= (2 ** 53) - 1) {
-        return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+        return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
       }
       const nStr = X(ToString(F(n)));
       Q(yield* CreateDataPropertyOrThrow(A, nStr, E));
@@ -182,7 +183,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('$1 is not a function', callbackfn);
   }
   const A = Q(yield* ArraySpeciesCreate(O, 0));
   let k = 0;
@@ -231,7 +232,7 @@ function* FlattenIntoArray(target: ObjectValue, source: ObjectValue, sourceLen: 
         targetIndex = Q(yield* FlattenIntoArray(target, element as ObjectValue, elementLen, targetIndex, depth - 1));
       } else {
         if (targetIndex >= (2 ** 53) - 1) {
-          return surroundingAgent.Throw('TypeError', 'OutOfRange', targetIndex);
+          return Throw.TypeError('$1 is out of range', targetIndex);
         }
         Q(yield* CreateDataPropertyOrThrow(target, X(ToString(F(targetIndex))), element));
         targetIndex += 1;
@@ -260,7 +261,7 @@ function* ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(yield* LengthOfArrayLike(O));
   if (!IsCallable(mapperFunction)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', mapperFunction);
+    return Throw.TypeError('$1 is not a function', mapperFunction);
   }
   const A = Q(yield* ArraySpeciesCreate(O, 0));
   Q(yield* FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg));
@@ -278,7 +279,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('$1 is not a function', callbackfn);
   }
   const A = Q(yield* ArraySpeciesCreate(O, len));
   let k = 0;
@@ -319,7 +320,7 @@ function* ArrayProto_push(_items: Arguments, { thisValue }: FunctionCallContext)
   let len = Q(yield* LengthOfArrayLike(O));
   const argCount = items.length;
   if (len + argCount > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+    return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
   }
   while (items.length > 0) {
     const E = items.shift()!;
@@ -399,20 +400,34 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arg
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.sort */
-function* ArrayProto_sort([comparefn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  if (comparefn !== Value.undefined && !IsCallable(comparefn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
+function* ArrayProto_sort([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  if (comparator !== Value.undefined && !IsCallable(comparator)) {
+    return Throw.TypeError('comparator ($1) is not a function', comparator);
   }
   const obj = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(obj));
 
-  return yield* ArrayProto_sortBody(obj, len, (x, y) => CompareArrayElements(x, y, comparefn));
+  const SortCompare = function* SortCompare(x: Value, y: Value) {
+    return yield* CompareArrayElements(x, y, comparator);
+  };
+  const sortedList = Q(yield* SortIndexedProperties(obj, len, SortCompare, 'skip-holes'));
+  const itemCount = sortedList.length;
+  let j = 0;
+  while (j < itemCount) {
+    Q(yield* Set(obj, X(ToString(F(j))), sortedList[j], Value.true));
+    j += 1;
+  }
+  while (j < len) {
+    Q(yield* DeletePropertyOrThrow(obj, X(ToString(F(j)))));
+    j += 1;
+  }
+  return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.tosorted */
 function* ArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   if (comparator !== Value.undefined && !IsCallable(comparator)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
+    return Throw.TypeError('$1 is not a function', comparator);
   }
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
@@ -455,7 +470,7 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
     actualDeleteCount = Math.min(Math.max(dc, 0), len - actualStart);
   }
   if (len + insertCount - actualDeleteCount > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+    return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
   }
   const A = Q(yield* ArraySpeciesCreate(O, actualDeleteCount));
   let k = 0;
@@ -540,7 +555,7 @@ function* ArrayProto_toSpliced(args: Arguments, { thisValue }: FunctionCallConte
   }
   const newLen = len - actualSkipCount + insertCount;
   if (newLen > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+    return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
   }
   const A = Q(ArrayCreate(newLen));
   let i = 0;
@@ -579,7 +594,7 @@ function* ArrayProto_with([index = Value.undefined, value = Value.undefined]: Ar
     actualIndex = len + relativeIndex;
   }
   if (actualIndex >= len || actualIndex < 0) {
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', index);
+    return Throw.RangeError('$1 is out of range', index);
   }
   const A = Q(ArrayCreate(len));
   let k = 0;
@@ -614,7 +629,7 @@ function* ArrayProto_unshift(args: Arguments, { thisValue }: FunctionCallContext
   const argCount = args.length;
   if (argCount > 0) {
     if (len + argCount > (2 ** 53) - 1) {
-      return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+      return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
     }
     let k = len;
     while (k > 0) {

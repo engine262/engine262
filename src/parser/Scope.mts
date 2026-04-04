@@ -1,4 +1,6 @@
-import { Assert, Parser } from '../index.mts';
+import {
+  Assert, Parser, Throw, type ErrorObject,
+} from '../index.mts';
 import { isArray, OutOfRange } from '../helpers.mts';
 import type { TokenData } from './Lexer.mts';
 import type { ParseNode } from './ParseNode.mts';
@@ -157,7 +159,7 @@ export interface ArrowInfo {
 
 export interface AssignmentInfo {
   readonly type: 'assign' | 'arrow' | 'for';
-  readonly earlyErrors: SyntaxError[];
+  readonly earlyErrors: ErrorObject[];
   clear(): void;
 }
 
@@ -306,7 +308,7 @@ export class Scope {
             }
             scope = scope.outer;
           }
-          this.parser.raiseEarly('NotDefined', node, name);
+          this.parser.addEarlyError(Throw.SyntaxError('Private identifier $1 not defined', name), node);
         });
       }
     }
@@ -368,7 +370,7 @@ export class Scope {
     return assignmentInfo;
   }
 
-  registerObjectLiteralEarlyError(error: SyntaxError) {
+  registerObjectLiteralEarlyError(error: ErrorObject) {
     for (let i = this.assignmentInfoStack.length - 1; i >= 0; i -= 1) {
       const info = this.assignmentInfoStack[i];
       info.earlyErrors.push(error);
@@ -411,14 +413,14 @@ export class Scope {
         case 'lexical':
         case 'import': {
           if (type === 'lexical' && d.name === 'let') {
-            this.parser.raiseEarly('LetInLexicalBinding', d.node);
+            this.parser.addEarlyError(Throw.SyntaxError('Let in lexical binding'), d.node);
           }
           const scope = this.lexicalScope();
           if (scope.lexicals.has(d.name)
               || scope.variables.has(d.name)
               || scope.functions.has(d.name)
               || scope.parameters.has(d.name)) {
-            this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+            this.parser.addEarlyError(Throw.SyntaxError('Identifier $1 already declared', d.name), d.node);
           }
           scope.lexicals.add(d.name);
           if (scope === this.scopeStack[0] && this.undefinedExports.has(d.name)) {
@@ -429,13 +431,13 @@ export class Scope {
         case 'function': {
           const scope = this.lexicalScope();
           if (scope.lexicals.has(d.name)) {
-            this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+            this.parser.addEarlyError(Throw.SyntaxError('Function $1 already declared', d.name), d.node);
           }
           if (scope.flags.variableFunctions) {
             scope.functions.add(d.name);
           } else {
             if (scope.variables.has(d.name)) {
-              this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+              this.parser.addEarlyError(Throw.SyntaxError('Function $1 already declared', d.name), d.node);
             }
             scope.lexicals.add(d.name);
           }
@@ -452,7 +454,7 @@ export class Scope {
             const scope = this.scopeStack[i];
             scope.variables.add(d.name);
             if (scope.lexicals.has(d.name) || (!scope.flags.variableFunctions && scope.functions.has(d.name))) {
-              this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+              this.parser.addEarlyError(Throw.SyntaxError('Variable $1 already declared', d.name), d.node);
             }
             if (i === 0 && this.undefinedExports.has(d.name)) {
               this.undefinedExports.delete(d.name);
@@ -464,7 +466,7 @@ export class Scope {
           break;
         case 'export':
           if (this.exports.has(d.name)) {
-            this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+            this.parser.addEarlyError(Throw.SyntaxError('Export identifier $1 already declared', d.name), d.node);
           } else {
             this.exports.add(d.name);
           }
@@ -486,7 +488,7 @@ export class Scope {
                 break;
             }
             if (duplicate) {
-              this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+              this.parser.addEarlyError(Throw.SyntaxError('Private identifier $1 already declared', d.name), d.node);
             }
           } else if (extraType) {
             this.privateScope!.names.set(d.name, new Set([extraType]));
@@ -517,7 +519,7 @@ export class Scope {
     const [{ node, name }] = getDeclarations(PrivateIdentifier);
 
     if (!this.privateScope) {
-      this.parser.raiseEarly('NotDefined', node, name);
+      this.parser.addEarlyError(Throw.SyntaxError('Private identifier $1 not defined', name), node);
       return;
     }
 

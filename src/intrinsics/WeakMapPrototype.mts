@@ -102,11 +102,11 @@ function* WeakMapProto_getOrInsertComputed([key = Value.undefined, callbackfn = 
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
   if (!CanBeHeldWeakly(key)) {
-    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', key);
+    return Throw.TypeError('$1 cannot be weakly referenced', key);
   }
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
   // 5. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
   const entries = M.WeakMapData;
@@ -167,7 +167,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined]: Argu
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
   if (!CanBeHeldWeakly(key)) {
-    return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
+    return Throw.TypeError('$1 cannot be weakly referenced', key);
   }
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   const entries = M.WeakMapData;

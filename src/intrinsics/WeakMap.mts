@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   UndefinedValue,
   Value,
@@ -16,6 +15,7 @@ import {
   IsCallable,
   OrdinaryCreateFromConstructor,
   Realm,
+  Throw,
   type FunctionObject,
   type OrdinaryObject,
 } from '#self';
@@ -30,7 +30,7 @@ export function isWeakMapObject(object: object): object is WeakMapObject {
 function* WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('WeakMap cannot be invoked without new');
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
   const map = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData'])) as Mutable<WeakMapObject>;
@@ -43,7 +43,7 @@ function* WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]:
   // 5. Let adder be ? Get(map, "set").
   const adder = Q(yield* Get(map, Value('set')));
   if (!IsCallable(adder)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+    return Throw.TypeError('"set" property ($1) of object $2 is not a function', adder, map);
   }
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
   return Q(yield* AddEntriesFromIterable(map, iterable, adder));

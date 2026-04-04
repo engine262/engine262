@@ -34,6 +34,7 @@ import {
   CanonicalizeKeyedCollectionKey,
   IteratorStepValue,
   IteratorClose,
+  Throw,
 } from '#self';
 import type {
   FunctionObject,
@@ -204,7 +205,7 @@ function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('$1 is not a function', callbackfn);
   }
   // 4. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
@@ -622,7 +623,7 @@ interface SetRecord {
 function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   // 1. If obj is not an Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
+    return Throw.TypeError('$1 is not an object', obj);
   }
 
   // 2. Let rawSize be ? Get(obj, "size").
@@ -634,7 +635,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
 
   // 5. If numSize is NaN, throw a TypeError exception.
   if (numSize.isNaN()) {
-    return surroundingAgent.Throw('TypeError', 'SizeIsNaN');
+    return Throw.TypeError('size property must not be undefined, as it will be NaN');
   }
 
   // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
@@ -642,7 +643,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
 
   // 7. If intSize < 0, throw a RangeError exception.
   if (intSize < 0) {
-    return surroundingAgent.Throw('RangeError', 'SizeMustBePositiveInteger');
+    return Throw.RangeError('size property must be a positive integer');
   }
 
   // 8. Let has be ? Get(obj, "has").
@@ -650,7 +651,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
 
   // 9. If IsCallable(has) is false, throw a TypeError exception.
   if (!IsCallable(has)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', has);
+    return Throw.TypeError('$1 is not a function', has);
   }
 
   // 10. Let keys be ? Get(obj, "keys").
@@ -658,7 +659,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
 
   // 11. If IsCallable(keys) is false, throw a TypeError exception.
   if (!IsCallable(keys)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', keys);
+    return Throw.TypeError('$1 is not a function', keys);
   }
 
   // 12. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.

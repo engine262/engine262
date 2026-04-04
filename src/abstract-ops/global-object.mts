@@ -32,6 +32,7 @@ import {
   GlobalEnvironmentRecord,
   ObjectEnvironmentRecord,
   PrivateEnvironmentRecord,
+  Throw,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -122,7 +123,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
   }
   const body = script.ScriptBody;
   if (inClassFieldInitializer && ContainsArguments(body)) {
-    return surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
+    return Throw.SyntaxError('arguments cannot be referenced in a class field initializer');
   }
   // 11. If strictCaller is true, let strictEval be true.
   // 12. Else, let strictEval be IsStrict of script.
@@ -211,7 +212,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
       for (const name of varNames) {
         // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
         if ((yield* varEnv.HasLexicalDeclaration(name)) === Value.true) {
-          return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+          return Throw.SyntaxError('$1 is already declared', name);
         }
         // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
       }
@@ -230,7 +231,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
           // a. If thisEnv.HasBinding(name) is true, then
           if ((yield* thisEnv.HasBinding(name)) === Value.true) {
             // i. Throw a SyntaxError exception.
-            return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+            return Throw.SyntaxError('$1 is already declared', name);
             // ii. NOTE: Annex B.3.5 defines alternate semantics for the above step.
           }
           // b. NOTE: A direct eval will not hoist var declaration over a like-named lexical declaration
@@ -282,7 +283,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
           const fnDefinable = Q(yield* varEnv.CanDeclareGlobalFunction(fn));
           // b. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
           if (fnDefinable === Value.false) {
-            return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
+            return Throw.TypeError('$1 is already declared', fn);
           }
         }
         // 2. Append fn to declaredFunctionNames.
@@ -311,7 +312,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
             const vnDefinable = Q(yield* varEnv.CanDeclareGlobalVar(vn));
             // ii. If vnDefinable is false, throw a TypeError exception.
             if (vnDefinable === Value.false) {
-              return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
+              return Throw.TypeError('$1 is already declared', vn);
             }
           }
           // b. If vn is not an element of declaredVarNames, then

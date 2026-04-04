@@ -1,5 +1,6 @@
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mts';
 import type { Mutable } from '../helpers.mts';
+import { Throw } from '../host-defined/error-messages.mts';
 import { Token, isKeywordRaw } from './tokens.mts';
 import { StatementParser } from './StatementParser.mts';
 import { FunctionKind } from './FunctionParser.mts';
@@ -116,10 +117,10 @@ export abstract class ModuleParser extends StatementParser {
     } else {
       node.ImportedBinding = this.repurpose(name, 'BindingIdentifier');
       if (isKeywordRaw(node.ImportedBinding.name)) {
-        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+        this.addEarlyError(Throw.SyntaxError('Import name cannot be a keyword'), node.ImportedBinding);
       }
       if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+        this.addEarlyError(Throw.SyntaxError('Import name cannot be "eval" or "arguments"'), node.ImportedBinding);
       }
     }
     return this.finishNode(node, 'ImportSpecifier');
@@ -167,7 +168,7 @@ export abstract class ModuleParser extends StatementParser {
           break;
       }
       if (this.scope.exports.has('default')) {
-        this.raiseEarly('AlreadyDeclared', node, 'default');
+        this.addEarlyError(Throw.SyntaxError('Default export already declared'), node);
       } else {
         this.scope.exports.add('default');
       }
@@ -201,7 +202,7 @@ export abstract class ModuleParser extends StatementParser {
           } else {
             NamedExports.ExportsList.forEach((n) => {
               if (n.localName.type === 'StringLiteral') {
-                this.raiseEarly('UnexpectedToken', n.localName);
+                this.addEarlyError(Throw.SyntaxError('Import name cannot be a string'), n.localName);
               }
             });
             node.NamedExports = NamedExports;
@@ -281,7 +282,7 @@ export abstract class ModuleParser extends StatementParser {
     if (this.test(Token.STRING)) {
       const literal = this.parseStringLiteral();
       if (!IsStringWellFormedUnicode(StringValue(literal))) {
-        this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+        this.addEarlyError(Throw.SyntaxError('Module export name contains invalid Unicode'), literal);
       }
       return literal;
     }
@@ -311,7 +312,7 @@ export abstract class ModuleParser extends StatementParser {
 
       const key = StringValue(entry.AttributeKey).value;
       if (seenKeys.has(key)) {
-        this.raiseEarly('DuplicateImportAttribute', entry, key);
+        this.addEarlyError(Throw.SyntaxError('Duplicate import attribute $1', key), entry);
       }
       seenKeys.add(key);
 

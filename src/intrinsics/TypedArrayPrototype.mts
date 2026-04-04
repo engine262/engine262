@@ -2,7 +2,6 @@ import {
   Q, X, type ValueEvaluator,
   type ValueCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
@@ -48,6 +47,7 @@ import {
   IsTypedArrayOutOfBounds,
   TypedArrayLength,
   IsValidIntegerIndex,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
@@ -138,7 +138,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
     const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
     taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
     if (IsTypedArrayOutOfBounds(taRecord)) {
-      return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
+      return Throw.TypeError('TypedArray index out of bounds');
     }
     len = TypedArrayLength(taRecord);
     count = Math.min(count, len - startIndex, len - targetIndex);
@@ -211,7 +211,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   }
   taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
+    return Throw.TypeError('TypedArray index out of bounds');
   }
   len = TypedArrayLength(taRecord);
   endIndex = Math.min(endIndex, len);
@@ -230,7 +230,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
   const kept = [];
   let captured = 0;
@@ -283,7 +283,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
   const A = Q(yield* TypedArraySpeciesCreate(O, [F(len)]));
   let k = 0;
@@ -302,13 +302,13 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
   const targetBuffer = target.ViewedArrayBuffer as ArrayBufferObject;
   const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target, 'seq-cst');
   if (IsTypedArrayOutOfBounds(targetRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
+    return Throw.TypeError('TypedArray index out of bounds');
   }
   const targetLength = TypedArrayLength(targetRecord);
   let srcBuffer = source.ViewedArrayBuffer as ArrayBufferObject;
   const srcRecord = MakeTypedArrayWithBufferWitnessRecord(source, 'seq-cst');
   if (IsTypedArrayOutOfBounds(srcRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
+    return Throw.TypeError('TypedArray index out of bounds');
   }
   const srcLength = TypedArrayLength(srcRecord);
   const targetType = TypedArrayElementType(target);
@@ -318,13 +318,13 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
   const srcElementSize = TypedArrayElementSize(source);
   const srcByteOffset = source.ByteOffset;
   if (targetOffset === +Infinity) {
-    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+    return Throw.RangeError('TypedArray index out of bounds');
   }
   if (srcLength + targetOffset > targetLength) {
-    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+    return Throw.RangeError('TypedArray index out of bounds');
   }
   if (target.ContentType !== source.ContentType) {
-    return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+    return Throw.TypeError('Newly created TypedArray did not match exemplar\'s content type');
   }
   let sameSharedArrayBuffer;
   if (IsSharedArrayBuffer(srcBuffer) && IsSharedArrayBuffer(targetBuffer) && srcBuffer.ArrayBufferData === targetBuffer.ArrayBufferData) {
@@ -364,16 +364,16 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
 function* SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: number, source: Value) {
   const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target, 'seq-cst');
   if (IsTypedArrayOutOfBounds(targetRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
+    return Throw.TypeError('TypedArray index out of bounds');
   }
   const targetLength = TypedArrayLength(targetRecord);
   const src = Q(ToObject(source));
   const srcLength = Q(yield* LengthOfArrayLike(src));
   if (targetOffset === +Infinity) {
-    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+    return Throw.RangeError('TypedArray index out of bounds');
   }
   if (srcLength + targetOffset > targetLength) {
-    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+    return Throw.RangeError('TypedArray index out of bounds');
   }
   let k = 0;
   while (k < srcLength) {
@@ -398,7 +398,7 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   const targetOffset = Q(yield* ToIntegerOrInfinity(offset));
   // 5. If targetOffset < 0, throw a RangeError exception.
   if (targetOffset < 0) {
-    return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
+    return Throw.RangeError('targetOffset ($1) cannot be negative', targetOffset);
   }
   // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
   if (source instanceof ObjectValue && 'TypedArrayName' in source) {
@@ -445,7 +445,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   if (countBytes > 0) {
     taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
     if (IsTypedArrayOutOfBounds(taRecord)) {
-      return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
+      return Throw.TypeError('TypedArray index out of bounds');
     }
     endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
     countBytes = Math.max(endIndex - startIndex, 0);
@@ -483,7 +483,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
 function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   if (comparator !== Value.undefined && !IsCallable(comparator)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
+    return Throw.TypeError('comparator ($1) is not a function', comparator);
   }
   const obj = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
@@ -505,7 +505,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { this
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tosorted */
 function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   if (comparator !== Value.undefined && !IsCallable(comparator)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
+    return Throw.TypeError('comparator ($1) is not a function', comparator);
   }
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
@@ -642,7 +642,7 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
     numericValue = Q(yield* ToNumber(value));
   }
   if (IsValidIntegerIndex(O, F(actualIndex)) === Value.false) {
-    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+    return Throw.RangeError('TypedArray index out of bounds');
   }
   const A = Q(yield* TypedArrayCreateSameType(O, len));
   let k = 0;

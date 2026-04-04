@@ -27,6 +27,7 @@ import {
   type IteratorRecord,
   type OrdinaryObject,
 } from './all.mts';
+import { Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 export interface GeneratorObject extends OrdinaryObject {
@@ -132,12 +133,7 @@ export function GeneratorValidate(generator: Value, generatorBrand: JSStringValu
       ? brand !== generatorBrand
       : SameValue(brand, generatorBrand) === Value.false
   ) {
-    return surroundingAgent.Throw(
-      'TypeError',
-      'NotATypeObject',
-      generatorBrandToErrorMessageType(generatorBrand) || 'Generator',
-      generator,
-    );
+    return Throw.TypeError('$1 is not a $2 object', generator, generatorBrandToErrorMessageType(generatorBrand) || 'Generator');
   }
   // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
   Assert('GeneratorContext' in generator);
@@ -145,7 +141,7 @@ export function GeneratorValidate(generator: Value, generatorBrand: JSStringValu
   const state = generator.GeneratorState;
   // 6. If state is executing, throw a TypeError exception.
   if (state === 'executing') {
-    return surroundingAgent.Throw('TypeError', 'GeneratorRunning');
+    return Throw.TypeError('Cannot manipulate a running generator $1', generator);
   }
   // 7. Return state.
   return state;

@@ -22,29 +22,20 @@ test('compile script (for invalid code break line)', async () => {
       "exceptionDetails": {
         "columnNumber": 0,
         "exception": {
-          "className": "SyntaxError",
+          "className": "Error",
           "description": "SyntaxError: Unexpected end of input",
           "objectId": "default:2",
           "preview": {
-            "description": "
+            "description": "SyntaxError: Unexpected token
     function f() {
-                  ^
-    SyntaxError: Unexpected end of source",
+                  ^",
             "entries": undefined,
             "overflow": false,
             "properties": [
               {
                 "name": "message",
                 "type": "string",
-                "value": "Unexpected end of source",
-              },
-              {
-                "name": "stack",
-                "type": "string",
-                "value": "
-    function f() {
-                  ^
-    SyntaxError: Unexpected end of source",
+                "value": "Unexpected token",
               },
             ],
             "subtype": "error",
@@ -82,7 +73,7 @@ test('preview evaluation', async () => {
     `globalThis.x = 1`,
   ]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result: any = await inspector.perview(code);
+    const result: any = await inspector.preview(code);
     if (result.exceptionDetails?.exception.preview.properties[0].value === 'Preview evaluator cannot evaluate side-effecting code') {
       expect('side effect').toMatchSnapshot(code);
     } else {
