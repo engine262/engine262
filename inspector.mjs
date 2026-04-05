@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 661889ca61f8cee584c73338e2c8e8ff39bd7778
+ * engine262 0.0.1 7ca1527262c7248606a1d9cebf799bd4d14d5575
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { SymbolDescriptiveString, R, BigIntValue, isECMAScriptFunctionObject, isBuiltinFunctionObject, IntrinsicsFunctionToString, isWrappedFunctionExoticObject, Value, ObjectValue, ArrayExoticObjectInternalMethods, Descriptor, F, isTypedArrayObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, JSStringValue, PrivateName, surroundingAgent, skipDebugger, performDevtoolsEval, EnsureCompletion, Get, NormalCompletion, CreateBuiltinFunction, IsCallable, NumberValue, isIntegerIndex, TemporalZonedDateTimeToString, TemporalYearMonthToString, TimeRecordToString, TemporalMonthDayToString, ISODateTimeToString, TemporalDateToString, TemporalDurationToString, TemporalInstantToString, DateProto_toISOString, ValueOfNormalCompletion, evalQ, ToString, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, SymbolValue, ManagedRealm, IsAccessorDescriptor, ThrowCompletion, getHostDefinedErrorStack, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateDataProperty } from './engine262.mjs';
+import { R, BigIntValue, SymbolDescriptiveString, surroundingAgent, isEvaluator, skipDebugger, ExecutionContext, Value, DeclarativeEnvironmentRecord, GetThisEnvironment, FunctionEnvironmentRecord, wrappedParse, ThrowCompletion, ContainsArguments, Throw, IsStrict, EnsureCompletion, EvalDeclarationInstantiation, unwrapCompletion, NewPromiseCapability, AsyncBlockStart, Evaluate, NormalCompletion, isECMAScriptFunctionObject, EnvironmentRecord, isBuiltinFunctionObject, IntrinsicsFunctionToString, CreateArrayFromList, isWrappedFunctionExoticObject, ObjectValue, ArrayExoticObjectInternalMethods, Descriptor, F, isTypedArrayObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, JSStringValue, PrivateName, Get, CreateBuiltinFunction, IsCallable, NumberValue, isIntegerIndex, TemporalZonedDateTimeToString, TemporalYearMonthToString, TimeRecordToString, TemporalMonthDayToString, ISODateTimeToString, TemporalDateToString, TemporalDurationToString, TemporalInstantToString, DateProto_toISOString, ValueOfNormalCompletion, getHostDefinedErrorDetails, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, SymbolValue, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, ModuleEnvironmentRecord, ManagedRealm, IsAccessorDescriptor, getCurrentStack, NullValue, SourceTextModuleRecord, evalQ, Call, ParseModule, ParseScript, kInternal, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateDataProperty } from './engine262.mjs';
 
 const Null = {
   toRemoteObject: () => ({
@@ -170,11 +170,168 @@ const Number = {
   }
 };
 
+const cascadeStack = new WeakMap();
+// This is modified based on PerformEval, used internally for devtools console.
+function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
+  let inFunction = false;
+  let inMethod = false;
+  let inDerivedConstructor = false;
+  let inClassFieldInitializer = false;
+  let scriptContext;
+  if (!surroundingAgent.runningExecutionContext?.LexicalEnvironment) {
+    // top level devtools eval
+    const globalEnv = evalRealm.GlobalEnv;
+    scriptContext = new ExecutionContext();
+    scriptContext.Function = Value.null;
+    scriptContext.Realm = evalRealm;
+    scriptContext.VariableEnvironment = globalEnv;
+    if (!cascadeStack.has(globalEnv)) {
+      cascadeStack.set(globalEnv, new DeclarativeEnvironmentRecord(globalEnv));
+    }
+    scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv);
+    scriptContext.PrivateEnvironment = Value.null;
+    surroundingAgent.executionContextStack.push(scriptContext);
+  }
+  const thisEnv = GetThisEnvironment();
+  if (thisEnv instanceof FunctionEnvironmentRecord) {
+    const F = thisEnv.FunctionObject;
+    inFunction = true;
+    inMethod = thisEnv.HasSuperBinding() === Value.true;
+    if (F.ConstructorKind === 'derived') {
+      inDerivedConstructor = true;
+    }
+    const classFieldInitializerName = F.ClassFieldInitializerName;
+    if (classFieldInitializerName !== undefined) {
+      inClassFieldInitializer = true;
+    }
+  }
+  let isAsync = false;
+  const script = wrappedParse({
+    source,
+    allowAllPrivateNames: true
+  }, parser => parser.scope.with({
+    strict: strictCaller,
+    newTarget: inFunction,
+    superProperty: inMethod,
+    superCall: inDerivedConstructor,
+    private: true
+  }, () => parser.try(() => parser.parseScript()) || parser.scope.with({
+    await: true
+  }, () => {
+    isAsync = true;
+    return parser.parseScript();
+  })));
+  if (Array.isArray(script)) {
+    if (scriptContext) {
+      surroundingAgent.executionContextStack.pop(scriptContext);
+    }
+    return ThrowCompletion(script[0]);
+  }
+  if (!script.ScriptBody) {
+    if (scriptContext) {
+      surroundingAgent.executionContextStack.pop(scriptContext);
+    }
+    return Value.undefined;
+  }
+  const body = script.ScriptBody;
+  if (inClassFieldInitializer && ContainsArguments(body)) {
+    return Throw.SyntaxError('arguments cannot be referenced in a class field initializer');
+  }
+  const scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source, script);
+  if (!doNotTrack) {
+    surroundingAgent.parsedSources.get(scriptId).HostDefined.isInspectorEval = true;
+    if (scriptContext) {
+      scriptContext.HostDefined ??= {};
+      scriptContext.HostDefined.scriptId = scriptId;
+    }
+  }
+  let strictEval;
+  if (script) {
+    strictEval = IsStrict(script);
+  } else {
+    strictEval = true;
+  }
+  const runningContext = surroundingAgent.runningExecutionContext;
+  let parentLexicalEnvironment;
+  if (cascadeStack.has(runningContext.LexicalEnvironment)) {
+    parentLexicalEnvironment = cascadeStack.get(runningContext.LexicalEnvironment);
+  } else {
+    parentLexicalEnvironment = runningContext.LexicalEnvironment;
+  }
+  const lexEnv = new DeclarativeEnvironmentRecord(parentLexicalEnvironment);
+  cascadeStack.set(runningContext.LexicalEnvironment, lexEnv);
+  let varEnv;
+  const privateEnv = runningContext.PrivateEnvironment;
+  varEnv = runningContext.VariableEnvironment;
+  if (strictEval === true) {
+    varEnv = lexEnv;
+  }
+  const evalContext = new ExecutionContext();
+  evalContext.HostDefined ??= {};
+  evalContext.HostDefined.scriptId = scriptId;
+  evalContext.Function = Value.null;
+  evalContext.Realm = evalRealm;
+  evalContext.ScriptOrModule = runningContext.ScriptOrModule;
+  evalContext.VariableEnvironment = varEnv;
+  evalContext.LexicalEnvironment = lexEnv;
+  evalContext.PrivateEnvironment = privateEnv;
+  surroundingAgent.executionContextStack.push(evalContext);
+  let result;
+  result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+  if (result.Type === 'normal') {
+    if (isAsync) {
+      const promiseCapability = unwrapCompletion(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+      unwrapCompletion(yield* AsyncBlockStart(promiseCapability, function* evaluate() {
+        return yield* Evaluate(body);
+      }, evalContext));
+      result = promiseCapability.Promise;
+    } else {
+      result = EnsureCompletion(yield* Evaluate(body));
+    }
+  }
+  result = EnsureCompletion(result);
+  if (result.Type === 'normal' && result.Value === undefined) {
+    result = NormalCompletion(Value.undefined);
+  }
+  surroundingAgent.executionContextStack.pop(evalContext);
+  if (scriptContext) {
+    surroundingAgent.executionContextStack.pop(scriptContext);
+  }
+  return result;
+}
+function nativeEvalInAnyRealm(closure, context) {
+  const realm = surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
+  if (!realm) return undefined;
+  return realm.scope(() => {
+    const result = closure();
+    if (isEvaluator(result)) {
+      return skipDebugger(result);
+    }
+    return result;
+  });
+}
+
 function unwrapFunction(value) {
   if (isWrappedFunctionExoticObject(value)) {
     return unwrapFunction(value.WrappedTargetFunction);
   }
   return value;
+}
+function toLocation(location, scriptId) {
+  return {
+    name: '[[FunctionLocation]]',
+    value: {
+      type: 'object',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      subtype: 'internal#location',
+      description: 'Object',
+      value: {
+        columnNumber: location.start.column,
+        lineNumber: location.start.line - 1,
+        scriptId
+      }
+    }
+  };
 }
 const Function = {
   toRemoteObject(value, getObjectId) {
@@ -212,31 +369,48 @@ const Function = {
       properties: []
     };
   },
-  toInternalProperties(value) {
+  toInternalProperties(value, getObjectId, context) {
     if (isECMAScriptFunctionObject(value)) {
-      return [{
-        name: '[[FunctionLocation]]',
-        value: value.ECMAScriptCode ? {
-          type: 'object',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          subtype: 'internal#location',
-          description: 'Object',
-          value: {
-            columnNumber: value.ECMAScriptCode.location.start.column,
-            lineNumber: value.ECMAScriptCode.location.start.line - 1,
-            scriptId: value.scriptId
-          }
-        } : undefined
+      if (!value.ECMAScriptCode) return [];
+      const scope = [];
+      let env = value.Environment;
+      while (env instanceof EnvironmentRecord) {
+        const result = getDisplayObjectFromEnvironmentRecord(env);
+        if (result) {
+          scope.push(result.object);
+        }
+        env = env.OuterEnv;
+      }
+      const scopeObject = unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(scope), context));
+      const scopeDesc = scopeObject ? {
+        className: 'Array',
+        description: `Scopes[${scope.length}]`,
+        objectId: getObjectId(scopeObject),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        subtype: 'internal#scopeList',
+        type: 'object'
+      } : undefined;
+      return [toLocation(value.ECMAScriptCode.location, value.scriptId), {
+        name: '[[Scopes]]',
+        value: scopeDesc
       }];
     }
-    if (isBuiltinFunctionObject(value) && value.nativeFunction.section) {
-      return [{
-        name: '[[Section]]',
-        value: {
-          type: 'string',
-          value: value.nativeFunction.section
-        }
-      }];
+    if (isBuiltinFunctionObject(value)) {
+      const result = [];
+      if (value.HostLocation) {
+        const [scriptId, location] = value.HostLocation;
+        result.push(toLocation(location, scriptId));
+      }
+      if (value.nativeFunction.section) {
+        result.push({
+          name: '[[Section]]',
+          value: {
+            type: 'string',
+            value: value.nativeFunction.section
+          }
+        });
+      }
+      return result;
     }
     return [];
   },
@@ -247,6 +421,7 @@ class ObjectInspector {
   subtype;
   className;
   toDescription;
+  toCustomPreview;
   toEntries;
   additionalProperties;
   internalProperties;
@@ -259,9 +434,10 @@ class ObjectInspector {
     this.additionalProperties = additionalOptions?.additionalProperties;
     this.internalProperties = additionalOptions?.internalProperties;
     this.exoticProperties = additionalOptions?.exoticProperties;
+    this.toCustomPreview = additionalOptions?.customPreview;
   }
   toRemoteObject(value, getObjectId, context) {
-    return {
+    const object = {
       type: 'object',
       subtype: this.subtype,
       objectId: getObjectId(value),
@@ -269,6 +445,9 @@ class ObjectInspector {
       description: this.toDescription(value, context),
       preview: this.toObjectPreview(value, context)
     };
+    const customPreview = this.toCustomPreview?.(value, getObjectId, context);
+    if (customPreview) object.customPreview = customPreview;
+    return object;
   }
   toPropertyPreview(name, value, context) {
     return {
@@ -433,10 +612,10 @@ const ShadowRealm = new ObjectInspector('ShadowRealm', undefined, () => 'ShadowR
 });
 
 const Module = new ObjectInspector('Module', undefined, () => 'Module', {
-  additionalProperties: module => {
+  additionalProperties: (module, context) => {
     const result = [];
     surroundingAgent.debugger_scopePreview(() => {
-      skipDebugger(performDevtoolsEval(function* accessModuleExports() {
+      nativeEvalInAnyRealm(() => {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
@@ -444,14 +623,14 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
           }
         }
         return Value.undefined;
-      }, module.Module.Realm, true, true));
+      }, context);
     });
     return result;
   },
   exoticProperties(module, getObjectId, context, generatePreview) {
     const result = [];
     surroundingAgent.debugger_scopePreview(() => {
-      skipDebugger(performDevtoolsEval(function* accessModuleExports() {
+      nativeEvalInAnyRealm(() => {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
@@ -482,7 +661,7 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
           }
         }
         return Value.undefined;
-      }, module.Module.Realm, true, true));
+      }, context);
     });
     return result;
   }
@@ -625,26 +804,47 @@ const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
   }))
 });
 
-const Error$1 = new ObjectInspector('SyntaxError', 'error', (value, context) => {
+const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
   let text = '';
-  const realm = surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
-  if (!realm) {
-    return text;
+  surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => {
+    const completion = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(value, Value('stack'))), context)));
+    if (completion instanceof NormalCompletion && completion.Value instanceof JSStringValue) {
+      text = completion.Value.stringValue();
+      if (!text.includes('  at') && !text.includes('SyntaxError')) {
+        text = '';
+      }
+    }
+    return Value.undefined;
+  }, context));
+  return text || 'Error';
+}, {
+  internalProperties: (error, context) => {
+    const unformattedMessage = getHostDefinedErrorDetails(error).message;
+    if (!unformattedMessage) return [];
+    const value = nativeEvalInAnyRealm(() => CreateArrayFromList(unformattedMessage.map(part => typeof part === 'string' ? Value(part) : part)), context);
+    if (!value) return [];
+    return [['[[UnformattedErrorMessage]]', unwrapCompletion(value)]];
+  },
+  customPreview: (error, getObjectId, context) => {
+    const {
+      message,
+      stack,
+      stackGetterValue
+    } = getHostDefinedErrorDetails(error);
+    if (!message || !stackGetterValue) return undefined;
+    const stackC = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(error, Value('stack'))), context)));
+    if (stackC instanceof NormalCompletion && stackC.Value instanceof JSStringValue) {
+      const stackMaybeModified = stackC.Value.stringValue();
+      if (stackMaybeModified !== stackGetterValue) return undefined;
+    }
+    let constructorName = 'Error';
+    const nameC = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(error, Value('name'))), context)));
+    if (nameC instanceof NormalCompletion && nameC.Value instanceof JSStringValue) constructorName = nameC.Value.stringValue();
+    const header = JSON.stringify(['span', null, constructorName, ': ', ...message.map(part => typeof part === 'string' ? part : ['object', getInspector(part).toRemoteObject(part, getObjectId, context, false)]), stack]);
+    return {
+      header
+    };
   }
-  surroundingAgent.debugger_scopePreview(() => {
-    skipDebugger(performDevtoolsEval(function* getErrorStack() {
-      evalQ(Q => {
-        if (value instanceof ObjectValue) {
-          const stack = Q(skipDebugger(Get(value, Value('stack'))));
-          if (stack !== Value.undefined) {
-            text += Q(skipDebugger(ToString(stack))).stringValue();
-          }
-        }
-      });
-      return Value.undefined;
-    }, realm, true, true));
-  });
-  return text;
 });
 
 function getInspector(value) {
@@ -865,17 +1065,20 @@ class InspectorContext {
     const properties = [];
     const internalProperties = [];
     const privateProperties = [];
-    object.PrivateElements.forEach(value => {
-      privateProperties.push({
-        name: value.Key.Description.stringValue(),
-        value: value.Value ? wrap(value.Value) : undefined,
-        get: value.Get ? wrap(value.Get) : undefined,
-        set: value.Set ? wrap(value.Set) : undefined
+    if (!accessorPropertiesOnly) {
+      object.PrivateElements.forEach(value => {
+        const desc = {
+          name: value.Key.Description.stringValue()
+        };
+        if (value.Value) desc.value = wrap(value.Value);
+        if (value.Get) desc.get = wrap(value.Get);
+        if (value.Set) desc.set = wrap(value.Set);
+        privateProperties.push(desc);
       });
-    });
-    const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
-    if (exoticProperties) {
-      properties.push(...exoticProperties);
+      const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
+      if (exoticProperties) {
+        properties.push(...exoticProperties);
+      }
     }
     (() => {
       let p = object;
@@ -893,16 +1096,15 @@ class InspectorContext {
           }
           const descriptor = {
             name: key instanceof JSStringValue ? key.stringValue() : SymbolDescriptiveString(key).stringValue(),
-            value: desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value) ? wrap(desc.Value) : undefined,
             writable: desc.Writable === Value.true,
-            get: desc.Get ? wrap(desc.Get) : undefined,
-            set: desc.Set ? wrap(desc.Set) : undefined,
             configurable: desc.Configurable === Value.true,
             enumerable: desc.Enumerable === Value.true,
-            wasThrown: false,
-            isOwn: p === object,
-            symbol: key instanceof SymbolValue ? wrap(key) : undefined
+            isOwn: p === object
           };
+          if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
+          if (desc.Get) descriptor.get = wrap(desc.Get);
+          if (desc.Set) descriptor.set = wrap(desc.Set);
+          if (key instanceof SymbolValue) descriptor.symbol = wrap(key);
           properties.push(descriptor);
         }
         if (ownProperties) {
@@ -934,14 +1136,16 @@ class InspectorContext {
   #exceptionMap = new WeakMap();
   createExceptionDetails(completion, isPromise) {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
-    const stack = getHostDefinedErrorStack(value);
-    const frames = InspectorContext.callSiteToCallFrame(stack);
+    const {
+      callStack
+    } = getHostDefinedErrorDetails(value);
+    const frames = InspectorContext.callSiteToCallFrame(callStack);
     const exceptionId = this.#objectCounter;
     this.#objectCounter += 1;
     this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
-      stackTrace: stack ? {
+      stackTrace: callStack ? {
         callFrames: frames
       } : undefined,
       exception: getInspector(value).toRemoteObject(value, val => this.#internObject(val), this, false),
@@ -1067,7 +1271,7 @@ function getParsedEvent(source, id, executionContextId) {
   return {
     isModule: source instanceof SourceTextModuleRecord,
     scriptId: id,
-    url: source.HostDefined.specifier || `vm:///${id}`,
+    url: source.HostDefined?.specifier || `vm:///${id}`,
     startLine: 0,
     startColumn: 0,
     endLine: lines.length,
@@ -1395,10 +1599,10 @@ const unsupportedError = {
     exceptionId: 0
   }
 };
-function evaluate(options, _context) {
+function evaluate(options, inspectorContext) {
   const {
     context
-  } = _context;
+  } = inspectorContext;
   const isPreview = options.throwOnSideEffect;
   if (options.awaitPromise) {
     return unsupportedError;
@@ -1413,8 +1617,15 @@ function evaluate(options, _context) {
   if (isCallOnFrame) {
     const frame = surroundingAgent.executionContextStack[options.callFrameId];
     if (!frame) {
-      // eslint-disable-next-line no-console
-      console.error('Execution context not found: ', options.callFrameId);
+      inspectorContext.sendEvent['Runtime.exceptionThrown']({
+        timestamp: Date.now(),
+        exceptionDetails: {
+          columnNumber: 0,
+          exceptionId: 0,
+          lineNumber: 0,
+          text: `Execution context not found for callFrameId ${options.callFrameId}`
+        }
+      });
       return unsupportedError;
     }
     for (const currentFrame of [...surroundingAgent.executionContextStack].reverse()) {
@@ -1452,7 +1663,7 @@ function evaluate(options, _context) {
       toBeEvaluated = parsed;
     }
     const noDebuggerEvaluate = () => {
-      if (!('next' in toBeEvaluated)) {
+      if (!isEvaluator(toBeEvaluated)) {
         throw new Assert.Error('Unexpected');
       }
       resolve(context.createEvaluationResult(skipDebugger(toBeEvaluated)));
@@ -1486,9 +1697,9 @@ function evaluate(options, _context) {
       }
     }
   }, err => {
-    const expr = surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText;
+    const expr = surroundingAgent.runningExecutionContext?.callSite.lastNode?.sourceText;
     const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
-    _context.sendEvent['Runtime.exceptionThrown']({
+    inspectorContext.sendEvent['Runtime.exceptionThrown']({
       timestamp: Date.now(),
       exceptionDetails: {
         stackTrace: frame.length ? {
@@ -1542,7 +1753,7 @@ function createConsole(realm, defaultBehaviour) {
           completion = defaultBehaviour.default(method, args);
         }
         if (completion) {
-          if (typeof completion === 'object' && 'next' in completion) {
+          if (isEvaluator(completion)) {
             completion = yield* completion;
           }
           // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
@@ -1618,8 +1829,15 @@ class Inspector {
       return;
     }
     if (!(namespace in impl)) {
-      // eslint-disable-next-line no-console
-      console.error(`Unknown namespace requested: ${namespace}`);
+      this.sendEvent['Runtime.consoleAPICalled']({
+        timestamp: Date.now(),
+        type: 'warning',
+        executionContextId: 0,
+        args: [{
+          type: 'string',
+          value: `engine262 internal error: Namespace not implemented: ${namespace}.*`
+        }]
+      });
       return;
     }
     const ns = impl[namespace];

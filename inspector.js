@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 661889ca61f8cee584c73338e2c8e8ff39bd7778
+ * engine262 0.0.1 7ca1527262c7248606a1d9cebf799bd4d14d5575
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -174,11 +174,168 @@
     }
   };
 
+  const cascadeStack = new WeakMap();
+  // This is modified based on PerformEval, used internally for devtools console.
+  function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
+    let inFunction = false;
+    let inMethod = false;
+    let inDerivedConstructor = false;
+    let inClassFieldInitializer = false;
+    let scriptContext;
+    if (!engine262_mjs.surroundingAgent.runningExecutionContext?.LexicalEnvironment) {
+      // top level devtools eval
+      const globalEnv = evalRealm.GlobalEnv;
+      scriptContext = new engine262_mjs.ExecutionContext();
+      scriptContext.Function = engine262_mjs.Value.null;
+      scriptContext.Realm = evalRealm;
+      scriptContext.VariableEnvironment = globalEnv;
+      if (!cascadeStack.has(globalEnv)) {
+        cascadeStack.set(globalEnv, new engine262_mjs.DeclarativeEnvironmentRecord(globalEnv));
+      }
+      scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv);
+      scriptContext.PrivateEnvironment = engine262_mjs.Value.null;
+      engine262_mjs.surroundingAgent.executionContextStack.push(scriptContext);
+    }
+    const thisEnv = engine262_mjs.GetThisEnvironment();
+    if (thisEnv instanceof engine262_mjs.FunctionEnvironmentRecord) {
+      const F = thisEnv.FunctionObject;
+      inFunction = true;
+      inMethod = thisEnv.HasSuperBinding() === engine262_mjs.Value.true;
+      if (F.ConstructorKind === 'derived') {
+        inDerivedConstructor = true;
+      }
+      const classFieldInitializerName = F.ClassFieldInitializerName;
+      if (classFieldInitializerName !== undefined) {
+        inClassFieldInitializer = true;
+      }
+    }
+    let isAsync = false;
+    const script = engine262_mjs.wrappedParse({
+      source,
+      allowAllPrivateNames: true
+    }, parser => parser.scope.with({
+      strict: strictCaller,
+      newTarget: inFunction,
+      superProperty: inMethod,
+      superCall: inDerivedConstructor,
+      private: true
+    }, () => parser.try(() => parser.parseScript()) || parser.scope.with({
+      await: true
+    }, () => {
+      isAsync = true;
+      return parser.parseScript();
+    })));
+    if (Array.isArray(script)) {
+      if (scriptContext) {
+        engine262_mjs.surroundingAgent.executionContextStack.pop(scriptContext);
+      }
+      return engine262_mjs.ThrowCompletion(script[0]);
+    }
+    if (!script.ScriptBody) {
+      if (scriptContext) {
+        engine262_mjs.surroundingAgent.executionContextStack.pop(scriptContext);
+      }
+      return engine262_mjs.Value.undefined;
+    }
+    const body = script.ScriptBody;
+    if (inClassFieldInitializer && engine262_mjs.ContainsArguments(body)) {
+      return engine262_mjs.Throw.SyntaxError('arguments cannot be referenced in a class field initializer');
+    }
+    const scriptId = doNotTrack ? undefined : engine262_mjs.surroundingAgent.addDynamicParsedSource(engine262_mjs.surroundingAgent.currentRealmRecord, source, script);
+    if (!doNotTrack) {
+      engine262_mjs.surroundingAgent.parsedSources.get(scriptId).HostDefined.isInspectorEval = true;
+      if (scriptContext) {
+        scriptContext.HostDefined ??= {};
+        scriptContext.HostDefined.scriptId = scriptId;
+      }
+    }
+    let strictEval;
+    if (script) {
+      strictEval = engine262_mjs.IsStrict(script);
+    } else {
+      strictEval = true;
+    }
+    const runningContext = engine262_mjs.surroundingAgent.runningExecutionContext;
+    let parentLexicalEnvironment;
+    if (cascadeStack.has(runningContext.LexicalEnvironment)) {
+      parentLexicalEnvironment = cascadeStack.get(runningContext.LexicalEnvironment);
+    } else {
+      parentLexicalEnvironment = runningContext.LexicalEnvironment;
+    }
+    const lexEnv = new engine262_mjs.DeclarativeEnvironmentRecord(parentLexicalEnvironment);
+    cascadeStack.set(runningContext.LexicalEnvironment, lexEnv);
+    let varEnv;
+    const privateEnv = runningContext.PrivateEnvironment;
+    varEnv = runningContext.VariableEnvironment;
+    if (strictEval === true) {
+      varEnv = lexEnv;
+    }
+    const evalContext = new engine262_mjs.ExecutionContext();
+    evalContext.HostDefined ??= {};
+    evalContext.HostDefined.scriptId = scriptId;
+    evalContext.Function = engine262_mjs.Value.null;
+    evalContext.Realm = evalRealm;
+    evalContext.ScriptOrModule = runningContext.ScriptOrModule;
+    evalContext.VariableEnvironment = varEnv;
+    evalContext.LexicalEnvironment = lexEnv;
+    evalContext.PrivateEnvironment = privateEnv;
+    engine262_mjs.surroundingAgent.executionContextStack.push(evalContext);
+    let result;
+    result = engine262_mjs.EnsureCompletion(yield* engine262_mjs.EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+    if (result.Type === 'normal') {
+      if (isAsync) {
+        const promiseCapability = engine262_mjs.unwrapCompletion(engine262_mjs.NewPromiseCapability(engine262_mjs.surroundingAgent.intrinsic('%Promise%')));
+        engine262_mjs.unwrapCompletion(yield* engine262_mjs.AsyncBlockStart(promiseCapability, function* evaluate() {
+          return yield* engine262_mjs.Evaluate(body);
+        }, evalContext));
+        result = promiseCapability.Promise;
+      } else {
+        result = engine262_mjs.EnsureCompletion(yield* engine262_mjs.Evaluate(body));
+      }
+    }
+    result = engine262_mjs.EnsureCompletion(result);
+    if (result.Type === 'normal' && result.Value === undefined) {
+      result = engine262_mjs.NormalCompletion(engine262_mjs.Value.undefined);
+    }
+    engine262_mjs.surroundingAgent.executionContextStack.pop(evalContext);
+    if (scriptContext) {
+      engine262_mjs.surroundingAgent.executionContextStack.pop(scriptContext);
+    }
+    return result;
+  }
+  function nativeEvalInAnyRealm(closure, context) {
+    const realm = engine262_mjs.surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
+    if (!realm) return undefined;
+    return realm.scope(() => {
+      const result = closure();
+      if (engine262_mjs.isEvaluator(result)) {
+        return engine262_mjs.skipDebugger(result);
+      }
+      return result;
+    });
+  }
+
   function unwrapFunction(value) {
     if (engine262_mjs.isWrappedFunctionExoticObject(value)) {
       return unwrapFunction(value.WrappedTargetFunction);
     }
     return value;
+  }
+  function toLocation(location, scriptId) {
+    return {
+      name: '[[FunctionLocation]]',
+      value: {
+        type: 'object',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        subtype: 'internal#location',
+        description: 'Object',
+        value: {
+          columnNumber: location.start.column,
+          lineNumber: location.start.line - 1,
+          scriptId
+        }
+      }
+    };
   }
   const Function = {
     toRemoteObject(value, getObjectId) {
@@ -216,31 +373,48 @@
         properties: []
       };
     },
-    toInternalProperties(value) {
+    toInternalProperties(value, getObjectId, context) {
       if (engine262_mjs.isECMAScriptFunctionObject(value)) {
-        return [{
-          name: '[[FunctionLocation]]',
-          value: value.ECMAScriptCode ? {
-            type: 'object',
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            subtype: 'internal#location',
-            description: 'Object',
-            value: {
-              columnNumber: value.ECMAScriptCode.location.start.column,
-              lineNumber: value.ECMAScriptCode.location.start.line - 1,
-              scriptId: value.scriptId
-            }
-          } : undefined
+        if (!value.ECMAScriptCode) return [];
+        const scope = [];
+        let env = value.Environment;
+        while (env instanceof engine262_mjs.EnvironmentRecord) {
+          const result = getDisplayObjectFromEnvironmentRecord(env);
+          if (result) {
+            scope.push(result.object);
+          }
+          env = env.OuterEnv;
+        }
+        const scopeObject = engine262_mjs.unwrapCompletion(nativeEvalInAnyRealm(() => engine262_mjs.CreateArrayFromList(scope), context));
+        const scopeDesc = scopeObject ? {
+          className: 'Array',
+          description: `Scopes[${scope.length}]`,
+          objectId: getObjectId(scopeObject),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          subtype: 'internal#scopeList',
+          type: 'object'
+        } : undefined;
+        return [toLocation(value.ECMAScriptCode.location, value.scriptId), {
+          name: '[[Scopes]]',
+          value: scopeDesc
         }];
       }
-      if (engine262_mjs.isBuiltinFunctionObject(value) && value.nativeFunction.section) {
-        return [{
-          name: '[[Section]]',
-          value: {
-            type: 'string',
-            value: value.nativeFunction.section
-          }
-        }];
+      if (engine262_mjs.isBuiltinFunctionObject(value)) {
+        const result = [];
+        if (value.HostLocation) {
+          const [scriptId, location] = value.HostLocation;
+          result.push(toLocation(location, scriptId));
+        }
+        if (value.nativeFunction.section) {
+          result.push({
+            name: '[[Section]]',
+            value: {
+              type: 'string',
+              value: value.nativeFunction.section
+            }
+          });
+        }
+        return result;
       }
       return [];
     },
@@ -251,6 +425,7 @@
     subtype;
     className;
     toDescription;
+    toCustomPreview;
     toEntries;
     additionalProperties;
     internalProperties;
@@ -263,9 +438,10 @@
       this.additionalProperties = additionalOptions?.additionalProperties;
       this.internalProperties = additionalOptions?.internalProperties;
       this.exoticProperties = additionalOptions?.exoticProperties;
+      this.toCustomPreview = additionalOptions?.customPreview;
     }
     toRemoteObject(value, getObjectId, context) {
-      return {
+      const object = {
         type: 'object',
         subtype: this.subtype,
         objectId: getObjectId(value),
@@ -273,6 +449,9 @@
         description: this.toDescription(value, context),
         preview: this.toObjectPreview(value, context)
       };
+      const customPreview = this.toCustomPreview?.(value, getObjectId, context);
+      if (customPreview) object.customPreview = customPreview;
+      return object;
     }
     toPropertyPreview(name, value, context) {
       return {
@@ -437,10 +616,10 @@
   });
 
   const Module = new ObjectInspector('Module', undefined, () => 'Module', {
-    additionalProperties: module => {
+    additionalProperties: (module, context) => {
       const result = [];
       engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
-        engine262_mjs.skipDebugger(engine262_mjs.performDevtoolsEval(function* accessModuleExports() {
+        nativeEvalInAnyRealm(() => {
           for (const key of module.Exports) {
             const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
             if (completion instanceof engine262_mjs.NormalCompletion) {
@@ -448,14 +627,14 @@
             }
           }
           return engine262_mjs.Value.undefined;
-        }, module.Module.Realm, true, true));
+        }, context);
       });
       return result;
     },
     exoticProperties(module, getObjectId, context, generatePreview) {
       const result = [];
       engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
-        engine262_mjs.skipDebugger(engine262_mjs.performDevtoolsEval(function* accessModuleExports() {
+        nativeEvalInAnyRealm(() => {
           for (const key of module.Exports) {
             const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
             if (completion instanceof engine262_mjs.NormalCompletion) {
@@ -486,7 +665,7 @@
             }
           }
           return engine262_mjs.Value.undefined;
-        }, module.Module.Realm, true, true));
+        }, context);
       });
       return result;
     }
@@ -629,26 +808,47 @@
     }))
   });
 
-  const Error$1 = new ObjectInspector('SyntaxError', 'error', (value, context) => {
+  const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
     let text = '';
-    const realm = engine262_mjs.surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
-    if (!realm) {
-      return text;
+    engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => {
+      const completion = engine262_mjs.EnsureCompletion(engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))), context)));
+      if (completion instanceof engine262_mjs.NormalCompletion && completion.Value instanceof engine262_mjs.JSStringValue) {
+        text = completion.Value.stringValue();
+        if (!text.includes('  at') && !text.includes('SyntaxError')) {
+          text = '';
+        }
+      }
+      return engine262_mjs.Value.undefined;
+    }, context));
+    return text || 'Error';
+  }, {
+    internalProperties: (error, context) => {
+      const unformattedMessage = engine262_mjs.getHostDefinedErrorDetails(error).message;
+      if (!unformattedMessage) return [];
+      const value = nativeEvalInAnyRealm(() => engine262_mjs.CreateArrayFromList(unformattedMessage.map(part => typeof part === 'string' ? engine262_mjs.Value(part) : part)), context);
+      if (!value) return [];
+      return [['[[UnformattedErrorMessage]]', engine262_mjs.unwrapCompletion(value)]];
+    },
+    customPreview: (error, getObjectId, context) => {
+      const {
+        message,
+        stack,
+        stackGetterValue
+      } = engine262_mjs.getHostDefinedErrorDetails(error);
+      if (!message || !stackGetterValue) return undefined;
+      const stackC = engine262_mjs.EnsureCompletion(engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('stack'))), context)));
+      if (stackC instanceof engine262_mjs.NormalCompletion && stackC.Value instanceof engine262_mjs.JSStringValue) {
+        const stackMaybeModified = stackC.Value.stringValue();
+        if (stackMaybeModified !== stackGetterValue) return undefined;
+      }
+      let constructorName = 'Error';
+      const nameC = engine262_mjs.EnsureCompletion(engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('name'))), context)));
+      if (nameC instanceof engine262_mjs.NormalCompletion && nameC.Value instanceof engine262_mjs.JSStringValue) constructorName = nameC.Value.stringValue();
+      const header = JSON.stringify(['span', null, constructorName, ': ', ...message.map(part => typeof part === 'string' ? part : ['object', getInspector(part).toRemoteObject(part, getObjectId, context, false)]), stack]);
+      return {
+        header
+      };
     }
-    engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
-      engine262_mjs.skipDebugger(engine262_mjs.performDevtoolsEval(function* getErrorStack() {
-        engine262_mjs.evalQ(Q => {
-          if (value instanceof engine262_mjs.ObjectValue) {
-            const stack = Q(engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))));
-            if (stack !== engine262_mjs.Value.undefined) {
-              text += Q(engine262_mjs.skipDebugger(engine262_mjs.ToString(stack))).stringValue();
-            }
-          }
-        });
-        return engine262_mjs.Value.undefined;
-      }, realm, true, true));
-    });
-    return text;
   });
 
   function getInspector(value) {
@@ -869,17 +1069,20 @@
       const properties = [];
       const internalProperties = [];
       const privateProperties = [];
-      object.PrivateElements.forEach(value => {
-        privateProperties.push({
-          name: value.Key.Description.stringValue(),
-          value: value.Value ? wrap(value.Value) : undefined,
-          get: value.Get ? wrap(value.Get) : undefined,
-          set: value.Set ? wrap(value.Set) : undefined
+      if (!accessorPropertiesOnly) {
+        object.PrivateElements.forEach(value => {
+          const desc = {
+            name: value.Key.Description.stringValue()
+          };
+          if (value.Value) desc.value = wrap(value.Value);
+          if (value.Get) desc.get = wrap(value.Get);
+          if (value.Set) desc.set = wrap(value.Set);
+          privateProperties.push(desc);
         });
-      });
-      const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
-      if (exoticProperties) {
-        properties.push(...exoticProperties);
+        const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
+        if (exoticProperties) {
+          properties.push(...exoticProperties);
+        }
       }
       (() => {
         let p = object;
@@ -897,16 +1100,15 @@
             }
             const descriptor = {
               name: key instanceof engine262_mjs.JSStringValue ? key.stringValue() : engine262_mjs.SymbolDescriptiveString(key).stringValue(),
-              value: desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value) ? wrap(desc.Value) : undefined,
               writable: desc.Writable === engine262_mjs.Value.true,
-              get: desc.Get ? wrap(desc.Get) : undefined,
-              set: desc.Set ? wrap(desc.Set) : undefined,
               configurable: desc.Configurable === engine262_mjs.Value.true,
               enumerable: desc.Enumerable === engine262_mjs.Value.true,
-              wasThrown: false,
-              isOwn: p === object,
-              symbol: key instanceof engine262_mjs.SymbolValue ? wrap(key) : undefined
+              isOwn: p === object
             };
+            if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
+            if (desc.Get) descriptor.get = wrap(desc.Get);
+            if (desc.Set) descriptor.set = wrap(desc.Set);
+            if (key instanceof engine262_mjs.SymbolValue) descriptor.symbol = wrap(key);
             properties.push(descriptor);
           }
           if (ownProperties) {
@@ -938,14 +1140,16 @@
     #exceptionMap = new WeakMap();
     createExceptionDetails(completion, isPromise) {
       const value = completion instanceof engine262_mjs.ThrowCompletion ? completion.Value : completion;
-      const stack = engine262_mjs.getHostDefinedErrorStack(value);
-      const frames = InspectorContext.callSiteToCallFrame(stack);
+      const {
+        callStack
+      } = engine262_mjs.getHostDefinedErrorDetails(value);
+      const frames = InspectorContext.callSiteToCallFrame(callStack);
       const exceptionId = this.#objectCounter;
       this.#objectCounter += 1;
       this.#exceptionMap.set(value, exceptionId);
       return {
         text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
-        stackTrace: stack ? {
+        stackTrace: callStack ? {
           callFrames: frames
         } : undefined,
         exception: getInspector(value).toRemoteObject(value, val => this.#internObject(val), this, false),
@@ -1071,7 +1275,7 @@
     return {
       isModule: source instanceof engine262_mjs.SourceTextModuleRecord,
       scriptId: id,
-      url: source.HostDefined.specifier || `vm:///${id}`,
+      url: source.HostDefined?.specifier || `vm:///${id}`,
       startLine: 0,
       startColumn: 0,
       endLine: lines.length,
@@ -1399,10 +1603,10 @@
       exceptionId: 0
     }
   };
-  function evaluate(options, _context) {
+  function evaluate(options, inspectorContext) {
     const {
       context
-    } = _context;
+    } = inspectorContext;
     const isPreview = options.throwOnSideEffect;
     if (options.awaitPromise) {
       return unsupportedError;
@@ -1417,8 +1621,15 @@
     if (isCallOnFrame) {
       const frame = engine262_mjs.surroundingAgent.executionContextStack[options.callFrameId];
       if (!frame) {
-        // eslint-disable-next-line no-console
-        console.error('Execution context not found: ', options.callFrameId);
+        inspectorContext.sendEvent['Runtime.exceptionThrown']({
+          timestamp: Date.now(),
+          exceptionDetails: {
+            columnNumber: 0,
+            exceptionId: 0,
+            lineNumber: 0,
+            text: `Execution context not found for callFrameId ${options.callFrameId}`
+          }
+        });
         return unsupportedError;
       }
       for (const currentFrame of [...engine262_mjs.surroundingAgent.executionContextStack].reverse()) {
@@ -1432,7 +1643,7 @@
     const promise = new Promise(resolve => {
       let toBeEvaluated;
       if (isPreview || options.evalMode === 'console' || isCallOnFrame) {
-        toBeEvaluated = engine262_mjs.performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
+        toBeEvaluated = performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
       } else {
         let parsed;
         const realm = context.getRealm(options.uniqueContextId);
@@ -1456,7 +1667,7 @@
         toBeEvaluated = parsed;
       }
       const noDebuggerEvaluate = () => {
-        if (!('next' in toBeEvaluated)) {
+        if (!engine262_mjs.isEvaluator(toBeEvaluated)) {
           throw new engine262_mjs.Assert.Error('Unexpected');
         }
         resolve(context.createEvaluationResult(engine262_mjs.skipDebugger(toBeEvaluated)));
@@ -1490,9 +1701,9 @@
         }
       }
     }, err => {
-      const expr = engine262_mjs.surroundingAgent.runningExecutionContext.callSite.lastNode?.sourceText;
+      const expr = engine262_mjs.surroundingAgent.runningExecutionContext?.callSite.lastNode?.sourceText;
       const frame = InspectorContext.callSiteToCallFrame(engine262_mjs.captureStack().stack);
-      _context.sendEvent['Runtime.exceptionThrown']({
+      inspectorContext.sendEvent['Runtime.exceptionThrown']({
         timestamp: Date.now(),
         exceptionDetails: {
           stackTrace: frame.length ? {
@@ -1546,7 +1757,7 @@
             completion = defaultBehaviour.default(method, args);
           }
           if (completion) {
-            if (typeof completion === 'object' && 'next' in completion) {
+            if (engine262_mjs.isEvaluator(completion)) {
               completion = yield* completion;
             }
             // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
@@ -1622,8 +1833,15 @@
         return;
       }
       if (!(namespace in impl)) {
-        // eslint-disable-next-line no-console
-        console.error(`Unknown namespace requested: ${namespace}`);
+        this.sendEvent['Runtime.consoleAPICalled']({
+          timestamp: Date.now(),
+          type: 'warning',
+          executionContextId: 0,
+          args: [{
+            type: 'string',
+            value: `engine262 internal error: Namespace not implemented: ${namespace}.*`
+          }]
+        });
         return;
       }
       const ns = impl[namespace];
