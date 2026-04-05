@@ -3,7 +3,7 @@ import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
 import { NormalCompletion, Q } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   NamedEvaluation,
@@ -56,7 +56,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     }
   }
   if (!isDefault) {
-    throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
+    throw OutOfRange.exhaustive(ExportDeclaration);
   }
   if (HoistableDeclaration) {
     // 1. Return the result of evaluating HoistableDeclaration.
@@ -96,5 +96,5 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
-  throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
+  throw OutOfRange.exhaustive(ExportDeclaration);
 }

@@ -41,6 +41,7 @@ import {
   YearFromTime,
   F, R,
   CreateTemporalInstant,
+  Throw,
 } from '#self';
 import type { Realm } from '#self';
 
@@ -49,7 +50,7 @@ export function thisTimeValue(value: Value): ValueCompletion<NumberValue> {
   if (value instanceof ObjectValue && 'DateValue' in value) {
     return (value as DateObject).DateValue;
   }
-  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', value);
+  return Throw.TypeError('$1 is not a $2 object', value, 'Date');
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getdate */
@@ -551,7 +552,7 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { this
 function* DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
+    return Throw.TypeError('$1 is not a $2 object', O, 'Date');
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -565,7 +566,7 @@ function* DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallCo
 export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion<JSStringValue> {
   const t = Q(thisTimeValue(thisValue));
   if (!Number.isFinite(R(t))) {
-    return surroundingAgent.Throw('RangeError', 'DateInvalidTime');
+    return Throw.RangeError('Invalid time');
   }
   const year = R(YearFromTime(t));
   const month = R(MonthFromTime(t)) + 1;
@@ -676,7 +677,7 @@ export function ToDateString(tv: NumberValue) {
 function DateProto_toTimeString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
+    return Throw.TypeError('$1 is not a $2 object', O, 'Date');
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -697,7 +698,7 @@ function DateProto_toTemporalInstant(_args: Arguments, { thisValue }: FunctionCa
 function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
+    return Throw.TypeError('$1 is not a $2 object', O, 'Date');
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -722,7 +723,7 @@ function DateProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext)
 function* DateProto_toPrimitive([hint = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
+    return Throw.TypeError('$1 is not a $2 object', O, 'Date');
   }
   let tryFirst: 'string' | 'number';
   if (hint instanceof JSStringValue && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
@@ -730,7 +731,7 @@ function* DateProto_toPrimitive([hint = Value.undefined]: Arguments, { thisValue
   } else if (hint instanceof JSStringValue && hint.stringValue() === 'number') {
     tryFirst = 'number';
   } else {
-    return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);
+    return Throw.TypeError('Invalid hint: $1', hint);
   }
   return Q(yield* OrdinaryToPrimitive(O, tryFirst));
 }

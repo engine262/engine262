@@ -18,7 +18,7 @@ import {
   NormalCompletion,
   EnsureCompletion,
 } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Evaluate_PropertyName,
@@ -290,7 +290,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, A);
     }
     default:
-      throw new OutOfRange('IteratorDestructuringAssignmentEvaluation', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }
 
@@ -301,6 +301,6 @@ export function DestructuringAssignmentEvaluation(node: ParseNode.ObjectAssignme
     case 'ArrayAssignmentPattern':
       return DestructuringAssignmentEvaluation_ArrayAssignmentPattern(node, value);
     default:
-      throw new OutOfRange('DestructuringAssignmentEvaluation', node);
+      throw OutOfRange.exhaustive(node);
   }
 }

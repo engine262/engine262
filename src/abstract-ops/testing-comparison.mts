@@ -8,7 +8,6 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import {
   Assert,
@@ -23,6 +22,7 @@ import {
   SameType,
   type FunctionObject,
   type PropertyKeyValue,
+  Throw,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -31,10 +31,10 @@ import {
 /** https://tc39.es/ecma262/#sec-requireobjectcoercible */
 export function RequireObjectCoercible(argument: Value) {
   if (argument === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
+    return Throw.TypeError('Cannot convert $1 to object', 'undefined');
   }
   if (argument === Value.null) {
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
+    return Throw.TypeError('Cannot convert $1 to object', 'null');
   }
   return undefined;
 }
@@ -49,7 +49,7 @@ export function IsArray(argument: Value) {
   }
   if (isProxyExoticObject(argument)) {
     if (argument.ProxyHandler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'IsArray');
+      return Throw.TypeError("Cannot perform '$1' on a proxy that has been revoked", 'IsArray');
     }
     const target = argument.ProxyTarget;
     return IsArray(target);

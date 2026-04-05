@@ -1,5 +1,5 @@
 import { NullValue, Value } from '../value.mts';
-import { OutOfRange, isArray } from '../helpers.mts';
+import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { StringValue, type ExportEntry, type ModuleRequestRecord } from './all.mts';
 
@@ -58,6 +58,6 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
     case 'NamedExports':
       return ExportEntriesForModule(node.ExportsList, module);
     default:
-      throw new OutOfRange('ExportEntriesForModule', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }

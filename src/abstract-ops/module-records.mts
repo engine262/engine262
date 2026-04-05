@@ -34,6 +34,7 @@ import {
   ModuleRequestsEqual,
   ReadyForSyncExecution,
   type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -73,7 +74,7 @@ export function InnerModuleLoading(state: GraphLoadingState, module: AbstractMod
       const invalidAttributeKey = AllImportAttributesSupported(request.Attributes);
       if (invalidAttributeKey) {
         // 1. Let error be ThrowCompletion(a newly created SyntaxError object).
-        const error = surroundingAgent.Throw('SyntaxError', 'UnsupportedImportAttribute', invalidAttributeKey);
+        const error = Throw.SyntaxError('Unsupported import attribute $1', invalidAttributeKey);
         // 2. Perform ContinueModuleLoading(state, error).
         ContinueModuleLoading(state, error);
       } else {

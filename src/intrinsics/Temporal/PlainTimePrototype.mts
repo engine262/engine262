@@ -31,6 +31,7 @@ import {
   CreateDataPropertyOrThrow,
   F,
   JSStringValue,
+  ObjectValue,
   OrdinaryObjectCreate,
   Q,
   RequireInternalSlot,
@@ -104,7 +105,7 @@ function* PlainTimeProto_with([temporalTimeLike = Value.undefined, options = Val
   if (!Q(yield* IsPartialTemporalObject(temporalTimeLike))) {
     return Throw.TypeError('$1 is not a partial Temporal object', temporalTimeLike);
   }
-  const partialTime = Q(yield* ToTemporalTimeRecord(temporalTimeLike as never, 'partial'));
+  const partialTime = Q(yield* ToTemporalTimeRecord(temporalTimeLike as ObjectValue, 'partial'));
   const hour = partialTime.Hour ?? plainTime.Time.Hour;
   const minute = partialTime.Minute ?? plainTime.Time.Minute;
   const second = partialTime.Second ?? plainTime.Time.Second;

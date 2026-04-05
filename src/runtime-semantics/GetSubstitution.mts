@@ -7,7 +7,7 @@ import {
   Assert,
   Get,
   ToString,
-  surroundingAgent,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
@@ -84,7 +84,7 @@ export function* GetSubstitution(matched: JSStringValue, str: JSStringValue, pos
     result_str = result.join('');
   } catch (e) {
     // test262/test/staging/sm/String/replace-math.js
-    return surroundingAgent.Throw('RangeError', 'OutOfRange', 'String too long');
+    return Throw.RangeError('String is too long');
   }
   return Value(result_str);
 }

@@ -21,8 +21,8 @@ import {
   Q, X,
   AbruptCompletion,
 } from '../completion.mts';
-import { __ts_cast__, OutOfRange, type Mutable } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
+import { __ts_cast__, OutOfRange, type Mutable } from '../utils/language.mts';
+import type { Location, ParseNode } from '../parser/ParseNode.mts';
 import {
   DefineMethod,
   MethodDefinitionEvaluation,
@@ -55,6 +55,7 @@ import {
   type FunctionObject,
   DefineMethodProperty,
   IsCallable,
+  getActiveScriptId,
 } from '#self';
 import {
   DeclarativeEnvironmentRecord,
@@ -96,7 +97,7 @@ function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.Ge
     case 'ClassStaticBlock':
       return ClassStaticBlockDefinitionEvaluation(node, object);
     default:
-      throw new OutOfRange('ClassElementEvaluation', node);
+      throw OutOfRange.exhaustive(node);
   }
 }
 
@@ -112,8 +113,9 @@ export interface DefaultConstructorBuiltinFunction extends BuiltinFunctionObject
   /**
    * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
    * This is only used in the inspector.
-   */
+  */
   readonly HostInitialName: PropertyKeyValue | PrivateName;
+  readonly HostLocation: [scriptId: string | undefined, location: Location];
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
@@ -175,13 +177,13 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
     } else if (!IsConstructor(superclass)) {
       // f. Else if IsConstructor(superclass) is false, throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
+      return Throw.TypeError('Super class $1 is not a constructor', superclass);
     } else { // g. Else,
       // i. Let protoParent be ? Get(superclass, "prototype").
       protoParent = Q(yield* Get(superclass as ObjectValue, Value('prototype')));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
       if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
-        return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
+        return Throw.TypeError('Super class\'s prototype must be an object or null');
       }
       // iii. Let constructorParent be superclass.
       constructorParent = superclass as ObjectValue;
@@ -208,7 +210,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       // i. Let args be the List of arguments that was passed to this function by [[Call]] or [[Construct]].
       // ii. If NewTarget is undefined, throw a TypeError exception.
       if (NewTarget instanceof UndefinedValue) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', surroundingAgent.activeFunctionObject);
+        return Throw.TypeError('$1 cannot be invoked without new', surroundingAgent.activeFunctionObject);
       }
       // iii. Let F be the active function object.
       const F = surroundingAgent.activeFunctionObject as ECMAScriptFunctionObject; // eslint-disable-line no-shadow
@@ -222,7 +224,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
         const func = X(yield* F.GetPrototypeOf());
         // 3. If IsConstructor(func) is false, throw a TypeError exception.
         if (!IsConstructor(func)) {
-          return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+          return Throw.TypeError('$1 is not a constructor', func);
         }
         // 4. Let result be ? Construct(func, args, NewTarget).
         result = Q(yield* Construct(func, args, NewTarget));
@@ -235,7 +237,8 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       return result;
     };
     // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[PrivateMethods]], [[Fields]] », the current Realm Record, constructorParent).
-    F = X(CreateBuiltinFunction(markBuiltinFunctionAsConstructor(defaultConstructor), 0, className, ['ConstructorKind', 'SourceText', surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods', surroundingAgent.feature('decorators') ? 'Elements' : 'Fields'], surroundingAgent.currentRealmRecord, constructorParent));
+    F = X(CreateBuiltinFunction(markBuiltinFunctionAsConstructor(defaultConstructor), 0, className, ['ConstructorKind', 'SourceText', surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods', surroundingAgent.feature('decorators') ? 'Elements' : 'Fields', 'HostLocation'], surroundingAgent.currentRealmRecord, constructorParent)) as Mutable<DefaultConstructorBuiltinFunction>;
+    F.HostLocation = [getActiveScriptId(), ClassTail.location];
   } else { // 15. Else,
     // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
     const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));

@@ -1,5 +1,5 @@
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import { BigIntValue, NumberValue } from '../value.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -121,6 +121,6 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     }
 
     default:
-      throw new OutOfRange('Evaluate_UpdateExpression', operator);
+      throw OutOfRange.nonExhaustive(operator);
   }
 }

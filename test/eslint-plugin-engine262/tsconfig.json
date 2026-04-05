@@ -7,7 +7,8 @@
     "declarationMap": false,
     "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": false,
-    "strict": false
+    "strict": false,
+    "types": ["node"]
   },
   "include": ["./"]
 }

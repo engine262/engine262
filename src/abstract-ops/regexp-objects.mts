@@ -3,11 +3,13 @@ import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
   UndefinedValue,
 } from '../value.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
+import {
+  Q, ThrowCompletion, X, type ValueEvaluator,
+} from '../completion.mts';
 import { CompilePattern, CountLeftCapturingParensWithin, type RegExpRecord } from '../runtime-semantics/all.mts';
 import { ParsePattern } from '../parse.mts';
 import { isLineTerminator } from '../parser/Lexer.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import type { RegExpObject } from '../intrinsics/RegExp.mts';
 import {
   ArrayCreate,
@@ -23,6 +25,7 @@ import {
   F as toNumberValue,
   type FunctionObject,
 } from './all.mts';
+import { Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {
@@ -54,7 +57,7 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
   const f = F.stringValue();
   // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", "v", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
   if (/^[dgimsuvy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
-    return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
+    return Throw.SyntaxError('RegExp has invalid flags ($1)', f);
   }
   const i = f.includes('i');
   const m = f.includes('m');
@@ -70,7 +73,7 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
 
   const parseResult = ParsePattern(patternText, u, v);
   if (Array.isArray(parseResult)) {
-    return surroundingAgent.Throw(parseResult[0], 'Raw', parseResult[0]);
+    return ThrowCompletion(parseResult[0]);
   }
   obj.OriginalSource = P;
   obj.OriginalFlags = F;
@@ -284,7 +287,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
 export function RegExpHasFlag(R: Value, codeUnit: string) {
   // 1. If Type(R) is not Object, throw a TypeError exception.
   if (!(R instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a RegExp object', R);
   }
   // 2. If R does not have an [[OriginalFlags]] internal slot, then
   if (!('OriginalFlags' in R)) {
@@ -293,7 +296,7 @@ export function RegExpHasFlag(R: Value, codeUnit: string) {
       return Value.undefined;
     }
     // b. Otherwise, throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+    return Throw.TypeError('$1 is not a RegExp object', R);
   }
   // 3. Let flags be R.[[OriginalFlags]].
   const flags = (R as RegExpObject).OriginalFlags.stringValue();

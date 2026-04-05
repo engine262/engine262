@@ -4,7 +4,7 @@ import { Q } from '../completion.mts';
 import {
   Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
@@ -21,6 +21,7 @@ import {
   IsPropertyKey,
   IsPrivateReference,
   ToPropertyKey,
+  Throw,
 } from '#self';
 import { EnvironmentRecord } from '#self';
 
@@ -48,7 +49,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     Assert(!IsPrivateReference(ref));
     // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
     if (IsSuperReference(ref) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
+      return Throw.ReferenceError('Cannot delete a super property');
     }
     // c. Let baseObj be ? ToObject(ref.[[Base]]).
     const baseObj = Q(ToObject(ref.Base as Value));
@@ -61,7 +62,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     const deleteStatus = Q(yield* baseObj.Delete(ref.ReferencedName as JSStringValue));
     // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
     if (deleteStatus === Value.false && ref.Strict === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
+      return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);
     }
     // g. Return deleteStatus.
     return deleteStatus;
@@ -121,7 +122,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
     }
     return Value('object');
   }
-  throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
+  throw OutOfRange.exhaustive(val);
 }
 
 /** https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
@@ -213,6 +214,6 @@ export function* Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpres
       return yield* Evaluate_UnaryExpression_Bang(UnaryExpression);
 
     default:
-      throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
+      throw OutOfRange.nonExhaustive(UnaryExpression);
   }
 }

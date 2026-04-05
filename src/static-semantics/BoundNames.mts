@@ -1,4 +1,4 @@
-import { OutOfRange, isArray } from '../helpers.mts';
+import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { JSStringValue, Value } from '../value.mts';
 import { StringValue } from './all.mts';
@@ -67,7 +67,7 @@ export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValu
       if (node.AssignmentExpression) {
         return [Value('*default*')];
       }
-      throw new OutOfRange('BoundNames', node);
+      throw OutOfRange.exhaustive(node);
     case 'SingleNameBinding':
       return BoundNames(node.BindingIdentifier);
     case 'BindingRestElement':

@@ -11,7 +11,7 @@ import {
   LexicallyScopedDeclarations,
 } from '../static-semantics/all.mts';
 import { Q, X, NormalCompletion } from '../completion.mts';
-import { JSStringSet } from '../helpers.mts';
+import { JSStringSet } from '../utils/container.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
   InstantiateFunctionObject,

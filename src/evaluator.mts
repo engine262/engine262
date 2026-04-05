@@ -2,7 +2,7 @@ import type {
   NormalCompletion, PlainCompletion, ThrowCompletion, YieldCompletion,
 } from './completion.mts';
 import { surroundingAgent } from './host-defined/engine.mts';
-import { OutOfRange } from './helpers.mts';
+import { OutOfRange } from './utils/language.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import {
   Evaluate_Script,
@@ -275,7 +275,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'ExpressionBody':
       return yield* Evaluate_ExpressionBody(node);
     default:
-      throw new OutOfRange('Evaluate', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }
 

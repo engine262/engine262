@@ -1,4 +1,4 @@
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { ModuleParser } from './ModuleParser.mts';
 import type { ParseNode } from './ParseNode.mts';
 import { Token } from './tokens.mts';
@@ -60,7 +60,7 @@ export abstract class LanguageParser extends ModuleParser {
         node.ModuleBody = this.parseModuleBody();
       }
       this.scope.undefinedExports.forEach((importNode, name) => {
-        this.raiseEarly('ModuleUndefinedExport', importNode, name);
+        this.addEarlyError(Throw.SyntaxError('Module undefined export $1', name), importNode);
       });
       node.hasTopLevelAwait = this.state.hasTopLevelAwait;
       Object.defineProperty(node, 'sourceText', {

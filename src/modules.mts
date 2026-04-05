@@ -21,7 +21,8 @@ import {
   Q, X, ThrowCompletion,
   IfAbruptRejectPromise,
 } from './completion.mts';
-import { JSStringSet, type Mutable } from './helpers.mts';
+import { type Mutable } from './utils/language.mts';
+import { JSStringSet } from './utils/container.mts';
 import {
   Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
 } from './evaluator.mts';
@@ -40,6 +41,8 @@ import {
   PromiseCapabilityRecord,
   GraphLoadingState,
   Realm,
+  Throw,
+  isEvaluator,
 } from '#self';
 import {
   type ImportAttributeRecord,
@@ -493,13 +496,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       const resolution = module.ResolveExport(e.ExportName as JSStringValue);
       // b. If resolution is null or "ambiguous", throw a SyntaxError exception.
       if (resolution === null || resolution === 'ambiguous') {
-        return surroundingAgent.Throw(
-          'SyntaxError',
-          'ResolutionNullOrAmbiguous',
-          resolution,
-          e.ExportName,
-          module,
-        );
+        const moduleName = module.HostDefined?.specifier || '<anonymous module>';
+        if (resolution === null) {
+          return Throw.SyntaxError('Module "$1" does not have an export named "$2"', moduleName, e.ExportName);
+        }
+        return Throw.SyntaxError('Export "$1" from module "$2" is ambiguous', e.ExportName, moduleName);
       }
       // c. Assert: resolution is a ResolvedBinding Record.
       Assert(resolution instanceof ResolvedBindingRecord);
@@ -530,13 +531,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         const resolution = importedModule.ResolveExport(ie.ImportName);
         // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.
         if (resolution === null || resolution === 'ambiguous') {
-          return surroundingAgent.Throw(
-            'SyntaxError',
-            'ResolutionNullOrAmbiguous',
-            resolution,
-            ie.ImportName,
-            importedModule,
-          );
+          const moduleName = importedModule.HostDefined?.specifier || '<anonymous module>';
+          if (resolution === null) {
+            return Throw.SyntaxError('Module "$1" does not have an export named "$2"', moduleName, ie.ImportName);
+          }
+          return Throw.SyntaxError('Export "$1" from module "$2" is ambiguous', ie.ImportName, moduleName);
         }
         // iii. If resolution.[[BindingName]] is ~namespace~, then
         if (resolution.BindingName === 'namespace') {
@@ -745,7 +744,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     const steps = module.EvaluationSteps;
     // 10. Let result be Completion(steps(module)).
     let result = steps(module);
-    if (result && 'next' in result) {
+    if (isEvaluator(result)) {
       result = yield* result;
     }
     // 11. Suspend moduleContext and remove it from the execution context stack.

@@ -1,6 +1,7 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  type FinalizationRegistryObject, type PlainCompletion, Q, skipDebugger, NormalCompletion, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, UndefinedValue, Value, type ValueEvaluator, KeyForSymbol,
+  type FinalizationRegistryObject, type PlainCompletion, Q, NormalCompletion, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, UndefinedValue, Value, type ValueEvaluator, KeyForSymbol,
+  type PlainEvaluator,
 } from '#self';
 
 
@@ -12,10 +13,9 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg: FinalizationRegist
   } else {
     if (!surroundingAgent.scheduledForCleanup.has(fg)) {
       surroundingAgent.scheduledForCleanup.add(fg);
-      surroundingAgent.queueJob('FinalizationCleanup', () => {
+      surroundingAgent.queueJob('FinalizationCleanup', function* finalizationJob(): PlainEvaluator {
         surroundingAgent.scheduledForCleanup.delete(fg);
-        // TODO: remove skipDebugger
-        skipDebugger(CleanupFinalizationRegistry(fg));
+        Q(yield* (CleanupFinalizationRegistry(fg)));
       });
     }
   }

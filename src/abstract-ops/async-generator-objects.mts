@@ -15,9 +15,8 @@ import {
   BooleanValue, JSStringValue, Value, type Arguments,
   type NativeSteps,
 } from '../value.mts';
-import {
-  resume, __ts_cast__,
-} from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
+import { resume } from '../utils/evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,

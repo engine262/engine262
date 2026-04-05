@@ -414,22 +414,31 @@ test('evaluate on frame', async () => {
       "exceptionDetails": {
         "columnNumber": 0,
         "exception": {
-          "className": "SyntaxError",
-          "description": "ReferenceError: 'a' is not defined
+          "className": "Error",
+          "customPreview": {
+            "header": "["span",null,"ReferenceError",": ",["object",{"type":"string","value":"a"}]," is not defined","\\n    at <anonymous>:1:1\\n    at <anonymous>:11:5"]",
+          },
+          "description": "ReferenceError: "a" is not defined
         at <anonymous>:1:1
         at <anonymous>:11:5",
           "objectId": "default:5",
           "preview": {
-            "description": "ReferenceError: 'a' is not defined
+            "description": "ReferenceError: "a" is not defined
         at <anonymous>:1:1
         at <anonymous>:11:5",
             "entries": undefined,
             "overflow": false,
             "properties": [
               {
+                "name": "[[UnformattedErrorMessage]]",
+                "subtype": "array",
+                "type": "object",
+                "value": "Array(2)",
+              },
+              {
                 "name": "message",
                 "type": "string",
-                "value": "'a' is not defined",
+                "value": ""a" is not defined",
               },
             ],
             "subtype": "error",
@@ -463,22 +472,31 @@ test('evaluate on frame', async () => {
         "url": "<anonymous>",
       },
       "result": {
-        "className": "SyntaxError",
-        "description": "ReferenceError: 'a' is not defined
+        "className": "Error",
+        "customPreview": {
+          "header": "["span",null,"ReferenceError",": ",["object",{"type":"string","value":"a"}]," is not defined","\\n    at <anonymous>:1:1\\n    at <anonymous>:11:5"]",
+        },
+        "description": "ReferenceError: "a" is not defined
         at <anonymous>:1:1
         at <anonymous>:11:5",
         "objectId": "default:5",
         "preview": {
-          "description": "ReferenceError: 'a' is not defined
+          "description": "ReferenceError: "a" is not defined
         at <anonymous>:1:1
         at <anonymous>:11:5",
           "entries": undefined,
           "overflow": false,
           "properties": [
             {
+              "name": "[[UnformattedErrorMessage]]",
+              "subtype": "array",
+              "type": "object",
+              "value": "Array(2)",
+            },
+            {
               "name": "message",
               "type": "string",
-              "value": "'a' is not defined",
+              "value": ""a" is not defined",
             },
           ],
           "subtype": "error",

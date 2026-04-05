@@ -1,8 +1,8 @@
 // https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar
 
 import type { TemporalDurationObject } from '../intrinsics/Temporal/Duration.mts';
-import { unreachable } from '../helpers.mts';
 import { remainder } from '../abstract-ops/math.mts';
+import { OutOfRange } from '../utils/language.mts';
 import {
   Assert,
   CreateTemporalDuration,
@@ -13,13 +13,13 @@ import {
   ObjectValue,
   Q,
   StringToNumber,
-  surroundingAgent,
   Throw,
   ThrowCompletion,
   ToIntegerWithTruncation,
   ToPrimitive,
   Value,
   X,
+  type Formattable,
   type Mutable,
   type PlainCompletion, type PlainEvaluator, type TimeRecord,
   type ValueEvaluator,
@@ -138,7 +138,7 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
               return node;
             }
             default:
-              return unreachable(goal);
+              throw OutOfRange.exhaustive(goal);
           }
         },
       );
@@ -174,7 +174,7 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
               if (Annotation.CriticalFlag || calendarWasCritical) return Throw.RangeError('Critical calendar annotation failed.');
             }
           } else {
-            if (Annotation.CriticalFlag) return Throw.RangeError(`Critical annotation ${key} failed.`);
+            if (Annotation.CriticalFlag) return Throw.RangeError('Critical annotation "$1" failed.', key);
           }
         }
 
@@ -251,8 +251,7 @@ export function ParseTemporalCalendarString(isoString: string): PlainCompletion<
   }
   const parseResult2 = DateParser.parse(
     isoString,
-    (parser) => parser.parseAnnotationValue(),
-    () => Throw.RangeError('$1 is not a valid calendar', isoString).Value as ObjectValue,
+    (parser) => parser.with({ RangeError: true }, () => parser.parseAnnotationValue()),
   );
   if (Array.isArray(parseResult2)) return ThrowCompletion(parseResult2[0]);
   return parseResult2;
@@ -262,8 +261,7 @@ export function ParseTemporalCalendarString(isoString: string): PlainCompletion<
 export function* ParseTemporalDurationString(isoString: string): ValueEvaluator<TemporalDurationObject> {
   const duration = DateParser.parse(
     isoString,
-    (parser) => parser.parseTemporalDurationString(),
-    (message) => Throw.RangeError('$1 is not a valid TemporalDurationString ($2)', isoString, message).Value as ObjectValue,
+    (parser) => parser.with({ RangeError: true }, () => parser.parseTemporalDurationString()),
   );
   if (Array.isArray(duration)) return ThrowCompletion(duration[0]);
   const {
@@ -326,8 +324,7 @@ export function* ParseTemporalDurationString(isoString: string): ValueEvaluator<
 export function ParseTemporalTimeZoneString(timeZoneString: string): PlainCompletion<TimeZoneIdentifierParseRecord> {
   const parseResult = DateParser.parse(
     timeZoneString,
-    (parser) => parser.parseTimeZoneIdentifier(),
-    (message) => Throw.RangeError('$1 is not a valid time zone string: $2', timeZoneString, message).Value as ObjectValue,
+    (parser) => parser.with({ RangeError: true }, () => parser.parseTimeZoneIdentifier()),
   );
   if (!Array.isArray(parseResult)) {
     return X(ParseTimeZoneIdentifier(timeZoneString));
@@ -354,7 +351,7 @@ export interface TimeZoneIdentifierParseRecord {
 export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ MonthNumber: number; IsLeapMonth: boolean }> {
   const monthCode = typeof argument === 'string' ? Value(argument) : Q(yield* ToPrimitive(argument, 'string'));
   if (!(monthCode instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', typeof argument === 'string' ? Value(argument) : argument);
+    return Throw.TypeError('monthCode ($1) is not a string', typeof argument === 'string' ? Value(argument) : argument);
   }
 
   // If ParseText(StringToCodePoints(monthCode), MonthCode) is a List of errors, throw a RangeError exception.
@@ -365,7 +362,7 @@ export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ Mont
   //    M NonZeroDigit DecimalDigit L?
 
   if (!monthCode.stringValue().match(/^(M00L|M0[1-9]L?|M[1-9][0-9]L?)$/)) {
-    return surroundingAgent.Throw('RangeError', 'InvalidMonth');
+    return Throw.RangeError('$1 is not a valid month code', monthCode);
   }
 
   let isLeapMonth = false;
@@ -377,7 +374,7 @@ export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ Mont
   const monthCodeDigits = monthCode.stringValue().substring(1, 3);
   const monthNumber = parseInt(monthCodeDigits, 10);
   if (monthNumber === 0 && !isLeapMonth) {
-    return surroundingAgent.Throw('RangeError', 'InvalidMonth');
+    return Throw.RangeError('$1 is not a valid month code', monthCode);
   }
   return { MonthNumber: monthNumber, IsLeapMonth: isLeapMonth };
 }
@@ -386,8 +383,7 @@ export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ Mont
 export function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<number> {
   const parseResult = DateParser.parse(
     offsetString,
-    (parser) => parser.with({ SubMinutePrecision: true }, () => parser.parseUTCOffset()),
-    (message) => Throw.RangeError('$1 is not a valid UTC offset string: $2', offsetString, message).Value as ObjectValue,
+    (parser) => parser.with({ SubMinutePrecision: true, RangeError: true }, () => parser.parseUTCOffset()),
   );
   if (Array.isArray(parseResult)) return ThrowCompletion(parseResult[0]);
   Assert(!!parseResult.Sign);
@@ -411,8 +407,7 @@ export function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<nu
 export function ParseTimeZoneIdentifier(identifier: string): PlainCompletion<TimeZoneIdentifierParseRecord> {
   const parseResult = DateParser.parse(
     identifier,
-    (parser) => parser.parseTimeZoneIdentifier(),
-    (message) => Throw.RangeError('$1 is not a valid time zone identifier: $2', identifier, message).Value as ObjectValue,
+    (parser) => parser.with({ RangeError: true }, () => parser.parseTimeZoneIdentifier()),
   );
   if (Array.isArray(parseResult)) return ThrowCompletion(parseResult[0]);
   if (parseResult.TimeZoneIANAName) {
@@ -573,17 +568,17 @@ export class DateParser {
   static parse<T>(
     source: string,
     f: (parser: DateParser) => T,
-    onError: (message: string) => ObjectValue = (message) => Throw.SyntaxError(message).Value as ObjectValue,
   ): T | ObjectValue[] {
     const parser = new DateParser(source);
     try {
       const parse = f(parser);
       if (parser.peek()) {
-        throw new SyntaxError('More content than expected');
+        return [Throw.SyntaxError('Date parser found more content after parsing finished when parsing $1', source).Value as ObjectValue];
       }
       return parse;
     } catch (error) {
-      return [onError(error instanceof Error ? error.message : String(error))];
+      Assert(error instanceof ThrowCompletion && error.Value instanceof ObjectValue);
+      return [error.Value];
     }
   }
 
@@ -602,11 +597,13 @@ export class DateParser {
     TimeRequired: false as boolean,
     Zoned: false as boolean,
     Sep: false as boolean,
+    // Throw RangeError over SyntaxError
+    RangeError: false as boolean,
   } as const;
 
-  private raise(message: string): never {
-    throw new Error(`${message} at position ${this.pos}`);
-  }
+  private raise: Throw = (message: string, ...args: Formattable[]) => {
+    throw Reflect.apply(Throw[this.grammarParameters.RangeError ? 'RangeError' : 'SyntaxError'], null, [message, ...args]);
+  };
 
   peek(length = 1): string | undefined {
     return this.input.slice(this.pos, this.pos + length);
@@ -659,10 +656,10 @@ export class DateParser {
   private parseDateYear(): number {
     const year = this.eatRegExp(/\d{4}|[+-]\d{6}/);
     if (!year) {
-      this.raise('Expected DateYear');
+      throw this.raise('Expected DateYear');
     }
     if (year === '-000000') {
-      this.raise('-000000 is not a valid year');
+      throw this.raise('-000000 is not a valid year');
     }
     return Number.parseInt(year, 10);
   }
@@ -671,7 +668,7 @@ export class DateParser {
   private parseDateMonth(): number {
     const month = this.eatRegExp(/0[1-9]|1[0-2]/);
     if (!month) {
-      this.raise('Invalid DateMonth');
+      throw this.raise('Invalid DateMonth');
     }
     return Number.parseInt(month, 10);
   }
@@ -680,7 +677,7 @@ export class DateParser {
   private parseDateDay(): number {
     const day = this.eatRegExp(/0[1-9]|[12][0-9]|3[01]/);
     if (!day) {
-      this.raise('Invalid DateDay');
+      throw this.raise('Invalid DateDay');
     }
     return Number.parseInt(day, 10);
   }
@@ -907,7 +904,7 @@ export class DateParser {
     const parseComponent = () => {
       const value = this.eatRegExp(/[a-zA-Z0-9]+/);
       if (!value) {
-        this.raise('Expected AnnotationValueComponent');
+        throw this.raise('Expected AnnotationValueComponent');
       }
       return value;
     };
@@ -926,16 +923,16 @@ export class DateParser {
     const durationRegExp = /(?<AsciiSign>[+-])?P(?<Year>\d+Y)?(?<Month>\d+M)?(?<Week>\d+W)?(?<Day>\d+D)?(?<HasTimePart>T(?<Hour>\d+(?<HourDot>[.,]\d{1,9})?H)?(?<Minute>\d+(?<MinuteDot>[.,]\d{1,9})?M)?(?<Second>\d+([.,]\d{1,9})?S)?)?/i;
     const match = this.eatRegExp(durationRegExp);
     if (!match) {
-      this.raise('Invalid TemporalDurationString');
+      throw this.raise('Invalid TemporalDurationString');
     }
     const {
       AsciiSign, Year, Month, Week, Day, HasTimePart, Hour, Minute, Second, HourDot, MinuteDot,
     } = (durationRegExp.exec(match) as RegExpExecArray).groups!;
     if (HasTimePart && !Hour && !Minute && !Second) {
-      this.raise('Invalid TemporalDurationString: Time part is present but empty');
+      throw this.raise('Invalid TemporalDurationString: Time part is present but empty');
     }
-    if ((Minute || Second) && HourDot) this.raise('Invalid TemporalDurationString: Hour has decimal part but Minute or Second is present');
-    if (Second && MinuteDot) this.raise('Invalid TemporalDurationString: Minute has decimal part but Second is present');
+    if ((Minute || Second) && HourDot) throw this.raise('Invalid TemporalDurationString: Hour has decimal part but Minute or Second is present');
+    if (Second && MinuteDot) throw this.raise('Invalid TemporalDurationString: Minute has decimal part but Second is present');
     return {
       AsciiSign: AsciiSign as '+' | '-' | undefined,
       Years: Year ? Year.slice(0, -1) : undefined,
@@ -1157,7 +1154,7 @@ export class DateParser {
     }
 
     if (annotations.length === 0) {
-      this.raise('Expected at least one Annotation');
+      throw this.raise('Expected at least one Annotation');
     }
     return annotations;
   }

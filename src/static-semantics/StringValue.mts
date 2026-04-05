@@ -1,5 +1,5 @@
 import { Value } from '../value.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function StringValue(node: ParseNode) {
@@ -14,6 +14,6 @@ export function StringValue(node: ParseNode) {
     case 'StringLiteral':
       return Value(node.value);
     default:
-      throw new OutOfRange('StringValue', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }

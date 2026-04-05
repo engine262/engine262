@@ -11,7 +11,7 @@ import {
   UpdateEmpty,
   Q,
 } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   BlockDeclarationInstantiation,
@@ -38,7 +38,8 @@ function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEval
 //     `{` `}`
 //     `{` CaseClauses `}`
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input: Value): StatementEvaluator {
+function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): StatementEvaluator {
+  const { CaseClauses_a, DefaultClause, CaseClauses_b } = node;
   switch (true) {
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).
@@ -177,7 +178,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: P
       return NormalCompletion(V as Value);
     }
     default:
-      throw new OutOfRange('CaseBlockEvaluation', '');
+      throw OutOfRange.nonExhaustive(node);
   }
 }
 

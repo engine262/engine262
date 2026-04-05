@@ -1,10 +1,12 @@
+/* eslint-disable no-console */
 // defined intrinsics that used in test262
-import { isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
 import harness from '../../lib/test262-harness.json' with { type: 'json' };
 import {
   CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, skipDebugger, surroundingAgent, ToString, Value, type Arguments, type ValueCompletion, gc,
   ParseScript,
   ThrowCompletion,
+  Throw,
   ScriptEvaluation,
   CreateNonEnumerableDataPropertyOrThrow,
   type ValueEvaluator,
@@ -17,7 +19,7 @@ import {
 } from '#self';
 
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
-export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean) {
+export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log: (...args: unknown[]) => void) {
   return realm.scope(() => {
     let test262PrintHandle: ((str: string, value: Value) => void) | undefined;
     const setPrintHandle = (f: typeof test262PrintHandle | undefined) => {
@@ -44,8 +46,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
             }
             str.push(s.Value.stringValue());
           }
-          // eslint-disable-next-line no-console
-          console.log(...str);
+          log(...str);
           return Value.undefined;
         } else {
           const formatted = args.map((a, i) => {
@@ -54,7 +55,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
             }
             return inspect(a);
           }).join(' ');
-          console.log(formatted); // eslint-disable-line no-console
+          log(formatted);
         }
       }
       return Value.undefined;
@@ -66,19 +67,19 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       createRealm: function* createRealm(): ValueEvaluator {
         Q(surroundingAgent.debugger_cannotPreview);
         const realm = new ManagedRealm();
-        const { $262 } = createTest262Intrinsics(realm, printCompatMode);
+        const { $262 } = createTest262Intrinsics(realm, printCompatMode, log);
         return $262;
       },
       detachArrayBuffer: function* detachArrayBuffer(arrayBuffer = Value.undefined) {
         if (!isArrayBufferObject(arrayBuffer)) {
-          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
+          return Throw.TypeError('argument[0] must be an ArrayBuffer');
         }
         Q(DetachArrayBuffer(arrayBuffer));
         return Value.undefined;
       },
       evalScript: function* evalScript(sourceText) {
         if (!(sourceText instanceof JSStringValue)) {
-          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be a string');
+          return Throw.TypeError('argument[0] must be a string');
         }
         const s = ParseScript(sourceText.stringValue(), surroundingAgent.currentRealmRecord);
         if (isArray(s)) {

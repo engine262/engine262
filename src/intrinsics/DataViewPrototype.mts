@@ -1,5 +1,4 @@
 import { Q, type ValueCompletion, type ValueEvaluator } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { DataViewObject } from './DataView.mts';
@@ -12,6 +11,7 @@ import {
   F,
   type ArrayBufferObject,
   Realm,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
@@ -40,7 +40,7 @@ function* DataViewProto_byteLength(_args: Arguments, { thisValue }: FunctionCall
   const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 6. Let size be O.[[ByteLength]].
   const size = O.ByteLength;
@@ -60,7 +60,7 @@ function* DataViewProto_byteOffset(_args: Arguments, { thisValue }: FunctionCall
   const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;

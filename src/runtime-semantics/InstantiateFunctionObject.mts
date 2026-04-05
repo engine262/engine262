@@ -1,6 +1,6 @@
 import { X } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import { Descriptor, Value } from '../value.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -118,6 +118,6 @@ export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.Func
       return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
 
     default:
-      throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
+      throw OutOfRange.exhaustive(AnyFunctionDeclaration);
   }
 }

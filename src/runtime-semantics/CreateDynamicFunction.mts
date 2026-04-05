@@ -9,7 +9,7 @@ import {
   Descriptor, UndefinedValue, Value,
   type Arguments,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
@@ -22,9 +22,10 @@ import {
   ToString,
   type FunctionObject,
   type Intrinsics,
+  type ValueEvaluator,
 } from '#self';
 
-export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value) {
+export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value): ValueEvaluator {
   // 6. If newTarget is undefined, set newTarget to constructor.
   if (newTarget instanceof UndefinedValue) {
     newTarget = constructor;
@@ -135,7 +136,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
         body = (f as ParseNode.AsyncGeneratorExpression).AsyncGeneratorBody;
         break;
       default:
-        throw new OutOfRange('kind', kind);
+        throw OutOfRange.exhaustive(kind);
     }
   }
   // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).

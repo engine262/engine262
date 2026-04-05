@@ -10,7 +10,7 @@ import {
   type ValueCompletion,
   type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
@@ -35,6 +35,7 @@ import {
   ToIntegerOrInfinity,
   ToNumber,
   ToString,
+  Throw,
   Yield,
   type GeneratorObject,
   type IteratorRecord,
@@ -42,13 +43,13 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
-function IteratorProto_constructorGetter() {
+function IteratorProto_constructor_getter() {
   // 1. Return %Iterator%.
   return surroundingAgent.intrinsic('%Iterator%');
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor */
-function* IteratorProto_constructorSetter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
+function* IteratorProto_constructor_setter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   // 1. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Iterator.prototype%, "constructor", v).
   Q(yield* SetterThatIgnoresPrototypeProperties(
     thisValue,
@@ -61,12 +62,12 @@ function* IteratorProto_constructorSetter([v = Value.undefined]: Arguments, { th
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.drop */
-function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
@@ -78,7 +79,7 @@ function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisVal
   // 6. If numLimit is NaN, then
   if (numLimit.isNaN()) {
     // a. Let error be ThrowCompletion(a newly created RangeError object).
-    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    const error = Throw.RangeError('$1 is out of range', numLimit);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -87,14 +88,14 @@ function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisVal
   // 8. If integerLimit < 0, then
   if (integerLimit < 0) {
     // a. Let error be ThrowCompletion(a newly created RangeError object).
-    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    const error = Throw.RangeError('$1 is out of range', numLimit);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
   // 9. Set iterated to ? GetIteratorDirect(O).
   iterated = Q(yield* GetIteratorDirect(O));
   // 10. Let closure be a new Abstract Closure with no parameters that captures iterated and integerLimit and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): ValueEvaluator {
     // a. Let remaining be integerLimit.
     let remaining: number = integerLimit;
     // b. Repeat, while remaining > 0,
@@ -139,19 +140,19 @@ function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisVal
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.every */
-function* IteratorPrototype_every([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    const error = Throw.TypeError('$1 is not a function', predicate);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -182,26 +183,26 @@ function* IteratorPrototype_every([predicate = Value.undefined]: Arguments, { th
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.filter */
-function* IteratorPrototype_filter([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    const error = Throw.TypeError('$1 is not a function', predicate);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
   // 5. Set iterated to ? GetIteratorDirect(O).
   iterated = Q(yield* GetIteratorDirect(O));
   // 6. Let closure be a new Abstract Closure with no parameters that captures iterated and predicate and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): ValueEvaluator {
     // a. Let counter be 0.
     let counter = 0;
     // b. Repeat,
@@ -242,19 +243,19 @@ function* IteratorPrototype_filter([predicate = Value.undefined]: Arguments, { t
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.find */
-function* IteratorPrototype_find([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    const error = Throw.TypeError('$1 is not a function', predicate);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -285,26 +286,26 @@ function* IteratorPrototype_find([predicate = Value.undefined]: Arguments, { thi
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.flatmap */
-function* IteratorPrototype_flatMap([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(mapper) is false, then
   if (IsCallable(mapper) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+    const error = Throw.TypeError('$1 is not a function', mapper);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
   // 5. Set iterated to ? GetIteratorDirect(O).
   iterated = Q(yield* GetIteratorDirect(O));
   // 6. Let closure be a new Abstract Closure with no parameters that captures iterated and mapper and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): ValueEvaluator {
     //  a. Let counter be 0.
     let counter = 0;
     // b. Repeat,
@@ -372,19 +373,19 @@ function* IteratorPrototype_flatMap([mapper = Value.undefined]: Arguments, { thi
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.foreach */
-function* IteratorPrototype_forEach([procedure = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(procedure) is false, then
   if (IsCallable(procedure) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', procedure);
+    const error = Throw.TypeError('$1 is not a function', procedure);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -410,32 +411,32 @@ function* IteratorPrototype_forEach([procedure = Value.undefined]: Arguments, { 
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator% */
-function IteratorPrototype_iterator(_args: Arguments, { thisValue }: FunctionCallContext) {
+function IteratorProto_iterator(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return the this value.
   return thisValue;
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.map */
-function* IteratorPrototype_map([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(mapper) is false, then
   if (IsCallable(mapper) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+    const error = Throw.TypeError('$1 is not a function', mapper);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
   // 5. Set iterated to ? GetIteratorDirect(O).
   iterated = Q(yield* GetIteratorDirect(O));
   // 6. Let closure be a new Abstract Closure with no parameters that captures iterated and mapper and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): ValueEvaluator {
     // a. Let counter be 0.
     let counter = 0;
     // b. Repeat,
@@ -473,12 +474,12 @@ function* IteratorPrototype_map([mapper = Value.undefined]: Arguments, { thisVal
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.reduce */
-function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_reduce(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
@@ -486,7 +487,7 @@ function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallC
   const reducer = args[0] ?? Value.undefined;
   if (IsCallable(reducer) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', reducer);
+    const error = Throw.TypeError('$1 is not a function', reducer);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -500,7 +501,7 @@ function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallC
     accumulator = Q(yield* IteratorStepValue(iterated));
     // b. If accumulator is done, throw a TypeError exception.
     if (accumulator === 'done') {
-      return surroundingAgent.Throw('TypeError', 'IteratorCompleted');
+      return Throw.TypeError('The iterator is already complete.');
     }
     // c. Let counter be 1.
     counter = 1;
@@ -532,19 +533,19 @@ function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.some */
-function* IteratorPrototype_some([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
-    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    const error = Throw.TypeError('$1 is not a function', predicate);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -575,12 +576,12 @@ function* IteratorPrototype_some([predicate = Value.undefined]: Arguments, { thi
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.take */
-function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
@@ -592,7 +593,7 @@ function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisVal
   // 6. If numLimit is NaN, then
   if (numLimit.isNaN()) {
     // a. Let error be ThrowCompletion(a newly created RangeError object).
-    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    const error = Throw.RangeError('$1 is out of range', numLimit);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -601,14 +602,14 @@ function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisVal
   // 8. If integerLimit < 0, then
   if (integerLimit < 0) {
     // a. Let error be ThrowCompletion(a newly created RangeError object).
-    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    const error = Throw.RangeError('$1 is out of range', numLimit);
     // b. Return ? IteratorClose(iterated, error).
     return Q(yield* IteratorClose(iterated, error));
   }
   // 9. Set iterated to ? GetIteratorDirect(O).
   iterated = Q(yield* GetIteratorDirect(O));
   // 10. Let closure be a new Abstract Closure with no parameters that captures iterated and integerLimit and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): ValueEvaluator {
     // a. Let remaining be integerLimit.
     let remaining: number = integerLimit;
     //         b. Repeat,
@@ -649,12 +650,12 @@ function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisVal
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.toarray */
-function* IteratorPrototype_toArray(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_toArray(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be ? GetIteratorDirect(O).
   const iterated: IteratorRecord = Q(yield* GetIteratorDirect(O));
@@ -674,12 +675,12 @@ function* IteratorPrototype_toArray(_args: Arguments, { thisValue }: FunctionCal
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag% */
-function IteratorPrototype_toStringTagGetter() {
+function IteratorProto_toStringTagGetter() {
   return Value('Iterator');
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag% */
-function* IteratorPrototype_toStringTagSetter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
+function* IteratorPrototype_toStringTag_setter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   // 1. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Iterator.prototype%, %Symbol.toStringTag%, v).
   Q(yield* SetterThatIgnoresPrototypeProperties(
     thisValue,
@@ -692,10 +693,10 @@ function* IteratorPrototype_toStringTagSetter([v = Value.undefined]: Arguments, 
 }
 
 /** https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join */
-function* IteratorPrototype_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   let sep;
@@ -730,21 +731,21 @@ function* IteratorPrototype_join([separator = Value.undefined]: Arguments, { thi
 
 export function bootstrapIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
-    ['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]],
-    ['drop', IteratorPrototype_drop, 1],
-    ['every', IteratorPrototype_every, 1],
-    ['filter', IteratorPrototype_filter, 1],
-    ['find', IteratorPrototype_find, 1],
-    ['flatMap', IteratorPrototype_flatMap, 1],
-    ['forEach', IteratorPrototype_forEach, 1],
-    ['map', IteratorPrototype_map, 1],
-    ['reduce', IteratorPrototype_reduce, 1],
-    ['some', IteratorPrototype_some, 1],
-    ['take', IteratorPrototype_take, 1],
-    ['toArray', IteratorPrototype_toArray, 0],
-    [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0],
-    [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]],
-    surroundingAgent.feature('iterator.join') ? ['join', IteratorPrototype_join, 1] : undefined,
+    ['constructor', [IteratorProto_constructor_getter, IteratorProto_constructor_setter]],
+    ['drop', IteratorProto_drop, 1],
+    ['every', IteratorProto_every, 1],
+    ['filter', IteratorProto_filter, 1],
+    ['find', IteratorProto_find, 1],
+    ['flatMap', IteratorProto_flatMap, 1],
+    ['forEach', IteratorProto_forEach, 1],
+    ['map', IteratorProto_map, 1],
+    ['reduce', IteratorProto_reduce, 1],
+    ['some', IteratorProto_some, 1],
+    ['take', IteratorProto_take, 1],
+    ['toArray', IteratorProto_toArray, 0],
+    [wellKnownSymbols.iterator, IteratorProto_iterator, 0],
+    [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]],
+    surroundingAgent.feature('iterator.join') ? ['join', IteratorProto_join, 1] : undefined,
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Iterator.prototype%'] = proto;

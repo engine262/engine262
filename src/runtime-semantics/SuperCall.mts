@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { ObjectValue } from '../value.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -11,6 +10,7 @@ import {
   IsConstructor,
   InitializeInstanceElements,
   isECMAScriptFunctionObject,
+  Throw,
   type FunctionObject,
 } from '#self';
 import { FunctionEnvironmentRecord } from '#self';
@@ -28,7 +28,7 @@ export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
   const argList = Q(yield* ArgumentListEvaluation(Arguments));
   // 5. If IsConstructor(func) is false, throw a TypeError exception.
   if (!IsConstructor(func)) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+    return Throw.TypeError('super ($1) is not a constructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).
   const result = Q(yield* Construct(func, argList, newTarget as FunctionObject));

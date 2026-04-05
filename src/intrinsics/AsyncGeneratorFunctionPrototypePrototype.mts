@@ -7,7 +7,7 @@ import {
   ReturnCompletion,
 } from '../completion.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert,

@@ -1,5 +1,6 @@
 import { IsSimpleParameterList } from '../static-semantics/all.mts';
-import { type Mutable } from '../helpers.mts';
+import { type Mutable } from '../utils/language.mts';
+import { Throw } from '../host-defined/error-messages.mts';
 import { getDeclarations, type ArrowInfo } from './Scope.mts';
 import { Token } from './tokens.mts';
 import { IdentifierParser } from './IdentifierParser.mts';
@@ -101,14 +102,14 @@ export abstract class FunctionParser extends IdentifierParser {
 
       if (node.BindingIdentifier) {
         if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
-          this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+          this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', node.BindingIdentifier.name), node.BindingIdentifier);
         }
         if (isExpression) {
           if (this.scope.hasYield() && node.BindingIdentifier.name === 'yield') {
-            this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+            this.addEarlyError(Throw.SyntaxError('yield cannot be used as an identifier inside generator functions'), node.BindingIdentifier);
           }
           if (this.scope.hasAwait() && node.BindingIdentifier.name === 'await') {
-            this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+            this.addEarlyError(Throw.SyntaxError('await cannot be used as an identifier inside async functions'), node.BindingIdentifier);
           }
         }
       }
@@ -136,7 +137,7 @@ export abstract class FunctionParser extends IdentifierParser {
     if (hasStrictDirective) {
       parameters.forEach((p) => {
         if (p.type !== 'SingleNameBinding' || p.Initializer) {
-          this.raiseEarly('UseStrictNonSimpleParameter', p);
+          this.addEarlyError(Throw.SyntaxError('Non-simple parameter cannot be used with "use strict" directive'), p);
         }
       });
     }
@@ -146,12 +147,12 @@ export abstract class FunctionParser extends IdentifierParser {
       .forEach((d) => {
         if (isStrict) {
           if (d.name === 'arguments' || d.name === 'eval') {
-            this.raiseEarly('UnexpectedToken', d.node);
+            this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', d.name), d.node);
           }
         }
         if (isStrict || wantsUnique) {
           if (names.has(d.name)) {
-            this.raiseEarly('AlreadyDeclared', d.node, d.name);
+            this.addEarlyError(Throw.SyntaxError('Identifier has already been declared'), d.node);
           } else {
             names.add(d.name);
           }
@@ -184,7 +185,7 @@ export abstract class FunctionParser extends IdentifierParser {
             const c = this.convertArrowParameter(p);
             if (c.type === 'BindingRestElement') {
               if (i !== asOld.ElementList.length - 1) {
-                this.raiseEarly('UnexpectedToken', c);
+                this.addEarlyError(Throw.SyntaxError('Rest element must be last element'), c);
               }
               asNew.BindingRestElement = c;
             } else {
@@ -251,7 +252,7 @@ export abstract class FunctionParser extends IdentifierParser {
         const BindingRestElement = this.repurpose(node, 'BindingRestElement', (asNew, asOld, asPartial) => {
           const { AssignmentExpression } = asOld;
           if (AssignmentExpression.type === 'AssignmentExpression') {
-            this.raiseEarly('UnexpectedToken', node);
+            this.addEarlyError(Throw.SyntaxError('Invalid assignment in rest element'), node);
           } else if (AssignmentExpression.type === 'IdentifierReference') {
             asNew.BindingIdentifier = this.repurpose(AssignmentExpression, 'BindingIdentifier');
           } else {
@@ -263,7 +264,7 @@ export abstract class FunctionParser extends IdentifierParser {
         return BindingRestElement;
       }
       default:
-        this.raiseEarly('UnexpectedToken', node);
+        this.addEarlyError(Throw.SyntaxError('Unexpected token'), node);
         return node;
     }
   }
@@ -273,14 +274,14 @@ export abstract class FunctionParser extends IdentifierParser {
     this.expect(Token.ARROW);
     if (arrowInfo) {
       arrowInfo.awaitExpressions.forEach((e) => {
-        this.raiseEarly('AwaitInFormalParameters', e);
+        this.addEarlyError(Throw.SyntaxError('await cannot be used inside parameters of arrow functions'), e);
       });
       arrowInfo.yieldExpressions.forEach((e) => {
-        this.raiseEarly('YieldInFormalParameters', e);
+        this.addEarlyError(Throw.SyntaxError('yield cannot be used inside parameters of arrow functions'), e);
       });
       if (isAsync) {
         arrowInfo.awaitIdentifiers.forEach((e) => {
-          this.raiseEarly('AwaitInFormalParameters', e);
+          this.addEarlyError(Throw.SyntaxError('await cannot be used as an identifier inside parameters of async functions'), e);
         });
       }
     }

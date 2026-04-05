@@ -1,8 +1,9 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console,import/no-extraneous-dependencies */
 import { opendir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import {
   createSourceFile, isCallExpression, isIdentifier, isPropertyAccessExpression, isStringLiteral, ScriptTarget,
+  type PropertyAccessExpression,
 } from 'typescript';
 
 async function* readdir(dir: string): AsyncGenerator<string> {
@@ -19,6 +20,17 @@ async function* readdir(dir: string): AsyncGenerator<string> {
 const list = ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError', 'Error', 'AggregateError'];
 const messages = new Set<string>();
 const promises: Promise<void>[] = [];
+function isErrorCall(node: PropertyAccessExpression) {
+  // Throw.X(...)
+  if (isIdentifier(node.expression)
+    && node.expression.escapedText === 'Throw'
+    && isIdentifier(node.name)
+    && list.includes(node.name.escapedText as string)
+  ) {
+    return true;
+  }
+  return false;
+}
 for await (const filePath of readdir(join(import.meta.dirname, '../src/'))) {
   if (!filePath.endsWith('.mts')) {
     continue;
@@ -31,14 +43,13 @@ for await (const filePath of readdir(join(import.meta.dirname, '../src/'))) {
       if (
         isCallExpression(node)
         && isPropertyAccessExpression(node.expression)
-        && isIdentifier(node.expression.expression)
-        && node.expression.expression.escapedText === 'Throw'
-        && isIdentifier(node.expression.name)
-        && list.includes(node.expression.name.escapedText as string)
+        && isErrorCall(node.expression)
         && node.arguments.length >= 1
       ) {
         if (!isStringLiteral(node.arguments[0])) {
-          console.warn(`Non-literal error message in ${filePath}`);
+          const pos = node.arguments[0].getStart(sourceFile);
+          const { line, character } = sourceFile.getLineAndCharacterOfPosition(pos);
+          console.warn(`Non-literal error message in ${filePath}:${line + 1}:${character + 1}`);
         } else {
           messages.add(node.arguments[0].text);
         }

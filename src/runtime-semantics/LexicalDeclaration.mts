@@ -5,7 +5,7 @@ import {
 import { Value } from '../value.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { IsAnonymousFunctionDefinition, StringValue, type FunctionDeclaration } from '../static-semantics/all.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
@@ -62,7 +62,7 @@ export function* Evaluate_LexicalBinding(LexicalBinding: ParseNode.LexicalBindin
     case !!LexicalBinding.BindingPattern:
       return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
     default:
-      throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding);
+      throw OutOfRange.nonExhaustive(LexicalBinding);
   }
 }
 

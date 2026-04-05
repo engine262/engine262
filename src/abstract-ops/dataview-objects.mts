@@ -1,5 +1,5 @@
 import { Q } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import type { DataViewObject } from '../intrinsics/DataView.mts';
 import { type TypedArrayTypes, typedArrayInfoByType } from '../intrinsics/TypedArray.mts';
 import { Value } from '../value.mts';

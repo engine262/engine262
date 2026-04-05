@@ -1,5 +1,6 @@
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
+import { atob_polyfill, btoa_polyfill } from '../host-defined/base64.mts';
 import {
   AllocateTypedArray, type TypedArrayObject,
 } from './TypedArray.mts';
@@ -7,10 +8,11 @@ import { assignProps } from './bootstrap.mts';
 import { F } from '#self';
 import {
   Assert, CodePointsToString, CreateDataPropertyOrThrow, EnsureCompletion, Get, GetValueFromBuffer, IsTypedArrayOutOfBounds, JSStringValue, MakeTypedArrayWithBufferWitnessRecord, NumberValue, ObjectValue, OrdinaryObjectCreate, Q, R, Realm, RequireInternalSlot, SetValueInBuffer, StringPad, surroundingAgent, ThrowCompletion, ToBoolean, TypedArrayLength, UndefinedValue, X, type ArrayBufferObject, type PlainCompletion, type ValueCompletion,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.tobase64 */
-function* Uint8Array_prototype_toBase64([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* Uint8ArrayProto_toBase64([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const O = thisValue;
   Q(ValidateUint8Array(O));
   __ts_cast__<TypedArrayObject>(O);
@@ -20,21 +22,21 @@ function* Uint8Array_prototype_toBase64([options = Value.undefined]: Arguments, 
     alphabet = Value('base64');
   }
   if (!(alphabet instanceof JSStringValue) || (alphabet.stringValue() !== 'base64' && alphabet.stringValue() !== 'base64url')) {
-    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+    return Throw.TypeError('Invalid alphabet');
   }
   const omitPadding = ToBoolean(Q(yield* Get(opts, Value('omitPadding'))));
   const toEncode = Q(GetUint8ArrayBytes(O));
   let outAscii: string;
   if (alphabet.stringValue() === 'base64') {
     // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64 encoding specified in section 4 of RFC 4648. Padding is included if and only if omitPadding is false.
-    outAscii = btoa(String.fromCharCode(...toEncode));
+    outAscii = btoa_polyfill(String.fromCharCode(...toEncode));
     if (omitPadding !== Value.false) {
       outAscii = outAscii.replace(/=/g, '');
     }
   } else {
     Assert(alphabet.stringValue() === 'base64url');
     // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64url encoding specified in section 5 of RFC 4648. Padding is included if and only if omitPadding is false.
-    outAscii = btoa(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
+    outAscii = btoa_polyfill(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
     if (omitPadding !== Value.false) {
       outAscii = outAscii.replace(/=/g, '');
     }
@@ -43,7 +45,7 @@ function* Uint8Array_prototype_toBase64([options = Value.undefined]: Arguments, 
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.tohex */
-function Uint8Array_prototype_toHex(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function Uint8ArrayProto_toHex(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
   Q(ValidateUint8Array(O));
   __ts_cast__<TypedArrayObject>(O);
@@ -60,7 +62,7 @@ function Uint8Array_prototype_toHex(_args: Arguments, { thisValue }: FunctionCal
 /** https://tc39.es/ecma262/#sec-uint8array.frombase64 */
 function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undefined]: Arguments) {
   if (!(string instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+    return Throw.TypeError('$1 is not a string', string);
   }
   const opts = Q(GetOptionsObject(options));
   let alphabet = Q(yield* Get(opts, Value('alphabet')));
@@ -68,22 +70,22 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
     alphabet = Value('base64');
   }
   if (!(alphabet instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+    return Throw.TypeError('Invalid alphabet');
   }
   const alphabetStr = alphabet.stringValue();
   if (alphabetStr !== 'base64' && alphabetStr !== 'base64url') {
-    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+    return Throw.TypeError('Invalid alphabet');
   }
   let lastChunkHandling = Q(yield* Get(opts, Value('lastChunkHandling')));
   if (lastChunkHandling instanceof UndefinedValue) {
     lastChunkHandling = Value('loose');
   }
   if (!(lastChunkHandling instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+    return Throw.TypeError('Invalid lastChunkHandling');
   }
   const lastChunkHandlingStr = lastChunkHandling.stringValue();
   if ((lastChunkHandlingStr !== 'loose' && lastChunkHandlingStr !== 'strict' && lastChunkHandlingStr !== 'stop-before-partial')) {
-    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+    return Throw.TypeError('Invalid lastChunkHandling');
   }
   const result = FromBase64(string.stringValue(), alphabetStr, lastChunkHandlingStr);
   if (result.Error) {
@@ -103,12 +105,12 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.setfrombase64 */
-function* Uint8Array_prototype_setFromBase64([string = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
   Q(ValidateUint8Array(into));
   __ts_cast__<TypedArrayObject>(into);
   if (!(string instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+    return Throw.TypeError('$1 is not a string', string);
   }
   const opts = Q(GetOptionsObject(options));
   let alphabet = Q(yield* Get(opts, Value('alphabet')));
@@ -116,26 +118,26 @@ function* Uint8Array_prototype_setFromBase64([string = Value.undefined, options 
     alphabet = Value('base64');
   }
   if (!(alphabet instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+    return Throw.TypeError('Invalid alphabet');
   }
   const alphabetStr = alphabet.stringValue();
   if (alphabetStr !== 'base64' && alphabetStr !== 'base64url') {
-    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+    return Throw.TypeError('Invalid alphabet');
   }
   let lastChunkHandling = Q(yield* Get(opts, Value('lastChunkHandling')));
   if (lastChunkHandling instanceof UndefinedValue) {
     lastChunkHandling = Value('loose');
   }
   if (!(lastChunkHandling instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+    return Throw.TypeError('Invalid lastChunkHandling');
   }
   const lastChunkHandlingStr = lastChunkHandling.stringValue();
   if ((lastChunkHandlingStr !== 'loose' && lastChunkHandlingStr !== 'strict' && lastChunkHandlingStr !== 'stop-before-partial')) {
-    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+    return Throw.TypeError('Invalid lastChunkHandling');
   }
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(into, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    return Throw.TypeError('Sum of start offset and byte length should be less than the size of the TypedArray');
   }
   const byteLength = TypedArrayLength(taRecord);
   const result = FromBase64(string.stringValue(), alphabetStr, lastChunkHandlingStr, byteLength);
@@ -155,7 +157,7 @@ function* Uint8Array_prototype_setFromBase64([string = Value.undefined, options 
 /** https://tc39.es/ecma262/#sec-uint8array.fromhex */
 function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
   if (!(string instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+    return Throw.TypeError('$1 is not a string', string);
   }
   const result = FromHex(string.stringValue());
   if (result.Error) {
@@ -174,16 +176,16 @@ function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
 }
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.setfromhex */
-function* Uint8Array_prototype_setFromHex([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
   Q(ValidateUint8Array(into));
   __ts_cast__<TypedArrayObject>(into);
   if (!(string instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+    return Throw.TypeError('$1 is not a string', string);
   }
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(into, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    return Throw.TypeError('Sum of start offset and byte length should be less than the size of the TypedArray');
   }
   const byteLength = TypedArrayLength(taRecord);
   const result = FromHex(string.stringValue(), byteLength);
@@ -205,7 +207,7 @@ function ValidateUint8Array(ta: Value) {
   Q(RequireInternalSlot(ta, 'TypedArrayName'));
   __ts_cast__<TypedArrayObject>(ta);
   if (ta.TypedArrayName.stringValue() !== 'Uint8Array') {
-    return surroundingAgent.Throw('TypeError', 'NotUint8Array');
+    return Throw.TypeError('Not a Uint8Array');
   }
   return undefined;
 }
@@ -215,7 +217,7 @@ function GetUint8ArrayBytes(ta: TypedArrayObject): PlainCompletion<number[]> {
   const buffer = ta.ViewedArrayBuffer;
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(ta, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
-    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    return Throw.TypeError('Sum of start offset and byte length should be less than the size of the TypedArray');
   }
   const len = TypedArrayLength(taRecord);
   const byteOffset = ta.ByteOffset;
@@ -269,12 +271,12 @@ function DecodeFinalBase64Chunk(chunk: string, throwOnExtraBits: boolean): Plain
   const bytes = DecodeFullLengthBase64Chunk(chunk);
   if (chunkLength === 2) {
     if (throwOnExtraBits && bytes[1] !== 0) {
-      return surroundingAgent.Throw('SyntaxError', 'InvalidBase64String');
+      return Throw.SyntaxError('Invalid base64 string');
     }
     return [bytes[0]];
   } else {
     if (throwOnExtraBits && (bytes[2] !== 0)) {
-      return surroundingAgent.Throw('SyntaxError', 'InvalidBase64String');
+      return Throw.SyntaxError('Invalid base64 string');
     }
     return [bytes[0], bytes[1]];
   }
@@ -284,7 +286,7 @@ function DecodeFinalBase64Chunk(chunk: string, throwOnExtraBits: boolean): Plain
 function DecodeFullLengthBase64Chunk(chunk: string): number[] {
   // 1. Let byteSequence be the unique sequence of 3 bytes resulting from decoding chunk as base64 (i.e., the sequence such that applying the base64 encoding specified in section 4 of RFC 4648 to byteSequence would produce chunk).
   // 2. Return a List whose elements are the elements of byteSequence, in order.
-  const byteSequence = [...atob(chunk)].map((c) => c.charCodeAt(0));
+  const byteSequence = [...atob_polyfill(chunk)].map((c) => c.charCodeAt(0));
   return byteSequence;
 }
 
@@ -312,13 +314,13 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
           return { Read: read, Bytes: bytes, Error: undefined };
         } else if (lastChunkHandling === 'loose') {
           if (chunkLength === 1) {
-            const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+            const error = Throw.SyntaxError('Invalid base64 string').Value;
             return { Read: read, Bytes: bytes, Error: error };
           }
           bytes.push(...X(DecodeFinalBase64Chunk(chunk, false)));
         } else {
           Assert(lastChunkHandling === 'strict');
-          const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+          const error = Throw.SyntaxError('Invalid base64 string').Value;
           return { Read: read, Bytes: bytes, Error: error };
         }
       }
@@ -328,7 +330,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
     index += 1;
     if (char === '=') {
       if (chunkLength < 2) {
-        const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+        const error = Throw.SyntaxError('Invalid base64 string').Value;
         return { Read: read, Bytes: bytes, Error: error };
       }
       index = SkipAsciiWhitespace(string, index);
@@ -337,7 +339,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
           if (lastChunkHandling === 'stop-before-partial') {
             return { Read: read, Bytes: bytes, Error: undefined };
           }
-          const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+          const error = Throw.SyntaxError('Invalid base64 string').Value;
           return { Read: read, Bytes: bytes, Error: error };
         }
         char = string.substring(index, index + 1);
@@ -346,7 +348,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
         }
       }
       if (index < length) {
-        const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+        const error = Throw.SyntaxError('Invalid base64 string').Value;
         return { Read: read, Bytes: bytes, Error: error };
       }
       let throwOnExtraBits;
@@ -364,7 +366,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
     }
     if (alphabet === 'base64url') {
       if (char === '+' || char === '/') {
-        const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+        const error = Throw.SyntaxError('Invalid base64 string').Value;
         return { Read: read, Bytes: bytes, Error: error };
       } else if (char === '-') {
         char = '+';
@@ -373,7 +375,7 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
       }
     }
     if (!/[A-Za-z0-9+/]/.test(char)) {
-      const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+      const error = Throw.SyntaxError('Invalid base64 string').Value;
       return { Read: read, Bytes: bytes, Error: error };
     }
     const remaining = maxLength - bytes.length;
@@ -400,13 +402,13 @@ function FromHex(string: string, maxLength = 2 ** 53 - 1): Record {
   const bytes: number[] = [];
   let read = 0;
   if (length % 2 !== 0) {
-    const error = surroundingAgent.Throw('SyntaxError', 'InvalidHexString').Value;
+    const error = Throw.SyntaxError('Invalid hex string').Value;
     return { Read: read, Bytes: bytes, Error: error };
   }
   while (read < length && bytes.length < maxLength) {
     const hexits = string.substring(read, read + 2);
     if ([...hexits].some((c) => !/[0-9a-fA-F]/.test(c))) {
-      const error = surroundingAgent.Throw('SyntaxError', 'InvalidHexString').Value;
+      const error = Throw.SyntaxError('Invalid hex string').Value;
       return { Read: read, Bytes: bytes, Error: error };
     }
     read += 2;
@@ -424,17 +426,17 @@ function GetOptionsObject(options: Value) {
   if (options instanceof ObjectValue) {
     return options;
   }
-  return surroundingAgent.Throw('TypeError', 'NotAnObject', options);
+  return Throw.TypeError('$1 is not an object', options);
 }
 
 export function bootstrapUint8Array(realmRec: Realm) {
   const proto = realmRec.Intrinsics['%Uint8Array.prototype%'];
   const constructor = realmRec.Intrinsics['%Uint8Array%'];
   assignProps(realmRec, proto, [
-    ['toBase64', Uint8Array_prototype_toBase64, 0],
-    ['setFromBase64', Uint8Array_prototype_setFromBase64, 1],
-    ['toHex', Uint8Array_prototype_toHex, 0],
-    ['setFromHex', Uint8Array_prototype_setFromHex, 1],
+    ['toBase64', Uint8ArrayProto_toBase64, 0],
+    ['setFromBase64', Uint8ArrayProto_setFromBase64, 1],
+    ['toHex', Uint8ArrayProto_toHex, 0],
+    ['setFromHex', Uint8ArrayProto_setFromHex, 1],
   ]);
   assignProps(realmRec, constructor, [
     ['fromBase64', Uint8Array_fromBase64, 1],

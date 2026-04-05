@@ -11,7 +11,7 @@ import {
   Q,
   type PlainCompletion,
 } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { ResolvePrivateIdentifier } from '../execution-context/PrivateEnvironment.mts';
 import {
@@ -24,7 +24,7 @@ import {
   ToPropertyKey,
   getActiveScriptId,
 } from './all.mts';
-import { EnvironmentRecord, GetGlobalObject } from '#self';
+import { EnvironmentRecord, GetGlobalObject, Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
 export function IsPropertyReference(V: ReferenceRecord) {
@@ -71,7 +71,7 @@ export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
   }
   // 2. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
   if (IsUnresolvableReference(V) === Value.true) {
-    return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
+    return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
   }
   // 3. If IsPropertyReference(V) is true, then
   if (IsPropertyReference(V) === Value.true) {
@@ -102,13 +102,13 @@ export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
 export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator {
   // 1. If V is not a Reference Record, throw a ReferenceError exception.
   if (!(V instanceof ReferenceRecord)) {
-    return surroundingAgent.Throw('ReferenceError', 'InvalidAssignmentTarget');
+    return Throw.ReferenceError('Invalid assignment target');
   }
   // 2. If IsUnresolvableReference(V) is true, then
   if (IsUnresolvableReference(V) === Value.true) {
     // a. If V.[[Strict]] is true, throw a ReferenceError exception.
     if (V.Strict === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
+      return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
     }
     // b. Let globalObj be GetGlobalObject().
     const globalObj = GetGlobalObject();
@@ -132,7 +132,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     const succeeded = Q(yield* baseObj.Set(V.ReferencedName, W, GetThisValue(V)));
     // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
     if (succeeded === Value.false && V.Strict === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'CannotSetProperty', V.ReferencedName, V.Base);
+      return Throw.TypeError('Cannot set property $1 on $2', V.ReferencedName, baseObj);
     }
     // e. Return.
     return undefined;

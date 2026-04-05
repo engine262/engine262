@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
 import {
-  AbstractModuleRecord, Agent, Call, JSStringValue, ManagedRealm, NewPromiseCapability, NormalCompletion, PromiseCapabilityRecord, setSurroundingAgent, skipDebugger, Value, type PromiseObject,
+  AbstractModuleRecord, Agent, Call, EnsureCompletion, JSStringValue, ManagedRealm, NewPromiseCapability, PromiseCapabilityRecord, setSurroundingAgent, skipDebugger, Value, type PromiseObject,
 } from '#self';
 
 test('Import attributes', () => {
@@ -56,10 +56,10 @@ test('Custom module records', () => {
 
   class CustomModuleRecord extends AbstractModuleRecord {
     _pc(): PromiseCapabilityRecord {
-      const it = NewPromiseCapability(this.Realm.Intrinsics['%Promise%']);
-      const completion = skipDebugger(it) as NormalCompletion<PromiseCapabilityRecord>;
+      const promise = EnsureCompletion(skipDebugger(NewPromiseCapability(this.Realm.Intrinsics['%Promise%'])));
+      const completion = promise;
       if (completion.Type !== 'normal') {
-        throw new Error('Expected normal completion');
+        throw completion.Value;
       }
       return completion.Value;
     }

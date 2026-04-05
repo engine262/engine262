@@ -19,7 +19,7 @@ import {
   ThrowCompletion,
   AbruptCompletion,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import type { AsyncFromSyncIteratorObject } from '../intrinsics/AsyncFromSyncIteratorPrototype.mts';
 import type {
   Evaluator, PlainEvaluator, YieldEvaluator,
@@ -40,7 +40,9 @@ import {
   CreateDataPropertyOrThrow,
   GeneratorYield,
 } from './all.mts';
-import type { ValueCompletion, PromiseObject, OrdinaryObject } from '#self';
+import {
+  type ValueCompletion, type PromiseObject, type OrdinaryObject, Throw,
+} from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
@@ -72,7 +74,7 @@ export function* GetIteratorDirect(obj: ObjectValue): PlainEvaluator<IteratorRec
 export function* GetIteratorFromMethod(obj: Value, method: FunctionObject): PlainEvaluator<IteratorRecord> {
   const iterator = Q(yield* Call(method, obj));
   if (!(iterator instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
+    return Throw.TypeError('$1 is not an object', iterator);
   }
   return yield* GetIteratorDirect(iterator);
 }
@@ -85,7 +87,7 @@ export function* GetIterator(obj: Value, kind: 'sync' | 'async'): PlainEvaluator
     if (method === Value.undefined) {
       const syncMethod = Q(yield* GetMethod(obj, wellKnownSymbols.iterator));
       if (syncMethod instanceof UndefinedValue) {
-        return surroundingAgent.Throw('TypeError', 'NotIterable', obj);
+        return Throw.TypeError('$1 is not iterable', obj);
       }
       const syncIteratorRecord = Q(yield* GetIteratorFromMethod(obj, syncMethod));
       return CreateAsyncFromSyncIterator(syncIteratorRecord);
@@ -94,7 +96,7 @@ export function* GetIterator(obj: Value, kind: 'sync' | 'async'): PlainEvaluator
     method = Q(yield* GetMethod(obj, wellKnownSymbols.iterator));
   }
   if (method instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'NotIterable', obj);
+    return Throw.TypeError('$1 is not iterable', obj);
   }
   return yield* GetIteratorFromMethod(obj, method);
 }
@@ -103,11 +105,11 @@ export type PrimitiveHanding = 'iterate-string-primitives' | 'reject-primitives'
 export function* GetIteratorFlattenable(obj: Value, primitiveHandling: PrimitiveHanding): PlainEvaluator<IteratorRecord> {
   if (!(obj instanceof ObjectValue)) {
     if (primitiveHandling === 'reject-primitives') {
-      return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
+      return Throw.TypeError('$1 is not an object', obj);
     }
     Assert(primitiveHandling === 'iterate-string-primitives');
     if (!(obj instanceof JSStringValue)) {
-      return surroundingAgent.Throw('TypeError', 'NotAString', obj);
+      return Throw.TypeError('$1 is not a string', obj);
     }
   }
   const method = Q(yield* GetMethod(obj, wellKnownSymbols.iterator));
@@ -118,7 +120,7 @@ export function* GetIteratorFlattenable(obj: Value, primitiveHandling: Primitive
     iterator = Q(yield* Call(method, obj));
   }
   if (!(iterator instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
+    return Throw.TypeError('$1 is not an object', iterator);
   }
   return yield* GetIteratorDirect(iterator);
 }
@@ -138,7 +140,7 @@ export function* IteratorNext(iteratorRecord: IteratorRecord, value?: Value): Va
   result = X(result);
   if (!(result instanceof ObjectValue)) {
     iteratorRecord.Done = Value.true;
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', result);
+    return Throw.TypeError('$1 is not an object', result);
   }
   return result;
 }
@@ -201,7 +203,7 @@ export function* IteratorClose<T, C extends Completion<T>>(iteratorRecord: Itera
     return innerResult;
   }
   if (!(innerResult.Value instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
+    return Throw.TypeError('$1 is not an object', innerResult.Value);
   }
   return completion;
 }
@@ -236,7 +238,7 @@ export function* AsyncIteratorClose<T, C extends Completion<T>>(iteratorRecord: 
     return innerResult;
   }
   if (!(innerResult.Value instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
+    return Throw.TypeError('$1 is not an object', innerResult.Value);
   }
   return completion;
 }

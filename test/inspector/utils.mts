@@ -77,7 +77,7 @@ export class TestInspector extends Inspector {
     });
   }
 
-  perview(expression: string) {
+  preview(expression: string) {
     return this.runtime.evaluate({
       expression,
       uniqueContextId: '0',

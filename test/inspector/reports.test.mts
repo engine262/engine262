@@ -86,7 +86,7 @@ test('console', async () => {
   `);
   expect(count).eq(2);
 
-  await inspector.perview('console.log("hello", "world")');
+  await inspector.preview('console.log("hello", "world")');
   expect(count).eq(2);
 });
 

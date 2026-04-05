@@ -2,12 +2,9 @@ import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   JSStringValue, Value, type Arguments,
 } from './value.mts';
-import {
-  callable,
-  kAsyncContext,
-  OutOfRange,
-  resume,
-} from './helpers.mts';
+import { kAsyncContext } from './utils/internal.mts';
+import { callable, OutOfRange } from './utils/language.mts';
+import { resume } from './utils/evaluator.mts';
 import type { Evaluator, ValueEvaluator } from './evaluator.mts';
 import {
   Assert,
@@ -72,7 +69,7 @@ class CompletionImpl<const T> {
         case 'throw':
           return createThrowCompletion(init) as CompletionImpl<T>;
         default:
-          throw new OutOfRange('new Completion', init);
+          throw OutOfRange.exhaustive(init);
       }
     }
 
@@ -95,7 +92,7 @@ class CompletionImpl<const T> {
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export type Completion<T> =
   | NormalCompletion<T>
-  | AbruptCompletion<T>;
+  | AbruptCompletion;
 
 /**
  * A NON-SPEC shorthand to notate "returns either a normal completion containing an ECMAScript language value or a throw completion".
@@ -157,7 +154,7 @@ export const NormalCompletion = NormalCompletionImpl as typeof NormalCompletionI
 };
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type AbruptCompletion<T = unknown> =
+export type AbruptCompletion =
   | ThrowCompletion
   | ReturnCompletion
   | BreakCompletion
@@ -249,7 +246,7 @@ export type ReturnCompletion = ReturnCompletion_;
 /** https://tc39.es/ecma262/#sec-throwcompletion */
 export const ReturnCompletion = ReturnCompletion_ as typeof ReturnCompletion_ & {
   /** https://tc39.es/ecma262/#sec-throwcompletion */
-  (value: Value): ThrowCompletion;
+  <T extends Value = Value>(value: T): ThrowCompletion<T>;
 };
 
 const debugging = false;
@@ -258,19 +255,21 @@ const debugging = false;
   // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: value as Value, Target: undefined });
 })
-class ThrowCompletion_ extends AbruptCompletion<Value> {
+class ThrowCompletion_<T extends Value = Value> extends AbruptCompletion<T> {
   declare readonly Type: 'throw';
 
-  declare readonly Value: Value;
+  declare readonly Value: T;
 
   declare readonly Target: undefined;
 
   readonly stack = debugging ? new Error() : undefined;
 
-  private constructor(init: Pick<ThrowCompletion_, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+  private constructor(init: Pick<ThrowCompletion_<T>, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);
     if (debugging) {
-      Error.stackTraceLimit = Infinity;
+      if ('stackTraceLimit' in Error) {
+        Error.stackTraceLimit = Infinity;
+      }
     }
   }
 
@@ -282,12 +281,12 @@ class ThrowCompletion_ extends AbruptCompletion<Value> {
 }
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type ThrowCompletion = ThrowCompletion_;
+export type ThrowCompletion<T extends Value = Value> = ThrowCompletion_<T>;
 
 /** https://tc39.es/ecma262/#sec-throwcompletion */
 export const ThrowCompletion = ThrowCompletion_ as typeof ThrowCompletion_ & {
   /** https://tc39.es/ecma262/#sec-throwcompletion */
-  (value: Value): ThrowCompletion;
+  <T extends Value = Value>(value: T): ThrowCompletion<T>;
 };
 
 /** https://tc39.es/ecma262/#sec-updateempty */
@@ -321,6 +320,8 @@ export type Q<T> =
 /**
  * https://tc39.es/ecma262/#sec-returnifabrupt
  * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
+ *
+ * @internal
  */
 export function Q<const T>(_completion: T): Q<T> {
   /* node:coverage ignore next */
@@ -329,7 +330,7 @@ export function Q<const T>(_completion: T): Q<T> {
 
 function Q_runtime<const T>(completion: T): Q<T> {
   /* node:coverage ignore next 3 */
-  if (typeof completion === 'object' && completion && 'next' in completion) {
+  if (isEvaluator(completion)) {
     throw new TypeError('Forgot to yield* on the completion.');
   }
   const c = EnsureCompletion(completion);
@@ -339,7 +340,14 @@ function Q_runtime<const T>(completion: T): Q<T> {
   throw c;
 }
 
-/** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
+export function isEvaluator(value: unknown): value is Evaluator<unknown> {
+  return !!(value && typeof value === 'object' && 'next' in value && typeof value.next === 'function');
+}
+
+/**
+ * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName()
+ * @internal Use unwrapCompletion for external code.
+ */
 export function X<const T>(_completion: T | Evaluator<T>): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('X() requires build');
@@ -347,7 +355,7 @@ export function X<const T>(_completion: T | Evaluator<T>): Q<T> {
 
 export function unwrapCompletion<const T>(completion: T | Evaluator<T>): Q<T> {
   /* node:coverage ignore next 3 */
-  if (typeof completion === 'object' && completion && 'next' in completion) {
+  if (isEvaluator(completion)) {
     completion = skipDebugger(completion);
   }
   const c = EnsureCompletion(completion);
@@ -358,19 +366,28 @@ export function unwrapCompletion<const T>(completion: T | Evaluator<T>): Q<T> {
   throw new Assert.Error('Unexpected AbruptCompletion.', { cause: c });
 }
 
-/** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
+/**
+ * https://tc39.es/ecma262/#sec-ifabruptcloseiterator
+ * @internal
+ */
 export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
-/** https://tc39.es/ecma262/#sec-ifabruptcloseasynciterator */
+/**
+ * https://tc39.es/ecma262/#sec-ifabruptcloseasynciterator
+ * @internal
+ */
 export function IfAbruptCloseAsyncIterator<T>(_value: T, _iteratorRecord: IteratorRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptCloseAsyncIterator() requires build');
 }
 
-/** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
+/**
+ * https://tc39.es/ecma262/#sec-ifabruptrejectpromise
+ * @internal
+ */
 export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): Q<T> {
   /* node:coverage ignore next */
   throw new TypeError('IfAbruptRejectPromise requires build');

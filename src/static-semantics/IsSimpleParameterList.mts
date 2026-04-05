@@ -1,4 +1,4 @@
-import { OutOfRange, isArray } from '../helpers.mts';
+import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function IsSimpleParameterList(node: ParseNode | readonly ParseNode[]) {
@@ -18,6 +18,6 @@ export function IsSimpleParameterList(node: ParseNode | readonly ParseNode[]) {
     case 'BindingRestElement':
       return false;
     default:
-      throw new OutOfRange('IsSimpleParameterList', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }

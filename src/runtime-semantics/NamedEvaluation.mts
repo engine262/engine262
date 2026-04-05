@@ -1,6 +1,6 @@
 import { Value } from '../value.mts';
 import { Q } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
 import {
@@ -92,6 +92,6 @@ export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue 
     case 'ParenthesizedExpression':
       return yield* NamedEvaluation(F.Expression, name);
     default:
-      throw new OutOfRange('NamedEvaluation', F);
+      throw OutOfRange.exhaustive(F);
   }
 }

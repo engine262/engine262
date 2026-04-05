@@ -80,8 +80,15 @@ export abstract class Inspector {
       return;
     }
     if (!(namespace in impl)) {
-      // eslint-disable-next-line no-console
-      console.error(`Unknown namespace requested: ${namespace}`);
+      this.sendEvent['Runtime.consoleAPICalled']({
+        timestamp: Date.now(),
+        type: 'warning',
+        executionContextId: 0,
+        args: [{
+          type: 'string',
+          value: `engine262 internal error: Namespace not implemented: ${namespace}.*`,
+        }],
+      });
       return;
     }
     const ns = (impl as Record<string, object>)[namespace];

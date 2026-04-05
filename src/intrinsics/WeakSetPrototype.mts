@@ -12,6 +12,7 @@ import {
   RequireInternalSlot,
   CanBeHeldWeakly,
   Realm,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.add */
@@ -22,7 +23,7 @@ function WeakSetProto_add([value = Value.undefined]: Arguments, { thisValue }: F
   Q(RequireInternalSlot(S, 'WeakSetData'));
   // 3. If CanBeHeldWeakly(value) is false, throw a TypeError exception.
   if (!CanBeHeldWeakly(value)) {
-    return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', value);
+    return Throw.TypeError('$1 cannot be weakly referenced', value);
   }
   // 4. For each e that is an element of entries, do
   const entries = S.WeakSetData;

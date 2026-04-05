@@ -14,7 +14,7 @@ import {
   F,
   IsCallable,
   RequireInternalSlot,
-  SameValue, SameValueZero, R,
+  SameValue, SameValueZero, R, Throw,
 } from '#self';
 import type {
   Arguments, Descriptor, ValueEvaluator, FunctionCallContext, Realm,
@@ -83,7 +83,7 @@ function* MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('$1 is not a function', callbackfn);
   }
   // 4. Let entries be the List that is M.[[MapData]].
   const entries = M.MapData;
@@ -151,7 +151,7 @@ function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Valu
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
   if (!IsCallable(callbackfn)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+    return Throw.TypeError('$1 is not a function', callbackfn);
   }
   // 4. Set key to CanonicalizeKeyedCollectionKey(key).
   key = CanonicalizeKeyedCollectionKey(key);

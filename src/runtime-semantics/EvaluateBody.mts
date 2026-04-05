@@ -10,7 +10,7 @@ import {
 import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
 import { IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import {
   Evaluate_FunctionStatementList,
   FunctionDeclarationInstantiation,
@@ -146,6 +146,7 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNo
   // 1. Assert: argumentsList is empty.
   if (surroundingAgent.feature('decorators') && surroundingAgent.feature('decorators.no-bugfix.1')) {
     // TODO(decorator): spec bug
+    // @ts-expect-error
     // eslint-disable-next-line no-console
     console.assert(argumentsList.length === 0, 'Assert: argumentsList is empty.');
   } else {

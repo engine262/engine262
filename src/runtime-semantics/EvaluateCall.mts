@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, Value, ReferenceRecord,
 } from '../value.mts';
@@ -13,10 +12,11 @@ import {
   PrepareForTailCall,
   Call,
   EnvironmentRecord,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-evaluatecall */
-export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: ParseNode | ParseNode.Arguments, tailPosition: boolean) {
+export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: ParseNode.TemplateLiteral | ParseNode.Arguments, tailPosition: boolean, callExpression?: ParseNode.CallExpression | ParseNode.OptionalExpression) {
   // 1. If Type(ref) is Reference, then
   let thisValue;
   if (ref instanceof ReferenceRecord) {
@@ -39,12 +39,16 @@ export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: P
   // 3. Let argList be ? ArgumentListEvaluation of arguments.
   const argList = Q(yield* ArgumentListEvaluation(args));
   // 4. If Type(func) is not Object, throw a TypeError exception.
-  if (!(func instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
-  }
   // 5. If IsCallable(func) is false, throw a TypeError exception.
-  if (!IsCallable(func)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+  if (!(func instanceof ObjectValue) || !IsCallable(func)) {
+    if (callExpression) {
+      const source = callExpression.sourceText;
+      const arg0StartIndex = args.location.startIndex;
+      if (source.length < 100) {
+        return Throw.TypeError('$1 is not a function. (In "$2", it is $3)', source.slice(0, arg0StartIndex - callExpression.location.startIndex), source, func);
+      }
+    }
+    return Throw.TypeError('$1 is not a function', func);
   }
   // 6. If tailPosition is true, perform PrepareForTailCall().
   if (tailPosition) {

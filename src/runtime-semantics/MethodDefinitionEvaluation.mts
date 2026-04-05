@@ -5,7 +5,7 @@ import {
 import {
   Q, X,
 } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { ClassElementDefinitionRecord, DefineMethod, Evaluate_PropertyName } from './all.mts';
@@ -193,7 +193,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       }
     }
     default:
-      throw new OutOfRange('MethodDefinitionEvaluation_MethodDefinition', MethodDefinition);
+      throw OutOfRange.nonExhaustive(MethodDefinition);
   }
 }
 
@@ -337,7 +337,7 @@ export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike,
       case 'AsyncGeneratorMethod':
         return MethodDefinitionEvaluation_AsyncGeneratorMethod(node, object, enumerable);
       default:
-        throw new OutOfRange('MethodDefinitionEvaluation', node);
+        throw OutOfRange.exhaustive(node);
     }
   } else {
     switch (node.type) {
@@ -350,7 +350,7 @@ export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike,
       case 'AsyncGeneratorMethod':
         return MethodDefinitionEvaluation_AsyncGeneratorMethod(node, object);
       default:
-        throw new OutOfRange('MethodDefinitionEvaluation', node);
+        throw OutOfRange.exhaustive(node);
     }
   }
 }

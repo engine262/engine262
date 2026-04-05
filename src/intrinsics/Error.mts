@@ -3,15 +3,16 @@ import {
   Value,
   type Arguments,
   type FunctionCallContext,
-  type JSStringValue,
   type ObjectValue,
   type UndefinedValue,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  captureStack, callSiteToErrorString, type CallSite, CallFrame,
-} from '../helpers.mts';
+  captureStack,
+  callSiteToErrorStack,
+} from '../utils/stack.mts';
+import { type CallSite, CallFrame } from '../utils/stack.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   DefinePropertyOrThrow,
@@ -21,11 +22,34 @@ import {
   type FunctionObject,
   IsError,
   Realm,
+  Call,
+  JSStringValue,
+  type PlainEvaluator,
 } from '#self';
 
 export interface ErrorObject extends ObjectValue {
-  ErrorData: JSStringValue;
-  HostDefinedErrorStack?: (CallSite | CallFrame)[] | UndefinedValue;
+  ErrorData: never;
+  /** Show a clickable stack in the devtools */
+  HostDefinedStack: readonly (CallSite | CallFrame)[] | UndefinedValue;
+  /** Show an error message that allows ECMAScript values to be interleaved with host error messages in the devtools */
+  HostDefinedMessage: readonly (string | Value)[] | UndefinedValue;
+  HostDefinedFormattedStack: string | UndefinedValue;
+  HostDefinedMessageString: string | UndefinedValue;
+}
+
+export const ErrorHostInternalSlots = Object.freeze([
+  'HostDefinedStack',
+  'HostDefinedMessage',
+  'HostDefinedFormattedStack',
+  'HostDefinedMessageString',
+] as const);
+
+export function* setErrorHostInternalSlot(O: ErrorObject, { nativeStack, stack }: ReturnType<typeof captureStack>, errorStringPredefined?: string): PlainEvaluator {
+  const errorString = errorStringPredefined ?? (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+  const errorStack = callSiteToErrorStack(stack, nativeStack);
+  O.HostDefinedStack = stack;
+  O.HostDefinedFormattedStack = errorStack;
+  O.HostDefinedMessageString = errorString;
 }
 
 export { IsError as isErrorObject } from '../abstract-ops/error-objects.mts';
@@ -42,7 +66,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
   const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', [
     'ErrorData',
-    'HostDefinedErrorStack',
+    ...ErrorHostInternalSlots,
   ])) as ErrorObject;
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
@@ -62,10 +86,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   // 4. Perform ? InstallErrorCause(O, options).
   Q(yield* InstallErrorCause(O, options));
 
-  // NON-SPEC
-  const S = captureStack();
-  O.HostDefinedErrorStack = S.stack;
-  O.ErrorData = X(callSiteToErrorString(O, S.stack, S.nativeStack));
+  Q(yield* setErrorHostInternalSlot(O, captureStack()));
 
   // 5. Return O.
   return O;

@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { X } from '../completion.mts';
 import {
@@ -6,12 +5,13 @@ import {
   CreateBuiltinFunction,
   Realm,
   SetIntegrityLevel,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {
   // 1. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', 'StrictPoisonPill');
+  return Throw.TypeError('The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them');
 }
 
 export function bootstrapThrowTypeError(realmRec: Realm) {

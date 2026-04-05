@@ -1,11 +1,10 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, UndefinedValue, Value, wellKnownSymbols,
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   AllocateTypedArray, InitializeTypedArrayFromArrayBuffer, InitializeTypedArrayFromArrayLike, InitializeTypedArrayFromList, InitializeTypedArrayFromTypedArray, isTypedArrayObject, typedArrayInfoByName, type TypedArrayConstructorNames,
@@ -19,6 +18,7 @@ import {
   Realm,
   GetIteratorFromMethod,
   isArrayBufferObject,
+  Throw,
 } from '#self';
 
 export function bootstrapTypedArrayConstructors(realmRec: Realm) {
@@ -27,7 +27,7 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
     function* TypedArrayConstructor(this: Value, args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
       __ts_cast__<TypedArrayConstructorNames>(TypedArray);
       if (NewTarget instanceof UndefinedValue) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        return Throw.TypeError('$1 cannot be invoked without new', TypedArray);
       }
       const constructorName = Value(TypedArray);
       const proto = `%${TypedArray}.prototype%` as const;

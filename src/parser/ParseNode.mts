@@ -495,7 +495,7 @@ export namespace ParseNode {
   //   `...` AssignmentExpression
   //   ArgumentList `,` AssignmentExpression
   //   ArgumentList `,` `...` AssignmentExpression
-  export type Arguments = readonly ArgumentListElement[];
+  export type Arguments = readonly ArgumentListElement[] & { readonly location: Location };
 
   // NON-SPEC
   export type ArgumentListElement =

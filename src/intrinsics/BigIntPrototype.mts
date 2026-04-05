@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, BigIntValue, Value,
   type Arguments,
@@ -10,6 +9,7 @@ import {
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert, ToIntegerOrInfinity, ToString, R,
+  Throw,
 } from '#self';
 import type { Realm } from '#self';
 
@@ -27,7 +27,7 @@ function thisBigIntValue(value: Value) {
     return value.BigIntData;
   }
   // 3. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'BigInt', value);
+  return Throw.TypeError('$1 is not a $2 object', value, 'BigInt');
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
@@ -52,7 +52,7 @@ function* BigIntProto_toString([radix]: Arguments, { thisValue }: FunctionCallCo
   }
   // 5. If radixNumber < 2 or radixNumber > 36, throw a RangeError exception.
   if (radixNumber < 2 || radixNumber > 36) {
-    return surroundingAgent.Throw('RangeError', 'InvalidRadix');
+    return Throw.RangeError('Radix must be between 2 and 36, inclusive');
   }
   // 6. If radixNumber = 10, return ! ToString(x).
   if (radixNumber === 10) {

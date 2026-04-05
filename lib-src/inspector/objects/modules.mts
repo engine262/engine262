@@ -1,16 +1,17 @@
 import type { Protocol } from 'devtools-protocol';
+import { nativeEvalInAnyRealm } from '../eval.mts';
 import { ObjectInspector, type AdditionalPropertyItem } from './objects.mts';
 import { getInspector } from './index.mts';
 import {
-  type ModuleNamespaceObject, surroundingAgent, skipDebugger, performDevtoolsEval, EnsureCompletion, Get, NormalCompletion, Value, ManagedRealm,
+  type ModuleNamespaceObject, surroundingAgent, skipDebugger, EnsureCompletion, Get, NormalCompletion, Value, ManagedRealm,
   CreateBuiltinFunction,
 } from '#self';
 
 export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undefined, () => 'Module', {
-  additionalProperties: (module) => {
+  additionalProperties: (module, context) => {
     const result: AdditionalPropertyItem[] = [];
     surroundingAgent.debugger_scopePreview(() => {
-      skipDebugger(performDevtoolsEval(function* accessModuleExports() {
+      nativeEvalInAnyRealm(() => {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
@@ -18,14 +19,14 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
           }
         }
         return Value.undefined;
-      }, module.Module.Realm as ManagedRealm, true, true));
+      }, context);
     });
     return result;
   },
   exoticProperties(module, getObjectId, context, generatePreview): Protocol.Runtime.PropertyDescriptor[] {
     const result: Protocol.Runtime.PropertyDescriptor[] = [];
     surroundingAgent.debugger_scopePreview(() => {
-      skipDebugger(performDevtoolsEval(function* accessModuleExports() {
+      nativeEvalInAnyRealm(() => {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
@@ -54,7 +55,7 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
           }
         }
         return Value.undefined;
-      }, module.Module.Realm as ManagedRealm, true, true));
+      }, context);
     });
     return result;
   },

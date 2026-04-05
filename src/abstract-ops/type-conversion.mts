@@ -17,7 +17,7 @@ import {
   Q, X,
   type ValueCompletion,
 } from '../completion.mts';
-import { OutOfRange, type Mutable } from '../helpers.mts';
+import { OutOfRange, type Mutable } from '../utils/language.mts';
 import { MV_StringNumericLiteral } from '../runtime-semantics/all.mts';
 import type { BooleanObject } from '../intrinsics/Boolean.mts';
 import type { NumberObject } from '../intrinsics/Number.mts';
@@ -37,6 +37,7 @@ import {
   F, R,
 } from './all.mts';
 import { modulo } from './math.mts';
+import { Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
 export function* ToPrimitive(input: Value, preferredType?: 'string' | 'number'): ValueEvaluator<PrimitiveValue> {
@@ -67,7 +68,7 @@ export function* ToPrimitive(input: Value, preferredType?: 'string' | 'number'):
         return result;
       }
       // vi. Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
+      return Throw.TypeError('Cannot convert object to primitive value');
     }
     // c. If preferredType is not present, let preferredType be number.
     if (preferredType === undefined) {
@@ -110,7 +111,7 @@ export function* OrdinaryToPrimitive(O: ObjectValue, hint: 'string' | 'number'):
     }
   }
   // 6. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
+  return Throw.TypeError('Cannot convert object to primitive value');
 }
 
 /** https://tc39.es/ecma262/#sec-toboolean */
@@ -177,17 +178,17 @@ export function* ToNumber(argument: Value): ValueEvaluator<NumberValue> {
     return MV_StringNumericLiteral(argument.stringValue());
   } else if (argument instanceof BigIntValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
+    return Throw.TypeError('Cannot mix BigInt and other types, use explicit conversions');
   } else if (argument instanceof SymbolValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'number');
+    return Throw.TypeError('Cannot convert a symbol value $1 to a number', argument);
   } else if (argument instanceof ObjectValue) {
     // 1. Let primValue be ? ToPrimitive(argument, number).
     const primValue = Q(yield* ToPrimitive(argument, 'number'));
     // 2. Return ? ToNumber(primValue).
     return Q(yield* ToNumber(primValue));
   }
-  throw new OutOfRange('ToNumber', { argument });
+  throw OutOfRange.exhaustive(argument);
 }
 
 /** https://tc39.es/ecma262/#sec-stringtonumber */
@@ -370,10 +371,10 @@ export function* ToBigInt(argument: Value): ValueEvaluator<BigIntValue> {
   // 2. Return the value that prim corresponds to in Table 12 (#table-tobigint).
   if (prim instanceof UndefinedValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
+    return Throw.TypeError('Cannot convert $1 to a BigInt', prim);
   } else if (prim instanceof NullValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
+    return Throw.TypeError('Cannot convert $1 to a BigInt', prim);
   } else if (prim instanceof BooleanValue) {
     // Return 1ℤ if prim is true and 0ℤ if prim is false.
     if (prim === Value.true) {
@@ -385,21 +386,21 @@ export function* ToBigInt(argument: Value): ValueEvaluator<BigIntValue> {
     return prim;
   } else if (prim instanceof NumberValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
+    return Throw.TypeError('Cannot convert $1 to a BigInt', prim);
   } else if (prim instanceof JSStringValue) {
     // 1. Let n be StringToBigInt(prim).
     const n = StringToBigInt(prim);
     // 2. If n is NaN, throw a SyntaxError exception.
     if (n === undefined) {
-      return surroundingAgent.Throw('SyntaxError', 'CannotConvertToBigInt', prim);
+      return Throw.SyntaxError('Cannot convert $1 to a BigInt', prim);
     }
     // 3. Return n.
     return n;
   } else if (prim instanceof SymbolValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
+    return Throw.TypeError('Cannot convert a Symbol value to a $1', 'bigint');
   }
-  throw new OutOfRange('ToBigInt', argument);
+  throw OutOfRange.nonExhaustive(argument);
 }
 
 /** https://tc39.es/ecma262/#sec-stringtobigint */
@@ -454,7 +455,7 @@ export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
     return argument;
   } else if (argument instanceof SymbolValue) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
+    return Throw.TypeError('Cannot convert a Symbol value to a $1', 'string');
   } else if (argument instanceof BigIntValue) {
     // Return ! BigInt::toString(argument).
     return X(BigIntValue.toString(argument, 10));
@@ -464,17 +465,17 @@ export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
     // 2. Return ? ToString(primValue).
     return Q(yield* ToString(primValue));
   }
-  throw new OutOfRange('ToString', { argument });
+  throw OutOfRange.exhaustive(argument);
 }
 
 /** https://tc39.es/ecma262/#sec-toobject */
 export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
   if (argument === Value.undefined) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
+    return Throw.TypeError('Cannot convert $1 to object', 'undefined');
   } else if (argument === Value.null) {
     // Throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
+    return Throw.TypeError('Cannot convert $1 to object', 'null');
   } else if (argument instanceof BooleanValue) {
     // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument.
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']) as Mutable<BooleanObject>;
@@ -557,13 +558,13 @@ export function* ToIndex(value: Value) {
     const integerIndex = F(Q(yield* ToIntegerOrInfinity(value)));
     // b. If integerIndex < +0𝔽, throw a RangeError exception.
     if (R(integerIndex) < 0) {
-      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
+      return Throw.RangeError('Index ($1) cannot be negative', integerIndex);
     }
     // c. Let index be ! ToLength(integerIndex).
     const index = X(ToLength(integerIndex));
     // d. If ! SameValue(integerIndex, index) is false, throw a RangeError exception.
     if (X(SameValue(integerIndex, index)) === Value.false) {
-      return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
+      return Throw.RangeError('Index ($1) is out of range', integerIndex);
     }
     // e. Return ℝ(index).
     return R(index);

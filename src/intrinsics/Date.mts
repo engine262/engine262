@@ -6,7 +6,7 @@ import {
   Q, ValueOfNormalCompletion, X,
   type ValueEvaluator,
 } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { ToDateString, thisTimeValue } from './DatePrototype.mts';
 import {

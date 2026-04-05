@@ -13,6 +13,7 @@ import {
   SameValue,
   type FunctionObject,
   Realm,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
@@ -23,7 +24,7 @@ function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Ar
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If callback is present and IsCallable(callback) is false, throw a TypeError exception.
   if (callback !== Value.undefined && !IsCallable(callback)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
+    return Throw.TypeError('$1 is not a function', callback);
   }
   // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
   Q(yield* CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, { Callback: callback as FunctionObject, HostDefined: undefined }));
@@ -39,17 +40,17 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If CanBeHeldWeakly(target) is false, throw a TypeError exception.
   if (!CanBeHeldWeakly(target)) {
-    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', target);
+    return Throw.TypeError('$1 is not an object or a symbol', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
   if (SameValue(target, heldValue) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'TargetMatchesHeldValue', heldValue);
+    return Throw.TypeError('heldValue $1 matches target', heldValue);
   }
   // 5. If CanBeHeldWeakly(unregisterToken) is false, then
   if (!CanBeHeldWeakly(unregisterToken)) {
     // a. If unregisterToken is not undefined, throw a TypeError exception.
     if (unregisterToken !== Value.undefined) {
-      return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
+      return Throw.TypeError('$1 is not an object or a symbol', unregisterToken);
     }
     // b. Set unregisterToken to empty.
     unregisterToken = undefined!;
@@ -75,7 +76,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If CanBeHeldWeakly(unregisterToken) is false, throw a TypeError exception.
   if (!CanBeHeldWeakly(unregisterToken)) {
-    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
+    return Throw.TypeError('$1 is not an object or a symbol', unregisterToken);
   }
   // 4. Let removed be false.
   let removed: BooleanValue = Value.false;

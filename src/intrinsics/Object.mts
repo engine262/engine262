@@ -39,6 +39,7 @@ import {
   ToPropertyKey,
   CreateBuiltinFunction,
   Realm,
+  Throw,
   type FunctionObject,
   GroupBy,
   type KeyedGroupRecord,
@@ -98,7 +99,7 @@ function* Object_assign([target = Value.undefined, ...sources]: Arguments): Valu
 function* Object_create([O = Value.undefined, Properties = Value.undefined]: Arguments) {
   // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
   if (!(O instanceof ObjectValue) && !(O instanceof NullValue)) {
-    return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
+    return Throw.TypeError('Object prototype must be an Object or null');
   }
   // 2. Let obj be OrdinaryObjectCreate(O).
   const obj = OrdinaryObjectCreate(O);
@@ -121,7 +122,7 @@ function* Object_defineProperties([O = Value.undefined, Properties = Value.undef
 function* ObjectDefineProperties(O: Value, Properties: Value) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 2. Let props be ? ToObject(Properties).
   const props = Q(ToObject(Properties));
@@ -160,7 +161,7 @@ function* ObjectDefineProperties(O: Value, Properties: Value) {
 function* Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]: Arguments) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+    return Throw.TypeError('$1 is not an object', O);
   }
   // 2. Let key be ? ToPropertyKey(P).
   const key = Q(yield* ToPropertyKey(P));
@@ -192,7 +193,7 @@ function* Object_freeze([O = Value.undefined]: Arguments) {
   const status = Q(yield* SetIntegrityLevel(O, 'frozen'));
   // 3. If status is false, throw a TypeError exception.
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'UnableToFreeze', O);
+    return Throw.TypeError('Unable to freeze object $1', O);
   }
   // 4. Return O.
   return O;
@@ -380,7 +381,7 @@ function* Object_preventExtensions([O = Value.undefined]: Arguments) {
   const status = Q(yield* O.PreventExtensions());
   // 3. If status is false, throw a TypeError exception.
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'UnableToPreventExtensions', O);
+    return Throw.TypeError('Unable to prevent extensions on object $1', O);
   }
   // 4. Return O.
   return O;
@@ -396,7 +397,7 @@ function* Object_seal([O = Value.undefined]: Arguments) {
   const status = Q(yield* SetIntegrityLevel(O, 'sealed'));
   // 3. If status is false, throw a TypeError exception.
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'UnableToSeal', O);
+    return Throw.TypeError('Unable to seal object $1', O);
   }
   // 4. Return O.
   return O;
@@ -408,7 +409,7 @@ function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]: 
   Q(RequireObjectCoercible(O));
   // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
   if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
-    return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
+    return Throw.TypeError('Object prototype must be an Object or null');
   }
   // 3. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
@@ -418,7 +419,7 @@ function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]: 
   const status = Q(yield* O.SetPrototypeOf(proto));
   // 5. If status is false, throw a TypeError exception.
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
+    return Throw.TypeError('Could not set prototype of object');
   }
   // 6. Return O.
   return O;

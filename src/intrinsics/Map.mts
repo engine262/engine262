@@ -13,7 +13,7 @@ import {
   X,
   type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Assert,
@@ -28,6 +28,7 @@ import {
   IteratorStepValue,
   OrdinaryCreateFromConstructor,
   Realm,
+  Throw,
   type FunctionObject,
   type KeyedGroupRecord,
   type OrdinaryObject,
@@ -42,7 +43,7 @@ export function* AddEntriesFromIterable(target: ObjectValue, iterable: Value, ad
       return target;
     }
     if (!(next instanceof ObjectValue)) {
-      const error = surroundingAgent.Throw('TypeError', 'NotAnObject', next);
+      const error = Throw.TypeError('$1 is not an object', next);
       return Q(yield* IteratorClose(iteratorRecord, error));
     }
     // e. Let k be Get(nextItem, "0").
@@ -72,7 +73,7 @@ export function isMapObject(value: Value): value is MapObject {
 function* MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('Map cannot be invoked without new');
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%Map.prototype%", « [[MapData]] »).
   const map = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData'])) as Mutable<MapObject>;
@@ -85,7 +86,7 @@ function* MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
   // 5. Let adder be ? Get(map, "set").
   const adder = Q(yield* Get(map, Value('set')));
   if (!IsCallable(adder)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+    return Throw.TypeError('$1 is not a function', adder);
   }
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
   return Q(yield* AddEntriesFromIterable(map, iterable, adder));

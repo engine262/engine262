@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { ObjectValue, Value, type Arguments } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -12,6 +11,7 @@ import {
   IsConstructor,
   PrepareForTailCall,
   Realm,
+  Throw,
   ToPropertyDescriptor,
   ToPropertyKey,
   type FunctionObject,
@@ -21,7 +21,7 @@ import {
 function* Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]: Arguments) {
   // 1. If IsCallable(target) is false, throw a TypeError exception.
   if (!IsCallable(target)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
+    return Throw.TypeError('$1 is not a function', target);
   }
   // 2. Let args be ? CreateListFromArrayLike(argumentsList).
   const args = Q(yield* CreateListFromArrayLike(argumentsList));
@@ -35,13 +35,13 @@ function* Reflect_apply([target = Value.undefined, thisArgument = Value.undefine
 function* Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]: Arguments) {
   // 1. If IsConstructor(target) is false, throw a TypeError exception.
   if (!IsConstructor(target)) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', target);
+    return Throw.TypeError('$1 is not a constructor', target);
   }
   // 2. If newTarget is not present, set newTarget to target.
   if (newTarget === undefined) {
     newTarget = target;
   } else if (!IsConstructor(newTarget)) { // 3. Else if IsConstructor(newTarget) is false, throw a TypeError exception.
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', newTarget);
+    return Throw.TypeError('$1 is not a constructor', newTarget);
   }
   // 4. Let args be ? CreateListFromArrayLike(argumentsList).
   const args = Q(yield* CreateListFromArrayLike(argumentsList));
@@ -53,7 +53,7 @@ function* Reflect_construct([target = Value.undefined, argumentsList = Value.und
 function* Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
@@ -67,7 +67,7 @@ function* Reflect_defineProperty([target = Value.undefined, propertyKey = Value.
 function* Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
@@ -79,7 +79,7 @@ function* Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.
 function* Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
@@ -96,7 +96,7 @@ function* Reflect_get([target = Value.undefined, propertyKey = Value.undefined, 
 function* Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
@@ -110,7 +110,7 @@ function* Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKe
 function* Reflect_getPrototypeOf([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Return ? target.[[GetPrototypeOf]]().
   return Q(yield* target.GetPrototypeOf());
@@ -120,7 +120,7 @@ function* Reflect_getPrototypeOf([target = Value.undefined]: Arguments) {
 function* Reflect_has([target = Value.undefined, propertyKey = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
@@ -132,7 +132,7 @@ function* Reflect_has([target = Value.undefined, propertyKey = Value.undefined]:
 function* Reflect_isExtensible([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Return ? target.[[IsExtensible]]().
   return Q(yield* target.IsExtensible());
@@ -142,7 +142,7 @@ function* Reflect_isExtensible([target = Value.undefined]: Arguments) {
 function* Reflect_ownKeys([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let keys be ? target.[[OwnPropertyKeys]]().
   const keys = Q(yield* target.OwnPropertyKeys());
@@ -154,7 +154,7 @@ function* Reflect_ownKeys([target = Value.undefined]: Arguments) {
 function* Reflect_preventExtensions([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Return ? target.[[PreventExtensions]]().
   return Q(yield* target.PreventExtensions());
@@ -164,7 +164,7 @@ function* Reflect_preventExtensions([target = Value.undefined]: Arguments) {
 function* Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
@@ -180,11 +180,11 @@ function* Reflect_set([target = Value.undefined, propertyKey = Value.undefined, 
 function* Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    return Throw.TypeError('$1 is not an object', target);
   }
   // 2. If Type(proto) is not Object and proto is not null, throw a TypeError exception.
   if (!(proto instanceof ObjectValue) && proto !== Value.null) {
-    return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
+    return Throw.TypeError('Object prototype must be an object or null');
   }
   // 3. Return ? target.[[SetPrototypeOf]](proto).
   return Q(yield* target.SetPrototypeOf(proto));

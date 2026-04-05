@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   NullValue,
   JSStringValue,
@@ -14,7 +13,7 @@ import {
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { assignProps } from './bootstrap.mts';
 import {
   DefinePropertyOrThrow,
@@ -29,6 +28,7 @@ import {
   RequireObjectCoercible,
   SameValue,
   SetImmutablePrototype,
+  Throw,
   ToObject,
   ToPropertyKey,
   type BuiltinFunctionObject,
@@ -156,7 +156,7 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(getter) is false, throw a TypeError exception.
   if (!IsCallable(getter)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
+    return Throw.TypeError('$1 is not a function', getter);
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
@@ -178,7 +178,7 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(setter) is false, throw a TypeError exception.
   if (!IsCallable(setter)) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
+    return Throw.TypeError('$1 is not a function', setter);
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
@@ -253,7 +253,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisVa
 }
 
 /** https://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
-function* ObjectProto__proto__Get(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* ObjectProto___proto___getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. Return ? O.[[GetPrototypeOf]]().
@@ -261,7 +261,7 @@ function* ObjectProto__proto__Get(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
-function* ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* ObjectProto___proto___setter([proto = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the *this* value.
   // 2. Perform ? RequireObjectCoercible(this value).
   const O = thisValue;
@@ -278,7 +278,7 @@ function* ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisVa
   const status = Q(yield* O.SetPrototypeOf(proto));
   // 5. If status is false, throw a TypeError exception.
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
+    return Throw.TypeError('Could not set prototype of object');
   }
   // 6. Return undefined.
   return Value.undefined;
@@ -325,7 +325,7 @@ export function bootstrapObjectPrototype(realmRec: Realm) {
     ['__defineSetter__', ObjectProto__defineSetter__, 2],
     ['__lookupGetter__', ObjectProto__lookupGetter__, 1],
     ['__lookupSetter__', ObjectProto__lookupSetter__, 1],
-    ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]],
+    ['__proto__', [ObjectProto___proto___getter, ObjectProto___proto___setter]],
   ]);
 
   realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, Value('toString'))) as BuiltinFunctionObject;

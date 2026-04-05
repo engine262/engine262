@@ -1,3 +1,4 @@
+import type { InspectorContext } from './context.mts';
 import {
   AsyncBlockStart,
   ContainsArguments,
@@ -8,12 +9,12 @@ import {
   EvalDeclarationInstantiation,
   Evaluate,
   ExecutionContext,
-  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NewPromiseCapability, NormalCompletion, Q, surroundingAgent, ThrowCompletion, Value, wrappedParse, X, type ParseNode, type PlainCompletion, type ValueEvaluator,
+  FunctionEnvironmentRecord, GetThisEnvironment, isEvaluator, IsStrict, ManagedRealm, NewPromiseCapability, NormalCompletion, skipDebugger, surroundingAgent, Throw, ThrowCompletion, unwrapCompletion, Value, wrappedParse, type PlainCompletion, type PlainEvaluator, type ValueCompletion, type ValueEvaluator,
 } from '#self';
 
 const cascadeStack = new WeakMap<EnvironmentRecord, EnvironmentRecord>();
 // This is modified based on PerformEval, used internally for devtools console.
-export function* performDevtoolsEval(source: string | (() => ValueEvaluator), evalRealm: ManagedRealm, strictCaller: boolean, doNotTrack: boolean): ValueEvaluator {
+export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, strictCaller: boolean, doNotTrack: boolean): ValueEvaluator {
   let inFunction = false;
   let inMethod = false;
   let inDerivedConstructor = false;
@@ -49,46 +50,40 @@ export function* performDevtoolsEval(source: string | (() => ValueEvaluator), ev
     }
   }
 
-  let script: ParseNode.Script | undefined;
-  let scriptId: string | undefined;
-  let body: ParseNode.ScriptBody | undefined;
   let isAsync = false;
-  if (typeof source === 'string') {
-    const parsed = wrappedParse({ source, allowAllPrivateNames: true }, (parser) => parser.scope.with({
-      strict: strictCaller,
-      newTarget: inFunction,
-      superProperty: inMethod,
-      superCall: inDerivedConstructor,
-      private: true,
-    }, () => parser.try(() => parser.parseScript()) || parser.scope.with({ await: true }, () => {
-      isAsync = true;
-      return parser.parseScript();
-    })));
-    if (Array.isArray(parsed)) {
-      if (scriptContext) {
-        surroundingAgent.executionContextStack.pop(scriptContext);
-      }
-      return ThrowCompletion(parsed[0]);
+  const script = wrappedParse({ source, allowAllPrivateNames: true }, (parser) => parser.scope.with({
+    strict: strictCaller,
+    newTarget: inFunction,
+    superProperty: inMethod,
+    superCall: inDerivedConstructor,
+    private: true,
+  }, () => parser.try(() => parser.parseScript()) || parser.scope.with({ await: true }, () => {
+    isAsync = true;
+    return parser.parseScript();
+  })));
+  if (Array.isArray(script)) {
+    if (scriptContext) {
+      surroundingAgent.executionContextStack.pop(scriptContext);
     }
-    script = parsed;
-    if (!script.ScriptBody) {
-      if (scriptContext) {
-        surroundingAgent.executionContextStack.pop(scriptContext);
-      }
-      return Value.undefined;
+    return ThrowCompletion(script[0]);
+  }
+  if (!script.ScriptBody) {
+    if (scriptContext) {
+      surroundingAgent.executionContextStack.pop(scriptContext);
     }
-    body = script.ScriptBody;
-    if (inClassFieldInitializer && ContainsArguments(body)) {
-      return surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
-    }
+    return Value.undefined;
+  }
+  const body = script.ScriptBody;
+  if (inClassFieldInitializer && ContainsArguments(body)) {
+    return Throw.SyntaxError('arguments cannot be referenced in a class field initializer');
+  }
 
-    scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source, script);
-    if (!doNotTrack) {
-      (surroundingAgent.parsedSources.get(scriptId!) as DynamicParsedCodeRecord).HostDefined.isInspectorEval = true;
-      if (scriptContext) {
-        scriptContext.HostDefined ??= {};
-        scriptContext.HostDefined.scriptId = scriptId;
-      }
+  const scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source, script);
+  if (!doNotTrack) {
+    (surroundingAgent.parsedSources.get(scriptId!) as DynamicParsedCodeRecord).HostDefined.isInspectorEval = true;
+    if (scriptContext) {
+      scriptContext.HostDefined ??= {};
+      scriptContext.HostDefined.scriptId = scriptId;
     }
   }
 
@@ -128,23 +123,17 @@ export function* performDevtoolsEval(source: string | (() => ValueEvaluator), ev
   surroundingAgent.executionContextStack.push(evalContext);
 
   let result: PlainCompletion<void | Value>;
-  if (body) {
-    result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
-    if (result.Type === 'normal') {
-      if (isAsync) {
-        const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-        X(yield* AsyncBlockStart(promiseCapability, function* evaluate(): ValueEvaluator {
-          return Q(yield* Evaluate(body));
-        }, evalContext));
-        result = promiseCapability.Promise;
-      } else {
-        result = EnsureCompletion(yield* Evaluate(body));
-      }
+  result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+  if (result.Type === 'normal') {
+    if (isAsync) {
+      const promiseCapability = unwrapCompletion(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+      unwrapCompletion(yield* AsyncBlockStart(promiseCapability, function* evaluate(): ValueEvaluator {
+        return yield* Evaluate(body);
+      }, evalContext));
+      result = promiseCapability.Promise;
+    } else {
+      result = EnsureCompletion(yield* Evaluate(body));
     }
-  } else if (typeof source === 'function') {
-    result = yield* source();
-  } else {
-    throw new Error('Unreachable');
   }
 
   result = EnsureCompletion(result);
@@ -155,5 +144,17 @@ export function* performDevtoolsEval(source: string | (() => ValueEvaluator), ev
   if (scriptContext) {
     surroundingAgent.executionContextStack.pop(scriptContext);
   }
-  return Q(result)!;
+  return result as ValueCompletion;
+}
+
+export function nativeEvalInAnyRealm<T>(closure: (() => PlainCompletion<T>) | (() => PlainEvaluator<T>), context: InspectorContext): PlainCompletion<T> | undefined {
+  const realm = (surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm) as ManagedRealm | undefined;
+  if (!realm) return undefined;
+  return realm.scope((): PlainCompletion<T> | undefined => {
+    const result = closure();
+    if (isEvaluator(result)) {
+      return skipDebugger(result);
+    }
+    return result;
+  });
 }

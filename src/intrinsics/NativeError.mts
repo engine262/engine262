@@ -9,9 +9,10 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack, callSiteToErrorString } from '../helpers.mts';
+import { captureStack } from '../utils/stack.mts';
+import { setErrorHostInternalSlot } from './Error.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
-import type { ErrorObject } from './Error.mts';
+import { ErrorHostInternalSlots, type ErrorObject } from './Error.mts';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
@@ -49,7 +50,7 @@ export function bootstrapNativeError(realmRec: Realm) {
       // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
       const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, [
         'ErrorData',
-        'HostDefinedErrorStack',
+        ...ErrorHostInternalSlots,
       ])) as ErrorObject;
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
@@ -68,10 +69,7 @@ export function bootstrapNativeError(realmRec: Realm) {
       // 4. Perform ? InstallErrorCause(O, options).
       Q(yield* InstallErrorCause(O, options));
       // NON-SPEC
-      const S = captureStack();
-      O.HostDefinedErrorStack = S.stack;
-      O.ErrorData = X(callSiteToErrorString(O, S.stack, S.nativeStack));
-      // 5. Return O.
+      Q(yield* setErrorHostInternalSlot(O, captureStack()));
       return O;
     };
     Object.defineProperty(Constructor, 'name', {

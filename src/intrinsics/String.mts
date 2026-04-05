@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
   JSStringValue,
@@ -28,6 +27,7 @@ import {
   F, R,
   type ExoticObject,
   Realm,
+  Throw,
   type CodePoint,
 } from '#self';
 
@@ -81,11 +81,11 @@ function* String_fromCodePoint(codePoints: Arguments) {
     const nextCP = Q(yield* ToNumber(next));
     // b. If IsIntegralNumber(nextCP) is false, throw a RangeError exception.
     if (X(IsIntegralNumber(nextCP)) === Value.false) {
-      return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
+      return Throw.RangeError('Invalid code point $1', next);
     }
     // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
     if (R(nextCP) < 0 || R(nextCP) > 0x10FFFF) {
-      return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
+      return Throw.RangeError('Invalid code point $1', nextCP);
     }
     // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
     result += UTF16EncodeCodePoint(R(nextCP) as CodePoint);

@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -9,10 +8,10 @@ import {
 } from '../static-semantics/all.mts';
 import { Value } from '../value.mts';
 import { Q, NormalCompletion } from '../completion.mts';
-import { JSStringSet } from '../helpers.mts';
+import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { InstantiateFunctionObject } from './all.mts';
-import { Assert, GlobalEnvironmentRecord } from '#self';
+import { Assert, GlobalEnvironmentRecord, Throw } from '#self';
 
 export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
   // 2. Let lexNames be the LexicallyDeclaredNames of script.
@@ -23,20 +22,20 @@ export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: G
   for (const name of lexNames) {
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
     if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      return Throw.SyntaxError('$1 is already declared', name);
     }
     // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
     const hasRestrictedGlobal = Q(yield* env.HasRestrictedGlobalProperty(name));
     // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
     if (hasRestrictedGlobal === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      return Throw.SyntaxError('$1 is already declared', name);
     }
   }
   // 5. For each name in varNames, do
   for (const name of varNames) {
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
     if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      return Throw.SyntaxError('$1 is already declared', name);
     }
   }
   // 6. Let varDeclarations be the VarScopedDeclarations of script.
@@ -65,7 +64,7 @@ export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: G
         const fnDefinable = Q(yield* env.CanDeclareGlobalFunction(fn));
         // 2. If fnDefinable is false, throw a TypeError exception.
         if (fnDefinable === Value.false) {
-          return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
+          return Throw.TypeError('$1 is already declared', fn);
         }
         // 3. Append fn to declaredFunctionNames.
         declaredFunctionNames.add(fn);
@@ -90,7 +89,7 @@ export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: G
           const vnDefinable = Q(yield* env.CanDeclareGlobalVar(vn));
           // b. If vnDefinable is false, throw a TypeError exception.
           if (vnDefinable === Value.false) {
-            return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
+            return Throw.TypeError('$1 is already declared', vn);
           }
           // c. If vn is not an element of declaredVarNames, then
           if (!declaredVarNames.has(vn)) {

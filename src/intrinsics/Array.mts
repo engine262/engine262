@@ -18,7 +18,7 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   ArrayCreate,
@@ -81,7 +81,7 @@ function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCall
     } else {
       intLen = X(ToUint32(len));
       if (R(intLen) !== R(len)) {
-        return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
+        return Throw.RangeError('$1 is not a valid array length', len);
       }
     }
     yield* Set(array, Value('length'), intLen, Value.true);
@@ -107,7 +107,7 @@ function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCall
     return array;
   }
 
-  throw new OutOfRange('ArrayConstructor', numberOfArgs);
+  throw OutOfRange.nonExhaustive(numberOfArgs);
 }
 
 /** https://tc39.es/ecma262/#sec-array.from */
@@ -134,7 +134,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     let k = 0;
     while (true) { // eslint-disable-line no-constant-condition
       if (k >= (2 ** 53) - 1) {
-        const error = ThrowCompletion(surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength').Value);
+        const error = ThrowCompletion(Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index').Value);
         return Q(yield* IteratorClose(iteratorRecord, error));
       }
       const Pk = X(ToString(F(k)));
@@ -186,7 +186,7 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
   let mapping = false;
   if (mapper !== Value.undefined) {
     if (!IsCallable(mapper)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+      return Throw.TypeError('arguments[1] ($1) is not a function', mapper);
     }
     mapping = true;
   }
@@ -214,7 +214,7 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
     let k = 0;
     while (true) {
       if (k > MAX_SAFE_INTEGER) {
-        const error = surroundingAgent.Throw('TypeError', 'OutOfRange', k);
+        const error = Throw.TypeError('Iterator length is bigger than MAX_SAFE_INTEGER');
         return Q(yield* AsyncIteratorClose(iteratorRecord, error));
       }
 
@@ -222,7 +222,7 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
       let nextResult: Value = Q(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
       nextResult = Q(yield* Await(nextResult));
       if (!(nextResult instanceof ObjectValue)) {
-        return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
+        return Throw.TypeError('The return value ($1) of the next() on an iterator ($2) must be an object', nextResult, iteratorRecord.Iterator);
       }
       const done = Q(yield* IteratorComplete(nextResult));
       if (done === Value.true) {

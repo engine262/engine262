@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { ObjectValue, Value } from '../value.mts';
 import {
   Await,
@@ -23,6 +22,7 @@ import {
   IteratorValue,
   AsyncGeneratorYield,
   AsyncIteratorClose,
+  Throw,
   Yield,
 } from '#self';
 
@@ -59,7 +59,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         }
         // iii. If Type(innerResult) is not Object, throw a TypeError exception.
         if (!(innerResult instanceof ObjectValue)) {
-          return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
+          return Throw.TypeError('The return value ($1) of the next() on an iterator ($2) must be an object', innerResult, iterator);
         }
         // iv. Let done be ? IteratorComplete(innerResult).
         const done = Q(yield* IteratorComplete(innerResult));
@@ -88,7 +88,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
           // 3. NOTE: Exceptions from the inner iterator throw method are propagated. Normal completions from an inner throw method are processed similarly to an inner next.
           // 4. If Type(innerResult) is not Object, throw a TypeError exception.
           if (!(innerResult instanceof ObjectValue)) {
-            return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
+            return Throw.TypeError('The return value ($1) of the throw() on an iterator ($2) must be an object', innerResult, iterator);
           }
           // 5. Let done be ? IteratorComplete(innerResult).
           const done = Q(yield* IteratorComplete(innerResult));
@@ -116,7 +116,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
           }
           // 5. NOTE: The next step throws a TypeError to indicate that there was a yield* protocol violation: iterator does not have a throw method.
           // 6. Throw a TypeError exception.
-          return surroundingAgent.Throw('TypeError', 'IteratorThrowMissing');
+          return Throw.TypeError('The iterator $1 does not provide a throw method', iterator);
         }
       } else { // c. Else,
         // i. Assert: received is a return completion.
@@ -141,7 +141,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         }
         // vi. If Type(innerReturnResult) is not Object, throw a TypeError exception.
         if (!(innerReturnResult instanceof ObjectValue)) {
-          return surroundingAgent.Throw('TypeError', 'NotAnObject', innerReturnResult);
+          return Throw.TypeError('The return value ($1) of the return() on an iterator ($2) must be an object', innerReturnResult, iterator);
         }
         // vii. Let done be ? IteratorComplete(innerReturnResult).
         const done = Q(yield* IteratorComplete(innerReturnResult));

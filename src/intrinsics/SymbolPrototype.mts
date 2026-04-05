@@ -6,15 +6,13 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { Q, type ValueCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert,
   Realm,
   SymbolDescriptiveString,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-thissymbolvalue */
@@ -33,7 +31,7 @@ function thisSymbolValue(value: Value) {
     return s;
   }
   // 3. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Symbol', value);
+  return Throw.TypeError('$1 is not a $2 object', value, 'Symbol');
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.description */

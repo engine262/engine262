@@ -22,6 +22,7 @@ import {
   PromiseResolve,
   Realm,
   SpeciesConstructor,
+  Throw,
   type FunctionObject,
 } from '#self';
 
@@ -39,7 +40,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
   const promise = thisValue;
   // 2. If Type(promise) is not Object, throw a TypeError exception.
   if (!(promise instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
+    return Throw.TypeError('$1 is not a $2 object', promise, 'Promise');
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
   const C = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
@@ -101,7 +102,7 @@ function* PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.u
   const promise = thisValue as PromiseObject;
   // 2. If IsPromise(promise) is false, throw a TypeError exception.
   if (IsPromise(promise) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
+    return Throw.TypeError('$1 is not a $2 object', promise, 'Promise');
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
   const C = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));

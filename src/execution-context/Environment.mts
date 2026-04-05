@@ -10,12 +10,12 @@ import {
   JSStringValue,
   NullValue,
 } from '../value.mts';
-import { surroundingAgent, type GCMarker } from '../host-defined/engine.mts';
+import { type GCMarker } from '../host-defined/engine.mts';
 import {
   NormalCompletion, Q, X,
   type ValueEvaluator,
 } from '../completion.mts';
-import { JSStringMap, skipDebugger } from '../helpers.mts';
+import { JSStringMap } from '../utils/container.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,
@@ -30,6 +30,7 @@ import {
   ToBoolean,
   isECMAScriptFunctionObject,
   type ECMAScriptFunctionObject,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-environment-records */
@@ -168,7 +169,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     if (!envRec.bindings.has(N)) {
       // a. If S is true, throw a ReferenceError exception.
       if (S === Value.true) {
-        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+        return Throw.ReferenceError('$1 is not defined', N);
       }
       // b. Perform envRec.CreateMutableBinding(N, true).
       yield* envRec.CreateMutableBinding(N, Value.true);
@@ -184,7 +185,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
     // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
+      return Throw.ReferenceError('$1 cannot be used before initialization', N);
     }
     // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
     if (binding.mutable === true) {
@@ -193,7 +194,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       // a. Assert: This is an attempt to change the value of an immutable binding.
       // b. If S is true, throw a TypeError exception.
       if (S === Value.true) {
-        return surroundingAgent.Throw('TypeError', 'AssignmentToConstant', N);
+        return Throw.TypeError('Assignment to constant variable $1', N);
       }
     }
     // 7. Return NormalCompletion(empty).
@@ -209,7 +210,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     Assert(binding !== undefined);
     // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
+      return Throw.ReferenceError('$1 cannot be used before initialization', N);
     }
     // 4. Return the value currently bound to N in envRec.
     return NormalCompletion(binding.value!);
@@ -298,7 +299,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     Assert(envRec.ThisBindingStatus !== 'lexical');
     // 3. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
     if (envRec.ThisBindingStatus === 'initialized') {
-      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
+      return Throw.ReferenceError('this has already been initialized');
     }
     // 4. Set envRec.[[ThisValue]] to V.
     envRec.ThisValue = V;
@@ -343,7 +344,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     Assert(envRec.ThisBindingStatus !== 'lexical');
     // 3. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
     if (envRec.ThisBindingStatus === 'uninitialized') {
-      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
+      return Throw.ReferenceError('this has not been initialized');
     }
     // 4. Return envRec.[[ThisValue]].
     return envRec.ThisValue;
@@ -393,14 +394,14 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       const targetEnv = M.Environment;
       // c. If targetEnv is undefined, throw a ReferenceError exception.
       if (!targetEnv) {
-        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+        return Throw.ReferenceError('$1 is not defined', N);
       }
       // d. Return ? targetEnv.GetBindingValue(N2, true).
       return yield* targetEnv.GetBindingValue(N2, Value.true);
     }
     // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
+      return Throw.ReferenceError('$1 cannot be used before initialization', N);
     }
     // 6. Return the value currently bound to N in envRec.
     return NormalCompletion(binding.value!);
@@ -428,7 +429,7 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
     // 1. Let envRec be the module Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec does not already have a binding for N.
-    Assert(skipDebugger(envRec.HasBinding(N)) === Value.false);
+    Assert(X(envRec.HasBinding(N)) === Value.false);
     // 3. Assert: M is a Module Record.
     Assert(M instanceof AbstractModuleRecord);
     // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
@@ -531,7 +532,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     const stillExists = Q(yield* HasProperty(bindings, N));
     // 4. If stillExists is false and S is true, throw a ReferenceError exception.
     if (stillExists === Value.false && S === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+      return Throw.ReferenceError('$1 is not defined', N);
     }
     // 5. Return ? Set(bindings, N, V, S).
     Q(yield* Set(bindings, N, V, S));
@@ -552,7 +553,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
       if (S === Value.false) {
         return NormalCompletion(Value.undefined);
       } else {
-        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+        return Throw.ReferenceError('$1 is not defined', N);
       }
     }
     // 5. Return Get(bindings, N).
@@ -650,7 +651,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
     if ((yield* DclRec.HasBinding(N)) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
+      return Throw.TypeError('$1 is already declared', N);
     }
     // 4. Return DclRec.CreateMutableBinding(N, D).
     return yield* DclRec.CreateMutableBinding(N, D);
@@ -663,9 +664,8 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-    // TODO: remove skipDebugger
-    if (skipDebugger(DclRec.HasBinding(N)) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
+    if (X(DclRec.HasBinding(N)) === Value.true) {
+      return Throw.TypeError('$1 is already declared', N);
     }
     // Return DclRec.CreateImmutableBinding(N, S).
     return DclRec.CreateImmutableBinding(N, S);
@@ -673,15 +673,10 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
   * InitializeBinding(N: JSStringValue, V: Value) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
-    // 3. If DclRec.HasBinding(N) is true, then
-    // TODO: remove skipDebugger
-    if (skipDebugger(DclRec.HasBinding(N)) === Value.true) {
-      // a. Return DclRec.InitializeBinding(N, V).
-      return yield* DclRec.InitializeBinding(N, V);
+    if (X(DclRec.HasBinding(N)) === Value.true) {
+      return X(DclRec.InitializeBinding(N, V));
     }
     // 4. Assert: If the binding exists, it must be in the object Environment Record.
     // 5. Let ObjRec be envRec.[[ObjectRecord]].

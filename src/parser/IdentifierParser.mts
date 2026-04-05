@@ -1,3 +1,4 @@
+import { Throw } from '../host-defined/error-messages.mts';
 import {
   Token,
   isKeyword,
@@ -57,7 +58,7 @@ export abstract class IdentifierParser extends BaseParser {
         this.unexpected(token);
     }
     if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
-      this.raiseEarly('UnexpectedEvalOrArguments', token);
+      this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', node.name), token);
     }
     this.validateIdentifierReference(node.name, token);
     return this.finishNode(node, 'BindingIdentifier');
@@ -109,19 +110,19 @@ export abstract class IdentifierParser extends BaseParser {
 
   validateIdentifierReference(name: string, token: Locatable) {
     if (name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedReservedWordStrict', token);
+      this.addEarlyError(Throw.SyntaxError('yield cannot be used as an identifier inside generator functions or modules'), token);
     }
     if (name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedReservedWordStrict', token);
+      this.addEarlyError(Throw.SyntaxError('await cannot be used as an identifier inside async functions or modules'), token);
     }
     if (this.isStrictMode() && isReservedWordStrict(name)) {
-      this.raiseEarly('UnexpectedReservedWordStrict', token);
+      this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', name), token);
     }
     if (this.scope.inClassStaticBlock() && name === 'arguments') {
-      this.raiseEarly('UnexpectedEvalOrArguments', token);
+      this.addEarlyError(Throw.SyntaxError('"arguments" cannot be used as an identifier in class static block'), token);
     }
     if (name !== 'yield' && name !== 'await' && isKeywordRaw(name)) {
-      this.raiseEarly('UnexpectedToken', token);
+      this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier', name), token);
     }
   }
 

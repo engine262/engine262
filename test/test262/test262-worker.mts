@@ -19,7 +19,7 @@ import {
   skipDebugger,
   boostTest262Harness,
   ThrowCompletion,
-  getHostDefinedErrorStack,
+  getHostDefinedErrorDetails,
   CallSite,
 } from '#self';
 
@@ -71,9 +71,9 @@ function run(test: Test): WorkerToSupervisor {
 
 
   function fail(test: Test, error: Value): WorkerToSupervisor {
-    const stacks = getHostDefinedErrorStack(error);
+    const { callStack } = getHostDefinedErrorDetails(error);
     const reportStack: Stack[] = [];
-    for (const stack of stacks || []) {
+    for (const stack of callStack || []) {
       if (!(stack instanceof CallSite)) {
         continue;
       }

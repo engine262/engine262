@@ -9,7 +9,7 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
   Assert,

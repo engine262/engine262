@@ -10,13 +10,14 @@ import { GlobalDeclarationInstantiation } from '../runtime-semantics/all.mts';
 import {
   Evaluate, type PlainEvaluator, type ValueEvaluator,
 } from '../evaluator.mts';
-import { kInternal } from '../helpers.mts';
+import { kInternal } from '../utils/internal.mts';
 import {
   AbstractModuleRecord, CyclicModuleRecord, ObjectValue, runJobQueue, type ValueCompletion, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
   ManagedRealm,
   SourceTextModuleRecord,
   type ModuleRequestRecord,
   Realm,
+  isEvaluator,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PromiseObject } from '../intrinsics/Promise.mts';
@@ -30,6 +31,7 @@ import {
   type FunctionObject,
   GraphLoadingState,
   PromiseCapabilityRecord,
+  Throw,
 } from '#self';
 
 export interface Engine262Feature {
@@ -192,7 +194,7 @@ export function* HostEnsureCanCompileStrings(calleeRealm: Realm, parameterString
   if (!completion) {
     return NormalCompletion(undefined);
   }
-  if ('next' in completion) {
+  if (isEvaluator(completion)) {
     Q(yield* completion);
   } else {
     Q(completion);
@@ -235,7 +237,7 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
       if (!sync) {
         // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
         surroundingAgent.executionContextStack.push(executionContext);
-        surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
+        surroundingAgent.queueJob('FinishLoadingImportedModule', function* finishLoadingJob(): PlainEvaluator {
           result = EnsureCompletion(result);
           Assert(!!result && (result.Type === 'normal' || result.Type === 'throw'));
           FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
@@ -251,7 +253,7 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
       FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
     }
   } else {
-    FinishLoadingImportedModule(referrer, moduleRequest, surroundingAgent.Throw('Error', 'CouldNotResolveModule', moduleRequest.Specifier), payload);
+    FinishLoadingImportedModule(referrer, moduleRequest, Throw.Error('Host does not set a module loader'), payload);
   }
 }
 

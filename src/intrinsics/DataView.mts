@@ -1,9 +1,8 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   IsDetachedBuffer,
@@ -14,6 +13,7 @@ import {
   type FunctionObject,
   type ArrayBufferObject,
   Realm,
+  Throw,
 } from '#self';
 
 export interface DataViewObject extends OrdinaryObject {
@@ -29,7 +29,7 @@ export function isDataViewObject(V: Value): V is DataViewObject {
 function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('DataView cannot be invoked without new');
   }
   // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
   Q(RequireInternalSlot(buffer, 'ArrayBufferData'));
@@ -38,13 +38,13 @@ function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, b
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   __ts_cast__<ArrayBufferObject>(buffer);
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
   const bufferByteLength = (buffer).ArrayBufferByteLength;
   // 6. If offset > bufferByteLength, throw a RangeError exception.
   if (offset > bufferByteLength) {
-    return surroundingAgent.Throw('RangeError', 'DataViewOOB');
+    return Throw.RangeError('Offset is outside the bounds of the DataView');
   }
   let viewByteLength;
   // 7. If byteLength is undefined, then
@@ -56,14 +56,14 @@ function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, b
     viewByteLength = Q(yield* ToIndex(byteLength));
     // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
     if (offset + viewByteLength > bufferByteLength) {
-      return surroundingAgent.Throw('RangeError', 'DataViewOOB');
+      return Throw.RangeError('Offset is outside the bounds of the DataView');
     }
   }
   // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
   const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset'])) as Mutable<DataViewObject>;
   // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 11. Set O.[[ViewedArrayBuffer]] to buffer.
   O.ViewedArrayBuffer = buffer;

@@ -4,9 +4,10 @@ import {
   UndefinedValue,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack, callSiteToErrorString } from '../helpers.mts';
+import { captureStack } from '../utils/stack.mts';
+import { setErrorHostInternalSlot } from './Error.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
-import type { ErrorObject } from './Error.mts';
+import { ErrorHostInternalSlots, type ErrorObject } from './Error.mts';
 import {
   ToString,
   IteratorToList,
@@ -32,7 +33,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%", « [[ErrorData]] »).
   const O = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', [
     'ErrorData',
-    'HostDefinedErrorStack',
+    ...ErrorHostInternalSlots,
   ])) as ErrorObject;
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
@@ -52,10 +53,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
     Value: CreateArrayFromList(errorsList),
   })));
 
-  // NON-SPEC
-  const S = captureStack();
-  O.HostDefinedErrorStack = S.stack;
-  O.ErrorData = X(callSiteToErrorString(O, S.stack, S.nativeStack));
+  Q(yield* setErrorHostInternalSlot(O, captureStack()));
 
   // 7. Return O.
   return O;

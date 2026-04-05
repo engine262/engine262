@@ -8,19 +8,21 @@ export * from './completion.mts';
 export * from './parse.mts';
 export * from './modules.mts';
 export * from './host-defined/inspect.mts';
-export { type ErrorType, type Formattable, Throw } from './host-defined/error-messages.mts';
+export { type Formattable, Throw } from './host-defined/error-messages.mts';
 export * from './evaluator.mts';
 
-export { captureStack } from './helpers.mts';
 export {
   gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
 export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';
-export { performDevtoolsEval } from './host-defined/debugger-eval.mts';
+export { type Mutable, OutOfRange } from './utils/language.mts';
+export { kInternal } from './utils/internal.mts';
+export { JSStringMap, JSStringSet, PropertyKeyMap } from './utils/container.mts';
+export { skipDebugger } from './utils/evaluator.mts';
 export {
-  getHostDefinedErrorStack, skipDebugger, getCurrentStack, JSStringMap, JSStringSet, CallSite, CallFrame, type Mutable, PropertyKeyMap, kInternal,
-} from './helpers.mts';
+  CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
+} from './utils/stack.mts';
 
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';
 export { isSetObject, type SetObject } from './intrinsics/Set.mts';
@@ -35,7 +37,7 @@ export { isTypedArrayObject, type TypedArrayObject } from './intrinsics/TypedArr
 export { isProxyExoticObject, type ProxyObject } from './intrinsics/Proxy.mts';
 export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 export { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
-export { isErrorObject } from './intrinsics/Error.mts';
+export { isErrorObject, type ErrorObject } from './intrinsics/Error.mts';
 export { isShadowRealmObject, type ShadowRealmObject } from './intrinsics/ShadowRealm.mts';
 
 export { isTemporalDurationObject, type TemporalDurationObject } from './intrinsics/Temporal/Duration.mts';

@@ -5,8 +5,8 @@
 import { CharacterValue, CodePointsToString } from '../static-semantics/all.mts';
 import { isLineTerminator, isWhitespace } from '../parser/Lexer.mts';
 import {
-  __ts_cast__, isArray, unreachable, type Mutable,
-} from '../helpers.mts';
+  __ts_cast__, isArray, OutOfRange, type Mutable,
+} from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 // @ts-ignore
 import PropertyValueAliases from '../unicode/PropertyValueAliases.json' with { type: 'json' };
@@ -458,12 +458,12 @@ function CompileSubPattern(
             return CompileAtom(node.Atom, rer, direction);
           }
         default:
-          unreachable(node);
+          throw OutOfRange.exhaustive(node);
       }
     }
     default:
   }
-  unreachable(node);
+  throw OutOfRange.exhaustive(node);
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-repeatmatcher-abstract-operation */
@@ -649,7 +649,7 @@ function CompileAssertion(node: ParseNode.RegExp.Assertion, rer: RegExpRecord): 
       return yield () => c(x);
     };
   }
-  unreachable(node.production);
+  throw OutOfRange.exhaustive(node.production);
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
@@ -773,7 +773,7 @@ function CompileAtom(node: ParseNode.RegExp.Atom | ParseNode.RegExp.AtomEscape, 
       case 'AtomEscape':
         return CompileAtom(node.AtomEscape, rer, direction);
       default:
-        unreachable(node);
+        throw OutOfRange.exhaustive(node);
     }
     // Atom :: ( GroupSpecifieropt Disjunction )
   } else if (node.type === 'AtomEscape') {
@@ -836,10 +836,10 @@ function CompileAtom(node: ParseNode.RegExp.Atom | ParseNode.RegExp.AtomEscape, 
         return BackreferenceMatcher(rer, parenIndices, direction);
       }
       default:
-        unreachable(node);
+        throw OutOfRange.exhaustive(node);
     }
   }
-  unreachable(node);
+  throw OutOfRange.exhaustive(node);
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-charactersetmatcher-abstract-operation */
@@ -1014,7 +1014,7 @@ function CompileToCharSet(
       } else if (node.production === 'ClassSetExpression') {
         return CompileToCharSet(node.ClassSetExpression, rer);
       }
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
     }
     //  ClassAtom :: -
     //  ClassAtomNoDash :: SourceCharacter but not one of \ or ] or -
@@ -1026,7 +1026,7 @@ function CompileToCharSet(
       } else if (node.production === 'ClassEscape') {
         return CompileToCharSet(node.ClassEscape, rer);
       }
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
     }
     //  ClassEscape :: -
     //  ClassEscape :: CharacterEscape
@@ -1062,7 +1062,7 @@ function CompileToCharSet(
           return CharacterComplement(rer, S);
         }
         default:
-          unreachable(node);
+          throw OutOfRange.exhaustive(node);
       }
     }
     //  UnicodePropertyValueExpression :: UnicodePropertyName = UnicodePropertyValue
@@ -1142,7 +1142,7 @@ function CompileToCharSet(
         const A = CompileToCharSet(node.ClassStringDisjunction, rer);
         return MaybeSimpleCaseFolding(rer, A);
       }
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
     }
     //  NestedClass :: [ ClassContents ]
     //  NestedClass :: [^ ClassContents ]
@@ -1178,7 +1178,7 @@ function CompileToCharSet(
       return A;
     }
     default:
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
   }
 }
 

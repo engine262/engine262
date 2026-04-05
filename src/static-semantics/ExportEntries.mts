@@ -1,5 +1,5 @@
 import { JSStringValue, NullValue, Value } from '../value.mts';
-import { OutOfRange, isArray } from '../helpers.mts';
+import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   BoundNames, ModuleRequests, ExportEntriesForModule, type ModuleRequestRecord,
@@ -114,7 +114,7 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
           return [entry];
         }
         default:
-          throw new OutOfRange('ExportEntries', node);
+          throw OutOfRange.exhaustive(node);
       }
     default:
       return [];

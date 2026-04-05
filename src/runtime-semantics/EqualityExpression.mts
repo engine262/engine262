@@ -1,7 +1,7 @@
 import { Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
 import { Value } from '../value.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   IsLooselyEqual,
@@ -55,6 +55,6 @@ export function* Evaluate_EqualityExpression({ EqualityExpression, operator, Rel
     }
 
     default:
-      throw new OutOfRange('Evaluate_EqualityExpression', operator);
+      throw OutOfRange.exhaustive(operator);
   }
 }

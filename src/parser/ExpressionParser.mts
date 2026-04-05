@@ -5,7 +5,7 @@ import {
   IsComputedPropertyKey,
   ContainsArguments,
 } from '../static-semantics/all.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { surroundingAgent, type Feature } from '../host-defined/engine.mts';
 import {
   Token, TokenPrecedence,
@@ -17,7 +17,8 @@ import {
 import { isLineTerminator, type TokenData } from './Lexer.mts';
 import { FunctionParser, FunctionKind } from './FunctionParser.mts';
 import { RegExpParser, type RegExpParserContext } from './RegExpParser.mts';
-import type { ParseNode } from './ParseNode.mts';
+import type { Location, ParseNode } from './ParseNode.mts';
+import { Throw } from '#self';
 
 export abstract class ExpressionParser extends FunctionParser {
   protected abstract readonly state: {
@@ -35,6 +36,28 @@ export abstract class ExpressionParser extends FunctionParser {
   abstract semicolon(): void;
 
   abstract feature(name: Feature): boolean;
+
+  protected getLocation(inheritStart?: ParseNode.BaseParseNode): Location {
+    return {
+      startIndex: inheritStart ? inheritStart.location.startIndex : this.peekToken.startIndex,
+      endIndex: -1,
+      start: inheritStart ? { ...inheritStart.location.start } : {
+        line: this.peekToken.line,
+        column: this.peekToken.column,
+      },
+      end: {
+        line: -1,
+        column: -1,
+      },
+    };
+  }
+
+  protected markLocationEnd(node: Pick<ParseNode.Unfinished, 'location'>) {
+    node.location.endIndex = this.currentToken.endIndex;
+    node.location.end.line = this.currentToken.line;
+    node.location.end.column = this.currentToken.column;
+    return node;
+  }
 
   // Expression :
   //   AssignmentExpression
@@ -170,7 +193,7 @@ export abstract class ExpressionParser extends FunctionParser {
       case 'ArrayLiteral':
         node.ElementList.forEach((p, i) => {
           if (p.type === 'SpreadElement' && (i !== node.ElementList.length - 1 || node.hasTrailingComma)) {
-            this.raiseEarly('InvalidAssignmentTarget', p);
+            this.addEarlyError(Throw.SyntaxError('Spread element must be last element'), p);
           }
           if (p.type === 'AssignmentExpression') {
             this.validateAssignmentTarget(p.LeftHandSideExpression);
@@ -183,7 +206,7 @@ export abstract class ExpressionParser extends FunctionParser {
         node.PropertyDefinitionList.forEach((p, i) => {
           if (p.type === 'PropertyDefinition' && !p.PropertyName
               && i !== node.PropertyDefinitionList.length - 1) {
-            this.raiseEarly('InvalidAssignmentTarget', p);
+            this.addEarlyError(Throw.SyntaxError('Invalid assignment target'), p);
           }
           this.validateAssignmentTarget(p);
         });
@@ -206,7 +229,7 @@ export abstract class ExpressionParser extends FunctionParser {
       default:
         break;
     }
-    this.raiseEarly('InvalidAssignmentTarget', node);
+    this.addEarlyError(Throw.SyntaxError('Invalid assignment target'), node);
   }
 
   // YieldExpression :
@@ -215,7 +238,7 @@ export abstract class ExpressionParser extends FunctionParser {
   //   `yield` [no LineTerminator here] `*` AssignmentExpression
   parseYieldExpression(): ParseNode.YieldExpression {
     if (this.scope.inParameters()) {
-      this.raiseEarly('YieldInFormalParameters');
+      this.addEarlyError(Throw.SyntaxError('yield cannot be used in formal parameters'));
     }
     const node = this.startNode<ParseNode.YieldExpression>();
     this.expect(Token.YIELD);
@@ -304,7 +327,7 @@ export abstract class ExpressionParser extends FunctionParser {
         x = this.parsePrivateIdentifier();
         const p = TokenPrecedence[this.peek().type];
         if (!this.test(Token.IN) || p < precedence) {
-          this.raise('UnexpectedToken');
+          this.unexpected();
         }
         this.scope.checkUndefinedPrivate(x);
         return this.parseBinaryExpression(p, x);
@@ -475,10 +498,10 @@ export abstract class ExpressionParser extends FunctionParser {
               target = target.Expression;
             }
             if (this.isStrictMode() && target.type === 'IdentifierReference') {
-              this.raiseEarly('DeleteIdentifier', target);
+              this.addEarlyError(Throw.SyntaxError('Cannot delete an identifier in strict mode'), target);
             }
             if (target.type === 'MemberExpression' && target.PrivateIdentifier) {
-              this.raiseEarly('DeletePrivateName', target);
+              this.addEarlyError(Throw.SyntaxError('Cannot delete private names'), target);
             }
           }
           return this.finishNode(node, 'UnaryExpression');
@@ -492,9 +515,9 @@ export abstract class ExpressionParser extends FunctionParser {
   // AwaitExpression : `await` UnaryExpression
   parseAwaitExpression(): ParseNode.AwaitExpression {
     if (this.scope.inParameters()) {
-      this.raiseEarly('AwaitInFormalParameters');
+      this.addEarlyError(Throw.SyntaxError('await cannot be used in formal parameters'));
     } else if (this.scope.inClassStaticBlock()) {
-      this.raiseEarly('AwaitInClassStaticBlock');
+      this.addEarlyError(Throw.SyntaxError('await cannot be used in class static block'));
     }
     const node = this.startNode<ParseNode.AwaitExpression>();
     this.expect(Token.AWAIT);
@@ -547,13 +570,13 @@ export abstract class ExpressionParser extends FunctionParser {
         this.next();
         if (this.test(Token.LPAREN)) {
           if (!this.scope.hasSuperCall()) {
-            this.raiseEarly('InvalidSuperCall');
+            this.addEarlyError(Throw.SyntaxError('Invalid use of super'), node);
           }
           node.Arguments = this.parseArguments().Arguments;
           result = this.finishNode(node, 'SuperCall');
         } else {
           if (!this.scope.hasSuperProperty()) {
-            this.raiseEarly('InvalidSuperProperty');
+            this.addEarlyError(Throw.SyntaxError('Invalid use of super'), node);
           }
           if (this.eat(Token.LBRACK)) {
             node.Expression = this.parseExpression();
@@ -685,7 +708,7 @@ export abstract class ExpressionParser extends FunctionParser {
       base.Expression = this.parseExpression();
       this.expect(Token.RBRACK);
     } else if (this.test(Token.TEMPLATE)) {
-      this.raise('TemplateInOptionalChain');
+      this.raise(Throw.SyntaxError('Template in optional chain'));
     } else if (this.test(Token.PRIVATE_IDENTIFIER)) {
       base.PrivateIdentifier = this.parsePrivateIdentifier();
       this.scope.checkUndefinedPrivate(base.PrivateIdentifier);
@@ -706,7 +729,7 @@ export abstract class ExpressionParser extends FunctionParser {
         this.expect(Token.RBRACK);
         chain = this.finishNode(node, 'OptionalChain');
       } else if (this.test(Token.TEMPLATE)) {
-        this.raise('TemplateInOptionalChain');
+        this.raise(Throw.SyntaxError('Template in optional chain'));
       } else if (this.eat(Token.PERIOD)) {
         node.OptionalChain = chain;
         if (this.test(Token.PRIVATE_IDENTIFIER)) {
@@ -894,7 +917,7 @@ export abstract class ExpressionParser extends FunctionParser {
           && PropertyDefinition.PropertyName.type !== 'NumericLiteral'
           && StringValue(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
         if (hasProto) {
-          this.scope.registerObjectLiteralEarlyError(this.raiseEarly('DuplicateProto', PropertyDefinition.PropertyName));
+          this.scope.registerObjectLiteralEarlyError(this.addEarlyError(Throw.SyntaxError('Duplicate __proto__ property'), PropertyDefinition.PropertyName));
         } else {
           hasProto = true;
         }
@@ -917,11 +940,12 @@ export abstract class ExpressionParser extends FunctionParser {
   }
 
   parseArguments(): { Arguments: ParseNode.Arguments, trailingComma: boolean } {
+    const location = this.getLocation();
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
-      return { Arguments: [], trailingComma: false };
+      return { Arguments: Object.assign([], this.markLocationEnd({ location })), trailingComma: false };
     }
-    const Arguments: Mutable<ParseNode.Arguments> = [];
+    const Arguments: ParseNode.ArgumentListElement[] = [];
     let trailingComma = false;
     while (true) {
       const node = this.startNode<ParseNode.AssignmentRestElement>();
@@ -940,7 +964,7 @@ export abstract class ExpressionParser extends FunctionParser {
         break;
       }
     }
-    return { Arguments, trailingComma };
+    return { Arguments: Object.assign(Arguments, this.markLocationEnd({ location })), trailingComma };
   }
 
   /** https://tc39.es/ecma262/#sec-class-definitions */
@@ -963,7 +987,7 @@ export abstract class ExpressionParser extends FunctionParser {
           this.scope.declare(node.BindingIdentifier, 'lexical');
         }
       } else if (isExpression === false && !this.scope.isDefault()) {
-        this.raise('ClassMissingBindingIdentifier');
+        this.raise(Throw.SyntaxError('Class missing binding identifier'));
       } else {
         node.BindingIdentifier = null;
       }
@@ -1025,13 +1049,13 @@ export abstract class ExpressionParser extends FunctionParser {
             if (type === 'get' || type === 'set') {
               if (m.static) {
                 if (instancePrivates.has(m.ClassElementName.name)) {
-                  this.raiseEarly('InvalidMethodName', m, m.ClassElementName.name);
+                  this.addEarlyError(Throw.SyntaxError('A class cannot have static and instance private methods with the same name'), m);
                 } else {
                   staticPrivates.add(m.ClassElementName.name);
                 }
               } else {
                 if (staticPrivates.has(m.ClassElementName.name)) {
-                  this.raiseEarly('InvalidMethodName', m, m.ClassElementName.name);
+                  this.addEarlyError(Throw.SyntaxError('A class cannot have static and instance private methods with the same name'), m);
                 } else {
                   instancePrivates.add(m.ClassElementName.name);
                 }
@@ -1039,7 +1063,7 @@ export abstract class ExpressionParser extends FunctionParser {
             }
             this.scope.declare(m.ClassElementName, 'private', type);
             if (m.ClassElementName.name === 'constructor') {
-              this.raiseEarly('InvalidMethodName', m, m.ClassElementName.name);
+              this.addEarlyError(Throw.SyntaxError('A class element cannot be named as "constructor"'), m);
             }
           }
 
@@ -1050,17 +1074,17 @@ export abstract class ExpressionParser extends FunctionParser {
             && name === 'constructor';
           if (isActualConstructor) {
             if (hasConstructor) {
-              this.raiseEarly('DuplicateConstructor', m);
+              this.addEarlyError(Throw.SyntaxError('Duplicate constructor'), m);
             } else {
               hasConstructor = true;
             }
           }
           if ((m.static && name === 'prototype')
               || (!m.static && !isActualConstructor && name === 'constructor')) {
-            this.raiseEarly('InvalidMethodName', m, name);
+            this.addEarlyError(Throw.SyntaxError('A class element cannot be named as "prototype" or "constructor"'), m);
           }
           if (m.static && m.type === 'FieldDefinition' && name === 'constructor') {
-            this.raiseEarly('InvalidMethodName', m, name);
+            this.addEarlyError(Throw.SyntaxError('A class static field cannot be named as "constructor"'), m);
           }
         }
         return ClassBody;
@@ -1111,7 +1135,7 @@ export abstract class ExpressionParser extends FunctionParser {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
-        this.raise('UnterminatedTemplate', this.position);
+        this.raise(Throw.SyntaxError('Unterminated template literal'), this.position);
       }
       const c = this.source[this.position];
       switch (c) {
@@ -1122,7 +1146,7 @@ export abstract class ExpressionParser extends FunctionParser {
           if (!tagged) {
             TemplateSpanList.forEach((s) => {
               if (TV(s) === undefined) {
-                this.raise('InvalidTemplateEscape');
+                this.raise(Throw.SyntaxError('Invalid template escape'), this.position);
               }
             });
           }
@@ -1179,28 +1203,22 @@ export abstract class ExpressionParser extends FunctionParser {
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue as string; // NOTE: unsound cast
     if (node.RegularExpressionFlags.includes('v') && node.RegularExpressionFlags.includes('u')) {
-      this.raise('InvalidRegExpFlags', flagPosition, 'u and v cannot be used together');
+      this.raise(Throw.SyntaxError('u and v cannot be used together'), flagPosition);
     }
-    try {
-      const parse = (flags: RegExpParserContext) => {
-        const p = new RegExpParser(body);
-        return p.scope(flags, () => p.parsePattern());
-      };
-      if (node.RegularExpressionFlags.includes('u')) {
-        parse({ UnicodeMode: true, NamedCaptureGroups: true });
-      } else if (node.RegularExpressionFlags.includes('v')) {
-        parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
-      } else {
-        // NOTE: this part is modified by Annex B (but we're not applying it for now)
-        //       NamedCaptureGroups: false breaks for RegExp /\k<a>(?<a>b)/
-        parse({ NamedCaptureGroups: true });
-      }
-    } catch (e) {
-      if (e instanceof SyntaxError) {
-        this.raise('Raw', node.location.startIndex + e.position! + 1, e.message);
-      } else {
-        throw e;
-      }
+    const parse = (flags: RegExpParserContext) => {
+      const p = new RegExpParser(body, (error, position) => {
+        this.decorateSyntaxError(error, node.location.startIndex + position + 1);
+      });
+      return p.scope(flags, () => p.parsePattern());
+    };
+    if (node.RegularExpressionFlags.includes('u')) {
+      parse({ UnicodeMode: true, NamedCaptureGroups: true });
+    } else if (node.RegularExpressionFlags.includes('v')) {
+      parse({ UnicodeMode: true, UnicodeSetsMode: true, NamedCaptureGroups: true });
+    } else {
+      // NOTE: this part is modified by Annex B (but we're not applying it for now)
+      //       NamedCaptureGroups: false breaks for RegExp /\k<a>(?<a>b)/
+      parse({ NamedCaptureGroups: true });
     }
     const fakeToken = {
       endIndex: this.position - 1,
@@ -1439,7 +1457,7 @@ export abstract class ExpressionParser extends FunctionParser {
         node.Initializer = this.scope.with({ superProperty: true }, () => this.parseInitializerOpt());
         const argumentNode = node.Initializer && ContainsArguments(node.Initializer);
         if (argumentNode) {
-          this.raiseEarly('UnexpectedToken', argumentNode);
+          this.addEarlyError(Throw.SyntaxError('Invalid use of arguments'), argumentNode);
         }
         const finished = this.finishNode(node, 'FieldDefinition');
         this.semicolon();
@@ -1451,7 +1469,7 @@ export abstract class ExpressionParser extends FunctionParser {
         node.IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         node.Initializer = this.parseInitializerOpt();
         const finished = this.finishNode(node, 'CoverInitializedName');
-        this.scope.registerObjectLiteralEarlyError(this.raiseEarly('UnexpectedToken', finished));
+        this.scope.registerObjectLiteralEarlyError(this.addEarlyError(Throw.SyntaxError('Invalid assignment target'), finished));
         return finished;
       }
 

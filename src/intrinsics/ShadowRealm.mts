@@ -16,9 +16,11 @@ import {
   isOrdinaryObject,
   OrdinaryCreateFromConstructor,
   Realm,
+  Throw,
   type FunctionObject,
   type OrdinaryObject,
   type Mutable,
+  isEvaluator,
 } from '#self';
 
 export interface ShadowRealmObject extends OrdinaryObject {
@@ -33,7 +35,7 @@ export function isShadowRealmObject(value: Value): value is ShadowRealmObject {
 function* ShadowRealmConstructor(this: FunctionObject, _args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   Q(surroundingAgent.debugger_cannotPreview);
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('ShadowRealm cannot be invoked without new');
   }
   const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%ShadowRealm.prototype%', ['ShadowRealm'])) as Mutable<ShadowRealmObject>;
   // Note: wait for https://github.com/tc39/ecma262/pull/3728
@@ -47,7 +49,7 @@ function* ShadowRealmConstructor(this: FunctionObject, _args: Arguments, { NewTa
   O.ShadowRealm = realmRec;
 
   const hostHookCompletion = surroundingAgent.hostDefinedOptions.hostHooks?.HostInitializeShadowRealm?.(realmRec, innerContext, O);
-  if (typeof hostHookCompletion === 'object' && hostHookCompletion && 'next' in hostHookCompletion) {
+  if (isEvaluator(hostHookCompletion)) {
     Q(yield* hostHookCompletion);
   } else {
     Q(hostHookCompletion);

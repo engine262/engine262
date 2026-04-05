@@ -4,7 +4,7 @@ import {
   EnvironmentRecord, StringValue, UndefinedValue,
 } from '../index.mts';
 import { NormalCompletion, Q } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
@@ -88,6 +88,6 @@ export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.Fo
       return result;
     }
     default:
-      throw new OutOfRange('BindingInitialization', node);
+      throw OutOfRange.exhaustive(node);
   }
 }

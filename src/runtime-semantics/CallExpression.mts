@@ -53,5 +53,5 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
   // 8. Let tailCall be IsInTailPosition(thisCall).
   const tailCall = IsInTailPosition(thisCall);
   // 9. Return ? EvaluateCall(func, ref, arguments, tailCall).
-  return Q(yield* EvaluateCall(func, ref, args, tailCall));
+  return Q(yield* EvaluateCall(func, ref, args, tailCall, CallExpression));
 }

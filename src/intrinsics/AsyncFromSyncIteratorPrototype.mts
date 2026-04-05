@@ -5,7 +5,7 @@ import {
 import {
   IfAbruptRejectPromise, NormalCompletion, X,
 } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
   AsyncFromSyncIteratorContinuation,
@@ -20,6 +20,7 @@ import {
   IteratorClose,
   type FunctionObject,
   Realm,
+  Throw,
 } from '#self';
 
 export interface AsyncFromSyncIteratorObject extends OrdinaryObject {
@@ -92,7 +93,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
   if (!(result instanceof ObjectValue)) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
     X(Call(promiseCapability.Reject, Value.undefined, [
-      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,
+      Throw.TypeError('$1 is not an object', result).Value,
     ]));
     // b. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
@@ -124,7 +125,7 @@ function* AsyncFromSyncIteratorPrototype_throw([value = Value.undefined]: Argume
     IfAbruptRejectPromise(result, promiseCapability);
     X(Call(promiseCapability.Reject, Value.undefined, [
       // TODO: error message should be no throw method
-      surroundingAgent.Throw('TypeError', 'NotAnObject', value).Value,
+      Throw.TypeError('$1 is not an object', value).Value,
     ]));
     return promiseCapability.Promise;
   }
@@ -144,7 +145,7 @@ function* AsyncFromSyncIteratorPrototype_throw([value = Value.undefined]: Argume
   if (!(result instanceof ObjectValue)) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
     X(Call(promiseCapability.Reject, Value.undefined, [
-      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,
+      Throw.TypeError('$1 is not an object', result).Value,
     ]));
     // b. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;

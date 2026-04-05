@@ -1,6 +1,6 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import { abs } from '../../abstract-ops/math.mts';
-import { __ts_cast__ } from '../../helpers.mts';
+import { __ts_cast__ } from '../../utils/language.mts';
 import {
   GetOptionsObject, GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
 } from '../../abstract-ops/temporal/addition.mts';

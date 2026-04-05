@@ -16,6 +16,7 @@ import {
   GetIterator,
   IteratorStepValue,
   IteratorClose,
+  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-math.abs */
@@ -115,11 +116,11 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
     next = Q(yield* IteratorStepValue(iteratorRecord));
     if (next !== 'done') {
       if (count >= 2 ** 53 - 1) {
-        const error = surroundingAgent.Throw('RangeError', 'OutOfRange', '');
+        const error = Throw.RangeError('$1 is out of range', '');
         return Q(yield* IteratorClose(iteratorRecord, error));
       }
       if (!(next instanceof NumberValue)) {
-        const error = surroundingAgent.Throw('TypeError', 'NotANumber', next);
+        const error = Throw.TypeError('$1 is not a number', next);
         return Q(yield* IteratorClose(iteratorRecord, error));
       }
       const n = R(next);
@@ -275,6 +276,7 @@ export function bootstrapMath(realmRec: Realm) {
       // we're calling host Math functions here.
       return F((Math[name] as (...args: unknown[]) => number)(...nextArgs));
     };
+    Object.defineProperty(method, 'name', { value: `Math_${name}` });
     const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
     X(mathObj.DefineOwnProperty(Value(name), Descriptor({
       Value: func,

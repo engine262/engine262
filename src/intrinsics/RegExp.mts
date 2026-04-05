@@ -29,6 +29,7 @@ import {
   type OrdinaryObject,
 
   Assert, isLeadingSurrogate, isTrailingSurrogate, StringToCodePoints, UTF16EncodeCodePoint, type CodePoint, type RegExpMatcher, type RegExpRecord,
+  Throw,
 } from '#self';
 
 export interface RegExpObject extends OrdinaryObject {
@@ -99,7 +100,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
 /** https://tc39.es/ecma262/#sec-regexp.escape */
 function* RegExp_escape([S = Value.undefined]: Arguments) {
   if (!(S instanceof JSStringValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAString', S);
+    return Throw.TypeError('$1 is not a string', S);
   }
   let escaped = '';
   const cpList = StringToCodePoints(S.stringValue());

@@ -1,6 +1,6 @@
 import { Evaluate } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
@@ -66,6 +66,6 @@ export function Evaluate_MemberExpression(MemberExpression: ParseNode.MemberExpr
     case !!MemberExpression.PrivateIdentifier:
       return Evaluate_MemberExpression_PrivateIdentifier(MemberExpression);
     default:
-      throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);
+      throw OutOfRange.nonExhaustive(MemberExpression);
   }
 }

@@ -14,6 +14,7 @@ import {
   OrdinaryObjectCreate,
   ProxyCreate,
   Realm,
+  Throw,
   type BuiltinFunctionObject,
   type ExoticObject,
   type FunctionObject,
@@ -33,7 +34,7 @@ export interface RevocableProxyRevokeFunctionObject extends BuiltinFunctionObjec
 function ProxyConstructor(this: FunctionObject, [target = Value.undefined, handler = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('Proxy cannot be invoked without new');
   }
   // 2. Return ? ProxyCreate(target, handler).
   return ProxyCreate(target, handler);

@@ -4,6 +4,7 @@ import {
   CreateBuiltinFunction, CreateDataProperty, DefinePropertyOrThrow, Descriptor, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
   type PlainEvaluator,
   type PlainCompletion,
+  isEvaluator,
 } from '#self';
 
 const consoleMethods = [
@@ -58,7 +59,7 @@ export function createConsole(
           }
 
           if (completion) {
-            if (typeof completion === 'object' && 'next' in completion) {
+            if (isEvaluator(completion)) {
               completion = yield* completion;
             }
             // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.

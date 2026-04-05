@@ -5,22 +5,21 @@ import {
   SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
 } from './modules.mts';
 import { JSStringValue, ObjectValue, Value } from './value.mts';
-import { Q, X, type PlainCompletion } from './completion.mts';
+import { Q, type PlainCompletion } from './completion.mts';
 import {
   ModuleRequests,
   ImportEntries,
   ExportEntries,
   ImportedLocalNames,
 } from './static-semantics/all.mts';
-import {
-  JSStringSet, kInternal, skipDebugger, type Mutable,
-} from './helpers.mts';
+import { kInternal } from './utils/internal.mts';
+import { type Mutable } from './utils/language.mts';
+import { skipDebugger } from './utils/evaluator.mts';
+import { JSStringSet } from './utils/container.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';
 import {
-  Get,
-  Set,
   CreateDefaultExportSyntheticModule,
   ToString,
   Throw,
@@ -29,23 +28,6 @@ import type { Realm } from '#self';
 
 export { Parser, RegExpParser };
 
-function handleError(e: unknown) {
-  if (e instanceof SyntaxError) {
-    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value as ObjectValue;
-    if (e.decoration) {
-      const stackString = Value('stack');
-      const stack = X(Get(v, stackString));
-      // Note: in many cases the output will be padded by space or text like "Uncaught",
-      // insert a new line allow decoration lines get the same padding.
-      const newStackString = `\n${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
-      X(Set(v, stackString, Value(newStackString), Value.true));
-    }
-    return v;
-  } else {
-    throw e;
-  }
-}
-
 export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   const p = new Parser(init);
 
@@ -53,9 +35,6 @@ export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
     const r = f(p);
     const errors = [];
     for (const error of p.earlyErrors) {
-      errors.push(handleError(error));
-    }
-    for (const error of p.earlyErrors2) {
       errors.push(error);
     }
     if (errors.length > 0) {
@@ -63,7 +42,8 @@ export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
     }
     return r;
   } catch (e) {
-    return [handleError(e)];
+    if (e instanceof ObjectValue) return [e];
+    throw e;
   }
 }
 
@@ -257,7 +237,8 @@ export function ParsePattern(patternText: string, u: boolean, v: boolean) {
       const p = new RegExpParser(patternText);
       return p.scope(flags, () => p.parsePattern());
     } catch (e) {
-      return [handleError(e)];
+      if (e instanceof ObjectValue) return [e];
+      throw e;
     }
   };
   if (v && u) {

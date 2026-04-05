@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -6,6 +5,7 @@ import { Q } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   ToIndex, AllocateArrayBuffer, type FunctionObject,
+  Throw,
   Realm,
 } from '#self';
 
@@ -13,7 +13,7 @@ import {
 function* ArrayBufferConstructor(this: FunctionObject, [length = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return Throw.TypeError('ArrayBuffer cannot be invoked without new');
   }
   // 2. Let byteLength be ? ToIndex(length).
   const byteLength = Q(yield* ToIndex(length));

@@ -1,5 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
-import { __ts_cast__ } from '../../helpers.mts';
+import { __ts_cast__ } from '../../utils/language.mts';
 import { ToIntegerIfIntegral, GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
 import { bootstrapTemporalDurationPrototype } from './DurationPrototype.mts';
 import {

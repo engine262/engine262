@@ -28,7 +28,7 @@ import { ExpectedArgumentCount } from '../static-semantics/all.mts';
 import {
   ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord,
 } from '../runtime-semantics/all.mts';
-import { skipDebugger, type Mutable } from '../helpers.mts';
+import { type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { FunctionProto_toString } from '../intrinsics/FunctionPrototype.mts';
@@ -67,6 +67,8 @@ import {
   GlobalEnvironmentRecord,
   ClassElementDefinitionRecord,
   type AbstractModuleRecord, type CanBeNativeSteps, type DefaultConstructorBuiltinFunction, type DescriptorInit, type FunctionCallContext, type ModuleRecord, type PrivateEnvironmentRecord, type ScriptRecord,
+  Throw,
+  isEvaluator,
 } from '#self';
 
 interface BaseFunctionObject extends OrdinaryObject {
@@ -312,7 +314,7 @@ function* FunctionCallSlot(this: FunctionObject, thisArgument: Value, argumentsL
   // 5. If F.[[IsClassConstructor]] is true, then
   if (F.IsClassConstructor === Value.true) {
     // a. Let error be a newly created TypeError object.
-    const error = surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
+    const error = Throw.TypeError('$1 cannot be invoked without new', F);
     // b. NOTE: _error_ is created in _calleeContext_ with _F_'s associated Realm Record.
     // c. Remove _calleeContext_ from the execution context stack and restore _callerContext_ as the running execution context.
     surroundingAgent.executionContextStack.pop(calleeContext);
@@ -388,7 +390,7 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
     }
     // c. If result.[[Value]] is not undefined, throw a TypeError exception.
     if (result.Value !== Value.undefined) {
-      return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
+      return Throw.TypeError('Return value $1 of a derived constructor is not an object or undefined', result.Value);
     }
   } else {
     Q(result);
@@ -541,7 +543,7 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
 /** https://tc39.es/ecma262/#sec-setfunctionname */
 export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
-  Assert(skipDebugger(IsExtensible(F)) === Value.true && skipDebugger(HasOwnProperty(F, Value('name'))) === Value.false);
+  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('name'))) === Value.false);
   // 2. If Type(name) is Symbol, then
   if (name instanceof SymbolValue) {
     // a. Let description be name's [[Description]] value.
@@ -588,7 +590,7 @@ export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | Priv
 export function SetFunctionLength(F: FunctionObject, length: number): void {
   Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
-  Assert(skipDebugger(IsExtensible(F)) === Value.true && skipDebugger(HasOwnProperty(F, Value('length'))) === Value.false);
+  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('length'))) === Value.false);
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
   X(DefinePropertyOrThrow(F, Value('length'), Descriptor({
     Value: toNumberValue(length),
@@ -629,7 +631,7 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
     const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
     const resultClosure = function* asyncFunctionPrologue() {
       let result = apply(F.nativeFunction, F, [argumentsList, functionCallContext]);
-      if (result && 'next' in result) {
+      if (isEvaluator(result)) {
         result = yield* result;
       }
       return ReturnCompletion(Q(result) || Value.undefined);
@@ -639,7 +641,7 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
     return NormalCompletion(promiseCapability.Promise);
   } else {
     let result = apply(F.nativeFunction, F, [argumentsList, functionCallContext]);
-    if (result && 'next' in result) {
+    if (isEvaluator(result)) {
       result = yield* result;
     }
     if (result instanceof Completion) {

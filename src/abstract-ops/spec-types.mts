@@ -22,6 +22,7 @@ import {
   type FunctionObject,
 } from './all.mts';
 import { isNonNegativeInteger } from './data-types-and-values.mts';
+import { Throw } from '#self';
 
 // #𝔽
 export function F(x: number): NumberValue {
@@ -105,7 +106,7 @@ export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
 /** https://tc39.es/ecma262/#sec-topropertydescriptor */
 export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   if (!(Obj instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
+    return Throw.TypeError('$1 is not an object', Obj);
   }
 
   let desc = Descriptor({});
@@ -133,7 +134,7 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   if (hasGet === Value.true) {
     const getter = Q(yield* Get(Obj, Value('get')));
     if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
+      return Throw.TypeError('getter ($1) in a property descriptor $2 must be a function', getter, Obj);
     }
     desc = Descriptor({ ...desc, Get: getter as FunctionObject });
   }
@@ -141,13 +142,13 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   if (hasSet === Value.true) {
     const setter = Q(yield* Get(Obj, Value('set')));
     if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
+      return Throw.TypeError('setter ($1) in a property descriptor $2 must be a function', setter, Obj);
     }
     desc = Descriptor({ ...desc, Set: setter as FunctionObject });
   }
   if (desc.Get !== undefined || desc.Set !== undefined) {
     if (desc.Value !== undefined || desc.Writable !== undefined) {
-      return surroundingAgent.Throw('TypeError', 'InvalidPropertyDescriptor');
+      return Throw.TypeError('Property descriptors must not specify both accessors and a value or writable attribute, but $1 does', Obj);
     }
   }
   return desc;
@@ -195,7 +196,7 @@ export function CreateByteDataBlock(size: number) {
   try {
     db = new DataBlock(size);
   } catch (err) {
-    return surroundingAgent.Throw('RangeError', 'CannotAllocateDataBlock');
+    return Throw.RangeError('Cannot allocate memory');
   }
   return db;
 }

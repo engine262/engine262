@@ -22,6 +22,8 @@ export class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
 
   toDescription: (value: T, context: InspectorContext) => string;
 
+  toCustomPreview?: (value: T, getObjectId: (val: SymbolValue | ObjectValue) => string, context: InspectorContext) => Protocol.Runtime.CustomPreview | undefined;
+
   private toEntries: ((value: T, context: InspectorContext) => Protocol.Runtime.ObjectPreview['entries']) | undefined;
 
   private additionalProperties: ((value: T, context: InspectorContext) => Iterable<AdditionalPropertyItem>) | undefined;
@@ -39,6 +41,7 @@ export class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
       additionalProperties?: ObjectInspector<T>['additionalProperties'];
       internalProperties?: ObjectInspector<T>['internalProperties'];
       exoticProperties?: ObjectInspector<T>['exoticProperties'];
+      customPreview?: ObjectInspector<T>['toCustomPreview'];
     },
   ) {
     this.className = className;
@@ -48,10 +51,11 @@ export class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
     this.additionalProperties = additionalOptions?.additionalProperties;
     this.internalProperties = additionalOptions?.internalProperties;
     this.exoticProperties = additionalOptions?.exoticProperties;
+    this.toCustomPreview = additionalOptions?.customPreview;
   }
 
-  toRemoteObject(value: T, getObjectId: (val: ObjectValue) => string, context: InspectorContext): Protocol.Runtime.RemoteObject {
-    return {
+  toRemoteObject(value: T, getObjectId: (val: ObjectValue | SymbolValue) => string, context: InspectorContext): Protocol.Runtime.RemoteObject {
+    const object: Protocol.Runtime.RemoteObject = {
       type: 'object',
       subtype: this.subtype,
       objectId: getObjectId(value),
@@ -59,6 +63,9 @@ export class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
       description: this.toDescription(value, context),
       preview: this.toObjectPreview(value, context),
     };
+    const customPreview = this.toCustomPreview?.(value, getObjectId, context);
+    if (customPreview) object.customPreview = customPreview;
+    return object;
   }
 
   toPropertyPreview(name: string, value: T, context: InspectorContext): Protocol.Runtime.PropertyPreview {

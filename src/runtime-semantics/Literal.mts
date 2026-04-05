@@ -1,6 +1,6 @@
 import { Value } from '../value.mts';
 import { StringValue, NumericValue } from '../static-semantics/all.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { NormalCompletion } from '../completion.mts';
 
@@ -24,13 +24,13 @@ export function Evaluate_Literal(Literal: ParseNode.Literal): NormalCompletion<V
       if (Literal.value === true) {
         return NormalCompletion(Value.true);
       }
-      throw new OutOfRange('Evaluate_Literal', Literal);
+      throw OutOfRange.nonExhaustive(Literal);
     case 'NumericLiteral':
       // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
       return NormalCompletion(NumericValue(Literal));
     case 'StringLiteral':
       return NormalCompletion(StringValue(Literal));
     default:
-      throw new OutOfRange('Evaluate_Literal', Literal);
+      throw OutOfRange.exhaustive(Literal);
   }
 }

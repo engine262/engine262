@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { JSStringValue, Value, type Arguments } from '../value.mts';
 import { CodePointAt, UTF16EncodeCodePoint } from '../static-semantics/all.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
@@ -6,6 +5,7 @@ import {
   Assert,
   CreateBuiltinFunction,
   Realm,
+  Throw,
   ToString,
 } from '#self';
 import type { CodePoint } from '#self';
@@ -123,7 +123,7 @@ function Encode(_string: JSStringValue, extraUnescaped: string) {
     } else {
       const cp = CodePointAt(string, k);
       if (cp.IsUnpairedSurrogate) {
-        return surroundingAgent.Throw('URIError', 'URIMalformed');
+        return Throw.URIError('URI malformed');
       }
       k += cp.CodeUnitCount;
       // Let Octets be the List of octets resulting by applying the UTF-8 transformation to cp.[[CodePoint]].
@@ -149,12 +149,12 @@ function Decode(_string: JSStringValue, preserveEscapeSet: string) {
     let S = C;
     if (C === '\u{0025}') {
       if (k + 3 > len) {
-        return surroundingAgent.Throw('URIError', 'URIMalformed');
+        return Throw.URIError('URI malformed');
       }
       const escape = string.substring(k, k + 3);
       const B = ParseHexOctet(string, k + 1);
       if (typeof B !== 'number') {
-        return surroundingAgent.Throw('URIError', 'URIMalformed');
+        return Throw.URIError('URI malformed');
       }
       k += 2;
       // Let n be the number of leading 1 bits in B.
@@ -169,22 +169,22 @@ function Decode(_string: JSStringValue, preserveEscapeSet: string) {
         }
       } else {
         if (n === 1 || n > 4) {
-          return surroundingAgent.Throw('URIError', 'URIMalformed');
+          return Throw.URIError('URI malformed');
         }
         const Octets = [B];
         let j = 1;
         while (j < n) {
           k += 1;
           if (k + 3 > len) {
-            return surroundingAgent.Throw('URIError', 'URIMalformed');
+            return Throw.URIError('URI malformed');
           }
           // If the code unit at index k within string is not U+0025 PERCENT SIGN (%),
           if (string[k] !== '\u{0025}') {
-            return surroundingAgent.Throw('URIError', 'URIMalformed');
+            return Throw.URIError('URI malformed');
           }
           const continuationByte = ParseHexOctet(string, k + 1);
           if (typeof continuationByte !== 'number') {
-            return surroundingAgent.Throw('URIError', 'URIMalformed');
+            return Throw.URIError('URI malformed');
           }
           Octets.push(continuationByte);
           k += 2;
@@ -195,7 +195,7 @@ function Decode(_string: JSStringValue, preserveEscapeSet: string) {
         // Let V be the code point obtained by applying the UTF-8 transformation to Octets, that is, from a List of octets into a 21-bit value.
         const V = utf8Decode(Octets);
         if (V === null) {
-          return surroundingAgent.Throw('URIError', 'URIMalformed');
+          return Throw.URIError('URI malformed');
         }
         S = UTF16EncodeCodePoint(V);
       }
