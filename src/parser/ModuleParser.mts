@@ -1,5 +1,5 @@
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { Throw } from '../host-defined/error-messages.mts';
 import { Token, isKeywordRaw } from './tokens.mts';
 import { StatementParser } from './StatementParser.mts';

@@ -61,7 +61,7 @@ import {
   RoundISODateTime,
 } from '../../abstract-ops/temporal/plain-date-time.mts';
 import { CreateTemporalInstant } from '../../abstract-ops/temporal/instant.mts';
-import { __ts_cast__ } from '../../helpers.mts';
+import { __ts_cast__ } from '../../utils/language.mts';
 import type { TemporalZonedDateTimeObject } from './ZonedDateTime.mts';
 import {
   AddTimeDurationToEpochNanoseconds,

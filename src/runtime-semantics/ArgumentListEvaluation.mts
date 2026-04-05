@@ -4,7 +4,7 @@ import {
 } from '../value.mts';
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
-import { OutOfRange, isArray } from '../helpers.mts';
+import { OutOfRange, isArray } from '../utils/language.mts';
 import { TemplateStrings } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
@@ -114,7 +114,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.Temp
     }
 
     default:
-      throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
+      throw OutOfRange.nonExhaustive(TemplateLiteral);
   }
 }
 
@@ -173,6 +173,6 @@ export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral: ParseNode.Tem
     case ('type' in ArgumentsOrTemplateLiteral && ArgumentsOrTemplateLiteral.type === 'TemplateLiteral'):
       return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
     default:
-      throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
+      throw OutOfRange.nonExhaustive(ArgumentsOrTemplateLiteral);
   }
 }

@@ -9,7 +9,7 @@ import {
   X,
 } from '../completion.mts';
 import { BoundNames } from '../static-semantics/all.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { BindingInitialization } from './all.mts';
 import { DeclarativeEnvironmentRecord } from '#self';
@@ -28,7 +28,7 @@ export function Evaluate_TryStatement(TryStatement: ParseNode.TryStatement) {
     case !!TryStatement.Catch && !!TryStatement.Finally:
       return Evaluate_TryStatement_BlockCatchFinally(TryStatement);
     default:
-      throw new OutOfRange('Evaluate_TryStatement', TryStatement);
+      throw OutOfRange.nonExhaustive(TryStatement);
   }
 }
 

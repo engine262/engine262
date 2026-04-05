@@ -1,4 +1,4 @@
-import { isArray, unreachable } from '../helpers.mts';
+import { isArray, OutOfRange } from '../utils/language.mts';
 import { R } from '../abstract-ops/all.mjs';
 import { isBooleanObject } from '../intrinsics/Boolean.mts';
 import { isNumberObject } from '../intrinsics/Number.mts';
@@ -149,7 +149,7 @@ export function format(arg: Formattable): string {
     case isArray(arg):
       return `[${arg.map(format).join(', ')}]`;
     default:
-      return unreachable(arg);
+      throw OutOfRange.exhaustive(arg);
   }
 }
 
@@ -169,9 +169,8 @@ function toDisplayableValue(arg: Formattable): Value | string {
         return v instanceof Value ? v : Value(v);
       }));
     default:
-      unreachable(arg);
+      throw OutOfRange.exhaustive(arg);
   }
-  return Value.null;
 }
 
 export interface Throw {

@@ -6,7 +6,8 @@ import {
   Q, X,
   type ValueCompletion,
 } from '../completion.mts';
-import { __ts_cast__, PropertyKeyMap } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
+import { PropertyKeyMap } from '../utils/container.mts';
 import type { ProxyObject } from '../intrinsics/Proxy.mts';
 import {
   Assert,

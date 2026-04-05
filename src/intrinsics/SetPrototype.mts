@@ -12,7 +12,7 @@ import {
 import {
   EnsureCompletion, NormalCompletion, Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateSetIterator } from './SetIteratorPrototype.mts';
 import type { SetObject } from './Set.mts';

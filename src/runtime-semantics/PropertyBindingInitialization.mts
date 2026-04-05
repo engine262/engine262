@@ -1,7 +1,7 @@
 import { BoundNames } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mts';
 import type {

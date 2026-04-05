@@ -1,4 +1,4 @@
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { PerformShadowRealmEval, ShadowRealmImportValue, ValidateShadowRealmObject } from '../abstract-ops/shadow-realm.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { type ShadowRealmObject } from './ShadowRealm.mts';

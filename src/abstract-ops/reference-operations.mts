@@ -11,7 +11,7 @@ import {
   Q,
   type PlainCompletion,
 } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { ResolvePrivateIdentifier } from '../execution-context/PrivateEnvironment.mts';
 import {

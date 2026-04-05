@@ -18,7 +18,7 @@ import {
   Q, X,
   type PlainCompletion,
 } from '../completion.mts';
-import { __ts_cast__, isArray } from '../helpers.mts';
+import { __ts_cast__, isArray } from '../utils/language.mts';
 import { isBoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {

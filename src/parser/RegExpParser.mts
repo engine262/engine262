@@ -17,7 +17,7 @@ import {
 } from '../static-semantics/all.mts';
 // @ts-ignore
 import PropertyValueAliases from '../unicode/PropertyValueAliases.json' with { type: 'json' };
-import { __ts_cast__, unreachable } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import {
   isIdentifierStart,
   isIdentifierPart,
@@ -1411,7 +1411,7 @@ function MayContainStrings(node: ParseNode.RegExp.UnicodePropertyValueExpression
       } else if (node.production === 'ClassStringDisjunction') {
         return node.ClassStringDisjunction.ClassString.some((x) => x.length !== 1);
       }
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
     case 'NestedClass':
       if (node.production === 'CharacterClassEscape') {
         if (node.CharacterClassEscape.production !== 'p') {
@@ -1421,8 +1421,8 @@ function MayContainStrings(node: ParseNode.RegExp.UnicodePropertyValueExpression
       } else if (node.production === 'ClassContents') {
         return MayContainStrings(node.ClassContents);
       }
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
     default:
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
   }
 }

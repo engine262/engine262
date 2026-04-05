@@ -9,7 +9,7 @@ import {
 } from '../value.mts';
 import { Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   AbstractRelationalComparison,
@@ -147,6 +147,6 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
       // 6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).
       return Q(yield* HasProperty(rval, Q(yield* ToPropertyKey(lval))));
     default:
-      throw new OutOfRange('Evaluate_RelationalExpression', operator);
+      throw OutOfRange.exhaustive(operator);
   }
 }

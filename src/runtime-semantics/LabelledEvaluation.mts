@@ -24,7 +24,8 @@ import {
   type PlainCompletion,
   BreakCompletion,
 } from '../completion.mts';
-import { JSStringSet, OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
+import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Evaluate_SwitchStatement,
@@ -89,7 +90,7 @@ export function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode
     case 'LabelledStatement':
       return LabelledEvaluation_LabelledStatement(node, labelSet);
     default:
-      throw new OutOfRange('LabelledEvaluation', node);
+      throw OutOfRange.exhaustive(node);
   }
 }
 
@@ -181,7 +182,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement: ParseNode.Br
       return Completion(stmtResult) as Completion<Value | void>;
     }
     default:
-      throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
+      throw OutOfRange.exhaustive(BreakableStatement);
   }
 }
 
@@ -200,7 +201,7 @@ function LabelledEvaluation_IterationStatement(IterationStatement: ParseNode.Ite
     case 'ForAwaitStatement':
       return LabelledEvaluation_IterationStatement_ForAwaitStatement(IterationStatement, labelSet);
     default:
-      throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
+      throw OutOfRange.exhaustive(IterationStatement);
   }
 }
 
@@ -372,7 +373,7 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement: P
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult as IteratorRecord, 'enumerate', 'lexicalBinding', labelSet));
     }
     default:
-      throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
+      throw OutOfRange.nonExhaustive(ForInStatement);
   }
 }
 
@@ -408,7 +409,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult as IteratorRecord, 'iterate', 'lexicalBinding', labelSet, 'async'));
     }
     default:
-      throw new OutOfRange('LabelledEvaluation_IterationStatement_ForAwaitStatement', ForAwaitStatement);
+      throw OutOfRange.nonExhaustive(ForAwaitStatement);
   }
 }
 
@@ -445,7 +446,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: P
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult as IteratorRecord, 'iterate', 'lexicalBinding', labelSet));
     }
     default:
-      throw new OutOfRange('LabelledEvaluation_BreakableStatement_ForOfStatement', ForOfStatement);
+      throw OutOfRange.nonExhaustive(ForOfStatement);
   }
 }
 

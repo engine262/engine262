@@ -10,7 +10,7 @@ import {
 } from '../value.mts';
 import { X } from '../completion.mts';
 import type { StringObject } from '../intrinsics/String.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import {
   Assert,
   CanonicalNumericIndexString,

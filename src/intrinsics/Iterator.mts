@@ -1,5 +1,5 @@
 import { AbruptCompletion, Q, type ValueEvaluator } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue,

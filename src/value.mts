@@ -2,9 +2,8 @@ import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   Q, X, type ValueEvaluator, type PlainCompletion,
 } from './completion.mts';
-import {
-  PropertyKeyMap, OutOfRange, callable,
-} from './helpers.mts';
+import { OutOfRange, callable } from './utils/language.mts';
+import { PropertyKeyMap } from './utils/container.mts';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
 import type { PlainEvaluator } from './evaluator.mts';
 import {
@@ -80,7 +79,7 @@ export const Value = (() => {
       case 'bigint':
         return createBigIntValue(value);
       default:
-        throw new OutOfRange('new Value', value);
+        throw OutOfRange.nonExhaustive(value);
     }
   })
   abstract class Value extends BaseValue {
@@ -514,7 +513,7 @@ function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
     case '^':
       return F(R(lnum) ^ R(rnum));
     default:
-      throw new OutOfRange('NumberBitwiseOp', op);
+      throw OutOfRange.exhaustive(op);
   }
 }
 
@@ -756,7 +755,7 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
     case '^':
       return Z(R(x) ^ R(y));
     default:
-      throw new OutOfRange('BigIntBitwiseOp', op);
+      throw OutOfRange.exhaustive(op);
   }
 }
 

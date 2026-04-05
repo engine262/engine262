@@ -1,4 +1,4 @@
-import { OutOfRange, isArray } from '../helpers.mts';
+import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function ContainsExpression(node: ParseNode | readonly ParseNode[]): boolean {
@@ -54,6 +54,6 @@ export function ContainsExpression(node: ParseNode | readonly ParseNode[]): bool
     case 'Elision':
       return false;
     default:
-      throw new OutOfRange('ContainsExpression', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }

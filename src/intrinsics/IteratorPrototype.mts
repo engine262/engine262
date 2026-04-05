@@ -10,7 +10,7 @@ import {
   type ValueCompletion,
   type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,

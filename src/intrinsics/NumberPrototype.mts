@@ -8,7 +8,7 @@ import {
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { NumberObject } from './Number.mts';
 import {

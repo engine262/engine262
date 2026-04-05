@@ -1,5 +1,5 @@
 import { Value } from '../value.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   BoundNames, StringValue, type ImportEntry, type ModuleRequestRecord,
@@ -32,7 +32,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
         case !!node.NamedImports:
           return ImportEntriesForModule(node.NamedImports, module);
         default:
-          throw new OutOfRange('ImportEntriesForModule', node);
+          throw OutOfRange.nonExhaustive(node);
       }
     case 'ImportedDefaultBinding': {
       // 1. Let localName be the sole element of BoundNames of ImportedBinding.
@@ -92,6 +92,6 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
         return [entry];
       }
     default:
-      throw new OutOfRange('ImportEntriesForModule', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }

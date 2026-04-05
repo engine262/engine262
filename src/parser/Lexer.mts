@@ -8,7 +8,8 @@ import {
   ThrowCompletion,
 } from '../index.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
-import { __ts_cast__, getHostDefinedErrorDetails } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
+import { getHostDefinedErrorDetails } from '../utils/stack.mts';
 import {
   Token,
   TokenNames,

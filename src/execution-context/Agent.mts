@@ -2,7 +2,7 @@ import type { Protocol } from 'devtools-protocol';
 import { shouldStepOnNode } from '../host-defined/debugger-util.mts';
 import {
 } from '../host-defined/engine.mts';
-import { isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
 import {
   ObjectValue, SymbolValue, type Job, type Intrinsics, Value, ThrowCompletion, GetActiveScriptOrModule, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
   ExecutionContextStack,

@@ -6,7 +6,7 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, type ValueCompletion } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { BooleanObject } from './Boolean.mts';
 import { Assert, Throw } from '#self';

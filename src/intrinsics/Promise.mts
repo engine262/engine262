@@ -19,7 +19,7 @@ import {
   type ValueEvaluator,
   type ValueCompletion,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Assert,

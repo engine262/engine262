@@ -1,7 +1,7 @@
 import {
   Assert, Parser, Throw, type ErrorObject,
 } from '../index.mts';
-import { isArray, OutOfRange } from '../helpers.mts';
+import { isArray, OutOfRange } from '../utils/language.mts';
 import type { TokenData } from './Lexer.mts';
 import type { ParseNode } from './ParseNode.mts';
 
@@ -114,7 +114,7 @@ export function getDeclarations(node: ParseNode | readonly ParseNode[]): Declara
       Assert(!!node.BindingIdentifier);
       return getDeclarations(node.BindingIdentifier);
     default:
-      throw new OutOfRange('getDeclarations', node);
+      throw OutOfRange.nonExhaustive(node);
   }
 }
 

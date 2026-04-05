@@ -1,4 +1,4 @@
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import { atob_polyfill, btoa_polyfill } from '../host-defined/base64.mts';
 import {

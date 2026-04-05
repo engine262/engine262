@@ -17,7 +17,9 @@ import {
   NormalCompletion,
   Q, X,
 } from '../completion.mts';
-import { isArray, JSStringSet, kInternal } from '../helpers.mts';
+import { kInternal } from '../utils/internal.mts';
+import { isArray } from '../utils/language.mts';
+import { JSStringSet } from '../utils/container.mts';
 import {
   BigIntValue, F, ParseScript, Realm, ScriptEvaluation, ThrowCompletion, type Arguments,
   type CodePoint,

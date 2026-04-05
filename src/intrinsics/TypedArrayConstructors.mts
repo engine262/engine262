@@ -4,7 +4,7 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   AllocateTypedArray, InitializeTypedArrayFromArrayBuffer, InitializeTypedArrayFromArrayLike, InitializeTypedArrayFromList, InitializeTypedArrayFromTypedArray, isTypedArrayObject, typedArrayInfoByName, type TypedArrayConstructorNames,

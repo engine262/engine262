@@ -17,7 +17,7 @@ import {
   Q, X,
   type ValueCompletion,
 } from '../completion.mts';
-import { OutOfRange, type Mutable } from '../helpers.mts';
+import { OutOfRange, type Mutable } from '../utils/language.mts';
 import { MV_StringNumericLiteral } from '../runtime-semantics/all.mts';
 import type { BooleanObject } from '../intrinsics/Boolean.mts';
 import type { NumberObject } from '../intrinsics/Number.mts';
@@ -188,7 +188,7 @@ export function* ToNumber(argument: Value): ValueEvaluator<NumberValue> {
     // 2. Return ? ToNumber(primValue).
     return Q(yield* ToNumber(primValue));
   }
-  throw new OutOfRange('ToNumber', { argument });
+  throw OutOfRange.exhaustive(argument);
 }
 
 /** https://tc39.es/ecma262/#sec-stringtonumber */
@@ -400,7 +400,7 @@ export function* ToBigInt(argument: Value): ValueEvaluator<BigIntValue> {
     // Throw a TypeError exception.
     return Throw.TypeError('Cannot convert a Symbol value to a $1', 'bigint');
   }
-  throw new OutOfRange('ToBigInt', argument);
+  throw OutOfRange.nonExhaustive(argument);
 }
 
 /** https://tc39.es/ecma262/#sec-stringtobigint */
@@ -465,7 +465,7 @@ export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
     // 2. Return ? ToString(primValue).
     return Q(yield* ToString(primValue));
   }
-  throw new OutOfRange('ToString', { argument });
+  throw OutOfRange.exhaustive(argument);
 }
 
 /** https://tc39.es/ecma262/#sec-toobject */

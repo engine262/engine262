@@ -21,7 +21,7 @@ import {
   Q, X,
   AbruptCompletion,
 } from '../completion.mts';
-import { __ts_cast__, OutOfRange, type Mutable } from '../helpers.mts';
+import { __ts_cast__, OutOfRange, type Mutable } from '../utils/language.mts';
 import type { Location, ParseNode } from '../parser/ParseNode.mts';
 import {
   DefineMethod,
@@ -97,7 +97,7 @@ function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.Ge
     case 'ClassStaticBlock':
       return ClassStaticBlockDefinitionEvaluation(node, object);
     default:
-      throw new OutOfRange('ClassElementEvaluation', node);
+      throw OutOfRange.exhaustive(node);
   }
 }
 

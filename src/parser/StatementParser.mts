@@ -1,4 +1,4 @@
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { Token, isAutomaticSemicolon } from './tokens.mts';
 import { ExpressionParser } from './ExpressionParser.mts';
 import { FunctionKind } from './FunctionParser.mts';

@@ -4,7 +4,7 @@ import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   AddToKeptObjects, CanBeHeldWeakly, OrdinaryCreateFromConstructor, Realm, Throw, type FunctionObject, type OrdinaryObject,

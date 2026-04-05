@@ -12,9 +12,8 @@ import {
   ObjectValue,
   BooleanValue,
 } from '../value.mts';
-import {
-  JSStringSet, type Mutable,
-} from '../helpers.mts';
+import { type Mutable } from '../utils/language.mts';
+import { JSStringSet } from '../utils/container.mts';
 import {
   Assert,
   CompareArrayElements,

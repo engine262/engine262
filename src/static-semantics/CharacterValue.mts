@@ -1,4 +1,4 @@
-import { OutOfRange, unreachable } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { UTF16SurrogatePairToCodePoint } from './all.mts';
 import { Unicode, type CodePoint } from '#self';
@@ -28,7 +28,7 @@ export function CharacterValue(node: CharacterValueAcceptNode): CodePoint {
             case 'r':
               return 0x000D as CodePoint;
             default:
-              unreachable(node.ControlEscape);
+              throw OutOfRange.exhaustive(node.ControlEscape);
           }
         case 'AsciiLetter': {
           // 1. Let ch be the code point matched by ControlLetter.
@@ -53,7 +53,7 @@ export function CharacterValue(node: CharacterValueAcceptNode): CodePoint {
           return ch as CodePoint;
         }
         default:
-          unreachable(node);
+          throw OutOfRange.exhaustive(node);
       }
     case 'RegExpUnicodeEscapeSequence':
       switch (true) {
@@ -66,7 +66,7 @@ export function CharacterValue(node: CharacterValueAcceptNode): CodePoint {
         case 'HexLeadSurrogate' in node:
           return node.HexLeadSurrogate as CodePoint;
         default:
-          throw new OutOfRange('CharacterValue', node);
+          throw OutOfRange.nonExhaustive(node);
       }
     case 'ClassAtom':
       switch (node.production) {
@@ -82,7 +82,7 @@ export function CharacterValue(node: CharacterValueAcceptNode): CodePoint {
         case 'ClassEscape':
           return CharacterValue(node.ClassEscape);
         default:
-          unreachable(node);
+          throw OutOfRange.exhaustive(node);
       }
     case 'ClassEscape':
       switch (node.production) {
@@ -95,9 +95,9 @@ export function CharacterValue(node: CharacterValueAcceptNode): CodePoint {
         case 'CharacterEscape':
           return CharacterValue(node.CharacterEscape);
         case 'CharacterClassEscape':
-          throw new OutOfRange('CharacterValue', node);
+          throw OutOfRange.nonExhaustive(node);
         default:
-          unreachable(node);
+          throw OutOfRange.exhaustive(node);
       }
     case 'ClassSetCharacter': {
       if (node.production === 'CharacterEscape') {
@@ -107,6 +107,6 @@ export function CharacterValue(node: CharacterValueAcceptNode): CodePoint {
       }
     }
     default:
-      unreachable(node);
+      throw OutOfRange.exhaustive(node);
   }
 }

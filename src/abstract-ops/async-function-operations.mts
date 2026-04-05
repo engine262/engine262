@@ -1,4 +1,4 @@
-import { resume } from '../helpers.mts';
+import { resume } from '../utils/evaluator.mts';
 import {
   EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord,
   type AsyncBuiltinSteps,

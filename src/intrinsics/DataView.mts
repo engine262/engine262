@@ -2,7 +2,7 @@ import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   IsDetachedBuffer,

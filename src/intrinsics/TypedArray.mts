@@ -12,7 +12,7 @@ import {
   UndefinedValue,
   Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
-import { type Mutable, __ts_cast__ } from '../helpers.mts';
+import { type Mutable, __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {

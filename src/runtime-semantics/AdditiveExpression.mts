@@ -1,6 +1,6 @@
 import { Q } from '../completion.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { EvaluateStringOrNumericBinaryExpression } from './all.mts';
 
@@ -24,6 +24,6 @@ export function* Evaluate_AdditiveExpression(AdditiveExpression: ParseNode.Addit
     case '-':
       return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression);
     default:
-      throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
+      throw OutOfRange.nonExhaustive(AdditiveExpression);
   }
 }

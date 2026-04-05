@@ -12,9 +12,10 @@ import {
   ExportEntries,
   ImportedLocalNames,
 } from './static-semantics/all.mts';
-import {
-  JSStringSet, kInternal, skipDebugger, type Mutable,
-} from './helpers.mts';
+import { kInternal } from './utils/internal.mts';
+import { type Mutable } from './utils/language.mts';
+import { skipDebugger } from './utils/evaluator.mts';
+import { JSStringSet } from './utils/container.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';

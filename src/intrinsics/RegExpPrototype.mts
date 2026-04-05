@@ -15,7 +15,7 @@ import { CodePointAt } from '../static-semantics/all.mts';
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
 import { isRegExpObject, type RegExpObject } from './RegExp.mts';

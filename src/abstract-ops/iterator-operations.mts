@@ -19,7 +19,7 @@ import {
   ThrowCompletion,
   AbruptCompletion,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import type { AsyncFromSyncIteratorObject } from '../intrinsics/AsyncFromSyncIteratorPrototype.mts';
 import type {
   Evaluator, PlainEvaluator, YieldEvaluator,

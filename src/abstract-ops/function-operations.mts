@@ -28,7 +28,7 @@ import { ExpectedArgumentCount } from '../static-semantics/all.mts';
 import {
   ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord,
 } from '../runtime-semantics/all.mts';
-import { type Mutable } from '../helpers.mts';
+import { type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { FunctionProto_toString } from '../intrinsics/FunctionPrototype.mts';

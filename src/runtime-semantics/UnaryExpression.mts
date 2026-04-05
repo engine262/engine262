@@ -4,7 +4,7 @@ import { Q } from '../completion.mts';
 import {
   Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
@@ -122,7 +122,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
     }
     return Value('object');
   }
-  throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
+  throw OutOfRange.exhaustive(val);
 }
 
 /** https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
@@ -214,6 +214,6 @@ export function* Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpres
       return yield* Evaluate_UnaryExpression_Bang(UnaryExpression);
 
     default:
-      throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
+      throw OutOfRange.nonExhaustive(UnaryExpression);
   }
 }

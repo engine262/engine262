@@ -7,7 +7,7 @@ import {
   AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import {
   GetValue,
   ToString,

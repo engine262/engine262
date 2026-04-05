@@ -9,7 +9,7 @@ import {
   Descriptor, UndefinedValue, Value,
   type Arguments,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
@@ -136,7 +136,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
         body = (f as ParseNode.AsyncGeneratorExpression).AsyncGeneratorBody;
         break;
       default:
-        throw new OutOfRange('kind', kind);
+        throw OutOfRange.exhaustive(kind);
     }
   }
   // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).

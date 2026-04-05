@@ -7,7 +7,7 @@ import {
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   NamedEvaluation,
@@ -123,7 +123,7 @@ export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | Pars
     case 'Elision':
       return node;
     default:
-      throw new OutOfRange('refineLeftHandSideExpression', node.type);
+      throw OutOfRange.nonExhaustive(node.type);
   }
 }
 

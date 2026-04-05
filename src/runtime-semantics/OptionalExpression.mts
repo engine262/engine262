@@ -2,7 +2,7 @@ import { ReferenceRecord, Value } from '../value.mts';
 import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import { IsInTailPosition, StringValue } from '../static-semantics/all.mts';
-import { OutOfRange } from '../helpers.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   EvaluateCall,
@@ -125,5 +125,5 @@ function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseR
     // 2. Return ! MakePrivateReference(bv, fieldNameString).
     return X(MakePrivateReference(baseValue, fieldNameString));
   }
-  throw new OutOfRange('ChainEvaluation', node);
+  throw OutOfRange.nonExhaustive(node);
 }

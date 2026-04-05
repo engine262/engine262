@@ -18,7 +18,7 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   ArrayCreate,
@@ -107,7 +107,7 @@ function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCall
     return array;
   }
 
-  throw new OutOfRange('ArrayConstructor', numberOfArgs);
+  throw OutOfRange.nonExhaustive(numberOfArgs);
 }
 
 /** https://tc39.es/ecma262/#sec-array.from */

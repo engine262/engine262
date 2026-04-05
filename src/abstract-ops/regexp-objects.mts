@@ -9,7 +9,7 @@ import {
 import { CompilePattern, CountLeftCapturingParensWithin, type RegExpRecord } from '../runtime-semantics/all.mts';
 import { ParsePattern } from '../parse.mts';
 import { isLineTerminator } from '../parser/Lexer.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import type { RegExpObject } from '../intrinsics/RegExp.mts';
 import {
   ArrayCreate,

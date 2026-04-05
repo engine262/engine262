@@ -1,5 +1,5 @@
 import { IsSimpleParameterList } from '../static-semantics/all.mts';
-import { type Mutable } from '../helpers.mts';
+import { type Mutable } from '../utils/language.mts';
 import { Throw } from '../host-defined/error-messages.mts';
 import { getDeclarations, type ArrowInfo } from './Scope.mts';
 import { Token } from './tokens.mts';

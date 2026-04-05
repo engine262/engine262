@@ -9,7 +9,7 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack } from '../helpers.mts';
+import { captureStack } from '../utils/stack.mts';
 import { setErrorHostInternalSlot } from './Error.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 import { ErrorHostInternalSlots, type ErrorObject } from './Error.mts';

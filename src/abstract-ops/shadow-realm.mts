@@ -1,4 +1,5 @@
-import { captureStack, isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
+import { captureStack } from '../utils/stack.mts';
 import { setErrorHostInternalSlot } from '../intrinsics/Error.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
 import {

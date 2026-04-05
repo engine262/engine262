@@ -11,17 +11,18 @@ export * from './host-defined/inspect.mts';
 export { type Formattable, Throw } from './host-defined/error-messages.mts';
 export * from './evaluator.mts';
 
-export { captureStack } from './helpers.mts';
 export {
   gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
 export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';
+export { type Mutable, OutOfRange } from './utils/language.mts';
+export { kInternal } from './utils/internal.mts';
+export { JSStringMap, JSStringSet, PropertyKeyMap } from './utils/container.mts';
+export { skipDebugger } from './utils/evaluator.mts';
 export {
-  getHostDefinedErrorDetails, skipDebugger, getCurrentStack,
-  JSStringMap, JSStringSet, CallSite, CallFrame, type Mutable, PropertyKeyMap, kInternal,
-  parseJson,
-} from './helpers.mts';
+  CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
+} from './utils/stack.mts';
 
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';
 export { isSetObject, type SetObject } from './intrinsics/Set.mts';

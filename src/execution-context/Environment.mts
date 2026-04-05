@@ -15,7 +15,7 @@ import {
   NormalCompletion, Q, X,
   type ValueEvaluator,
 } from '../completion.mts';
-import { JSStringMap } from '../helpers.mts';
+import { JSStringMap } from '../utils/container.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,

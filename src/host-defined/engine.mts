@@ -10,7 +10,7 @@ import { GlobalDeclarationInstantiation } from '../runtime-semantics/all.mts';
 import {
   Evaluate, type PlainEvaluator, type ValueEvaluator,
 } from '../evaluator.mts';
-import { kInternal } from '../helpers.mts';
+import { kInternal } from '../utils/internal.mts';
 import {
   AbstractModuleRecord, CyclicModuleRecord, ObjectValue, runJobQueue, type ValueCompletion, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
   ManagedRealm,

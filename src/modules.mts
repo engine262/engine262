@@ -21,7 +21,8 @@ import {
   Q, X, ThrowCompletion,
   IfAbruptRejectPromise,
 } from './completion.mts';
-import { JSStringSet, type Mutable } from './helpers.mts';
+import { type Mutable } from './utils/language.mts';
+import { JSStringSet } from './utils/container.mts';
 import {
   Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
 } from './evaluator.mts';

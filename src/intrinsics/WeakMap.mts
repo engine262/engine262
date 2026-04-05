@@ -7,7 +7,7 @@ import {
 import {
   Q,
 } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { AddEntriesFromIterable } from './Map.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {

@@ -1,7 +1,7 @@
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
 import { ArgumentListEvaluation } from './all.mts';
 import {
   Assert,

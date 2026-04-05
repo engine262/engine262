@@ -15,7 +15,8 @@ import {
 import {
   Evaluate, type ValueEvaluator, type YieldEvaluator,
 } from '../evaluator.mts';
-import { __ts_cast__, resume, type Mutable } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
+import { resume } from '../utils/evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,

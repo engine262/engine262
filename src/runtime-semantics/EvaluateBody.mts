@@ -10,7 +10,7 @@ import {
 import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
 import { IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import {
   Evaluate_FunctionStatementList,
   FunctionDeclarationInstantiation,

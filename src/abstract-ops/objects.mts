@@ -11,7 +11,7 @@ import {
 import {
   Q, X,
 } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
 import {
   Assert,

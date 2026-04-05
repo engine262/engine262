@@ -2,7 +2,7 @@ import {
   UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { IfAbruptCloseIterator, Q } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Call,

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 // defined intrinsics that used in test262
-import { isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
 import harness from '../../lib/test262-harness.json' with { type: 'json' };
 import {
   CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, skipDebugger, surroundingAgent, ToString, Value, type Arguments, type ValueCompletion, gc,

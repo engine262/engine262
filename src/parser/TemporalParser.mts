@@ -1,8 +1,8 @@
 // https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar
 
 import type { TemporalDurationObject } from '../intrinsics/Temporal/Duration.mts';
-import { unreachable } from '../helpers.mts';
 import { remainder } from '../abstract-ops/math.mts';
+import { OutOfRange } from '../utils/language.mts';
 import {
   Assert,
   CreateTemporalDuration,
@@ -138,7 +138,7 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
               return node;
             }
             default:
-              return unreachable(goal);
+              throw OutOfRange.exhaustive(goal);
           }
         },
       );

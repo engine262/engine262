@@ -8,7 +8,7 @@ import {
 } from '../static-semantics/all.mts';
 import { Value } from '../value.mts';
 import { Q, NormalCompletion } from '../completion.mts';
-import { JSStringSet } from '../helpers.mts';
+import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { InstantiateFunctionObject } from './all.mts';
 import { Assert, GlobalEnvironmentRecord, Throw } from '#self';

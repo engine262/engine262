@@ -5,7 +5,7 @@ import {
   IsComputedPropertyKey,
   ContainsArguments,
 } from '../static-semantics/all.mts';
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { surroundingAgent, type Feature } from '../host-defined/engine.mts';
 import {
   Token, TokenPrecedence,

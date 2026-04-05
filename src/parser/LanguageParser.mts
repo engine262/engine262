@@ -1,4 +1,4 @@
-import type { Mutable } from '../helpers.mts';
+import type { Mutable } from '../utils/language.mts';
 import { ModuleParser } from './ModuleParser.mts';
 import type { ParseNode } from './ParseNode.mts';
 import { Token } from './tokens.mts';

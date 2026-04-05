@@ -1,4 +1,4 @@
-import type { kAsyncContext } from '../helpers.mts';
+import type { kAsyncContext } from '../utils/internal.mts';
 import {
   type Realm, type AbstractModuleRecord, type ScriptRecord, type NullValue, type ExecutionContext, type FunctionObject,
   Assert,

@@ -13,7 +13,8 @@ import {
   Q, X,
   NormalCompletion,
 } from '../completion.mts';
-import { OutOfRange, kInternal } from '../helpers.mts';
+import { kInternal } from '../utils/internal.mts';
+import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mts';
 import {
@@ -56,7 +57,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
       }
     }
     default:
-      throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
+      throw OutOfRange.nonExhaustive(PropertyDefinition);
   }
   // PropertyDefinition :
   //   PropertyName `:` AssignmentExpression

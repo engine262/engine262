@@ -1,4 +1,4 @@
-import { isArray } from '../helpers.mts';
+import { isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { TopLevelVarScopedDeclarations, type VarScopedDeclaration } from './all.mts';
 

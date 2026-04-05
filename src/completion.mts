@@ -2,12 +2,9 @@ import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   JSStringValue, Value, type Arguments,
 } from './value.mts';
-import {
-  callable,
-  kAsyncContext,
-  OutOfRange,
-  resume,
-} from './helpers.mts';
+import { kAsyncContext } from './utils/internal.mts';
+import { callable, OutOfRange } from './utils/language.mts';
+import { resume } from './utils/evaluator.mts';
 import type { Evaluator, ValueEvaluator } from './evaluator.mts';
 import {
   Assert,
@@ -72,7 +69,7 @@ class CompletionImpl<const T> {
         case 'throw':
           return createThrowCompletion(init) as CompletionImpl<T>;
         default:
-          throw new OutOfRange('new Completion', init);
+          throw OutOfRange.exhaustive(init);
       }
     }
 

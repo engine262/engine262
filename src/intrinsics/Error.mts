@@ -9,9 +9,10 @@ import {
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  captureStack, type CallSite, CallFrame,
+  captureStack,
   callSiteToErrorStack,
-} from '../helpers.mts';
+} from '../utils/stack.mts';
+import { type CallSite, CallFrame } from '../utils/stack.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   DefinePropertyOrThrow,

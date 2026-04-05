@@ -21,7 +21,8 @@ import {
 } from '../completion.mts';
 import { Parser, wrappedParse } from '../parse.mts';
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
-import { __ts_cast__, JSStringSet } from '../helpers.mts';
+import { __ts_cast__ } from '../utils/language.mts';
+import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Assert } from './all.mts';
 import {
