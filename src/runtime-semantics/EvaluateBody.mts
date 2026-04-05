@@ -146,6 +146,7 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNo
   // 1. Assert: argumentsList is empty.
   if (surroundingAgent.feature('decorators') && surroundingAgent.feature('decorators.no-bugfix.1')) {
     // TODO(decorator): spec bug
+    // @ts-expect-error
     // eslint-disable-next-line no-console
     console.assert(argumentsList.length === 0, 'Assert: argumentsList is empty.');
   } else {

@@ -9,7 +9,8 @@ import {
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  captureStack, setErrorHostInternalSlot, type CallSite, CallFrame,
+  captureStack, type CallSite, CallFrame,
+  callSiteToErrorStack,
 } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
@@ -20,6 +21,9 @@ import {
   type FunctionObject,
   IsError,
   Realm,
+  Call,
+  JSStringValue,
+  type PlainEvaluator,
 } from '#self';
 
 export interface ErrorObject extends ObjectValue {
@@ -38,6 +42,14 @@ export const ErrorHostInternalSlots = Object.freeze([
   'HostDefinedFormattedStack',
   'HostDefinedMessageString',
 ] as const);
+
+export function* setErrorHostInternalSlot(O: ErrorObject, { nativeStack, stack }: ReturnType<typeof captureStack>, errorStringPredefined?: string): PlainEvaluator {
+  const errorString = errorStringPredefined ?? (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+  const errorStack = callSiteToErrorStack(stack, nativeStack);
+  O.HostDefinedStack = stack;
+  O.HostDefinedFormattedStack = errorStack;
+  O.HostDefinedMessageString = errorString;
+}
 
 export { IsError as isErrorObject } from '../abstract-ops/error-objects.mts';
 

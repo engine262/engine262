@@ -150,7 +150,8 @@ export function createRealm({ printCompatMode = false, specifier }: CreateRealmO
 
   return realm.scope(() => {
     const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    const { setPrintHandle } = createTest262Intrinsics(realm, printCompatMode);
+    // eslint-disable-next-line no-console
+    const { setPrintHandle } = createTest262Intrinsics(realm, printCompatMode, console.log);
     return {
       realm,
       $262,

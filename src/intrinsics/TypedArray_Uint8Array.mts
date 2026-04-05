@@ -1,5 +1,6 @@
 import { __ts_cast__ } from '../helpers.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
+import { atob_polyfill, btoa_polyfill } from '../host-defined/base64.mts';
 import {
   AllocateTypedArray, type TypedArrayObject,
 } from './TypedArray.mts';
@@ -28,14 +29,14 @@ function* Uint8ArrayProto_toBase64([options = Value.undefined]: Arguments, { thi
   let outAscii: string;
   if (alphabet.stringValue() === 'base64') {
     // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64 encoding specified in section 4 of RFC 4648. Padding is included if and only if omitPadding is false.
-    outAscii = btoa(String.fromCharCode(...toEncode));
+    outAscii = btoa_polyfill(String.fromCharCode(...toEncode));
     if (omitPadding !== Value.false) {
       outAscii = outAscii.replace(/=/g, '');
     }
   } else {
     Assert(alphabet.stringValue() === 'base64url');
     // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64url encoding specified in section 5 of RFC 4648. Padding is included if and only if omitPadding is false.
-    outAscii = btoa(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
+    outAscii = btoa_polyfill(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
     if (omitPadding !== Value.false) {
       outAscii = outAscii.replace(/=/g, '');
     }
@@ -285,7 +286,7 @@ function DecodeFinalBase64Chunk(chunk: string, throwOnExtraBits: boolean): Plain
 function DecodeFullLengthBase64Chunk(chunk: string): number[] {
   // 1. Let byteSequence be the unique sequence of 3 bytes resulting from decoding chunk as base64 (i.e., the sequence such that applying the base64 encoding specified in section 4 of RFC 4648 to byteSequence would produce chunk).
   // 2. Return a List whose elements are the elements of byteSequence, in order.
-  const byteSequence = [...atob(chunk)].map((c) => c.charCodeAt(0));
+  const byteSequence = [...atob_polyfill(chunk)].map((c) => c.charCodeAt(0));
   return byteSequence;
 }
 

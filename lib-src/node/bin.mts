@@ -138,7 +138,8 @@ const realm = new ManagedRealm({ resolverCache: new Map(), name: 'repl', specifi
 }
 
 if (argv.values.test262) {
-  createTest262Intrinsics(realm, argv.values.test262);
+  // eslint-disable-next-line no-console
+  createTest262Intrinsics(realm, argv.values.test262, console.log);
 }
 
 if (argv.values['test262-harness']) {

@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console,import/no-extraneous-dependencies */
 import { opendir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import {

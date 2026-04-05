@@ -378,7 +378,7 @@ class TerminalUIReporter extends TestReporter {
   }
 
   start() {
-    render(h(TerminalUI, { runner: this }), { incrementalRendering: true, exitOnCtrlC: false, maxFps: process.env.SSH_CONNECTION ? 5 : undefined }).waitUntilExit().then(this.onExit.resolve);
+    render(h(TerminalUI, { runner: this }), { incrementalRendering: true, exitOnCtrlC: false, maxFps: process.env.SSH_CONNECTION ? 5 : undefined }).waitUntilExit().then(() => this.onExit.resolve());
     this.startSlowTimer();
   }
 

@@ -12,7 +12,6 @@ import type { ParseNode } from './parser/ParseNode.mts';
 import type {
   Evaluator, EvaluatorNextType, YieldEvaluator,
 } from './evaluator.mts';
-import type { ErrorObject } from './intrinsics/Error.mts';
 import {
   Call,
   isFunctionObject,
@@ -20,7 +19,6 @@ import {
   isECMAScriptFunctionObject,
   type ValueCompletion,
   isErrorObject,
-  type PlainEvaluator,
   type FunctionObject,
 } from '#self';
 
@@ -605,7 +603,7 @@ export function captureStack() {
   const stack = getCurrentStack();
 
   let nativeStack: string | undefined;
-  if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
+  if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack && 'stackTraceLimit' in Error) {
     const origStackTraceLimit = Error.stackTraceLimit;
     Error.stackTraceLimit = 12;
     try {
@@ -619,14 +617,6 @@ export function captureStack() {
     stack,
     nativeStack,
   };
-}
-
-export function* setErrorHostInternalSlot(O: ErrorObject, { nativeStack, stack }: ReturnType<typeof captureStack>, errorStringPredefined?: string): PlainEvaluator {
-  const errorString = errorStringPredefined ?? (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
-  const errorStack = callSiteToErrorStack(stack, nativeStack);
-  O.HostDefinedStack = stack;
-  O.HostDefinedFormattedStack = errorStack;
-  O.HostDefinedMessageString = errorString;
 }
 
 export function callSiteToErrorStack(stack: readonly CallSite[], nativeStack: string | undefined) {

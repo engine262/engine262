@@ -270,6 +270,7 @@ export interface Throw {
   | 'Invalid use of arguments'
   | 'Invalid use of super'
   | 'Iterator cannot be invoked without new'
+  | 'Iterator is an abstract class'
   | 'Iterator length is bigger than MAX_SAFE_INTEGER'
   | 'Legacy octal literal in strict mode'
   | 'Let in lexical binding'
@@ -446,7 +447,6 @@ export interface Throw {
   | "'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable data property with a different value"
   | 'Accessor decorator must return an object or undefined, but $1 was returned'
   | 'Assignment to constant variable $1'
-  | 'Cannot construct abstract $1'
   | 'Cannot convert $1 to Temporal.Duration'
   | 'Cannot convert $1 to a BigInt'
   | 'Cannot convert $1 to object'

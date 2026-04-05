@@ -1,4 +1,5 @@
-import { captureStack, isArray, setErrorHostInternalSlot } from '../helpers.mts';
+import { captureStack, isArray } from '../helpers.mts';
+import { setErrorHostInternalSlot } from '../intrinsics/Error.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
 import {
   Assert, Call, Construct, CopyNameAndLength, CreateBuiltinFunction, DeclarativeEnvironmentRecord, EnvironmentRecord, EvalDeclarationInstantiation, Evaluate, ExecutionContext, Get, GetFunctionRealm, HasOwnProperty, HostEnsureCanCompileStrings, HostLoadImportedModule, IsCallable, isErrorObject, isModuleNamespaceObject, JSStringValue, MakeBasicObject, NewPromiseCapability, NormalCompletion, ObjectValue, Parser, PerformPromiseThen, Q, RequireInternalSlot, surroundingAgent, Throw, ThrowCompletion, Value, wrappedParse, X, type Arguments, type BuiltinFunctionObject, type ExoticObject, type FunctionObject, type Mutable, type PlainCompletion, type Realm, type ValueEvaluator,

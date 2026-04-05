@@ -7,7 +7,6 @@
 
 import { Q, type PlainEvaluator, type Value } from '#self';
 
-
 /**
  * Default minimum size of a run.
  */

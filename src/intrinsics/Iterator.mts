@@ -43,7 +43,7 @@ function* IteratorConstructor(
     return Throw.TypeError('Iterator cannot be invoked without new');
   }
   if (NewTarget === surroundingAgent.activeFunctionObject) {
-    return Throw.TypeError('Cannot construct abstract $1', NewTarget);
+    return Throw.TypeError('Iterator is an abstract class');
   }
 
   // 2. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Iterator.prototype%").

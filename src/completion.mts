@@ -270,7 +270,9 @@ class ThrowCompletion_<T extends Value = Value> extends AbruptCompletion<T> {
   private constructor(init: Pick<ThrowCompletion_<T>, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);
     if (debugging) {
-      Error.stackTraceLimit = Infinity;
+      if ('stackTraceLimit' in Error) {
+        Error.stackTraceLimit = Infinity;
+      }
     }
   }
 
