@@ -214,12 +214,12 @@ export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilit
   if (!IsConstructor(C)) {
     return Throw.TypeError('$1 is not a Promise constructor', C);
   }
-  const resolvingFunctions: Record<'Resolve' | 'Reject', Value | undefined> = { Resolve: undefined, Reject: undefined };
+  const resolvingFunctions = { Resolve: Value.undefined as Value, Reject: Value.undefined as Value };
   const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]: Arguments) => {
-    if (resolvingFunctions.Resolve) {
+    if (resolvingFunctions.Resolve !== Value.undefined) {
       return Throw.TypeError('Promise resolve function already set');
     }
-    if (resolvingFunctions.Reject) {
+    if (resolvingFunctions.Reject !== Value.undefined) {
       return Throw.TypeError('Promise reject function already set');
     }
     resolvingFunctions.Resolve = resolve;
@@ -228,10 +228,10 @@ export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilit
   };
   const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), []));
   const promise = Q(yield* Construct(C, [executor])) as PromiseObject;
-  if (!resolvingFunctions.Resolve || !IsCallable(resolvingFunctions.Resolve)) {
+  if (!IsCallable(resolvingFunctions.Resolve)) {
     return Throw.TypeError('Promise resolve function $1 is not callable', resolvingFunctions.Resolve || Value.undefined);
   }
-  if (!resolvingFunctions.Reject || !IsCallable(resolvingFunctions.Reject)) {
+  if (!IsCallable(resolvingFunctions.Reject)) {
     return Throw.TypeError('Promise reject function $1 is not callable', resolvingFunctions.Reject || Value.undefined);
   }
   return new PromiseCapabilityRecord({
