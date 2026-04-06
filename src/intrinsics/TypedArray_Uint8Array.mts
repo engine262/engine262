@@ -89,7 +89,7 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
   }
   const result = FromBase64(string.stringValue(), alphabetStr, lastChunkHandlingStr);
   if (result.Error) {
-    return ThrowCompletion(result.Error);
+    Throw(result.Error);
   }
   const resultLength = result.Bytes.length;
   const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
@@ -146,7 +146,7 @@ function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Val
   Assert(written <= byteLength);
   yield* SetUint8ArrayBytes(into, bytes);
   if (result.Error) {
-    return ThrowCompletion(result.Error);
+    Throw(result.Error);
   }
   const resultObject = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read)));
@@ -161,7 +161,7 @@ function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
   }
   const result = FromHex(string.stringValue());
   if (result.Error) {
-    return ThrowCompletion(result.Error);
+    Throw(result.Error);
   }
   const resultLength = result.Bytes.length;
   const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
@@ -194,7 +194,7 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { th
   Assert(written <= byteLength);
   yield* SetUint8ArrayBytes(into, bytes);
   if (result.Error) {
-    return ThrowCompletion(result.Error);
+    Throw(result.Error);
   }
   const resultObject = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read)));

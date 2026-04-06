@@ -1,7 +1,8 @@
 import { readFile, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  evalQ, ManagedRealm, Realm, Throw, ThrowCompletion, type AgentHostDefined,
+  EnsureCompletion,
+  ManagedRealm, Realm, Throw, ThrowCompletion, type AgentHostDefined,
 } from '#self';
 
 export function createLoadImportedModule(getCache = (realm: ManagedRealm) => realm.HostDefined.resolverCache) {
@@ -34,25 +35,23 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
       return;
     }
 
-    evalQ(async (Q) => {
-      const base = path.dirname(referrer.HostDefined!.specifier!);
-      const resolved = path.resolve(base, specifier);
-      if (cache?.has(resolved)) {
-        finish(cache.get(resolved)!);
+    const base = path.dirname(referrer.HostDefined!.specifier!);
+    const resolved = path.resolve(base, specifier);
+    if (cache?.has(resolved)) {
+      finish(cache.get(resolved)!);
+      return;
+    }
+    readFile(resolved, (err, data) => {
+      if (err) {
+        finish(Throw.SyntaxError('Could not read module $1', specifier));
         return;
       }
-      try {
-        readFile(resolved, (err, data) => {
-          if (err) {
-            finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
-            return;
-          }
-          const m = Q(parseModule(realm, resolved, attributes, data));
-          cache?.set(resolved, m);
-          finish(m);
-        });
-      } catch (error) {
-        finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
+      const module = EnsureCompletion(parseModule(realm, resolved, attributes, data));
+      if (module.Type === 'throw') {
+        finish(module);
+      } else {
+        cache?.set(resolved, module.Value);
+        finish(module);
       }
     });
   };

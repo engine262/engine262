@@ -26,8 +26,7 @@ function toLocation(location: Location, scriptId: string | undefined): Protocol.
     name: '[[FunctionLocation]]',
     value: {
       type: 'object',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subtype: 'internal#location' as any,
+      subtype: 'internal#location' as never,
       description: 'Object',
       value: {
         columnNumber: location.start.column,
@@ -88,8 +87,7 @@ export const Function: Inspector<FunctionObject> = {
         className: 'Array',
         description: `Scopes[${scope.length}]`,
         objectId: getObjectId(scopeObject as ObjectValue),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        subtype: 'internal#scopeList' as any,
+        subtype: 'internal#scopeList' as never,
         type: 'object',
       } : undefined;
 

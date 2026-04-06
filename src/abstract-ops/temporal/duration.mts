@@ -428,7 +428,7 @@ export function DefaultTemporalLargestUnit(duration: TemporalDurationObject): Te
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalpartialdurationrecord */
 export function* ToTemporalPartialDurationRecord(temporalDurationLike: Value): PlainEvaluator<PartialDurationRecord> {
   if (!(temporalDurationLike instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', temporalDurationLike);
+    return Throw.TypeError('Cannot convert $1 to TemporalPartialDurationRecord', temporalDurationLike);
   }
   const result: Mutable<PartialDurationRecord> = {
     Days: undefined,
@@ -447,7 +447,7 @@ export function* ToTemporalPartialDurationRecord(temporalDurationLike: Value): P
     result.Days = Q(yield* ToIntegerIfIntegral(days));
   }
   const hours = Q(yield* Get(temporalDurationLike, Value('hours')));
-  if (days !== Value.undefined) {
+  if (hours !== Value.undefined) {
     result.Hours = Q(yield* ToIntegerIfIntegral(hours));
   }
   const microseconds = Q(yield* Get(temporalDurationLike, Value('microseconds')));

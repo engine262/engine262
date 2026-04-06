@@ -12,8 +12,12 @@ import {
   type Intrinsics, type ErrorObject,
 } from '#self';
 
-export function Throw(_: never): never {
-  throw new Error('Not implemented yet.');
+/** https://tc39.es/ecma262/#sec-throw-an-exception */
+export function Throw(_: never): never
+/** @internal */
+export function Throw(_: Value): never
+export function Throw(_: Value): never {
+  throw new Error('Throw requires build.');
 }
 
 function ThrowFactory(intrinsicName: keyof Intrinsics & `%${string}Error%`): Throw {
@@ -447,6 +451,7 @@ export interface Throw {
   | 'Accessor decorator must return an object or undefined, but $1 was returned'
   | 'Assignment to constant variable $1'
   | 'Cannot convert $1 to Temporal.Duration'
+  | 'Cannot convert $1 to TemporalPartialDurationRecord'
   | 'Cannot convert $1 to a BigInt'
   | 'Cannot convert $1 to object'
   | 'Cannot convert a Symbol value to a $1'
@@ -581,5 +586,6 @@ type ParametersMap = {
   '2': Formattable;
   '3': Formattable;
   '4': Formattable;
+  '5': Formattable;
 }
 type ParsePrintFormat<S extends string> = S extends `${string}$${infer T}${infer End}` ? T extends keyof ParametersMap ? [ParametersMap[T], ...ParsePrintFormat<End>] : ParsePrintFormat<End> : []

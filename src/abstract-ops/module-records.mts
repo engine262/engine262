@@ -202,8 +202,8 @@ export function* EvaluateModuleSync(module: ModuleRecord): PlainEvaluator<undefi
     }
     // b. Set promise.[[PromiseIsHandled]] to true.
     promise.PromiseIsHandled = Value.true;
-    // c. Return ThrowCompletion(promise.[[PromiseResult]]).
-    return ThrowCompletion(promise.PromiseResult!);
+    // c. Throw promise.[[PromiseResult]].
+    Throw(promise.PromiseResult!);
   }
   // 5. Return unused.
   return undefined;

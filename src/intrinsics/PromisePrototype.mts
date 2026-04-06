@@ -3,7 +3,7 @@ import {
   ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import {
-  Q, ThrowCompletion, X,
+  Q, X,
 } from '../completion.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -80,8 +80,8 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       // ii. Let promise be ? PromiseResolve(C, result).
       const promiseInner = Q(yield* PromiseResolve(C, result));
       // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
-      //   1. Return ThrowCompletion(reason).
-      const throwReason = () => ThrowCompletion(reason);
+      //   1. Return Throw(reason).
+      const throwReason = () => Throw(reason);
       // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
       const thrower = X(CreateBuiltinFunction(throwReason, 0, Value(''), []));
       // v. Return ? Invoke(promise, "then", « thrower »).

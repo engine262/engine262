@@ -13,7 +13,7 @@ export const args = util.parseArgs({
   strict: true,
   options: {
     'help': { type: 'boolean', short: 'h' },
-    'features': { type: 'string', short: 'f' },
+    'features': { type: 'string' },
     'engine-features': { type: 'string', multiple: true, short: 'e' },
     'update-slow': { type: 'string' },
     'update-failed': { type: 'boolean', short: 'u' },
