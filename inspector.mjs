@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 7ca1527262c7248606a1d9cebf799bd4d14d5575
+ * engine262 0.0.1 9f142ce60775babef9fa5399323daf665dd10b0d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -322,7 +322,6 @@ function toLocation(location, scriptId) {
     name: '[[FunctionLocation]]',
     value: {
       type: 'object',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       subtype: 'internal#location',
       description: 'Object',
       value: {
@@ -386,7 +385,6 @@ const Function = {
         className: 'Array',
         description: `Scopes[${scope.length}]`,
         objectId: getObjectId(scopeObject),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         subtype: 'internal#scopeList',
         type: 'object'
       } : undefined;
