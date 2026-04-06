@@ -23,6 +23,7 @@ export { skipDebugger } from './utils/evaluator.mts';
 export {
   CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
 } from './utils/stack.mts';
+export { ModuleCache } from './utils/module.mts';
 
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';
 export { isSetObject, type SetObject } from './intrinsics/Set.mts';

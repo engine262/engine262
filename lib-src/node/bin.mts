@@ -27,6 +27,7 @@ import {
   type PlainEvaluator,
   importBundledTest262Harness,
   boostTest262Harness,
+  ModuleCache,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -113,7 +114,7 @@ const agent = new Agent({
 });
 setSurroundingAgent(agent);
 
-const realm = new ManagedRealm({ resolverCache: new Map(), name: 'repl', specifier: process.cwd() });
+const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'repl', specifier: process.cwd() });
 // Define console.log
 {
   const format = (function* format(args: Arguments): PlainEvaluator<string> {
@@ -181,7 +182,7 @@ function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: stri
     const completion = evalQ((Q) => {
       if (argv.values.module || filename.endsWith('.mjs')) {
         const module = Q(realm.compileModule(source, { specifier: filename }));
-        realm.HostDefined.resolverCache?.set(filename, module);
+        realm.HostDefined.resolverCache?.set(filename, 'js', module);
         const load = Q(module.LoadRequestedModules());
         if (load.PromiseState === 'rejected') {
           Q(ThrowCompletion(load.PromiseResult!));

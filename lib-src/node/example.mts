@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import {
-  Agent, inspect, ManagedRealm, NormalCompletion, setSurroundingAgent, ThrowCompletion, type Arguments, type PlainEvaluator,
+  Agent, inspect, ManagedRealm, ModuleCache, NormalCompletion, setSurroundingAgent, ThrowCompletion, type Arguments, type PlainEvaluator,
 } from '#self';
 import { createConsole } from '#self/inspector';
 
@@ -12,7 +12,7 @@ setSurroundingAgent(agent);
 
 // A Realm is a separate global environment.
 // In Web browsers, each iframe has its own Realm and they may interact with each other.
-const realm = new ManagedRealm({ resolverCache: new Map(), name: 'My Realm', specifier: process.cwd() });
+const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'My Realm', specifier: process.cwd() });
 
 // Define console.log
 {

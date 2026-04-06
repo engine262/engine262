@@ -170,7 +170,7 @@ ${test.attrs.flags.async ? DONE : ''}`);
     const completion = evalQ((Q) => {
       if (test.attrs.flags.module) {
         const module = Q(realm.compileModule(test.content, { specifier }));
-        resolverCache.set(specifier, module);
+        resolverCache.set(specifier, 'js', module);
         const loadModuleCompletion = module.LoadRequestedModules();
         if (loadModuleCompletion.PromiseState === 'rejected') {
           Q(ThrowCompletion(loadModuleCompletion.PromiseResult!));

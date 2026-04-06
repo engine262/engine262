@@ -8,16 +8,22 @@ import {
 export function createLoadImportedModule(getCache = (realm: ManagedRealm) => realm.HostDefined.resolverCache) {
   const validateType = (attributes: Map<string, string>, finish: (completion: ThrowCompletion) => void) => {
     const type = attributes.get('type');
-    if (type && type !== 'json') {
-      finish(Throw.TypeError('Unsupported import type "$1" (only "json" is supported)', type));
+    if (type && type !== 'json' && type !== 'text') {
+      finish(Throw.TypeError('Unsupported import type "$1" (only "json" and "text" are supported)', type));
       return false;
     }
     return true;
   };
 
-  const parseModule = (realm: ManagedRealm, resolved: string, attributes: Map<string, string>, source: string) => (attributes.get('type') === 'json' || resolved.endsWith('.json')
-    ? realm.createJSONModule(resolved, source)
-    : realm.compileModule(source, { specifier: resolved }));
+  const parseModule = (realm: ManagedRealm, resolved: string, attributes: Map<string, string>, source: string) => {
+    if (attributes.get('type') === 'text') {
+      return realm.createTextModule(source);
+    } else if (attributes.get('type') === 'json' || resolved.endsWith('.json')) {
+      return realm.createJSONModule(source);
+    } else {
+      return realm.compileModule(source, { specifier: resolved });
+    }
+  };
 
   const loadImportedModuleSyncOrAsync = (
     readFile: (path: string, callback: (err: NodeJS.ErrnoException | null, data: string) => void) => void,
@@ -37,8 +43,9 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
 
     const base = path.dirname(referrer.HostDefined!.specifier!);
     const resolved = path.resolve(base, specifier);
-    if (cache?.has(resolved)) {
-      finish(cache.get(resolved)!);
+    const type = (attributes.get('type') as 'json' | 'text' | undefined) || 'js';
+    if (cache?.has(resolved, type)) {
+      finish(cache.get(resolved, type)!);
       return;
     }
     readFile(resolved, (err, data) => {
@@ -50,7 +57,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
       if (module.Type === 'throw') {
         finish(module);
       } else {
-        cache?.set(resolved, module.Value);
+        cache?.set(resolved, type, module.Value);
         finish(module);
       }
     });

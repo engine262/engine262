@@ -24,7 +24,7 @@ import {
   type ParseScriptHostDefined,
 } from './parse.mts';
 import {
-  AbstractModuleRecord, ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
+  ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
@@ -32,12 +32,14 @@ import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
 import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import type { ModuleCache } from './utils/module.mts';
 import {
   ClearKeptObjects,
   CreateIntrinsics,
   SetDefaultGlobalBindings,
   OrdinaryObjectCreate,
   Assert,
+  CreateTextModule,
 } from '#self';
 import {
   Realm,
@@ -193,7 +195,7 @@ export interface ManagedRealmHostDefined {
   promiseRejectionTracker?(promise: PromiseObject, operation: 'reject' | 'handle'): void;
   getImportMetaProperties?(module: ModuleRecordHostDefinedPublic): readonly { readonly Key: PropertyKeyValue, readonly Value: Value }[];
   finalizeImportMeta?(meta: ObjectValue, module: ModuleRecordHostDefinedPublic): PlainCompletion<void>;
-  resolverCache?: Map<string, AbstractModuleRecord>;
+  resolverCache?: ModuleCache;
 
   randomSeed?(): string;
   attachingInspector?: unknown;
@@ -463,14 +465,19 @@ export class ManagedRealm extends Realm {
     return module;
   }
 
-  createJSONModule(specifier: string, sourceText: string) {
-    if (typeof specifier !== 'string') {
-      throw new TypeError('specifier must be a string');
-    }
+  createJSONModule(sourceText: string) {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
     const module = this.scope(() => ParseJSONModule(Value(sourceText)));
+    return module;
+  }
+
+  createTextModule(sourceText: string) {
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
+    }
+    const module = this.scope(() => CreateTextModule(Value(sourceText)));
     return module;
   }
 }

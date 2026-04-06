@@ -35,6 +35,7 @@ import {
   ReadyForSyncExecution,
   type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
   Throw,
+  JSStringValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -566,4 +567,9 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
     ExportNames: [Value('default')],
     EvaluationSteps: closure,
   });
+}
+
+/** https://tc39.es/proposal-import-text/#sec-create-text-module */
+export function CreateTextModule(source: JSStringValue) {
+  return CreateDefaultExportSyntheticModule(source);
 }

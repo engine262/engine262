@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import { loadImportedModuleSync } from '../lib-src/node/module.mts';
 import { supportColor, type SkipReason } from './tui.mts';
 import {
-  Agent, ManagedRealm, type OrdinaryObject, SourceTextModuleRecord, OrdinaryObjectCreate, createTest262Intrinsics,
+  Agent, ManagedRealm, type OrdinaryObject, OrdinaryObjectCreate, createTest262Intrinsics,
   Value,
+  ModuleCache,
 } from '#self';
 
 export interface Attrs {
@@ -132,7 +133,7 @@ export function createAgent({ features = [] }: CreateAgentOptions) {
 export interface Test262CreateRealm {
   realm: ManagedRealm;
   $262: OrdinaryObject;
-  resolverCache: Map<string, SourceTextModuleRecord>;
+  resolverCache: ModuleCache;
   setPrintHandle: (callback: ((str: string, value: Value) => void) | undefined) => void;
 }
 export interface CreateRealmOptions {
@@ -141,7 +142,7 @@ export interface CreateRealmOptions {
 }
 
 export function createRealm({ printCompatMode = false, specifier }: CreateRealmOptions = {}): Test262CreateRealm {
-  const resolverCache = new Map();
+  const resolverCache = new ModuleCache();
 
   const realm = new ManagedRealm({
     resolverCache,
