@@ -537,11 +537,13 @@ export function GetModuleNamespace(
     const unambiguousNames = [];
     // c. For each element name of exportedNames, do
     for (const name of exportedNames) {
-      // i. Let resolution be module.ResolveExport(name).
-      const resolution = module.ResolveExport(name);
-      // ii. If resolution is a ResolvedBinding Record, append name to unambiguousNames.
-      if (resolution instanceof ResolvedBindingRecord) {
-        unambiguousNames.push(name);
+      if (phase !== 'defer' || name.stringValue() !== 'then') {
+        // i. Let resolution be module.ResolveExport(name).
+        const resolution = module.ResolveExport(name);
+        // ii. If resolution is a ResolvedBinding Record, append name to unambiguousNames.
+        if (resolution instanceof ResolvedBindingRecord) {
+          unambiguousNames.push(name);
+        }
       }
     }
     // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).

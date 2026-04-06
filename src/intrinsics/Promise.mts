@@ -51,6 +51,7 @@ import {
   type PromiseAllResolveElementFunctionObject,
   type PromiseAllRejectElementFunctionObject,
   IteratorStepValue,
+  PerformPromiseThen,
 } from '#self';
 
 
@@ -122,6 +123,26 @@ function* GetPromiseResolve(promiseConstructor: FunctionObject) {
   return promiseResolve;
 }
 
+function CreatePromiseAllResolveElement(index: number, values: Value[], resultCapability: PromiseCapabilityRecord, remainingElementsCount: { Value: number }): FunctionObject {
+  const fulfilledSteps = function* fulfilled([value = Value.undefined]: Arguments): ValueEvaluator {
+    const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
+    if (F.AlreadyCalled.Value) return Value.undefined;
+    F.AlreadyCalled.Value = true;
+    const thisIndex = F.Index;
+    values[thisIndex] = value;
+    remainingElementsCount.Value -= 1;
+    if (remainingElementsCount.Value === 0) {
+      const valuesArray = CreateArrayFromList(values);
+      return Q(yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
+    }
+    return Value.undefined;
+  };
+  const onFulfilled = CreateBuiltinFunction(fulfilledSteps, 1, '', ['AlreadyCalled', 'Index']) as Mutable<PromiseAllResolveElementFunctionObject>;
+  onFulfilled.AlreadyCalled = { Value: false };
+  onFulfilled.Index = index;
+  return onFulfilled;
+}
+
 /** https://tc39.es/ecma262/#sec-performpromiseall */
 export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: IsConstructor(constructor) is true.
@@ -158,29 +179,30 @@ export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: 
     values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
     const nextPromise = Q(yield* Call(promiseResolve, constructor, [next]));
-    const fulfilledSteps = function* PromiseAllResolveElementFunctions([x = Value.undefined]: Arguments): ValueEvaluator {
-      const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
-      const alreadyCalled = F.AlreadyCalled;
-      if (alreadyCalled.Value === true) {
-        return Value.undefined;
-      }
-      alreadyCalled.Value = true;
-      const thisIndex = F.Index;
-      values[thisIndex] = x;
-      remainingElementsCount.Value -= 1;
-      if (remainingElementsCount.Value === 0) {
-        const valuesArray = CreateArrayFromList(values);
-        return Q(yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
-      }
-      return Value.undefined;
-    };
-    const onFulfilled = X(CreateBuiltinFunction(fulfilledSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllResolveElementFunctionObject>;
-    onFulfilled.AlreadyCalled = { Value: false };
-    onFulfilled.Index = index;
+    const onFulfilled = CreatePromiseAllResolveElement(index, values, resultCapability, remainingElementsCount);
     index += 1;
     remainingElementsCount.Value += 1;
     Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]));
   }
+}
+
+/** https://tc39.es/proposal-defer-import-eval/#sec-getmodulenamespace */
+export function SafePerformPromiseAll(promises: readonly PromiseObject[]) {
+  const resultCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+  if (!promises.length) {
+    X(Call(resultCapability.Resolve, Value.undefined, [CreateArrayFromList([])]));
+    return resultCapability.Promise;
+  }
+  const values: Value[] = [];
+  const remainingElementsCount = { Value: promises.length };
+  let index = 0;
+  for (const promise of promises) {
+    values.push(Value.undefined);
+    const onFulfilled = CreatePromiseAllResolveElement(index, values, resultCapability, remainingElementsCount);
+    index += 1;
+    PerformPromiseThen(promise, onFulfilled, resultCapability.Reject);
+  }
+  return resultCapability.Promise;
 }
 
 /** https://tc39.es/ecma262/#sec-promise.all */

@@ -11,7 +11,7 @@ import {
 import {
   AbruptCompletion, ValueOfNormalCompletion, X, type PlainCompletion,
 } from '../completion.mts';
-import { PerformPromiseAll } from '../intrinsics/Promise.mts';
+import { PerformPromiseAll, SafePerformPromiseAll } from '../intrinsics/Promise.mts';
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
 export function ContinueDynamicImport(
@@ -81,12 +81,8 @@ export function ContinueDynamicImport(
       for (const dep of evaluationList) {
         asyncDepsEvaluationPromises.push(yield* dep.Evaluate());
       }
-      // v. Let iterator be CreateListIteratorRecord(asyncDepsEvaluationPromises).
-      const iterator = CreateListIteratorRecord(asyncDepsEvaluationPromises);
-      // vi. Let pc be ! NewPromiseCapability(%Promise%).
-      const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-      // vii. Let evaluatePromise be ! PerformPromiseAll(iterator, %Promise%, pc, %Promise.resolve%).
-      evaluatePromise = X(PerformPromiseAll(iterator, surroundingAgent.intrinsic('%Promise%'), pc, surroundingAgent.intrinsic('%Promise.resolve%'))) as PromiseObject;
+      // vii. Let evaluatePromise be ! SafePerformPromiseAll(asyncDepsEvaluationPromises).
+      evaluatePromise = SafePerformPromiseAll(asyncDepsEvaluationPromises);
     } else { // f. Else,
       // i. Assert: phase is EVALUATION.
       Assert(phase === 'evaluation');
