@@ -210,6 +210,12 @@ export abstract class Lexer {
 
   protected position = 0;
 
+  protected get debug() {
+    const e = { HostDefinedMessageString: '', HostDefinedStack: [] } satisfies Partial<ErrorObject>;
+    this.decorateSyntaxError(e, this.position);
+    return e.HostDefinedMessageString;
+  }
+
   protected line = 1;
 
   protected columnOffset = 0;
@@ -230,7 +236,7 @@ export abstract class Lexer {
 
   earlyErrors = new Set<ErrorObject>();
 
-  decorateSyntaxError(error: ErrorObject, location: number | Locatable) {
+  decorateSyntaxError(error: Pick<ErrorObject, 'HostDefinedMessageString' | 'HostDefinedStack'>, location: number | Locatable) {
     let startIndex: number;
     // @ts-ignore unused
     let endIndex: number;

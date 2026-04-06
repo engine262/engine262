@@ -1582,9 +1582,9 @@ export abstract class ExpressionParser extends FunctionParser {
 
     let result: ParseNode.MemberExpression | ParseNode.IdentifierReference = this.parseIdentifierReference();
 
-    while (isPropertyOrCall(this.peek().type)) {
+    let next = this.peek().type;
+    while (next === Token.PERIOD || next === Token.LPAREN) {
       let finished: ParseNode.MemberExpression | ParseNode.CallExpression;
-      const next = this.peek().type;
       if (next === Token.PERIOD) {
         const node = this.startNode<ParseNode.MemberExpression>(result);
         this.next();
@@ -1612,10 +1612,11 @@ export abstract class ExpressionParser extends FunctionParser {
         outerNode.CallExpression = finishedNode;
         return this.finishNode(outerNode, 'Decorator');
       } else {
-        this.unexpected();
+        return this.finishNode(this.startNode<ParseNode.Decorator_MemberExpression>(result), 'Decorator');
       }
       // NOTE: unwinds ParseNode.Finish type alias to avoid circularity issues in type checker
       result = finished as ParseNode.MemberExpression;
+      next = this.peek().type;
     }
     const outerNode = this.startNode<ParseNode.Decorator_MemberExpression>(result);
     outerNode.subtype = 'MemberExpression';
