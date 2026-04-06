@@ -4,14 +4,14 @@
 import {
   AbstractModuleRecord,
   Assert,
-  Call, CreateBuiltinFunction, CreateListIteratorRecord, GatherAsynchronousTransitiveDependencies, GetModuleNamespace, NewPromiseCapability, PerformPromiseThen, PromiseCapabilityRecord, surroundingAgent, Value,
+  Call, CreateBuiltinFunction, GatherAsynchronousTransitiveDependencies, GetModuleNamespace, PerformPromiseThen, PromiseCapabilityRecord, Value,
   type Arguments,
   type PromiseObject,
 } from '../index.mts';
 import {
   AbruptCompletion, ValueOfNormalCompletion, X, type PlainCompletion,
 } from '../completion.mts';
-import { PerformPromiseAll, SafePerformPromiseAll } from '../intrinsics/Promise.mts';
+import { SafePerformPromiseAll } from '../intrinsics/Promise.mts';
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
 export function ContinueDynamicImport(
