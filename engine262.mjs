@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 9f142ce60775babef9fa5399323daf665dd10b0d
+ * engine262 0.0.1 b249d351e89be2efdb59fecbc291d7aca6fd6e4c
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -75492,9 +75492,7 @@ class ManagedRealm extends Realm {
     if (!completion) {
       throw new Assert.Error('Expect evaluation completes synchronously');
     }
-    if (!(completion instanceof AbruptCompletion)) {
-      runJobQueue();
-    }
+    runJobQueue();
     return completion;
   }
   evaluateModule(sourceText, specifier) {
@@ -75514,9 +75512,7 @@ class ManagedRealm extends Realm {
     let completion;
     completion = this.evaluate(sourceText, c => {
       completion = c;
-      if (!(completion instanceof AbruptCompletion)) {
-        runJobQueue();
-      }
+      runJobQueue();
     });
     if (!completion) {
       surroundingAgent.resumeEvaluate({
