@@ -30,36 +30,40 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
     ...[referrer, specifier, attributes, _hostDefined, finish]: Parameters<NonNullable<AgentHostDefined['loadImportedModule']>>
   ) => {
     const realm = (referrer instanceof Realm ? referrer : referrer.Realm) as ManagedRealm;
-    const cache = getCache(realm);
+    realm.scope(() => {
+      const cache = getCache(realm);
 
-    if (!referrer.HostDefined?.specifier) {
-      finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
-      return;
-    }
-
-    if (!validateType(attributes, finish)) {
-      return;
-    }
-
-    const base = path.dirname(referrer.HostDefined!.specifier!);
-    const resolved = path.resolve(base, specifier);
-    const type = (attributes.get('type') as 'json' | 'text' | undefined) || 'js';
-    if (cache?.has(resolved, type)) {
-      finish(cache.get(resolved, type)!);
-      return;
-    }
-    readFile(resolved, (err, data) => {
-      if (err) {
-        finish(Throw.SyntaxError('Could not read module $1', specifier));
+      if (!referrer.HostDefined?.specifier) {
+        finish(Throw.SyntaxError('Could not resolve module "$1" from a module with no source location', specifier));
         return;
       }
-      const module = EnsureCompletion(parseModule(realm, resolved, attributes, data));
-      if (module.Type === 'throw') {
-        finish(module);
-      } else {
-        cache?.set(resolved, type, module.Value);
-        finish(module);
+
+      if (!validateType(attributes, finish)) {
+        return;
       }
+
+      const base = path.dirname(referrer.HostDefined!.specifier!);
+      const resolved = path.resolve(base, specifier);
+      const type = (attributes.get('type') as 'json' | 'text' | undefined) || 'js';
+      if (cache?.has(resolved, type)) {
+        finish(cache.get(resolved, type)!);
+        return;
+      }
+      readFile(resolved, (err, data) => {
+        realm.scope(() => {
+          if (err) {
+            finish(Throw.SyntaxError('Could not read module $1', specifier));
+            return;
+          }
+          const module = EnsureCompletion(parseModule(realm, resolved, attributes, data));
+          if (module.Type === 'throw') {
+            finish(module);
+          } else {
+            cache?.set(resolved, type, module.Value);
+            finish(module);
+          }
+        });
+      });
     });
   };
 
