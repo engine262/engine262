@@ -153,7 +153,7 @@ export default defineConfig([
  * Special handle of the following modules so we don't need to import the whole zlib polyfill.
  */
 function importUnicodeLib(): Plugin {
-  const canImport = ['@unicode/unicode-16.0.0/Case_Folding/C/symbols.js', '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js'];
+  const canImport = ['@unicode/unicode-17.0.0/Case_Folding/C/symbols.js', '@unicode/unicode-17.0.0/Case_Folding/S/symbols.js'];
   return {
     name: '@unicode lib import',
     async transform(code, id) {

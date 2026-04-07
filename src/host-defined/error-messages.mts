@@ -118,7 +118,7 @@ export function format(arg: Formattable): string {
         return `/${P}/${F}`;
       }
       if (isDateObject(arg)) {
-        const d = new Date(R(arg.DateValue));
+        const d = new Date(arg.DateValue);
         if (Number.isNaN(d.getTime())) {
           return '[Date Invalid]';
         }
@@ -371,6 +371,7 @@ export interface Throw {
   | 'await cannot be used in formal parameters'
   | 'await cannot be used inside parameters of arrow functions'
   | 'calendar is not a string'
+  | 'direction option is required'
   | 'directionParam is required'
   | 'largestUnit must be larger than smallestUnit'
   | 'object.constructor[Symbol.species] is not a constructor'
@@ -395,13 +396,13 @@ export interface Throw {
   | 'yield cannot be used inside parameters of arrow functions'
   ): ThrowCompletion;
   (m:
-'"roundingIncrement" ($1) is out of range'
-  | '$1 can only be used with v flag'
+'$1 can only be used with v flag'
   | '$1 cannot be inverted'
   | '$1 cannot be invoked without new'
   | '$1 cannot be used as a WeakMap key'
   | '$1 cannot be used as an identifier'
   | '$1 cannot be used as an identifier in strict mode'
+  | '$1 cannot be used as an index'
   | '$1 cannot be used before initialization'
   | '$1 cannot be weakly referenced'
   | '$1 does not look like a TemporalTimeLike object'
@@ -410,6 +411,7 @@ export interface Throw {
   | '$1 is not a RegExp object'
   | '$1 is not a TemporalTimeLike object'
   | '$1 is not a constructor'
+  | '$1 is not a finite number'
   | '$1 is not a function'
   | '$1 is not a number'
   | '$1 is not a partial Temporal object'
@@ -420,7 +422,7 @@ export interface Throw {
   | '$1 is not a valid modifier'
   | '$1 is not a valid month code'
   | '$1 is not a valid property name'
-  | '$1 is not an integral number'
+  | '$1 is not an integer'
   | '$1 is not an object'
   | '$1 is not an object or a symbol'
   | '$1 is not defined'
@@ -428,6 +430,8 @@ export interface Throw {
   | '$1 is not object or null'
   | '$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer'
   | '$1 is out of range'
+  | '$1 is too large'
+  | '$1 is too small'
   | "'defineProperty' on proxy: trap returned truthy for adding property $1 that is incompatible with the existing property in the proxy target"
   | "'defineProperty' on proxy: trap returned truthy for adding property $1 to the non-extensible proxy target"
   | "'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which cannot be non-writable, unless there exists a corresponding non-configurable, non-writable own property of the target object"
@@ -466,7 +470,6 @@ export interface Throw {
   | 'Class decorator must return a function or undefined, but $1 was returned'
   | 'Count $1 is invalid'
   | 'Critical annotation "$1" failed.'
-  | 'Date parser found more content after parsing finished when parsing $1'
   | 'Duplicate import attribute $1'
   | 'Duplicated capture group $1'
   | 'Expect a CharacterClassEscape but $1 found'
@@ -478,11 +481,9 @@ export interface Throw {
   | 'Function $1 already declared'
   | 'Identifier $1 already declared'
   | 'Import attribute value must be a string, but $1'
-  | 'Index ($1) cannot be negative'
-  | 'Index ($1) is out of range'
+  | 'Index $1 is too big'
   | 'Invalid TemporalUnit value $1'
   | 'Invalid code point $1'
-  | 'Invalid date: $1'
   | 'Invalid format range for $1'
   | 'Invalid hint: $1'
   | 'Invalid time string $1'
@@ -529,25 +530,33 @@ export interface Throw {
   | 'arguments[0] ($1) is not a symbol'
   | 'arguments[1] ($1) is not a function'
   | 'calendar must be a string, but $1'
+  | 'calendarName option is invalid ($1), only "auto", "always", "never" and "critical" are accepted'
   | 'callbackfn ($1) is not a function'
   | 'comparator ($1) is not a function'
+  | 'direction option is not valid ($1), only "next" and "previous" are accepted'
+  | 'disambiguation option is invalid ($1), only "compatible", "earlier", "later" and "reject" are accepted'
   | 'heldValue $1 matches target'
   | 'invalid time zone identifier: $1'
   | 'mapper ($1) is not a function'
   | 'monthCode ($1) is not a string'
+  | 'offset option is invalid ($1), only "auto" and "never" are accepted'
+  | 'offset option is invalid ($1), only "prefer", "use", "ignore" and "reject" are accepted'
+  | 'option $1 is required'
+  | 'overflow option is invalid ($1), only "constrain" and "reject" are accepted'
   | 'super ($1) is not a constructor'
   | 'targetOffset ($1) cannot be negative'
   | 'temporalCalendarLike must be a string or a Temporal object, but got $1'
   | 'this value $1 is not an object'
   | 'this.add ($1) is not a function'
+  | 'timeZoneName option is invalid ($1), only "auto", "never" and "critical" are accepted'
   , $1: Formattable): ThrowCompletion;
   (m:
-'"$1" is required on object $2'
-  | '"add" property ($1) of object $2 is not a function'
+'"add" property ($1) of object $2 is not a function'
   | '"set" property ($1) of object $2 is not a function'
   | '$1 argument required, but only $2 present'
   | '$1 called on invalid receiver: $2'
   | '$1 does not exist on $2'
+  | '$1 does not match any of productions ($2)'
   | '$1 is a required on object $2'
   | '$1 is not a $2'
   | '$1 is not a $2 object'
@@ -571,10 +580,11 @@ export interface Throw {
   | 'setter ($1) in a property descriptor $2 must be a function'
   , $1: Formattable, $2: Formattable): ThrowCompletion;
   (m:
-'"$1" on object $2 is not valid ($3)'
+'"roundingMode" on object $1 is not valid ($2), only $3 are accepted'
   | '$1 is not a function. (In "$2", it is $3)'
   | '$1-$2-$3 is not a valid date'
   | 'Duration($1, $2, $3, $4) is not a valid duration'
+  | 'option $1 does not accept value $2 (only $3 accepted)'
   , $1: Formattable, $2: Formattable, $3: Formattable): ThrowCompletion;
   // auto-generate end
   <const S extends string>(m: S, ...args: ParsePrintFormat<S>): ThrowCompletion;

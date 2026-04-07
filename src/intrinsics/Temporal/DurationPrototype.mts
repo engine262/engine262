@@ -50,7 +50,7 @@ import {
   ToInternalDurationRecordWith24HourDays,
   ToSecondsStringPrecisionRecord,
   TotalTimeDuration,
-  ToTemporalPartialDurationRecord,
+  ToPartialDurationRecord,
   UndefinedValue,
   ValidateTemporalRoundingIncrement,
   ValidateTemporalUnitValue,
@@ -60,9 +60,10 @@ import {
   type Arguments,
   type FunctionCallContext,
   type PlainCompletion,
-  type TimeDuration,
   type TimeUnit,
   type ValueEvaluator,
+  type MathematicalValue,
+  type Integer,
 } from '#self';
 
 function thisTemporalDurationValue(value: Value): PlainCompletion<TemporalDurationObject> {
@@ -73,61 +74,61 @@ function thisTemporalDurationValue(value: Value): PlainCompletion<TemporalDurati
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years */
 function DurationProto_yearsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Years);
+  return F(Number(duration.Years));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.months */
 function DurationProto_monthsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Months);
+  return F(Number(duration.Months));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.weeks */
 function DurationProto_weeksGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Weeks);
+  return F(Number(duration.Weeks));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.days */
 function DurationProto_daysGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Days);
+  return F(Number(duration.Days));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.hours */
 function DurationProto_hoursGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Hours);
+  return F(Number(duration.Hours));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.minutes */
 function DurationProto_minutesGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Minutes);
+  return F(Number(duration.Minutes));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.seconds */
 function DurationProto_secondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Seconds);
+  return F(Number(duration.Seconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.milliseconds */
 function DurationProto_millisecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Milliseconds);
+  return F(Number(duration.Milliseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.microseconds */
 function DurationProto_microsecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Microseconds);
+  return F(Number(duration.Microseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.nanoseconds */
 function DurationProto_nanosecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  return F(duration.Nanoseconds);
+  return F(Number(duration.Nanoseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.sign */
@@ -145,17 +146,17 @@ function DurationProto_blankGetter(_args: Arguments, { thisValue }: FunctionCall
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.with */
 function* DurationProto_with([_temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  const temporalDurationLike = Q(yield* ToTemporalPartialDurationRecord(_temporalDurationLike));
-  const years = temporalDurationLike.Years ?? duration.Years;
-  const months = temporalDurationLike.Months ?? duration.Months;
-  const weeks = temporalDurationLike.Weeks ?? duration.Weeks;
-  const days = temporalDurationLike.Days ?? duration.Days;
-  const hours = temporalDurationLike.Hours ?? duration.Hours;
-  const minutes = temporalDurationLike.Minutes ?? duration.Minutes;
-  const seconds = temporalDurationLike.Seconds ?? duration.Seconds;
-  const milliseconds = temporalDurationLike.Milliseconds ?? duration.Milliseconds;
-  const microseconds = temporalDurationLike.Microseconds ?? duration.Microseconds;
-  const nanoseconds = temporalDurationLike.Nanoseconds ?? duration.Nanoseconds;
+  const temporalDurationLike = Q(yield* ToPartialDurationRecord(_temporalDurationLike));
+  const years = BigInt(temporalDurationLike.Years ?? duration.Years);
+  const months = BigInt(temporalDurationLike.Months ?? duration.Months);
+  const weeks = BigInt(temporalDurationLike.Weeks ?? duration.Weeks);
+  const days = BigInt(temporalDurationLike.Days ?? duration.Days);
+  const hours = BigInt(temporalDurationLike.Hours ?? duration.Hours);
+  const minutes = BigInt(temporalDurationLike.Minutes ?? duration.Minutes);
+  const seconds = BigInt(temporalDurationLike.Seconds ?? duration.Seconds);
+  const milliseconds = BigInt(temporalDurationLike.Milliseconds ?? duration.Milliseconds);
+  const microseconds = BigInt(temporalDurationLike.Microseconds ?? duration.Microseconds);
+  const nanoseconds = BigInt(temporalDurationLike.Nanoseconds ?? duration.Nanoseconds);
   return Q(yield* CreateTemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 }
 
@@ -287,8 +288,8 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
   if (smallestUnit === TemporalUnit.Day) {
     const fractionalDays = TotalTimeDuration(internalDuration.Time, TemporalUnit.Day);
     const days = RoundNumberToIncrement(fractionalDays, roundingIncrement, roundingMode);
-    const dateDuration = Q(CreateDateDurationRecord(0, 0, 0, days));
-    internalDuration = CombineDateAndTimeDuration(dateDuration, 0 as TimeDuration);
+    const dateDuration = Q(CreateDateDurationRecord(0n, 0n, 0n, days));
+    internalDuration = CombineDateAndTimeDuration(dateDuration, 0n);
   } else {
     const timeDuration = Q(RoundTimeDuration(internalDuration.Time, roundingIncrement, smallestUnit, roundingMode));
     internalDuration = CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
@@ -317,7 +318,7 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
   Q(ValidateTemporalUnitValue(unit, 'datetime'));
   __ts_cast__<TemporalUnit>(unit);
 
-  let total;
+  let total: MathematicalValue;
   if (zonedRelativeTo !== undefined) {
     const internalDuration = ToInternalDurationRecord(duration);
     const timeZone = zonedRelativeTo.TimeZone;
@@ -342,7 +343,7 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
     const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
     total = TotalTimeDuration(internalDuration.Time, unit);
   }
-  return F(total);
+  return F(total.toNumber());
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring */
@@ -361,7 +362,7 @@ function* DurationProto_toString([options = Value.undefined]: Arguments, { thisV
 
   const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
 
-  if (precision.Unit === TemporalUnit.Nanosecond && precision.Increment === 1) {
+  if (precision.Unit === TemporalUnit.Nanosecond && precision.Increment === 1n) {
     return Value(TemporalDurationToString(duration, precision.Precision));
   }
 
@@ -371,7 +372,7 @@ function* DurationProto_toString([options = Value.undefined]: Arguments, { thisV
   internalDuration = CombineDateAndTimeDuration(internalDuration.Date, timeDuration);
   const roundedLargestUnit = LargerOfTwoTemporalUnits(largestUnit, TemporalUnit.Second);
   const roundedDuration = Q(yield* TemporalDurationFromInternal(internalDuration, roundedLargestUnit));
-  return Value(TemporalDurationToString(roundedDuration, precision.Precision as number | 'auto'));
+  return Value(TemporalDurationToString(roundedDuration, precision.Precision as Integer | 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson */

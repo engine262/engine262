@@ -1,6 +1,6 @@
-import isUnicodeIDStartRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_Start/regex.js';
-import isUnicodeIDContinueRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_Continue/regex.js';
-import isSpaceSeparatorRegex from '@unicode/unicode-16.0.0/General_Category/Space_Separator/regex.js';
+import isUnicodeIDStartRegex from '@unicode/unicode-17.0.0/Binary_Property/ID_Start/regex.js';
+import isUnicodeIDContinueRegex from '@unicode/unicode-17.0.0/Binary_Property/ID_Continue/regex.js';
+import isSpaceSeparatorRegex from '@unicode/unicode-17.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mts';
 import {
   Assert, CallFrame, isErrorObject, isLeadingSurrogate, isTrailingSurrogate, ObjectValue, surroundingAgent,

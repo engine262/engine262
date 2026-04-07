@@ -10,7 +10,6 @@ import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
   X,
   ThrowCompletion,
-  AbruptCompletion,
   type PlainCompletion,
   type ValueCompletion,
   NormalCompletion,
@@ -410,9 +409,7 @@ export class ManagedRealm extends Realm {
     if (!completion) {
       throw new Assert.Error('Expect evaluation completes synchronously');
     }
-    if (!(completion instanceof AbruptCompletion)) {
-      runJobQueue();
-    }
+    runJobQueue();
 
     return completion;
   }
@@ -432,9 +429,7 @@ export class ManagedRealm extends Realm {
     let completion;
     completion = this.evaluate(sourceText, (c) => {
       completion = c;
-      if (!(completion instanceof AbruptCompletion)) {
-        runJobQueue();
-      }
+      runJobQueue();
     });
     if (!completion) {
       surroundingAgent.resumeEvaluate({

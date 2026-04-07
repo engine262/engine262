@@ -118,6 +118,12 @@ test('transform X() correctly', () => {
       return X(value);
     }
   `);
+  compile('condition', `
+    function f() {
+      let value;
+      if (test) return X(value.compute());
+    }
+  `);
 });
 
 test('transform simple ternary', () => {

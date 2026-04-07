@@ -29,7 +29,7 @@ import {
   DifferenceTemporalPlainDateTime,
   AddDurationToDateTime,
   InterpretTemporalDateTimeFields,
-  ISODateTimeToString,
+  FormatISODateTime,
   ISODateTimeWithinLimits,
   RoundISODateTime,
   ToTemporalDateTime,
@@ -81,19 +81,19 @@ function PlainDateTimeProto_eraGetter(_args: Arguments, { thisValue }: FunctionC
 function PlainDateTimeProto_eraYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).EraYear;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year */
 function PlainDateTimeProto_yearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Year);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Year));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.month */
 function PlainDateTimeProto_monthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Month);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Month));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthcode */
@@ -105,93 +105,93 @@ function PlainDateTimeProto_monthCodeGetter(_args: Arguments, { thisValue }: Fun
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.day */
 function PlainDateTimeProto_dayGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Day);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Day));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.hour */
 function PlainDateTimeProto_hourGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(plainDateTime.ISODateTime.Time.Hour);
+  return F(Number(plainDateTime.ISODateTime.Time.Hour));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.minute */
 function PlainDateTimeProto_minuteGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(plainDateTime.ISODateTime.Time.Minute);
+  return F(Number(plainDateTime.ISODateTime.Time.Minute));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.second */
 function PlainDateTimeProto_secondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(plainDateTime.ISODateTime.Time.Second);
+  return F(Number(plainDateTime.ISODateTime.Time.Second));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.millisecond */
 function PlainDateTimeProto_millisecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(plainDateTime.ISODateTime.Time.Millisecond);
+  return F(Number(plainDateTime.ISODateTime.Time.Millisecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.microsecond */
 function PlainDateTimeProto_microsecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(plainDateTime.ISODateTime.Time.Microsecond);
+  return F(Number(plainDateTime.ISODateTime.Time.Microsecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.nanosecond */
 function PlainDateTimeProto_nanosecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(plainDateTime.ISODateTime.Time.Nanosecond);
+  return F(Number(plainDateTime.ISODateTime.Time.Nanosecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofweek */
 function PlainDateTimeProto_dayOfWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfWeek);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfWeek));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofyear */
 function PlainDateTimeProto_dayOfYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfYear);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.weekofyear */
 function PlainDateTimeProto_weekOfYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).WeekOfYear.Week;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.yearofweek */
 function PlainDateTimeProto_yearOfWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).WeekOfYear.Year;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinweek */
 function PlainDateTimeProto_daysInWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInWeek);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInWeek));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinmonth */
 function PlainDateTimeProto_daysInMonthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInMonth);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInMonth));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinyear */
 function PlainDateTimeProto_daysInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInYear);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthsinyear */
 function PlainDateTimeProto_monthsInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return F(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).MonthsInYear);
+  return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).MonthsInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.inleapyear */
@@ -278,10 +278,10 @@ function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
   const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
   const smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time', [TemporalUnit.Day]));
-  let maximum: number;
+  let maximum: bigint;
   let inclusive: boolean;
   if (smallestUnit === TemporalUnit.Day) {
-    maximum = 1;
+    maximum = 1n;
     inclusive = true;
   } else {
     const maximum2 = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
@@ -290,7 +290,7 @@ function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
     inclusive = false;
   }
   Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, inclusive));
-  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1) {
+  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1n) {
     return X(CreateTemporalDateTime(plainDateTime.ISODateTime, plainDateTime.Calendar));
   }
   const result = RoundISODateTime(
@@ -306,7 +306,7 @@ function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
 function* PlainDateTimeProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const other = Q(yield* ToTemporalDateTime(_other));
-  if (CompareISODateTime(plainDateTime.ISODateTime, other.ISODateTime) !== 0) {
+  if (CompareISODateTime(plainDateTime.ISODateTime, other.ISODateTime) !== 0n) {
     return Value.false;
   }
   return Value(CalendarEquals(plainDateTime.Calendar, other.Calendar));
@@ -329,19 +329,19 @@ function* PlainDateTimeProto_toString([options = Value.undefined]: Arguments, { 
   if (!ISODateTimeWithinLimits(result)) {
     return Throw.RangeError('DateTime outside of range');
   }
-  return Value(ISODateTimeToString(result, plainDateTime.Calendar, precision.Precision, showCalendar));
+  return Value(FormatISODateTime(result, plainDateTime.Calendar, precision.Precision, showCalendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tolocalestring */
 function PlainDateTimeProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return Value(ISODateTimeToString(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
+  return Value(FormatISODateTime(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tojson */
 function PlainDateTimeProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return Value(ISODateTimeToString(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
+  return Value(FormatISODateTime(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof */

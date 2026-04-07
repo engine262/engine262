@@ -14,7 +14,7 @@ import {
   F,
   IsCallable,
   RequireInternalSlot,
-  SameValue, SameValueZero, R, Throw,
+  SameValue, SameValueZero, Throw,
 } from '#self';
 import type {
   Arguments, Descriptor, ValueEvaluator, FunctionCallContext, Realm,
@@ -231,7 +231,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined]: Argument
     }
   }
   // 5. If key is -0𝔽, set key to +0𝔽.
-  if (key instanceof NumberValue && Object.is(R(key), -0)) {
+  if (key instanceof NumberValue && Object.is(key.value, -0)) {
     key = F(+0);
   }
   // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.

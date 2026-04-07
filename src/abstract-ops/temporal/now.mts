@@ -1,35 +1,36 @@
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
-import { clamp } from '../math.mts';
+import { clamp, floorDiv } from '../math.mts';
 import { SystemTimeZoneIdentifier } from './addition.mts';
 import {
   ObjectValue, GetGlobalObject, Value, type PlainCompletion, Q, ToTemporalTimeZoneIdentifier, GetISODateTimeFor,
   surroundingAgent,
-  nsMinInstant,
-  nsMaxInstant,
+  minEpochNanoseconds,
+  maxEpochNanoseconds,
+  type EpochNanoseconds,
+  type IntegralNumber,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
-export function HostSystemUTCEpochNanoseconds(global: ObjectValue): bigint {
+export function HostSystemUTCEpochNanoseconds(global: ObjectValue): EpochNanoseconds {
   let host = surroundingAgent.hostDefinedOptions.hostHooks?.HostSystemUTCEpochNanoseconds?.(global);
   if (host === undefined) {
-    host = BigInt(Date.now()) * BigInt(1e6);
+    host = BigInt(Date.now()) * BigInt(1e6) as EpochNanoseconds;
   }
-  return clamp(nsMinInstant, host, nsMaxInstant);
+  return clamp(minEpochNanoseconds, host, maxEpochNanoseconds);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochmilliseconds */
-export function SystemUTCEpochMilliseconds(): number {
+export function SystemUTCEpochMilliseconds(): IntegralNumber {
   const global = GetGlobalObject();
   const nowNs = HostSystemUTCEpochNanoseconds(global);
-  // Return 𝔽(floor(nowNs / 10**6)).
-  return Number(nowNs / BigInt(1e6));
+  return Number(floorDiv(nowNs, BigInt(1e6)));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds */
-export function SystemUTCEpochNanoseconds(): bigint {
+export function SystemUTCEpochNanoseconds(): EpochNanoseconds {
   const global = GetGlobalObject();
   const nowNs = HostSystemUTCEpochNanoseconds(global);
-  return BigInt(nowNs);
+  return nowNs;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime */

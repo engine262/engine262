@@ -566,7 +566,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     Q(Validate?.(thisValue));
     const array = Q(ToObject(thisValue));
     const len = Q(yield* ToLength(array));
-    const separator = ', ';
+    const separator = ',';
     let R = '';
     let k = 0;
     while (k < len) {

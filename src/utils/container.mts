@@ -65,6 +65,28 @@ export class JSStringMap<V> implements Map<JSStringValue, V> {
     return this.#map.values();
   }
 
+  getOrInsert(key: JSStringValue | string, defaultValue: V): V {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    if (this.#map.getOrInsert) return this.#map.getOrInsert(key, defaultValue);
+    if (!this.#map.has(key)) {
+      this.#map.set(key, defaultValue);
+    }
+    return this.#map.get(key)!;
+  }
+
+  getOrInsertComputed(key: JSStringValue | string, defaultValueFn: (key: JSStringValue) => V): V {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    if (this.#map.getOrInsertComputed) return this.#map.getOrInsertComputed(key, (k) => defaultValueFn(Value(k)));
+    if (!this.#map.has(key)) {
+      this.#map.set(key, defaultValueFn(Value(key)));
+    }
+    return this.#map.get(key)!;
+  }
+
   declare [Symbol.iterator]: () => MapIterator<[JSStringValue, V]>;
 
   declare [Symbol.toStringTag]: string;
@@ -153,6 +175,29 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
       yield value;
     }
     return undefined;
+  }
+
+  getOrInsert(key: PropertyKeyValue | string, defaultValue: V): V {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    if (this.#map.getOrInsert) return this.#map.getOrInsert(key, defaultValue);
+    if (!this.#map.has(key)) {
+      this.#map.set(key, defaultValue);
+    }
+    return this.#map.get(key)!;
+  }
+
+  getOrInsertComputed(key: PropertyKeyValue | string, defaultValueFn: (key: PropertyKeyValue) => V): V {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    const value = typeof key === 'string' ? Value(key) : key;
+    if (this.#map.getOrInsertComputed) return this.#map.getOrInsertComputed(key, () => defaultValueFn(value));
+    if (!this.#map.has(key)) {
+      this.#map.set(key, defaultValueFn(value));
+    }
+    return this.#map.get(key)!;
   }
 
   declare [Symbol.iterator]: () => MapIterator<[PropertyKeyValue, V]>;

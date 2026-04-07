@@ -5,7 +5,13 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { ObjectValue } from '../value.mts';
 import { Throw } from '#self';
 
-class AssertError extends Error {}
+class AssertError extends Error {
+  constructor(source?: string, options?: { cause?: Completion<unknown> }) {
+    super(source, options);
+    // eslint-disable-next-line no-debugger
+    debugger;
+  }
+}
 export function Assert(invariant: boolean, source?: string, completion?: Completion<unknown>): asserts invariant {
   /* node:coverage disable */
   if (!invariant) {

@@ -19,7 +19,7 @@ import {
 } from '#self';
 
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
-export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log: (...args: unknown[]) => void) {
+export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log: (...args: unknown[]) => void = Reflect.get(globalThis, 'console').log) {
   return realm.scope(() => {
     let test262PrintHandle: ((str: string, value: Value) => void) | undefined;
     const setPrintHandle = (f: typeof test262PrintHandle | undefined) => {

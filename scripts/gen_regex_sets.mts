@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import * as path from 'path';
 
 const nodeModules = path.resolve(path.resolve(import.meta.dirname, '..'), 'node_modules');
-const unicodeDir = path.resolve(nodeModules, '@unicode', 'unicode-16.0.0');
+const unicodeDir = path.resolve(nodeModules, '@unicode', 'unicode-17.0.0');
 
 async function writeUnicodePropertyMapping() {
   async function* scan(d: string): AsyncGenerator<string, void, void> {
@@ -29,7 +29,7 @@ async function writeUnicodePropertyMapping() {
 
   for await (const item of scan(unicodeDir)) {
     const category = path.relative(unicodeDir, item).replace(/\\/g, '/');
-    const { default: cps } = await import(`@unicode/unicode-16.0.0/${category}/code-points.js`);
+    const { default: cps } = await import(`@unicode/unicode-17.0.0/${category}/code-points.js`);
     if (!Array.isArray(cps)) {
       continue;
     }

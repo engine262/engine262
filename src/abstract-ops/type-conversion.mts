@@ -36,7 +36,7 @@ import {
   Z,
   F, R,
 } from './all.mts';
-import { modulo } from './math.mts';
+import { modulo, truncate } from './math.mts';
 import { Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
@@ -203,26 +203,13 @@ const mod = (n: number, m: number) => {
 };
 
 /** https://tc39.es/ecma262/#sec-tointegerorinfinity */
-export function* ToIntegerOrInfinity(argument: Value): PlainEvaluator<number> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = Q(yield* ToNumber(argument));
-  // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
-  if (number.isNaN() || R(number) === 0) {
-    return +0;
-  }
+export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<number> {
+  const number = typeof argument === 'number' ? Value(argument) : Q(yield* ToNumber(argument));
+  if (number.isNaN() || Object.is(number.value, -0) || number.value === 0) return +0;
   // 3. If number is +∞𝔽, return +∞.
   // 4. If number is -∞𝔽, return -∞.
-  if (!number.isFinite()) {
-    return R(number);
-  }
-  // 4. Let integer be floor(abs(ℝ(number))).
-  let integer = Math.floor(Math.abs(R(number)));
-  // 5. If number < +0𝔽, set integer to -integer.
-  if (R(number) < 0 && integer !== 0) {
-    integer = -integer;
-  }
-  // 6. Return integer.
-  return integer;
+  if (!number.isFinite()) return number.value;
+  return truncate(R(number));
 }
 
 /** https://tc39.es/ecma262/#sec-toint32 */
@@ -234,7 +221,7 @@ export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
     return F(+0);
   }
   // 3. Let int be truncate(ℝ(number)).
-  const int = Math.trunc(number);
+  const int = truncate(number);
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
@@ -253,7 +240,7 @@ export function* ToUint32(argument: Value): ValueEvaluator<NumberValue> {
     return F(+0);
   }
   // 3. Let int be truncate(ℝ(number)).
-  const int = Math.trunc(number);
+  const int = truncate(number);
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. Return 𝔽(int32bit).
@@ -269,7 +256,7 @@ export function* ToInt16(argument: Value): ValueEvaluator<NumberValue> {
     return F(+0);
   }
   // 3. Let int be truncate(ℝ(number)).
-  const int = Math.trunc(number);
+  const int = truncate(number);
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
@@ -288,7 +275,7 @@ export function* ToUint16(argument: Value): ValueEvaluator<NumberValue> {
     return F(+0);
   }
   // 3. Let int be truncate(ℝ(number)).
-  const int = Math.trunc(number);
+  const int = truncate(number);
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. Return 𝔽(int16bit).
@@ -304,7 +291,7 @@ export function* ToInt8(argument: Value): ValueEvaluator<NumberValue> {
     return F(+0);
   }
   // 3. Let int be truncate(ℝ(number)).
-  const int = Math.trunc(number);
+  const int = truncate(number);
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
@@ -323,7 +310,7 @@ export function* ToUint8(argument: Value): ValueEvaluator<NumberValue> {
     return F(+0);
   }
   // 3. Let int be truncate(ℝ(number)).
-  const int = Math.trunc(number);
+  const int = truncate(number);
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. Return 𝔽(int8bit).
@@ -549,24 +536,12 @@ export function CanonicalNumericIndexString(argument: Value) {
 
 /** https://tc39.es/ecma262/#sec-toindex */
 export function* ToIndex(value: Value) {
-  // 1. If value is undefined, then
-  if (value instanceof UndefinedValue) {
-    // a. Return 0.
-    return 0;
-  } else {
-    // a. Let integerIndex be 𝔽(? ToIntegerOrInfinity(value)).
-    const integerIndex = F(Q(yield* ToIntegerOrInfinity(value)));
-    // b. If integerIndex < +0𝔽, throw a RangeError exception.
-    if (R(integerIndex) < 0) {
-      return Throw.RangeError('Index ($1) cannot be negative', integerIndex);
-    }
-    // c. Let index be ! ToLength(integerIndex).
-    const index = X(ToLength(integerIndex));
-    // d. If ! SameValue(integerIndex, index) is false, throw a RangeError exception.
-    if (X(SameValue(integerIndex, index)) === Value.false) {
-      return Throw.RangeError('Index ($1) is out of range', integerIndex);
-    }
-    // e. Return ℝ(index).
-    return R(index);
+  const integer = Q(yield* ToIntegerOrInfinity(value));
+  if (Object.is(integer, -0) || integer < 0) {
+    return Throw.RangeError('$1 cannot be used as an index', value);
   }
+  if (integer > (2 ** 53 - 1)) {
+    return Throw.RangeError('Index $1 is too big', value);
+  }
+  return integer;
 }

@@ -1,11 +1,11 @@
 import { ObjectInspector } from './objects.mts';
 import {
-  type DateObject, R, DateProto_toISOString, Value, ValueOfNormalCompletion, NormalCompletion, JSStringValue, type TemporalInstantObject, TemporalInstantToString, type TemporalDurationObject, TemporalDurationToString, type TemporalPlainDateObject, TemporalDateToString, type TemporalPlainDateTimeObject, ISODateTimeToString, type TemporalPlainMonthDayObject, TemporalMonthDayToString, type TemporalPlainTimeObject, TimeRecordToString, type TemporalPlainYearMonthObject, TemporalYearMonthToString, type TemporalZonedDateTimeObject, TemporalZonedDateTimeToString,
+  type DateObject, DateProto_toISOString, Value, ValueOfNormalCompletion, NormalCompletion, JSStringValue, type TemporalInstantObject, TemporalInstantToString, type TemporalDurationObject, TemporalDurationToString, type TemporalPlainDateObject, TemporalDateToString, type TemporalPlainDateTimeObject, FormatISODateTime, type TemporalPlainMonthDayObject, TemporalMonthDayToString, type TemporalPlainTimeObject, TimeRecordToString, type TemporalPlainYearMonthObject, TemporalYearMonthToString, type TemporalZonedDateTimeObject, TemporalZonedDateTimeToString,
 } from '#self';
 
 
 export const Date = new ObjectInspector<DateObject>('Date', 'date', ((value: DateObject) => {
-  if (!globalThis.Number.isFinite(R(value.DateValue))) {
+  if (!globalThis.Number.isFinite(value.DateValue)) {
     return 'Invalid Date';
   }
   const val = DateProto_toISOString([], { thisValue: value, NewTarget: Value.undefined });
@@ -25,7 +25,7 @@ export const TemporalPlainDate = new ObjectInspector<TemporalPlainDateObject>('T
 export const TemporalPlainDateTime = new ObjectInspector<TemporalPlainDateTimeObject>(
   'Temporal.PlainDateTime',
   'date',
-  (value) => `Temporal.PlainDateTime <${ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`,
+  (value) => `Temporal.PlainDateTime <${FormatISODateTime(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`,
 );
 
 export const TemporalPlainMonthDay = new ObjectInspector<TemporalPlainMonthDayObject>(

@@ -17,7 +17,6 @@ import {
   evalQ,
   Agent,
   ManagedRealm,
-  skipDebugger,
   type ValueCompletion,
   createTest262Intrinsics,
   surroundingAgent,
@@ -28,6 +27,10 @@ import {
   importBundledTest262Harness,
   boostTest262Harness,
   ModuleCache,
+  NormalCompletion,
+  PerformPromiseThen,
+  CreateBuiltinFunction,
+  runJobQueue,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -179,33 +182,38 @@ async function setupInspector(mode: 'file' | 'eval' | 'pipe' | 'repl') {
 
 function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: string, filename: string) {
   realm.scope(() => {
+    const onErrorCallback = CreateBuiltinFunction.from((result = Value.undefined) => {
+      quit(ThrowCompletion(result));
+    });
     const completion = evalQ((Q) => {
       if (argv.values.module || filename.endsWith('.mjs')) {
         const module = Q(realm.compileModule(source, { specifier: filename }));
         realm.HostDefined.resolverCache?.set(filename, 'js', module);
-        const load = Q(module.LoadRequestedModules());
-        if (load.PromiseState === 'rejected') {
-          Q(ThrowCompletion(load.PromiseResult!));
-        } else if (load.PromiseState === 'pending') {
-          throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
-        }
-        Q(module.Link());
-        const evaluate = Q(skipDebugger(module.Evaluate()));
-        if (evaluate.PromiseState === 'rejected') {
-          Q(ThrowCompletion(evaluate.PromiseResult!));
-        }
+
+        const loadRequestedModules = module.LoadRequestedModules();
+        PerformPromiseThen(loadRequestedModules, CreateBuiltinFunction.from(function* runModule() {
+          const link = module.Link();
+          if (link instanceof ThrowCompletion) return link;
+          PerformPromiseThen(yield* module.Evaluate(), CreateBuiltinFunction.from(() => { }), onErrorCallback);
+          return Value.undefined;
+        }), onErrorCallback);
+        runJobQueue();
       } else {
         Q(realm.evaluateScript(source, { specifier: filename }));
       }
     });
+    quit(completion);
+  });
+
+  inspector?.stop();
+
+  function quit(completion: ThrowCompletion<Value> | NormalCompletion<void>) {
     if (completion instanceof AbruptCompletion) {
       const inspected = inspect(completion);
       process.stderr.write(`${inspected}\n`);
       process.exit(1);
     }
-  });
-
-  inspector?.stop();
+  }
 }
 
 if (argv.positionals[0]) {

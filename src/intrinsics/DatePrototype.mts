@@ -12,6 +12,8 @@ import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
 import { NumberToBigInt, StringPad } from '../runtime-semantics/all.mts';
+import { abs } from '../abstract-ops/math.mts';
+import { LocalTime_TemporalEdited, UTC_TemporalEdited } from '../abstract-ops/temporal/addition.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { DateObject } from './Date.mts';
 import {
@@ -36,7 +38,6 @@ import {
   ToNumber,
   ToPrimitive,
   ToObject,
-  UTC,
   WeekDay,
   YearFromTime,
   F, R,
@@ -48,7 +49,7 @@ import type { Realm } from '#self';
 
 export function thisTimeValue(value: Value): ValueCompletion<NumberValue> {
   if (value instanceof ObjectValue && 'DateValue' in value) {
-    return (value as DateObject).DateValue;
+    return Value((value as DateObject).DateValue);
   }
   return Throw.TypeError('$1 is not a $2 object', value, 'Date');
 }
@@ -59,7 +60,7 @@ function DateProto_getDate(_args: Arguments, { thisValue }: FunctionCallContext)
   if (t.isNaN()) {
     return F(NaN);
   }
-  return DateFromTime(LocalTime(t));
+  return Value(Number(DateFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getday */
@@ -68,7 +69,7 @@ function DateProto_getDay(_args: Arguments, { thisValue }: FunctionCallContext):
   if (t.isNaN()) {
     return F(NaN);
   }
-  return WeekDay(LocalTime(t));
+  return Value(Number(WeekDay(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getfullyear */
@@ -77,7 +78,7 @@ function DateProto_getFullYear(_args: Arguments, { thisValue }: FunctionCallCont
   if (t.isNaN()) {
     return F(NaN);
   }
-  return YearFromTime(LocalTime(t));
+  return Value(Number(YearFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.gethours */
@@ -86,7 +87,7 @@ function DateProto_getHours(_args: Arguments, { thisValue }: FunctionCallContext
   if (t.isNaN()) {
     return F(NaN);
   }
-  return HourFromTime(LocalTime(t));
+  return Value(Number(HourFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getmilliseconds */
@@ -95,7 +96,7 @@ function DateProto_getMilliseconds(_args: Arguments, { thisValue }: FunctionCall
   if (t.isNaN()) {
     return F(NaN);
   }
-  return msFromTime(LocalTime(t));
+  return Value(Number(msFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getminutes */
@@ -104,7 +105,7 @@ function DateProto_getMinutes(_args: Arguments, { thisValue }: FunctionCallConte
   if (t.isNaN()) {
     return F(NaN);
   }
-  return MinFromTime(LocalTime(t));
+  return Value(Number(MinFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getmonth */
@@ -113,7 +114,7 @@ function DateProto_getMonth(_args: Arguments, { thisValue }: FunctionCallContext
   if (t.isNaN()) {
     return F(NaN);
   }
-  return MonthFromTime(LocalTime(t));
+  return Value(Number(MonthFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getseconds */
@@ -122,7 +123,7 @@ function DateProto_getSeconds(_args: Arguments, { thisValue }: FunctionCallConte
   if (t.isNaN()) {
     return F(NaN);
   }
-  return SecFromTime(LocalTime(t));
+  return Value(Number(SecFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.gettime */
@@ -136,7 +137,7 @@ function DateProto_getTimezoneOffset(_args: Arguments, { thisValue }: FunctionCa
   if (t.isNaN()) {
     return F(NaN);
   }
-  return F((R(t) - R(LocalTime(t))) / msPerMinute);
+  return F((R(t) - R(LocalTime(t))) / Number(msPerMinute));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcdate */
@@ -145,7 +146,7 @@ function DateProto_getUTCDate(_args: Arguments, { thisValue }: FunctionCallConte
   if (t.isNaN()) {
     return F(NaN);
   }
-  return DateFromTime(t);
+  return Value(DateFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcday */
@@ -154,7 +155,7 @@ function DateProto_getUTCDay(_args: Arguments, { thisValue }: FunctionCallContex
   if (t.isNaN()) {
     return F(NaN);
   }
-  return WeekDay(t);
+  return Value(WeekDay(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear */
@@ -163,7 +164,7 @@ function DateProto_getUTCFullYear(_args: Arguments, { thisValue }: FunctionCallC
   if (t.isNaN()) {
     return F(NaN);
   }
-  return YearFromTime(t);
+  return Value(YearFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutchours */
@@ -172,7 +173,7 @@ function DateProto_getUTCHours(_args: Arguments, { thisValue }: FunctionCallCont
   if (t.isNaN()) {
     return F(NaN);
   }
-  return HourFromTime(t);
+  return Value(HourFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds */
@@ -181,7 +182,7 @@ function DateProto_getUTCMilliseconds(_args: Arguments, { thisValue }: FunctionC
   if (t.isNaN()) {
     return F(NaN);
   }
-  return msFromTime(t);
+  return Value(msFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcminutes */
@@ -190,7 +191,7 @@ function DateProto_getUTCMinutes(_args: Arguments, { thisValue }: FunctionCallCo
   if (t.isNaN()) {
     return F(NaN);
   }
-  return MinFromTime(t);
+  return Value(MinFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcmonth */
@@ -199,7 +200,7 @@ function DateProto_getUTCMonth(_args: Arguments, { thisValue }: FunctionCallCont
   if (t.isNaN()) {
     return F(NaN);
   }
-  return MonthFromTime(t);
+  return Value(MonthFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcseconds */
@@ -208,7 +209,7 @@ function DateProto_getUTCSeconds(_args: Arguments, { thisValue }: FunctionCallCo
   if (t.isNaN()) {
     return F(NaN);
   }
-  return SecFromTime(t);
+  return Value(SecFromTime(R(t)));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setdate */
@@ -219,71 +220,66 @@ function* DateProto_setDate([date = Value.undefined]: Arguments, { thisValue }: 
     return t;
   }
   t = LocalTime(t);
-  const newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t));
-  const u = TimeClip(UTC(newDate));
+  const _t = R(t);
+  const newDate = MakeDate(MakeDay(YearFromTime(_t), MonthFromTime(_t), R(dt)), TimeWithinDay(_t));
+  const u = TimeClip(UTC_TemporalEdited(newDate));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setfullyear */
 function* DateProto_setFullYear([year = Value.undefined, month, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
-  const y = Q(yield* ToNumber(year));
+  const y = R(Q(yield* ToNumber(year)));
   t = t.isNaN() ? F(+0) : LocalTime(t);
-  let m;
+  let m: number;
   if (month !== undefined) {
-    m = Q(yield* ToNumber(month));
+    m = R(Q(yield* ToNumber(month)));
   } else {
-    m = MonthFromTime(t);
+    m = MonthFromTime(R(t));
   }
-  let dt;
+  let dt: number;
   if (date !== undefined) {
-    dt = Q(yield* ToNumber(date));
+    dt = R(Q(yield* ToNumber(date)));
   } else {
-    dt = DateFromTime(t);
+    dt = DateFromTime(R(t));
   }
-  const newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
-  const u = TimeClip(UTC(newDate));
+  const newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(R(t)));
+  const u = TimeClip(UTC_TemporalEdited(newDate));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.sethours */
 function* DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
-  const h = Q(yield* ToNumber(hour));
-  let m;
+  const h = R(Q(yield* ToNumber(hour)));
+  let m: number | undefined;
   if (min) {
-    m = Q(yield* ToNumber(min));
+    m = R(Q(yield* ToNumber(min)));
   }
-  let s;
+  let s: number | undefined;
   if (sec) {
-    s = Q(yield* ToNumber(sec));
+    s = R(Q(yield* ToNumber(sec)));
   }
-  let milli;
+  let milli: number | undefined;
   if (ms !== undefined) {
-    milli = Q(yield* ToNumber(ms));
+    milli = R(Q(yield* ToNumber(ms)));
   }
   if (t.isNaN()) {
     return t;
   }
   t = LocalTime(t);
-  if (!m) {
-    m = MinFromTime(t);
-  }
-  if (!s) {
-    s = SecFromTime(t);
-  }
-  if (!milli) {
-    milli = msFromTime(t);
-  }
-  const date = MakeDate(Day(t), MakeTime(h, m, s, milli));
-  const u = TimeClip(UTC(date));
+  m ??= MinFromTime(R(t));
+  s ??= SecFromTime(R(t));
+  milli ??= msFromTime(R(t));
+  const date = MakeDate(Day(R(t)), MakeTime(h, m, s, milli));
+  const u = TimeClip(UTC_TemporalEdited(date));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
@@ -294,11 +290,12 @@ function* DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisVal
     return t;
   }
   t = LocalTime(t);
-  const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms);
-  const u = TimeClip(UTC(MakeDate(Day(t), time)));
+  const _t = R(t);
+  const time = MakeTime(HourFromTime(_t), MinFromTime(_t), SecFromTime(_t), R(ms));
+  const u = TimeClip(UTC_TemporalEdited(MakeDate(Day(_t), time)));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setminutes */
@@ -306,87 +303,79 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { th
   // 1. Let t be LocalTime(? thisTimeValue(this value)).
   const t = Q(thisTimeValue(thisValue));
   // 2. Let m be ? ToNumber(min).
-  const m = Q(yield* ToNumber(min));
-  let s;
+  const m = R(Q(yield* ToNumber(min)));
+  let s: number | undefined;
   if (sec) {
-    s = Q(yield* ToNumber(sec));
+    s = R(Q(yield* ToNumber(sec)));
   }
-  let milli;
+  let milli: number | undefined;
   if (ms) {
-    milli = Q(yield* ToNumber(ms));
+    milli = R(Q(yield* ToNumber(ms)));
   }
   if (t.isNaN()) {
     return t;
   }
-  if (!s) {
-    s = SecFromTime(t);
-  }
-  if (!milli) {
-    milli = msFromTime(t);
-  }
+  s ??= SecFromTime(R(t));
+  milli ??= msFromTime(R(t));
   // 5. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
-  const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
+  const date = MakeDate(Day(R(t)), MakeTime(HourFromTime(R(t)), m, s, milli));
   // 6. Let u be TimeClip(UTC(date)).
-  const u = TimeClip(UTC(date));
+  const u = TimeClip(UTC_TemporalEdited(date));
   // 7. Set the [[DateValue]] internal slot of this Date object to u.
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
   // 8. Return u.
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmonth */
 function* DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
-  const m = Q(yield* ToNumber(month));
-  let dt;
+  const m = R(Q(yield* ToNumber(month)));
+  let dt: number | undefined;
   if (date) {
-    dt = Q(yield* ToNumber(date));
+    dt = R(Q(yield* ToNumber(date)));
   }
   if (t.isNaN()) {
     return t;
   }
   t = LocalTime(t);
-  if (!dt) {
-    dt = DateFromTime(t);
-  }
-  const newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
-  const u = TimeClip(UTC(newDate));
+  dt ??= DateFromTime(R(t));
+  const newDate = MakeDate(MakeDay(YearFromTime(R(t)), m, dt), TimeWithinDay(R(t)));
+  const u = TimeClip(UTC_TemporalEdited(newDate));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setseconds */
 function* DateProto_setSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
-  const s = Q(yield* ToNumber(sec));
-  let milli;
+  const s = R(Q(yield* ToNumber(sec)));
+  let milli: number | undefined;
   if (ms) {
-    milli = Q(yield* ToNumber(ms));
+    milli = R(Q(yield* ToNumber(ms)));
   }
   if (t.isNaN()) {
     return t;
   }
   t = LocalTime(t);
-  if (!milli) {
-    milli = msFromTime(t);
-  }
-  const date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
-  const u = TimeClip(UTC(date));
+  milli ??= msFromTime(R(t));
+  const date = MakeDate(Day(R(t)), MakeTime(HourFromTime(R(t)), MinFromTime(R(t)), s, milli));
+  const u = TimeClip(UTC_TemporalEdited(date));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
-  return u;
+  return Value(u);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.settime */
 function* DateProto_setTime([time = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   Q(thisTimeValue(thisValue));
-  const t = Q(yield* ToNumber(time));
+  const t = R(Q(yield* ToNumber(time)));
   const v = TimeClip(t);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcdate */
@@ -396,11 +385,11 @@ function* DateProto_setUTCDate([date = Value.undefined]: Arguments, { thisValue 
   if (t.isNaN()) {
     return t;
   }
-  const newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t));
+  const newDate = MakeDate(MakeDay(YearFromTime(R(t)), MonthFromTime(R(t)), R(dt)), TimeWithinDay(R(t)));
   const v = TimeClip(newDate);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear */
@@ -410,58 +399,52 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date]: Argume
     t = F(+0);
   }
   const y = Q(yield* ToNumber(year));
-  let m;
+  let m: number;
   if (month !== undefined) {
-    m = Q(yield* ToNumber(month));
+    m = R(Q(yield* ToNumber(month)));
   } else {
-    m = MonthFromTime(t);
+    m = MonthFromTime(R(t));
   }
-  let dt;
+  let dt: number;
   if (date !== undefined) {
-    dt = Q(yield* ToNumber(date));
+    dt = R(Q(yield* ToNumber(date)));
   } else {
-    dt = DateFromTime(t);
+    dt = DateFromTime(R(t));
   }
-  const newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
+  const newDate = MakeDate(MakeDay(R(y), m, dt), TimeWithinDay(R(t)));
   const v = TimeClip(newDate);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutchours */
 function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
   const h = Q(yield* ToNumber(hour));
-  let m;
+  let m: number | undefined;
   if (min) {
-    m = Q(yield* ToNumber(min));
+    m = R(Q(yield* ToNumber(min)));
   }
-  let s;
+  let s: number | undefined;
   if (sec) {
-    s = Q(yield* ToNumber(sec));
+    s = R(Q(yield* ToNumber(sec)));
   }
-  let milli;
+  let milli: number | undefined;
   if (ms) {
-    milli = Q(yield* ToNumber(ms));
+    milli = R(Q(yield* ToNumber(ms)));
   }
   if (t.isNaN()) {
     return t;
   }
-  if (!m) {
-    m = MinFromTime(t);
-  }
-  if (!s) {
-    s = SecFromTime(t);
-  }
-  if (!milli) {
-    milli = msFromTime(t);
-  }
-  const date = MakeDate(Day(t), MakeTime(h, m, s, milli));
+  m ??= MinFromTime(R(t));
+  s ??= SecFromTime(R(t));
+  milli ??= msFromTime(R(t));
+  const date = MakeDate(Day(R(t)), MakeTime(R(h), m, s, milli));
   const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
@@ -471,11 +454,12 @@ function* DateProto_setUTCMilliseconds([ms = Value.undefined]: Arguments, { this
   if (t.isNaN()) {
     return t;
   }
-  const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms);
-  const v = TimeClip(MakeDate(Day(t), time));
+  const _t = R(t);
+  const time = MakeTime(HourFromTime(_t), MinFromTime(_t), SecFromTime(_t), R(ms));
+  const v = TimeClip(MakeDate(Day(_t), time));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcminutes */
@@ -484,68 +468,63 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms]: Arguments, {
   const m = Q(yield* ToNumber(min));
   let s;
   if (sec) {
-    s = Q(yield* ToNumber(sec));
+    s = R(Q(yield* ToNumber(sec)));
   }
   let milli;
   if (ms) {
-    milli = Q(yield* ToNumber(ms));
+    milli = R(Q(yield* ToNumber(ms)));
   }
   if (t.isNaN()) {
     return t;
   }
-  if (!s) {
-    s = SecFromTime(t);
-  }
-  if (!milli) {
-    milli = msFromTime(t);
-  }
-  const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
+  const _t = R(t);
+  s ??= SecFromTime(_t);
+  milli ??= msFromTime(_t);
+  const date = MakeDate(Day(_t), MakeTime(HourFromTime(_t), R(m), s, milli));
   const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmonth */
 function* DateProto_setUTCMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
   const m = Q(yield* ToNumber(month));
-  let dt;
+  let dt: number | undefined;
   if (date) {
-    dt = Q(yield* ToNumber(date));
+    dt = R(Q(yield* ToNumber(date)));
   }
   if (t.isNaN()) {
     return t;
   }
-  if (!dt) {
-    dt = DateFromTime(t);
-  }
-  const newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
+  const _t = R(t);
+  dt ??= DateFromTime(_t);
+  const newDate = MakeDate(MakeDay(YearFromTime(_t), R(m), dt), TimeWithinDay(_t));
   const v = TimeClip(newDate);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcseconds */
 function* DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
   const s = Q(yield* ToNumber(sec));
-  let milli;
+  let milli: number;
   if (ms) {
-    milli = Q(yield* ToNumber(ms));
+    milli = R(Q(yield* ToNumber(ms)));
   }
   if (t.isNaN()) {
     return t;
   }
-  if (!milli) {
-    milli = msFromTime(t);
-  }
-  const date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
+  const _t = R(t);
+  milli ??= msFromTime(_t);
+  const date = MakeDate(Day(_t), MakeTime(HourFromTime(_t), MinFromTime(_t), R(s), milli));
   const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
-  return v;
+  return Value(v);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.todatestring */
@@ -565,16 +544,17 @@ function* DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallCo
 /** https://tc39.es/ecma262/#sec-date.prototype.toisostring */
 export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion<JSStringValue> {
   const t = Q(thisTimeValue(thisValue));
-  if (!Number.isFinite(R(t))) {
+  if (!t.isFinite()) {
     return Throw.RangeError('Invalid time');
   }
-  const year = R(YearFromTime(t));
-  const month = R(MonthFromTime(t)) + 1;
-  const date = R(DateFromTime(t));
-  const hour = R(HourFromTime(t));
-  const min = R(MinFromTime(t));
-  const sec = R(SecFromTime(t));
-  const ms = R(msFromTime(t));
+  const _t = R(t);
+  const year = Number(YearFromTime(_t));
+  const month = Number(MonthFromTime(_t)) + 1;
+  const date = Number(DateFromTime(_t));
+  const hour = Number(HourFromTime(_t));
+  const min = Number(MinFromTime(_t));
+  const sec = Number(SecFromTime(_t));
+  const ms = Number(msFromTime(_t));
 
   // TODO: figure out if there can be invalid years.
   let YYYY = String(year);
@@ -626,9 +606,10 @@ function DateProto_toString(_args: Arguments, { thisValue }: FunctionCallContext
 function TimeString(tv: NumberValue) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
-  const hour = String(R(HourFromTime(tv))).padStart(2, '0');
-  const minute = String(R(MinFromTime(tv))).padStart(2, '0');
-  const second = String(R(SecFromTime(tv))).padStart(2, '0');
+  const _tv = R(tv);
+  const hour = String(HourFromTime(_tv)).padStart(2, '0');
+  const minute = String(MinFromTime(_tv)).padStart(2, '0');
+  const second = String(SecFromTime(_tv)).padStart(2, '0');
   return Value(`${hour}:${minute}:${second} GMT`);
 }
 
@@ -641,12 +622,13 @@ const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 function DateString(tv: NumberValue) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
-  const weekday = daysOfTheWeek[R(WeekDay(tv))];
-  const month = monthsOfTheYear[R(MonthFromTime(tv))];
-  const day = String(R(DateFromTime(tv))).padStart(2, '0');
-  const yv = R(YearFromTime(tv));
+  const _tv = R(tv);
+  const weekday = daysOfTheWeek[Number(WeekDay(_tv))];
+  const month = monthsOfTheYear[Number(MonthFromTime(_tv))];
+  const day = String(DateFromTime(_tv)).padStart(2, '0');
+  const yv = YearFromTime(_tv);
   const yearSign = yv >= 0 ? '' : '-';
-  const year = Value(String(Math.abs(yv)));
+  const year = Value(String(abs(yv)));
   const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
   return Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
@@ -657,8 +639,8 @@ export function TimeZoneString(tv: NumberValue) {
   Assert(!tv.isNaN());
   const offset = LocalTZA(tv, true);
   const offsetSign = offset >= 0 ? '+' : '-';
-  const offsetMin = String(R(MinFromTime(F(Math.abs(offset))))).padStart(2, '0');
-  const offsetHour = String(R(HourFromTime(F(Math.abs(offset))))).padStart(2, '0');
+  const offsetMin = String(MinFromTime(abs(offset))).padStart(2, '0');
+  const offsetHour = String(HourFromTime(abs(offset))).padStart(2, '0');
   const tzName = '';
   return Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
 }
@@ -704,12 +686,12 @@ function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallCont
   if (tv.isNaN()) {
     return Value('Invalid Date');
   }
-  const weekday = daysOfTheWeek[R(WeekDay(tv))];
-  const month = monthsOfTheYear[R(MonthFromTime(tv))];
-  const day = String(R(DateFromTime(tv))).padStart(2, '0');
-  const yv = R(YearFromTime(tv));
+  const weekday = daysOfTheWeek[WeekDay(R(tv))];
+  const month = monthsOfTheYear[MonthFromTime(R(tv))];
+  const day = String(DateFromTime(R(tv))).padStart(2, '0');
+  const yv = YearFromTime(R(tv));
   const yearSign = yv >= 0 ? '' : '-';
-  const year = Value(String(Math.abs(yv)));
+  const year = Value(String(abs(yv)));
   const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
   return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }

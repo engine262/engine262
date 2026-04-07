@@ -1,4 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
+import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
 import { bootstrapTemporalPlainDatePrototype } from './PlainDatePrototype.mts';
 import {
   type Realm, Value, UndefinedValue, Q, JSStringValue, type FunctionCallContext, type Arguments, F, type OrdinaryObject, type ValueEvaluator,
@@ -10,7 +11,7 @@ import {
   ToTemporalDate,
   type CalendarType,
   CanonicalizeCalendar,
-  ToIntegerWithTruncation,
+  type Integer,
 } from '#self';
 
 export interface TemporalPlainDateObject extends OrdinaryObject {
@@ -25,9 +26,9 @@ export function isTemporalPlainDateObject(o: Value): o is TemporalPlainDateObjec
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-records */
 export interface ISODateRecord {
-  readonly Year: number;
-  readonly Month: number;
-  readonly Day: number;
+  readonly Year: Integer;
+  readonly Month: Integer;
+  readonly Day: Integer;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindate */
@@ -35,9 +36,9 @@ function* PlainDateConstructor([isoYear = Value.undefined, isoMonth = Value.unde
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.PlainDate constructor cannot be called without new');
   }
-  const y = Q(yield* ToIntegerWithTruncation(isoYear));
-  const m = Q(yield* ToIntegerWithTruncation(isoMonth));
-  const d = Q(yield* ToIntegerWithTruncation(isoDay));
+  const y = Q(yield* SnapToInteger(isoYear, 'truncate-strict'));
+  const m = Q(yield* SnapToInteger(isoMonth, 'truncate-strict'));
+  const d = Q(yield* SnapToInteger(isoDay, 'truncate-strict'));
   if (_calendar instanceof UndefinedValue) {
     _calendar = Value('iso8601');
   }
@@ -61,7 +62,7 @@ function* PlainDate_From([item = Value.undefined, options = Value.undefined]: Ar
 function* PlainDate_Compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
   const one = Q(yield* ToTemporalDate(_one));
   const two = Q(yield* ToTemporalDate(_two));
-  return F(CompareISODate(one.ISODate, two.ISODate));
+  return F(Number(CompareISODate(one.ISODate, two.ISODate)));
 }
 
 export function bootstrapTemporalPlainDate(realmRec: Realm) {

@@ -1,7 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
-import {
-  ToIntegerWithTruncation,
-} from '../../abstract-ops/temporal/temporal.mts';
+import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
 import { bootstrapTemporalPlainTimePrototype } from './PlainTimePrototype.mts';
 import {
   Q, Throw, UndefinedValue, Value, type OrdinaryObject, type ValueEvaluator,
@@ -39,12 +37,12 @@ function* PlainTimeConstructor([
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.PlainTime cannot be called without new');
   }
-  const hour = _hour instanceof UndefinedValue ? 0 : Q(yield* ToIntegerWithTruncation(_hour));
-  const minute = _minute instanceof UndefinedValue ? 0 : Q(yield* ToIntegerWithTruncation(_minute));
-  const second = _second instanceof UndefinedValue ? 0 : Q(yield* ToIntegerWithTruncation(_second));
-  const millisecond = _millisecond instanceof UndefinedValue ? 0 : Q(yield* ToIntegerWithTruncation(_millisecond));
-  const microsecond = _microsecond instanceof UndefinedValue ? 0 : Q(yield* ToIntegerWithTruncation(_microsecond));
-  const nanosecond = _nanosecond instanceof UndefinedValue ? 0 : Q(yield* ToIntegerWithTruncation(_nanosecond));
+  const hour = _hour instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_hour, 'truncate-strict'));
+  const minute = _minute instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_minute, 'truncate-strict'));
+  const second = _second instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_second, 'truncate-strict'));
+  const millisecond = _millisecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_millisecond, 'truncate-strict'));
+  const microsecond = _microsecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_microsecond, 'truncate-strict'));
+  const nanosecond = _nanosecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_nanosecond, 'truncate-strict'));
   if (!IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)) {
     return Throw.RangeError('Invalid time');
   }
@@ -61,7 +59,7 @@ function* PlainTime_from([item = Value.undefined, options = Value.undefined]: Ar
 function* PlainTime_compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
   const one = Q(yield* ToTemporalTime(_one));
   const two = Q(yield* ToTemporalTime(_two));
-  return F(CompareTimeRecord(one.Time, two.Time));
+  return F(Number(CompareTimeRecord(one.Time, two.Time)));
 }
 
 export function bootstrapTemporalPlainTime(realmRec: Realm) {

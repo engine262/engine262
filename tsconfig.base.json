@@ -26,7 +26,7 @@
     // "checkJs": true,
 
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2024", "ESNext.Disposable"],
+    "lib": ["ESNext"],
 
     "incremental": true,
     "skipLibCheck": true,

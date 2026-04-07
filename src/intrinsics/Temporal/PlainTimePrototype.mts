@@ -54,37 +54,37 @@ function thisTemporalTimeValue(value: Value): PlainCompletion<TemporalPlainTimeO
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.hour */
 function PlainTimeProto_hourGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
-  return F(plainTime.Time.Hour);
+  return F(Number(plainTime.Time.Hour));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.minute */
 function PlainTimeProto_minuteGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
-  return F(plainTime.Time.Minute);
+  return F(Number(plainTime.Time.Minute));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.second */
 function PlainTimeProto_secondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
-  return F(plainTime.Time.Second);
+  return F(Number(plainTime.Time.Second));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.millisecond */
 function PlainTimeProto_millisecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
-  return F(plainTime.Time.Millisecond);
+  return F(Number(plainTime.Time.Millisecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.microsecond */
 function PlainTimeProto_microsecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
-  return F(plainTime.Time.Microsecond);
+  return F(Number(plainTime.Time.Microsecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.nanosecond */
 function PlainTimeProto_nanosecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
-  return F(plainTime.Time.Nanosecond);
+  return F(Number(plainTime.Time.Nanosecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.add */
@@ -158,7 +158,7 @@ function* PlainTimeProto_round([roundTo = Value.undefined]: Arguments, { thisVal
 function* PlainTimeProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   const other = Q(yield* ToTemporalTime(_other));
-  return CompareTimeRecord(plainTime.Time, other.Time) === 0 ? Value.true : Value.false;
+  return CompareTimeRecord(plainTime.Time, other.Time) === 0n ? Value.true : Value.false;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tostring */

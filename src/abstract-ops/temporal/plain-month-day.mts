@@ -33,7 +33,7 @@ export function* ToTemporalMonthDay(
   const resolvedOptions = Q(GetOptionsObject(options));
   Q(yield* GetTemporalOverflowOption(resolvedOptions));
   if (calendarType === 'iso8601') {
-    const referenceISOYear = 1972;
+    const referenceISOYear = 1972n;
     const isoDate = CreateISODateRecord(referenceISOYear, result.Month, result.Day);
     return X(CreateTemporalMonthDay(isoDate, calendarType));
   }
