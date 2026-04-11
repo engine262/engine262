@@ -197,11 +197,6 @@ export function StringToNumber(str: string) {
   return parseFloat(str);
 }
 
-const mod = (n: number, m: number) => {
-  const r = n % m;
-  return Math.floor(r >= 0 ? r : r + m);
-};
-
 /** https://tc39.es/ecma262/#sec-tointegerorinfinity */
 export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<number> {
   const number = typeof argument === 'number' ? Value(argument) : Q(yield* ToNumber(argument));
@@ -214,16 +209,10 @@ export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<n
 
 /** https://tc39.es/ecma262/#sec-toint32 */
 export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = R(Q(yield* ToNumber(argument)));
-  // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
-  }
-  // 3. Let int be truncate(ℝ(number)).
-  const int = truncate(number);
+  const int = Q(yield* ToIntegerOrInfinity(argument));
+  if (!Number.isFinite(int)) return F(0);
   // 4. Let int32bit be int modulo 2^32.
-  const int32bit = mod(int, 2 ** 32);
+  const int32bit = modulo(int, 2 ** 32);
   // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
   if (int32bit >= (2 ** 31)) {
     return F(int32bit - (2 ** 32));
@@ -233,32 +222,20 @@ export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
 
 /** https://tc39.es/ecma262/#sec-touint32 */
 export function* ToUint32(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = R(Q(yield* ToNumber(argument)));
-  // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
-  }
-  // 3. Let int be truncate(ℝ(number)).
-  const int = truncate(number);
+  const int = Q(yield* ToIntegerOrInfinity(argument));
+  if (!Number.isFinite(int)) return F(0);
   // 4. Let int32bit be int modulo 2^32.
-  const int32bit = mod(int, 2 ** 32);
+  const int32bit = modulo(int, 2 ** 32);
   // 5. Return 𝔽(int32bit).
   return F(int32bit);
 }
 
 /** https://tc39.es/ecma262/#sec-toint16 */
 export function* ToInt16(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = R(Q(yield* ToNumber(argument)));
-  // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
-  }
-  // 3. Let int be truncate(ℝ(number)).
-  const int = truncate(number);
+  const int = Q(yield* ToIntegerOrInfinity(argument));
+  if (!Number.isFinite(int)) return F(0);
   // 4. Let int16bit be int modulo 2^16.
-  const int16bit = mod(int, 2 ** 16);
+  const int16bit = modulo(int, 2 ** 16);
   // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
   if (int16bit >= (2 ** 15)) {
     return F(int16bit - (2 ** 16));
@@ -268,32 +245,20 @@ export function* ToInt16(argument: Value): ValueEvaluator<NumberValue> {
 
 /** https://tc39.es/ecma262/#sec-touint16 */
 export function* ToUint16(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = R(Q(yield* ToNumber(argument)));
-  // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
-  }
-  // 3. Let int be truncate(ℝ(number)).
-  const int = truncate(number);
+  const int = Q(yield* ToIntegerOrInfinity(argument));
+  if (!Number.isFinite(int)) return F(0);
   // 4. Let int16bit be int modulo 2^16.
-  const int16bit = mod(int, 2 ** 16);
+  const int16bit = modulo(int, 2 ** 16);
   // 5. Return 𝔽(int16bit).
   return F(int16bit);
 }
 
 /** https://tc39.es/ecma262/#sec-toint8 */
 export function* ToInt8(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = R(Q(yield* ToNumber(argument)));
-  // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
-  }
-  // 3. Let int be truncate(ℝ(number)).
-  const int = truncate(number);
+  const int = Q(yield* ToIntegerOrInfinity(argument));
+  if (!Number.isFinite(int)) return F(0);
   // 4. Let int8bit be int modulo 2^8.
-  const int8bit = mod(int, 2 ** 8);
+  const int8bit = modulo(int, 2 ** 8);
   // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
   if (int8bit >= (2 ** 7)) {
     return F(int8bit - (2 ** 8));
@@ -303,16 +268,10 @@ export function* ToInt8(argument: Value): ValueEvaluator<NumberValue> {
 
 /** https://tc39.es/ecma262/#sec-touint8 */
 export function* ToUint8(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let number be ? ToNumber(argument).
-  const number = R(Q(yield* ToNumber(argument)));
-  // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
-  }
-  // 3. Let int be truncate(ℝ(number)).
-  const int = truncate(number);
+  const int = Q(yield* ToIntegerOrInfinity(argument));
+  if (!Number.isFinite(int)) return F(0);
   // 4. Let int8bit be int modulo 2^8.
-  const int8bit = mod(int, 2 ** 8);
+  const int8bit = modulo(int, 2 ** 8);
   // 5. Return 𝔽(int8bit).
   return F(int8bit);
 }
