@@ -216,7 +216,86 @@ function* Math_f16round([x = Value.undefined]: Arguments): ValueEvaluator {
   // 4. Let n16 be the result of converting n to IEEE 754-2019 binary16 format using roundTiesToEven mode.
   // 5. Let n64 be the result of converting n16 to IEEE 754-2019 binary64 format.
   // 6. Return the ECMAScript Number value corresponding to n64.
-  return F(Math.f16round(n.value));
+  if ('f16round' in Math) {
+    return F(Math.f16round(n.value));
+  }
+
+  const _f16BufF64 = new Float64Array(1);
+  const _f16BufU32 = new Uint32Array(_f16BufF64.buffer);
+  // Fallback for Math.f16round: converts a finite, non-zero float64 to float16
+  // (roundTiesToEven) and back to float64 using bit manipulation.
+  // Assumes little-endian layout (all modern platforms).
+  function f16roundImpl(x: number): number {
+    _f16BufF64[0] = x;
+    const lo = _f16BufU32[0]!; // bits [31..0] of mantissa
+    const hi = _f16BufU32[1]!; // sign + exponent + bits [51..32] of mantissa
+
+    const sign = hi >>> 31;
+    const exp64 = (hi >>> 20) & 0x7FF;
+    const mantHi = hi & 0xFFFFF; // upper 20 bits of 52-bit mantissa
+
+    // Float16 biased exponent = float64 unbiased exponent + float16 bias
+    let f16exp = exp64 - 1023 + 15;
+
+    if (f16exp >= 31) {
+    // Overflow to infinity
+      return sign ? -Infinity : Infinity;
+    }
+
+    let frac16: number;
+    let roundBit: number;
+    let stickyBit: number;
+
+    if (f16exp <= 0) {
+    // Subnormal float16: the implicit leading 1 becomes an explicit mantissa bit.
+    // totalShift = 43 - f16exp maps the 53-bit value (leading-1 | mant52) to 10 bits.
+      const totalShift = 43 - f16exp; // range: 43 (f16exp=0) .. 53 (f16exp=-10)
+      if (totalShift > 53) {
+      // Value is too small to round to anything but ±0.
+        return sign ? -0 : 0;
+      }
+      const shiftInHi = totalShift - 32; // always 11..21
+      const mant53Hi = mantHi | 0x100000; // set implicit leading-1 at bit 52
+      frac16 = mant53Hi >>> shiftInHi;
+      roundBit = (mant53Hi >>> (shiftInHi - 1)) & 1;
+      const stickyMask = (1 << (shiftInHi - 1)) - 1;
+      stickyBit = (mant53Hi & stickyMask) || lo ? 1 : 0;
+
+      if (roundBit && (stickyBit || (frac16 & 1))) {
+        frac16 += 1;
+        if (frac16 === 0x400) {
+        // Rounded up to the smallest normal float16
+          const minNormal = 2 ** -14;
+          return sign ? -minNormal : minNormal;
+        }
+      }
+      // Subnormal float16 value = frac16 * 2^(-14-10) = frac16 * 2^-24
+      const val = frac16 * (2 ** -24);
+      return sign ? -val : val;
+    }
+
+    // Normal float16: round 52-bit mantissa to 10 bits by dropping the lower 42.
+    // mantHi holds bits [51..32] of the mantissa (20 bits).
+    frac16 = mantHi >>> 10; // bits [51..42]
+    roundBit = (mantHi >>> 9) & 1; // bit [41]
+    stickyBit = (mantHi & 0x1FF) || lo ? 1 : 0; // bits [40..0]
+
+    if (roundBit && (stickyBit || (frac16 & 1))) {
+      frac16 += 1;
+      if (frac16 === 0x400) {
+        frac16 = 0;
+        f16exp += 1;
+        if (f16exp >= 31) {
+          return sign ? -Infinity : Infinity;
+        }
+      }
+    }
+
+    // Normal float16 value = (1 + frac16/1024) * 2^(f16exp-15)
+    const val = (1 + frac16 / 1024) * (2 ** (f16exp - 15));
+    return sign ? -val : val;
+  }
+  return F(f16roundImpl(n.value));
 }
 
 /** https://tc39.es/ecma262/#sec-math.hypot */
@@ -476,9 +555,6 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
       // @ts-expect-error
       return Math.sumPrecise(items);
     }
-    // https://github.com/yukinotech/JSBD/issues/24
-    // const numbers = items.map(Decimal);
-    // return numbers.reduce((a, b) => a.add(b, { maximumFractionDigits: Number.MAX_SAFE_INTEGER }), Decimal(0)).toNumber();
     const fractional_parts: number[] = [];
     let whole_part_sum = 0n;
     items.forEach((n) => {
