@@ -8,6 +8,8 @@
 
 built-ins/RegExp/property-escapes/generated
 built-ins/RegExp/CharacterClassEscapes
+# temporal
+argument-string-limits.js
 
 # Slow tests appended by --update-slow=10
 built-ins/Array/prototype/concat/Array.prototype.concat_large-typed-array.js
@@ -29,9 +31,10 @@ built-ins/Temporal/Duration/prototype/round/roundingincrement-days-large.js
 built-ins/Temporal/Duration/prototype/round/singular-units.js
 built-ins/Temporal/Duration/prototype/total/calendar-possibly-required.js
 built-ins/Temporal/Duration/prototype/total/relativeto-total-of-each-unit.js
+built-ins/Temporal/PlainDate/prototype/since/basic-conversions.js
+built-ins/Temporal/PlainDate/prototype/until/basic-conversions.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-object.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-propertybag-optional-properties.js
-built-ins/Temporal/PlainDateTime/prototype/since/argument-string-limits.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-string.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-zoneddatetime-negative-epochnanoseconds.js
 built-ins/Temporal/PlainDateTime/prototype/since/basic.js
