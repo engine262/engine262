@@ -199,6 +199,8 @@ exports[`native function names 1`] = `
   ".Iterator.prototype.some()": "Iterator#some",
   ".Iterator.prototype.take()": "Iterator#take",
   ".Iterator.prototype.toArray()": "Iterator#toArray",
+  ".Iterator.zip()": "Iterator.zip",
+  ".Iterator.zipKeyed()": "Iterator.zipKeyed",
   ".JSON.isRawJSON()": "JSON.isRawJSON",
   ".JSON.parse()": "JSON.parse",
   ".JSON.rawJSON()": "JSON.rawJSON",

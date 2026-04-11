@@ -8,6 +8,9 @@
 
 # Bring by https://github.com/tc39/ecma262/pull/3775
 language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js
+language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js
+language/import/import-defer/deferred-namespace-object/reexport-deferred-ns-evaluation.js
+language/import/import-defer/deferred-namespace-object/identity.js
 
 # Engine crash
 staging/sm/class/superPropDestructuring.js
