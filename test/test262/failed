@@ -6,6 +6,9 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# Bring by https://github.com/tc39/ecma262/pull/3775
+language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js
+
 # Engine crash
 staging/sm/class/superPropDestructuring.js
 staging/sm/destructuring/order-super.js

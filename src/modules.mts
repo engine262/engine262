@@ -429,8 +429,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
-        // ii. If e.[[ImportName]] is ~all~, then
-        if (e.ImportName === 'all') {
+        // ii. If e.[[ImportName]] is ~namespace~, then
+        if (e.ImportName === 'namespace') {
           // 1. Assert: module does not provide the direct binding for this export
           // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
           return new ResolvedBindingRecord({
@@ -518,8 +518,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     for (const ie of module.ImportEntries) {
       // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
       const importedModule = GetImportedModule(module, ie.ModuleRequest);
-      // b. If in.[[ImportName]] is ~namespace-object~, then
-      if (ie.ImportName === 'namespace-object') {
+      // b. If in.[[ImportName]] is ~namespace~, then
+      if (ie.ImportName === 'namespace') {
         // i. Let namespace be GetModuleNamespace(importedModule).
         const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
@@ -626,9 +626,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
 
   /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
   * ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator {
-    // 1. Let module be this Source Text Module Record.
     const module = this;
-    // 2. Suspend the currently running execution context.
+    // Assert: _module_ has been linked and declarations in its module environment have been instantiated.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context!;
     if (module.HasTLA === Value.false) {

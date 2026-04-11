@@ -52,7 +52,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
       // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace-object~, [[LocalName]]: localName }.
       const entry: ImportEntry = {
         ModuleRequest: module,
-        ImportName: 'namespace-object',
+        ImportName: 'namespace',
         LocalName: localName,
       };
       // 3. Return a new List containing entry.

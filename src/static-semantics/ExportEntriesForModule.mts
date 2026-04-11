@@ -19,7 +19,7 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
         // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all~, [[LocalName]]: null, [[ExportName]]: exportName }.
         const entry: ExportEntry = {
           ModuleRequest: module,
-          ImportName: 'all',
+          ImportName: 'namespace',
           LocalName: Value.null,
           ExportName: exportName,
         };

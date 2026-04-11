@@ -123,7 +123,7 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
 
 export interface ExportEntry {
   readonly ModuleRequest: ModuleRequestRecord | NullValue;
-  readonly ImportName: JSStringValue | NullValue | 'all' | 'all-but-default';
+  readonly ImportName: JSStringValue | NullValue | 'namespace' | 'all-but-default';
   readonly LocalName: JSStringValue | NullValue;
   readonly ExportName: JSStringValue | NullValue;
 }

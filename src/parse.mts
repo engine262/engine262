@@ -159,21 +159,14 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
         const ie = importEntries.find((e) => e.LocalName.stringValue() === (ee.LocalName as JSStringValue).stringValue());
-        // 2. If ie.[[ImportName]] is ~namespace-object~, then
-        if (ie!.ImportName === 'namespace-object') {
-          // a. NOTE: This is a re-export of an imported module namespace object.
-          // b. Append ee to localExportEntries.
-          localExportEntries.push(ee);
-        } else { // 3. Else,
-          // a. NOTE: This is a re-export of a single name.
-          // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
-          indirectExportEntries.push({
-            ModuleRequest: ie!.ModuleRequest,
-            ImportName: ie!.ImportName,
-            LocalName: Value.null,
-            ExportName: ee.ExportName,
-          });
-        }
+        // a. NOTE: This is a re-export of a single name.
+        // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
+        indirectExportEntries.push({
+          ModuleRequest: ie!.ModuleRequest,
+          ImportName: ie!.ImportName,
+          LocalName: Value.null,
+          ExportName: ee.ExportName,
+        });
       }
     } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
