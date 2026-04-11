@@ -232,6 +232,7 @@ exports[`native function names 1`] = `
   ".Math.cosh()": "Math.cosh",
   ".Math.exp()": "Math.exp",
   ".Math.expm1()": "Math.expm1",
+  ".Math.f16round()": "Math.f16round",
   ".Math.floor()": "Math.floor",
   ".Math.fround()": "Math.fround",
   ".Math.hypot()": "Math.hypot",
