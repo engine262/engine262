@@ -12,7 +12,6 @@ Temporal = temporal
 -await-dictionary
 -explicit-resource-management
 -immutable-arraybuffer
--joint-iteration
 -source-phase-imports
 -source-phase-imports-module-source
 

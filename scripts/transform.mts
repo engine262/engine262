@@ -71,6 +71,18 @@ const Macros = {
     allowAnyExpression: false,
     expressionOnlyUsedOnce: false,
   },
+  IfAbruptCloseIterators: {
+    template: (source: NodeWithLocation, code: { value: t.Expression, iteratorRecord: t.Expression }) => withSource(source, template(`
+    /* IfAbruptCloseIterators */
+    /* node:coverage ignore next */
+    if (%%value%% instanceof AbruptCompletion) return yield* IteratorCloseAll(%%iteratorRecord%%, %%value%%);
+    /* node:coverage ignore next */
+    if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+    `, parseOptions)(code)),
+    imports: ['IteratorCloseAll', 'AbruptCompletion', 'Completion', 'skipDebugger'],
+    allowAnyExpression: false,
+    expressionOnlyUsedOnce: false,
+  },
   IfAbruptCloseAsyncIterator: {
     template: (source: NodeWithLocation, code: { value: t.Expression, iteratorRecord: t.Expression }) => withSource(source, template(`
     /* IfAbruptCloseAsyncIterator */
@@ -116,7 +128,7 @@ const Macros = {
 
 const parseOptions = { preserveComments: true };
 
-type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger' | 'ThrowCompletion';
+type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'IteratorCloseAll' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger' | 'ThrowCompletion';
 export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, boolean>> }> => ({
   visitor: {
     Program: {
@@ -247,7 +259,7 @@ export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, 
         (binding.path.parent as t.VariableDeclaration).kind = 'let';
         statementPath.insertBefore(Macros.IfAbruptRejectPromise.template(callee, { value: argument, capability }));
         removePath(path);
-      } else if (macroName === 'IfAbruptCloseIterator' || macroName === 'IfAbruptCloseAsyncIterator') {
+      } else if (macroName === 'IfAbruptCloseIterator' || macroName === 'IfAbruptCloseIterators' || macroName === 'IfAbruptCloseAsyncIterator') {
         if (!t.isIdentifier(argument)) {
           throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
         }

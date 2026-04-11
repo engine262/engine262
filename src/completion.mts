@@ -376,6 +376,15 @@ export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRec
 }
 
 /**
+ * https://tc39.es/ecma262/#sec-ifabruptcloseiterators
+ * @internal
+ */
+export function IfAbruptCloseIterators<T>(_value: T, _iteratorRecords: Iterable<IteratorRecord>): Q<T> {
+  /* node:coverage ignore next */
+  throw new TypeError('IfAbruptCloseIterators() requires build');
+}
+
+/**
  * https://tc39.es/ecma262/#sec-ifabruptcloseasynciterator
  * @internal
  */

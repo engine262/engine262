@@ -39,9 +39,12 @@ import {
   PromiseCapabilityRecord,
   CreateDataPropertyOrThrow,
   GeneratorYield,
+  Yield,
+  type GeneratorObject,
 } from './all.mts';
 import {
   type ValueCompletion, type PromiseObject, type OrdinaryObject, Throw,
+  ReturnCompletion,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -318,4 +321,90 @@ export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseC
   }
   PerformPromiseThen(valueWrapper, onFullfilled, onRejected, promiseCapability);
   return promiseCapability.Promise;
+}
+export type IteratorZipMode = 'shortest' | 'longest' | 'strict';
+/** https://tc39.es/ecma262/#sec-IteratorZip */
+export function IteratorZip(
+  _iters: readonly IteratorRecord[],
+  mode: IteratorZipMode,
+  padding: readonly Value[],
+  finishResults: (results: readonly Value[]) => Value,
+) {
+  const iters: (null | IteratorRecord)[] = [..._iters];
+  const iterCount = iters.length;
+  const openIters = [..._iters];
+  const closure = function* IteratorZipClosure(): YieldEvaluator {
+    if (iterCount === 0) {
+      return ReturnCompletion(Value.undefined);
+    }
+    while (true) {
+      const results: Value[] = [];
+      Assert(openIters.length !== 0);
+      for (let i = 0; i < iterCount; i += 1) {
+        const iter = iters[i];
+        let result: Value | 'done';
+        if (iter === null) {
+          Assert(mode === 'longest');
+          result = padding[i];
+        } else {
+          const _result = yield* IteratorStepValue(iter);
+          if (_result instanceof AbruptCompletion) {
+            // Remove iter from openIters.
+            openIters.splice(openIters.indexOf(iter), 1);
+            return Q(yield* IteratorCloseAll(openIters, _result));
+          }
+          result = X(_result);
+          if (result === 'done') {
+            // Remove iter from openIters.
+            openIters.splice(openIters.indexOf(iter), 1);
+            if (mode === 'shortest') {
+              return Q(yield* IteratorCloseAll(openIters, ReturnCompletion(Value.undefined)));
+            } else if (mode === 'strict') {
+              if (i !== 0) {
+                return Q(yield* IteratorCloseAll(openIters, Throw.TypeError('Iterator.zip strict mode requires all iterators to end together')));
+              }
+              for (let k = 1; k < iterCount; k += 1) {
+                const itersK = iters[k];
+                Assert(itersK !== null);
+                const _open = yield* IteratorStep(itersK);
+                if (_open instanceof AbruptCompletion) {
+                  // Remove itersK from openIters.
+                  openIters.splice(openIters.indexOf(itersK), 1);
+                  return Q(yield* IteratorCloseAll(openIters, _open));
+                }
+                const open = X(_open);
+                if (open === 'done') {
+                  // Remove itersK from openIters.
+                  openIters.splice(openIters.indexOf(itersK), 1);
+                } else {
+                  return Q(yield* IteratorCloseAll(openIters, Throw.TypeError('Iterator.zip strict mode requires all iterators to end together')));
+                }
+              }
+              return ReturnCompletion(Value.undefined);
+            }
+            Assert(mode === 'longest');
+            if (openIters.length === 0) {
+              return ReturnCompletion(Value.undefined);
+            }
+            iters[i] = null;
+            result = padding[i];
+          }
+        }
+        results.push(result);
+      }
+      const _results = finishResults(results);
+      const completion = yield* Yield(_results);
+      if (completion instanceof AbruptCompletion) {
+        return Q(yield* IteratorCloseAll(openIters, completion));
+      }
+    }
+  };
+  const gen = CreateIteratorFromClosure(
+    closure,
+    Value('Iterator Helper'),
+    surroundingAgent.intrinsic('%IteratorHelperPrototype%'),
+    ['UnderlyingIterators'],
+  ) as GeneratorObject;
+  gen.UnderlyingIterators = openIters;
+  return gen;
 }

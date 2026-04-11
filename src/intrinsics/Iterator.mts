@@ -1,8 +1,17 @@
-import { AbruptCompletion, Q, type ValueEvaluator } from '../completion.mts';
-import type { Mutable } from '../utils/language.mts';
+import {
+  AbruptCompletion,
+  IfAbruptCloseIterators,
+  NormalCompletion,
+  Q,
+  X,
+  type ValueEvaluator,
+} from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  JSStringValue,
   ObjectValue,
+  type PropertyKeyValue,
   type BooleanValue,
   UndefinedValue,
   Value,
@@ -10,10 +19,16 @@ import {
   type FunctionCallContext,
   wellKnownSymbols,
 } from '../value.mts';
+import { GetOptionsObject } from '../abstract-ops/temporal/addition.mts';
+import { type IteratorZipMode, IteratorZip } from '../abstract-ops/iterator-operations.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Call,
+  CreateArrayFromList,
+  CreateDataPropertyOrThrow,
   CreateIteratorFromClosure,
+  Get,
+  GetIterator,
   GetIteratorDirect,
   GetIteratorFlattenable,
   GetMethod,
@@ -25,6 +40,7 @@ import {
   Yield,
   type BuiltinFunctionObject,
   type FunctionObject,
+  type IteratorRecord,
   type IteratorObject,
   type Realm,
   Throw,
@@ -113,10 +129,173 @@ function* Iterator_concat(items: Arguments): ValueEvaluator {
   return gen;
 }
 
+/** https://tc39.es/ecma262/#sec-iterator.zip */
+function* Iterator_zip([iterables = Value.undefined, _options = Value.undefined]: Arguments): ValueEvaluator {
+  if (!(iterables instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', iterables);
+  }
+  const options = Q(GetOptionsObject(_options));
+
+  const modeOption = Q(yield* Get(options, Value('mode')));
+  let mode: IteratorZipMode;
+  if (modeOption === Value.undefined) mode = 'shortest';
+  else if (!(modeOption instanceof JSStringValue)) {
+    return Throw.TypeError('Iterator.zip mode must be one of "shortest", "longest", or "strict"');
+  } else {
+    const modeString = modeOption.stringValue();
+    if (modeString !== 'shortest' && modeString !== 'longest' && modeString !== 'strict') {
+      return Throw.TypeError('Iterator.zip mode must be one of "shortest", "longest", or "strict"');
+    }
+    mode = modeString;
+  }
+
+  let paddingOption: Value = Value.undefined;
+  if (mode === 'longest') {
+    paddingOption = Q(yield* Get(options, Value('padding')));
+    if (paddingOption !== Value.undefined && !(paddingOption instanceof ObjectValue)) {
+      return Throw.TypeError('options.padding $1 is not an object', paddingOption);
+    }
+  }
+  __ts_cast__<UndefinedValue | ObjectValue>(paddingOption);
+
+  const iters: IteratorRecord[] = [];
+  const padding: Value[] = [];
+  const inputIter = Q(yield* GetIterator(iterables, 'sync'));
+
+  let next: 'not-started' | Value | 'done' = 'not-started';
+  while (next !== 'done') {
+    const _next = yield* IteratorStepValue(inputIter);
+    IfAbruptCloseIterators(_next, iters);
+    next = X(_next);
+    if (next !== 'done') {
+      const iter = yield* GetIteratorFlattenable(next, 'reject-primitives');
+      const needsClosing = [inputIter, ...iters];
+      IfAbruptCloseIterators(iter, needsClosing);
+      iters.push(X(iter));
+    }
+  }
+
+  const iterCount = iters.length;
+  if (mode === 'longest') {
+    if (paddingOption === Value.undefined) {
+      for (let i = 0; i < iterCount; i += 1) {
+        padding.push(Value.undefined);
+      }
+    } else {
+      const _paddingIter = yield* GetIterator(paddingOption, 'sync');
+      IfAbruptCloseIterators(_paddingIter, iters);
+      const paddingIter = X(_paddingIter);
+
+      let usingIterator = true;
+      for (let i = 0; i < iterCount; i += 1) {
+        if (usingIterator === true) {
+          const _next = yield* IteratorStepValue(paddingIter);
+          IfAbruptCloseIterators(_next, iters);
+          next = X(_next);
+          if (next === 'done') {
+            usingIterator = false;
+          } else {
+            padding.push(next);
+          }
+        }
+        if (usingIterator === false) padding.push(Value.undefined);
+      }
+
+      if (usingIterator === true) {
+        const completion = yield* IteratorClose(paddingIter, NormalCompletion(undefined));
+        IfAbruptCloseIterators(completion, iters);
+      }
+    }
+  }
+
+  const finishResults = (results: readonly Value[]) => CreateArrayFromList(results);
+  return IteratorZip(iters, mode, padding, finishResults);
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.zipkeyed */
+function* Iterator_zipKeyed([iterables = Value.undefined, _options = Value.undefined]: Arguments): ValueEvaluator {
+  if (!(iterables instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', iterables);
+  }
+  const options = Q(GetOptionsObject(_options));
+
+  const modeOption = Q(yield* Get(options, Value('mode')));
+  let mode: IteratorZipMode;
+  if (modeOption === Value.undefined) mode = 'shortest';
+  else if (!(modeOption instanceof JSStringValue)) {
+    return Throw.TypeError('Iterator.zipKeyed mode must be one of "shortest", "longest", or "strict"');
+  } else {
+    const modeString = modeOption.stringValue();
+    if (modeString !== 'shortest' && modeString !== 'longest' && modeString !== 'strict') {
+      return Throw.TypeError('Iterator.zipKeyed mode must be one of "shortest", "longest", or "strict"');
+    }
+    mode = modeString;
+  }
+
+  let paddingOption: Value = Value.undefined;
+  if (mode === 'longest') {
+    paddingOption = Q(yield* Get(options, Value('padding')));
+    if (paddingOption !== Value.undefined && !(paddingOption instanceof ObjectValue)) {
+      return Throw.TypeError('option.padding $1 is not an object', paddingOption);
+    }
+  }
+
+  const iters: IteratorRecord[] = [];
+  const padding: Value[] = [];
+  const allKeys: PropertyKeyValue[] = Q(yield* iterables.OwnPropertyKeys());
+  const keys: PropertyKeyValue[] = [];
+
+  for (const key of allKeys) {
+    const _desc = yield* iterables.GetOwnProperty(key);
+    IfAbruptCloseIterators(_desc, iters);
+    const desc = X(_desc);
+    if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+      const _value = yield* Get(iterables, key);
+      IfAbruptCloseIterators(_value, iters);
+      const value = X(_value);
+      if (value !== Value.undefined) {
+        keys.push(key);
+        const _iter = yield* GetIteratorFlattenable(value, 'reject-primitives');
+        IfAbruptCloseIterators(_iter, iters);
+        const iter = X(_iter);
+        iters.push(iter);
+      }
+    }
+  }
+
+  const iterCount = iters.length;
+  if (mode === 'longest') {
+    if (paddingOption === Value.undefined) {
+      for (let i = 0; i < iterCount; i += 1) {
+        padding.push(Value.undefined);
+      }
+    } else {
+      __ts_cast__<ObjectValue>(paddingOption);
+      for (const key of keys) {
+        const _value = yield* Get(paddingOption, key);
+        IfAbruptCloseIterators(_value, iters);
+        const value = X(_value);
+        padding.push(value);
+      }
+    }
+  }
+
+  const finishResults = (results: readonly Value[]) => {
+    const obj = OrdinaryObjectCreate(Value.null);
+    for (let i = 0; i < iterCount; i += 1) {
+      X(CreateDataPropertyOrThrow(obj, keys[i], results[i]));
+    }
+    return obj;
+  };
+  return IteratorZip(iters, mode, padding, finishResults);
+}
+
 export function bootstrapIterator(realmRec: Realm) {
   const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], [
     ['from', Iterator_from, 1],
     ['concat', Iterator_concat, 0],
+    ['zip', Iterator_zip, 1],
+    ['zipKeyed', Iterator_zipKeyed, 1],
   ]);
 
   realmRec.Intrinsics['%Iterator%'] = cons;
