@@ -27,10 +27,10 @@ import {
   importBundledTest262Harness,
   boostTest262Harness,
   ModuleCache,
-  SourceTextModuleRecord,
   NormalCompletion,
   PerformPromiseThen,
   CreateBuiltinFunction,
+  runJobQueue,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -182,20 +182,22 @@ async function setupInspector(mode: 'file' | 'eval' | 'pipe' | 'repl') {
 
 function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: string, filename: string) {
   realm.scope(() => {
+    const onErrorCallback = CreateBuiltinFunction.from((result = Value.undefined) => {
+      quit(ThrowCompletion(result));
+    });
     const completion = evalQ((Q) => {
       if (argv.values.module || filename.endsWith('.mjs')) {
         const module = Q(realm.compileModule(source, { specifier: filename }));
         realm.HostDefined.resolverCache?.set(filename, 'js', module);
-        const loadDeps = Q(module.LoadRequestedModules());
-        if (loadDeps.PromiseState === 'fulfilled') {
-          loadMain(module);
-        } else if (loadDeps.PromiseState === 'rejected') {
-          quit(ThrowCompletion(loadDeps.PromiseResult!));
-        } else {
-          PerformPromiseThen(loadDeps, CreateBuiltinFunction.from(() => loadMain(module)), CreateBuiltinFunction.from((result = Value.undefined) => {
-            quit(ThrowCompletion(result));
-          }));
-        }
+
+        const loadRequestedModules = module.LoadRequestedModules();
+        PerformPromiseThen(loadRequestedModules, CreateBuiltinFunction.from(function* runModule() {
+          const link = module.Link();
+          if (link instanceof ThrowCompletion) return link;
+          PerformPromiseThen(yield* module.Evaluate(), CreateBuiltinFunction.from(() => { }), onErrorCallback);
+          return Value.undefined;
+        }), onErrorCallback);
+        runJobQueue();
       } else {
         Q(realm.evaluateScript(source, { specifier: filename }));
       }
@@ -205,21 +207,6 @@ function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: stri
 
   inspector?.stop();
 
-  function* loadMain(module: SourceTextModuleRecord) {
-    const link = module.Link();
-    if (link instanceof ThrowCompletion) {
-      quit(link);
-      return;
-    }
-    const result = yield* module.Evaluate();
-    if (result instanceof ThrowCompletion) {
-      quit(result);
-    } else {
-      PerformPromiseThen(result, CreateBuiltinFunction.from(() => { }), CreateBuiltinFunction.from((result = Value.undefined) => {
-        quit(ThrowCompletion(result));
-      }));
-    }
-  }
   function quit(completion: ThrowCompletion<Value> | NormalCompletion<void>) {
     if (completion instanceof AbruptCompletion) {
       const inspected = inspect(completion);

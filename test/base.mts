@@ -39,7 +39,7 @@ export class Test {
   endTime: number | null = null;
 
   getRuntimeSeconds(): number {
-    if (this.startTime === null) {
+    if (this.startTime === null || this.endTime) {
       return 0;
     }
     return ~~((Date.now() - this.startTime) / 1000);

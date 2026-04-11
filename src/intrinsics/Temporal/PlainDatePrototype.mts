@@ -68,19 +68,19 @@ function PlainDateProto_eraGetter(_args: Arguments, { thisValue }: FunctionCallC
 function PlainDateProto_eraYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
   const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).EraYear;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.year */
 function PlainDateProto_yearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Year);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Year));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.month */
 function PlainDateProto_monthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Month);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Month));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthcode */
@@ -92,57 +92,57 @@ function PlainDateProto_monthCodeGetter(_args: Arguments, { thisValue }: Functio
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.day */
 function PlainDateProto_dayGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Day);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Day));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofweek */
 function PlainDateProto_dayOfWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DayOfWeek);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DayOfWeek));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofyear */
 function PlainDateProto_dayOfYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DayOfYear);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DayOfYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.weekofyear */
 function PlainDateProto_weekOfYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
   const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).WeekOfYear.Week;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.yearofweek */
 function PlainDateProto_yearOfWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
   const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).WeekOfYear.Year;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinweek */
 function PlainDateProto_daysInWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInWeek);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInWeek));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinmonth */
 function PlainDateProto_daysInMonthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInMonth);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInMonth));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinyear */
 function PlainDateProto_daysInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInYear);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).DaysInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthsinyear */
 function PlainDateProto_monthsInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return F(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).MonthsInYear);
+  return F(Number(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).MonthsInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.inleapyear */
@@ -220,7 +220,7 @@ function* PlainDateProto_since([other = Value.undefined, options = Value.undefin
 function* PlainDateProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDate = Q(thisTemporalDateValue(thisValue));
   const other = Q(yield* ToTemporalDate(_other));
-  if (CompareISODate(plainDate.ISODate, other.ISODate) !== 0) {
+  if (CompareISODate(plainDate.ISODate, other.ISODate) !== 0n) {
     return Value.false;
   }
   return Value(CalendarEquals(plainDate.Calendar, other.Calendar));

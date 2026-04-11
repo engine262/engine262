@@ -59,19 +59,19 @@ function PlainYearMonthProto_eraGetter(_args: Arguments, { thisValue }: Function
 function PlainYearMonthProto_eraYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
   const result = CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).EraYear;
-  return result === undefined ? Value.undefined : F(result);
+  return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.year */
 function PlainYearMonthProto_yearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
-  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Year);
+  return F(Number(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Year));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.month */
 function PlainYearMonthProto_monthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
-  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Month);
+  return F(Number(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Month));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthcode */
@@ -83,19 +83,19 @@ function PlainYearMonthProto_monthCodeGetter(_args: Arguments, { thisValue }: Fu
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear */
 function PlainYearMonthProto_daysInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
-  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).DaysInYear);
+  return F(Number(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).DaysInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinmonth */
 function PlainYearMonthProto_daysInMonthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
-  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).DaysInMonth);
+  return F(Number(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).DaysInMonth));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthsinyear */
 function PlainYearMonthProto_monthsInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
-  return F(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).MonthsInYear);
+  return F(Number(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).MonthsInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.inleapyear */
@@ -148,7 +148,7 @@ function* PlainYearMonthProto_since([other = Value.undefined, options = Value.un
 function* PlainYearMonthProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
   const other = Q(yield* ToTemporalYearMonth(_other));
-  if (CompareISODate(plainYearMonth.ISODate, other.ISODate) !== 0) {
+  if (CompareISODate(plainYearMonth.ISODate, other.ISODate) !== 0n) {
     return Value.false;
   }
   return Value(CalendarEquals(plainYearMonth.Calendar, other.Calendar));

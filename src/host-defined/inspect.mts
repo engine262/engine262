@@ -137,7 +137,7 @@ const INSPECTORS = {
     }
 
     if ('DateValue' in v) {
-      const d = new Date(R((v as DateObject).DateValue));
+      const d = new Date((v as DateObject).DateValue);
       if (Number.isNaN(d.getTime())) {
         return '[Date Invalid]';
       }

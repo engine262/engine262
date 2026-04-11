@@ -52,7 +52,7 @@ function PlainMonthDayProto_monthCodeGetter(_args: Arguments, { thisValue }: Fun
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.day */
 function PlainMonthDayProto_dayGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainMonthDay = Q(thisTemporalMonthDayValue(thisValue));
-  return F(CalendarISOToDate(plainMonthDay.Calendar, plainMonthDay.ISODate).Day);
+  return F(Number(CalendarISOToDate(plainMonthDay.Calendar, plainMonthDay.ISODate).Day));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.with */
@@ -75,7 +75,7 @@ function* PlainMonthDayProto_with([temporalMonthDayLike = Value.undefined, optio
 function* PlainMonthDayProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainMonthDay = Q(thisTemporalMonthDayValue(thisValue));
   const other = Q(yield* ToTemporalMonthDay(_other));
-  if (CompareISODate(plainMonthDay.ISODate, other.ISODate) !== 0) {
+  if (CompareISODate(plainMonthDay.ISODate, other.ISODate) !== 0n) {
     return Value.false;
   }
   return Value(CalendarEquals(plainMonthDay.Calendar, other.Calendar));

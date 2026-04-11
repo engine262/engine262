@@ -189,14 +189,14 @@ export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, 
         if (enclosingConditional.parentPath.isVariableDeclarator()) {
           const declaration = enclosingConditional.parentPath.parentPath;
           const id = enclosingConditional.parentPath.get('id');
-          declaration.replaceWithMultiple(template.ast(`
-            let ${id};
-            if (${enclosingConditional.get('test')}) {
-              ${id} = ${enclosingConditional.get('consequent')}
-            } else {
-              ${id} = ${enclosingConditional.get('alternate')}
-            }
-          `));
+          declaration.replaceWithMultiple([
+            template.ast(`let ${id};`) as t.VariableDeclaration,
+            t.ifStatement(
+              enclosingConditional.get('test').node,
+              t.blockStatement([t.expressionStatement(t.assignmentExpression('=', id.node as t.Identifier, enclosingConditional.get('consequent').node))]),
+              t.blockStatement([t.expressionStatement(t.assignmentExpression('=', id.node as t.Identifier, enclosingConditional.get('alternate').node))]),
+            ),
+          ]);
           return;
         } else {
           throw path.buildCodeFrameError('Macros may not be used within conditional expressions');
@@ -265,6 +265,7 @@ export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, 
         );
         removePath(path);
       } else {
+        let sideEffect: t.Statement[] = [];
         let id;
         const macro = Macros[macroName];
         if (t.isIdentifier(argument)) {
@@ -276,16 +277,16 @@ export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, 
             // find a better name for cases like `const x = Q(y)`, reusing `x` instead of generating `_temp1`
             const possibleAssign = path.findParent((p) => p.isVariableDeclarator() && t.isIdentifier(p.node.id)) as NodePath<t.VariableDeclarator> | null;
             id = path.scope.generateUidIdentifier((possibleAssign?.node.id as t.Identifier | undefined)?.name);
-            statementPath.insertBefore(withSource(callee, template(`
+            sideEffect = withSource(callee, template(`
               /* ${macroName} */
               let %%id%% = %%argument%%;
-            `, parseOptions)({ id, argument })));
+            `, parseOptions)({ id, argument }));
           }
         } else {
           throw path.get('arguments.0').buildCodeFrameError(`First argument to ${macroName} should be an identifier`);
         }
 
-        let result: t.Statement | t.Statement[];
+        let result: t.Statement[];
         switch (macroName) {
           case 'ReturnIfAbrupt': {
             if (t.isIdentifier(argument)) {
@@ -316,7 +317,14 @@ export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, 
               throw path.buildCodeFrameError(`Internal error: no template found for macro ${_}`);
             })(macroName);
         }
-        statementPath.insertBefore(result);
+        if (statementPath.parentPath?.isIfStatement() && !statementPath.isBlock()) {
+          statementPath.replaceWith(t.blockStatement([
+            ...sideEffect!, ...result, statementPath.node as t.Statement,
+          ].filter(Boolean)));
+        } else {
+          if (sideEffect.length) statementPath.insertBefore(sideEffect);
+          statementPath.insertBefore(result);
+        }
         if (path.parentPath.isExpressionStatement()) {
           removePath(path);
         } else {

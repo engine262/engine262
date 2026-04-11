@@ -137,7 +137,7 @@ export function StringGetOwnProperty(S: ObjectValue, P: PropertyKeyValue) {
   if (IsIntegralNumber(index) === Value.false) {
     return Value.undefined;
   }
-  if (Object.is(R(index), -0)) {
+  if (Object.is(index.value, -0)) {
     return Value.undefined;
   }
   const str = S.StringData;

@@ -1,5 +1,5 @@
 import {
-  F, R,
+  F,
 } from './all.mts';
 import {
   NumberValue, Value,
@@ -9,11 +9,7 @@ import {
 // https://tc39.es/ecma262/#sec-abstract-operations-for-keyed-collections
 
 /** https://tc39.es/ecma262/#sec-canonicalizekeyedcollectionkey */
-export function CanonicalizeKeyedCollectionKey(key : Value) : Value {
-  // 1. If key is -0𝔽, return +0𝔽.
-  if (key instanceof NumberValue && Object.is(R(key), -0)) {
-    key = F(+0);
-  }
-  // 2. Return key.
+export function CanonicalizeKeyedCollectionKey(key: Value): Value {
+  if (key instanceof NumberValue && Object.is(key.value, -0)) return F(+0);
   return key;
 }

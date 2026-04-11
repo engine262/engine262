@@ -419,6 +419,45 @@ exports[`transform X() correctly > complex source map 1`] = `
 }"
 `;
 
+exports[`transform X() correctly > condition 1`] = `
+"import { Assert, Completion, AbruptCompletion, skipDebugger } from "#self";
+function f() {
+  let value;
+  if (test) {
+    /* X */let _temp = value.compute();
+    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */if (_temp instanceof Completion) {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! value.compute() returned an abrupt completion", {
+        cause: _temp
+      });
+      _temp = _temp.Value;
+    }
+    return _temp;
+  }
+}"
+`;
+
+exports[`transform X() correctly > condition source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "f",
+    "value",
+    "test",
+    "X",
+    "compute"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      if (test) return X(value.compute());\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAASA,CAACA,CAAA,EAAG;EACX,IAAIC,KAAK;EACT,IAAIC,IAAI;IAAS,OAAAC,GAAA,CAAAA,KAAC,GAACF,KAAK,CAACG,OAAO,CAAC,CAAf;IAAD,+BAAAD,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;IAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;MAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,iDAAC,EAADA;QAAAA,KAAC,EAADA;MAAA,EAAC;MAADA,KAAC,GAADA,KAAC,CAADA,KAAC;IAAD;IAAP,OAAOA,KAAC;EAAkB;AACtC",
+  "ignoreList": []
+}"
+`;
+
 exports[`transform X() correctly > return 1`] = `
 "import { Assert, Completion, AbruptCompletion, skipDebugger } from "#self";
 function f() {
@@ -511,8 +550,7 @@ exports[`transform simple ternary > case 1`] = `
 let value, error;
 let x;
 if (condition) {
-  /* ReturnIfAbrupt */
-  if (value instanceof Completion) {
+  /* ReturnIfAbrupt */if (value instanceof Completion) {
     if (value instanceof AbruptCompletion) return value;
     value = value.Value;
   }
@@ -530,9 +568,7 @@ exports[`transform simple ternary > case source map 1`] = `
     "error",
     "x",
     "condition",
-    "Completion",
-    "AbruptCompletion",
-    "Value"
+    "Q"
   ],
   "sources": [
     "unknown"
@@ -540,7 +576,7 @@ exports[`transform simple ternary > case source map 1`] = `
   "sourcesContent": [
     "\\n    let value, error;\\n    const x = condition ? Q(value) : (error);\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK,EAAEC,KAAK;AAAC,IAAAC,CAAA;AAAA,IAAAC,SAAA;EAAA;EAAA,IAAAH,KAAA,YAAAI,UAAA;IAAA,IAAAJ,KAAA,YAAAK,gBAAA,SAAAL,KAAA;IAAAA,KAAA,GAAAA,KAAA,CAAAM,KAAA;EAAA;EAAAJ,CAAA,GAAAF,KAAA;AAAA;EAAAE,CAAA,GAAAD,KAAA;AAAA",
+  "mappings": ";AACI,IAAIA,KAAK,EAAEC,KAAK;AAAC,IAAAC,CAAA;AAAA,IACPC,SAAS;EAAG,oBAAAC,EAAA,CAAAA,CAAEJ,KAAK,YAAPI,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAEJ,KAAK,YAAPI,gBAAC,EAADA,MAAA,CAAEJ,KAAK;IAALA,KAAK,GAALA,KAAK,CAAPI,KAAC;EAAD;EAAhBF,CAAC,GAAiBF,KAAK;AAAA;EAAvBE,CAAC,GAA2BD,KAAK;AAAA",
   "ignoreList": []
 }"
 `;

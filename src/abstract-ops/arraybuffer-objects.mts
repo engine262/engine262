@@ -12,7 +12,7 @@ import {
   isNonNegativeInteger, CreateByteDataBlock,
   SameValue, CopyDataBlockBytes,
   F,
-  Z, R,
+  Z,
   type FunctionObject,
   type OrdinaryObject,
   Throw,
@@ -166,17 +166,17 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
   let rawBytes;
   // One day, we will write our own IEEE 754 and two's complement encoder…
   if (type === 'Float32') {
-    if (Number.isNaN(R(value))) {
+    if (Number.isNaN(value.value)) {
       rawBytes = isLittleEndian ? [...float32NaNLE] : [...float32NaNBE];
     } else {
-      throwawayDataView.setFloat32(0, R(value as NumberValue), isLittleEndian);
+      throwawayDataView.setFloat32(0, Number(value.value), isLittleEndian);
       rawBytes = [...throwawayArray.subarray(0, 4)];
     }
   } else if (type === 'Float64') {
-    if (Number.isNaN(R(value))) {
+    if (Number.isNaN(value.value)) {
       rawBytes = isLittleEndian ? [...float64NaNLE] : [...float64NaNBE];
     } else {
-      throwawayDataView.setFloat64(0, R(value as NumberValue), isLittleEndian);
+      throwawayDataView.setFloat64(0, Number(value.value), isLittleEndian);
       rawBytes = [...throwawayArray.subarray(0, 8)];
     }
   } else {
@@ -187,7 +187,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
     // c. Let intValue be convOp(value) treated as a mathematical value, whether the result is a BigInt or Number.
     const intValue = X(convOp(value));
     const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-    throwawayDataView[`set${dataViewType}`](0, R(intValue) as bigint & number, isLittleEndian);
+    throwawayDataView[`set${dataViewType}`](0, intValue.value as bigint & number, isLittleEndian);
     rawBytes = [...throwawayArray.subarray(0, n)];
   }
   return rawBytes;

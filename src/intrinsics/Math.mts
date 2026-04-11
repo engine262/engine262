@@ -1,14 +1,13 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  Descriptor,
   Value,
   NumberValue,
   type Arguments,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { Decimal } from '../host-defined/decimal.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
-  CreateBuiltinFunction,
   ToNumber,
   F, R,
   Realm,
@@ -17,49 +16,397 @@ import {
   IteratorStepValue,
   IteratorClose,
   Throw,
+  Assert,
+  ToUint32,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-math.abs */
 function* Math_abs([x = Value.undefined]: Arguments): ValueEvaluator {
   const n = Q(yield* ToNumber(x));
-  if (n.isNaN()) {
-    return n;
-  } else if (Object.is(R(n), -0)) {
-    return F(+0);
-  } else if (n.isInfinity()) {
-    return F(Infinity);
-  }
-
-  if (R(n) < 0) {
-    return F(-R(n));
-  }
+  if (n.isNaN()) return n;
+  if (Object.is(n.value, -0)) return F(+0);
+  if (Object.is(n.value, -Infinity)) return F(Infinity);
+  if (n.value < 0) return F(-n.value);
   return n;
 }
 
 /** https://tc39.es/ecma262/#sec-math.acos */
 function* Math_acos([x = Value.undefined]: Arguments): ValueEvaluator {
   const n = Q(yield* ToNumber(x));
-  if (n.isNaN()) {
-    return n;
-  } else if (R(n) > 1) {
-    return F(NaN);
-  } else if (R(n) < -1) {
-    return F(NaN);
-  } else if (R(n) === 1) {
-    return F(+0);
+  if (n.isNaN() || n.value > 1 || n.value < -1) return F(NaN);
+  if (n.value === 1) return F(+0);
+  return F(Math.acos(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.acosh */
+function* Math_acosh([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || n.value === Infinity) return n;
+  if (n.value === 1) return F(+0);
+  if (n.value < 1) return F(NaN);
+  return F(Math.acosh(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.asin */
+function* Math_asin([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value > 1 || n.value < -1) return F(NaN);
+  return F(Math.asin(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.asinh */
+function* Math_asinh([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  return F(Math.asinh(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.atan */
+function* Math_atan([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value === Infinity) return F(Math.PI / 2);
+  if (n.value === -Infinity) return F(-Math.PI / 2);
+  return F(Math.atan(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.atanh */
+function* Math_atanh([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value > 1 || n.value < -1) return F(NaN);
+  if (n.value === 1) return F(Infinity);
+  if (n.value === -1) return F(-Infinity);
+  return F(Math.atanh(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.atan2 */
+function* Math_atan2([y = Value.undefined, x = Value.undefined]: Arguments): ValueEvaluator {
+  const ny = Q(yield* ToNumber(y));
+  const nx = Q(yield* ToNumber(x));
+  if (ny.isNaN() || nx.isNaN()) return F(NaN);
+  if (ny.value === Infinity) {
+    if (nx.value === Infinity) return F(Math.PI / 4);
+    if (nx.value === -Infinity) return F((3 * Math.PI) / 4);
+    return F(Math.PI / 2);
+  }
+  if (ny.value === -Infinity) {
+    if (nx.value === Infinity) return F(-Math.PI / 4);
+    if (nx.value === -Infinity) return F((-3 * Math.PI) / 4);
+    return F(-Math.PI / 2);
+  }
+  if (Object.is(ny.value, 0)) {
+    if (nx.value > 0 || Object.is(nx.value, 0)) return F(+0);
+    return F(Math.PI);
+  }
+  if (Object.is(ny.value, -0)) {
+    if (nx.value > 0 || Object.is(nx.value, 0)) return F(-0);
+    return F(-Math.PI);
+  }
+  Assert(ny.isFinite() && !Object.is(ny.value, 0) && !Object.is(ny.value, -0));
+  if (ny.value > 0) {
+    if (nx.value === Infinity) return F(0);
+    if (nx.value === -Infinity) return F(Math.PI);
+    if (Object.is(nx.value, 0) || Object.is(nx.value, -0)) return F(Math.PI / 2);
+  }
+  // eslint-disable-next-line no-compare-neg-zero
+  if (ny.value < -0) {
+    if (nx.value === Infinity) return F(-0);
+    if (nx.value === -Infinity) return F(-Math.PI);
+    if (Object.is(nx.value, 0) || Object.is(nx.value, -0)) return F(-Math.PI / 2);
+  }
+  Assert(ny.isFinite() && !Object.is(ny.value, 0) && !Object.is(ny.value, -0));
+  // 12. Let r be the inverse tangent of abs(ℝ(ny) / ℝ(nx)).
+  // 13. If nx < -0𝔽, then
+  // a. If ny > +0𝔽, set r to π - r.
+  // b. Else, set r to -π + r.
+  // 14. Else,
+  // a. If ny < -0𝔽, set r to -r.
+  // 15. Return an implementation-approximated Number value representing r.
+  return F(Math.atan2(ny.value, nx.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.cbrt */
+function* Math_cbrt([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  return F(Math.cbrt(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.ceil */
+function* Math_ceil([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0 && n.value > -1) return F(-0);
+  if (n.isIntegralNumber()) return n;
+  return F(Math.ceil(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.clz32 */
+function* Math_clz32([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToUint32(x));
+  // 2. Let p be the number of leading zero bits in the unsigned 32-bit binary representation of n.
+  // 3. Return 𝔽(p).
+  return F(Math.clz32(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.cos */
+function* Math_cos([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite()) return F(NaN);
+  if (Object.is(n.value, 0) || Object.is(n.value, -0)) return F(1);
+  return F(Math.cos(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.cosh */
+function* Math_cosh([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN()) return n;
+  if (n.isInfinity()) return F(Infinity);
+  if (Object.is(n.value, 0) || Object.is(n.value, -0)) return F(1);
+  return F(Math.cosh(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.exp */
+function* Math_exp([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || n.value === Infinity) return n;
+  if (Object.is(n.value, 0) || Object.is(n.value, -0)) return F(1);
+  if (n.value === -Infinity) return F(0);
+  return F(Math.exp(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.expm1 */
+function* Math_expm1([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0) || n.value === Infinity) return n;
+  if (n.value === -Infinity) return F(-1);
+  // 4. Let exp be the exponential function of ℝ(n).
+  // 5. Return an implementation-approximated Number value representing exp - 1.
+  return F(Math.expm1(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.floor */
+function* Math_floor([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value < 1 && n.value > 0) return F(0);
+  if (n.isIntegralNumber()) return n;
+  return F(Math.floor(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.fround */
+function* Math_fround([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN()) return n;
+  if (Object.is(n.value, 0) || Object.is(n.value, -0) || n.isInfinity()) return n;
+  // 4. Let n32 be the result of converting n to IEEE 754-2019 binary32 format using roundTiesToEven mode.
+  // 5. Let n64 be the result of converting n32 to IEEE 754-2019 binary64 format.
+  // 6. Return the ECMAScript Number value corresponding to n64.
+  return F(Math.fround(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.f16round */
+function* Math_f16round([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN()) return n;
+  if (Object.is(n.value, 0) || Object.is(n.value, -0) || n.isInfinity()) return n;
+  // 4. Let n16 be the result of converting n to IEEE 754-2019 binary16 format using roundTiesToEven mode.
+  // 5. Let n64 be the result of converting n16 to IEEE 754-2019 binary64 format.
+  // 6. Return the ECMAScript Number value corresponding to n64.
+  if ('f16round' in Math) {
+    return F(Math.f16round(n.value));
   }
 
-  return F(Math.acos(R(n)));
+  const _f16BufF64 = new Float64Array(1);
+  const _f16BufU32 = new Uint32Array(_f16BufF64.buffer);
+  // Fallback for Math.f16round: converts a finite, non-zero float64 to float16
+  // (roundTiesToEven) and back to float64 using bit manipulation.
+  // Assumes little-endian layout (all modern platforms).
+  function f16roundImpl(x: number): number {
+    _f16BufF64[0] = x;
+    const lo = _f16BufU32[0]!; // bits [31..0] of mantissa
+    const hi = _f16BufU32[1]!; // sign + exponent + bits [51..32] of mantissa
+
+    const sign = hi >>> 31;
+    const exp64 = (hi >>> 20) & 0x7FF;
+    const mantHi = hi & 0xFFFFF; // upper 20 bits of 52-bit mantissa
+
+    // Float16 biased exponent = float64 unbiased exponent + float16 bias
+    let f16exp = exp64 - 1023 + 15;
+
+    if (f16exp >= 31) {
+    // Overflow to infinity
+      return sign ? -Infinity : Infinity;
+    }
+
+    let frac16: number;
+    let roundBit: number;
+    let stickyBit: number;
+
+    if (f16exp <= 0) {
+    // Subnormal float16: the implicit leading 1 becomes an explicit mantissa bit.
+    // totalShift = 43 - f16exp maps the 53-bit value (leading-1 | mant52) to 10 bits.
+      const totalShift = 43 - f16exp; // range: 43 (f16exp=0) .. 53 (f16exp=-10)
+      if (totalShift > 53) {
+      // Value is too small to round to anything but ±0.
+        return sign ? -0 : 0;
+      }
+      const shiftInHi = totalShift - 32; // always 11..21
+      const mant53Hi = mantHi | 0x100000; // set implicit leading-1 at bit 52
+      frac16 = mant53Hi >>> shiftInHi;
+      roundBit = (mant53Hi >>> (shiftInHi - 1)) & 1;
+      const stickyMask = (1 << (shiftInHi - 1)) - 1;
+      stickyBit = (mant53Hi & stickyMask) || lo ? 1 : 0;
+
+      if (roundBit && (stickyBit || (frac16 & 1))) {
+        frac16 += 1;
+        if (frac16 === 0x400) {
+        // Rounded up to the smallest normal float16
+          const minNormal = 2 ** -14;
+          return sign ? -minNormal : minNormal;
+        }
+      }
+      // Subnormal float16 value = frac16 * 2^(-14-10) = frac16 * 2^-24
+      const val = frac16 * (2 ** -24);
+      return sign ? -val : val;
+    }
+
+    // Normal float16: round 52-bit mantissa to 10 bits by dropping the lower 42.
+    // mantHi holds bits [51..32] of the mantissa (20 bits).
+    frac16 = mantHi >>> 10; // bits [51..42]
+    roundBit = (mantHi >>> 9) & 1; // bit [41]
+    stickyBit = (mantHi & 0x1FF) || lo ? 1 : 0; // bits [40..0]
+
+    if (roundBit && (stickyBit || (frac16 & 1))) {
+      frac16 += 1;
+      if (frac16 === 0x400) {
+        frac16 = 0;
+        f16exp += 1;
+        if (f16exp >= 31) {
+          return sign ? -Infinity : Infinity;
+        }
+      }
+    }
+
+    // Normal float16 value = (1 + frac16/1024) * 2^(f16exp-15)
+    const val = (1 + frac16 / 1024) * (2 ** (f16exp - 15));
+    return sign ? -val : val;
+  }
+  return F(f16roundImpl(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.hypot */
+function* Math_hypot(args: Arguments): ValueEvaluator {
+  const coerced = [];
+  for (const arg of args) {
+    const n = Q(yield* ToNumber(arg ?? Value.undefined));
+    coerced.push(n);
+  }
+  for (const number of coerced) {
+    if (number.isInfinity()) return F(Infinity);
+  }
+  let onlyZero = true;
+  for (const number of coerced) {
+    if (number.isNaN()) return F(NaN);
+    if (!Object.is(number.value, 0) && !Object.is(number.value, -0)) {
+      onlyZero = false;
+    }
+  }
+  if (onlyZero) return F(+0);
+  return F(Math.hypot(...coerced.map((value) => value.value)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.imul */
+function* Math_imul([x = Value.undefined, y = Value.undefined]: Arguments): ValueEvaluator {
+  const a = Decimal(R(Q(yield* ToUint32(x))));
+  const b = Decimal(R(Q(yield* ToUint32(y))));
+  const product = a.multiply(b).modulo(2 ** 32);
+  if (product.greaterThanOrEqual(2 ** 31)) return F(product.subtract(2 ** 32).toNumber());
+  return F(product.toNumber());
+}
+
+/** https://tc39.es/ecma262/#sec-math.log */
+function* Math_log([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || n.value === Infinity) return n;
+  if (n.value === 1) return F(+0);
+  if (Object.is(n.value, 0) || Object.is(n.value, -0)) return F(-Infinity);
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0) return F(NaN);
+  return F(Math.log(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.log1p */
+function* Math_log1p([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0) || n.value === Infinity) return n;
+  if (n.value === -1) return F(-Infinity);
+  if (n.value < -1) return F(NaN);
+  return F(Math.log1p(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.log10 */
+function* Math_log10([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || n.value === Infinity) return n;
+  if (n.value === 1) return F(+0);
+  if (Object.is(n.value, 0) || Object.is(n.value, -0)) return F(-Infinity);
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0) return F(NaN);
+  return F(Math.log10(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.log2 */
+function* Math_log2([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || n.value === Infinity) return n;
+  if (n.value === 1) return F(+0);
+  if (Object.is(n.value, 0) || Object.is(n.value, -0)) return F(-Infinity);
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0) return F(NaN);
+  return F(Math.log2(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.max */
+function* Math_max(args: Arguments): ValueEvaluator {
+  const coerced = [];
+  for (const arg of args) {
+    const n = Q(yield* ToNumber(arg ?? Value.undefined));
+    coerced.push(n);
+  }
+  let highest = -Infinity;
+  for (const number of coerced) {
+    if (number.isNaN()) return number;
+    if (Object.is(number.value, 0) && Object.is(highest, -0)) highest = 0;
+    if (number.value > highest) highest = number.value;
+  }
+  return F(highest);
+}
+
+/** https://tc39.es/ecma262/#sec-math.min */
+function* Math_min(args: Arguments): ValueEvaluator {
+  const coerced = [];
+  for (const arg of args) {
+    const n = Q(yield* ToNumber(arg ?? Value.undefined));
+    coerced.push(n);
+  }
+  let lowest = Infinity;
+  for (const number of coerced) {
+    if (number.isNaN()) return number;
+    if (Object.is(number.value, -0) && Object.is(lowest, 0)) lowest = -0;
+    if (number.value < lowest) lowest = number.value;
+  }
+  return F(lowest);
 }
 
 /** https://tc39.es/ecma262/#sec-math.pow */
 function* Math_pow([base = Value.undefined, exponent = Value.undefined]: Arguments): ValueEvaluator {
-  // 1. Set base to ? ToNumber(base).
   base = Q(yield* ToNumber(base));
-  // 2. Set exponent to ? ToNumber(exponent).
   exponent = Q(yield* ToNumber(exponent));
-  // 3. Return ! Number::exponentiate(base, exponent).
-  return X(NumberValue.exponentiate(base, exponent));
+  return NumberValue.exponentiate(base, exponent);
 }
 
 /** @param {bigint} h */
@@ -104,6 +451,48 @@ function Math_random() {
   return F(result);
 }
 
+/** https://tc39.es/ecma262/#sec-math.round */
+function* Math_round([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || n.isIntegralNumber()) return n;
+  if (n.value < 0.5 && n.value > 0) return F(0);
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0 && n.value >= -0.5) return F(-0);
+  return F(Math.round(n.value));
+}
+
+/** https://tc39.es/ecma262/#sec-math.sign */
+function* Math_sign([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value < 0) return F(-1);
+  return F(1);
+}
+
+/** https://tc39.es/ecma262/#sec-math.sin */
+function* Math_sin([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.isInfinity()) return F(NaN);
+  return F(Math.sin(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.sinh */
+function* Math_sinh([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  return F(Math.sinh(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.sqrt */
+function* Math_sqrt([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0) || n.value === Infinity) return n;
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0) return F(NaN);
+  return F(Math.sqrt(R(n)));
+}
+
 /** https://tc39.es/ecma262/#sec-math.sumprecise */
 function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator {
   Q(RequireObjectCoercible(items));
@@ -123,7 +512,7 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
         const error = Throw.TypeError('$1 is not a number', next);
         return Q(yield* IteratorClose(iteratorRecord, error));
       }
-      const n = R(next);
+      const n = next.value;
       if (state !== 'not-a-number') {
         if (Number.isNaN(n)) {
           state = 'not-a-number';
@@ -209,6 +598,33 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
   }
 }
 
+/** https://tc39.es/ecma262/#sec-math.tan */
+function* Math_tan([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.isInfinity()) return F(NaN);
+  return F(Math.tan(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.tanh */
+function* Math_tanh([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (n.isNaN() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value === Infinity) return F(1);
+  if (n.value === -Infinity) return F(-1);
+  return F(Math.tanh(R(n)));
+}
+
+/** https://tc39.es/ecma262/#sec-math.trunc */
+function* Math_trunc([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
+  if (!n.isFinite() || Object.is(n.value, 0) || Object.is(n.value, -0)) return n;
+  if (n.value < 1 && n.value > 0) return F(0);
+  // eslint-disable-next-line no-compare-neg-zero
+  if (n.value < -0 && n.value > -1) return F(-0);
+  return F(Math.trunc(n.value));
+}
+
 /** https://tc39.es/ecma262/#sec-math-object */
 export function bootstrapMath(realmRec: Realm) {
   /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
@@ -226,65 +642,42 @@ export function bootstrapMath(realmRec: Realm) {
     ['SQRT2', F(1.4142135623730951), undefined, readonly],
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],
+    ['acosh', Math_acosh, 1],
+    ['asin', Math_asin, 1],
+    ['asinh', Math_asinh, 1],
+    ['atan', Math_atan, 1],
+    ['atan2', Math_atan2, 2],
+    ['atanh', Math_atanh, 1],
+    ['cbrt', Math_cbrt, 1],
+    ['ceil', Math_ceil, 1],
+    ['clz32', Math_clz32, 1],
+    ['cos', Math_cos, 1],
+    ['cosh', Math_cosh, 1],
+    ['exp', Math_exp, 1],
+    ['expm1', Math_expm1, 1],
+    ['f16round', Math_f16round, 1],
+    ['floor', Math_floor, 1],
+    ['fround', Math_fround, 1],
+    ['hypot', Math_hypot, 2],
+    ['imul', Math_imul, 2],
+    ['log', Math_log, 1],
+    ['log10', Math_log10, 1],
+    ['log1p', Math_log1p, 1],
+    ['log2', Math_log2, 1],
+    ['max', Math_max, 2],
+    ['min', Math_min, 2],
     ['pow', Math_pow, 2],
     ['random', Math_random, 0],
+    ['round', Math_round, 1],
+    ['sign', Math_sign, 1],
+    ['sin', Math_sin, 1],
+    ['sinh', Math_sinh, 1],
+    ['sqrt', Math_sqrt, 1],
     ['sumPrecise', Math_sumPrecise, 1],
+    ['tan', Math_tan, 1],
+    ['tanh', Math_tanh, 1],
+    ['trunc', Math_trunc, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
-
-  /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
-
-  ([
-    ['acosh', 1],
-    ['asin', 1],
-    ['asinh', 1],
-    ['atan', 1],
-    ['atanh', 1],
-    ['atan2', 2],
-    ['cbrt', 1],
-    ['ceil', 1],
-    ['clz32', 1],
-    ['cos', 1],
-    ['cosh', 1],
-    ['exp', 1],
-    ['expm1', 1],
-    ['floor', 1],
-    ['fround', 1],
-    ['hypot', 2],
-    ['imul', 2],
-    ['log', 1],
-    ['log1p', 1],
-    ['log10', 1],
-    ['log2', 1],
-    ['max', 2],
-    ['min', 2],
-    ['round', 1],
-    ['sign', 1],
-    ['sin', 1],
-    ['sinh', 1],
-    ['sqrt', 1],
-    ['tan', 1],
-    ['tanh', 1],
-    ['trunc', 1],
-  ] as const).forEach(([name, length]) => {
-    // TODO(18): Math
-    /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
-    const method = function* method(args: Arguments): ValueEvaluator {
-      const nextArgs: number[] = [];
-      for (let i = 0; i < args.length; i += 1) {
-        nextArgs[i] = R(Q(yield* ToNumber(args[i]!)));
-      }
-      // we're calling host Math functions here.
-      return F((Math[name] as (...args: unknown[]) => number)(...nextArgs));
-    };
-    Object.defineProperty(method, 'name', { value: `Math_${name}` });
-    const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
-    X(mathObj.DefineOwnProperty(Value(name), Descriptor({
-      Value: func,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  });
 
   realmRec.Intrinsics['%Math%'] = mathObj;
 }

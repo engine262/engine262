@@ -11,6 +11,7 @@ import {
 } from '../value.mts';
 import { NormalCompletion, Q, X } from '../completion.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import type { Decimal } from '../host-defined/decimal.mts';
 import {
   Assert,
   CreateDataProperty,
@@ -23,6 +24,21 @@ import {
 } from './all.mts';
 import { isNonNegativeInteger } from './data-types-and-values.mts';
 import { Throw } from '#self';
+
+/** https://tc39.es/ecma262/#mathematical-value */
+export type MathematicalValue = Decimal;
+/** https://tc39.es/ecma262/#extended-mathematical-value */
+export type ExtendedMathematicalValue = MathematicalValue | 'Inf' | '-Inf';
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
+export type Num = number;
+export type F = Num;
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
+export type BigInts = bigint & { /** @internal */ type?: 'bigint' };
+/** https://tc39.es/ecma262/#integer */
+export type Integer = bigint & { /** @internal */ type?: 'integer' };
+/** https://tc39.es/ecma262/#integral-number */
+export type IntegralNumber = Num & { /** @internal */ integral?: true; /** @internal */ finite?: true };
+export type NaN = Num & { /** @internal */ integral?: false; /** @internal */ finite?: false; /** @internal */ value: 'NaN' };
 
 // #𝔽
 export function F(x: number): NumberValue {
@@ -45,7 +61,11 @@ export function R(x: unknown) {
     return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
   }
   Assert(x instanceof NumberValue);
-  return x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+  const number = x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+  if (Object.is(number, -0)) {
+    return 0;
+  }
+  return number;
 }
 
 // 6.2.5.1 IsAccessorDescriptor

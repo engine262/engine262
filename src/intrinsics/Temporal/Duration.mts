@@ -1,6 +1,6 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
-import { ToIntegerIfIntegral, GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
+import { SnapToInteger, GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
 import { bootstrapTemporalDurationPrototype } from './DurationPrototype.mts';
 import {
   ObjectValue, Q, Value, type OrdinaryObject, type ValueEvaluator,
@@ -26,16 +26,16 @@ import {
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances */
 export interface TemporalDurationObject extends OrdinaryObject {
   readonly InitializedTemporalDuration: never;
-  readonly Years: number;
-  readonly Months: number;
-  readonly Weeks: number;
-  readonly Days: number;
-  readonly Hours: number;
-  readonly Minutes: number;
-  readonly Seconds: number;
-  readonly Milliseconds: number;
-  readonly Microseconds: number;
-  readonly Nanoseconds: number;
+  readonly Years: bigint;
+  readonly Months: bigint;
+  readonly Weeks: bigint;
+  readonly Days: bigint;
+  readonly Hours: bigint;
+  readonly Minutes: bigint;
+  readonly Seconds: bigint;
+  readonly Milliseconds: bigint;
+  readonly Microseconds: bigint;
+  readonly Nanoseconds: bigint;
 }
 
 export function isTemporalDurationObject(item: Value): item is TemporalDurationObject {
@@ -58,17 +58,17 @@ function* DurationConstructor([
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.Duration constructor cannot be called without new');
   }
-  const y = years instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(years));
-  const mo = months instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(months));
-  const w = weeks instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(weeks));
-  const d = days instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(days));
-  const h = hours instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(hours));
-  const m = minutes instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(minutes));
-  const s = seconds instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(seconds));
-  const ms = milliseconds instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(milliseconds));
-  const mis = microseconds instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(microseconds));
-  const ns = nanoseconds instanceof UndefinedValue ? 0 : Q(yield* ToIntegerIfIntegral(nanoseconds));
-  return Q(yield* CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget));
+  const y = years instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(years, 'strict'));
+  const mo = months instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(months, 'strict'));
+  const w = weeks instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(weeks, 'strict'));
+  const d = days instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(days, 'strict'));
+  const h = hours instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(hours, 'strict'));
+  const m = minutes instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(minutes, 'strict'));
+  const s = seconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(seconds, 'strict'));
+  const ms = milliseconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(milliseconds, 'strict'));
+  const mis = microseconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(microseconds, 'strict'));
+  const ns = nanoseconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(nanoseconds, 'strict'));
+  return Q(yield* CreateTemporalDuration(BigInt(y), BigInt(mo), BigInt(w), BigInt(d), BigInt(h), BigInt(m), BigInt(s), BigInt(ms), BigInt(mis), BigInt(ns), NewTarget));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.from */
@@ -110,8 +110,8 @@ function* Duration_Compare([_one = Value.undefined, _two = Value.undefined, opti
     if (after1 < after2) return F(-1);
     return F(0);
   }
-  let days1;
-  let days2;
+  let days1: bigint;
+  let days2: bigint;
   if (IsCalendarUnit(largestUnit1) || IsCalendarUnit(largestUnit2)) {
     if (plainRelativeTo === undefined) {
       return Throw.RangeError('relativeTo option is required when comparing durations with calendar units');

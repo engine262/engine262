@@ -1,6 +1,6 @@
 import type { Inspector } from './index.mts';
 import {
-  NullValue, UndefinedValue, BooleanValue, SymbolValue, SymbolDescriptiveString, JSStringValue, NumberValue, R, BigIntValue,
+  NullValue, UndefinedValue, BooleanValue, SymbolValue, SymbolDescriptiveString, JSStringValue, NumberValue, BigIntValue,
 } from '#self';
 
 export const Null: Inspector<NullValue> = {
@@ -80,7 +80,7 @@ export const String: Inspector<JSStringValue> = {
 
 export const Number: Inspector<NumberValue> = {
   toRemoteObject(value) {
-    const v = R(value);
+    const v = value.value;
     let description = v.toString();
     const isNeg0 = Object.is(v, -0);
     // Includes values `-0`, `NaN`, `Infinity`, `-Infinity`, and bigint literals.
@@ -107,7 +107,7 @@ export const Number: Inspector<NumberValue> = {
     };
   },
   toDescription: (value) => {
-    const r = R(value);
+    const r = value.value;
     return value instanceof BigIntValue ? `${r}n` : r.toString();
   },
 };

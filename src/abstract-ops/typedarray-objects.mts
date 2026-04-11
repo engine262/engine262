@@ -331,24 +331,13 @@ export function IsTypedArrayFixedLength(O: TypedArrayObject) {
 
 /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
 export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue) {
-  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) {
-    return Value.false;
-  }
-  if (IsIntegralNumber(index) === Value.false) {
-    return Value.false;
-  }
-  const index_ = R(index);
-  if (Object.is(index_, -0) || index_ < 0) {
-    return Value.false;
-  }
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) return Value.false;
+  if (IsIntegralNumber(index) === Value.false) return Value.false;
+  if (Object.is(index.value, -0) || index.value < 0) return Value.false;
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(taRecord)) {
-    return Value.false;
-  }
+  if (IsTypedArrayOutOfBounds(taRecord)) return Value.false;
   const length = TypedArrayLength(taRecord);
-  if (index_ >= length) {
-    return Value.false;
-  }
+  if (R(index) >= length) return Value.false;
   return Value.true;
 }
 

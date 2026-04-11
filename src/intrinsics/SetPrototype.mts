@@ -24,8 +24,6 @@ import {
   Get,
   ToNumber,
   ToIntegerOrInfinity,
-  IteratorStep,
-  IteratorValue,
   OrdinaryObjectCreate,
   SameValueZero, R,
   Realm,
@@ -534,56 +532,26 @@ function SetProto_values(_args: Arguments, { thisValue }: FunctionCallContext): 
 
 /** https://tc39.es/ecma262/#sec-set.prototype.union */
 function* SetProto_union([other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let O be the this value.
   const O = thisValue;
-
-  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
   Q(RequireInternalSlot(O, 'SetData'));
   __ts_cast__<SetObject>(O);
-
-  // 3. Let otherRec be ? GetSetRecord(other).
   const otherRec = Q(yield* GetSetRecord(other));
-
-  // 4. Let keysIter be ? GetIteratorFromMethod(otherRec.[[SetObject]], otherRec.[[Keys]]).
   const keysIter = Q(yield* GetIteratorFromMethod(otherRec.SetObject, otherRec.Keys));
-
   // 5. Let resultSetData be a copy of O.[[SetData]].
   const resultSetData = [...O.SetData];
-
-  // 6. Let next be true.
-  let next: Value | 'done' = Value.true;
-
-  // 7. Repeat, while next is not DONE,
+  let next: Value | 'not-started' | 'done' = 'not-started';
   while (next !== 'done') {
-    // a. Set next to ? IteratorStep(keysIter).
-    next = Q(yield* IteratorStep(keysIter));
-
-    // b. If next is not DONE, then
+    next = Q(yield* IteratorStepValue(keysIter));
     if (next !== 'done') {
-      // i. Let nextValue be ? IteratorValue(next).
-      let nextValue = Q(yield* IteratorValue(next));
-
-      // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
-      if (nextValue instanceof NumberValue && Object.is(R(nextValue), -0)) {
-        nextValue = F(+0);
-      }
-
-      // iii. If SetDataHas(resultSetData, nextValue) is false, then
-      if (!SetDataHas(resultSetData, nextValue)) {
-        // 1. Append nextValue to resultSetData.
-        resultSetData.push(nextValue);
+      next = CanonicalizeKeyedCollectionKey(next);
+      if (!SetDataHas(resultSetData, next)) {
+        resultSetData.push(next);
       }
     }
   }
-
-  // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
   const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']) as Mutable<SetObject>;
-
-  // 9. Set result.[[SetData]] to resultSetData.
   result.SetData = resultSetData;
-
-  // 10. Return result.
-  return EnsureCompletion(result);
+  return result;
 }
 
 export function bootstrapSetPrototype(realmRec: Realm) {

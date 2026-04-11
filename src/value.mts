@@ -277,12 +277,16 @@ export class NumberValue extends PrimitiveValue {
     return Number.isFinite(this.value);
   }
 
+  isIntegralNumber() {
+    return Number.isInteger(this.value);
+  }
+
   /** https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
   static unaryMinus(x: NumberValue) {
     if (x.isNaN()) {
       return F(NaN);
     }
-    return F(-R(x));
+    return F(-x.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
@@ -295,33 +299,32 @@ export class NumberValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
   static exponentiate(base: NumberValue, exponent: NumberValue) {
-    return F(R(base) ** R(exponent));
+    return F(base.value ** exponent.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-multiply */
   static multiply(x: NumberValue, y: NumberValue) {
-    return F(R(x) * R(y));
+    return F(x.value * y.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-divide */
   static divide(x: NumberValue, y: NumberValue) {
-    return F(R(x) / R(y));
+    return F(x.value / y.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-remainder */
   static remainder(n: NumberValue, d: NumberValue) {
-    return F(R(n) % R(d));
+    return F(n.value % d.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-add */
   static add(x: NumberValue, y: NumberValue) {
-    return F(R(x) + R(y));
+    return F(x.value + y.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-subtract */
   static subtract(x: NumberValue, y: NumberValue) {
-    // The result of - operator is x + (-y).
-    return NumberValue.add(x, F(-R(y)));
+    return F(x.value - y.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
@@ -418,8 +421,8 @@ export class NumberValue extends PrimitiveValue {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
     }
-    const xVal = R(x);
-    const yVal = R(y);
+    const xVal = x.value;
+    const yVal = y.value;
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
       return Value.false;
     }
@@ -434,20 +437,10 @@ export class NumberValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
   static sameValueZero(x: NumberValue, y: NumberValue) {
-    if (x.isNaN() && y.isNaN()) {
-      return Value.true;
-    }
-    const xVal = R(x);
-    const yVal = R(y);
-    if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return Value.true;
-    }
-    if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return Value.true;
-    }
-    if (xVal === yVal) {
-      return Value.true;
-    }
+    if (x.isNaN() && y.isNaN()) return Value.true;
+    if (Object.is(x.value, 0) && Object.is(y.value, -0)) return Value.true;
+    if (Object.is(x.value, -0) && Object.is(y.value, 0)) return Value.true;
+    if (x.value === y.value) return Value.true;
     return Value.false;
   }
 
@@ -470,22 +463,12 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static override toString(xV: NumberValue, radix: number): JSStringValue {
-    if (xV.isNaN()) {
-      return Value('NaN');
-    }
-    const x = R(xV);
-    if (Object.is(x, -0) || Object.is(x, 0)) {
-      return Value('0');
-    }
-    if (x < 0) {
-      return Value(`-${NumberValue.toString(F(-x), radix).stringValue()}`);
-    }
-    if (xV.isInfinity()) {
-      return Value('Infinity');
-    }
-    // TODO: implement properly, currently depends on host.
-    return Value(`${x.toString(radix)}`);
+  static override toString(x: NumberValue, radix: number): JSStringValue {
+    if (x.isNaN()) return Value('NaN');
+    if (Object.is(x.value, -0) || Object.is(x.value, 0)) return Value('0');
+    if (x.value < 0) return Value(`-${NumberValue.toString(F(-x.value), radix).stringValue()}`);
+    if (x.isInfinity()) return Value('Infinity');
+    return Value(`${x.value.toString(radix)}`);
   }
 
   static readonly unit = new NumberValue(1);

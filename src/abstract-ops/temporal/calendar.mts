@@ -1,12 +1,15 @@
 import { CanonicalizeUValue } from '../../ecma402/not-implemented.mts';
-import { __ts_cast__, isArray, type Mutable } from '../../utils/language.mts';
+import {
+  __ts_cast__, isArray, OutOfRange, type Mutable,
+} from '../../utils/language.mts';
 import { ParseMonthCode, ParseTemporalCalendarString } from '../../parser/TemporalParser.mts';
 import { isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { isTemporalPlainMonthDayObject } from '../../intrinsics/Temporal/PlainMonthDay.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import { isTemporalPlainDateObject, type ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import { isTemporalPlainYearMonthObject } from '../../intrinsics/Temporal/PlainYearMonth.mts';
-import { ToZeroPaddedDecimalString } from './addition.mts';
+import { floorDiv } from '../math.mts';
+import { SnapToInteger, ToZeroPaddedDecimalString } from './addition.mts';
 import type { YearWeekRecord } from './addition.mts';
 import {
   EpochDaysToEpochMs,
@@ -17,7 +20,7 @@ import {
   MathematicalDaysInYear,
   MathematicalInLeapYear,
   TemporalUnit,
-  ToIntegerWithTruncation, ToOffsetString, ToPositiveIntegerWithTruncation, type DateUnit,
+  ToOffsetString, type DateUnit,
 } from './temporal.mts';
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
 import { mark_OtherCalendarNotImplemented, unreachable_OtherCalendarNotImplemented } from './not-implemented.mts';
@@ -32,6 +35,7 @@ import {
   Get,
   ISODateSurpasses,
   ISODateWithinLimits,
+  ISOYearMonthWithinLimits,
   JSStringValue,
   NumberValue,
   ObjectValue,
@@ -44,6 +48,7 @@ import {
   X,
   ZeroDateDuration,
   type DateDurationRecord,
+  type Integer,
   type PlainCompletion, type PlainEvaluator,
 } from '#self';
 
@@ -67,8 +72,8 @@ export function AvailableCalendars(): CalendarType[] {
 export type MonthCode = string & { __brand: 'MonthCode' };
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createmonthcode */
-export function CreateMonthCode(monthNumber: number, isLeapMonth: boolean): MonthCode {
-  if (!isLeapMonth) Assert(monthNumber > 0);
+export function CreateMonthCode(monthNumber: Integer, isLeapMonth: boolean): MonthCode {
+  if (!isLeapMonth) Assert(monthNumber > 0n);
   const numberPart = ToZeroPaddedDecimalString(monthNumber, 2);
   if (isLeapMonth) {
     return `M${numberPart}L` as MonthCode;
@@ -79,35 +84,35 @@ export function CreateMonthCode(monthNumber: number, isLeapMonth: boolean): Mont
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendar-date-records */
 export interface CalendarDateRecord {
   readonly Era: string | undefined;
-  readonly EraYear: number | undefined;
-  readonly Year: number;
-  readonly Month: number;
+  readonly EraYear: Integer | undefined;
+  readonly Year: Integer;
+  readonly Month: Integer;
   readonly MonthCode: string;
-  readonly Day: number;
-  readonly DayOfWeek: number;
-  readonly DayOfYear: number;
+  readonly Day: Integer;
+  readonly DayOfWeek: Integer;
+  readonly DayOfYear: Integer;
   readonly WeekOfYear: YearWeekRecord;
-  readonly DaysInWeek: number;
-  readonly DaysInMonth: number;
-  readonly DaysInYear: number;
-  readonly MonthsInYear: number;
+  readonly DaysInWeek: Integer;
+  readonly DaysInMonth: Integer;
+  readonly DaysInYear: Integer;
+  readonly MonthsInYear: Integer;
   readonly InLeapYear: boolean;
 }
 
 /** https://tc39.es/proposal-temporal/#table-temporal-calendar-fields-record-fields */
 export interface CalendarFieldsRecord {
   readonly Era: string | undefined;
-  readonly EraYear: number | undefined;
-  Year: number | undefined;
-  Month: number | undefined;
+  readonly EraYear: Integer | undefined;
+  Year: Integer | undefined;
+  Month: Integer | undefined;
   MonthCode: string | undefined;
-  Day: number | undefined;
-  Hour: number | undefined;
-  Minute: number | undefined;
-  Second: number | undefined;
-  Millisecond: number | undefined;
-  Microsecond: number | undefined;
-  Nanosecond: number | undefined;
+  Day: Integer | undefined;
+  Hour: Integer | undefined;
+  Minute: Integer | undefined;
+  Second: Integer | undefined;
+  Millisecond: Integer | undefined;
+  Microsecond: Integer | undefined;
+  Nanosecond: Integer | undefined;
   OffsetString: string | undefined;
   readonly TimeZone: string | undefined;
 }
@@ -132,18 +137,18 @@ export const Table63_CalendarFieldsRecordFields = [
   { FieldName: 'Month', DefaultValue: undefined, PropertyKey: 'month', EnumerationKey: 'month', Conversion: Table19_Conversion.ToPositiveIntegerWithTruncation },
   { FieldName: 'MonthCode', DefaultValue: undefined, PropertyKey: 'monthCode', EnumerationKey: 'month-code', Conversion: Table19_Conversion.ToMonthCode },
   { FieldName: 'Day', DefaultValue: undefined, PropertyKey: 'day', EnumerationKey: 'day', Conversion: Table19_Conversion.ToPositiveIntegerWithTruncation },
-  { FieldName: 'Hour', DefaultValue: 0, PropertyKey: 'hour', EnumerationKey: 'hour', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'Minute', DefaultValue: 0, PropertyKey: 'minute', EnumerationKey: 'minute', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'Second', DefaultValue: 0, PropertyKey: 'second', EnumerationKey: 'second', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'Millisecond', DefaultValue: 0, PropertyKey: 'millisecond', EnumerationKey: 'millisecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'Microsecond', DefaultValue: 0, PropertyKey: 'microsecond', EnumerationKey: 'microsecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'Nanosecond', DefaultValue: 0, PropertyKey: 'nanosecond', EnumerationKey: 'nanosecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
-  { FieldName: 'OffsetString', DefaultValue: undefined, PropertyKey: 'offsetString', EnumerationKey: 'offset', Conversion: Table19_Conversion.ToOffsetString },
+  { FieldName: 'Hour', DefaultValue: 0n, PropertyKey: 'hour', EnumerationKey: 'hour', Conversion: Table19_Conversion.ToIntegerWithTruncation },
+  { FieldName: 'Minute', DefaultValue: 0n, PropertyKey: 'minute', EnumerationKey: 'minute', Conversion: Table19_Conversion.ToIntegerWithTruncation },
+  { FieldName: 'Second', DefaultValue: 0n, PropertyKey: 'second', EnumerationKey: 'second', Conversion: Table19_Conversion.ToIntegerWithTruncation },
+  { FieldName: 'Millisecond', DefaultValue: 0n, PropertyKey: 'millisecond', EnumerationKey: 'millisecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
+  { FieldName: 'Microsecond', DefaultValue: 0n, PropertyKey: 'microsecond', EnumerationKey: 'microsecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
+  { FieldName: 'Nanosecond', DefaultValue: 0n, PropertyKey: 'nanosecond', EnumerationKey: 'nanosecond', Conversion: Table19_Conversion.ToIntegerWithTruncation },
+  { FieldName: 'OffsetString', DefaultValue: undefined, PropertyKey: 'offset', EnumerationKey: 'offset', Conversion: Table19_Conversion.ToOffsetString },
   { FieldName: 'TimeZone', DefaultValue: undefined, PropertyKey: 'timeZone', EnumerationKey: 'time-zone', Conversion: Table19_Conversion.ToTemporalTimeZoneIdentifier },
   /* eslint-enable object-curly-newline */
 ] as const satisfies {
   FieldName: keyof CalendarFieldsRecord;
-  DefaultValue: string | number | undefined;
+  DefaultValue: string | bigint | undefined;
   PropertyKey: string;
   EnumerationKey: CalendarFieldsRecordEnumerationKey;
   Conversion: Table19_Conversion;
@@ -186,7 +191,7 @@ export function* PrepareCalendarFields(
   let any = false;
 
   // Let sortedPropertyNames be a List whose elements are the values in the Property Key column of Table 19 corresponding to the elements of fieldNames, sorted according to lexicographic code unit order.
-  const sortedPropertyNames = [...Table63_CalendarFieldsRecordFields].filter((a) => (fieldNames as string[]).includes(a.PropertyKey)).sort((a, b) => (a.PropertyKey < b.PropertyKey ? -1 : 1));
+  const sortedPropertyNames = [...Table63_CalendarFieldsRecordFields].filter((a) => fieldNames.includes(a.EnumerationKey)).sort((a, b) => (a.PropertyKey < b.PropertyKey ? -1 : 1));
 
   for (const {
     FieldName, PropertyKey, Conversion, DefaultValue, EnumerationKey,
@@ -200,9 +205,9 @@ export function* PrepareCalendarFields(
       any = true;
 
       if (Conversion === Table19_Conversion.ToIntegerWithTruncation) {
-        value = F(Q(yield* ToIntegerWithTruncation(value)));
+        value = F(Number(Q(yield* SnapToInteger(value, 'truncate-strict'))));
       } else if (Conversion === Table19_Conversion.ToPositiveIntegerWithTruncation) {
-        value = F(Q(yield* ToPositiveIntegerWithTruncation(value)));
+        value = F(Number(Q(yield* SnapToInteger(value, 'truncate-strict', 1n))));
       } else if (Conversion === Table19_Conversion.ToString) {
         value = Q(yield* ToString(value));
       } else if (Conversion === Table19_Conversion.ToTemporalTimeZoneIdentifier) {
@@ -215,23 +220,58 @@ export function* PrepareCalendarFields(
         value = Value(Q(yield* ToOffsetString(value)));
       }
 
-      let assignValue;
-      if (value instanceof NumberValue) {
-        assignValue = R(value);
-      } else if (value instanceof JSStringValue) {
-        assignValue = value.stringValue();
+      switch (FieldName) {
+        case 'Day':
+        case 'EraYear':
+        case 'Hour':
+        case 'Microsecond':
+        case 'Millisecond':
+        case 'Minute':
+        case 'Month':
+        case 'Nanosecond':
+        case 'Second':
+        case 'Year': {
+          Assert(value instanceof NumberValue);
+          result[FieldName] = BigInt(R(value));
+          break;
+        }
+        case 'Era':
+        case 'MonthCode':
+        case 'OffsetString':
+        case 'TimeZone': {
+          Assert(value instanceof JSStringValue);
+          result[FieldName] = value.stringValue();
+          break;
+        }
+        default: throw OutOfRange.exhaustive(FieldName);
       }
-      if (assignValue === undefined) {
-        throw new Error('invalid type');
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      result[FieldName] = assignValue as any;
     } else if (isArray(requiredFieldNames)) {
       if (requiredFieldNames.includes(key)) {
         return Throw.TypeError('$1 is a required on object $2', key, fields);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      result[FieldName] = DefaultValue as any;
+      switch (FieldName) {
+        case 'Day':
+        case 'EraYear':
+        case 'Hour':
+        case 'Microsecond':
+        case 'Millisecond':
+        case 'Minute':
+        case 'Month':
+        case 'Nanosecond':
+        case 'Second':
+        case 'Year': {
+          result[FieldName] = DefaultValue;
+          break;
+        }
+        case 'Era':
+        case 'MonthCode':
+        case 'OffsetString':
+        case 'TimeZone': {
+          result[FieldName] = DefaultValue;
+          break;
+        }
+        default: throw OutOfRange.exhaustive(FieldName);
+      }
     }
   }
 
@@ -278,14 +318,58 @@ export function CalendarMergeFields(calendar: CalendarType, fields: CalendarFiel
   for (const { EnumerationKey, FieldName } of Table63_CalendarFieldsRecordFields) {
     const key = EnumerationKey;
     if (fieldsKeys.includes(key) && !overriddenKeys.includes(key)) {
-      const propValue = fields[FieldName];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      merged[FieldName] = propValue as any;
+      switch (FieldName) {
+        case 'Day':
+        case 'EraYear':
+        case 'Hour':
+        case 'Microsecond':
+        case 'Millisecond':
+        case 'Minute':
+        case 'Month':
+        case 'Nanosecond':
+        case 'Second':
+        case 'Year': {
+          const propValue = fields[FieldName];
+          merged[FieldName] = propValue;
+          break;
+        }
+        case 'Era':
+        case 'MonthCode':
+        case 'OffsetString':
+        case 'TimeZone': {
+          const propValue = fields[FieldName];
+          merged[FieldName] = propValue;
+          break;
+        }
+        default: throw OutOfRange.exhaustive(FieldName);
+      }
     }
     if (additionalKeys.includes(key)) {
-      const propValue = additionalFields[FieldName];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      merged[FieldName] = propValue as any;
+      switch (FieldName) {
+        case 'Day':
+        case 'EraYear':
+        case 'Hour':
+        case 'Microsecond':
+        case 'Millisecond':
+        case 'Minute':
+        case 'Month':
+        case 'Nanosecond':
+        case 'Second':
+        case 'Year': {
+          const propValue = additionalFields[FieldName];
+          merged[FieldName] = propValue;
+          break;
+        }
+        case 'Era':
+        case 'MonthCode':
+        case 'OffsetString':
+        case 'TimeZone': {
+          const propValue = additionalFields[FieldName];
+          merged[FieldName] = propValue;
+          break;
+        }
+        default: throw OutOfRange.exhaustive(FieldName);
+      }
     }
   }
   return merged;
@@ -311,9 +395,9 @@ export function CalendarDateAdd(
 ): PlainCompletion<ISODateRecord> {
   let result: ISODateRecord;
   if (calendar === 'iso8601') {
-    const intermediate = Q(BalanceISOYearMonth(isoDate.Year + duration.Years, isoDate.Month + duration.Months));
+    const intermediate = Q(BalanceISOYearMonth(isoDate.Year + BigInt(duration.Years), isoDate.Month + BigInt(duration.Months)));
     const regulated = Q(RegulateISODate(intermediate.Year, intermediate.Month, isoDate.Day, overflow));
-    const days = duration.Days + 7 * duration.Weeks;
+    const days = BigInt(duration.Days) + 7n * BigInt(duration.Weeks);
     result = Q(AddDaysToISODate(regulated, days));
   } else {
     result = Q(NonISODateAdd(calendar, isoDate, duration, overflow));
@@ -343,34 +427,34 @@ export function CalendarDateUntil(
   largestUnit: DateUnit,
 ): DateDurationRecord {
   let sign = CompareISODate(one, two);
-  if (sign === 0) return ZeroDateDuration();
+  if (sign === 0n) return ZeroDateDuration();
   if (calendar === 'iso8601') {
-    sign = -sign as 1 | -1;
-    let years = 0;
+    sign = -sign as 1n | -1n;
+    let years = 0n;
     if (largestUnit === TemporalUnit.Year) {
       let candidateYears = sign;
-      while (!ISODateSurpasses(sign, one, two, candidateYears, 0, 0, 0)) {
+      while (!ISODateSurpasses(sign, one, two, candidateYears, 0n, 0n, 0n)) {
         years = candidateYears;
         candidateYears += sign;
       }
     }
-    let months = 0;
+    let months = 0n;
     if (largestUnit === TemporalUnit.Year || largestUnit === TemporalUnit.Month) {
       let candidateMonths = sign;
-      while (!ISODateSurpasses(sign, one, two, years, candidateMonths, 0, 0)) {
+      while (!ISODateSurpasses(sign, one, two, years, candidateMonths, 0n, 0n)) {
         months = candidateMonths;
         candidateMonths += sign;
       }
     }
-    let weeks = 0;
+    let weeks = 0n;
     if (largestUnit === TemporalUnit.Week) {
       let candidateWeeks = sign;
-      while (!ISODateSurpasses(sign, one, two, years, months, candidateWeeks, 0)) {
+      while (!ISODateSurpasses(sign, one, two, years, months, candidateWeeks, 0n)) {
         weeks = candidateWeeks;
         candidateWeeks += sign;
       }
     }
-    let days = 0;
+    let days = 0n;
     let candidateDays = sign;
     while (!ISODateSurpasses(sign, one, two, years, months, weeks, candidateDays)) {
       days = candidateDays;
@@ -438,10 +522,10 @@ export function* CalendarYearMonthFromFields(
 ): PlainEvaluator<ISODateRecord> {
   Q(yield* CalendarResolveFields(calendar, fields, 'year-month'));
   // Let firstDayIndex be the 1-based index of the first day of the month described by fields (i.e., 1 unless the month's first day is skipped by this calendar.)
-  const firstDayIndex = 1;
+  const firstDayIndex = 1n;
   fields.Day = firstDayIndex;
   const result = Q(CalendarDateToISO(calendar, fields, overflow));
-  if (!ISODateWithinLimits(result)) {
+  if (!ISOYearMonthWithinLimits(result)) {
     return Throw.RangeError('Resulting ISODate is out of range');
   }
   return result;
@@ -466,12 +550,8 @@ export function FormatCalendarAnnotation(
   id: CalendarType,
   showCalendar: 'auto' | 'always' | 'never' | 'critical',
 ): string {
-  if (showCalendar === 'never') {
-    return '';
-  }
-  if (showCalendar === 'auto' && id === 'iso8601') {
-    return '';
-  }
+  if (showCalendar === 'never') return '';
+  if (showCalendar === 'auto' && id === 'iso8601') return '';
   const flag = showCalendar === 'critical' ? '!' : '';
   return `[${flag}u-ca=${id}]`;
 }
@@ -485,64 +565,64 @@ export function CalendarEquals(one: CalendarType, two: CalendarType): boolean {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth */
-export function ISODaysInMonth(year: number, month: number): number {
-  if (month === 1 || month === 3 || month === 5 || month === 7 || month === 8 || month === 10 || month === 12) {
-    return 31;
+export function ISODaysInMonth(year: Integer, month: Integer): Integer {
+  if (month === 1n || month === 3n || month === 5n || month === 7n || month === 8n || month === 10n || month === 12n) {
+    return 31n;
   }
-  if (month === 4 || month === 6 || month === 9 || month === 11) {
-    return 30;
+  if (month === 4n || month === 6n || month === 9n || month === 11n) {
+    return 30n;
   }
-  Assert(month === 2);
-  return 28 + MathematicalInLeapYear(EpochTimeForYear(year));
+  Assert(month === 2n);
+  return (28n + MathematicalInLeapYear(EpochTimeForYear(year)));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isoweekofyear */
 export function ISOWeekOfYear(isoDate: ISODateRecord): YearWeekRecord {
   const year = isoDate.Year;
-  const wednesday = 3;
-  const thursday = 4;
-  const friday = 5;
-  const saturday = 6;
-  const daysInWeek = 7;
-  const maxWeekNumber = 53;
+  const wednesday = 3n;
+  const thursday = 4n;
+  const friday = 5n;
+  const saturday = 6n;
+  const daysInWeek = 7n;
+  const maxWeekNumber = 53n;
   const dayOfYear = ISODayOfYear(isoDate);
   const dayOfWeek = ISODayOfWeek(isoDate);
-  const week = Math.floor((dayOfYear + daysInWeek - dayOfWeek + wednesday) / daysInWeek);
+  const week = floorDiv((dayOfYear + daysInWeek - dayOfWeek + wednesday), daysInWeek);
   if (week < 1) {
     // NOTE: This is the last week of the previous year.
-    const jan1st = CreateISODateRecord(year, 1, 1);
+    const jan1st = CreateISODateRecord(year, 1n, 1n);
     const dayOfJan1st = ISODayOfWeek(jan1st);
     if (dayOfJan1st === friday) {
-      return { Week: maxWeekNumber, Year: year - 1 };
+      return { Week: maxWeekNumber, Year: year - 1n };
     }
-    if (dayOfJan1st === saturday && MathematicalInLeapYear(EpochTimeForYear(year - 1)) === 1) {
-      return { Week: maxWeekNumber, Year: year - 1 };
+    if (dayOfJan1st === saturday && MathematicalInLeapYear(EpochTimeForYear(year - 1n)) === 1n) {
+      return { Week: maxWeekNumber, Year: year - 1n };
     }
-    return { Week: maxWeekNumber - 1, Year: year - 1 };
+    return { Week: maxWeekNumber - 1n, Year: year - 1n };
   }
   if (week === maxWeekNumber) {
     const daysInYear = MathematicalDaysInYear(year);
     const daysLaterInYear = daysInYear - dayOfYear;
     const daysAfterThursday = thursday - dayOfWeek;
     if (daysLaterInYear < daysAfterThursday) {
-      return { Week: 1, Year: year + 1 };
+      return { Week: 1n, Year: year + 1n };
     }
   }
   return { Week: week, Year: year };
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodayofyear */
-export function ISODayOfYear(isoDate: ISODateRecord): number {
-  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day);
-  return EpochTimeToDayInYear(EpochDaysToEpochMs(epochDays, 0)) + 1;
+export function ISODayOfYear(isoDate: ISODateRecord): Integer {
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1n, isoDate.Day);
+  return EpochTimeToDayInYear(EpochDaysToEpochMs(epochDays, 0n)) + 1n;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodayofweek */
-export function ISODayOfWeek(isoDate: ISODateRecord): number {
-  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1, isoDate.Day);
-  const dayOfWeek = EpochTimeToWeekDay(EpochDaysToEpochMs(epochDays, 0));
-  if (dayOfWeek === 0) {
-    return 7;
+export function ISODayOfWeek(isoDate: ISODateRecord): Integer {
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1n, isoDate.Day);
+  const dayOfWeek = EpochTimeToWeekDay(EpochDaysToEpochMs(epochDays, 0n));
+  if (dayOfWeek === 0n) {
+    return 7n;
   }
   return dayOfWeek;
 }
@@ -588,7 +668,7 @@ export function CalendarMonthDayToISOReferenceDate(
 ): PlainCompletion<ISODateRecord> {
   if (calendar === 'iso8601') {
     Assert(fields.Month !== undefined && fields.Day !== undefined);
-    const referenceISOYear = 1972;
+    const referenceISOYear = 1972n;
     const year = fields.Year === undefined ? referenceISOYear : fields.Year;
     const result = Q(RegulateISODate(year, fields.Month, fields.Day, overflow));
     return CreateISODateRecord(referenceISOYear, result.Month, result.Day);
@@ -613,7 +693,7 @@ export function CalendarISOToDate(
   isoDate: ISODateRecord,
 ): CalendarDateRecord {
   if (calendar === 'iso8601') {
-    const inLeapYear = MathematicalInLeapYear(EpochTimeForYear(isoDate.Year)) === 1;
+    const inLeapYear = MathematicalInLeapYear(EpochTimeForYear(isoDate.Year)) === 1n;
     return {
       Era: undefined,
       EraYear: undefined,
@@ -624,10 +704,10 @@ export function CalendarISOToDate(
       DayOfWeek: ISODayOfWeek(isoDate),
       DayOfYear: ISODayOfYear(isoDate),
       WeekOfYear: ISOWeekOfYear(isoDate),
-      DaysInWeek: 7,
+      DaysInWeek: 7n,
       DaysInMonth: ISODaysInMonth(isoDate.Year, isoDate.Month),
       DaysInYear: MathematicalDaysInYear(isoDate.Year),
-      MonthsInYear: 12,
+      MonthsInYear: 12n,
       InLeapYear: inLeapYear,
     };
   }
@@ -710,7 +790,7 @@ export function* CalendarResolveFields(
       const parsedMonthCode = X(ParseMonthCode(fields.MonthCode));
       if (parsedMonthCode.IsLeapMonth) return Throw.RangeError('Invalid leap month');
       const month = parsedMonthCode.MonthNumber;
-      if (month > 12) return Throw.RangeError('Invalid month');
+      if (month > 12n) return Throw.RangeError('Invalid month');
       if (fields.Month !== undefined && fields.Month !== month) return Throw.RangeError('Mismatching month and month code');
       fields.Month = parsedMonthCode.MonthNumber;
     }

@@ -2,12 +2,13 @@ import type { TemporalDurationObject } from '../../intrinsics/Temporal/Duration.
 import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import { type TemporalPlainYearMonthObject, isTemporalPlainYearMonthObject, type ISOYearMonthRecord } from '../../intrinsics/Temporal/PlainYearMonth.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
-import { modulo } from '../math.mts';
+import { floorDiv, modulo } from '../math.mts';
 import { GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from './addition.mts';
 import {
-  Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarYearMonthFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateToFields, type CalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation, CalendarEquals, GetDifferenceSettings, TemporalUnit, CompareISODate, CreateTemporalDuration, CalendarDateFromFields, CalendarDateUntil, type DateUnit, AdjustDateDurationRecord, CombineDateAndTimeDuration, type TimeDuration, RoundRelativeDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord, CalendarDateAdd,
+  Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarYearMonthFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateToFields, type CalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation, CalendarEquals, GetDifferenceSettings, TemporalUnit, CompareISODate, CreateTemporalDuration, CalendarDateFromFields, CalendarDateUntil, type DateUnit, AdjustDateDurationRecord, CombineDateAndTimeDuration, RoundRelativeDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord, CalendarDateAdd,
   CombineISODateAndTimeRecord,
   MidnightTimeRecord,
+  type Integer,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth */
@@ -50,18 +51,18 @@ export function ISOYearMonthWithinLimits(
   isoDate: ISODateRecord,
 ): boolean {
   if (isoDate.Year < -271821 || isoDate.Year > 275760) return false;
-  if (isoDate.Year === -271821 && isoDate.Month < 4) return false;
-  if (isoDate.Year === 275760 && isoDate.Month > 9) return false;
+  if (isoDate.Year === -271821n && isoDate.Month < 4) return false;
+  if (isoDate.Year === 275760n && isoDate.Month > 9) return false;
   return true;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth */
 export function BalanceISOYearMonth(
-  year: number,
-  month: number,
+  year: Integer,
+  month: Integer,
 ): ISOYearMonthRecord {
-  year += Math.floor((month - 1) / 12);
-  month = modulo(month - 1, 12) + 1;
+  year += floorDiv((month - 1n), 12n);
+  month = modulo(month - 1n, 12n) + 1n;
   return {
     Year: year,
     Month: month,
@@ -127,19 +128,19 @@ export function* DifferenceTemporalPlainYearMonth(
     TemporalUnit.Month,
     TemporalUnit.Year,
   ));
-  if (CompareISODate(yearMonth.ISODate, other.ISODate) === 0) {
-    return X(CreateTemporalDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  if (CompareISODate(yearMonth.ISODate, other.ISODate) === 0n) {
+    return X(CreateTemporalDuration(0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n));
   }
   const thisFields = ISODateToFields(calendar, yearMonth.ISODate, 'year-month');
-  thisFields.Day = 1;
+  thisFields.Day = 1n;
   const thisDate = Q(yield* CalendarDateFromFields(calendar, thisFields, 'constrain'));
   const otherFields = ISODateToFields(calendar, other.ISODate, 'year-month');
-  otherFields.Day = 1;
+  otherFields.Day = 1n;
   const otherDate = Q(yield* CalendarDateFromFields(calendar, otherFields, 'constrain'));
   const dateDifference = CalendarDateUntil(calendar, thisDate, otherDate, settings.LargestUnit as DateUnit);
-  const yearsMonthsDifference = X(AdjustDateDurationRecord(dateDifference, 0, 0));
-  let duration = CombineDateAndTimeDuration(yearsMonthsDifference, 0 as TimeDuration);
-  if (settings.SmallestUnit !== TemporalUnit.Month || settings.RoundingIncrement !== 1) {
+  const yearsMonthsDifference = X(AdjustDateDurationRecord(dateDifference, 0n, 0n));
+  let duration = CombineDateAndTimeDuration(yearsMonthsDifference, 0n);
+  if (settings.SmallestUnit !== TemporalUnit.Month || settings.RoundingIncrement !== 1n) {
     const isoDateTime = CombineISODateAndTimeRecord(thisDate, MidnightTimeRecord());
     const originEpochNs = GetUTCEpochNanoseconds(isoDateTime);
     const isoDateTimeOther = CombineISODateAndTimeRecord(otherDate, MidnightTimeRecord());
@@ -179,12 +180,12 @@ export function* AddDurationToYearMonth(
   const resolvedOptions = Q(GetOptionsObject(options));
   const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
   const durationToAdd = internalDuration.Date;
-  if (durationToAdd.Weeks !== 0 || durationToAdd.Days !== 0 || internalDuration.Time !== 0) {
+  if (durationToAdd.Weeks !== 0 || durationToAdd.Days !== 0 || internalDuration.Time !== 0n) {
     return Throw.RangeError('Invalid duration');
   }
   const calendar = yearMonth.Calendar;
   const fields = ISODateToFields(calendar, yearMonth.ISODate, 'year-month');
-  fields.Day = 1;
+  fields.Day = 1n;
   const date = Q(yield* CalendarDateFromFields(calendar, fields, 'constrain'));
   const addedDate = Q(CalendarDateAdd(calendar, date, durationToAdd, overflow));
   const addedDateFields = ISODateToFields(calendar, addedDate, 'year-month');

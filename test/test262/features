@@ -5,23 +5,26 @@
 # e.g.:
 # import-defer = import-defer
 decorators = decorators
-; Temporal = temporal
--Temporal
+Temporal = temporal
 
-# Update with test262 on Feb 2025, to be investigated/implemented
--Float16Array
+# To be implemented
 -arraybuffer-transfer
+-await-dictionary
 -explicit-resource-management
+-immutable-arraybuffer
+-joint-iteration
 -source-phase-imports
 -source-phase-imports-module-source
--immutable-arraybuffer
 
-# Added before Feb 2025
-
+# Hard to implement
 -Atomics
--Atomics.waitAsync
 -Atomics.pause
--caller
+-Atomics.waitAsync
+-Float16Array
+-resizable-arraybuffer
 -SharedArrayBuffer
 -tail-call-optimization
--resizable-arraybuffer
+
+# Legacy features
+-caller
+-IsHTMLDDA
