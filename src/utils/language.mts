@@ -1,7 +1,7 @@
 /* node:coverage disable */
 export class OutOfRange extends RangeError {
   private constructor(public value: never) {
-    super();
+    super(`Value ${String(value)} is out of range`, { cause: value });
   }
 
   static exhaustive(value: never): OutOfRange {

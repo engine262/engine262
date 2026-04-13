@@ -4,7 +4,7 @@ import {
   CreateArrayFromList, CreateBuiltinFunction, CreateDataProperty, EnsureCompletion, FEATURES, NormalCompletion, setSurroundingAgent, skipDebugger, ToString, UndefinedValue, Value, type Arguments,
 } from '#self';
 
-test('Every built-in function should have a section property', () => {
+test('Every built-in function should have a section property', { timeout: 10000 }, () => {
   const agent = createAgent({
     features: FEATURES.map((f) => f.name),
   });

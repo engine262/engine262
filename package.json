@@ -1,5 +1,5 @@
 {
-  "name": "@magic-works/engine262",
+  "name": "@engine262/engine262",
   "version": "0.0.1",
   "packageManager": "npm@9.8.0",
   "description": "Implementation of ECMA-262 in JavaScript",

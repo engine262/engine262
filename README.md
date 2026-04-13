@@ -16,9 +16,6 @@ This project is bound by a [Code of Conduct][COC].
 
 Join us in `#engine262:matrix.org`.
 
-> [!NOTE]
-> Due to [recent changes on npm](https://github.blog/changelog/2025-12-09-npm-classic-tokens-revoked-session-based-auth-and-cli-token-management-now-available/), engine262 cannot release new versions in CI with its old name (`@engine262/engine262`), and the current active maintainer does not have permission to fix it. We're temporarily releasing it under the name `@magic-works/engine262`.
-
 
 ## Why this exists
 
@@ -78,9 +75,9 @@ is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
 You can install it from npm.
 
 ```shell
-npm install @magic-works/engine262
-yarn install @magic-works/engine262
-pnpm install @magic-works/engine262
+npm install @engine262/engine262
+yarn install @engine262/engine262
+pnpm install @engine262/engine262
 ```
 
 If you install it globally, you can use the CLI like so:
