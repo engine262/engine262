@@ -10,6 +10,7 @@ export function* Evaluate_DebuggerStatement(_node: ParseNode.DebuggerStatement):
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
     // a. Perform an implementation-defined debugging action.
     // b. Let result be an implementation-defined Completion value.
+    // TODO(debugger): this should respect conditional breakpoints.
     const completion = yield { type: 'debugger' };
     Assert(completion.type === 'debugger-resume');
     return completion.value;

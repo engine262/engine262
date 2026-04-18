@@ -1,5 +1,5 @@
 import type { Protocol } from 'devtools-protocol';
-import { nativeEvalInAnyRealm } from '../eval.mts';
+import { nativeEvalInAnyRealm } from '../evaluator.mts';
 import { ObjectInspector, type AdditionalPropertyItem } from './objects.mts';
 import { getInspector } from './index.mts';
 import {

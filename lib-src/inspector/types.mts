@@ -76,6 +76,8 @@ export interface DebuggerNamespace {
   setBreakpointOnFunctionCall?(req: Protocol.Debugger.SetBreakpointOnFunctionCallRequest, context: DebuggerContext): Protocol.Debugger.SetBreakpointOnFunctionCallResponse;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-setReturnValue */
   setReturnValue?(req: Protocol.Debugger.SetReturnValueRequest, context: DebuggerContext): void;
+  /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-pauseOnAsyncCall */
+  pauseOnAsyncCall?(req: Protocol.Debugger.PauseOnAsyncCallRequest, context: DebuggerContext): void;
 }
 
 export interface ProfilerNamespace {

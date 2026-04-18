@@ -182,6 +182,10 @@ export class Scope {
 
   readonly assignmentInfoStack: AssignmentInfo[] = [];
 
+  private arrowParameterCandidateDepth = 0;
+
+  private arrowBodyDepth = 0;
+
   readonly exports = new Set<string>();
 
   readonly undefinedExports = new Map<string, ParseNode.ModuleExportName>();
@@ -242,6 +246,30 @@ export class Scope {
 
   isModule() {
     return (this.flags & Flag.module) !== 0;
+  }
+
+  inArrowParameterCandidate() {
+    return this.arrowParameterCandidateDepth > 0;
+  }
+
+  enterArrowParameterCandidate() {
+    this.arrowParameterCandidateDepth += 1;
+  }
+
+  exitArrowParameterCandidate() {
+    this.arrowParameterCandidateDepth -= 1;
+  }
+
+  inArrowBody() {
+    return this.arrowBodyDepth > 0;
+  }
+
+  enterArrowBody() {
+    this.arrowBodyDepth += 1;
+  }
+
+  exitArrowBody() {
+    this.arrowBodyDepth -= 1;
   }
 
   with<R>(flags: ScopeFlagSetters, f: () => R) {
@@ -404,13 +432,14 @@ export class Scope {
 
   declare(node: ParseNode | readonly ParseNode[], type: 'private', extraType?: 'field' | 'method' | 'get' | 'set'): void;
 
-  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export'): void;
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'lexical-allow-let' | 'import' | 'function' | 'parameter' | 'variable' | 'export'): void;
 
-  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: 'field' | 'method' | 'get' | 'set') {
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'lexical-allow-let' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: 'field' | 'method' | 'get' | 'set') {
     const declarations = getDeclarations(node);
     declarations.forEach((d) => {
       switch (type) {
         case 'lexical':
+        case 'lexical-allow-let':
         case 'import': {
           if (type === 'lexical' && d.name === 'let') {
             this.parser.addEarlyError(Throw.SyntaxError('Let in lexical binding'), d.node);

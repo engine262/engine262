@@ -8,6 +8,7 @@ import { Scope } from './Scope.mts';
 
 export interface ParserOptions {
   readonly source: string;
+  readonly decoratingSource?: string;
   readonly specifier?: string;
   readonly json?: boolean;
   readonly allowAllPrivateNames?: boolean;
@@ -27,12 +28,15 @@ export class Parser extends LanguageParser {
 
   readonly scope = new Scope(this);
 
+  protected readonly decoratingSource?: string;
+
   constructor({
-    source, specifier, json = false, allowAllPrivateNames = false,
+    source, specifier, json = false, allowAllPrivateNames = false, decoratingSource,
   }: ParserOptions) {
     super();
     this.source = source;
     this.specifier = specifier;
+    this.decoratingSource = decoratingSource;
     this.state = {
       hasTopLevelAwait: false,
       strict: false,

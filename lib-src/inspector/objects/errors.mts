@@ -1,4 +1,4 @@
-import { nativeEvalInAnyRealm } from '../eval.mts';
+import { nativeEvalInAnyRealm } from '../evaluator.mts';
 import { ObjectInspector } from './objects.mts';
 import { getInspector } from './index.mts';
 import {

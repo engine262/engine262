@@ -24,12 +24,16 @@ export abstract class Inspector {
 
   attachAgent(agent: Agent, priorRealms: ManagedRealm[]) {
     const oldOnDebugger = agent.hostDefinedOptions.onDebugger;
-    agent.hostDefinedOptions.onDebugger = () => {
-      oldOnDebugger?.();
-      this.sendEvent['Debugger.paused']({
-        reason: 'debugCommand',
+    agent.hostDefinedOptions.onDebugger = (reason) => {
+      oldOnDebugger?.(reason);
+      const pausedEvent: Protocol.Debugger.PausedEvent = {
+        reason: reason?.reason ?? 'debugCommand',
         callFrames: this.#context.getDebuggerCallFrame(),
-      });
+      };
+      if (reason?.hitBreakpoints) {
+        pausedEvent.hitBreakpoints = [...reason.hitBreakpoints];
+      }
+      this.sendEvent['Debugger.paused'](pausedEvent);
     };
 
     const oldOnRealmCreated = agent.hostDefinedOptions.onRealmCreated;

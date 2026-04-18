@@ -513,6 +513,16 @@ export abstract class StatementParser extends ExpressionParser {
         const list = this.parseBindingList();
         this.scope.declare(list, 'lexical');
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
+          if (isAwait) {
+            this.unexpected();
+          }
+          if (inner.LetOrConst === 'const') {
+            list.forEach((b) => {
+              if (!b.Initializer) {
+                this.addEarlyError(Throw.SyntaxError('Missing initializer in const declaration'), b);
+              }
+            });
+          }
           inner.BindingList = list;
           node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
           this.expect(Token.SEMICOLON);
@@ -621,6 +631,10 @@ export abstract class StatementParser extends ExpressionParser {
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
         return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+      }
+
+      if (isAwait) {
+        this.unexpected();
       }
 
       node.Expression_a = expression;
@@ -864,7 +878,7 @@ export abstract class StatementParser extends ExpressionParser {
               clause.CatchParameter = this.parseBindingIdentifier();
               break;
           }
-          this.scope.declare(clause.CatchParameter, 'lexical');
+          this.scope.declare(clause.CatchParameter, 'lexical-allow-let');
           this.expect(Token.RPAREN);
         } else {
           clause.CatchParameter = null;

@@ -477,7 +477,14 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             return 'ambiguous';
           }
           // 3. If _resolution_.[[BindingName]] is not _starResolution_.[[BindingName]], return ~ambiguous~.
-          if (SameValue(resolution.BindingName as JSStringValue, starResolution.BindingName as JSStringValue) === Value.false) {
+          if (resolution.BindingName === starResolution.BindingName) {
+            // pass
+          } else if (
+            (resolution.BindingName === 'namespace' && starResolution.BindingName !== 'namespace')
+            || (resolution.BindingName !== 'namespace' && starResolution.BindingName === 'namespace')
+          ) {
+            return 'ambiguous';
+          } else if ((resolution.BindingName as JSStringValue).stringValue() !== (starResolution.BindingName as JSStringValue).stringValue()) {
             return 'ambiguous';
           }
         }
@@ -498,9 +505,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       if (resolution === null || resolution === 'ambiguous') {
         const moduleName = module.HostDefined?.specifier || '<anonymous module>';
         if (resolution === null) {
-          return Throw.SyntaxError('Module "$1" does not have an export named "$2"', moduleName, e.ExportName);
+          return Throw.SyntaxError('Module "$1" does not have an export named $2', moduleName, e.ExportName);
         }
-        return Throw.SyntaxError('Export "$1" from module "$2" is ambiguous', e.ExportName, moduleName);
+        return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', e.ExportName, moduleName);
       }
       // c. Assert: resolution is a ResolvedBinding Record.
       Assert(resolution instanceof ResolvedBindingRecord);
@@ -533,9 +540,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         if (resolution === null || resolution === 'ambiguous') {
           const moduleName = importedModule.HostDefined?.specifier || '<anonymous module>';
           if (resolution === null) {
-            return Throw.SyntaxError('Module "$1" does not have an export named "$2"', moduleName, ie.ImportName);
+            return Throw.SyntaxError('Module "$1" does not have an export named $2', moduleName, ie.ImportName);
           }
-          return Throw.SyntaxError('Export "$1" from module "$2" is ambiguous', ie.ImportName, moduleName);
+          return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', ie.ImportName, moduleName);
         }
         // iii. If resolution.[[BindingName]] is ~namespace~, then
         if (resolution.BindingName === 'namespace') {

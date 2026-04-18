@@ -1,4 +1,3 @@
-import type { InspectorContext } from './context.mts';
 import {
   AsyncBlockStart,
   ContainsArguments,
@@ -9,7 +8,7 @@ import {
   EvalDeclarationInstantiation,
   Evaluate,
   ExecutionContext,
-  FunctionEnvironmentRecord, GetThisEnvironment, isEvaluator, IsStrict, ManagedRealm, NewPromiseCapability, NormalCompletion, skipDebugger, surroundingAgent, Throw, ThrowCompletion, unwrapCompletion, Value, wrappedParse, type PlainCompletion, type PlainEvaluator, type ValueCompletion, type ValueEvaluator,
+  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NewPromiseCapability, NormalCompletion, surroundingAgent, Throw, ThrowCompletion, unwrapCompletion, Value, wrappedParse, type PlainCompletion, type ValueCompletion, type ValueEvaluator,
 } from '#self';
 
 const cascadeStack = new WeakMap<EnvironmentRecord, EnvironmentRecord>();
@@ -51,16 +50,19 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
   }
 
   let isAsync = false;
-  const script = wrappedParse({ source, allowAllPrivateNames: true }, (parser) => parser.scope.with({
+  const parseOption = { source, allowAllPrivateNames: true };
+  const parseParam = {
     strict: strictCaller,
     newTarget: inFunction,
     superProperty: inMethod,
     superCall: inDerivedConstructor,
     private: true,
-  }, () => parser.try(() => parser.parseScript()) || parser.scope.with({ await: true }, () => {
+  };
+  let script = wrappedParse(parseOption, (parser) => parser.scope.with(parseParam, () => parser.parseScript()));
+  if (Array.isArray(script)) {
     isAsync = true;
-    return parser.parseScript();
-  })));
+    script = wrappedParse(parseOption, (parser) => parser.scope.with({ ...parseParam, await: true }, () => parser.parseScript()));
+  }
   if (Array.isArray(script)) {
     if (scriptContext) {
       surroundingAgent.executionContextStack.pop(scriptContext);
@@ -145,16 +147,4 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
     surroundingAgent.executionContextStack.pop(scriptContext);
   }
   return result as ValueCompletion;
-}
-
-export function nativeEvalInAnyRealm<T>(closure: (() => PlainCompletion<T>) | (() => PlainEvaluator<T>), context: InspectorContext): PlainCompletion<T> | undefined {
-  const realm = (surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm) as ManagedRealm | undefined;
-  if (!realm) return undefined;
-  return realm.scope((): PlainCompletion<T> | undefined => {
-    const result = closure();
-    if (isEvaluator(result)) {
-      return skipDebugger(result);
-    }
-    return result;
-  });
 }

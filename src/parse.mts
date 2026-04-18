@@ -86,17 +86,16 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined: Parse
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse({
+  const parseOptions = {
     source: sourceText,
     specifier: hostDefined.specifier,
     json: hostDefined[kInternal]?.json,
     allowAllPrivateNames: hostDefined[kInternal]?.allowAllPrivateNames,
-  }, (p) => {
-    if (hostDefined[kInternal]?.allowAwait) {
-      return p.try(() => p.parseScript()) || p.scope.with({ await: true }, () => p.parseScript());
-    }
-    return p.parseScript();
-  });
+  };
+  let body = wrappedParse(parseOptions, (p) => p.parseScript());
+  if (Array.isArray(body) && hostDefined[kInternal]?.allowAwait) {
+    body = wrappedParse(parseOptions, (p) => p.scope.with({ await: true }, () => p.parseScript()));
+  }
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     const scriptId = hostDefined.doNotTrackScriptId ? undefined : surroundingAgent.addDynamicParsedSource(realm, sourceText);

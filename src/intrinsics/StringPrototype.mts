@@ -44,6 +44,7 @@ import {
   Yield,
   F, R, R as MathematicalValue,
   Realm,
+  Unicode,
 } from '#self';
 
 
@@ -250,8 +251,8 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
 function* StringProto_localeCompare([that = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
-  const That = Q(yield* ToString(that)).stringValue();
+  const S = Unicode.str_normalization(Q(yield* ToString(O)).stringValue(), 'NFC');
+  const That = Unicode.str_normalization(Q(yield* ToString(that)).stringValue(), 'NFC');
   if (S === That) {
     return F(+0);
   } else if (S < That) {
@@ -324,10 +325,10 @@ function* StringProto_normalize([form = Value.undefined]: Arguments, { thisValue
     form = Q(yield* ToString(form));
   }
   const f = form.stringValue();
-  if (!['NFC', 'NFD', 'NFKC', 'NFKD'].includes(f)) {
+  if (f !== 'NFC' && f !== 'NFD' && f !== 'NFKC' && f !== 'NFKD') {
     return Throw.RangeError('Invalid normalization form');
   }
-  const ns = S.stringValue().normalize(f);
+  const ns = Unicode.str_normalization(S.stringValue(), f);
   return Value(ns);
 }
 
@@ -662,7 +663,7 @@ function* StringProto_toLocaleLowerCase(_args: Arguments, { thisValue }: Functio
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
-  const L = S.stringValue().toLocaleLowerCase();
+  const L = Unicode.str_toLocaleLowercase(S.stringValue());
   return Value(L);
 }
 
@@ -671,7 +672,7 @@ function* StringProto_toLocaleUpperCase(_args: Arguments, { thisValue }: Functio
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
-  const L = S.stringValue().toLocaleUpperCase();
+  const L = Unicode.str_toLocaleUppercase(S.stringValue());
   return Value(L);
 }
 
@@ -680,7 +681,7 @@ function* StringProto_toLowerCase(_args: Arguments, { thisValue }: FunctionCallC
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
-  const L = S.stringValue().toLowerCase();
+  const L = Unicode.str_toLowercase(S.stringValue());
   return Value(L);
 }
 
@@ -694,7 +695,7 @@ function* StringProto_toUpperCase(_args: Arguments, { thisValue }: FunctionCallC
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   const S = Q(yield* ToString(O));
-  const L = S.stringValue().toUpperCase();
+  const L = Unicode.str_toUppercase(S.stringValue());
   return Value(L);
 }
 

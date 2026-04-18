@@ -6,7 +6,6 @@ import type {
 } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
 import { InspectorContext } from './context.mts';
-import { performDevtoolsEval } from './eval.mts';
 import {
   Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
   ParseModule,
@@ -18,6 +17,10 @@ import {
   kInternal,
   captureStack,
   isEvaluator,
+  getBreakpointCandidateNodes,
+  parseNodeToBreakpointLocation,
+  performDevtoolsEval,
+  isFunctionObject,
 } from '#self';
 
 export const Debugger: DebuggerNamespace = {
@@ -40,23 +43,32 @@ export const Debugger: DebuggerNamespace = {
   setBlackboxExecutionContexts() { },
 
   // #region breakpoints
-  getPossibleBreakpoints() {
-  // getPossibleBreakpoints({ start, end, restrictToFunction }) {
-    return { locations: [] };
-    // return { locations: getBreakpointCandidates(start, end, restrictToFunction) };
+  getPossibleBreakpoints({ start, end, restrictToFunction }) {
+    return {
+      locations: [...getBreakpointCandidateNodes(start, end, restrictToFunction)]
+        .map((node) => parseNodeToBreakpointLocation(start.scriptId, node)),
+    };
   },
   removeBreakpoint({ breakpointId }) {
     surroundingAgent?.removeBreakpoint(breakpointId);
   },
-  // setBreakpoint({ location, condition }) { },
-  setBreakpointByUrl(req) {
-    return surroundingAgent?.addBreakpointByUrl(req);
+  setBreakpoint(req) {
+    return surroundingAgent.addBreakpointByLocation(req);
   },
-  // setBreakpointOnFunctionCall({ objectId, condition }) { },
+  setBreakpointByUrl(req) {
+    return surroundingAgent.addBreakpointByUrl(req);
+  },
+  setBreakpointOnFunctionCall(req, context) {
+    const f = context.context.getObject(req.objectId);
+    if (!f || !isFunctionObject(f)) return { breakpointId: null! };
+    return surroundingAgent.addBreakpointOnFunctionCall(f, req.condition);
+  },
+  setInstrumentationBreakpoint(req) {
+    return surroundingAgent.addInstrumentationBreakpoint(req);
+  },
   setBreakpointsActive({ active }) {
     surroundingAgent.breakpointsEnabled = active;
   },
-  // setInstrumentationBreakpoint({ instrumentation }) { },
   setPauseOnExceptions({ state }) {
     if (surroundingAgent) {
       surroundingAgent.pauseOnExceptions = state === 'none' ? undefined : state;
@@ -347,11 +359,15 @@ function evaluate(options: {
   }, (err): Protocol.Runtime.EvaluateResponse => {
     const expr = surroundingAgent.runningExecutionContext?.callSite.lastNode?.sourceText;
     const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
+    // @ts-expect-error
+    // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+    declare const console: any;
+    if (typeof console === 'object') console.error(err);
     inspectorContext.sendEvent['Runtime.exceptionThrown']({
       timestamp: Date.now(),
       exceptionDetails: {
         stackTrace: frame.length ? { callFrames: frame } : undefined,
-        text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length + 1)}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
+        text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length).split('\n').map((line: string) => `  ${line}`).join('\n')}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
         columnNumber: frame[0]?.columnNumber,
         lineNumber: frame[0]?.lineNumber,
         scriptId: frame[0]?.scriptId,

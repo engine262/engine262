@@ -84,18 +84,21 @@ test('functions', async () => {
 
 async function snapshotObject(inspector: TestInspector, value: string) {
   const result = await inspector.eval(value);
-  expect(result).toMatchSnapshot(value);
+  expect(JSON.parse(JSON.stringify(result))).toMatchSnapshot(value);
   const objectId = (result as any)?.objectId;
   if (objectId) {
     const properties = await inspector.runtime.getProperties({ objectId, ownProperties: true, generatePreview: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
     properties.internalProperties = properties.internalProperties?.filter((prop) => prop.name !== '[[Prototype]]');
-    expect(properties).toMatchSnapshot(`${value} properties`);
+    expect(JSON.parse(JSON.stringify(properties))).toMatchSnapshot(`${value} properties`);
 
     const properties2 = await inspector.runtime.getProperties({ objectId, accessorPropertiesOnly: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
-    expect([properties2.result, properties2.privateProperties]).toMatchSnapshot(`${value} accessor properties`);
+    expect(JSON.parse(JSON.stringify(properties2.result?.filter((value) => value.isOwn) || null))).toMatchSnapshot(`${value} accessor properties`);
+    expect(properties2.result?.filter((value) => !value.isOwn).map((x) => x.name).join(', ')).toMatchSnapshot(`${value} accessor properties (prototype)`);
 
     const properties3 = await inspector.runtime.getProperties({ objectId, nonIndexedPropertiesOnly: true }) as Protocol.Protocol.Runtime.GetPropertiesResponse;
-    expect([properties3.result, properties3.privateProperties]).toMatchSnapshot(`${value} non-indexed properties`);
+    expect(JSON.parse(JSON.stringify(properties3.result?.filter((value) => value.isOwn) || null))).toMatchSnapshot(`${value} non-indexed owned properties`);
+    expect(properties3.privateProperties?.map((x) => x.name).join(', ')).toMatchSnapshot(`${value} non-indexed owned properties (private)`);
+    expect(properties3.result?.filter((value) => !value.isOwn).map((value) => value.name).join(', ')).toMatchSnapshot(`${value} non-indexed properties (prototype)`);
   }
 }
 
@@ -320,7 +323,8 @@ test('shadow realm', async () => {
   inspector.attachAgent(agent, [realm]);
 
   await snapshotObject(inspector, 'new ShadowRealm');
-  expect(await inspector.eval('new ShadowRealm().evaluate("(() => {})")')).toMatchSnapshot('ShadowRealm function');
+  await snapshotObject(inspector, 'new ShadowRealm().evaluate("(() => {})")');
+  await snapshotObject(inspector, 'new ShadowRealm().evaluate("(() => {}).bind(Object).bind(Object)")');
 });
 
 test('normal object', async () => {

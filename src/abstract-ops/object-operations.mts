@@ -210,6 +210,11 @@ export function* Call(F: Value, V: Value, argumentsList: Arguments = []): ValueE
     return Throw.TypeError('$1 is not a function', F);
   }
 
+  if (surroundingAgent.breakpointsByFunction.has(F)) {
+    const resumption = yield { type: 'debugger' };
+    Assert(resumption.type === 'debugger-resume');
+  }
+
   return EnsureCompletion(Q(yield* F.Call(V, argumentsList)));
 }
 

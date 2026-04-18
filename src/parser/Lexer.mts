@@ -202,6 +202,8 @@ export class TokenData {
 export abstract class Lexer {
   protected abstract readonly source: string;
 
+  protected abstract readonly decoratingSource?: string;
+
   protected currentToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
 
   protected peekToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
@@ -242,10 +244,11 @@ export abstract class Lexer {
     let endIndex: number;
     let line: number;
     let column: number | undefined;
+    const decoratingSource = this.decoratingSource ?? this.source;
     if (typeof location === 'number') {
       line = this.line;
-      if (location === this.source.length) {
-        while (isLineTerminator(this.source[location - 1])) {
+      if (location === decoratingSource.length) {
+        while (isLineTerminator(decoratingSource[location - 1])) {
           line -= 1;
           location -= 1;
         }
@@ -255,7 +258,7 @@ export abstract class Lexer {
     } else if ('type' in location && location.type === Token.EOS) {
       line = this.line;
       startIndex = location.startIndex;
-      while (isLineTerminator(this.source[startIndex - 1])) {
+      while (isLineTerminator(decoratingSource[startIndex - 1])) {
         line -= 1;
         startIndex -= 1;
       }
@@ -292,12 +295,12 @@ export abstract class Lexer {
       */
 
     let lineStart = startIndex;
-    while (!isLineTerminator(this.source[lineStart - 1]) && this.source[lineStart - 1] !== undefined) {
+    while (!isLineTerminator(decoratingSource[lineStart - 1]) && decoratingSource[lineStart - 1] !== undefined) {
       lineStart -= 1;
     }
 
     let lineEnd = startIndex;
-    while (!isLineTerminator(this.source[lineEnd]) && this.source[lineEnd] !== undefined) {
+    while (!isLineTerminator(decoratingSource[lineEnd]) && decoratingSource[lineEnd] !== undefined) {
       lineEnd += 1;
     }
 
@@ -309,7 +312,7 @@ export abstract class Lexer {
     callFrame.columnNumber = column;
     callFrame.lineNumber = line;
     const decoration = `\
-${this.specifier ? `${this.specifier}:${line}:${column}\n` : ''}${this.source.slice(lineStart, lineEnd)}
+${this.specifier ? `${this.specifier}:${line}:${column}\n` : ''}${decoratingSource.slice(lineStart, lineEnd)}
 ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
     if (typeof error.HostDefinedMessageString === 'string') {
       error.HostDefinedMessageString += `\n${decoration}`;
@@ -347,36 +350,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   unexpected(location: number | Locatable = this.peek()): never {
     this.raise(Throw.SyntaxError('Unexpected token'), location);
-  }
-
-  try<T>(callback: () => T): T | undefined {
-    const currentToken = this.currentToken;
-    const peekToken = this.peekToken;
-    const peekAheadToken = this.peekAheadToken;
-    const lineTerminatorBeforeNextToken = this.lineTerminatorBeforeNextToken;
-    const escapeIndex = this.escapeIndex;
-    const positionForNextToken = this.positionForNextToken;
-    const lineForNextToken = this.lineForNextToken;
-    const columnForNextToken = this.columnForNextToken;
-    const position = this.position;
-    const earlyErrors = [...this.earlyErrors];
-    let result: T | undefined;
-    try {
-      result = callback();
-    } catch {}
-    if (!result) {
-      this.currentToken = currentToken;
-      this.peekToken = peekToken;
-      this.peekAheadToken = peekAheadToken;
-      this.lineTerminatorBeforeNextToken = lineTerminatorBeforeNextToken;
-      this.escapeIndex = escapeIndex;
-      this.positionForNextToken = positionForNextToken;
-      this.lineForNextToken = lineForNextToken;
-      this.columnForNextToken = columnForNextToken;
-      this.position = position;
-      this.earlyErrors = new Set(earlyErrors);
-    }
-    return result;
   }
 
   advance(): TokenData {
@@ -1060,8 +1033,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   scanCodePoint() {
     if (this.source[this.position] === '{') {
-      const end = this.source.indexOf('}', this.position);
       this.position += 1;
+      const end = this.source.indexOf('}', this.position);
+      if (end === -1) {
+        this.raise(Throw.SyntaxError('Invalid code point'), this.position);
+      }
       const code = this.scanHex(end - this.position);
       this.position += 1;
       if (code > 0x10FFFF) {
@@ -1073,7 +1049,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   scanHex(length: number) {
-    if (length === 0) {
+    if (length <= 0) {
       this.raise(Throw.SyntaxError('Invalid code point'), this.position);
     }
     let n = 0;
@@ -1081,7 +1057,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const c = this.source[this.position];
       if (isHexDigit(c)) {
         this.position += 1;
-        n = (n << 4) | Number.parseInt(c, 16);
+        n = (n * 16) + Number.parseInt(c, 16);
       } else {
         this.unexpected(this.position);
       }

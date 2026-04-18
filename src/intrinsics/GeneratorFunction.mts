@@ -22,13 +22,17 @@ export function bootstrapGeneratorFunction(realmRec: Realm) {
   const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
 
   const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
+
   X(DefinePropertyOrThrow(cons, Value('prototype'), Descriptor({
     Writable: Value.false,
     Configurable: Value.false,
   })));
+
   X(DefinePropertyOrThrow(generator, Value('constructor'), Descriptor({
     Writable: Value.false,
   })));
+
+  cons.Prototype = realmRec.Intrinsics['%Function%'];
 
   realmRec.Intrinsics['%GeneratorFunction%'] = cons;
 }

@@ -8,6 +8,7 @@ export * from './completion.mts';
 export * from './parse.mts';
 export * from './modules.mts';
 export * from './host-defined/inspect.mts';
+export { performDevtoolsEval } from './host-defined/devtoolsEval.mts';
 export { type Formattable, Throw } from './host-defined/error-messages.mts';
 export * from './evaluator.mts';
 
@@ -25,6 +26,7 @@ export {
 } from './utils/stack.mts';
 export { ModuleCache } from './utils/module.mts';
 
+export { isBoundFunctionObject, type BoundFunctionObject } from './intrinsics/FunctionPrototype.mts';
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';
 export { isSetObject, type SetObject } from './intrinsics/Set.mts';
 export { isRegExpObject, type RegExpObject } from './intrinsics/RegExp.mts';

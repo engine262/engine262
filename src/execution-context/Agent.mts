@@ -13,8 +13,14 @@ import {
   type GCMarker,
   type ResumeEvaluateOptions,
   type ParseNode,
-  getBreakpointCandidates,
+  type BreakpointLocation,
+  getBreakpointCandidateNodes,
   type PlainEvaluator,
+  parseNodeToBreakpointLocation,
+  type FunctionObject,
+  performDevtoolsEval,
+  ManagedRealm,
+  ToBoolean,
 } from '#self';
 
 let agentSignifier = 0;
@@ -150,7 +156,7 @@ export class Agent {
       const state = this.#pausedEvaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
       debuggerStatementCompletion = undefined;
 
-      if (!noBreakpoint && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
+      if (!noBreakpoint && this.breakpointsEnabled && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
         if (state.value.type === 'debugger') {
           this.hostDefinedOptions.onDebugger();
           return { done: false, value: undefined };
@@ -188,8 +194,9 @@ export class Agent {
     if (source.HostDefined) {
       source.HostDefined.scriptId = id;
     }
-    this.hostDefinedOptions.onScriptParsed?.(source, id);
     this.parsedSources.set(id, source);
+    this.#addBreakpointByUrl(this.#breakpoints.values(), [[id, source]]);
+    this.hostDefinedOptions.onScriptParsed?.(source, id);
     this.#script_id += 1;
   }
 
@@ -205,49 +212,156 @@ export class Agent {
     const id = `${this.#script_id}`;
     const source = new DynamicParsedCodeRecord(realm, !ast || isArray(ast) ? sourceText : ast);
     source.HostDefined.scriptId = id;
-    this.hostDefinedOptions.onScriptParsed?.(source, id);
     this.parsedSources.set(id, source);
+    this.#addBreakpointByUrl(this.#breakpoints.values(), [[id, source]]);
+    this.hostDefinedOptions.onScriptParsed?.(source, id);
     this.#script_id += 1;
     this.#dynamicParsedSourceIds.set(sourceText, id);
     return id;
   }
 
   // #endregion
-
+  // NON-SPEC
   // #region breakpoint
-  breakpointsEnabled = false;
+  breakpointsEnabled = true;
 
+  // TODO(debugger): not implemented
   pauseOnExceptions: undefined | 'caught' | 'uncaught' | 'all';
 
   #breakpointId = 0;
 
   #breakpoints = new Map<string, Breakpoint>();
 
-  addBreakpointByUrl(breakpoint: Protocol.Debugger.SetBreakpointByUrlRequest): Protocol.Debugger.SetBreakpointByUrlResponse {
+  #breakpointsByNode = new WeakMap<ParseNode, Set<Breakpoint>>();
+
+  breakpointsByFunction = new WeakSet<FunctionObject>();
+
+  testBreakpoint(node: ParseNode) {
+    const breakpoints = this.#breakpointsByNode.get(node);
+    if (!breakpoints) return false;
+    for (const breakpoint of breakpoints) {
+      if (breakpoint.condition) {
+        const result = EnsureCompletion(skipDebugger(performDevtoolsEval(breakpoint.condition, surroundingAgent.currentRealmRecord as ManagedRealm, false, true)));
+        if (result instanceof NormalCompletion) {
+          return ToBoolean(result.Value).booleanValue();
+        } else {
+          // ignore them now.
+          // should report to inspector, but it requires us to adjust code to move part of breakpoint code to the inspector class.
+          // or maybe we can share code with uncaughtException?
+        }
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #resolveBreakpointNode(location: BreakpointLocation): ParseNode | undefined {
+    // eslint-disable-next-line no-unreachable-loop
+    for (const candidate of getBreakpointCandidateNodes(location)) {
+      return candidate;
+    }
+    return undefined;
+  }
+
+  #createBreakpoint(breakpoint: BreakpointRequest): Breakpoint {
     this.#breakpointId += 1;
-    let scriptId;
-    if (breakpoint.url) {
-      for (const [id, script] of this.parsedSources) {
-        if (script.HostDefined?.specifier === breakpoint.url) {
-          scriptId = id;
-          break;
+    const breakpointId = this.#breakpointId.toString();
+    const breakpointRecord: Breakpoint = {
+      id: breakpointId,
+      resolvedBreakpoints: new Set(),
+      ...breakpoint,
+    };
+    this.#breakpoints.set(breakpointId, breakpointRecord);
+    return breakpointRecord;
+  }
+
+  #matchUrlBreakpoint(breakpoint: Pick<Breakpoint, 'url' | 'urlRegex'>, script: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord): boolean {
+    const url = script.HostDefined?.specifier;
+    if (!url) return false;
+    if (breakpoint.url && breakpoint.url !== url) return false;
+    if (breakpoint.urlRegex && !new RegExp(breakpoint.urlRegex).test(url)) return false;
+    return !!(breakpoint.url || breakpoint.urlRegex);
+  }
+
+  addBreakpointByUrl(breakpoint: Protocol.Debugger.SetBreakpointByUrlRequest): Protocol.Debugger.SetBreakpointByUrlResponse {
+    const record = this.#createBreakpoint(breakpoint);
+    const locations = this.#addBreakpointByUrl([record], this.parsedSources);
+    return { breakpointId: record.id, locations };
+  }
+
+  #addBreakpointByUrl(breakpoints: Iterable<Breakpoint>, sources: Iterable<[string, ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord]>): BreakpointLocation[] {
+    const nodes: ParseNode[] = [];
+    const locations: BreakpointLocation[] = [];
+    for (const breakpoint of breakpoints) {
+      for (const { location, node } of this.#breakpointUrlRequestToLocations(breakpoint, sources)) {
+        breakpoint.resolvedBreakpoints.add(node);
+        this.#breakpointsByNode.getOrInsertComputed(node, () => new Set()).add(breakpoint);
+        nodes.push(node);
+        locations.push(location);
+      }
+    }
+    return locations;
+  }
+
+
+  * #breakpointUrlRequestToLocations(breakpoint: Pick<Breakpoint, 'url' | 'urlRegex' | 'lineNumber' | 'columnNumber'>, sources: Iterable<[string, ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord]>): Generator<{ location: BreakpointLocation; node: ParseNode }> {
+    for (const [scriptId, script] of sources) {
+      if (this.#matchUrlBreakpoint(breakpoint, script)) {
+        if (breakpoint.lineNumber !== undefined) {
+          const node = this.#resolveBreakpointNode({
+            scriptId,
+            lineNumber: breakpoint.lineNumber,
+            columnNumber: breakpoint.columnNumber,
+          });
+          if (node) {
+            yield { location: parseNodeToBreakpointLocation(scriptId, node), node };
+          }
         }
       }
     }
-    if (!scriptId) {
-      return { breakpointId: this.#breakpointId.toString(), locations: [] };
+  }
+
+  // TODO(debugger): we need to inject a debugger scope debug(f) function to trigger this
+  addBreakpointOnFunctionCall(f: FunctionObject, condition: string | undefined): Protocol.Debugger.SetBreakpointOnFunctionCallResponse {
+    const record = this.#createBreakpoint({ function: f, condition });
+    this.breakpointsByFunction.add(f);
+    return { breakpointId: record.id };
+  }
+
+  addInstrumentationBreakpoint(breakpoint: Protocol.Debugger.SetInstrumentationBreakpointRequest): Protocol.Debugger.SetInstrumentationBreakpointResponse {
+    const record = this.#createBreakpoint(breakpoint);
+    return { breakpointId: record.id };
+  }
+
+  addBreakpointByLocation(breakpoint: Protocol.Debugger.SetBreakpointRequest): Protocol.Debugger.SetBreakpointResponse {
+    const record = this.#createBreakpoint(breakpoint);
+    const node = this.#resolveBreakpointNode(breakpoint.location);
+    if (node) {
+      record.resolvedBreakpoints.add(node);
+      this.#breakpointsByNode.getOrInsertComputed(node, () => new Set()).add(record);
     }
     return {
-      breakpointId: this.#breakpointId.toString(),
-      locations: [getBreakpointCandidates({ scriptId, lineNumber: breakpoint.lineNumber, columnNumber: breakpoint.columnNumber })[0]],
+      breakpointId: record.id,
+      actualLocation: node ? parseNodeToBreakpointLocation(breakpoint.location.scriptId, node) : breakpoint.location,
     };
   }
 
   removeBreakpoint(breakpointId: string) {
+    const breakpoint = this.#breakpoints.get(breakpointId);
+    if (breakpoint) {
+      for (const node of breakpoint.resolvedBreakpoints) {
+        const set = this.#breakpointsByNode.get(node);
+        set?.delete(breakpoint);
+        if (set?.size === 0) this.#breakpointsByNode.delete(node);
+      }
+    }
     this.#breakpoints.delete(breakpointId);
+    if (breakpoint?.function) this.breakpointsByFunction.delete(breakpoint.function);
   }
-  // #endregion
 
+  // #endregion
+  // NON-SPEC
   // #region side-effect free evaluator
   #debugger_previewing = false;
 
@@ -309,9 +423,20 @@ export class Agent {
   // #endregion
 }
 
-interface Breakpoint {
-  _: never;
+export interface Breakpoint extends
+  Partial<Protocol.Debugger.SetBreakpointByUrlRequest>,
+  Partial<Protocol.Debugger.SetBreakpointOnFunctionCallRequest>,
+  Partial<Protocol.Debugger.SetInstrumentationBreakpointRequest> {
+  readonly id: string;
+  readonly resolvedBreakpoints: Set<ParseNode>;
+  readonly function?: FunctionObject;
 }
+
+export type BreakpointRequest =
+  Partial<Protocol.Debugger.SetBreakpointRequest> &
+  Partial<Protocol.Debugger.SetBreakpointByUrlRequest> &
+  { readonly function?: FunctionObject; } &
+  Partial<Protocol.Debugger.SetInstrumentationBreakpointRequest>;
 
 /** https://tc39.es/ecma262/#sec-agentsignifier */
 export function AgentSignifier() {

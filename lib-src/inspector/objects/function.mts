@@ -1,7 +1,7 @@
 import type { Protocol } from 'devtools-protocol';
 import type { Location } from '../../../src/parser/ParseNode.mts';
 import { getDisplayObjectFromEnvironmentRecord } from '../context.mts';
-import { nativeEvalInAnyRealm } from '../eval.mts';
+import { nativeEvalInAnyRealm } from '../evaluator.mts';
 import type { Inspector } from './index.mts';
 import {
   type FunctionObject, isWrappedFunctionExoticObject, IntrinsicsFunctionToString, isECMAScriptFunctionObject,
@@ -12,11 +12,15 @@ import {
   ObjectValue,
   CreateArrayFromList,
   unwrapCompletion,
+  isBoundFunctionObject,
 } from '#self';
 
 function unwrapFunction(value: FunctionObject): FunctionObject {
   if (isWrappedFunctionExoticObject(value)) {
     return unwrapFunction(value.WrappedTargetFunction);
+  }
+  if (isBoundFunctionObject(value)) {
+    return unwrapFunction(value.BoundTargetFunction);
   }
   return value;
 }
@@ -39,11 +43,11 @@ function toLocation(location: Location, scriptId: string | undefined): Protocol.
 
 export const Function: Inspector<FunctionObject> = {
   toRemoteObject(value, getObjectId) {
-    value = unwrapFunction(value);
     const result: Protocol.Runtime.RemoteObject = {
       type: 'function',
       objectId: getObjectId(value),
     };
+    value = unwrapFunction(value);
     result.description = IntrinsicsFunctionToString(value);
     if (isECMAScriptFunctionObject(value) && value.ECMAScriptCode) {
       if (value.ECMAScriptCode.type === 'FunctionBody') {
@@ -64,12 +68,49 @@ export const Function: Inspector<FunctionObject> = {
   toObjectPreview(value) {
     return {
       type: 'function',
-      description: IntrinsicsFunctionToString(value),
+      description: IntrinsicsFunctionToString(unwrapFunction(value)),
       overflow: false,
       properties: [],
     };
   },
   toInternalProperties(value, getObjectId, context) {
+    const result: Protocol.Runtime.InternalPropertyDescriptor[] = [];
+
+    while (true) {
+      if (isWrappedFunctionExoticObject(value)) {
+        if (!result.some((p) => p.name === '[[WrappedTargetFunction]]')) {
+          result.push({
+            name: '[[WrappedTargetFunction]]',
+            value: context.toRemoteObject(value.WrappedTargetFunction, { generatePreview: true }),
+          });
+        }
+        value = value.WrappedTargetFunction;
+        continue;
+      }
+
+      if (isBoundFunctionObject(value)) {
+        const v = value;
+        if (!result.some((p) => p.name === '[[BoundTargetFunction]]')) {
+          result.push({
+            name: '[[BoundTargetFunction]]',
+            value: context.toRemoteObject(v.BoundTargetFunction, { generatePreview: true }),
+          }, {
+            name: '[[BoundThis]]',
+            value: context.toRemoteObject(v.BoundThis, { generatePreview: true }),
+          }, {
+            name: '[[BoundArguments]]',
+            value: context.toRemoteObject(
+              unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(v.BoundArguments), context))!,
+              { generatePreview: true },
+            ),
+          });
+        }
+        value = v.BoundTargetFunction;
+        continue;
+      }
+      break;
+    }
+
     if (isECMAScriptFunctionObject(value)) {
       if (!value.ECMAScriptCode) return [];
 
@@ -90,12 +131,10 @@ export const Function: Inspector<FunctionObject> = {
         subtype: 'internal#scopeList' as never,
         type: 'object',
       } : undefined;
-
-      return [toLocation(value.ECMAScriptCode.location, value.scriptId), { name: '[[Scopes]]', value: scopeDesc }];
+      result.push(toLocation(value.ECMAScriptCode.location, value.scriptId), { name: '[[Scopes]]', value: scopeDesc });
     }
 
     if (isBuiltinFunctionObject(value)) {
-      const result: Protocol.Runtime.InternalPropertyDescriptor[] = [];
       if ((value as DefaultConstructorBuiltinFunction).HostLocation) {
         const [scriptId, location] = (value as DefaultConstructorBuiltinFunction).HostLocation;
         result.push(toLocation(location, scriptId));
@@ -109,9 +148,8 @@ export const Function: Inspector<FunctionObject> = {
           },
         });
       }
-      return result;
     }
-    return [];
+    return result;
   },
   toDescription: () => 'Function',
 };

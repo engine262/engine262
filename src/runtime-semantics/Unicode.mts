@@ -137,6 +137,7 @@ Object.setPrototypeOf(Table71_BinaryPropertyOfStrings, null);
 
 const canonicalizeUnicodePropertyCache: Record<string, [excludeSet: ReadonlySet<string>, includeSet: ReadonlySet<string>]> = { __proto__: null! };
 const stringPropertySetCache: Record<string, readonly ListOfCharacter[]> = {};
+// TODO(unicode): methods here should be implemented based on Unicode database so we can pin Unicode version.
 export const Unicode = {
   toUppercase(ch: CodePoint): CodePoint {
     return String.fromCodePoint(ch).toUpperCase().codePointAt(0)! as CodePoint;
@@ -233,6 +234,21 @@ export const Unicode = {
   },
   iterateCharacterByCodePoint(string: Character | ListOfCharacter) {
     return string[Symbol.iterator]() as IterableIterator<Character>;
+  },
+  str_normalization(string: string, form: 'NFC' | 'NFD' | 'NFKC' | 'NFKD'): string {
+    return string.normalize(form);
+  },
+  str_toLowercase(string: string): string {
+    return string.toLowerCase();
+  },
+  str_toUppercase(string: string): string {
+    return string.toUpperCase();
+  },
+  str_toLocaleLowercase(string: string): string {
+    return string.toLocaleLowerCase();
+  },
+  str_toLocaleUppercase(string: string): string {
+    return string.toLocaleUpperCase();
   },
 };
 

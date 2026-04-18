@@ -18,14 +18,13 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../utils/language.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   ArrayCreate,
   Assert,
   Call,
   Construct,
-  CreateDataProperty,
   CreateDataPropertyOrThrow,
   Get,
   GetMethod,
@@ -47,6 +46,7 @@ import {
   CreateAsyncFromSyncIterator,
   AsyncIteratorClose,
   IteratorComplete,
+  SameValueZero,
 } from '#self';
 import {
   Realm,
@@ -54,60 +54,38 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */
-function* ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
-  const numberOfArgs = argumentsList.length;
-  if (numberOfArgs === 0) {
-    /** https://tc39.es/ecma262/#sec-array-constructor-array */
-    Assert(numberOfArgs === 0);
-    if (NewTarget instanceof UndefinedValue) {
-      NewTarget = surroundingAgent.activeFunctionObject as FunctionObject;
-    }
-    const proto = X(GetPrototypeFromConstructor(NewTarget, '%Array.prototype%'));
-    return ArrayCreate(0, proto);
-  } else if (numberOfArgs === 1) {
-    /** https://tc39.es/ecma262/#sec-array-len */
-    const [len] = argumentsList;
-    Assert(numberOfArgs === 1);
-    if (NewTarget instanceof UndefinedValue) {
-      NewTarget = surroundingAgent.activeFunctionObject as FunctionObject;
-    }
-    const proto = X(GetPrototypeFromConstructor(NewTarget, '%Array.prototype%'));
+function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
+  const newTarget = NewTarget instanceof UndefinedValue ? surroundingAgent.activeFunctionObject as FunctionObject : NewTarget;
+  const proto = Q(yield* GetPrototypeFromConstructor(newTarget, '%Array.prototype%'));
+  const numberOfArgs = values.length;
+  if (numberOfArgs === 0) return X(ArrayCreate(0, proto));
+  else if (numberOfArgs === 1) {
+    const len = values[0]!;
     const array = X(ArrayCreate(0, proto));
     let intLen;
     if (!(len instanceof NumberValue)) {
-      const defineStatus = X(CreateDataProperty(array, Value('0'), len!));
-      Assert(defineStatus === Value.true);
+      X(CreateDataPropertyOrThrow(array, Value('0'), len));
       intLen = F(1);
     } else {
       intLen = X(ToUint32(len));
-      if (R(intLen) !== R(len)) {
+      if (SameValueZero(intLen, len) === Value.false) {
         return Throw.RangeError('$1 is not a valid array length', len);
       }
     }
-    yield* Set(array, Value('length'), intLen, Value.true);
-    return array;
-  } else if (numberOfArgs >= 2) {
-    /** https://tc39.es/ecma262/#sec-array-items */
-    const items = argumentsList;
-    Assert(numberOfArgs >= 2);
-    if (NewTarget instanceof UndefinedValue) {
-      NewTarget = surroundingAgent.activeFunctionObject as FunctionObject;
-    }
-    const proto = Q(yield* GetPrototypeFromConstructor(NewTarget, '%Array.prototype%'));
-    const array = X(ArrayCreate(0, proto));
-    let k = 0;
-    while (k < numberOfArgs) {
-      const Pk = X(ToString(F(k)));
-      const itemK = items[k]!;
-      const defineStatus = X(CreateDataProperty(array, Pk, itemK));
-      Assert(defineStatus === Value.true);
-      k += 1;
-    }
-    Assert(R(X(Get(array, Value('length'))) as NumberValue) === numberOfArgs);
+    X(yield* Set(array, Value('length'), intLen, Value.true));
     return array;
   }
 
-  throw OutOfRange.nonExhaustive(numberOfArgs);
+  const array = Q(ArrayCreate(numberOfArgs, proto));
+  let k = 0;
+  while (k < numberOfArgs) {
+    const Pk = X(ToString(F(k)));
+    const itemK = values[k]!;
+    X(CreateDataPropertyOrThrow(array, Pk, itemK));
+    k += 1;
+  }
+  Assert(R(X(Get(array, Value('length'))) as NumberValue) === numberOfArgs);
+  return array;
 }
 
 /** https://tc39.es/ecma262/#sec-array.from */

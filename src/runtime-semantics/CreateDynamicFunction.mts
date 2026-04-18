@@ -9,8 +9,9 @@ import {
   Descriptor, UndefinedValue, Value,
   type Arguments,
 } from '../value.mts';
-import { __ts_cast__, OutOfRange } from '../utils/language.mts';
+import { __ts_cast__, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { FunctionKind } from '../parser/FunctionParser.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -26,41 +27,46 @@ import {
 } from '#self';
 
 export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value): ValueEvaluator {
-  // 6. If newTarget is undefined, set newTarget to constructor.
   if (newTarget instanceof UndefinedValue) {
     newTarget = constructor;
   }
-  // 7. If kind is normal, then
   let fallbackProto: keyof Intrinsics;
   let prefix;
+  let exprSym;
+  let bodySym;
+  let parameterSym;
+  const bodySymParser = (parser: Parser, await_: boolean, yield_: boolean) => parser.scope.with({
+    await: await_, yield: yield_, lexical: true, variable: true,
+  }, () => parser.parseFunctionBody(await_, yield_, false));
+  const parameterSymParser = (parser: Parser, await_: boolean, yield_: boolean) => parser.scope.with({
+    await: await_, yield: yield_, lexical: true, variable: true, variableFunctions: true, newTarget: true, return: true, label: 'boundary',
+  }, () => ({ result: parser.parseFormalParameters() }));
   if (kind === 'normal') {
     prefix = 'function';
-    // a. Let goal be the grammar symbol FunctionBody[~Yield, ~Await].
-    // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, ~Await].
-    // c. Let fallbackProto be "%Function.prototype%".
+    exprSym = (parser: Parser) => parser.parseFunctionExpression(FunctionKind.NORMAL);
+    bodySym = (parser: Parser) => bodySymParser(parser, false, false);
+    parameterSym = (parser: Parser) => parameterSymParser(parser, false, false);
     fallbackProto = '%Function.prototype%';
-  } else if (kind === 'generator') { // 8. Else if kind is generator, then
+  } else if (kind === 'generator') {
     prefix = 'function*';
-    // a. Let goal be the grammar symbol GeneratorBody.
-    // b. Let parameterGoal be the grammar symbol FormalParameters[+Yield, ~Await].
-    // c. Let fallbackProto be "%GeneratorFunction.prototype%".
+    exprSym = (parser: Parser) => parser.parseFunctionExpression(FunctionKind.NORMAL);
+    bodySym = (parser: Parser) => bodySymParser(parser, false, true);
+    parameterSym = (parser: Parser) => parameterSymParser(parser, false, true);
     fallbackProto = '%GeneratorFunction.prototype%';
-  } else if (kind === 'async') { // 9. Else if kind is async, then
+  } else if (kind === 'async') {
     prefix = 'async function';
-    // a. Let goal be the grammar symbol AsyncBody.
-    // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, +Await].
-    // c. Let fallbackProto be "%AsyncFunction.prototype%".
+    exprSym = (parser: Parser) => parser.parseFunctionExpression(FunctionKind.ASYNC);
+    bodySym = (parser: Parser) => bodySymParser(parser, true, false);
+    parameterSym = (parser: Parser) => parameterSymParser(parser, true, false);
     fallbackProto = '%AsyncFunction.prototype%';
-  } else { // 10. Else,
-    // a. Assert: kind is asyncGenerator.
+  } else {
     Assert(kind === 'asyncGenerator');
     prefix = 'async function*';
-    // b. Let goal be the grammar symbol AsyncGeneratorBody.
-    // c. Let parameterGoal be the grammar symbol FormalParameters[+Yield, +Await].
-    // d. Let fallbackProto be "%AsyncGeneratorFunction.prototype%".
+    exprSym = (parser: Parser) => parser.parseFunctionExpression(FunctionKind.ASYNC);
+    bodySym = (parser: Parser) => bodySymParser(parser, true, true);
+    parameterSym = (parser: Parser) => parameterSymParser(parser, true, true);
     fallbackProto = '%AsyncGeneratorFunction.prototype%';
   }
-  // 11. Let argCount be the number of elements in args.
   const argCount = parameterArgs.length;
   const parameterStrings: string[] = [];
   for (const arg of parameterArgs) {
@@ -69,111 +75,87 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   const bodyString = Q(yield* ToString(bodyArg)).stringValue();
   const currentRealm = surroundingAgent.currentRealmRecord;
   Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, false));
-  // 12. Let P be the empty String.
   let P = '';
   if (argCount > 0) {
     P = parameterStrings[0];
-    // d. Let k be 1.
     let k = 1;
-    // e. Repeat, while k < argCount - 1
     while (k < argCount) {
       const nextArgString = parameterStrings[k];
-      // iii. Set P to the string-concatenation of the previous value of P, "," (a comma), and nextArgString.
       P = `${P},${nextArgString}`;
-      // iv. Set k to k + 1.
       k += 1;
     }
   }
   const bodyParseString = `\u{000A}${bodyString}\u{000A}`;
-  // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
   const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyParseString}}`;
-  // 19. Let sourceText be ! UTF16DecodeString(sourceString).
   const sourceText = sourceString;
-  // 20. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
-  //   a. Let parameters be the result of parsing ! UTF16DecodeString(P), using parameterGoal as the goal symbol. Throw a SyntaxError exception if the parse fails.
-  //   b. Let body be the result of parsing ! UTF16DecodeString(bodyString), using goal as the goal symbol. Throw a SyntaxError exception if the parse fails.
-  //   c. Let strict be ContainsUseStrict of body.
-  //   d. If any static semantics errors are detected for parameters or body, throw a SyntaxError exception. If strict is true, the Early Error rules for UniqueFormalParameters:FormalParameters are applied.
-  //   e. If strict is true and IsSimpleParameterList of parameters is false, throw a SyntaxError exception.
-  //   f. If any element of the BoundNames of parameters also occurs in the LexicallyDeclaredNames of body, throw a SyntaxError exception.
-  //   g. If body Contains SuperCall is true, throw a SyntaxError exception.
-  //   h. If parameters Contains SuperCall is true, throw a SyntaxError exception.
-  //   i. If body Contains SuperProperty is true, throw a SyntaxError exception.
-  //   j. If parameters Contains SuperProperty is true, throw a SyntaxError exception.
-  //   k. If kind is generator or asyncGenerator, then
-  //     i. If parameters Contains YieldExpression is true, throw a SyntaxError exception.
-  //   l. If kind is async or asyncGenerator, then
-  //     i. If parameters Contains AwaitExpression is true, throw a SyntaxError exception.
-  //   m. If strict is true, then
-  //     i. If BoundNames of parameters contains any duplicate elements, throw a SyntaxError exception.
-  let parameters;
-  let body;
-  let scriptId;
+  const parameters = wrappedParse({
+    source: `${' '.repeat(prefix.length + 10)}(${P}\n)`,
+    decoratingSource: sourceText,
+  }, (parser) => {
+    const result = parameterSym(parser);
+    parser.expect(Token.EOS);
+    return result;
+  });
+  const body = wrappedParse({
+    source: `${' '.repeat(prefix.length + P.length + 12)}\u{000A} {${bodyParseString}}`,
+    decoratingSource: sourceText,
+  }, (parser) => {
+    const result = bodySym(parser);
+    parser.expect(Token.EOS);
+    return result;
+  });
+  // NOTE: The parameters and body are parsed separately to ensure that each is valid alone. For example, new Function("/*", "*/ ) {") does not evaluate to a function.
+  // NOTE: If this step is reached, sourceText must have the syntax of exprSym (although the reverse implication does not hold). The purpose of the next two steps is to enforce any Early Error rules which apply to exprSym directly.
+  let scriptId: string | undefined;
+  let parametersNode: ParseNode.FormalParameters;
+  let bodyNode;
   {
-    const f = wrappedParse({ source: sourceString }, (p) => {
-      const r = p.parseExpression();
+    const expr = wrappedParse({ source: sourceString }, (p) => {
+      const r = exprSym(p);
       p.expect(Token.EOS);
       return r;
     });
-    scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceString, f);
-    if (Array.isArray(f)) {
-      Parser.decorateSyntaxErrorWithScriptId(f[0], scriptId);
-      return ThrowCompletion(f[0]);
+    scriptId = surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, sourceString, expr);
+    if (isArray(parameters)) {
+      Parser.decorateSyntaxErrorWithScriptId(parameters[0], scriptId);
+      return ThrowCompletion(parameters[0]);
     }
-    __ts_cast__<ParseNode.FunctionExpression | ParseNode.GeneratorExpression | ParseNode.AsyncFunctionExpression | ParseNode.AsyncGeneratorExpression>(f);
-    parameters = f.FormalParameters;
-    switch (kind) {
-      case 'normal':
-        body = (f as ParseNode.FunctionExpression).FunctionBody;
-        break;
-      case 'generator':
-        body = (f as ParseNode.GeneratorExpression).GeneratorBody;
-        break;
-      case 'async':
-        body = (f as ParseNode.AsyncFunctionExpression).AsyncBody;
-        break;
-      case 'asyncGenerator':
-        body = (f as ParseNode.AsyncGeneratorExpression).AsyncGeneratorBody;
-        break;
-      default:
-        throw OutOfRange.exhaustive(kind);
+    if (isArray(body)) {
+      Parser.decorateSyntaxErrorWithScriptId(body[0], scriptId);
+      return ThrowCompletion(body[0]);
     }
+    if (Array.isArray(expr)) {
+      Parser.decorateSyntaxErrorWithScriptId(expr[0], scriptId);
+      return ThrowCompletion(expr[0]);
+    }
+    parametersNode = parameters.result;
+    bodyNode = body;
   }
-  // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
   const proto = Q(yield* GetPrototypeFromConstructor(newTarget, fallbackProto));
-  // 23. Let scope be realmF.[[GlobalEnv]].
   const env = currentRealm.GlobalEnv;
   const privateEnv = Value.null;
-  // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, privateEnv).
-  const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', env, privateEnv));
+  const F = OrdinaryFunctionCreate(proto, sourceText, parametersNode, bodyNode, 'non-lexical-this', env, privateEnv);
   F.scriptId = scriptId;
-  // 25. Perform SetFunctionName(F, "anonymous").
   SetFunctionName(F, Value('anonymous'));
-  // 26. If kind is generator, then
   if (kind === 'generator') {
-    // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
-    // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
     })));
-  } else if (kind === 'asyncGenerator') { // 27. Else if kind is asyncGenerator, then
-    // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+  } else if (kind === 'asyncGenerator') {
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
-    // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
     })));
-  } else if (kind === 'normal') { // 28. Else if kind is normal, then perform MakeConstructor(F).
+  } else if (kind === 'normal') {
     MakeConstructor(F);
   }
   // 29. NOTE: Functions whose kind is async are not constructible and do not have a [[Construct]] internal method or a "prototype" property.
-  // 20. Return F.
   return F;
 }

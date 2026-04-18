@@ -30,14 +30,14 @@ import {
   type ExoticObject,
   type FunctionObject,
   isBuiltinFunctionObject,
-  type BuiltinFunctionObject,
   hasSourceTextInternalSlot,
   CopyNameAndLength,
   Realm,
   Throw,
+  type BaseFunctionObject,
 } from '#self';
 
-export interface BoundFunctionObject extends ExoticObject, BuiltinFunctionObject {
+export interface BoundFunctionObject extends ExoticObject, BaseFunctionObject {
   readonly BoundTargetFunction: FunctionObject;
   readonly BoundThis: Value;
   readonly BoundArguments: Arguments;

@@ -13,6 +13,7 @@ import {
   isMember,
   isKeywordRaw,
   isAutomaticSemicolon,
+  isKeyword,
 } from './tokens.mts';
 import { isLineTerminator, type TokenData } from './Lexer.mts';
 import { FunctionParser, FunctionKind } from './FunctionParser.mts';
@@ -57,6 +58,16 @@ export abstract class ExpressionParser extends FunctionParser {
     node.location.end.line = this.currentToken.line;
     node.location.end.column = this.currentToken.column;
     return node;
+  }
+
+  private isParsingArrowParameterCandidate() {
+    if (this.scope.inParameters()) {
+      return true;
+    }
+    if (this.scope.inArrowParameterCandidate() && !this.scope.inArrowBody()) {
+      return true;
+    }
+    return this.scope.assignmentInfoStack.some((info) => info.type === 'arrow');
   }
 
   // Expression :
@@ -181,6 +192,10 @@ export abstract class ExpressionParser extends FunctionParser {
         this.validateAssignmentTarget(node.IdentifierReference);
         return;
       case 'MemberExpression':
+        if (node.MemberExpression.type === 'ObjectLiteral'
+            && node.MemberExpression.PropertyDefinitionList.some((p) => p.type === 'CoverInitializedName')) {
+          break;
+        }
         return;
       case 'SuperProperty':
         return;
@@ -266,7 +281,9 @@ export abstract class ExpressionParser extends FunctionParser {
         }
       }
     }
-    this.scope.arrowInfo?.yieldExpressions.push(node as ParseNode.YieldExpression);
+    if (this.isParsingArrowParameterCandidate()) {
+      this.scope.arrowInfo?.yieldExpressions.push(node as ParseNode.YieldExpression);
+    }
     return this.finishNode(node, 'YieldExpression');
   }
 
@@ -522,7 +539,9 @@ export abstract class ExpressionParser extends FunctionParser {
     const node = this.startNode<ParseNode.AwaitExpression>();
     this.expect(Token.AWAIT);
     node.UnaryExpression = this.parseUnaryExpression();
-    this.scope.arrowInfo?.awaitExpressions.push(node as ParseNode.AwaitExpression);
+    if (this.isParsingArrowParameterCandidate()) {
+      this.scope.arrowInfo?.awaitExpressions.push(node as ParseNode.AwaitExpression);
+    }
     if (!this.scope.hasReturn()) {
       this.state.hasTopLevelAwait = true;
     }
@@ -663,11 +682,13 @@ export abstract class ExpressionParser extends FunctionParser {
             && !this.peek().hadLineTerminatorBefore;
           if (couldBeArrow) {
             this.scope.pushArrowInfo(true);
+            this.scope.enterArrowParameterCandidate();
           }
           const { Arguments, trailingComma } = this.parseArguments();
           node.CallExpression = result;
           node.Arguments = Arguments;
           if (couldBeArrow) {
+            this.scope.exitArrowParameterCandidate();
             node.arrowInfo = this.scope.popArrowInfo();
             node.arrowInfo.hasTrailingComma = trailingComma;
           }
@@ -675,6 +696,9 @@ export abstract class ExpressionParser extends FunctionParser {
           break;
         }
         case Token.OPTIONAL: {
+          if (result.type === 'NewExpression' && result.Arguments === null) {
+            this.raise(Throw.SyntaxError('Unexpected token'));
+          }
           const node = this.startNode<ParseNode.OptionalExpression>(result);
           node.MemberExpression = result;
           node.OptionalChain = this.parseOptionalChain();
@@ -754,6 +778,9 @@ export abstract class ExpressionParser extends FunctionParser {
       return this.finishNode(node as ParseNode.NewTarget, 'NewTarget');
     }
     node.MemberExpression = this.parseLeftHandSideExpression(false);
+    if (node.MemberExpression.type === 'OptionalExpression') {
+      this.raise(Throw.SyntaxError('Unexpected token'));
+    }
     if (this.test(Token.LPAREN)) {
       node.Arguments = this.parseArguments().Arguments;
     } else {
@@ -1342,6 +1369,22 @@ export abstract class ExpressionParser extends FunctionParser {
     return this.parseIdentifierName();
   }
 
+  private tokenIsPropertyName(token: Token): boolean {
+    switch (token) {
+      case Token.IDENTIFIER:
+      case Token.YIELD:
+      case Token.AWAIT:
+      case Token.STRING:
+      case Token.NUMBER:
+      case Token.BIGINT:
+      case Token.LBRACK:
+      case Token.PRIVATE_IDENTIFIER:
+        return true;
+      default:
+        return isKeyword(token);
+    }
+  }
+
   // ClassElementName :
   //   PropertyName
   //   PrivateIdentifier
@@ -1386,50 +1429,67 @@ export abstract class ExpressionParser extends FunctionParser {
       return this.finishNode(node, 'PropertyDefinition');
     }
 
-    let firstFirstName;
-    let isAccessor = false;
+    let staticOrAccessorButNotKeyword;
+    let isAccessorField = false;
     if (type === 'class element') {
       node.Decorators = this.parseDecorators();
-      const parseAccessorKeyword = surroundingAgent.feature('decorators') ? () => this.try(() => {
-        this.expect('accessor');
-        const next = this.peek();
-        if ((next.type === Token.IDENTIFIER || next.type === Token.STRING || next.type === Token.LBRACK || next.type === Token.PRIVATE_IDENTIFIER || next.type === Token.NUMBER || next.type === Token.BIGINT) && !next.hadLineTerminatorBefore) {
-          isAccessor = true;
-          return true;
+      const staticId = this.test('static') ? this.parseIdentifierName() : null;
+      let isStaticField = true;
+      if (staticId && (this.test(Token.ASSIGN)
+        || this.test(Token.SEMICOLON)
+        || this.peek().hadLineTerminatorBefore
+        || isAutomaticSemicolon(this.peek().type))) {
+        isStaticField = false;
+      }
+      node.static = !!staticId && isStaticField;
+
+      if (staticId) {
+        if (isStaticField) {
+          node.static = true;
+        } else {
+          node.static = false;
+          staticOrAccessorButNotKeyword = staticId;
+          this.markNodeStart(node);
         }
-        return false;
-      }) : () => false;
-      if (this.test('static') && (
-        this.testAhead(Token.ASSIGN)
-        || this.testAhead(Token.SEMICOLON)
-        || this.peekAhead().hadLineTerminatorBefore
-        || isAutomaticSemicolon(this.peekAhead().type)
-      )) {
-        node.static = false;
-        node.accessor = parseAccessorKeyword();
-        firstFirstName = this.parseIdentifierName();
-      } else {
-        node.static = this.eat('static');
-        node.accessor = parseAccessorKeyword();
-        this.markNodeStart(node);
+      } else node.static = false;
+
+      if (!staticOrAccessorButNotKeyword) {
+        const accessor = surroundingAgent.feature('decorators') && this.test('accessor') ? this.parseIdentifierName() : null;
+        const next = this.peek();
+        if (accessor && !next.hadLineTerminatorBefore && this.tokenIsPropertyName(next.type)) {
+          isAccessorField = true;
+        } else isAccessorField = false;
+
+        if (accessor) {
+          if (isAccessorField) {
+            node.accessor = true;
+          } else {
+            node.accessor = false;
+            staticOrAccessorButNotKeyword = accessor;
+            this.markNodeStart(node);
+          }
+        } else node.accessor = false;
       }
     }
 
+    if (!staticOrAccessorButNotKeyword) {
+      this.markNodeStart(node);
+    }
     let isGenerator = this.eat(Token.MUL);
     let isGetter = false;
     let isSetter = false;
     let isAsync = false;
-    if (!isGenerator && !isAccessor) {
-      if (this.test('get')) {
+    if (!isGenerator && !isAccessorField) {
+      if (this.test('get') && this.tokenIsPropertyName(this.peekAhead().type)) {
         isGetter = true;
-      } else if (this.test('set')) {
+      } else if (this.test('set') && this.tokenIsPropertyName(this.peekAhead().type)) {
         isSetter = true;
       } else if (this.test('async') && !this.peekAhead().hadLineTerminatorBefore) {
         isAsync = true;
       }
     }
 
-    const firstName = firstFirstName || (type === 'property'
+    const firstName = staticOrAccessorButNotKeyword || (type === 'property'
       ? this.parsePropertyName()
       : this.parseClassElementName());
 
@@ -1437,7 +1497,17 @@ export abstract class ExpressionParser extends FunctionParser {
       isGenerator = this.eat(Token.MUL);
     }
 
-    const isSpecialMethod = isGenerator || ((isSetter || isGetter || isAsync) && !this.test(Token.LPAREN));
+    const isAsyncShorthandProperty = type === 'property'
+      && isAsync
+      && firstName.type === 'IdentifierName'
+      && firstName.name === 'async'
+      && !this.test(Token.LPAREN)
+      && (this.test(Token.COMMA)
+        || this.test(Token.RBRACE)
+        || this.test(Token.COLON)
+        || this.test(Token.ASSIGN));
+    const isSpecialMethod = isGenerator
+      || ((isSetter || isGetter || isAsync) && !this.test(Token.LPAREN) && !isAsyncShorthandProperty);
 
     if (!isGenerator) {
       if (type === 'property' && this.eat(Token.COLON)) {
@@ -1452,9 +1522,9 @@ export abstract class ExpressionParser extends FunctionParser {
         || this.peek().hadLineTerminatorBefore
         || isAutomaticSemicolon(this.peek().type)
       )) {
-        node.accessor = isAccessor;
+        node.accessor = isAccessorField;
         node.ClassElementName = firstName;
-        node.Initializer = this.scope.with({ superProperty: true }, () => this.parseInitializerOpt());
+        node.Initializer = this.scope.with({ superProperty: true, await: false, yield: false }, () => this.parseInitializerOpt());
         const argumentNode = node.Initializer && ContainsArguments(node.Initializer);
         if (argumentNode) {
           this.addEarlyError(Throw.SyntaxError('Invalid use of arguments'), argumentNode);
@@ -1500,6 +1570,7 @@ export abstract class ExpressionParser extends FunctionParser {
       lexical: true,
       variable: true,
       superProperty: true,
+      newTarget: true,
       await: isAsync,
       yield: isGenerator,
       classStaticBlock: false,

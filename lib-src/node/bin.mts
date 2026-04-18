@@ -31,6 +31,8 @@ import {
   PerformPromiseThen,
   CreateBuiltinFunction,
   runJobQueue,
+  NewPromiseCapability,
+  unwrapCompletion,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -190,13 +192,15 @@ function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: stri
         const module = Q(realm.compileModule(source, { specifier: filename }));
         realm.HostDefined.resolverCache?.set(filename, 'js', module);
 
-        const loadRequestedModules = module.LoadRequestedModules();
-        PerformPromiseThen(loadRequestedModules, CreateBuiltinFunction.from(function* runModule() {
+        const noop = CreateBuiltinFunction.from(() => { });
+
+        const loadPromise = module.LoadRequestedModules();
+        const runPromise = PerformPromiseThen(loadPromise, CreateBuiltinFunction.from(function* runModule() {
           const link = module.Link();
           if (link instanceof ThrowCompletion) return link;
-          PerformPromiseThen(yield* module.Evaluate(), CreateBuiltinFunction.from(() => { }), onErrorCallback);
-          return Value.undefined;
-        }), onErrorCallback);
+          return yield* module.Evaluate();
+        }), onErrorCallback, unwrapCompletion(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))));
+        PerformPromiseThen(runPromise, noop, onErrorCallback);
         runJobQueue();
       } else {
         Q(realm.evaluateScript(source, { specifier: filename }));

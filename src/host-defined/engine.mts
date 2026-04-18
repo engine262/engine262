@@ -116,6 +116,12 @@ export interface HostHooks {
   HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator | PlainCompletion<void>;
   HostSystemUTCEpochNanoseconds?(global: ObjectValue): EpochNanoseconds;
 }
+
+export interface DebuggerPauseReason {
+  readonly reason: 'debugCommand' | 'other';
+  readonly hitBreakpoints?: readonly string[];
+}
+
 export interface AgentHostDefined {
   hostHooks?: HostHooks;
   hasSourceTextAvailable?(f: FunctionObject): void;
@@ -124,7 +130,7 @@ export interface AgentHostDefined {
   features?: readonly string[];
   supportedImportAttributes?: readonly string[];
   loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
-  onDebugger?(): void;
+  onDebugger?(reason?: DebuggerPauseReason): void;
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord, scriptId: string): void;
   onNodeEvaluation?(node: ParseNode, realm: Realm): void;

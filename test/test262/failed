@@ -6,109 +6,23 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
-# Bring by https://github.com/tc39/ecma262/pull/3775
+# Tracked issues
+; https://github.com/tc39/ecma262/pull/3775#issuecomment-4228512815
 language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js
 language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js
 language/import/import-defer/deferred-namespace-object/reexport-deferred-ns-evaluation.js
 language/import/import-defer/deferred-namespace-object/identity.js
-
-# Engine crash
-staging/sm/class/superPropDestructuring.js
-staging/sm/destructuring/order-super.js
-staging/sm/expressions/destructuring-pattern-parenthesized.js
-staging/sm/Proxy/revoked-get-function-realm-typeerror.js
-
-# TODO: need fix on our side, or to be investigated
-## Looks like a bug on our side
-staging/sm/Date/toISOString-01.js
-
-## Not sure if it is a bug or implementation-defined
-staging/sm/generators/runtime.js
-
-## Unknown Function#caller issue
-staging/sm/extensions/arguments-property-access-in-function.js
-staging/sm/extensions/censor-strict-caller.js
-staging/sm/extensions/function-caller-skips-eval-frames.js
-staging/sm/extensions/function-properties.js
-staging/sm/Function/function-caller-restrictions.js
-staging/sm/regress/regress-577648-1.js
-staging/sm/regress/regress-577648-2.js
-staging/sm/regress/regress-584355.js
-staging/sm/regress/regress-586482-1.js
-staging/sm/regress/regress-586482-2.js
-staging/sm/regress/regress-586482-3.js
-staging/sm/regress/regress-586482-4.js
-staging/sm/regress/regress-586482-5.js
-
-## Unknown Unicode issue
-built-ins/String/prototype/localeCompare/15.5.4.9_CE.js
-staging/sm/String/unicode-braced.js
-
-## Unknown parser issue
-language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from-and-import-star-as-and-export.js
-language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from.js
-language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-import-star-as-and-export.js
-staging/sm/async-functions/await-in-arrow-parameters.js
-staging/sm/async-functions/await-in-parameters-of-async-func.js
-staging/sm/async-functions/property.js
-staging/sm/AsyncGenerators/for-await-bad-syntax.js
-staging/sm/class/newTargetDefaults.js
-staging/sm/class/superCallBadNewTargetPrototype.js
-staging/sm/destructuring/bug1396261.js
-staging/sm/expressions/optional-chain.js
-staging/sm/fields/await-identifier-module-3.js
-staging/sm/fields/await-identifier-script.js
-staging/sm/Function/function-name-for.js
-staging/sm/Function/invalid-parameter-list.js
-staging/sm/generators/syntax.js
-staging/sm/lexical-environment/for-loop.js
-staging/sm/misc/future-reserved-words.js
-staging/sm/regress/regress-554955-5.js
-staging/sm/regress/regress-602621.js
-staging/sm/statements/for-in-with-declaration.js
-staging/sm/strict/strict-function-statements.js
-staging/sm/syntax/declaration-forbidden-in-label.js
-
-## Unsupported feature: SharedArrayBuffer, Atomics
-staging/sm/Atomics/cross-compartment.js
-
-## Unsupported feature: Atomics
-staging/sm/Atomics/detached-buffers.js
-
-## Unsupported feature: Float16Array
-staging/sm/TypedArray/toString.js
-staging/sm/TypedArray/sort-negative-nan.js
-
-## Recursion optimize
-staging/sm/extensions/recursion.js
-
-
-# TODO: need fix on test262
-
-## Annex B, but it shouldn't. (String#substr => String#slice)
-built-ins/Temporal/Instant/prototype/toString/timezone-string-datetime.js
-built-ins/Temporal/Instant/prototype/toString/timezone-string-leap-second.js
-built-ins/Temporal/Instant/prototype/toString/timezone-string-multiple-offsets.js
-built-ins/Temporal/Instant/prototype/toString/timezone-string.js
-
-## TODO: https://github.com/tc39/ecma262/issues/3592
+; https://github.com/tc39/ecma262/issues/3592
 built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
 
 
-# Non-strict mode, will not support for now
-# Annex B
-## RegExp#compile
-staging/sm/RegExp/compile-lastIndex.js
-staging/sm/RegExp/constructor-ordering.js
-staging/sm/RegExp/flags-param-handling.js
-staging/sm/RegExp/match-local-tolength-recompilation.js
-staging/sm/RegExp/prototype.js
-staging/sm/RegExp/replace-compile-elembase.js
-staging/sm/RegExp/replace-compile.js
-staging/sm/RegExp/replace-local-tolength-recompilation.js
-staging/sm/String/matchAll.js
-## RegExp.lastMatch
-staging/sm/statements/regress-642975.js
+# To be investigated
+## Infinite recursion
+; maybe https://github.com/tc39/proposal-oom-fails-fast
+staging/sm/extensions/recursion.js
+
+
+# Annex B syntax
 ## SourceCharacterIdentityEscape
 language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
@@ -126,9 +40,16 @@ staging/sm/lexical-environment/block-scoped-functions-annex-b-same-name.js
 staging/sm/lexical-environment/block-scoped-functions-annex-b-with.js
 staging/sm/lexical-environment/block-scoped-functions-annex-b.js
 staging/sm/lexical-environment/block-scoped-functions-deprecated-redecl.js
-## IsHTMLDDA
-; staging/sm/expressions/nullish-coalescing.js
-staging/sm/generators/yield-star-throw-htmldda.js
+staging/sm/regress/regress-554955-5.js
+staging/sm/regress/regress-602621.js
+staging/sm/strict/strict-function-statements.js
+## Labeled Function
+staging/sm/syntax/declaration-forbidden-in-label.js
+## Initializer in ForIn/OfStatement
+staging/sm/Function/function-name-for.js
+
+
+# Annex B built-ins
 ## Date#setYear
 staging/sm/Date/setTime-argument-shortcircuiting.js
 ## String#blink
@@ -137,10 +58,34 @@ staging/sm/Function/function-toString-builtin.js
 ## String#substr
 staging/sm/misc/explicit-undefined-optional-argument.js
 staging/sm/syntax/linefeed-at-eof-in-unterminated-string-or-template.js
-## Annex B eval
+## eval
 staging/sm/lexical-environment/var-in-catch-body-annex-b-eval.js
+## RegExp#compile
+staging/sm/RegExp/compile-lastIndex.js
+staging/sm/RegExp/constructor-ordering.js
+staging/sm/RegExp/flags-param-handling.js
+staging/sm/RegExp/match-local-tolength-recompilation.js
+staging/sm/RegExp/prototype.js
+staging/sm/RegExp/replace-compile-elembase.js
+staging/sm/RegExp/replace-compile.js
+staging/sm/RegExp/replace-local-tolength-recompilation.js
+staging/sm/String/matchAll.js
+## RegExp.lastMatch
+staging/sm/statements/regress-642975.js
 
-
-# Intl
-## Unsupported timezone
-built-ins/Temporal/Duration/prototype/round/rounding-increment-relativeto.js
+# Non-standard extension
+## (function instance).caller and (function instance).arguments
+; behaviour is described in https://tc39.es/ecma262/#sec-forbidden-extensions
+staging/sm/extensions/arguments-property-access-in-function.js
+staging/sm/extensions/censor-strict-caller.js
+staging/sm/extensions/function-caller-skips-eval-frames.js
+staging/sm/extensions/function-properties.js
+staging/sm/Function/function-caller-restrictions.js
+staging/sm/regress/regress-577648-1.js
+staging/sm/regress/regress-577648-2.js
+staging/sm/regress/regress-584355.js
+staging/sm/regress/regress-586482-1.js
+staging/sm/regress/regress-586482-2.js
+staging/sm/regress/regress-586482-3.js
+staging/sm/regress/regress-586482-4.js
+staging/sm/regress/regress-586482-5.js

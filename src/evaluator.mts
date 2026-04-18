@@ -103,8 +103,13 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     surroundingAgent.hostDefinedOptions.onNodeEvaluation(node, surroundingAgent.currentRealmRecord);
   }
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
-    const resumption = yield { type: 'potential-debugger' };
-    Assert(resumption.type === 'debugger-resume');
+    if (surroundingAgent.testBreakpoint(node)) {
+      const resumption = yield { type: 'debugger' };
+      Assert(resumption.type === 'debugger-resume');
+    } else {
+      const resumption = yield { type: 'potential-debugger' };
+      Assert(resumption.type === 'debugger-resume');
+    }
   }
 
   switch (node.type) {
@@ -306,18 +311,25 @@ export interface BreakpointLocation {
   columnNumber?: number;
 }
 
-export function getBreakpointCandidates(from: BreakpointLocation, to?: BreakpointLocation, _restrictToFunction = false): BreakpointLocation[] {
+export function* getBreakpointCandidateNodes(from: BreakpointLocation, to?: BreakpointLocation, _restrictToFunction = false): Generator<ParseNode> {
   const scriptId = from.scriptId;
   const script = surroundingAgent.parsedSources.get(scriptId);
   if (!script || (to && scriptId !== to.scriptId)) {
-    return [];
+    return;
   }
   const node = script.ECMAScriptCode;
   if (!('type' in node)) {
-    return [];
+    return;
   }
-  const nodes = [...yieldAllNodesIntersectWithRange(node, from, to)];
-  return nodes.map((node): BreakpointLocation => ({ scriptId, lineNumber: node.location.start.line - 1, columnNumber: node.location.start.column - 1 }));
+  yield* yieldAllNodesIntersectWithRange(node, from, to);
+}
+
+export function parseNodeToBreakpointLocation(scriptId: string, node: ParseNode): BreakpointLocation {
+  return {
+    scriptId,
+    lineNumber: node.location.start.line - 1,
+    columnNumber: node.location.start.column - 1,
+  };
 }
 
 function* yieldAllNodesIntersectWithRange(node: ParseNode, from: BreakpointLocation, to: BreakpointLocation | undefined): Generator<ParseNode> {

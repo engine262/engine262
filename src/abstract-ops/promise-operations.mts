@@ -363,7 +363,10 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
 }
 
 /** https://tc39.es/ecma262/#sec-performpromisethen */
-export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue) {
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability: PromiseCapabilityRecord): PromiseObject
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: UndefinedValue): UndefinedValue
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue {
   // 1. Assert: IsPromise(promise) is true.
   Assert(IsPromise(promise) === Value.true);
   // 2. If resultCapability is not present, then

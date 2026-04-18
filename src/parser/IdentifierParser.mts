@@ -43,19 +43,21 @@ export abstract class IdentifierParser extends BaseParser {
         break;
       case Token.AWAIT:
         node.name = 'await';
-        for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
-          const arrowInfo = this.scope.arrowInfoStack[i];
-          if (!arrowInfo) {
-            break;
-          }
-          if (arrowInfo.isAsync) {
-            arrowInfo.awaitIdentifiers.push(node as ParseNode.BindingIdentifier);
-            break;
-          }
-        }
         break;
       default:
         this.unexpected(token);
+    }
+    if (node.name === 'await') {
+      for (let i = this.scope.arrowInfoStack.length - 1; i >= 0; i -= 1) {
+        const arrowInfo = this.scope.arrowInfoStack[i];
+        if (!arrowInfo) {
+          break;
+        }
+        if (arrowInfo.isAsync) {
+          arrowInfo.awaitIdentifiers.push(node as ParseNode.BindingIdentifier);
+          break;
+        }
+      }
     }
     if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
       this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', node.name), token);
@@ -89,20 +91,22 @@ export abstract class IdentifierParser extends BaseParser {
         if (this.scope.hasAwait()) {
           this.unexpected(token);
         }
-        for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
-          const arrowInfo = this.scope.arrowInfoStack[i];
-          if (!arrowInfo) {
-            break;
-          }
-          if (arrowInfo.isAsync) {
-            arrowInfo.awaitIdentifiers.push(node as ParseNode.IdentifierReference);
-            break;
-          }
-        }
         node.name = 'await';
         break;
       default:
         this.unexpected(token);
+    }
+    if (node.name === 'await') {
+      for (let i = this.scope.arrowInfoStack.length - 1; i >= 0; i -= 1) {
+        const arrowInfo = this.scope.arrowInfoStack[i];
+        if (!arrowInfo) {
+          break;
+        }
+        if (arrowInfo.isAsync) {
+          arrowInfo.awaitIdentifiers.push(node as ParseNode.IdentifierReference);
+          break;
+        }
+      }
     }
     this.validateIdentifierReference(node.name, token);
     return this.finishNode(node, 'IdentifierReference');

@@ -556,10 +556,9 @@ export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionC
   const sec = Number(SecFromTime(_t));
   const ms = Number(msFromTime(_t));
 
-  // TODO: figure out if there can be invalid years.
-  let YYYY = String(year);
+  let YYYY = String(year).padStart(4, '0');
   if (year < 0 || year > 9999) {
-    YYYY = year < 0 ? `${String(year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
+    YYYY = year < 0 ? `-${String(-year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
   }
   const MM = String(month).padStart(2, '0');
   const DD = String(date).padStart(2, '0');

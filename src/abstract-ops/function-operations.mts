@@ -31,7 +31,7 @@ import {
 import { type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
-import { FunctionProto_toString } from '../intrinsics/FunctionPrototype.mts';
+import { FunctionProto_toString, type BoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import {
   Assert,
   Call,
@@ -71,7 +71,7 @@ import {
   isEvaluator,
 } from '#self';
 
-interface BaseFunctionObject extends OrdinaryObject {
+export interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
   readonly InitialName: JSStringValue | NullValue;
   readonly Async: boolean;
@@ -111,7 +111,7 @@ export interface BuiltinFunctionObject extends BaseFunctionObject {
   // NON-SPEC
   HostCapturedValues?: readonly Value[];
 }
-export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
+export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject | BoundFunctionObject;
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects */
 /** https://tc39.es/ecma262/#sec-built-in-function-objects */

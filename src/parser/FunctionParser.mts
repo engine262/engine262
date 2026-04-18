@@ -2,7 +2,7 @@ import { IsSimpleParameterList } from '../static-semantics/all.mts';
 import { type Mutable } from '../utils/language.mts';
 import { Throw } from '../host-defined/error-messages.mts';
 import { getDeclarations, type ArrowInfo } from './Scope.mts';
-import { Token } from './tokens.mts';
+import { isReservedWordStrict, Token } from './tokens.mts';
 import { IdentifierParser } from './IdentifierParser.mts';
 import type { ParseNode, ParseNodesByType } from './ParseNode.mts';
 
@@ -92,6 +92,7 @@ export abstract class FunctionParser extends IdentifierParser {
       variableFunctions: true,
       parameters: false,
       classStaticBlock: false,
+      newTarget: true,
     }, () => {
       this.scope.arrowInfoStack.push(null);
 
@@ -101,7 +102,7 @@ export abstract class FunctionParser extends IdentifierParser {
       this.setFunctionBodyGeneric(node, body.type, body);
 
       if (node.BindingIdentifier) {
-        if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
+        if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments' || isReservedWordStrict(node.BindingIdentifier.name))) {
           this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', node.BindingIdentifier.name), node.BindingIdentifier);
         }
         if (isExpression) {
@@ -147,6 +148,9 @@ export abstract class FunctionParser extends IdentifierParser {
       .forEach((d) => {
         if (isStrict) {
           if (d.name === 'arguments' || d.name === 'eval') {
+            this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', d.name), d.node);
+          }
+          if (isReservedWordStrict(d.name)) {
             this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', d.name), d.node);
           }
         }
@@ -273,14 +277,16 @@ export abstract class FunctionParser extends IdentifierParser {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
     if (arrowInfo) {
-      arrowInfo.awaitExpressions.forEach((e) => {
+      const beforeArrow = <T extends { location: { startIndex: number } }>(nodes: readonly T[]) => nodes
+        .filter((n) => n.location.startIndex < this.currentToken.startIndex);
+      beforeArrow(arrowInfo.awaitExpressions).forEach((e) => {
         this.addEarlyError(Throw.SyntaxError('await cannot be used inside parameters of arrow functions'), e);
       });
-      arrowInfo.yieldExpressions.forEach((e) => {
+      beforeArrow(arrowInfo.yieldExpressions).forEach((e) => {
         this.addEarlyError(Throw.SyntaxError('yield cannot be used inside parameters of arrow functions'), e);
       });
       if (isAsync) {
-        arrowInfo.awaitIdentifiers.forEach((e) => {
+        beforeArrow(arrowInfo.awaitIdentifiers).forEach((e) => {
           this.addEarlyError(Throw.SyntaxError('await cannot be used as an identifier inside parameters of async functions'), e);
         });
       }
@@ -293,7 +299,9 @@ export abstract class FunctionParser extends IdentifierParser {
       node.ArrowParameters = this.scope.with({
         parameters: true,
       }, () => Arguments.map((p) => this.convertArrowParameter(p)));
+      this.scope.enterArrowBody();
       const body = this.parseConciseBody(isAsync);
+      this.scope.exitArrowBody();
       this.validateFormalParameters(node.ArrowParameters, body, true);
       let bodyType: 'ConciseBody' | 'AsyncConciseBody';
       if (body.type === 'FunctionBody') {

@@ -22,7 +22,7 @@ import {
 
 
 /** https://tc39.es/ecma262/#sec-destructuring-assignment */
-export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | ParseNode.ObjectLiteral | ParseNode.PropertyDefinition | ParseNode.MemberExpression | ParseNode.CoverInitializedName | ParseNode.AssignmentExpression | ParseNode.Elision | ParseNode.IdentifierReference | ParseNode.ElementListElement | DestructuringParseNode, type?: 'array' | 'object'): ParseNode.AssignmentPattern {
+export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | ParseNode.ObjectLiteral | ParseNode.PropertyDefinition | ParseNode.MemberExpression | ParseNode.CoverInitializedName | ParseNode.AssignmentExpression | ParseNode.Elision | ParseNode.IdentifierReference | ParseNode.ElementListElement | DestructuringParseNode | ParseNode.Expression, type?: 'array' | 'object'): ParseNode.AssignmentPattern {
   switch (node.type) {
     case 'ArrayLiteral': {
       const refinement: ParseNode.ArrayAssignmentPattern = {
@@ -103,6 +103,7 @@ export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | Pars
         };
       }
     case 'MemberExpression':
+    case 'SuperProperty':
       return {
         type: 'AssignmentElement',
         DestructuringAssignmentTarget: node,
@@ -122,6 +123,8 @@ export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | Pars
       };
     case 'Elision':
       return node;
+    case 'ParenthesizedExpression':
+      return refineLeftHandSideExpression(node.Expression, type);
     default:
       throw OutOfRange.nonExhaustive(node.type);
   }
