@@ -61,11 +61,11 @@ export interface LoadedModuleRequestRecord {
 export class ResolvedBindingRecord {
   readonly Module: AbstractModuleRecord;
 
-  readonly BindingName: 'namespace' | JSStringValue;
+  readonly BindingName: 'namespace' | 'deferred-namespace' | JSStringValue;
 
   constructor({ Module, BindingName }: Pick<ResolvedBindingRecord, 'BindingName' | 'Module'>) {
     Assert(Module instanceof AbstractModuleRecord);
-    Assert(BindingName === 'namespace' || BindingName instanceof JSStringValue);
+    Assert(BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName instanceof JSStringValue);
     this.Module = Module;
     this.BindingName = BindingName;
   }
@@ -432,11 +432,20 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         // ii. If e.[[ImportName]] is ~namespace~, then
         if (e.ImportName === 'namespace') {
           // 1. Assert: module does not provide the direct binding for this export
-          // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
-          return new ResolvedBindingRecord({
-            Module: importedModule,
-            BindingName: 'namespace',
-          });
+          if ((e.ModuleRequest as ModuleRequestRecord).Phase === 'defer') {
+            // https://tc39.es/proposal-defer-import-eval/#sec-resolveexport
+            return new ResolvedBindingRecord({
+              Module: importedModule,
+              BindingName: 'deferred-namespace',
+            });
+          } else {
+            Assert((e.ModuleRequest as ModuleRequestRecord).Phase === 'evaluation');
+            // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
+            return new ResolvedBindingRecord({
+              Module: importedModule,
+              BindingName: 'namespace',
+            });
+          }
         } else { // iv. Else,
           // 1. Assert: module imports a specific binding for this export.
           // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
@@ -545,9 +554,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', ie.ImportName, moduleName);
         }
         // iii. If resolution.[[BindingName]] is ~namespace~, then
-        if (resolution.BindingName === 'namespace') {
+        if (resolution.BindingName === 'namespace' || resolution.BindingName === 'deferred-namespace') {
+          // https://tc39.es/proposal-defer-import-eval/#sec-source-text-module-record-initialize-environment
+          const phase = resolution.BindingName === 'namespace' ? 'evaluation' : 'defer';
           // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
-          const namespace = GetModuleNamespace(resolution.Module, 'evaluation');
+          const namespace = GetModuleNamespace(resolution.Module, phase);
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).

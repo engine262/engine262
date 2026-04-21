@@ -147,6 +147,10 @@ const InternalMethods = {
       // a. Return ? GetModuleNamespace(targetModule).
       return Q(GetModuleNamespace(targetModule, 'evaluation'));
     }
+    // https://tc39.es/proposal-defer-import-eval/#sec-module-namespace-exotic-objects-get-p-receiver
+    if (binding.BindingName === 'deferred-namespace') {
+      return Q(GetModuleNamespace(targetModule, 'defer'));
+    }
     // 11. Let targetEnv be targetModule.[[Environment]].
     const targetEnv = targetModule.Environment;
     // 12. If targetEnv is undefined, throw a ReferenceError exception.
