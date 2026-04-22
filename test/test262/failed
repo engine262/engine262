@@ -7,11 +7,6 @@
 # Paths may contain globs.
 
 # Tracked issues
-; https://github.com/tc39/ecma262/pull/3775#issuecomment-4228512815
-language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js
-language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js
-language/import/import-defer/deferred-namespace-object/reexport-deferred-ns-evaluation.js
-language/import/import-defer/deferred-namespace-object/identity.js
 ; https://github.com/tc39/ecma262/issues/3592
 built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
 
