@@ -219,7 +219,7 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
   const roundingIncrement = Q(yield* GetRoundingIncrementOption(roundTo));
   const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
   let smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'unset'));
-  Q(ValidateTemporalUnitValue(smallestUnit, 'datetime'));
+  if (smallestUnit === 'auto') return Throw.RangeError('smallestUnit cannot be auto');
 
   if (smallestUnit === 'unset') {
     smallestUnitPresent = false;
@@ -315,8 +315,8 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
   const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
   const plainRelativeTo = relativeToRecord.PlainRelativeTo;
   const unit = Q(yield* GetTemporalUnitValuedOption(totalOf, 'unit', 'required'));
-  Q(ValidateTemporalUnitValue(unit, 'datetime'));
-  __ts_cast__<TemporalUnit>(unit);
+  Assert(unit !== 'unset');
+  if (unit === 'auto') return Throw.RangeError('unit cannot be auto');
 
   let total: MathematicalValue;
   if (zonedRelativeTo !== undefined) {

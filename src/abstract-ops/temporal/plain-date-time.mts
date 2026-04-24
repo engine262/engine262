@@ -14,6 +14,10 @@ import {
   type Integer,
   type FiniteTimeValue,
   type MathematicalValue,
+  EpochDaysToEpochMs,
+  EpochTimeToEpochYear,
+  EpochTimeToMonthInYear,
+  EpochTimeToDate,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timevaluetoisodatetimerecord */
@@ -45,6 +49,7 @@ export function ISODateTimeWithinLimits(isoDateTime: ISODateTimeRecord): boolean
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields */
 export function* InterpretTemporalDateTimeFields(calendar: CalendarType, fields: CalendarFieldsRecord, overflow: 'constrain' | 'reject'): PlainEvaluator<ISODateTimeRecord> {
+  Assert(fields.Hour !== undefined && fields.Minute !== undefined && fields.Second !== undefined && fields.Millisecond !== undefined && fields.Microsecond !== undefined && fields.Nanosecond !== undefined);
   const isoDate = Q(yield* CalendarDateFromFields(calendar, fields, overflow));
   const time = Q(RegulateTime(fields.Hour!, fields.Minute!, fields.Second!, fields.Millisecond!, fields.Microsecond!, fields.Nanosecond!, overflow));
   return CombineISODateAndTimeRecord(isoDate, time);
@@ -94,7 +99,9 @@ export function* ToTemporalDateTime(item: Value, options: Value = Value.undefine
 /** https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime */
 export function BalanceISODateTime(year: Integer, month: Integer, day: Integer, hour: Integer, minute: Integer, second: Integer, millisecond: Integer, microsecond: Integer, nanosecond: Integer): ISODateTimeRecord {
   const balancedTime = BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
-  const balancedDate = AddDaysToISODate(CreateISODateRecord(year, month, day), balancedTime.Days);
+  const epochDays = ISODateToEpochDays(year, month - 1n, day) + balancedTime.Days;
+  const epochMilliseconds = EpochDaysToEpochMs(epochDays, 0n);
+  const balancedDate = CreateISODateRecord(EpochTimeToEpochYear(epochMilliseconds), EpochTimeToMonthInYear(epochMilliseconds) + 1n, EpochTimeToDate(epochMilliseconds));
   return CombineISODateAndTimeRecord(balancedDate, balancedTime);
 }
 
