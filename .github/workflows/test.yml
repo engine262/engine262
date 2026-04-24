@@ -36,7 +36,7 @@ jobs:
             lib/engine262.mjs.map
 
       # run tests/coverage
-      - run: npm run coverage:all
+      - run: npm run coverage
         env:
           CONTINUOUS_INTEGRATION: 1
           NUM_WORKERS: 1

@@ -40,9 +40,7 @@ jobs:
       # Publish to github registry
       - run: npm set //npm.pkg.github.com/:_authToken ${{ github.token }}
       - run: npm config set registry https://npm.pkg.github.com
-      # note: remove this after we can release as @engine262/engine262 on npm
-      - run: node -e "let pkg=require('./package.json'); pkg.name='@engine262/engine262'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
-      - run: npm publish --access=public
+      - run: npm exec npm@latest -- publish --provenance --access public --tag latest
 
       # Push build to to gh-pages
       - run: |

@@ -147,4 +147,3 @@ included here for reference, though engine262 is not based on any of them.
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
 [test262]: https://github.com/tc39/test262
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
-[NPM]: https://npmjs.com/@magic-works/engine262
