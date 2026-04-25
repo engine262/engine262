@@ -13,7 +13,7 @@ test('debugger statement should return undefined when no debugger is attached', 
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
-  const result = realm.evaluateScript('debugger;') as NormalCompletion<UndefinedValue>;
+  const result = realm.evaluateScriptSkipDebugger('debugger;') as NormalCompletion<UndefinedValue>;
   expect(result).toBeInstanceOf(NormalCompletion);
   expect(result.Value).toBe(Value.undefined);
 });
@@ -28,7 +28,7 @@ test('debugger statement should return the value passed to resumeEvaluate', asyn
   evalQ((_Q, X) => {
     const script = X(realm.compileScript('debugger;'));
     let completion!: ValueCompletion;
-    realm.evaluate(script, (c) => {
+    realm.evaluateScript(script, {}, (c) => {
       completion = c;
     });
     // start the evaluation

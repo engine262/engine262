@@ -61,7 +61,7 @@ test('evaluate on frame', async () => {
         "params": {
           "callFrames": [
             {
-              "callFrameId": "3",
+              "callFrameId": "2",
               "canBeRestarted": false,
               "functionLocation": {
                 "columnNumber": 17,
@@ -156,7 +156,7 @@ test('evaluate on frame', async () => {
               "url": "",
             },
             {
-              "callFrameId": "2",
+              "callFrameId": "1",
               "canBeRestarted": false,
               "functionLocation": {
                 "columnNumber": 17,
@@ -251,7 +251,7 @@ test('evaluate on frame', async () => {
               "url": "",
             },
             {
-              "callFrameId": "1",
+              "callFrameId": "0",
               "canBeRestarted": false,
               "functionLocation": undefined,
               "functionName": "<anonymous>",
@@ -387,7 +387,7 @@ test('evaluate on frame', async () => {
     ]
   `);
   expect(await inspector.debugger.evaluateOnCallFrame({
-    callFrameId: "3",
+    callFrameId: "2",
     expression: 'a',
   })).toMatchInlineSnapshot(`
     {
@@ -397,7 +397,7 @@ test('evaluate on frame', async () => {
     }
   `);
   expect(await inspector.debugger.evaluateOnCallFrame({
-    callFrameId: "2",
+    callFrameId: "1",
     expression: 'a',
   })).toMatchInlineSnapshot(`
     {
@@ -407,7 +407,7 @@ test('evaluate on frame', async () => {
     }
   `);
   expect(await inspector.debugger.evaluateOnCallFrame({
-    callFrameId: "1",
+    callFrameId: "0",
     expression: 'a',
   })).toMatchInlineSnapshot(`
     {

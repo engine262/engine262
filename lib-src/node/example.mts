@@ -42,12 +42,12 @@ const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'My Rea
 // Do not forget to use realm.scope when running code.
 realm.scope(() => {
   // Run ECMAScript code in the Realm.
-  realm.evaluateScript(`
+  realm.evaluateScriptSkipDebugger(`
     console.log('Hello from engine262!');
     console.log('2 + 2 =', 2 + 2);
   `, { specifier: 'example.mts' });
 
-  const result = realm.evaluateScript(`
+  const result = realm.evaluateScriptSkipDebugger(`
     throw new Error('This is an example error');
   `, { specifier: 'example.mts' });
   if (result instanceof NormalCompletion) {

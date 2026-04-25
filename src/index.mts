@@ -24,7 +24,7 @@ export { skipDebugger } from './utils/evaluator.mts';
 export {
   CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
 } from './utils/stack.mts';
-export { ModuleCache } from './utils/module.mts';
+export { ModuleCache, type ModuleCacheKey } from './utils/module.mts';
 
 export { isBoundFunctionObject, type BoundFunctionObject } from './intrinsics/FunctionPrototype.mts';
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';

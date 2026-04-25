@@ -25,6 +25,8 @@ export const args = util.parseArgs({
 
     'verbose': { type: 'boolean', short: 'v' },
     'vv': { type: 'boolean', short: 'V' },
+    'fyi': { type: 'string' },
+    'fyi-slow-as-passed': { type: 'boolean' },
   },
 });
 
@@ -72,6 +74,10 @@ async function main() {
           Print why tests are skipped or failed.
         ${styleText('green', '--vv / -V')}
           Print why tests are skipped or failed, and also print passed tests.
+        ${styleText('green', '--fyi')} ${styleText('gray', '[folder path]')}
+          Write test262-fyi format report files.
+        ${styleText('green', '--fyi-slow-as-passed')}
+          Treat slow tests as passed in the test262-fyi report.
 
       ${styleText('yellowBright', 'Files:')}
         ${link(styleText('yellow', 'features'), new URL('./features', import.meta.url))}

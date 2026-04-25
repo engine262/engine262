@@ -43,7 +43,7 @@ function test(filename: string) {
   reporter.updateWorker(0, test.id);
   let result;
   try {
-    result = realm.evaluateScript(`JSON.parse(${JSON.stringify(source)});`);
+    result = realm.evaluateScriptSkipDebugger(`JSON.parse(${JSON.stringify(source)});`);
   } catch (error) {
     reporter.updateWorker(0, null);
     console.error(filename, error);

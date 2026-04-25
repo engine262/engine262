@@ -23,6 +23,7 @@ import {
   type ParseScriptHostDefined,
 } from './parse.mts';
 import {
+  AbstractModuleRecord,
   ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
@@ -39,10 +40,13 @@ import {
   OrdinaryObjectCreate,
   Assert,
   CreateTextModule,
+  PerformPromiseThen,
+  CreateBuiltinFunction,
+  ValueOfNormalCompletion,
 } from '#self';
 import {
   Realm,
-  EnsureCompletion, GetModuleNamespace, GlobalEnvironmentRecord, type Intrinsics,
+  GlobalEnvironmentRecord, type Intrinsics,
   type ValueEvaluator,
 } from '#self';
 
@@ -316,148 +320,62 @@ export class ManagedRealm extends Realm {
     });
   }
 
-  /**
-   * Call surroundingAgent.resumeEvaluate() to continue evaluation.
-   *
-   * This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered.
-   */
-  evaluate(sourceText: ScriptRecord | ModuleRecord | ValueEvaluator, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
-    if (!sourceText) {
-      throw new TypeError('sourceText is null or undefined');
-    }
+  evaluateScript(sourceText: string | ScriptRecord, options: { specifier?: string, doNotTrackScriptId?: boolean } = {}, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
+    if (sourceText === undefined || sourceText === null) throw new TypeError('sourceText must be a string or a ScriptRecord');
+    if (typeof sourceText === 'string') sourceText = Q(this.compileScript(sourceText, options));
+    if (!sourceText) throw new TypeError('sourceText is null or undefined');
+    using _ = this.scope();
     let result: ValueCompletion | undefined;
-
-    if (sourceText instanceof ModuleRecord) {
-      const old = this.active;
-      this.active = true;
-      surroundingAgent.executionContextStack.push(this.topContext);
-
-      const loadModuleCompletion = sourceText.LoadRequestedModules();
-      const link = ((): PlainCompletion<void> => {
-        if (loadModuleCompletion.PromiseState === 'rejected') {
-          Q(ThrowCompletion(loadModuleCompletion.PromiseResult!));
-        } else if (loadModuleCompletion.PromiseState === 'pending') {
-          throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
-        }
-        Q(sourceText.Link());
-      })();
-      if (link instanceof ThrowCompletion) {
-        callback(link);
-        return link;
-      }
-      surroundingAgent.evaluate(sourceText.Evaluate(), (completion) => {
-        if (completion instanceof NormalCompletion && completion.Value.PromiseState === 'fulfilled') {
-          result = GetModuleNamespace(sourceText, 'evaluation');
-        } else {
-          result = completion;
-        }
-        this.active = old;
-        surroundingAgent.executionContextStack.pop(this.topContext);
-        callback(EnsureCompletion(result));
-      });
-      return result;
-    } else if (sourceText instanceof ScriptRecord) {
-      const old = this.active;
-      this.active = true;
-      surroundingAgent.executionContextStack.push(this.topContext);
-
-      surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
-        this.active = old;
-        surroundingAgent.executionContextStack.pop(this.topContext);
-        result = completion;
-        callback(completion);
-      });
-      return result;
-    } else {
-      // this path only called by the inspector
-      Assert(!!surroundingAgent.hostDefinedOptions.onDebugger);
-      let emptyExecutionStack = false;
-      if (!surroundingAgent.runningExecutionContext) {
-        emptyExecutionStack = true;
-        this.active = true;
-        surroundingAgent.executionContextStack.push(this.topContext);
-      }
-      surroundingAgent.evaluate(sourceText, (completion) => {
-        result = completion;
-        if (emptyExecutionStack) {
-          this.active = false;
-          surroundingAgent.executionContextStack.pop(this.topContext);
-        }
-        callback(completion);
-      });
-      return result;
-    }
+    surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
+      result = completion;
+      callback(completion);
+    });
+    return result;
   }
 
-  evaluateScript(sourceText: string | ScriptRecord, { specifier, doNotTrackScriptId }: { specifier?: string, doNotTrackScriptId?: boolean } = {}): ValueCompletion {
-    if (sourceText === undefined || sourceText === null) {
-      throw new TypeError('sourceText must be a string or a ScriptRecord');
-    }
-    if (typeof sourceText === 'string') {
-      sourceText = Q(this.compileScript(sourceText, { specifier, doNotTrackScriptId }));
-    }
-
-    let completion;
-    completion = this.evaluate(sourceText, (c) => {
+  /**
+   * Evaluate a script (skip the debugger).
+   */
+  evaluateScriptSkipDebugger(sourceText: string | ScriptRecord, options: { specifier?: string, doNotTrackScriptId?: boolean } = {}): ValueCompletion {
+    let completion = this.evaluateScript(sourceText, options, (c) => {
       completion = c;
     });
-    if (!completion) {
-      surroundingAgent.resumeEvaluate({
-        noBreakpoint: true,
-      });
-    }
-    if (!completion) {
-      throw new Assert.Error('Expect evaluation completes synchronously');
-    }
+    if (!completion) surroundingAgent.resumeEvaluate({ noBreakpoint: true });
+    if (!completion) throw new Assert.Error('Expect evaluation completes synchronously');
     runJobQueue();
 
     return completion;
   }
 
-  evaluateModule(sourceText: string, specifier: string): PlainCompletion<SourceTextModuleRecord>
 
-  evaluateModule<T extends ModuleRecord>(sourceText: T, specifier: string): PlainCompletion<T>
+  evaluateModule<T extends ModuleRecord>(sourceText: string | T, specifier: string | undefined, finish: (completion: ValueCompletion<PromiseObject>) => void) {
+    using _ = this.scope();
+    if (sourceText === undefined || sourceText === null) throw new TypeError('sourceText must be a string or a ModuleRecord');
+    const moduleCompletion = typeof sourceText === 'string' ? this.compileModule(sourceText, { specifier }) as PlainCompletion<AbstractModuleRecord> : sourceText;
 
-  evaluateModule(sourceText: string | ModuleRecord, specifier: string): PlainCompletion<ModuleRecord> {
-    if (sourceText === undefined || sourceText === null) {
-      throw new TypeError('sourceText must be a string or a ModuleRecord');
-    }
-    if (typeof sourceText === 'string') {
-      sourceText = Q(this.compileModule(sourceText, { specifier }));
-    }
-
-    let completion;
-    completion = this.evaluate(sourceText, (c) => {
-      completion = c;
-      runJobQueue();
-    });
-    if (!completion) {
-      surroundingAgent.resumeEvaluate({
-        noBreakpoint: true,
-      });
+    if (this.HostDefined.resolverCache && typeof specifier === 'string') {
+      const key = this.HostDefined.resolverCache.toCacheKey(specifier, 'js', {});
+      this.HostDefined.resolverCache.set(key, moduleCompletion);
     }
 
-    return sourceText;
-  }
+    if (moduleCompletion instanceof ThrowCompletion) {
+      finish(moduleCompletion);
+      return;
+    }
+    const module = ValueOfNormalCompletion(moduleCompletion);
 
-  /**
-   * @deprecated use compileModule
-   */
-  createSourceTextModule(specifier: string, sourceText: string): PlainCompletion<SourceTextModuleRecord> {
-    if (typeof specifier !== 'string') {
-      throw new TypeError('specifier must be a string');
-    }
-    if (typeof sourceText !== 'string') {
-      throw new TypeError('sourceText must be a string');
-    }
-    const module = this.scope(() => ParseModule(sourceText, this, {
-      specifier,
-      SourceTextModuleRecord: ManagedSourceTextModuleRecord,
+    PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
+      const link = module.Link();
+      if (link instanceof ThrowCompletion) {
+        finish(link);
+        return Value.undefined;
+      }
+      finish(yield* module.Evaluate());
+      return Value.undefined;
+    }), CreateBuiltinFunction.from((err = Value.undefined) => {
+      finish(ThrowCompletion(err));
     }));
-    if (Array.isArray(module)) {
-      return ThrowCompletion(module[0]);
-    }
-    return module;
+    runJobQueue();
   }
 
   createJSONModule(sourceText: string) {

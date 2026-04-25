@@ -10,7 +10,7 @@ test('stack', () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
-  const result = realm.evaluateScript(`
+  const result = realm.evaluateScriptSkipDebugger(`
     function x() { throw new Error('owo'); }
     function y() { x(); }
     try {
@@ -33,7 +33,7 @@ test('async stack', () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
-  const result = realm.evaluateScript(`
+  const result = realm.evaluateScriptSkipDebugger(`
     async function x() { await 1; throw new Error('owo'); }
     async function y() { await x(); }
     y().catch((e) => e.stack);
@@ -57,7 +57,7 @@ test('native stack', () => {
   const realm = new ManagedRealm();
   // built-in functions
   {
-    const result = realm.evaluateScript(`
+    const result = realm.evaluateScriptSkipDebugger(`
       function x() { Reflect.get(); }
       try {
         x();
@@ -77,7 +77,7 @@ test('native stack', () => {
 
   // derived class constructors
   {
-    const result = realm.evaluateScript(`
+    const result = realm.evaluateScriptSkipDebugger(`
       class T {}
       try { T() } catch (e) { e.stack; }
     `) as NormalCompletion<JSStringValue>;
@@ -104,7 +104,7 @@ test('native function names', () => {
     });
     unwrapCompletion(CreateDataPropertyOrThrow(realm.GlobalObject, Value('getName'), f));
   });
-  const result = realm.evaluateScript(`
+  const result = realm.evaluateScriptSkipDebugger(`
   (${() => {
     // @ts-expect-error
     declare const getName: (f: object) => string;
