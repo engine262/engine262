@@ -18,36 +18,38 @@ test('Import attributes', () => {
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
 
-  realm.evaluateModule('import "test" with {}', 'case 1');
+  const noop = () => {};
+
+  realm.evaluateModule('import "test" with {}', 'case 1', noop);
   expect([...attributes]).lengthOf(0);
 
-  realm.evaluateModule('import "test" with { fruit: "banana" }', 'case 2');
+  realm.evaluateModule('import "test" with { fruit: "banana" }', 'case 2', noop);
   expect([...attributes]).deep.equal([['fruit', 'banana']]);
 
-  realm.evaluateModule('import "test" with { fruit: "banana", animal: "monkey" }', 'case 3');
+  realm.evaluateModule('import "test" with { fruit: "banana", animal: "monkey" }', 'case 3', noop);
   expect([...attributes]).deep.equal([['animal', 'monkey'], ['fruit', 'banana']]);
 
-  realm.evaluateModule('import "test" with { animal: "monkey", fruit: "banana" }', 'case 4');
+  realm.evaluateModule('import "test" with { animal: "monkey", fruit: "banana" }', 'case 4', noop);
   expect([...attributes]).deep.equal([['animal', 'monkey'], ['fruit', 'banana']]);
 
   calls = 0;
-  realm.evaluateModule('import "test" with { fruit: "banana" }; import "test" with { fruit: "banana" }', 'case 5');
+  realm.evaluateModule('import "test" with { fruit: "banana" }; import "test" with { fruit: "banana" }', 'case 5', noop);
   expect(calls).toBe(1);
 
   calls = 0;
-  realm.evaluateModule('import "test" with { fruit: "banana" }; import "test" with { animal: "monkey" }', 'case 6');
+  realm.evaluateModule('import "test" with { fruit: "banana" }; import "test" with { animal: "monkey" }', 'case 6', noop);
   expect(calls).toBe(2);
 
   calls = 0;
-  realm.evaluateModule('import "test" with { fruit: "banana", animal: "monkey" }; import "test" with { animal: "monkey", fruit: "banana" };', 'case 7');
+  realm.evaluateModule('import "test" with { fruit: "banana", animal: "monkey" }; import "test" with { animal: "monkey", fruit: "banana" };', 'case 7', noop);
   expect(calls).toBe(1);
 
   calls = 0;
-  realm.evaluateModule('import "test" with { animal: "monkey" }; import "test" with { animal: "elephant" };', 'case 8');
+  realm.evaluateModule('import "test" with { animal: "monkey" }; import "test" with { animal: "elephant" };', 'case 8', noop);
   expect(calls).toBe(2);
 
   calls = 0;
-  realm.evaluateModule('import "test"; import "test" with {};', 'case 9');
+  realm.evaluateModule('import "test"; import "test" with {};', 'case 9', noop);
   expect(calls).toBe(1);
 });
 
@@ -111,7 +113,7 @@ test('Custom module records', () => {
     },
   });
 
-  realm.evaluateModule('import "dep"', 'entrypoint');
+  realm.evaluateModule('import "dep"', 'entrypoint', () => {});
 
   assert(calls.length >= 2); // there is a third call, for the promise of the entrypoint
   assert.deepStrictEqual(calls[0], [evaluationPromise!, 'reject'], "first call should be 'reject'");

@@ -12,7 +12,7 @@ test('WeakRef (script)', () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
-  const result = realm.evaluateScript(`
+  const result = realm.evaluateScriptSkipDebugger(`
     const w = new WeakRef({});
     Promise.resolve()
       .then(() => {

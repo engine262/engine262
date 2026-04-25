@@ -14,7 +14,6 @@ import { loadImportedModule } from './module.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
-  evalQ,
   Agent,
   ManagedRealm,
   type ValueCompletion,
@@ -31,8 +30,6 @@ import {
   PerformPromiseThen,
   CreateBuiltinFunction,
   runJobQueue,
-  NewPromiseCapability,
-  unwrapCompletion,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -187,28 +184,25 @@ function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: stri
     const onErrorCallback = CreateBuiltinFunction.from((result = Value.undefined) => {
       quit(ThrowCompletion(result));
     });
-    const completion = evalQ((Q) => {
-      if (argv.values.module || filename.endsWith('.mjs')) {
-        const module = Q(realm.compileModule(source, { specifier: filename }));
-        realm.HostDefined.resolverCache?.set(filename, 'js', module);
-
-        const noop = CreateBuiltinFunction.from(() => { });
-
-        const loadPromise = module.LoadRequestedModules();
-        const runPromise = PerformPromiseThen(loadPromise, CreateBuiltinFunction.from(function* runModule() {
-          const link = module.Link();
-          if (link instanceof ThrowCompletion) return link;
-          return yield* module.Evaluate();
-        }), onErrorCallback, unwrapCompletion(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))));
-        PerformPromiseThen(runPromise, noop, onErrorCallback);
+    // TODO: change exit time to idle.
+    if (argv.values.module || filename.endsWith('.mjs')) {
+      realm.evaluateModule(source, filename, (promise) => {
+        if (promise instanceof ThrowCompletion) {
+          quit(promise);
+          return;
+        }
+        PerformPromiseThen(ValueOfNormalCompletion(promise), Value.null, onErrorCallback);
         runJobQueue();
-      } else {
-        Q(realm.evaluateScript(source, { specifier: filename }));
-      }
-    });
-    quit(completion);
+      });
+    } else {
+      let completion = realm.evaluateScript(source, { specifier: filename }, (c) => {
+        completion = c;
+        if (completion instanceof ThrowCompletion) quit(completion);
+      });
+      if (!completion) surroundingAgent.resumeEvaluate();
+      runJobQueue();
+    }
   });
-
   inspector?.stop();
 
   function quit(completion: ThrowCompletion<Value> | NormalCompletion<void>) {

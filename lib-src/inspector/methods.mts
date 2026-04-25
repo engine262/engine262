@@ -21,6 +21,8 @@ import {
   parseNodeToBreakpointLocation,
   performDevtoolsEval,
   isFunctionObject,
+  ModuleRecord,
+  GetModuleNamespace,
 } from '#self';
 
 export const Debugger: DebuggerNamespace = {
@@ -154,7 +156,7 @@ export const Runtime: RuntimeNamespace = {
     if (!realmDesc) {
       throw new Error('No realm found');
     }
-    const { Value: F } = realmDesc.realm.evaluateScript(`(${options.functionDeclaration})`, { doNotTrackScriptId: true }) as NormalCompletion<FunctionObject>;
+    const { Value: F } = realmDesc.realm.evaluateScriptSkipDebugger(`(${options.functionDeclaration})`, { doNotTrackScriptId: true }) as NormalCompletion<FunctionObject>;
     const thisValue = options.objectId
       ? context.getObject(options.objectId)!
       : Value.undefined;
@@ -336,14 +338,31 @@ function evaluate(options: {
       return;
     }
 
-    const completion = realm.realm.evaluate(toBeEvaluated, (completion) => {
-      resolve(context.createEvaluationResult(completion));
+    if (toBeEvaluated instanceof ModuleRecord) {
+      realm.realm.evaluateModule(toBeEvaluated, undefined, (completion) => {
+        if (completion instanceof ThrowCompletion) {
+          resolve(context.createEvaluationResult(completion));
+        } else {
+          resolve(context.createEvaluationResult(NormalCompletion(GetModuleNamespace(toBeEvaluated, 'evaluation'))));
+        }
+        runJobQueue();
+      });
+    } else if (toBeEvaluated instanceof ScriptRecord) {
+      let completion = realm.realm.evaluateScript(toBeEvaluated, {}, (c) => {
+        completion = c;
+        resolve(context.createEvaluationResult(completion));
+      });
+      if (!completion) surroundingAgent.resumeEvaluate();
       runJobQueue();
-    });
-    if (completion) {
-      return;
+    } else {
+      let completion;
+      surroundingAgent.evaluate(toBeEvaluated, (c) => {
+        completion = c;
+        resolve(context.createEvaluationResult(c));
+      });
+      if (!completion) surroundingAgent.resumeEvaluate();
+      runJobQueue();
     }
-    surroundingAgent.resumeEvaluate();
   });
   promise.then(() => {
     if (callOnFramePoppedLevel) {

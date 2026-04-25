@@ -2,7 +2,8 @@ import { readFile, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   EnsureCompletion,
-  ManagedRealm, Realm, Throw, ThrowCompletion, type AgentHostDefined,
+  ManagedRealm, Realm, Throw, ThrowCompletion, type AgentHostDefined, type AbstractModuleRecord, type PlainCompletion,
+  type ModuleCacheKey,
 } from '#self';
 
 export function createLoadImportedModule(getCache = (realm: ManagedRealm) => realm.HostDefined.resolverCache) {
@@ -44,26 +45,27 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
 
       const base = path.dirname(referrer.HostDefined!.specifier!);
       const resolved = path.resolve(base, specifier);
-      const type = (attributes.get('type') as 'json' | 'text' | undefined) || 'js';
-      if (cache?.has(resolved, type)) {
-        finish(cache.get(resolved, type)!);
-        return;
-      }
-      readFile(resolved, (err, data) => {
-        realm.scope(() => {
-          if (err) {
-            finish(Throw.SyntaxError('Could not read module $1', specifier));
-            return;
-          }
-          const module = EnsureCompletion(parseModule(realm, resolved, attributes, data));
-          if (module.Type === 'throw') {
-            finish(module);
-          } else {
-            cache?.set(resolved, type, module.Value);
-            finish(module);
-          }
+      const attributeObject = Object.fromEntries(attributes);
+
+      const load = (callback: (completion: PlainCompletion<AbstractModuleRecord>) => void) => {
+        readFile(resolved, (err, data) => {
+          realm.scope(() => {
+            if (err) {
+              callback(Throw.SyntaxError('Could not read module $1', specifier));
+            } else {
+              callback(EnsureCompletion(parseModule(realm, resolved, attributes, data)));
+            }
+          });
         });
-      });
+      };
+
+      let cacheKey: ModuleCacheKey;
+      if (cache) {
+        cacheKey = cache.toCacheKey(resolved, attributes.get('type') || 'js', attributeObject);
+        cache.load(cacheKey, load, finish);
+      } else {
+        load(finish);
+      }
     });
   };
 

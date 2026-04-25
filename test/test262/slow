@@ -6,6 +6,10 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+built-ins/encodeURI
+built-ins/decodeURI
+built-ins/encodeURIComponent
+built-ins/decodeURIComponent
 built-ins/RegExp/property-escapes/generated
 built-ins/RegExp/CharacterClassEscapes
 # temporal
@@ -20,12 +24,14 @@ built-ins/Array/prototype/forEach/15.4.4.18-7-c-ii-1.js
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-9-1.js
 built-ins/Array/prototype/map/15.4.4.19-8-c-ii-1.js
 built-ins/Array/prototype/some/15.4.4.17-7-c-ii-2.js
-built-ins/encodeURIComponent/S15.1.3.4_A2.3_T1.js
-built-ins/encodeURIComponent/S15.1.3.4_A2.4_T1.js
-built-ins/encodeURIComponent/S15.1.3.4_A2.4_T2.js
-built-ins/encodeURIComponent/S15.1.3.4_A2.5_T1.js
 built-ins/Function/prototype/toString/built-in-function-object.js
+built-ins/Iterator/zip/basic-longest.js
+built-ins/Iterator/zip/basic-shortest.js
+built-ins/Iterator/zipKeyed/basic-longest.js
+built-ins/Iterator/zipKeyed/basic-shortest.js
+built-ins/parseFloat/S15.1.2.3_A6.js
 built-ins/parseInt/S15.1.2.2_A8.js
+built-ins/RegExp/character-class-escape-non-whitespace.js
 built-ins/Temporal/Duration/prototype/round/relativeto-largestunit-smallestunit-combinations.js
 built-ins/Temporal/Duration/prototype/round/roundingincrement-days-large.js
 built-ins/Temporal/Duration/prototype/round/singular-units.js
@@ -33,6 +39,7 @@ built-ins/Temporal/Duration/prototype/total/calendar-possibly-required.js
 built-ins/Temporal/Duration/prototype/total/relativeto-total-of-each-unit.js
 built-ins/Temporal/PlainDate/prototype/since/basic-conversions.js
 built-ins/Temporal/PlainDate/prototype/until/basic-conversions.js
+built-ins/Temporal/PlainDateTime/datetime-math.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-object.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-propertybag-optional-properties.js
 built-ins/Temporal/PlainDateTime/prototype/since/argument-string.js

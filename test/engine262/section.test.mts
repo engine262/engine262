@@ -33,7 +33,7 @@ test('Every built-in function should have a section property', { timeout: 10000 
       CreateArrayFromList(targets),
     ));
   });
-  const result = realm.evaluateScript(`
+  const result = realm.evaluateScriptSkipDebugger(`
     'use strict';
 
     {

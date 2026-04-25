@@ -153,18 +153,17 @@ function useExit(runner: TestReporter) {
     () => runner.exited,
   );
   const { exit } = useApp();
-  const [previousExitState, setExitState] = React.useState<boolean>(false);
-  if (exitRequested && !previousExitState) {
-    setExitState(true);
-    setTimeout(exit, 10);
+  const [exitingState, setExitingState] = React.useState<boolean>(false);
+  if (exitRequested && !exitingState) {
+    setExitingState(true);
+    queueMicrotask(exit);
   }
   useInput((input, key) => {
     if (input === 'q' || (key.ctrl && input === 'c')) {
-      setExitState(true);
       runner.exit();
     }
   });
-  return previousExitState;
+  return exitingState;
 }
 
 function useFlushStdout(runner: TerminalUIReporter) {
@@ -372,6 +371,10 @@ class TerminalUIReporter extends TestReporter {
   pending_stdout: string[] = [];
 
   stdout(...message: string[]) {
+    if (this.exited) {
+      process.stdout.write(message.join(''));
+      return;
+    }
     this.pending_stdout.push(...message);
     this.statsStale = true;
     this.dispatchEvent(new Event('flush'));

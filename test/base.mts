@@ -1,9 +1,8 @@
 import fs from 'node:fs';
-import { loadImportedModuleSync } from '../lib-src/node/module.mts';
+import { loadImportedModule, loadImportedModuleSync } from '../lib-src/node/module.mts';
 import { supportColor, type SkipReason } from './tui.mts';
 import {
   Agent, ManagedRealm, type OrdinaryObject, OrdinaryObjectCreate, createTest262Intrinsics,
-  Value,
   ModuleCache,
 } from '#self';
 
@@ -33,6 +32,8 @@ export class Test {
     this.content = contents;
     this.currentTestFlag = currentRunFlags;
   }
+
+  asyncModuleLoader = false;
 
   startTime: number | null = null;
 
@@ -68,9 +69,27 @@ export class Test {
   withDifferentTestFlag(newFlag: string, newContent = this.content) {
     return new Test(this.file, this.specifier, this.engineFeatures, this.attrs, newFlag, newContent);
   }
+
+  withAsyncModuleLoader() {
+    const test = this.withDifferentTestFlag(this.currentTestFlag ? `${this.currentTestFlag},async-loader` : 'async-loader');
+    test.asyncModuleLoader = true;
+    return test;
+  }
 }
 
 export type SupervisorToWorker = Exclude<Test, 'withDifferentTestFlag'>
+
+export type LogDetail = {
+  message: string;
+  stack: Stack[];
+}
+
+export type WorkerToSupervisor_Log = {
+  status: 'LOG';
+  file: undefined | string;
+  testId: undefined | number;
+} & LogDetail;
+
 export type WorkerToSupervisor_Running = {
   status: 'RUNNING';
   testId: number;
@@ -96,11 +115,10 @@ export type WorkerToSupervisor_Failed = {
   flags: string;
   testId: number;
   description: string;
-  error: string;
-  stack: Stack[]
-};
+} & LogDetail;
 
 export type WorkerToSupervisor =
+  | WorkerToSupervisor_Log
   | WorkerToSupervisor_Running
   | WorkerToSupervisor_Pass
   | WorkerToSupervisor_Failed
@@ -115,13 +133,14 @@ export function readList(path: string | URL) {
 
 export interface CreateAgentOptions {
   features?: readonly string[];
+  asyncModuleLoader?: boolean;
 }
 
-export function createAgent({ features = [] }: CreateAgentOptions) {
+export function createAgent({ features = [], asyncModuleLoader = false }: CreateAgentOptions) {
   const agent = new Agent({
     features,
     supportedImportAttributes: ['type'],
-    loadImportedModule: loadImportedModuleSync,
+    loadImportedModule: asyncModuleLoader ? loadImportedModule : loadImportedModuleSync,
     onDebugger() {
       // attach an empty debugger to make sure our debugger infrastructure does not break the engine
       agent.resumeEvaluate({ noBreakpoint: true });
@@ -134,14 +153,15 @@ export interface Test262CreateRealm {
   realm: ManagedRealm;
   $262: OrdinaryObject;
   resolverCache: ModuleCache;
-  setPrintHandle: (callback: ((str: string, value: Value) => void) | undefined) => void;
 }
 export interface CreateRealmOptions {
   printCompatMode?: boolean;
   specifier?: string;
+  log?: (...val: unknown[]) => void;
 }
 
-export function createRealm({ printCompatMode = false, specifier }: CreateRealmOptions = {}): Test262CreateRealm {
+// eslint-disable-next-line no-console
+export function createRealm({ printCompatMode = false, specifier, log = console.log }: CreateRealmOptions = {}): Test262CreateRealm {
   const resolverCache = new ModuleCache();
 
   const realm = new ManagedRealm({
@@ -151,13 +171,11 @@ export function createRealm({ printCompatMode = false, specifier }: CreateRealmO
 
   return realm.scope(() => {
     const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    // eslint-disable-next-line no-console
-    const { setPrintHandle } = createTest262Intrinsics(realm, printCompatMode, console.log);
+    createTest262Intrinsics(realm, printCompatMode, log);
     return {
       realm,
       $262,
       resolverCache,
-      setPrintHandle,
     };
   });
 }

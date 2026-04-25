@@ -21,42 +21,31 @@ import {
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
 export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log: (...args: unknown[]) => void = Reflect.get(globalThis, 'console').log) {
   return realm.scope(() => {
-    let test262PrintHandle: ((str: string, value: Value) => void) | undefined;
-    const setPrintHandle = (f: typeof test262PrintHandle | undefined) => {
-      test262PrintHandle = f;
-    };
     const print = CreateBuiltinFunction((args: Arguments): ValueCompletion => {
       if (surroundingAgent.debugger_isPreviewing) {
         return NormalCompletion(Value.undefined);
       }
       /* node:coverage ignore next */
-      if (test262PrintHandle) {
-        if (args[0] instanceof JSStringValue) {
-          test262PrintHandle(args[0].stringValue(), args[1] || Value.undefined);
-          return Value.undefined;
-        }
-      } else {
-        if (printCompatMode) {
-          const str: string[] = [];
-          for (let i = 0; i < args.length; i += 1) {
-            const arg = args[i]!;
-            const s = EnsureCompletion(skipDebugger(ToString(arg)));
-            if (s.Type === 'throw') {
-              return s;
-            }
-            str.push(s.Value.stringValue());
+      if (printCompatMode) {
+        const str: string[] = [];
+        for (let i = 0; i < args.length; i += 1) {
+          const arg = args[i]!;
+          const s = EnsureCompletion(skipDebugger(ToString(arg)));
+          if (s.Type === 'throw') {
+            return s;
           }
-          log(...str);
-          return Value.undefined;
-        } else {
-          const formatted = args.map((a, i) => {
-            if (i === 0 && a instanceof JSStringValue) {
-              return a.stringValue();
-            }
-            return inspect(a);
-          }).join(' ');
-          log(formatted);
+          str.push(s.Value.stringValue());
         }
+        log(...str);
+        return Value.undefined;
+      } else {
+        const formatted = args.map((a, i) => {
+          if (i === 0 && a instanceof JSStringValue) {
+            return a.stringValue();
+          }
+          return inspect(a);
+        }).join(' ');
+        log(formatted);
       }
       return Value.undefined;
     }, 0, Value('print'), []);
@@ -116,7 +105,6 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
     CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $262);
 
     return {
-      setPrintHandle,
       $262,
     };
   });
@@ -130,7 +118,7 @@ export function importBundledTest262Harness(
     const script = X(
       realm.compileScript(file, { specifier: nameMapper(specifier) }),
     );
-    realm.evaluateScript(script);
+    realm.evaluateScriptSkipDebugger(script);
   }
 }
 
