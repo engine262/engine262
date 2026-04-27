@@ -2171,6 +2171,7 @@ export namespace ParseNode {
     readonly ExportFromClause: ExportFromClauseLike;
     readonly FromClause: FromClause;
     readonly WithClause: undefined | WithClause;
+    readonly Phase: 'defer' | 'evaluation';
 
     readonly AssignmentExpression?: undefined;
     readonly ClassDeclaration?: undefined;

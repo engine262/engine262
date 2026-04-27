@@ -10,6 +10,7 @@ import {
   ModuleRequests,
   ImportEntries,
   ExportEntries,
+  OptionalIndirectExportEntries,
   ImportedLocalNames,
 } from './static-semantics/all.mts';
 import { kInternal } from './utils/internal.mts';
@@ -175,6 +176,9 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
       indirectExportEntries.push(ee);
     }
   }
+  // Let optionalIndirectExportEntries be OptionalIndirectExportEntries of body.
+  // (https://tc39.es/proposal-deferred-reexports/#sec-parsemodule)
+  const optionalIndirectExportEntries = OptionalIndirectExportEntries(body);
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSAncestorIndex]]: undefined }.
   const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
@@ -192,6 +196,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,
     StarExportEntries: starExportEntries,
+    OptionalIndirectExportEntries: optionalIndirectExportEntries,
     CycleRoot: undefined,
     HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
     AsyncEvaluationOrder: 'unset',

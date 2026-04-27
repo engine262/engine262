@@ -89,6 +89,12 @@ export const FEATURES = ([
     url: 'https://github.com/tc39/proposal-regexp-buffer-boundaries',
     enableInPlayground: true,
   },
+  {
+    name: 'Deferred Re-exports',
+    flag: 'export-defer',
+    url: 'https://github.com/tc39/proposal-deferred-reexports',
+    enableInPlayground: true,
+  },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);

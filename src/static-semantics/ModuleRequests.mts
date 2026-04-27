@@ -1,12 +1,18 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { Value, type JSStringValue } from '../value.mts';
+import type { Mutable } from '../utils/language.mts';
 import { StringValue } from './all.mts';
-import { type LoadedModuleRequestRecord } from '#self';
+import { MergeImportedNames, type LoadedModuleRequestRecord } from '#self';
+
+// https://tc39.es/proposal-deferred-reexports/
+export type ImportedNamesValue = 'all' | 'all-but-default' | readonly JSStringValue[];
 
 // https://tc39.es/ecma262/#modulerequest-record
 export interface ModuleRequestRecord {
   readonly Specifier: string;
   readonly Attributes: readonly ImportAttributeRecord[];
   readonly Phase: 'source' | 'defer' | 'evaluation';
+  readonly ImportedNames: ImportedNamesValue;
 }
 
 // https://tc39.es/ecma262/#importattribute-record
@@ -15,23 +21,32 @@ export interface ImportAttributeRecord {
   readonly Value: string;
 }
 
-// https://tc39.es/ecma262/#sec-ModuleRequestsEqual
-export function ModuleRequestsEqual(left: ModuleRequestRecord | LoadedModuleRequestRecord, right: ModuleRequestRecord | LoadedModuleRequestRecord) {
+/** https://tc39.es/proposal-defer-import-eval/#sec-ModuleRequestsKeyEqual */
+export function ModuleRequestsKeyEqual(left: ModuleRequestRecord | LoadedModuleRequestRecord, right: ModuleRequestRecord | LoadedModuleRequestRecord) {
+  // 1. If left.[[Specifier]] is not right.[[Specifier]], return false.
   if (left.Specifier !== right.Specifier) {
     return false;
   }
+  // 2. Let leftAttrs be left.[[Attributes]].
   const leftAttrs = left.Attributes;
+  // 3. Let rightAttrs be right.[[Attributes]].
   const rightAttrs = right.Attributes;
+  // 4. Let leftAttrsCount be the number of elements in leftAttrs.
   const leftAttrsCount = leftAttrs.length;
+  // 5. Let rightAttrsCount be the number of elements in rightAttrs.
   const rightAttrsCount = rightAttrs.length;
+  // 6. If leftAttrsCount ≠ rightAttrsCount, return false.
   if (leftAttrsCount !== rightAttrsCount) {
     return false;
   }
+  // 7. For each ImportAttribute Record l of leftAttrs, do
   for (const l of leftAttrs) {
+    // a. If rightAttrs does not contain an ImportAttribute Record r such that l.[[Key]] is r.[[Key]] and l.[[Value]] is r.[[Value]], return false.
     if (!rightAttrs.some((r) => l.Key === r.Key && l.Value === r.Value)) {
       return false;
     }
   }
+  // 8. Return true.
   return true;
 }
 
@@ -48,6 +63,59 @@ function WithClauseToAttributes(node: ParseNode.WithClause): ImportAttributeReco
   return attributes;
 }
 
+/** Compute [[ImportedNames]] for a ModuleRequest derived from an ImportDeclaration's ImportClause.
+ * Per proposal-deferred-reexports:
+ * - `import "m"` (no clause) → « »
+ * - `import * as ns from "m"` (NameSpaceImport) → ~all~
+ * - `import a from "m"` (DefaultBinding) → « "default" »
+ * - `import { x, y as z } from "m"` (NamedImports) → « "x", "y" »
+ * - Combinations are unioned.
+ */
+function importedNamesFromImportClause(importClause: ParseNode.ImportClause | undefined): ImportedNamesValue {
+  if (!importClause) {
+    return [];
+  }
+  if (importClause.NameSpaceImport) {
+    return 'all';
+  }
+  const names: JSStringValue[] = [];
+  if (importClause.ImportedDefaultBinding) {
+    names.push(Value('default'));
+  }
+  if (importClause.NamedImports) {
+    for (const spec of importClause.NamedImports.ImportsList) {
+      names.push(StringValue(spec.ModuleExportName ?? spec.ImportedBinding));
+    }
+  }
+  return names;
+}
+
+/** Compute [[ImportedNames]] for a ModuleRequest derived from an ExportFromClause.
+ * Per proposal-deferred-reexports:
+ * - `export * from "m"` → ~all-but-default~ (default is excluded for star re-exports)
+ * - `export * as ns from "m"` → ~all~
+ * - `export { x, y as z } from "m"` → « "x", "y" »
+ */
+function importedNamesFromExportFromClause(clause: ParseNode.ExportFromClauseLike): ImportedNamesValue {
+  if (clause.type === 'ExportFromClause') {
+    // export * from "m"  → ModuleExportName absent  → 'all-but-default'
+    // export * as ns from "m"  → ModuleExportName present  → 'all'
+    return clause.ModuleExportName ? 'all' : 'all-but-default';
+  }
+  // NamedExports (export { a, b as c } from "m")
+  return clause.ExportsList.map((spec) => StringValue(spec.localName));
+}
+
+/** https://tc39.es/proposal-deferred-reexports/#sec-ExportFromDeclarationModuleRequest */
+export function ExportFromDeclarationModuleRequest(node: ParseNode.ExportDeclaration_NamedFrom): ModuleRequestRecord {
+  const specifier = StringValue(node.FromClause);
+  const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+  const importedNames = importedNamesFromExportFromClause(node.ExportFromClause);
+  return {
+    Specifier: specifier.value, Attributes: attributes, Phase: 'evaluation', ImportedNames: importedNames,
+  };
+}
+
 export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
   switch (node.type) {
     case 'Module':
@@ -60,31 +128,39 @@ export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
       for (const item of node.ModuleItemList) {
         const additionalRequests = ModuleRequests(item);
         for (const mr of additionalRequests) {
-          if (!requests.some((r) => ModuleRequestsEqual(r, mr) && r.Phase === mr.Phase)
-          ) {
+          const existing = requests.find((r) => ModuleRequestsKeyEqual(r, mr) && r.Phase === mr.Phase);
+          if (existing) {
+            (existing as Mutable<ModuleRequestRecord>).ImportedNames = MergeImportedNames(existing.ImportedNames, mr.ImportedNames);
+          } else {
             requests.push(mr);
           }
         }
       }
       return requests;
     }
-    case 'ImportDeclaration':
+    case 'ImportDeclaration': {
+      let specifier: JSStringValue;
       if (node.FromClause) {
-        const specifier = StringValue(node.FromClause);
-        const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-        return [{ Specifier: specifier.value, Attributes: attributes, Phase: node.Phase }];
+        specifier = StringValue(node.FromClause);
+      } else if (node.ModuleSpecifier) {
+        specifier = StringValue(node.ModuleSpecifier);
+      } else {
+        throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
       }
-      if (node.ModuleSpecifier) {
-        const specifier = StringValue(node.ModuleSpecifier);
-        const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-        return [{ Specifier: specifier.value, Attributes: attributes, Phase: node.Phase }];
-      }
-      throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
+      const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
+      const importedNames = importedNamesFromImportClause(node.ImportClause);
+      return [{
+        Specifier: specifier.value, Attributes: attributes, Phase: node.Phase, ImportedNames: importedNames,
+      }];
+    }
     case 'ExportDeclaration':
       if (node.FromClause) {
-        const specifier = StringValue(node.FromClause);
-        const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-        return [{ Specifier: specifier.value, Attributes: attributes, Phase: 'evaluation' }];
+        const fromNode = node as ParseNode.ExportDeclaration_NamedFrom;
+        // `export defer ... from "m"` is tracked via [[OptionalIndirectExportEntries]]
+        if (fromNode.Phase === 'defer') {
+          return [];
+        }
+        return [ExportFromDeclarationModuleRequest(fromNode)];
       }
       return [];
     default:

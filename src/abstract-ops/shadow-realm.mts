@@ -157,6 +157,7 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
     Specifier: specifierString.value,
     Phase: 'evaluation',
     Attributes: [],
+    ImportedNames: 'all',
   }, undefined, { data: innerCapability });
   surroundingAgent.executionContextStack.pop(evalContext);
   const onFullfilled = CreateBuiltinFunction(function* onFullfilled([exports = Value.undefined]) {

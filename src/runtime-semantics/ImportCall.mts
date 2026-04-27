@@ -127,7 +127,9 @@ function* EvaluateImportCall(
     }
   }
   // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
-  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString.value, Attributes: attributes, Phase: phase };
+  const moduleRequest: ModuleRequestRecord = {
+    Specifier: specifierString.value, Attributes: attributes, Phase: phase, ImportedNames: 'all',
+  };
   // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
   HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, moduleRequest, undefined, { data: promiseCapability });
   // 9. Return promiseCapability.[[Promise]].

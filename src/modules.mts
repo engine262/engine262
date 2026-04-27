@@ -36,6 +36,9 @@ import {
   InnerModuleEvaluation,
   InnerModuleLinking,
   InnerModuleLoading,
+  MergeImportedNames,
+  ModuleRequestsKeyEqual,
+  SafePerformPromiseAll,
   SameValue,
   AsyncBlockStart,
   PromiseCapabilityRecord,
@@ -46,6 +49,7 @@ import {
 } from '#self';
 import {
   type ImportAttributeRecord,
+  type ImportedNamesValue,
   type ModuleRequestRecord,
   type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
 } from '#self';
@@ -98,15 +102,21 @@ interface ResolveSetItem {
 
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
 export abstract class AbstractModuleRecord {
-  abstract LoadRequestedModules(hostDefined?: ModuleRecordHostDefined): PromiseObject;
+  abstract LoadRequestedModules(hostDefined?: ModuleRecordHostDefined, importedNames?: ImportedNamesValue): PromiseObject;
 
   abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly JSStringValue[];
 
   abstract ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[]): 'ambiguous' | ResolvedBindingRecord | null;
 
-  abstract Link(): PlainCompletion<void>;
+  abstract Link(importedNames?: ImportedNamesValue): PlainCompletion<void>;
 
-  abstract Evaluate(): Evaluator<PromiseObject>;
+  abstract Evaluate(importedNames?: ImportedNamesValue): Evaluator<PromiseObject>;
+
+  /** https://tc39.es/proposal-deferred-reexports/#abstract-getoptionalindirectexportsmodulerequests */
+  GetOptionalIndirectExportsModuleRequests(_importedNames: ImportedNamesValue): readonly ModuleRequestRecord[] {
+    // 1. Return a new empty List.
+    return [];
+  }
 
   // https://github.com/tc39/ecma262/pull/3492/#abstract-get-module-source-kind
   GetModuleSourceKind(): string {
@@ -188,29 +198,33 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   abstract ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator;
 
   /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
-  LoadRequestedModules(hostDefined?: ModuleRecordHostDefined) {
+  LoadRequestedModules(hostDefined?: ModuleRecordHostDefined, importedNames: ImportedNamesValue = 'all') {
     const module = this;
-
-    // 2. Let pc be ! NewPromiseCapability(%Promise%).
+    // 1. If importedNames is not present, set importedNames to ~all~.
+    // 2. If hostDefined is not present, set hostDefined to empty.
+    // 3. Let pc be ! NewPromiseCapability(%Promise%).
     const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-    // 3. Let state be a new GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
+    // 4. Let state be the GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
     const state = new GraphLoadingState({
       PromiseCapability: pc,
       HostDefined: hostDefined,
     });
-    InnerModuleLoading(state, module, 'recursive-load');
-    // 5. Return pc.[[Promise]].
+    // 5. Perform InnerModuleLoading(state, module, importedNames).
+    InnerModuleLoading(state, module, importedNames);
+    // 6. Return pc.[[Promise]].
     return pc.Promise;
   }
 
   /** https://tc39.es/ecma262/#sec-moduledeclarationlinking */
-  Link() {
+  Link(importedNames: ImportedNamesValue = 'all'): PlainCompletion<void> {
     const module = this;
-    // 1. Assert: module.[[Status]] is unlinked, linked, evaluating-async, or evaluated.
+    // 1. Assert: module.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
     Assert(module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // 2. Let stack be a new empty List.
+    // 2. If importedNames is not present, set importedNames to ~all~.
+    //    (handled via the default parameter above)
+    // 3. Let stack be a new empty List.
     const stack: CyclicModuleRecord[] = [];
-    // 3. Let result be Completion(InnerModuleLinking(module, stack, 0)).
+    // 4. Let result be Completion(InnerModuleLinking(module, stack, 0)).
     const result = InnerModuleLinking(module, stack, 0);
     // 5. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
@@ -223,20 +237,37 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       }
       // b. Assert: module.[[Status]] is unlinked.
       Assert(module.Status === 'unlinked');
-      // c. Return result.
-      return result;
+      // c. Return ? result.
+      return Q(result);
     }
-    // 6. Assert: module.[[Status]] is linked, evaluating-async, or evaluated.
+    // 6. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
     // 7. Assert: stack is empty.
     Assert(stack.length === 0);
-    // 8. Return unused.
+    // 8. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(importedNames).
+    const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests(importedNames);
+    // 9. For each ModuleRequest Record request of optionalIndirectRequests, do
+    for (const request of optionalIndirectRequests) {
+      // a. Let requiredModule be GetImportedModule(module, request).
+      const requiredModule = GetImportedModule(module, request);
+      // b. Assert: requiredModule.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
+      Assert(
+        !(requiredModule instanceof CyclicModuleRecord)
+        || requiredModule.Status === 'unlinked' || requiredModule.Status === 'linked'
+        || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated',
+      );
+      // c. If requiredModule.[[Status]] is unlinked, perform ? requiredModule.Link(request.[[ImportedNames]]).
+      if (requiredModule instanceof CyclicModuleRecord && requiredModule.Status === 'unlinked') {
+        Q(requiredModule.Link(request.ImportedNames));
+      }
+    }
+    // 10. Return unused.
     return NormalCompletion(undefined);
   }
 
   /** https://tc39.es/ecma262/#sec-moduleevaluation */
-  * Evaluate(): Evaluator<PromiseObject> {
-    let module: CyclicModuleRecord = this;
+  * Evaluate(importedNames: ImportedNamesValue = []): Evaluator<PromiseObject> {
+    const module: CyclicModuleRecord = this;
 
     // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
     Assert((function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {
@@ -249,66 +280,103 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       }
       return list;
     }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new'));
-
-    // 3. Assert: module.[[Status]] is linked or evaluated.
+    // 2. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // 3. If module.[[Status]] is evaluating-async or evaluated, then
-    if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      if (module.CycleRoot !== undefined) {
-        module = module.CycleRoot;
-      } else {
-        Assert(module.Status === 'evaluated' && module.EvaluationError !== undefined);
+    // 3. If importedNames is not present, set importedNames to « ».
+    let topLevelPromise: PromiseObject;
+    // 4. If module.[[Status]] is either evaluating-async or evaluated, then
+    if ((module.Status === 'evaluating-async' || module.Status === 'evaluated')
+        && module.CycleRoot !== undefined && module.CycleRoot.TopLevelCapability !== undefined) {
+      // a. Assert: module.[[CycleRoot]].[[TopLevelCapability]] is not empty.
+      // b. Let topLevelPromise be module.[[CycleRoot]].[[TopLevelCapability]].[[Promise]].
+      topLevelPromise = module.CycleRoot.TopLevelCapability.Promise;
+    } else { // 5. Else,
+      // a. Assert: module.[[CycleRoot]] and module.[[TopLevelCapability]] are empty.
+      // b. Let stack be a new empty List.
+      const stack: CyclicModuleRecord[] = [];
+      // c. Let capability be ! NewPromiseCapability(%Promise%).
+      const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+      // d. Set module.[[TopLevelCapability]] to capability.
+      module.TopLevelCapability = capability;
+      // e. Let result be Completion(InnerModuleEvaluation(module, stack, 0)).
+      const result = yield* InnerModuleEvaluation(module, stack, 0);
+      // f. If result is an abrupt completion, then
+      if (result instanceof AbruptCompletion) {
+        // i. For each Cyclic Module Record m of stack, do
+        for (const m of stack) {
+          // 1. Assert: m.[[Status]] is evaluating.
+          Assert(m.Status === 'evaluating');
+          // 2. Set m.[[Status]] to evaluated.
+          m.Status = 'evaluated';
+          // 3. Set m.[[EvaluationError]] to result.
+          m.EvaluationError = result;
+          m.CycleRoot = m;
+        }
+        // ii. Assert: module.[[Status]] is evaluated.
+        // iii. Assert: module.[[EvaluationError]] is result.
+        Assert((module.Status as CyclicModuleRecordStatus) === 'evaluated' && module.EvaluationError === result);
+        // iv. Perform ! Call(capability.[[Reject]], undefined, « result.[[Value]] »).
+        X(Call(capability.Reject, Value.undefined, [result.Value]));
+      } else { // g. Else,
+        const postStatus = module.Status as CyclicModuleRecordStatus;
+        // i. Assert: module.[[Status]] is either evaluating-async or evaluated.
+        Assert(postStatus === 'evaluating-async' || postStatus === 'evaluated');
+        // ii. Assert: module.[[EvaluationError]] is empty.
+        Assert(module.EvaluationError === undefined);
+        // iii. If module.[[Status]] is evaluated, then
+        if (postStatus === 'evaluated') {
+          //    1. NOTE: This implies that evaluation of module completed synchronously.
+          //    2. Assert: module.[[AsyncEvaluationOrder]] is unset.
+          Assert(typeof module.AsyncEvaluationOrder !== 'number');
+          //    3. Perform ! Call(capability.[[Resolve]], undefined, « undefined »).
+          X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
+        }
+        // iv. Assert: stack is empty.
+        Assert(stack.length === 0);
       }
+      // h. Let topLevelPromise be capability.[[Promise]].
+      topLevelPromise = capability.Promise;
     }
-    // 4. If module.[[TopLevelCapability]] is not ~empty~, then
-    if (module.TopLevelCapability !== undefined) {
-      // a. Return module.[[TopLevelCapability]].[[Promise]].
-      return module.TopLevelCapability.Promise;
+
+    // 6. If topLevelPromise.[[PromiseState]] is rejected, return topLevelPromise.
+    if (topLevelPromise.PromiseState === 'rejected') {
+      return topLevelPromise;
     }
-    // 4. Let stack be a new empty List.
-    const stack: CyclicModuleRecord[] = [];
-    // (*TopLevelAwait) 6. Let capability be ! NewPromiseCapability(%Promise%).
-    const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-    // (*TopLevelAwait) 7. Set module.[[TopLevelCapability]] to capability.
-    module.TopLevelCapability = capability;
-    // 5. Let result be InnerModuleEvaluation(module, stack, 0).
-    const result = yield* InnerModuleEvaluation(module, stack, 0);
-    // 6. If result is an abrupt completion, then
-    if (result instanceof AbruptCompletion) {
-      // a. For each Cyclic Module Record m in stack, do
-      for (const m of stack) {
-        // i. Assert: m.[[Status]] is evaluating.
-        Assert(m.Status === 'evaluating');
-        // iii. Set m.[[Status]] to evaluated.
-        m.Status = 'evaluated';
-        // iv. Set m.[[EvaluationError]] to result.
-        m.EvaluationError = result;
-        // v. Set _m_.[[CycleRoot]] to _m_.
-        m.CycleRoot = m;
+
+    // 7. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(importedNames).
+    const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests(importedNames);
+    // 8. Let promises be « topLevelPromise ».
+    const promises: PromiseObject[] = [topLevelPromise];
+    // 9. For each ModuleRequest Record request of optionalIndirectRequests, do
+    for (const request of optionalIndirectRequests) {
+      // a. Let requiredModule be GetImportedModule(module, request).
+      const requiredModule = GetImportedModule(module, request);
+      // b. Assert: requiredModule.[[Status]] is one of linked, evaluating-async, or evaluated.
+      Assert(
+        !(requiredModule instanceof CyclicModuleRecord)
+        || requiredModule.Status === 'linked'
+        || requiredModule.Status === 'evaluating-async'
+        || requiredModule.Status === 'evaluated',
+      );
+      // c. Let innerPromise be requiredModule.Evaluate(request.[[ImportedNames]]).
+      const innerPromise = yield* requiredModule.Evaluate(request.ImportedNames);
+      // d. If innerPromise.[[PromiseState]] is rejected, return innerPromise.
+      if (innerPromise.PromiseState === 'rejected') {
+        return innerPromise;
       }
-      // b. Assert: module.[[Status]] is evaluated and module.[[EvaluationError]] is result.
-      Assert(module.Status === 'evaluated' && module.EvaluationError === result);
-      // c. Return result.
-      // c. (*TopLevelAwait) Perform ! Call(capability.[[Reject]], undefined, «result.[[Value]]»).
-      X(Call(capability.Reject, Value.undefined, [result.Value]));
-    } else { // (*TopLevelAwait) 10. Otherwise,
-      // a. Assert: module.[[Status]] is evaluating-async or evaluated.
-      Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated');
-      // b. Assert: module.[[EvaluationError]] is ~empty~.
-      Assert(module.EvaluationError === undefined);
-      // c. If module.[[Status]] is evaluated, then
-      if (module.Status === 'evaluated') {
-        // i. Assert: module.[[AsyncEvaluationOrder]] is not an integer.
-        Assert(typeof module.AsyncEvaluationOrder !== 'number');
-        // ii. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
-        X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
-      }
-      // d. Assert: stack is empty.
-      Assert(stack.length === 0);
+      // e. Append innerPromise to promises.
+      promises.push(innerPromise);
     }
-    // 9. Return undefined.
-    // (*TopLevelAwait) 11. Return capability.[[Promise]].
-    return capability.Promise;
+
+    // 10. If promises contains a Promise P such that P.[[PromiseState]] is pending, then
+    if (promises.some((p) => p.PromiseState === 'pending')) {
+      // a. NOTE: If all modules in the graph are synchronous, the usage of promises is an internal specification detail.
+      //    In that case, we do not use SafePerformPromiseAll to keep returning an already settled promise.
+      // b. Return SafePerformPromiseAll(CreateListIteratorRecord(promises)).
+      return SafePerformPromiseAll(promises);
+    }
+    // 11. Return topLevelPromise.
+    return topLevelPromise;
   }
 
   override mark(m: GCMarker) {
@@ -320,7 +388,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   }
 }
 
-export type SourceTextModuleRecordInit = CyclicModuleRecordInit & Pick<SourceTextModuleRecord, 'ImportMeta' | 'ECMAScriptCode' | 'Context' | 'ImportEntries' | 'LocalExportEntries' | 'IndirectExportEntries' | 'StarExportEntries'>;
+export type SourceTextModuleRecordInit = CyclicModuleRecordInit & Pick<SourceTextModuleRecord, 'ImportMeta' | 'ECMAScriptCode' | 'Context' | 'ImportEntries' | 'LocalExportEntries' | 'IndirectExportEntries' | 'StarExportEntries'> & Partial<Pick<SourceTextModuleRecord, 'OptionalIndirectExportEntries'>>;
 /** https://tc39.es/ecma262/#sec-source-text-module-records */
 export class SourceTextModuleRecord extends CyclicModuleRecord {
   ImportMeta: ObjectValue | undefined;
@@ -337,6 +405,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
 
   readonly StarExportEntries: readonly ExportEntry[];
 
+  /** https://tc39.es/proposal-deferred-reexports/ — deferred re-export entries (`export defer ... from`). */
+  readonly OptionalIndirectExportEntries: readonly ExportEntry[];
+
   constructor(init: SourceTextModuleRecordInit) {
     super(init);
 
@@ -347,6 +418,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     this.LocalExportEntries = init.LocalExportEntries;
     this.IndirectExportEntries = init.IndirectExportEntries;
     this.StarExportEntries = init.StarExportEntries;
+    this.OptionalIndirectExportEntries = init.OptionalIndirectExportEntries ?? [];
   }
 
   /** https://tc39.es/ecma262/#sec-getexportednames */
@@ -376,8 +448,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // c. Append e.[[ExportName]] to exportedNames.
       exportedNames.push(e.ExportName);
     }
-    // 7. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
-    for (const e of module.IndirectExportEntries) {
+    // 6. Let allNamedExportEntries be the list-concatenation of module.[[LocalExportEntries]], module.[[IndirectExportEntries]], and module.[[OptionalIndirectExportEntries]].
+    const allNamedExportEntries = [...module.IndirectExportEntries, ...module.OptionalIndirectExportEntries];
+    // 7. For each ExportEntry Record e of allNamedExportEntries, do
+    //    https://tc39.es/proposal-deferred-reexports/#sec-getexportednames
+    for (const e of allNamedExportEntries) {
       // a. Assert: module imports a specific binding for this export.
       // b. Assert: e.[[ExportName]] is not null.
       Assert(!(e.ExportName instanceof NullValue));
@@ -438,8 +513,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         });
       }
     }
-    // 6. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
-    for (const e of module.IndirectExportEntries) {
+    // 6. Let allIndirectEntries be the list-concatenation of module.[[IndirectExportEntries]] and module.[[OptionalIndirectExportEntries]].
+    const allIndirectEntries = [...module.IndirectExportEntries, ...module.OptionalIndirectExportEntries];
+    // 7. For each ExportEntry Record e in allIndirectEntries, do
+    //    https://tc39.es/proposal-deferred-reexports/#sec-resolveexport
+    for (const e of allIndirectEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName)) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
@@ -527,7 +605,69 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return starResolution;
   }
 
-  /** https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
+  /** https://tc39.es/proposal-deferred-reexports/#sec-GetOptionalIndirectExportsModuleRequests */
+  override GetOptionalIndirectExportsModuleRequests(importedNames: ImportedNamesValue): readonly ModuleRequestRecord[] {
+    // 1. Let requests be a new empty List.
+    const requests: ModuleRequestRecord[] = [];
+    // 2. For each ExportEntry Record oie of module.[[OptionalIndirectExportEntries]], do
+    for (const oie of this.OptionalIndirectExportEntries) {
+      const exportName = oie.ExportName;
+      // a. If importedNames is all or importedNames contains oie.[[ExportName]], then
+      let included: boolean;
+      if (importedNames === 'all') {
+        included = true;
+      } else if (importedNames === 'all-but-default') {
+        included = exportName instanceof JSStringValue && exportName.stringValue() !== 'default';
+      } else if (exportName instanceof JSStringValue) {
+        included = (importedNames as readonly JSStringValue[]).some((n) => n.stringValue() === exportName.stringValue());
+      } else {
+        included = false;
+      }
+      if (!included) {
+        continue;
+      }
+      // i. Let nextRequest be oie.[[ModuleRequest]].
+      const nextRequest = oie.ModuleRequest as ModuleRequestRecord;
+      // ii. Let existingRequest be empty.
+      let existingRequest: ModuleRequestRecord | undefined;
+      // iii. For each ModuleRequest Record r in requests, do
+      for (const r of requests) {
+        // 1. If existingRequest is empty and ModuleRequestsKeyEqual(r, nextRequest) is true and r.[[Phase]] is nextRequest.[[Phase]], then
+        if (existingRequest === undefined && ModuleRequestsKeyEqual(r, nextRequest) && r.Phase === nextRequest.Phase) {
+          // a. Set existingRequest to r.
+          existingRequest = r;
+        }
+      }
+      // iv. Let newImportedNames be all.
+      let newImportedNames: ImportedNamesValue = 'all';
+      // v. Assert: oie.[[ImportName]] is a String or namespace.
+      // (this is deviating from spec because spec looks wrong)
+      Assert(oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace');
+      // vi. If oie.[[ImportName]] is a String, set newImportedNames to « oie.[[ImportName]] ».
+      if (oie.ImportName instanceof JSStringValue) {
+        newImportedNames = [oie.ImportName];
+      }
+      // vii. If existingRequest is empty, then
+      if (existingRequest === undefined) {
+        // 1. Let request be the ModuleRequest Record { [[Specifier]]: nextRequest.[[Specifier]], [[Attributes]]: nextRequest.[[Attributes]], [[Phase]]: nextRequest.[[Phase]], [[ImportedNames]]: newImportedNames }.
+        const request: ModuleRequestRecord = {
+          Specifier: nextRequest.Specifier,
+          Attributes: nextRequest.Attributes,
+          Phase: nextRequest.Phase,
+          ImportedNames: newImportedNames,
+        };
+        // 2. Append request to requests.
+        requests.push(request);
+      } else { // viii. Else,
+        // 1. Set existingRequest.[[ImportedNames]] to MergeImportedNames(existingRequest.[[ImportedNames]], newImportedNames).
+        (existingRequest as Mutable<ModuleRequestRecord>).ImportedNames = MergeImportedNames(existingRequest.ImportedNames, newImportedNames);
+      }
+    }
+    // 3. Return requests.
+    return requests;
+  }
+
+  /** https://tc39.es/proposal-deferred-reexports/#sec-source-text-module-record-initialize-environment */
   InitializeEnvironment() {
     const module = this as Mutable<SourceTextModuleRecord>;
     // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
@@ -684,8 +824,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
 
   /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
   * ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator {
+    // 1. Let module be this Source Text Module Record.
     const module = this;
-    // Assert: _module_ has been linked and declarations in its module environment have been instantiated.
+    // 2. Assert: module has been linked and declarations in its module environment have been instantiated.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context!;
     if (module.HasTLA === Value.false) {

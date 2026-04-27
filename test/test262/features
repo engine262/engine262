@@ -6,6 +6,7 @@
 # import-defer = import-defer
 decorators = decorators
 Temporal = temporal
+export-defer = export-defer
 
 # To be implemented
 -await-dictionary
