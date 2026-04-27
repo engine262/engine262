@@ -27,6 +27,8 @@ import {
   Call,
   ContinueDynamicImport,
   PromiseCapabilityRecord,
+  Construct,
+  type ArrayBufferObject,
 } from './all.mts';
 import {
   Realm,
@@ -36,6 +38,7 @@ import {
   type Arguments, type ImportAttributeRecord, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
   Throw,
   JSStringValue,
+  type HostLoadImportedModulePayloadOpaque,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -86,7 +89,7 @@ export function InnerModuleLoading(state: GraphLoadingState, module: AbstractMod
           InnerModuleLoading(state, record.Module);
         } else { // iii. Else,
           // 1. Perform HostLoadImportedModule(module, request, state.[[HostDefined]], state).
-          HostLoadImportedModule(module, request, state.HostDefined, state);
+          HostLoadImportedModule(module, request, state.HostDefined, { data: state });
         }
       }
 
@@ -475,7 +478,8 @@ export function GetImportedModule(referrer: CyclicModuleRecord, request: ModuleR
 }
 
 /** https://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
-export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, moduleRequest: ModuleRequestRecord, result: PlainCompletion<AbstractModuleRecord>, state: GraphLoadingState | PromiseCapabilityRecord) {
+export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, moduleRequest: ModuleRequestRecord, payload: HostLoadImportedModulePayloadOpaque, result: PlainCompletion<AbstractModuleRecord>) {
+  const payload_ = payload.data;
   result = EnsureCompletion(result);
   // 1. If result is a normal completion, then
   if (result.Type === 'normal') {
@@ -491,13 +495,13 @@ export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModul
   }
 
   // 2. If payload is a GraphLoadingState Record, then
-  if (state instanceof GraphLoadingState) {
+  if (payload_ instanceof GraphLoadingState) {
     // a. Perform ContinueModuleLoading(payload, result).
-    ContinueModuleLoading(state, result);
+    ContinueModuleLoading(payload_, result);
     // 3. Else,
   } else {
     // a. Perform ContinueDynamicImport(payload, result).
-    ContinueDynamicImport(state, result, moduleRequest.Phase);
+    ContinueDynamicImport(payload_, result, moduleRequest.Phase);
   }
 
   // 4. Return unused.
@@ -511,7 +515,7 @@ export function AllImportAttributesSupported(attributes: readonly ImportAttribut
 
   const supported: readonly string[] = HostGetSupportedImportAttributes();
   for (const attribute of attributes) {
-    if (!supported.includes(attribute.Key.stringValue())) {
+    if (!supported.includes(attribute.Key)) {
       return attribute.Key;
     }
   }
@@ -574,4 +578,11 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
 /** https://tc39.es/proposal-import-text/#sec-create-text-module */
 export function CreateTextModule(source: JSStringValue) {
   return CreateDefaultExportSyntheticModule(source);
+}
+
+export function CreateBytesModule(arrayBuffer: ArrayBufferObject) {
+  // TODO: immutable array buffer
+  // 1. Assert: IsImmutableBuffer(arrayBuffer) is true.
+  const uint8Array = X(Construct(surroundingAgent.intrinsic('%Uint8Array%'), [arrayBuffer]));
+  return CreateDefaultExportSyntheticModule(uint8Array);
 }

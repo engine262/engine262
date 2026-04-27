@@ -4,7 +4,7 @@ import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mts';
 import {
-  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
+  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ImportAttributeRecord, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../utils/language.mts';
@@ -58,7 +58,7 @@ function* EvaluateImportCall(
   IfAbruptRejectPromise(specifierString, promiseCapability);
   __ts_cast__<JSStringValue>(specifierString);
   // 10. Let attributes nw a new empty List.
-  const attributes = [];
+  const attributes: ImportAttributeRecord[] = [];
   // 11. If options is not undefined, then
   if (options !== Value.undefined) {
     // a. If options is not an Object, then
@@ -109,7 +109,7 @@ function* EvaluateImportCall(
             return promiseCapability.Promise;
           }
           // b. Append the ImportAttribute Record { [[Key]]: key, [[Value]]: value } to attributes.
-          attributes.push({ Key: key, Value: value });
+          attributes.push({ Key: key.value, Value: value.value });
         }
       }
       // e. If AllImportAttributesSupported(attributes) is false, then
@@ -117,19 +117,19 @@ function* EvaluateImportCall(
       if (unsupportedAttributeKey) {
         // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
         X(Call(promiseCapability.Reject, Value.undefined, [
-          Throw.TypeError('Unsupported import attribute "$1"', unsupportedAttributeKey.stringValue()).Value,
+          Throw.TypeError('Unsupported import attribute "$1"', unsupportedAttributeKey).Value,
         ]));
         // ii. Return promiseCapability.[[Promise]].
         return promiseCapability.Promise;
       }
       // f. Sort attributes according to the lexicographic order of their [[Key]] field, treating the value of each such field as a sequence of UTF-16 code unit values.
-      attributes.sort((a, b) => (a.Key.value < b.Key.value ? -1 : 1));
+      attributes.sort((a, b) => (a.Key < b.Key ? -1 : 1));
     }
   }
   // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
-  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString, Attributes: attributes, Phase: phase };
+  const moduleRequest: ModuleRequestRecord = { Specifier: specifierString.value, Attributes: attributes, Phase: phase };
   // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
-  HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, moduleRequest, undefined, promiseCapability);
+  HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, moduleRequest, undefined, { data: promiseCapability });
   // 9. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }

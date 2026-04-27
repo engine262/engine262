@@ -10,7 +10,7 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import { createRequire } from 'node:module';
 import { createConsole } from '../inspector/utils.mts';
 import type { NodeWebsocketInspector } from './inspector.mts';
-import { loadImportedModule } from './module.mts';
+import { fileSystemModuleLoader } from './module.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
@@ -30,6 +30,7 @@ import {
   PerformPromiseThen,
   CreateBuiltinFunction,
   runJobQueue,
+  composeModuleLoaders,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -112,7 +113,9 @@ if (argv.values.features === 'all') {
 const agent = new Agent({
   features,
   supportedImportAttributes: ['type'],
-  loadImportedModule,
+  hostHooks: {
+    HostLoadImportedModule: composeModuleLoaders([fileSystemModuleLoader]),
+  },
 });
 setSurroundingAgent(agent);
 

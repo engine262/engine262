@@ -1,25 +1,46 @@
-import { type AbstractModuleRecord, type PlainCompletion } from '#self';
-
-type ModuleType = 'js' | 'json' | 'text' | 'bytes' | string;
-type ModuleAttributes = Record<string, string>;
+import {
+  AbstractModuleRecord,
+  CyclicModuleRecord, Realm, ScriptRecord, type ModuleRequestRecord, type PlainCompletion,
+} from '#self';
 
 interface ModuleCacheEntry {
   result?: PlainCompletion<AbstractModuleRecord>;
   pending?: PromiseWithResolvers<PlainCompletion<AbstractModuleRecord>>;
 }
 
+export type ModuleCacheKeyObject = Pick<ModuleRequestRecord, 'Specifier' | 'Attributes'>;
+
 export type ModuleCacheKey = string & { __ModuleCacheKey: never };
 
+export type ModuleCacheLoader = (setCache: (value: PlainCompletion<AbstractModuleRecord>, cacheKey?: ModuleCacheKey) => void) => void;
+
 export class ModuleCache {
+  static fromReferer(referrer: CyclicModuleRecord | ScriptRecord | Realm) {
+    const realm = referrer instanceof Realm ? referrer : referrer.Realm;
+    const cache = realm.HostDefined?.resolverCache;
+    if (cache instanceof ModuleCache) {
+      return cache;
+    }
+    throw new Error('Module cache is not available in the referring realm');
+  }
+
   #cache = new Map<ModuleCacheKey, ModuleCacheEntry>();
 
-  toCacheKey(specifier: string, type: ModuleType, attributes: ModuleAttributes): ModuleCacheKey {
-    const sorted: ModuleAttributes = {};
-    for (const key of Object.keys(attributes).sort()) {
-      sorted[key] = attributes[key];
+  static toCacheKey(moduleRequest: ModuleCacheKeyObject): ModuleCacheKey {
+    const { Specifier, Attributes } = moduleRequest;
+    const sorted: Record<string, string> = {};
+    for (const attr of Attributes.toSorted((a, b) => (a.Key < b.Key ? -1 : 1))) {
+      sorted[attr.Key] = attr.Value;
     }
-    sorted.type = type;
-    return JSON.stringify([specifier, sorted]) as ModuleCacheKey;
+    return JSON.stringify([Specifier, sorted]) as ModuleCacheKey;
+  }
+
+  toCacheKey(moduleRequest: ModuleCacheKeyObject): ModuleCacheKey {
+    return this.toCacheKey(moduleRequest);
+  }
+
+  static {
+    ModuleCache.prototype.toCacheKey = ModuleCache.toCacheKey;
   }
 
   set(key: ModuleCacheKey, result: PlainCompletion<AbstractModuleRecord>): void {
@@ -36,13 +57,13 @@ export class ModuleCache {
     }
   }
 
-  load(key: ModuleCacheKey, loader: (setCache: (value: PlainCompletion<AbstractModuleRecord>) => void) => void, callback: (result: PlainCompletion<AbstractModuleRecord>) => void): void {
+  load(key: ModuleCacheKey, loader: ModuleCacheLoader, callback: (result: PlainCompletion<AbstractModuleRecord>) => void): void {
     if (!this.#cache.has(key)) {
       const promise = Promise.withResolvers<PlainCompletion<AbstractModuleRecord>>();
       this.#cache.set(key, { pending: promise });
-      loader((value) => {
+      loader((value, cacheKey) => {
         promise.resolve(value);
-        this.#cache.set(key, { result: value });
+        this.#cache.set(cacheKey || key, { result: value });
         callback(value);
       });
       return;

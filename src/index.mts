@@ -24,7 +24,11 @@ export { skipDebugger } from './utils/evaluator.mts';
 export {
   CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
 } from './utils/stack.mts';
-export { ModuleCache, type ModuleCacheKey } from './utils/module.mts';
+export { ModuleCache, type ModuleCacheKey, type ModuleCacheLoader } from './utils/module.mts';
+export {
+  type ModuleLoader, type ModuleLoaderResultWithCacheKey, type ModuleLoaderResultWithoutCacheKey, composeModuleLoaders,
+} from './utils/module-loader.mts';
+export { createBuiltinModuleLoader, type BuiltinModuleSource, type BuiltinModuleLoaderOptions } from './utils/module-loaders/builtin-loader.mts';
 
 export { isBoundFunctionObject, type BoundFunctionObject } from './intrinsics/FunctionPrototype.mts';
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';

@@ -1,9 +1,10 @@
 import fs from 'node:fs';
-import { loadImportedModule, loadImportedModuleSync } from '../lib-src/node/module.mts';
+import { fileSystemModuleLoader, fileSystemModuleLoaderSync } from '../lib-src/node/module.mts';
 import { supportColor, type SkipReason } from './tui.mts';
 import {
   Agent, ManagedRealm, type OrdinaryObject, OrdinaryObjectCreate, createTest262Intrinsics,
   ModuleCache,
+  composeModuleLoaders,
 } from '#self';
 
 export interface Attrs {
@@ -140,7 +141,9 @@ export function createAgent({ features = [], asyncModuleLoader = false }: Create
   const agent = new Agent({
     features,
     supportedImportAttributes: ['type'],
-    loadImportedModule: asyncModuleLoader ? loadImportedModule : loadImportedModuleSync,
+    hostHooks: {
+      HostLoadImportedModule: composeModuleLoaders([asyncModuleLoader ? fileSystemModuleLoader : fileSystemModuleLoaderSync]),
+    },
     onDebugger() {
       // attach an empty debugger to make sure our debugger infrastructure does not break the engine
       agent.resumeEvaluate({ noBreakpoint: true });

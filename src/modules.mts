@@ -52,8 +52,8 @@ import {
 
 // https://tc39.es/ecma262/#loadedmodulerequest-record
 export interface LoadedModuleRequestRecord {
-  readonly Specifier: JSStringValue;
-  readonly Attributes: ImportAttributeRecord[];
+  readonly Specifier: string;
+  readonly Attributes: readonly ImportAttributeRecord[];
   readonly Module: AbstractModuleRecord
 }
 
@@ -780,6 +780,6 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
   * SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator {
     const module = this;
     // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
-    return yield* (module.Environment as ModuleEnvironmentRecord).SetMutableBinding(name, value, Value.true);
+    return yield* module.Environment!.SetMutableBinding(name, value, Value.true);
   }
 }

@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
 import {
-  AbstractModuleRecord, Agent, Call, EnsureCompletion, JSStringValue, ManagedRealm, NewPromiseCapability, PromiseCapabilityRecord, setSurroundingAgent, skipDebugger, Value, type PromiseObject,
+  AbstractModuleRecord, Agent, Call, EnsureCompletion, FinishLoadingImportedModule, JSStringValue, ManagedRealm, NewPromiseCapability, PromiseCapabilityRecord, setSurroundingAgent, skipDebugger, Throw, Value, type PromiseObject,
 } from '#self';
 
 test('Import attributes', () => {
@@ -9,10 +9,12 @@ test('Import attributes', () => {
 
   const agent = new Agent({
     supportedImportAttributes: ['fruit', 'animal'],
-    loadImportedModule: (_referrer, _specifier, attrs, _hostDefined, finish) => {
-      calls += 1;
-      attributes = attrs;
-      finish(realm.compileModule(''));
+    hostHooks: {
+      HostLoadImportedModule(referrer, moduleRequest, _hostDefined, payload) {
+        calls += 1;
+        attributes = new Map(moduleRequest.Attributes.map((attr) => [attr.Key, attr.Value]));
+        FinishLoadingImportedModule(referrer, moduleRequest, payload, realm.compileModule(''));
+      },
     },
   });
   setSurroundingAgent(agent);
@@ -91,16 +93,19 @@ test('Custom module records', () => {
   }
 
   const agent = new Agent({
-    loadImportedModule(referrer, specifier, _attributes, _hostDefined, finish) {
-      if (specifier !== 'dep') {
-        throw new Error('Invalid specifier');
-      }
-      finish(new CustomModuleRecord({
-        Realm: (referrer as AbstractModuleRecord).Realm,
-        Environment: undefined,
-        Namespace: undefined,
-        HostDefined: {},
-      }));
+    hostHooks: {
+      HostLoadImportedModule(referrer, moduleRequest, _hostDefined, payload) {
+        if (moduleRequest.Specifier !== 'dep') {
+          FinishLoadingImportedModule(referrer, moduleRequest, payload, Throw.SyntaxError('Invalid specifier'));
+        } else {
+          FinishLoadingImportedModule(referrer, moduleRequest, payload, new CustomModuleRecord({
+            Realm: (referrer as AbstractModuleRecord).Realm,
+            Environment: undefined,
+            Namespace: undefined,
+            HostDefined: {},
+          }));
+        }
+      },
     },
   });
   setSurroundingAgent(agent);

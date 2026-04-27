@@ -154,10 +154,10 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
   surroundingAgent.executionContextStack.push(evalContext);
   const referrer = evalContext.Realm;
   HostLoadImportedModule(referrer, {
-    Specifier: specifierString,
+    Specifier: specifierString.value,
     Phase: 'evaluation',
     Attributes: [],
-  }, undefined, innerCapability);
+  }, undefined, { data: innerCapability });
   surroundingAgent.executionContextStack.pop(evalContext);
   const onFullfilled = CreateBuiltinFunction(function* onFullfilled([exports = Value.undefined]) {
     Assert(isModuleNamespaceObject(exports));

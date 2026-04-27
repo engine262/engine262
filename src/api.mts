@@ -23,8 +23,8 @@ import {
   type ParseScriptHostDefined,
 } from './parse.mts';
 import {
-  AbstractModuleRecord,
-  ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
+  CyclicModuleRecord,
+  SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
@@ -42,7 +42,9 @@ import {
   CreateTextModule,
   PerformPromiseThen,
   CreateBuiltinFunction,
-  ValueOfNormalCompletion,
+  AllocateArrayBuffer,
+  skipDebugger,
+  CreateBytesModule,
 } from '#self';
 import {
   Realm,
@@ -348,13 +350,13 @@ export class ManagedRealm extends Realm {
   }
 
 
-  evaluateModule<T extends ModuleRecord>(sourceText: string | T, specifier: string | undefined, finish: (completion: ValueCompletion<PromiseObject>) => void) {
+  evaluateModule<T extends CyclicModuleRecord>(sourceText: string | T, specifier: string | undefined, finish: (completion: ValueCompletion<PromiseObject>) => void) {
     using _ = this.scope();
     if (sourceText === undefined || sourceText === null) throw new TypeError('sourceText must be a string or a ModuleRecord');
-    const moduleCompletion = typeof sourceText === 'string' ? this.compileModule(sourceText, { specifier }) as PlainCompletion<AbstractModuleRecord> : sourceText;
+    const moduleCompletion = typeof sourceText === 'string' ? this.compileModule(sourceText, { specifier }) : sourceText;
 
     if (this.HostDefined.resolverCache && typeof specifier === 'string') {
-      const key = this.HostDefined.resolverCache.toCacheKey(specifier, 'js', {});
+      const key = this.HostDefined.resolverCache.toCacheKey({ Specifier: specifier, Attributes: [] });
       this.HostDefined.resolverCache.set(key, moduleCompletion);
     }
 
@@ -362,7 +364,7 @@ export class ManagedRealm extends Realm {
       finish(moduleCompletion);
       return;
     }
-    const module = ValueOfNormalCompletion(moduleCompletion);
+    const module = X(moduleCompletion);
 
     PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
       const link = module.Link();
@@ -378,7 +380,7 @@ export class ManagedRealm extends Realm {
     runJobQueue();
   }
 
-  createJSONModule(sourceText: string) {
+  createJSONModule(sourceText: string): PlainCompletion<SyntheticModuleRecord> {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
@@ -386,11 +388,20 @@ export class ManagedRealm extends Realm {
     return module;
   }
 
-  createTextModule(sourceText: string) {
+  createTextModule(sourceText: string): PlainCompletion<SyntheticModuleRecord> {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
     const module = this.scope(() => CreateTextModule(Value(sourceText)));
+    return module;
+  }
+
+  createBytesModule(content: Uint8Array): PlainCompletion<SyntheticModuleRecord> {
+    if (!(content instanceof Uint8Array)) {
+      throw new TypeError('content must be a Uint8Array');
+    }
+    const arrayBuffer = Q(skipDebugger(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), content.buffer.byteLength)));
+    const module = this.scope(() => CreateBytesModule(arrayBuffer));
     return module;
   }
 }
