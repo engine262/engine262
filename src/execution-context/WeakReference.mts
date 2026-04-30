@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   type FinalizationRegistryObject, type PlainCompletion, Q, NormalCompletion, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, UndefinedValue, Value, type ValueEvaluator, KeyForSymbol,
-  type PlainEvaluator,
+  GetActiveScriptOrModule,
 } from '#self';
 
 
@@ -13,9 +13,14 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg: FinalizationRegist
   } else {
     if (!surroundingAgent.scheduledForCleanup.has(fg)) {
       surroundingAgent.scheduledForCleanup.add(fg);
-      surroundingAgent.queueJob('FinalizationCleanup', function* finalizationJob(): PlainEvaluator {
-        surroundingAgent.scheduledForCleanup.delete(fg);
-        Q(yield* (CleanupFinalizationRegistry(fg)));
+      surroundingAgent.jobQueue.push({
+        queueName: 'FinalizationCleanup',
+        job: function finalizationJob() {
+          surroundingAgent.scheduledForCleanup.delete(fg);
+          return CleanupFinalizationRegistry(fg);
+        },
+        callerRealm: surroundingAgent.currentRealmRecord,
+        callerScriptOrModule: GetActiveScriptOrModule(),
       });
     }
   }

@@ -12,7 +12,7 @@ import {
 } from '../evaluator.mts';
 import { kInternal } from '../utils/internal.mts';
 import {
-  AbstractModuleRecord, CyclicModuleRecord, ObjectValue, runJobQueue, type ValueCompletion, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
+  AbstractModuleRecord, CyclicModuleRecord, ObjectValue, type ValueCompletion, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
   ManagedRealm,
   SourceTextModuleRecord,
   type ModuleRequestRecord,
@@ -39,7 +39,7 @@ export interface Engine262Feature {
   name: string;
   flag: string;
   url: string;
-  enableInPlayground: boolean;
+  enableInPlayground?: boolean;
 }
 
 // unflag a feature when it reaches stage 3.
@@ -55,7 +55,6 @@ export const FEATURES = ([
     name: 'Skip bugfix for field initializers in decorator',
     flag: 'decorators.no-bugfix.1',
     url: '',
-    enableInPlayground: false,
   },
   {
     name: 'Temporal',
@@ -71,7 +70,7 @@ export const FEATURES = ([
     enableInPlayground: true,
   },
   {
-    name: 'Promise#allKeyed',
+    name: 'Promise.allKeyed',
     flag: 'promise.allkeyed',
     url: 'https://github.com/tc39/proposal-await-dictionary',
     enableInPlayground: true,
@@ -111,9 +110,18 @@ export class ExecutionContextStack extends Array<ExecutionContext> {
   }
 }
 
+/** https://tc39.es/ecma262/#sec-host-promise-rejection-tracker */
+export type HostPromiseRejectionTracker = (promise: PromiseObject, operation: 'reject' | 'handle') => void;
 export interface HostHooks {
-  HostInitializeShadowRealm?(realmRec: Realm, innerContext: ExecutionContext, O: ShadowRealmObject): PlainEvaluator | PlainCompletion<void>;
+  /** https://tc39.es/ecma262/#sec-hostensurecancompilestrings */
   HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator | PlainCompletion<void>;
+  /** https://tc39.es/proposal-shadowrealm/#sec-hostinitializeshadowrealm */
+  HostInitializeShadowRealm?(realmRec: Realm, innerContext: ExecutionContext, O: ShadowRealmObject): PlainEvaluator | PlainCompletion<void>;
+  /** https://tc39.es/ecma262/#sec-#sec-HostLoadImportedModule */
+  HostLoadImportedModule?(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: HostLoadImportedModulePayloadOpaque): void;
+  /** https://tc39.es/ecma262/#sec-host-promise-rejection-tracker */
+  HostPromiseRejectionTrackers?: Set<HostPromiseRejectionTracker>;
+  /** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
   HostSystemUTCEpochNanoseconds?(global: ObjectValue): EpochNanoseconds;
 }
 
@@ -129,11 +137,13 @@ export interface AgentHostDefined {
   cleanupFinalizationRegistry?(FinalizationRegistry: FinalizationRegistryObject): PlainCompletion<void>;
   features?: readonly string[];
   supportedImportAttributes?: readonly string[];
-  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
   onDebugger?(reason?: DebuggerPauseReason): void;
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord, scriptId: string): void;
   onNodeEvaluation?(node: ParseNode, realm: Realm): void;
+
+  /** Promise rejection is standardized, but uncaught exception is not. */
+  uncaughtExceptionTrackers?: Set<(error: Value) => void>;
 
   errorStackAttachNativeStack?: boolean;
 }
@@ -217,13 +227,8 @@ export function* HostEnsureCanCompileStrings(calleeRealm: Realm, parameterString
 }
 
 export function HostPromiseRejectionTracker(promise: PromiseObject, operation: 'reject' | 'handle') {
-  if (surroundingAgent.debugger_isPreviewing) {
-    return;
-  }
-  const realm = surroundingAgent.currentRealmRecord;
-  if (realm && realm.HostDefined.promiseRejectionTracker) {
-    X(realm.HostDefined.promiseRejectionTracker(promise, operation));
-  }
+  if (surroundingAgent.debugger_isPreviewing) return;
+  surroundingAgent.hostDefinedOptions.hostHooks?.HostPromiseRejectionTrackers?.forEach((tracker) => tracker(promise, operation));
 }
 
 export function HostHasSourceTextAvailable(func: FunctionObject) {
@@ -241,36 +246,21 @@ export function HostGetSupportedImportAttributes(): readonly string[] {
 }
 
 // #sec-HostLoadImportedModule
-export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: GraphLoadingState | PromiseCapabilityRecord) {
-  if (surroundingAgent.hostDefinedOptions.loadImportedModule) {
-    const executionContext = surroundingAgent.runningExecutionContext;
-    let result: PlainCompletion<AbstractModuleRecord> | undefined;
-    let sync = true;
-    const attributes = new Map(moduleRequest.Attributes.map(({ Key, Value }) => [Key.stringValue(), Value.stringValue()]));
-    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, moduleRequest.Specifier.stringValue(), attributes, hostDefined, (res) => {
-      result = res;
-      if (!sync) {
-        // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
-        surroundingAgent.executionContextStack.push(executionContext);
-        surroundingAgent.queueJob('FinishLoadingImportedModule', function* finishLoadingJob(): PlainEvaluator {
-          result = EnsureCompletion(result);
-          Assert(!!result && (result.Type === 'normal' || result.Type === 'throw'));
-          FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
-        });
-        surroundingAgent.executionContextStack.pop(executionContext);
-        runJobQueue();
-      }
-    });
-    sync = false;
-    if (result !== undefined) {
-      result = EnsureCompletion(result);
-      Assert(result.Type === 'normal' || result.Type === 'throw');
-      FinishLoadingImportedModule(referrer, moduleRequest, result, payload);
-    }
+export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: HostLoadImportedModulePayloadOpaque) {
+  const HostHook = surroundingAgent.hostDefinedOptions.hostHooks?.HostLoadImportedModule;
+  if (HostHook) {
+    HostHook(referrer, moduleRequest, hostDefined, payload);
   } else {
-    FinishLoadingImportedModule(referrer, moduleRequest, Throw.Error('Host does not set a module loader'), payload);
+    FinishLoadingImportedModule(referrer, moduleRequest, payload, Throw.Error('Host does not set a module loader'));
   }
 }
+
+// The operation must treat payload as an opaque value to be passed through to FinishLoadingImportedModule.
+export type HostLoadImportedModulePayloadOpaque = {
+  /** @internal */
+  data: GraphLoadingState | PromiseCapabilityRecord;
+  HostLoadImportedModulePayloadOpaque?: never
+};
 
 /** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
 export function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord) {

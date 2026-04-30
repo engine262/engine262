@@ -8,7 +8,7 @@ import {
   HostCallJobCallback,
 } from '../execution-context/Job.mts';
 import {
-  ObjectValue, Value, UndefinedValue, BooleanValue, NullValue, type Arguments,
+  ObjectValue, Value, UndefinedValue, BooleanValue, type Arguments,
 } from '../value.mts';
 import {
   AbruptCompletion,
@@ -343,7 +343,7 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
     return undefined;
   }
   // 2. Let handlerRealm be null.
-  let handlerRealm: NullValue | Realm = Value.null;
+  let handlerRealm: null | Realm = null;
   // 3. If reaction.[[Handler]] is not empty, then
   if (reaction.Handler !== undefined) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).

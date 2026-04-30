@@ -4,7 +4,7 @@ import {
 } from '../host-defined/engine.mts';
 import { isArray } from '../utils/language.mts';
 import {
-  ObjectValue, SymbolValue, type Job, type Intrinsics, Value, ThrowCompletion, GetActiveScriptOrModule, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
+  ObjectValue, SymbolValue, type Job, type Intrinsics, Value, ThrowCompletion, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
   ExecutionContextStack,
   type AgentHostDefined,
   DynamicParsedCodeRecord,
@@ -15,7 +15,6 @@ import {
   type ParseNode,
   type BreakpointLocation,
   getBreakpointCandidateNodes,
-  type PlainEvaluator,
   parseNodeToBreakpointLocation,
   type FunctionObject,
   performDevtoolsEval,
@@ -90,19 +89,6 @@ export class Agent {
 
   intrinsic<const T extends keyof Intrinsics>(name: T): Intrinsics[T] {
     return this.currentRealmRecord.Intrinsics[name];
-  }
-
-  queueJob(queueName: string, job: () => PlainEvaluator) {
-    const callerContext = this.runningExecutionContext;
-    const callerRealm = callerContext.Realm;
-    const callerScriptOrModule = GetActiveScriptOrModule();
-    const pending: Job = {
-      queueName,
-      job,
-      callerRealm,
-      callerScriptOrModule,
-    };
-    this.jobQueue.push(pending);
   }
 
   // NON-SPEC: Check if a feature is enabled in this agent.
