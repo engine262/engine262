@@ -4,7 +4,7 @@ import {
   BooleanValue,
   Q, X, type ValueCompletion, type ValueEvaluator,
   type Mutable, type YieldEvaluator,
-  AbstractRelationalComparison,
+  IsLessThan,
   Assert,
   Call,
   Construct,
@@ -121,7 +121,7 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
     const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = Q(GetFunctionRealm(C));
     if (thisRealm !== realmC) {
-      if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
+      if (SameValue(C, realmC.Intrinsics['%Array%'])) {
         C = Value.undefined;
       }
     }
@@ -242,13 +242,13 @@ export function* CompareArrayElements(x: Value, y: Value, comparefn: FunctionObj
   // 6. Let yString be ? ToString(y).
   const yString = Q(yield* ToString(y));
   // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
-  const xSmaller = yield* AbstractRelationalComparison(xString, yString);
+  const xSmaller = yield* IsLessThan(xString, yString);
   // 8. If xSmaller is true, return -1𝔽.
   if (xSmaller === Value.true) {
     return F(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
-  const ySmaller = yield* AbstractRelationalComparison(yString, xString);
+  const ySmaller = yield* IsLessThan(yString, xString);
   // 10. If ySmaller is true, return 1𝔽.
   if (ySmaller === Value.true) {
     return F(1);

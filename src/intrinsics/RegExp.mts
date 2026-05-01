@@ -56,7 +56,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
       // i. Let patternConstructor be ? Get(pattern, "constructor").
       const patternConstructor = Q(yield* Get(pattern as ObjectValue, Value('constructor')));
       // ii. If SameValue(newTarget, patternConstructor) is true, return pattern.
-      if (SameValue(newTarget, patternConstructor) === Value.true) {
+      if (SameValue(newTarget, patternConstructor)) {
         return pattern;
       }
     }

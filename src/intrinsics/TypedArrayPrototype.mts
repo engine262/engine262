@@ -333,7 +333,7 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
     sameSharedArrayBuffer = false;
   }
   let srcByteIndex;
-  if (SameValue(srcBuffer, targetBuffer) === Value.true || sameSharedArrayBuffer) {
+  if (SameValue(srcBuffer, targetBuffer) || sameSharedArrayBuffer) {
     const srcByteLength = TypedArrayByteLength(srcRecord);
     srcBuffer = Q(yield* CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength));
     srcByteIndex = 0;

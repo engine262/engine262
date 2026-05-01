@@ -269,7 +269,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
   const context = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   let elementRecords: readonly JSONParseRecord[];
   let entryRecords: readonly JSONParseRecord[];
-  if (parseRecord && SameValue(parseRecord.Value, val) === Value.true) {
+  if (parseRecord && SameValue(parseRecord.Value, val)) {
     if (!(val instanceof ObjectValue)) {
       const parseNode = parseRecord.ParseNode;
       Assert(parseNode.type !== 'ArrayLiteral' && parseNode.type !== 'ObjectLiteral');
@@ -303,7 +303,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
     } else {
       const keys = Q(yield* EnumerableOwnProperties(val, 'key'));
       for (const P of keys) {
-        const entryRecord = entryRecords.find((record) => SameValue(record.Key, P) === Value.true);
+        const entryRecord = entryRecords.find((record) => SameValue(record.Key, P));
         const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver, entryRecord));
         if (newElement instanceof UndefinedValue) {
           Q(yield* val.Delete(P));

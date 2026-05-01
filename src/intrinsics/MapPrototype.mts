@@ -54,7 +54,7 @@ function MapProto_delete([key = Value.undefined]: Arguments, { thisValue }: Func
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       // i. Set p.[[Key]] to empty.
       p.Key = undefined;
@@ -110,7 +110,7 @@ function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: Functio
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       // i. Return p.[[Value]].
       return p.Value!;
     }
@@ -131,7 +131,7 @@ function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: 
   const entries = M.MapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       return p.Value!;
     }
   }
@@ -159,7 +159,7 @@ function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Valu
   const entries = M.MapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       return p.Value!;
     }
   }
@@ -169,7 +169,7 @@ function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Valu
   // 8. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       // i. Set p.[[Value]] to value.
       p.Value = value;
       // ii. Return value.
@@ -195,7 +195,7 @@ function MapProto_has([key = Value.undefined]: Arguments, { thisValue }: Functio
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, return true.
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       return Value.true;
     }
   }
@@ -222,7 +222,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined]: Argument
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       // i. Set p.[[Value]] to value.
       Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       p.Value = value;

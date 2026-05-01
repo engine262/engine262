@@ -55,9 +55,11 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
     F = Q(yield* ToString(flags));
   }
   const f = F.stringValue();
-  // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", "v", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
-  if (/^[dgimsuvy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
+  if (/^[dgimsuvy]*$/.test(f) === false) {
     return Throw.SyntaxError('RegExp has invalid flags ($1)', f);
+  }
+  if (new globalThis.Set(f).size !== f.length) {
+    return Throw.SyntaxError('RegExp flags must not have duplicates ($1)', f);
   }
   const i = f.includes('i');
   const m = f.includes('m');
@@ -292,7 +294,7 @@ export function RegExpHasFlag(R: Value, codeUnit: string) {
   // 2. If R does not have an [[OriginalFlags]] internal slot, then
   if (!('OriginalFlags' in R)) {
     // a. If SameValue(R, %RegExp.prototype%) is true, return undefined.
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%'))) {
       return Value.undefined;
     }
     // b. Otherwise, throw a TypeError exception.

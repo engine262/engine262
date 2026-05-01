@@ -43,7 +43,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
     return Throw.TypeError('$1 is not an object or a symbol', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
-  if (SameValue(target, heldValue) === Value.true) {
+  if (SameValue(target, heldValue)) {
     return Throw.TypeError('heldValue $1 matches target', heldValue);
   }
   // 5. If CanBeHeldWeakly(unregisterToken) is false, then
@@ -85,7 +85,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   finalizationRegistry.Cells = finalizationRegistry.Cells.filter((cell) => {
     let r = true;
     // a. If cell.[[UnregisterToken]] is not empty and SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
-    if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken) === Value.true) {
+    if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken)) {
       // i. Remove cell from finalizationRegistry.Cells.
       r = false;
       // ii. Set removed to true.

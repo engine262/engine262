@@ -486,7 +486,7 @@ export function CanonicalNumericIndexString(argument: Value) {
   // 3. Let n be ! ToNumber(argument).
   const n = X(ToNumber(argument));
   // 4. If SameValue(! ToString(n), argument) is false, return undefined.
-  if (SameValue(X(ToString(n)), argument) === Value.false) {
+  if (!SameValue(X(ToString(n)), argument)) {
     return Value.undefined;
   }
   // 4. Return n.

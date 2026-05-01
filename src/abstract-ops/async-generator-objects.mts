@@ -124,7 +124,7 @@ export function AsyncGeneratorValidate(generator: Value, generatorBrand: JSStrin
   if (
     brand === undefined || generatorBrand === undefined
       ? brand !== generatorBrand
-      : SameValue(brand, generatorBrand) === Value.false
+      : !SameValue(brand, generatorBrand)
   ) {
     return Throw.TypeError('$1 is not a $2', generator, generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator');
   }

@@ -378,7 +378,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // c. For each element n of starNames, do
       for (const n of starNames) {
         // i. If SameValue(n, "default") is false, then
-        if (SameValue(n, Value('default')) === Value.false) {
+        if (!SameValue(n, Value('default'))) {
           // 1. If n is not an element of exportedNames, then
           if (!exportedNames.includes(n)) {
             // a. Append n to exportedNames.
@@ -403,7 +403,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 3. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
     for (const r of resolveSet) {
       // a. If module and r.[[Module]] are the same Module Record and SameValue(exportName, r.[[ExportName]]) is true, then
-      if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
+      if (module === r.Module && SameValue(exportName, r.ExportName)) {
         // i. Assert: This is a circular import request.
         // ii. Return null.
         return null;
@@ -414,7 +414,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
     for (const e of module.LocalExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-      if (SameValue(exportName, e.ExportName) === Value.true) {
+      if (SameValue(exportName, e.ExportName)) {
         // i. Assert: module provides the direct binding for this export.
         // ii. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: e.[[LocalName]] }.
         return new ResolvedBindingRecord({
@@ -426,7 +426,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 6. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
     for (const e of module.IndirectExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-      if (SameValue(exportName, e.ExportName) === Value.true) {
+      if (SameValue(exportName, e.ExportName)) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
         // ii. If e.[[ImportName]] is ~namespace~, then
@@ -454,7 +454,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       }
     }
     // 7. If SameValue(exportName, "default") is true, then
-    if (SameValue(exportName, Value('default')) === Value.true) {
+    if (SameValue(exportName, Value('default'))) {
       // a. Assert: A default export was not explicitly defined by this module.
       // b. Return null.
       return null;
@@ -709,7 +709,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
     // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
     for (const e of module.ExportNames) {
-      if (SameValue(e, exportName) === Value.true) {
+      if (SameValue(e, exportName)) {
         return new ResolvedBindingRecord({ Module: module, BindingName: exportName });
       }
     }

@@ -19,7 +19,7 @@ export function KeyForSymbol(sym: SymbolValue): JSStringValue | UndefinedValue {
   // 1. For each element e of the GlobalSymbolRegistry List, do
   for (const e of GlobalSymbolRegistry) {
     // a. If SameValue(e.[[Symbol]], sym) is true, return e.[[Key]].
-    if (SameValue(e.Symbol, sym) === Value.true) {
+    if (SameValue(e.Symbol, sym)) {
       return e.Key;
     }
   }

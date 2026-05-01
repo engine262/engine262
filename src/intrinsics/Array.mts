@@ -68,7 +68,7 @@ function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext
       intLen = F(1);
     } else {
       intLen = X(ToUint32(len));
-      if (SameValueZero(intLen, len) === Value.false) {
+      if (!SameValueZero(intLen, len)) {
         return Throw.RangeError('$1 is not a valid array length', len);
       }
     }

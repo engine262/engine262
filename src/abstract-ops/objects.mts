@@ -67,7 +67,7 @@ export function OrdinarySetPrototypeOf(O: OrdinaryObject, V: ObjectValue | NullV
   Assert(V instanceof ObjectValue || V instanceof NullValue);
 
   const current = O.Prototype;
-  if (SameValue(V, current) === Value.true) {
+  if (SameValue(V, current)) {
     return Value.true;
   }
   const extensible = O.Extensible;
@@ -79,7 +79,7 @@ export function OrdinarySetPrototypeOf(O: OrdinaryObject, V: ObjectValue | NullV
   while (done === false) {
     if (p instanceof NullValue) {
       done = true;
-    } else if (SameValue(p, O) === Value.true) {
+    } else if (SameValue(p, O)) {
       return Value.false;
     } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
       done = true;
@@ -218,7 +218,7 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
       if (Desc.Writable !== undefined && Desc.Writable === Value.true) {
         return Value.false;
       }
-      if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === Value.false) {
+      if (Desc.Value !== undefined && !SameValue(Desc.Value, current.Value)) {
         return Value.false;
       }
       return Value.true;
@@ -226,10 +226,10 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
   } else {
     Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc));
     if (current.Configurable === Value.false) {
-      if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === Value.false) {
+      if (Desc.Set !== undefined && !SameValue(Desc.Set, current.Set)) {
         return Value.false;
       }
-      if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get) === Value.false) {
+      if (Desc.Get !== undefined && !SameValue(Desc.Get, current.Get)) {
         return Value.false;
       }
       return Value.true;

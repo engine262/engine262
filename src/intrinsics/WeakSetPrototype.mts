@@ -29,7 +29,7 @@ function WeakSetProto_add([value = Value.undefined]: Arguments, { thisValue }: F
   const entries = S.WeakSetData;
   for (const e of entries) {
     // a. If e is not empty and SameValue(e, value) is true, then
-    if (e !== undefined && SameValue(e, value) === Value.true) {
+    if (e !== undefined && SameValue(e, value)) {
       // i. Return S.
       return S;
     }
@@ -55,7 +55,7 @@ function WeakSetProto_delete([value = Value.undefined]: Arguments, { thisValue }
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
     // i. If e is not empty and SameValue(e, value) is true, then
-    if (e !== undefined && SameValue(e, value) === Value.true) {
+    if (e !== undefined && SameValue(e, value)) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
       Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
       entries[i] = undefined;
@@ -81,7 +81,7 @@ function WeakSetProto_has([value = Value.undefined]: Arguments, { thisValue }: F
   const entries = S.WeakSetData;
   for (const e of entries) {
     // a. If e is not empty and SameValue(e, value) is true, return true.
-    if (e !== undefined && SameValue(e, value) === Value.true) {
+    if (e !== undefined && SameValue(e, value)) {
       return Value.true;
     }
   }

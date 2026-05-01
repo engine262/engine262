@@ -33,7 +33,7 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
       && (ref.ReferencedName instanceof JSStringValue
       && ref.ReferencedName.stringValue() === 'eval')) {
     // a. If SameValue(func, %eval%) is true, then
-    if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === Value.true) {
+    if (SameValue(func, surroundingAgent.intrinsic('%eval%'))) {
       // i. Let argList be ? ArgumentListEvaluation of arguments.
       const argList = Q(yield* ArgumentListEvaluation(args));
       // ii. If argList has no elements, return undefined.

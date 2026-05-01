@@ -51,7 +51,7 @@ function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: Funct
   // 4. For each e that is an element of entries, do
   for (const e of entries) {
     // a. For each e that is an element of entries, do
-    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+    if (e !== undefined && SameValueZero(e, value)) {
       // i. Return S.
       return S;
     }
@@ -99,7 +99,7 @@ function SetProto_delete([value = Value.undefined]: Arguments, { thisValue }: Fu
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
     // a. If e is not empty and SameValueZero(e, value) is true, then
-    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+    if (e !== undefined && SameValueZero(e, value)) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
       Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
       entries[i] = undefined;
@@ -230,7 +230,7 @@ function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: Funct
   // 4. Let entries be the List that is S.[[SetData]].
   for (const e of entries) {
     // a. If e is not empty and SameValueZero(e, value) is true, return true.
-    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+    if (e !== undefined && SameValueZero(e, value)) {
       return Value.true;
     }
   }
@@ -664,7 +664,7 @@ function SetDataIndex(setData: (Value | undefined)[], value: Value): number | 'n
   let index = 0;
   while (index < size) {
     const e = setData[index];
-    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+    if (e !== undefined && SameValueZero(e, value)) {
       return index;
     }
     index += 1;

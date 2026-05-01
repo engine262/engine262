@@ -80,7 +80,7 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
     key = Value.undefined;
   }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
+  if (!SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
     return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));

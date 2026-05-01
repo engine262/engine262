@@ -286,7 +286,7 @@ function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallC
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%'))) {
       return Value.undefined;
     }
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
@@ -558,13 +558,13 @@ function* RegExpProto_search([string = Value.undefined]: Arguments, { thisValue 
   const S = Q(yield* ToString(string));
 
   const previousLastIndex = Q(yield* Get(rx, Value('lastIndex')));
-  if (SameValue(previousLastIndex, F(+0)) === Value.false) {
+  if (!SameValue(previousLastIndex, F(+0))) {
     Q(yield* Set(rx, Value('lastIndex'), F(+0), Value.true));
   }
 
   const result = Q(yield* RegExpExec(rx, S));
   const currentLastIndex = Q(yield* Get(rx, Value('lastIndex')));
-  if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
+  if (!SameValue(currentLastIndex, previousLastIndex)) {
     Q(yield* Set(rx, Value('lastIndex'), previousLastIndex, Value.true));
   }
 
@@ -582,7 +582,7 @@ function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallC
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
   }
   if (!('OriginalSource' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%'))) {
       return Value('(?:)');
     }
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');

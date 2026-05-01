@@ -100,7 +100,7 @@ const InternalMethods = {
       return Value.false;
     }
     if (Desc.Value !== undefined) {
-      return SameValue(Desc.Value, current.Value!);
+      return Value(SameValue(Desc.Value, current.Value!));
     }
     return Value.true;
   },

@@ -1176,9 +1176,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return;
       }
       const c = this.source[this.position];
-      if (isRegularExpressionFlagPart(c)
-          && 'dgimsuyv'.includes(c)
-          && !buffer.includes(c)) {
+      if (isRegularExpressionFlagPart(c) && 'dgimsuyv'.includes(c)) {
+        if (buffer.includes(c)) {
+          this.raise(Throw.SyntaxError(`Duplicate regular expression flag '${c}'`), this.position);
+        }
         this.position += 1;
         buffer += c;
       } else {

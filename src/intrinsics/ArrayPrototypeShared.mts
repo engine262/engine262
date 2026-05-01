@@ -273,7 +273,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     while (k < len) {
       const kStr = X(ToString(F(k)));
       const elementK = Q(yield* Get(O, kStr));
-      if (SameValueZero(searchElement, elementK) === Value.true) {
+      if (SameValueZero(searchElement, elementK)) {
         return Value.true;
       }
       k += 1;
@@ -312,7 +312,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       if (kPresent === Value.true) {
         const elementK = Q(yield* Get(O, kStr));
         const same = IsStrictlyEqual(searchElement, elementK);
-        if (same === Value.true) {
+        if (same) {
           return F(k);
         }
       }
@@ -380,7 +380,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       if (kPresent === Value.true) {
         const elementK = Q(yield* Get(O, kStr));
         const same = IsStrictlyEqual(searchElement, elementK);
-        if (same === Value.true) {
+        if (same) {
           return F(k);
         }
       }

@@ -12,7 +12,7 @@ import { Evaluate } from '../evaluator.mts';
 import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
-  AbstractRelationalComparison,
+  IsLessThan,
   Call,
   GetMethod,
   GetValue,
@@ -98,7 +98,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
   switch (operator) {
     case '<': {
       // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
-      const r = yield* AbstractRelationalComparison(lval, rval);
+      const r = yield* IsLessThan(lval, rval);
       Q(r);
       // 7. If r is undefined, return false. Otherwise, return r.
       if (r === Value.undefined) {
@@ -108,7 +108,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     }
     case '>': {
       // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
-      const r = yield* AbstractRelationalComparison(rval, lval, false);
+      const r = yield* IsLessThan(rval, lval, false);
       Q(r);
       // 7. If r is undefined, return false. Otherwise, return r.
       if (r === Value.undefined) {
@@ -118,7 +118,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     }
     case '<=': {
       // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
-      const r = yield* AbstractRelationalComparison(rval, lval, false);
+      const r = yield* IsLessThan(rval, lval, false);
       Q(r);
       // 7. If r is true or undefined, return false. Otherwise, return true.
       if (r === Value.true || r === Value.undefined) {
@@ -128,7 +128,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
     }
     case '>=': {
       // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
-      const r = yield* AbstractRelationalComparison(lval, rval);
+      const r = yield* IsLessThan(lval, rval);
       Q(r);
       // 7. If r is true or undefined, return false. Otherwise, return true.
       if (r === Value.true || r === Value.undefined) {

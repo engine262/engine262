@@ -56,7 +56,7 @@ const InternalMethods = {
       return handlerProto;
     }
     const targetProto = Q(yield* target.GetPrototypeOf());
-    if (SameValue(handlerProto, targetProto) === Value.false) {
+    if (!SameValue(handlerProto, targetProto)) {
       return Throw.TypeError("'getPrototypeOf' on proxy: proxy target is non-extensible but the trap did not return its actual prototype");
     }
     return handlerProto;
@@ -85,7 +85,7 @@ const InternalMethods = {
       return Value.true;
     }
     const targetProto = Q(yield* target.GetPrototypeOf());
-    if (SameValue(V, targetProto) === Value.false) {
+    if (!SameValue(V, targetProto)) {
       return Throw.TypeError("'setPrototypeOf' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target");
     }
     return Value.true;
@@ -106,7 +106,7 @@ const InternalMethods = {
     }
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target])));
     const targetResult = Q(yield* IsExtensible(target as ObjectValue));
-    if (SameValue(booleanTrapResult, targetResult) === Value.false) {
+    if (!SameValue(booleanTrapResult, targetResult)) {
       return Throw.TypeError("'isExtensible' on proxy: trap result does not reflect extensibility of proxy target (which is $1)", targetResult);
     }
     return booleanTrapResult;
@@ -338,7 +338,7 @@ const InternalMethods = {
     const targetDesc = Q(yield* target.GetOwnProperty(P));
     if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
-        if (SameValue(trapResult, targetDesc.Value) === Value.false) {
+        if (!SameValue(trapResult, targetDesc.Value)) {
           return Throw.TypeError("'get' on proxy: property $1 is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value", P);
         }
       }
@@ -372,7 +372,7 @@ const InternalMethods = {
     const targetDesc = Q(yield* target.GetOwnProperty(P));
     if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
-        if (SameValue(V, targetDesc.Value) === Value.false) {
+        if (!SameValue(V, targetDesc.Value)) {
           return Throw.TypeError("'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable data property with a different value", P);
         }
       }

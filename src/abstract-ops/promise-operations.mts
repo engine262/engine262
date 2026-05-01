@@ -103,7 +103,7 @@ export function CreateResolvingFunctions(toResolve: PromiseObject) {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
     promiseOrEmpty.Value = undefined;
     // 7. If SameValue(resolution, promise) is true, then
-    if (SameValue(resolution, promise) === Value.true) {
+    if (SameValue(resolution, promise)) {
       // a. Let selfResolutionError be a newly created TypeError object.
       const selfResolutionError = Throw.TypeError('Cannot resolve a promise $1 with itself', promise).Value;
       // b. Return RejectPromise(promise, selfResolutionError).
@@ -284,7 +284,7 @@ export function* PromiseResolve(C: ObjectValue, x: Value): ValueEvaluator<Promis
   Assert(C instanceof ObjectValue);
   if (IsPromise(x) === Value.true) {
     const xConstructor = Q(yield* Get(x as PromiseObject, Value('constructor')));
-    if (SameValue(xConstructor, C) === Value.true) {
+    if (SameValue(xConstructor, C)) {
       return x as PromiseObject;
     }
   }

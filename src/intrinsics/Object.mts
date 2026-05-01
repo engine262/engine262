@@ -328,7 +328,7 @@ function* Object_hasOwn([O = Value.undefined, P = Value.undefined]: Arguments): 
 /** https://tc39.es/ecma262/#sec-object.is */
 function Object_is([value1 = Value.undefined, value2 = Value.undefined]: Arguments) {
   // 1. Return SameValue(value1, value2).
-  return SameValue(value1, value2);
+  return Value(SameValue(value1, value2));
 }
 
 /** https://tc39.es/ecma262/#sec-object.isextensible */

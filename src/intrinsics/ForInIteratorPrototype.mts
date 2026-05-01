@@ -84,7 +84,7 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
       // i. Remove the first element from remaining and let r be the value of the element.
       const r = remaining.shift()!;
       // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
-      if (!visited.find((v) => SameValue(r, v) === Value.true)) {
+      if (!visited.find((v) => SameValue(r, v))) {
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
         const desc = Q(yield* object.GetOwnProperty(r));
         // 2. If desc is not undefined, then,

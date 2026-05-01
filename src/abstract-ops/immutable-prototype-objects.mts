@@ -13,7 +13,7 @@ export function* SetImmutablePrototype(O: ObjectValue, V: Value): ValueEvaluator
   // 2. Let current be ? O.[[GetPrototypeOf]]().
   const current = Q(yield* O.GetPrototypeOf());
   // 3. If SameValue(V, current) is true, return true.
-  if (SameValue(V, current) === Value.true) {
+  if (SameValue(V, current)) {
     return Value.true;
   }
   // 4. Return false.

@@ -55,7 +55,7 @@ function* Symbol_for([key = Value.undefined]: Arguments): ValueEvaluator {
   // 2. For each element e of the GlobalSymbolRegistry List, do
   for (const e of GlobalSymbolRegistry) {
     // a. If SameValue(e.[[Key]], stringKey) is true, return e.[[Symbol]].
-    if (SameValue(e.Key, stringKey) === Value.true) {
+    if (SameValue(e.Key, stringKey)) {
       return e.Symbol;
     }
   }

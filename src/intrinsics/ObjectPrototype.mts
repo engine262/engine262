@@ -64,7 +64,7 @@ function* ObjectProto_isPrototypeOf([V = Value.undefined]: Arguments, { thisValu
       return Value.false;
     }
     // c. If SameValue(O, V) is true, return true.
-    if (SameValue(O, V) === Value.true) {
+    if (SameValue(O, V)) {
       return Value.true;
     }
   }

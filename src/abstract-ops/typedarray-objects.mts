@@ -162,7 +162,7 @@ const InternalMethods = {
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
       if (!(numericIndex instanceof UndefinedValue)) {
-        if (SameValue(O, Receiver) === Value.true) {
+        if (SameValue(O, Receiver)) {
           // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
           Q(yield* TypedArraySetElement(O, numericIndex, V));
           // ii. Return true.

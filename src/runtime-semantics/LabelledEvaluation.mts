@@ -104,7 +104,7 @@ function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }
   // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
   let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet)) as Completion<Value | void>;
   // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
-  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target!, label) === Value.true) {
+  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target!, label)) {
     // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
     stmtResult = NormalCompletion(stmtResult.Value);
   }

@@ -102,7 +102,7 @@ const ArgumentExoticObject = {
     const args = this;
     let isMapped;
     let map;
-    if (SameValue(args, Receiver) === Value.false) {
+    if (!SameValue(args, Receiver)) {
       isMapped = false;
     } else {
       map = args.ParameterMap;

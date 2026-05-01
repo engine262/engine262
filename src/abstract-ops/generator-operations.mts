@@ -132,7 +132,7 @@ export function GeneratorValidate(generator: Value, generatorBrand: JSStringValu
   if (
     brand === undefined || generatorBrand === undefined
       ? brand !== generatorBrand
-      : SameValue(brand, generatorBrand) === Value.false
+      : !SameValue(brand, generatorBrand)
   ) {
     return Throw.TypeError('$1 is not a $2 object', generator, generatorBrandToErrorMessageType(generatorBrand) || 'Generator');
   }

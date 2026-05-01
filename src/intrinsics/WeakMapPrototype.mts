@@ -32,7 +32,7 @@ function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: 
   for (let i = 0; i < entries.length; i += 1) {
     const p = entries[i];
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       // i. Set p.[[Key]] to empty.
       Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       p.Key = undefined;
@@ -60,7 +60,7 @@ function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: Fun
   const entries = M.WeakMapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       return p.Value!;
     }
   }
@@ -82,7 +82,7 @@ function WeakMapProto_getOrInsert([key = Value.undefined, value = Value.undefine
   const entries = M.WeakMapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       return p.Value!;
     }
   }
@@ -112,7 +112,7 @@ function* WeakMapProto_getOrInsertComputed([key = Value.undefined, callbackfn = 
   const entries = M.WeakMapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       return p.Value!;
     }
   }
@@ -122,7 +122,7 @@ function* WeakMapProto_getOrInsertComputed([key = Value.undefined, callbackfn = 
   // 8. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       // i. Set p.[[Value]] to value.
       p.Value = value;
       // ii. Return value.
@@ -151,7 +151,7 @@ function WeakMapProto_has([key = Value.undefined]: Arguments, { thisValue }: Fun
   const entries = M.WeakMapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return true.
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       return Value.true;
     }
   }
@@ -173,7 +173,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined]: Argu
   const entries = M.WeakMapData;
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key)) {
       // i. Set p.[[Value]] to value.
       Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       p.Value = value;

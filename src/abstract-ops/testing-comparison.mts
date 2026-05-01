@@ -1,6 +1,6 @@
 import {
   BigIntValue,
-  BooleanValue, NullValue, UndefinedValue,
+  BooleanValue, UndefinedValue,
   SymbolValue,
   JSStringValue,
   NumberValue,
@@ -23,6 +23,7 @@ import {
   type FunctionObject,
   type PropertyKeyValue,
   Throw,
+  type PlainEvaluator,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -133,66 +134,61 @@ export function IsStringPrefix(p: JSStringValue, q: JSStringValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-samevalue */
-export function SameValue(x: Value, y: Value) {
+export function SameValue(x: Value, y: Value): boolean {
   // If SameType(x, y) is false, return false.
   if (!SameType(x, y)) {
-    return Value.false;
+    return false;
   }
   // If x is a Number, then
   if (x instanceof NumberValue) {
     // a. Return Number::sameValue(x, y).
-    return NumberValue.sameValue(x, y as NumberValue);
+    return NumberValue.sameValue(x, y as NumberValue) === Value.true;
   }
   // 3. Return SameValueNonNumber(x, y).
-  return X(SameValueNonNumber(x, y));
+  return SameValueNonNumber(x, y);
 }
 
 /** https://tc39.es/ecma262/#sec-samevaluezero */
-export function SameValueZero(x: Value, y: Value) {
+export function SameValueZero(x: Value, y: Value): boolean {
   // 1. If SameType(x, y) is false, return false.
   if (!SameType(x, y)) {
-    return Value.false;
+    return false;
   }
   // 2. If x is a Number, then
   if (x instanceof NumberValue) {
     // a. Return Number::sameValueZero(x, y).
-    return NumberValue.sameValueZero(x, y as NumberValue);
+    return NumberValue.sameValueZero(x, y as NumberValue) === Value.true;
   }
   // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);
 }
 
 /** https://tc39.es/ecma262/#sec-samevaluenonnumber */
-export function SameValueNonNumber(x: Value, y: Value) {
+export function SameValueNonNumber(x: Value, y: Value): boolean {
   Assert(SameType(x, y));
 
-  if (x instanceof UndefinedValue || x instanceof NullValue) {
-    return Value.true;
+  if (x === Value.undefined || x === Value.null) {
+    return true;
   }
 
   if (x instanceof BigIntValue) {
-    return BigIntValue.equal(x, y as BigIntValue);
+    return BigIntValue.equal(x, y as BigIntValue) === Value.true;
   }
 
   if (x instanceof JSStringValue) {
-    if (x.stringValue() === (y as JSStringValue).stringValue()) {
-      return Value.true;
-    }
-    return Value.false;
+    return x.stringValue() === (y as JSStringValue).stringValue();
   }
 
   if (x instanceof BooleanValue) {
-    if (x === y) {
-      return Value.true;
-    }
-    return Value.false;
+    if (x === Value.true && y === Value.true) return true;
+    if (x === Value.false && y === Value.false) return true;
+    return false;
   }
-
-  return x === y ? Value.true : Value.false;
+  return x === y;
 }
 
-/** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
-export function* AbstractRelationalComparison(x: Value, y: Value, LeftFirst = true): ValueEvaluator<BooleanValue | UndefinedValue> {
+/** https://tc39.es/ecma262/#sec-islessthan */
+export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluator<BooleanValue | UndefinedValue> {
   let px;
   let py;
   // 1. If the LeftFirst flag is true, then
@@ -296,7 +292,7 @@ export function* AbstractRelationalComparison(x: Value, y: Value, LeftFirst = tr
 }
 
 /** https://tc39.es/ecma262/#sec-islooselyequal */
-export function* IsLooselyEqual(x: Value, y: Value): ValueEvaluator<BooleanValue> {
+export function* IsLooselyEqual(x: Value, y: Value): PlainEvaluator<boolean> {
   // 1. If SameType(x, y) is true, then
   if (SameType(x, y)) {
     // a. Return the result of performing Strict Equality Comparison x === y.
@@ -304,11 +300,11 @@ export function* IsLooselyEqual(x: Value, y: Value): ValueEvaluator<BooleanValue
   }
   // 2. If x is null and y is undefined, return true.
   if (x === Value.null && y === Value.undefined) {
-    return Value.true;
+    return true;
   }
   // 3. If x is undefined and y is null, return true.
   if (x === Value.undefined && y === Value.null) {
-    return Value.true;
+    return true;
   }
   // 4. If Type(x) is Number and Type(y) is String, return the result of the comparison x == ! ToNumber(y).
   if (x instanceof NumberValue && y instanceof JSStringValue) {
@@ -324,7 +320,7 @@ export function* IsLooselyEqual(x: Value, y: Value): ValueEvaluator<BooleanValue
     const n = StringToBigInt(y);
     // b. If n is undefined, return false.
     if (n === undefined) {
-      return Value.false;
+      return false;
     }
     // c. Return the result of the comparison x == n.
     return X(yield* IsLooselyEqual(x, n));
@@ -353,27 +349,27 @@ export function* IsLooselyEqual(x: Value, y: Value): ValueEvaluator<BooleanValue
   if ((x instanceof BigIntValue && y instanceof NumberValue) || (x instanceof NumberValue && y instanceof BigIntValue)) {
     // a. If x or y are any of NaN, +∞, or -∞, return false.
     if ((x.isNaN && (x.isNaN() || !x.isFinite())) || (y.isNaN && (y.isNaN() || !y.isFinite()))) {
-      return Value.false;
+      return false;
     }
     // b. If the mathematical value of x is equal to the mathematical value of y, return true; otherwise return false.
     const a = R(x);
     const b = R(y);
-    return a == b ? Value.true : Value.false; // eslint-disable-line eqeqeq
+    return a == b; // eslint-disable-line eqeqeq
   }
   // 13. Return false.
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-isstrictlyequal */
-export function IsStrictlyEqual(x: Value, y: Value) {
+export function IsStrictlyEqual(x: Value, y: Value): boolean {
 // 1. If SameType(x, y) is false, return false.
   if (!SameType(x, y)) {
-    return Value.false;
+    return false;
   }
   // 2. If x is a Number, then
   if (x instanceof NumberValue) {
     // a. Return Number::equal(x, y).
-    return NumberValue.equal(x, y as NumberValue);
+    return NumberValue.equal(x, y as NumberValue) === Value.true;
   }
   // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);

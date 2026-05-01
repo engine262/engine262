@@ -371,7 +371,7 @@ export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<Boolean
     if (O instanceof NullValue) {
       return Value.false;
     }
-    if (SameValue(P, O) === Value.true) {
+    if (SameValue(P, O)) {
       return Value.true;
     }
   }
@@ -461,7 +461,7 @@ export function* CopyDataProperties(target: ObjectValue, source: Value, excluded
   for (const nextKey of keys) {
     let excluded = false;
     for (const e of excludedItems) {
-      if (SameValue(e, nextKey) === Value.true) {
+      if (SameValue(e, nextKey)) {
         excluded = true;
       }
     }
@@ -484,7 +484,7 @@ export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: Ob
     return Throw.TypeError('$1 is not an object', thisValue);
   }
   // 2. If SameValue(thisValue, home) is true, then
-  if (SameValue(thisValue, home) === Value.true) {
+  if (SameValue(thisValue, home)) {
     // a. NOTE: Throwing here emulates assignment to a non-writable data property on the home object in strict mode code.
     // b. Throw a TypeError exception.
     return Throw.TypeError('Cannot set property $1 on $2', p, thisValue);
@@ -521,10 +521,10 @@ function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue,
     4. Return unused.
   */
   for (const g of groups) {
-    if (SameValue(g.Key, key) === Value.true) {
+    if (SameValue(g.Key, key)) {
       let count = 0;
       for (const otherG of groups) {
-        if (SameValue(otherG.Key, key) === Value.true) {
+        if (SameValue(otherG.Key, key)) {
           count += 1;
         }
       }

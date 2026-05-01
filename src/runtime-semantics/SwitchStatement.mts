@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { Evaluate, type StatementEvaluator, type ValueEvaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator, type StatementEvaluator } from '../evaluator.mts';
 import {
-  BooleanValue, ReferenceRecord, Value,
+  ReferenceRecord, Value,
 } from '../value.mts';
 import {
   Completion,
@@ -22,7 +22,7 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
-function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEvaluator<BooleanValue> {
+function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): PlainEvaluator<boolean> {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
@@ -51,16 +51,16 @@ function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): Statemen
       // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
       const A = CaseClauses_a;
       // 3. Let found be false.
-      let found: BooleanValue = Value.false;
+      let found = false;
       // 4. For each CaseClause C in A, do
       for (const C of A) {
         // a. If found is false, then
-        if (found === Value.false) {
+        if (!found) {
           // i. Set found to ? CaseClauseIsSelected(C, input).
           found = Q(yield* CaseClauseIsSelected(C, input));
         }
         // b. If found is true, them
-        if (found === Value.true) {
+        if (found) {
           // i. Let R be the result of evaluating C.
           const R = EnsureCompletion(yield* Evaluate(C));
           // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -88,16 +88,16 @@ function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): Statemen
         // a. Let A be « ».
         A = [];
       }
-      let found: BooleanValue = Value.false;
+      let found = false;
       // 4. For each CaseClause C in A, do
       for (const C of A) {
         // a. If found is false, then
-        if (found === Value.false) {
+        if (!found) {
           // i. Set found to ? CaseClauseIsSelected(C, input).
           found = Q(yield* CaseClauseIsSelected(C, input));
         }
         // b. If found is true, them
-        if (found === Value.true) {
+        if (found) {
           // i. Let R be the result of evaluating C.
           const R = EnsureCompletion(yield* Evaluate(C));
           // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -111,7 +111,7 @@ function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): Statemen
         }
       }
       // 6. Let foundInB be false.
-      let foundInB: BooleanValue = Value.false;
+      let foundInB = false;
       // 7. If the second CaseClauses is present, then
       let B;
       if (CaseClauses_b) {
@@ -122,16 +122,16 @@ function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): Statemen
         B = [];
       }
       // 9. If found is false, then
-      if (found === Value.false) {
+      if (!found) {
         // a. For each CaseClause C in B, do
         for (const C of B) {
           // a. If foundInB is false, then
-          if (foundInB === Value.false) {
+          if (!foundInB) {
             // i. Set foundInB to ? CaseClauseIsSelected(C, input).
             foundInB = Q(yield* CaseClauseIsSelected(C, input));
           }
           // b. If foundInB is true, them
-          if (foundInB === Value.true) {
+          if (foundInB) {
             // i. Let R be the result of evaluating C.
             const R = EnsureCompletion(yield* Evaluate(C));
             // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -146,7 +146,7 @@ function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): Statemen
         }
       }
       // 10. If foundInB is true, return NormalCompletion(V).
-      if (foundInB === Value.true) {
+      if (foundInB) {
         return NormalCompletion(V as Value);
       }
       // 11. Let R be the result of evaluating DefaultClause.

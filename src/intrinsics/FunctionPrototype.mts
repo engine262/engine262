@@ -93,7 +93,7 @@ function* BoundFunctionExoticObjectConstruct(this: BoundFunctionObject, argument
   Assert(IsConstructor(target));
   const boundArgs = F.BoundArguments;
   const args = [...boundArgs.values(), ...argumentsList.values()];
-  if (SameValue(F, newTarget) === Value.true) {
+  if (SameValue(F, newTarget)) {
     newTarget = target;
   }
   return Q(yield* Construct(target, args, newTarget));

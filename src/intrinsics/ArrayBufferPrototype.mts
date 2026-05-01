@@ -89,7 +89,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
-  if (SameValue(newO, O) === Value.true) {
+  if (SameValue(newO, O)) {
     return Throw.TypeError('Subclass constructor returned the same object $1', newO);
   }
   // 17. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
