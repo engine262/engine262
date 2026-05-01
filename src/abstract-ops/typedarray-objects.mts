@@ -253,17 +253,17 @@ export function MakeTypedArrayWithBufferWitnessRecord(obj: TypedArrayObject, ord
 /** https://tc39.es/ecma262/#sec-typedarraycreate */
 export function TypedArrayCreate(prototype: ObjectValue) {
   const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength'] as const;
-  const A = MakeBasicObject(internalSlotsList);
-  A.PreventExtensions = InternalMethods.PreventExtensions;
-  A.GetOwnProperty = InternalMethods.GetOwnProperty;
-  A.HasProperty = InternalMethods.HasProperty;
-  A.DefineOwnProperty = InternalMethods.DefineOwnProperty;
-  A.Get = InternalMethods.Get;
-  A.Set = InternalMethods.Set;
-  A.Delete = InternalMethods.Delete;
-  A.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
-  A.Prototype = prototype;
-  return A;
+  const array = MakeBasicObject(internalSlotsList);
+  array.PreventExtensions = InternalMethods.PreventExtensions;
+  array.GetOwnProperty = InternalMethods.GetOwnProperty;
+  array.HasProperty = InternalMethods.HasProperty;
+  array.DefineOwnProperty = InternalMethods.DefineOwnProperty;
+  array.Get = InternalMethods.Get;
+  array.Set = InternalMethods.Set;
+  array.Delete = InternalMethods.Delete;
+  array.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
+  array.Prototype = prototype;
+  return array;
 }
 
 /** https://tc39.es/ecma262/#sec-typedarraybytelength */

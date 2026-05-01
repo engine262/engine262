@@ -380,14 +380,14 @@ export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<Boolean
 /** https://tc39.es/ecma262/#sec-speciesconstructor */
 export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: FunctionObject): ValueEvaluator<FunctionObject> {
   Assert(O instanceof ObjectValue);
-  const C = Q(yield* Get(O, Value('constructor')));
-  if (C === Value.undefined) {
+  const constructor = Q(yield* Get(O, Value('constructor')));
+  if (constructor === Value.undefined) {
     return defaultConstructor;
   }
-  if (!(C instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', C);
+  if (!(constructor instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', constructor);
   }
-  const S = Q(yield* Get(C, wellKnownSymbols.species));
+  const S = Q(yield* Get(constructor, wellKnownSymbols.species));
   if (S === Value.undefined || S === Value.null) {
     return defaultConstructor;
   }

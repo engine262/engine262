@@ -112,7 +112,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
     // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
     const lhs = Q(yield* ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
     // 2. Let A be ! ArrayCreate(0).
-    const A = X(ArrayCreate(0));
+    const array = X(ArrayCreate(0));
     // 3. Let n be 0.
     let n = 0;
     // 4. Repeat,
@@ -126,19 +126,19 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       if (next === 'done') {
         // i. If environment is undefined, return ? PutValue(lhs, A).
         if (environment === Value.undefined) {
-          return Q(yield* PutValue(lhs, A));
+          return Q(yield* PutValue(lhs, array));
         }
         // ii. Return InitializeReferencedBinding(lhs, A).
-        return yield* InitializeReferencedBinding(lhs, A);
+        return yield* InitializeReferencedBinding(lhs, array);
       }
       // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
-      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), next));
+      X(CreateDataPropertyOrThrow(array, X(ToString(F(n))), next));
       // g. Set n to n + 1.
       n += 1;
     }
   } else {
     // 1. Let A be ! ArrayCreate(0).
-    const A = X(ArrayCreate(0));
+    const array = X(ArrayCreate(0));
     // 2. Let n be 0.
     let n = 0;
     // 3. Repeat,
@@ -152,10 +152,10 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       // b. If next is done, then
       if (next === 'done') {
         // i. Return the result of performing BindingInitialization of BindingPattern with A and environment as the arguments.
-        return yield* BindingInitialization(BindingPattern!, A, environment);
+        return yield* BindingInitialization(BindingPattern!, array, environment);
       }
       // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
-      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(next)));
+      X(CreateDataPropertyOrThrow(array, X(ToString(F(n))), Q(next)));
       // g. Set n to n + 1.
       n += 1;
     }

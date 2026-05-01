@@ -12,10 +12,10 @@ function* AsyncFunctionConstructor(args: Arguments, { NewTarget }: FunctionCallC
   const bodyArg = args[args.length - 1] || Value('');
   args = args.slice(0, -1) as Arguments;
   // 1. Let C be the active function object.
-  const C = surroundingAgent.activeFunctionObject as FunctionObject;
+  const activeFunc = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
   // 3. Return CreateDynamicFunction(C, NewTarget, async, args).
-  return Q(yield* CreateDynamicFunction(C, NewTarget, 'async', args, bodyArg));
+  return Q(yield* CreateDynamicFunction(activeFunc, NewTarget, 'async', args, bodyArg));
 }
 
 export function bootstrapAsyncFunction(realmRec: Realm) {

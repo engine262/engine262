@@ -264,7 +264,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
         Q(lref);
       }
       // 2. Let A be ! ArrayCreate(0).
-      const A = X(ArrayCreate(0));
+      const array = X(ArrayCreate(0));
       // 3. Let n be 0.
       let n = 0;
       // 4. Repeat, while iteratorRecord.[[Done]] is false,
@@ -274,7 +274,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
         // d. If next is not done, then
         if (next !== 'done') {
           // i. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
-          X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), X(next)));
+          X(CreateDataPropertyOrThrow(array, X(ToString(F(n))), X(next)));
           // v. Set n to n + 1.
           n += 1;
         }
@@ -282,12 +282,12 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 5. If DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral, then
       if (DestructuringAssignmentTarget.type !== 'ObjectLiteral'
           && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
-        return Q(yield* PutValue(Q(lref) as ReferenceRecord, A));
+        return Q(yield* PutValue(Q(lref) as ReferenceRecord, array));
       }
       // 6. Let nestedAssignmentPattern be the AssignmentPattern that is covered by DestructuringAssignmentTarget.
       const nestedAssignmentPattern = refineLeftHandSideExpression(DestructuringAssignmentTarget) as ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern;
       // 7. Return the result of performing DestructuringAssignmentEvaluation of nestedAssignmentPattern with A as the argument.
-      return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, A);
+      return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, array);
     }
     default:
       throw OutOfRange.nonExhaustive(node);

@@ -29,9 +29,9 @@ function* GeneratorProto_return([value = Value.undefined]: Arguments, { thisValu
   // 1. Let g be the this value.
   const g = thisValue;
   // 2. Let C be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-  const C = new Completion({ Type: 'return', Value: value, Target: undefined });
+  const completion = new Completion({ Type: 'return', Value: value, Target: undefined });
   // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
-  return Q(yield* GeneratorResumeAbrupt(g, C, undefined));
+  return Q(yield* GeneratorResumeAbrupt(g, completion, undefined));
 }
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.throw */
@@ -39,9 +39,9 @@ function* GeneratorProto_throw([exception = Value.undefined]: Arguments, { thisV
   // 1. Let g be the this value.
   const g = thisValue;
   // 2. Let C be ThrowCompletion(exception).
-  const C = ThrowCompletion(exception);
+  const completion = ThrowCompletion(exception);
   // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
-  return Q(yield* GeneratorResumeAbrupt(g, C, undefined));
+  return Q(yield* GeneratorResumeAbrupt(g, completion, undefined));
 }
 
 export function bootstrapGeneratorFunctionPrototypePrototype(realmRec: Realm) {

@@ -12,10 +12,10 @@ function* GeneratorFunctionConstructor(args: Arguments, { NewTarget }: FunctionC
   const bodyArg = args[args.length - 1] || Value('');
   args = args.slice(0, -1) as Arguments;
   // 1. Let C be the active function object.
-  const C = surroundingAgent.activeFunctionObject as FunctionObject;
+  const activeFunc = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
   // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
-  return Q(yield* CreateDynamicFunction(C, NewTarget, 'generator', args, bodyArg));
+  return Q(yield* CreateDynamicFunction(activeFunc, NewTarget, 'generator', args, bodyArg));
 }
 
 export function bootstrapGeneratorFunction(realmRec: Realm) {

@@ -46,9 +46,9 @@ function* IteratorHelperPrototype_return(_args: Arguments, { thisValue }: Functi
   }
 
   // 5. Let C be ReturnCompletion(undefined).
-  const C = ReturnCompletion(Value.undefined);
+  const completion = ReturnCompletion(Value.undefined);
   // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
-  return Q(yield* GeneratorResumeAbrupt(O, C, Value('Iterator Helper')));
+  return Q(yield* GeneratorResumeAbrupt(O, completion, Value('Iterator Helper')));
 }
 
 export function bootstrapIteratorHelperPrototype(realmRec: Realm) {

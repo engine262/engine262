@@ -35,51 +35,51 @@ export function Evaluate_TryStatement(TryStatement: ParseNode.TryStatement) {
 // TryStatement : `try` Block Catch
 function* Evaluate_TryStatement_BlockCatch({ Block, Catch }: ParseNode.TryStatement) {
   // 1. Let B be the result of evaluating Block.
-  const B = EnsureCompletion(yield* Evaluate(Block));
+  const blockResult = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
-  let C;
-  if (B.Type === 'throw') {
-    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, B.Value));
+  let catchResult;
+  if (blockResult.Type === 'throw') {
+    catchResult = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, blockResult.Value));
   } else { // 3. Else, let C be B.
-    C = B;
+    catchResult = blockResult;
   }
   // 3. Return Completion(UpdateEmpty(C, undefined)).
-  return Completion(UpdateEmpty(C, Value.undefined));
+  return Completion(UpdateEmpty(catchResult, Value.undefined));
 }
 
 // TryStatement : `try` Block Finally
 function* Evaluate_TryStatement_BlockFinally({ Block, Finally }: ParseNode.TryStatement) {
   // 1. Let B be the result of evaluating Block.
-  const B = EnsureCompletion(yield* Evaluate(Block));
+  const blockResult = EnsureCompletion(yield* Evaluate(Block));
   // 1. Let F be the result of evaluating Finally.
-  let F = EnsureCompletion(yield* Evaluate(Finally!));
+  let finallyResult = EnsureCompletion(yield* Evaluate(Finally!));
   // 1. If F.[[Type]] is normal, set F to B.
-  if (F.Type === 'normal') {
-    F = B;
+  if (finallyResult.Type === 'normal') {
+    finallyResult = blockResult;
   }
   // 1. Return Completion(UpdateEmpty(F, undefined)).
-  return Completion(UpdateEmpty(F, Value.undefined));
+  return Completion(UpdateEmpty(finallyResult, Value.undefined));
 }
 
 // TryStatement : `try` Block Catch Finally
 function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }: ParseNode.TryStatement) {
   // 1. Let B be the result of evaluating Block.
-  const B = EnsureCompletion(yield* Evaluate(Block));
+  const blockResult = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
-  let C: Completion<Value | void>;
-  if (B.Type === 'throw') {
-    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, B.Value));
+  let catchResult: Completion<Value | void>;
+  if (blockResult.Type === 'throw') {
+    catchResult = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, blockResult.Value));
   } else { // 3. Else, let C be B.
-    C = B;
+    catchResult = blockResult;
   }
   // 4. Let F be the result of evaluating Finally.
-  let F = EnsureCompletion(yield* Evaluate(Finally!));
+  let finallyResult = EnsureCompletion(yield* Evaluate(Finally!));
   // 5. If F.[[Type]] is normal, set F to C.
-  if (F.Type === 'normal') {
-    F = C;
+  if (finallyResult.Type === 'normal') {
+    finallyResult = catchResult;
   }
   // 6. Return Completion(UpdateEmpty(F, undefined)).
-  return Completion(UpdateEmpty(F, Value.undefined));
+  return Completion(UpdateEmpty(finallyResult, Value.undefined));
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation */
@@ -112,9 +112,9 @@ function* CatchClauseEvaluation({ CatchParameter, Block }: ParseNode.Catch, thro
     return Completion(status);
   }
   // 7. Let B be the result of evaluating Block.
-  const B = EnsureCompletion(yield* Evaluate(Block));
+  const blockCompletion = EnsureCompletion(yield* Evaluate(Block));
   // 8. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 9. Return Completion(B).
-  return Completion(B);
+  return Completion(blockCompletion);
 }

@@ -90,9 +90,9 @@ function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext
 
 /** https://tc39.es/ecma262/#sec-array.from */
 function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  const C = thisValue;
+  const constructor = thisValue;
   let mapping;
-  let A;
+  let array;
   if (mapper === Value.undefined) {
     mapping = false;
   } else {
@@ -103,10 +103,10 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   }
   const usingIterator = Q(yield* GetMethod(items, wellKnownSymbols.iterator));
   if (!(usingIterator instanceof UndefinedValue)) {
-    if (IsConstructor(C)) {
-      A = Q(yield* Construct(C));
+    if (IsConstructor(constructor)) {
+      array = Q(yield* Construct(constructor));
     } else {
-      A = X(ArrayCreate(0));
+      array = X(ArrayCreate(0));
     }
     const iteratorRecord = Q(yield* GetIteratorFromMethod(items, usingIterator));
     let k = 0;
@@ -118,8 +118,8 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       const Pk = X(ToString(F(k)));
       const next = Q(yield* IteratorStepValue(iteratorRecord));
       if (next === 'done') {
-        Q(yield* Set(A, Value('length'), F(k), Value.true));
-        return A;
+        Q(yield* Set(array, Value('length'), F(k), Value.true));
+        return array;
       }
       let mappedValue;
       if (mapping) {
@@ -129,17 +129,17 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       } else {
         mappedValue = next;
       }
-      const defineStatus = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
+      const defineStatus = yield* CreateDataPropertyOrThrow(array, Pk, mappedValue);
       IfAbruptCloseIterator(defineStatus, iteratorRecord);
       k += 1;
     }
   }
   const arrayLike = X(ToObject(items));
   const len = Q(yield* LengthOfArrayLike(arrayLike));
-  if (IsConstructor(C)) {
-    A = Q(yield* Construct(C, [F(len)]));
+  if (IsConstructor(constructor)) {
+    array = Q(yield* Construct(constructor, [F(len)]));
   } else {
-    A = Q(ArrayCreate(len));
+    array = Q(ArrayCreate(len));
   }
   let k = 0;
   while (k < len) {
@@ -151,16 +151,16 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     } else {
       mappedValue = kValue;
     }
-    Q(yield* CreateDataPropertyOrThrow(A, Pk, mappedValue));
+    Q(yield* CreateDataPropertyOrThrow(array, Pk, mappedValue));
     k += 1;
   }
-  Q(yield* Set(A, Value('length'), F(len), Value.true));
-  return A;
+  Q(yield* Set(array, Value('length'), F(len), Value.true));
+  return array;
 }
 
 /** https://tc39.es/ecma262/#sec-array.fromasync */
 function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  const C = thisValue;
+  const constructor = thisValue;
   let mapping = false;
   if (mapper !== Value.undefined) {
     if (!IsCallable(mapper)) {
@@ -182,11 +182,11 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
 
   if (iteratorRecord) {
     const MAX_SAFE_INTEGER = (2 ** 53) - 1;
-    let A: ObjectValue;
-    if (IsConstructor(C)) {
-      A = Q(yield* Construct(C));
+    let array: ObjectValue;
+    if (IsConstructor(constructor)) {
+      array = Q(yield* Construct(constructor));
     } else {
-      A = X(ArrayCreate(0));
+      array = X(ArrayCreate(0));
     }
 
     let k = 0;
@@ -204,8 +204,8 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
       }
       const done = Q(yield* IteratorComplete(nextResult));
       if (done === Value.true) {
-        Q(yield* Set(A, Value('length'), F(k), Value.true));
-        return A;
+        Q(yield* Set(array, Value('length'), F(k), Value.true));
+        return array;
       }
 
       const nextValue: ValueCompletion<Value> = Q(yield* IteratorValue(nextResult));
@@ -221,7 +221,7 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
         mappedValue = nextValue;
       }
 
-      const defineStatus = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
+      const defineStatus = yield* CreateDataPropertyOrThrow(array, Pk, mappedValue);
       IfAbruptCloseAsyncIterator(defineStatus, iteratorRecord);
       k += 1;
     }
@@ -229,11 +229,11 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
     const arrayLike = X(ToObject(items));
     const len = Q(yield* LengthOfArrayLike(arrayLike));
 
-    let A: ObjectValue;
-    if (IsConstructor(C)) {
-      A = Q(yield* Construct(C, [F(len)]));
+    let array: ObjectValue;
+    if (IsConstructor(constructor)) {
+      array = Q(yield* Construct(constructor, [F(len)]));
     } else {
-      A = Q(ArrayCreate(len));
+      array = Q(ArrayCreate(len));
     }
 
     let k = 0;
@@ -248,12 +248,12 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
       } else {
         mappedValue = kValue;
       }
-      Q(yield* CreateDataPropertyOrThrow(A, Pk, mappedValue));
+      Q(yield* CreateDataPropertyOrThrow(array, Pk, mappedValue));
       k += 1;
     }
 
-    Q(yield* Set(A, Value('length'), F(len), Value.true));
-    return A;
+    Q(yield* Set(array, Value('length'), F(len), Value.true));
+    return array;
   }
 }
 
@@ -266,22 +266,22 @@ function Array_isArray([arg = Value.undefined]: Arguments): ValueCompletion {
 function* Array_of(items: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
-  const C = thisValue;
-  let A;
-  if (IsConstructor(C)) {
-    A = Q(yield* Construct(C, [F(len)]));
+  const constructor = thisValue;
+  let array;
+  if (IsConstructor(constructor)) {
+    array = Q(yield* Construct(constructor, [F(len)]));
   } else {
-    A = Q(ArrayCreate(len));
+    array = Q(ArrayCreate(len));
   }
   let k = 0;
   while (k < len) {
     const kValue = items[k]!;
     const Pk = X(ToString(F(k)));
-    Q(yield* CreateDataPropertyOrThrow(A, Pk, kValue));
+    Q(yield* CreateDataPropertyOrThrow(array, Pk, kValue));
     k += 1;
   }
-  Q(yield* Set(A, Value('length'), F(len), Value.true));
-  return A;
+  Q(yield* Set(array, Value('length'), F(len), Value.true));
+  return array;
 }
 
 /** https://tc39.es/ecma262/#sec-get-array-@@species */

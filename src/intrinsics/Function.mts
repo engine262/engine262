@@ -12,10 +12,10 @@ function* FunctionConstructor(args: Arguments, { NewTarget }: FunctionCallContex
   const bodyArg = args[args.length - 1] || Value('');
   args = args.slice(0, -1) as Arguments;
   // 1. Let C be the active function object.
-  const C = surroundingAgent.activeFunctionObject as FunctionObject;
+  const activeFunc = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
   // 3. Return ? CreateDynamicFunction(C, NewTarget, normal, args).
-  return Q(yield* CreateDynamicFunction(C, NewTarget, 'normal', args, bodyArg));
+  return Q(yield* CreateDynamicFunction(activeFunc, NewTarget, 'normal', args, bodyArg));
 }
 
 export function bootstrapFunction(realmRec: Realm) {

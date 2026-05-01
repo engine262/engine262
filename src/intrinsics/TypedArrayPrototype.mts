@@ -245,13 +245,13 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
     }
     k += 1;
   }
-  const A = Q(yield* TypedArraySpeciesCreate(O, [F(captured)]));
+  const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(captured)]));
   let n = 0;
   for (const e of kept) {
-    X(Set(A, X(ToString(F(n))), e, Value.true));
+    X(Set(resultArray, X(ToString(F(n))), e, Value.true));
     n += 1;
   }
-  return A;
+  return resultArray;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
@@ -285,16 +285,16 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   if (!IsCallable(callbackfn)) {
     return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
-  const A = Q(yield* TypedArraySpeciesCreate(O, [F(len)]));
+  const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(len)]));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = X(Get(O, Pk));
     const mappedValue = Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O]));
-    X(Set(A, Pk, mappedValue, Value.true));
+    X(Set(resultArray, Pk, mappedValue, Value.true));
     k += 1;
   }
-  return A;
+  return resultArray;
 }
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
@@ -441,7 +441,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
     endIndex = Math.min(relativeEnd, srcArrayLength);
   }
   let countBytes = Math.max(endIndex - startIndex, 0);
-  const A = Q(yield* TypedArraySpeciesCreate(O, [F(countBytes)]));
+  const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(countBytes)]));
   if (countBytes > 0) {
     taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
     if (IsTypedArrayOutOfBounds(taRecord)) {
@@ -450,14 +450,14 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
     endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
     countBytes = Math.max(endIndex - startIndex, 0);
     const srcType = TypedArrayElementType(O);
-    const targetType = TypedArrayElementType(A);
+    const targetType = TypedArrayElementType(resultArray);
     if (srcType === targetType) {
       const srcBuffer = O.ViewedArrayBuffer as ArrayBufferObject;
-      const targetBuffer = A.ViewedArrayBuffer as ArrayBufferObject;
+      const targetBuffer = resultArray.ViewedArrayBuffer as ArrayBufferObject;
       const elementSize = TypedArrayElementSize(O);
       const srcByteOffset = O.ByteOffset;
       let srcByteIndex = (startIndex * elementSize) + srcByteOffset;
-      let targetByteIndex = A.ByteOffset;
+      let targetByteIndex = resultArray.ByteOffset;
       const endByteIndex = targetByteIndex + (countBytes * elementSize);
       while (targetByteIndex < endByteIndex) {
         const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', true, 'unordered');
@@ -471,13 +471,13 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
       while (k < endIndex) {
         const Pk = X(ToString(F(k)));
         const kValue = X(Get(O, Pk));
-        X(Set(A, X(ToString(F(n))), kValue, Value.true));
+        X(Set(resultArray, X(ToString(F(n))), kValue, Value.true));
         k += 1;
         n += 1;
       }
     }
   }
-  return A;
+  return resultArray;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
@@ -510,7 +510,7 @@ function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { 
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  const A = Q(yield* TypedArrayCreateSameType(O, len));
+  const resultArray = Q(yield* TypedArrayCreateSameType(O, len));
   const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
     Assert(x instanceof NumberValue || x instanceof BigIntValue);
     Assert(y instanceof NumberValue || y instanceof BigIntValue);
@@ -519,10 +519,10 @@ function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { 
   const sortedList = Q(yield* SortIndexedProperties(O, len, SortCompare, 'read-through-holes'));
   let j = 0;
   while (j < len) {
-    X(Set(A, X(ToString(F(j))), sortedList[j], Value.true));
+    X(Set(resultArray, X(ToString(F(j))), sortedList[j], Value.true));
     j += 1;
   }
-  return A;
+  return resultArray;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
@@ -644,7 +644,7 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
   if (IsValidIntegerIndex(O, F(actualIndex)) === Value.false) {
     return Throw.RangeError('TypedArray index out of bounds');
   }
-  const A = Q(yield* TypedArrayCreateSameType(O, len));
+  const resultArray = Q(yield* TypedArrayCreateSameType(O, len));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
@@ -654,10 +654,10 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
     } else {
       fromValue = X(Get(O, Pk));
     }
-    X(Set(A, Pk, fromValue, Value.true));
+    X(Set(resultArray, Pk, fromValue, Value.true));
     k += 1;
   }
-  return A;
+  return resultArray;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed */
@@ -665,16 +665,16 @@ function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCa
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  const A = Q(yield* TypedArrayCreateSameType(O, len));
+  const resultArray = Q(yield* TypedArrayCreateSameType(O, len));
   let k = 0;
   while (k < len) {
     const from = X(ToString(F(len - k - 1)));
     const Pk = X(ToString(F(k)));
     const fromValue = X(Get(O, from));
-    X(Set(A, Pk, fromValue, Value.true));
+    X(Set(resultArray, Pk, fromValue, Value.true));
     k += 1;
   }
-  return A;
+  return resultArray;
 }
 
 export function bootstrapTypedArrayPrototype(realmRec: Realm) {

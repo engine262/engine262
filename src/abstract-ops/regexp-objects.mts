@@ -248,7 +248,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
   Assert(hasGroups instanceof BooleanValue);
   // 8. Set A to ! ArrayCreate(n).
   // 9. Assert: The value of A's "length" property is n.
-  const A = X(ArrayCreate(n));
+  const array = X(ArrayCreate(n));
   // 10. If hasGroups is true, then
   let groups: ObjectValue | UndefinedValue;
   if (hasGroups === Value.true) {
@@ -259,7 +259,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
     groups = Value.undefined;
   }
   // 11. Perform ! CreateDataProperty(A, "groups", groups).
-  X(CreateDataPropertyOrThrow(A, Value('groups'), groups));
+  X(CreateDataPropertyOrThrow(array, Value('groups'), groups));
   // 12. For each integer i such that i ≥ 0 and i < n, do
   for (let i = 0; i < n; i += 1) {
     // a. Let matchIndices be indices[i].
@@ -274,7 +274,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
       matchIndicesArray = Value.undefined;
     }
     // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
-    X(CreateDataPropertyOrThrow(A, X(ToString(toNumberValue(i))), matchIndicesArray));
+    X(CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(i))), matchIndicesArray));
     // e. If i > 0 and groupNames[i - 1] is not undefined, then
     if (i > 0 && groupNames[i - 1] !== Value.undefined) {
       // i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
@@ -282,7 +282,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
     }
   }
   // 13. Return A.
-  return A;
+  return array;
 }
 
 /** https://tc39.es/ecma262/#sec-regexphasflag */

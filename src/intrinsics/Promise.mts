@@ -208,12 +208,12 @@ export function SafePerformPromiseAll(promises: readonly PromiseObject[]) {
 /** https://tc39.es/ecma262/#sec-promise.all */
 function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  __ts_cast__<FunctionObject>(constructor);
   // 3. Let promiseResolve be GetPromiseResolve(C).
-  const promiseResolve = yield* GetPromiseResolve(C);
+  const promiseResolve = yield* GetPromiseResolve(constructor);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   __ts_cast__<FunctionObject>(promiseResolve);
@@ -223,7 +223,7 @@ function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ValueCompletion = yield* PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve);
+  let result: ValueCompletion = yield* PerformPromiseAll(iteratorRecord, constructor, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -239,13 +239,13 @@ function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fu
 
 /** https://tc39.es/proposal-await-dictionary/#sec-promise.allkeyed */
 function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  __ts_cast__<FunctionObject>(constructor);
 
   // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
-  const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(C));
+  const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(constructor));
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   __ts_cast__<FunctionObject>(promiseResolve);
 
@@ -259,7 +259,7 @@ function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue 
   }
 
   // 6. Let result be Completion(PerformPromiseAllKeyed(all, promises, C, promiseCapability, promiseResolve)).
-  const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all', promises, C, promiseCapability, promiseResolve));
+  const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all', promises, constructor, promiseCapability, promiseResolve));
   IfAbruptRejectPromise(result, promiseCapability);
   return promiseCapability.Promise;
 }
@@ -401,11 +401,11 @@ function CreateKeyedPromiseCombinatorResultObject(keys: readonly PropertyKeyValu
 
 /** https://tc39.es/ecma262/#sec-promise.allsettled */
 function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const C = thisValue;
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
+  const constructor = thisValue;
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  __ts_cast__<FunctionObject>(constructor);
 
-  const promiseResolve = yield* GetPromiseResolve(C);
+  const promiseResolve = yield* GetPromiseResolve(constructor);
   __ts_cast__<FunctionObject>(promiseResolve);
 
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
@@ -415,7 +415,7 @@ function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValu
   __ts_cast__<IteratorRecord>(iteratorRecord);
 
   // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ValueCompletion = yield* PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve);
+  let result: ValueCompletion = yield* PerformPromiseAllSettled(iteratorRecord, constructor, promiseCapability, promiseResolve);
 
   if (result instanceof AbruptCompletion) {
     if (iteratorRecord.Done === Value.false) {
@@ -526,11 +526,11 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
 
 /** https://tc39.es/proposal-await-dictionary/#sec-promise.allsettledkeyed */
 function* Promise_allSettledKeyed([promises = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const C = thisValue;
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
+  const constructor = thisValue;
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  __ts_cast__<FunctionObject>(constructor);
 
-  const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(C));
+  const promiseResolve = EnsureCompletion(yield* GetPromiseResolve(constructor));
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   __ts_cast__<FunctionObject>(promiseResolve);
 
@@ -541,7 +541,7 @@ function* Promise_allSettledKeyed([promises = Value.undefined]: Arguments, { thi
   }
 
   // 6. Let result be Completion(PerformPromiseAllKeyed(all, promises, C, promiseCapability, promiseResolve)).
-  const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all-settled', promises, C, promiseCapability, promiseResolve));
+  const result = EnsureCompletion(yield* PerformPromiseAllKeyed('all-settled', promises, constructor, promiseCapability, promiseResolve));
   IfAbruptRejectPromise(result, promiseCapability);
   return promiseCapability.Promise;
 }
@@ -624,12 +624,12 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
 /** https://tc39.es/ecma262/#sec-promise.any */
 function* Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  __ts_cast__<FunctionObject>(constructor);
   // 3. Let promiseResolve be GetPromiseResolve(C).
-  const promiseResolve = yield* GetPromiseResolve(C);
+  const promiseResolve = yield* GetPromiseResolve(constructor);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   __ts_cast__<FunctionObject>(promiseResolve);
@@ -639,7 +639,7 @@ function* Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
-  let result: ValueCompletion = yield* PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve);
+  let result: ValueCompletion = yield* PerformPromiseAny(iteratorRecord, constructor, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -679,12 +679,12 @@ function* PerformPromiseRace(iteratorRecord: IteratorRecord, constructor: Functi
 /** https://tc39.es/ecma262/#sec-promise.race */
 function* Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  __ts_cast__<FunctionObject>(C);
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  __ts_cast__<FunctionObject>(constructor);
   // 3. Let promiseResolve be GetPromiseResolve(C).
-  const promiseResolve = yield* GetPromiseResolve(C);
+  const promiseResolve = yield* GetPromiseResolve(constructor);
   __ts_cast__<FunctionObject>(promiseResolve);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
@@ -694,7 +694,7 @@ function* Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: F
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ValueCompletion = yield* PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve);
+  let result: ValueCompletion = yield* PerformPromiseRace(iteratorRecord, constructor, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -711,9 +711,9 @@ function* Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: F
 /** https://tc39.es/ecma262/#sec-promise.reject */
 function* Promise_reject([r = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
   // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
   Q(yield* Call(promiseCapability.Reject, Value.undefined, [r]));
   // 4. Return promiseCapability.[[Promise]].
@@ -723,13 +723,13 @@ function* Promise_reject([r = Value.undefined]: Arguments, { thisValue }: Functi
 /** https://tc39.es/ecma262/#sec-promise.resolve */
 function* Promise_resolve([x = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. If Type(C) is not Object, throw a TypeError exception.
-  if (!(C instanceof ObjectValue)) {
-    return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.resolve', C);
+  if (!(constructor instanceof ObjectValue)) {
+    return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.resolve', constructor);
   }
   // 3. Return ? PromiseResolve(C, x).
-  return Q(yield* PromiseResolve(C, x));
+  return Q(yield* PromiseResolve(constructor, x));
 }
 
 /** https://tc39.es/ecma262/#sec-get-promise-@@species */
@@ -741,13 +741,13 @@ function Promise_symbolSpecies(_args: Arguments, { thisValue }: FunctionCallCont
 /** https://tc39.es/ecma262/#sec-promise.try */
 function* Promise_try([callback = Value.undefined, ...args]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. If C is not an Object, throw a TypeError exception.
-  if (!(C instanceof ObjectValue)) {
-    return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.try', C);
+  if (!(constructor instanceof ObjectValue)) {
+    return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.try', constructor);
   }
   // 3. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(C));
+  const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(constructor));
   // 4. Let status be Completion(Call(callback, undefined, args)).
   const status = EnsureCompletion(yield* Call(callback, Value.undefined, args as Arguments));
 
@@ -767,9 +767,9 @@ function* Promise_try([callback = Value.undefined, ...args]: Arguments, { thisVa
 /** https://tc39.es/ecma262/#sec-promise.withResolvers */
 function* Promise_withResolvers(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the this value.
-  const C = thisValue;
+  const constructor = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(C));
+  const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(constructor));
   // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).

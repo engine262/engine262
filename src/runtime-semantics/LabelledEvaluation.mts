@@ -211,18 +211,18 @@ function LabelledEvaluation_IterationStatement(IterationStatement: ParseNode.Ite
 //     `do` Statement `while` `(` Expression `)` `;`
 function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Expression }: ParseNode.DoWhileStatement, labelSet: JSStringSet) {
   // 1. Let V be undefined.
-  let V: Value = Value.undefined;
+  let iterationResult: Value = Value.undefined;
   // 2. Repeat,
   while (true) {
     // a. Let stmtResult be the result of evaluating Statement.
     const stmtResult = EnsureCompletion(yield* Evaluate(Statement)) as Completion<Value | void>;
     // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
     if (LoopContinues(stmtResult, labelSet) === Value.false) {
-      return Completion(UpdateEmpty(stmtResult, V));
+      return Completion(UpdateEmpty(stmtResult, iterationResult));
     }
     // c. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
     if (stmtResult.Value !== undefined) {
-      V = stmtResult.Value;
+      iterationResult = stmtResult.Value;
     }
     // d. Let exprRef be the result of evaluating Expression.
     const exprRef = Q(yield* Evaluate(Expression));
@@ -230,7 +230,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
     const exprValue = Q(yield* GetValue(exprRef));
     // f. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
     if (X(ToBoolean(exprValue)) === Value.false) {
-      return NormalCompletion(V);
+      return NormalCompletion(iterationResult);
     }
   }
 }
@@ -241,7 +241,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
 //     `while` `(` Expression `)` Statement
 function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Statement }: ParseNode.WhileStatement, labelSet: JSStringSet) {
   // 1. Let V be undefined.
-  let V: Value = Value.undefined;
+  let iterationResult: Value = Value.undefined;
   // 2. Repeat,
   while (true) {
     // a. Let exprRef be the result of evaluating Expression.
@@ -250,17 +250,17 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Sta
     const exprValue = Q(yield* GetValue(exprRef));
     // c. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
     if (X(ToBoolean(exprValue)) === Value.false) {
-      return NormalCompletion(V);
+      return NormalCompletion(iterationResult);
     }
     // d. Let stmtResult be the result of evaluating Statement.
     const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
     // e. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
     if (LoopContinues(stmtResult, labelSet) === Value.false) {
-      return Completion(UpdateEmpty(stmtResult, V));
+      return Completion(UpdateEmpty(stmtResult, iterationResult));
     }
     // f. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
     if (stmtResult.Value !== undefined) {
-      V = stmtResult.Value;
+      iterationResult = stmtResult.Value;
     }
   }
 }
@@ -454,7 +454,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: P
 /** https://tc39.es/ecma262/#sec-forbodyevaluation */
 function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: ParseNode.Expression | undefined, stmt: ParseNode.Statement, perIterationBindings: readonly JSStringValue[], labelSet: JSStringSet) {
   // 1. Let V be undefined.
-  let V: Value = Value.undefined;
+  let iterationResult: Value = Value.undefined;
   // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
   Q(yield* CreatePerIterationEnvironment(perIterationBindings));
   // 3. Repeat,
@@ -467,18 +467,18 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
       const testValue = Q(yield* GetValue(testRef));
       // iii. If ! ToBoolean(testValue) is false, return NormalCompletion(V).
       if (X(ToBoolean(testValue)) === Value.false) {
-        return NormalCompletion(V);
+        return NormalCompletion(iterationResult);
       }
     }
     // b. Let result be the result of evaluating stmt.
     const result = EnsureCompletion(yield* Evaluate(stmt));
     // c. If LoopContinues(result, labelSet) is false, return Completion(UpdateEmpty(result, V)).
     if (LoopContinues(result, labelSet) === Value.false) {
-      return Completion(UpdateEmpty(result, V));
+      return Completion(UpdateEmpty(result, iterationResult));
     }
     // d. If result.[[Value]] is not empty, set V to result.[[Value]].
     if (result.Value !== undefined) {
-      V = result.Value;
+      iterationResult = result.Value;
     }
     // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
     Q(yield* CreatePerIterationEnvironment(perIterationBindings));

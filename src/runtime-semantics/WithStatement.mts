@@ -24,9 +24,9 @@ export function* Evaluate_WithStatement({ Expression, Statement }: ParseNode.Wit
   // 5. Set the running execution context's LexicalEnvironment to newEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   // 6. Let C be the result of evaluating Statement.
-  const C = EnsureCompletion(yield* Evaluate(Statement));
+  const stmtCompletion = EnsureCompletion(yield* Evaluate(Statement));
   // 7. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 8. Return Completion(UpdateEmpty(C, undefined)).
-  return Completion(UpdateEmpty(C, Value.undefined));
+  return Completion(UpdateEmpty(stmtCompletion, Value.undefined));
 }

@@ -43,13 +43,13 @@ import { isTypedArrayObject } from '#self';
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
   * DefineOwnProperty(P, Desc): ValueEvaluator<BooleanValue> {
-    const A = this;
+    const array = this;
 
     Assert(IsPropertyKey(P));
     if (P instanceof JSStringValue && P.stringValue() === 'length') {
-      return Q(yield* ArraySetLength(A, Desc));
+      return Q(yield* ArraySetLength(array, Desc));
     } else if (isArrayIndex(P)) {
-      let lengthDesc = OrdinaryGetOwnProperty(A, Value('length'));
+      let lengthDesc = OrdinaryGetOwnProperty(array, Value('length'));
       Assert(!(lengthDesc instanceof UndefinedValue));
       Assert(IsDataDescriptor(lengthDesc));
       Assert(lengthDesc.Configurable === Value.false);
@@ -59,18 +59,18 @@ const InternalMethods = {
       if (R(index) >= R(length) && lengthDesc.Writable === Value.false) {
         return Value.false;
       }
-      let succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
+      let succeeded = X(OrdinaryDefineOwnProperty(array, P, Desc));
       if (succeeded === Value.false) {
         return Value.false;
       }
       if (R(index) >= R(length)) {
         lengthDesc = Descriptor({ ...lengthDesc, Value: F(R(index) + 1) });
-        succeeded = X(OrdinaryDefineOwnProperty(A, Value('length'), lengthDesc));
+        succeeded = X(OrdinaryDefineOwnProperty(array, Value('length'), lengthDesc));
         Assert(succeeded === Value.true);
       }
       return Value.true;
     }
-    return yield* OrdinaryDefineOwnProperty(A, P, Desc);
+    return yield* OrdinaryDefineOwnProperty(array, P, Desc);
   },
 } satisfies Partial<ObjectInternalMethods<OrdinaryObject>>;
 
@@ -92,18 +92,18 @@ export function ArrayCreate(length: number, proto?: ObjectValue): ValueCompletio
   if (proto === undefined) {
     proto = surroundingAgent.intrinsic('%Array.prototype%');
   }
-  const A = X(MakeBasicObject(['Prototype', 'Extensible'])) as Mutable<OrdinaryObject>;
-  A.Prototype = proto;
-  A.DefineOwnProperty = InternalMethods.DefineOwnProperty;
+  const array = X(MakeBasicObject(['Prototype', 'Extensible'])) as Mutable<OrdinaryObject>;
+  array.Prototype = proto;
+  array.DefineOwnProperty = InternalMethods.DefineOwnProperty;
 
-  X(OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({
+  X(OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({
     Value: F(length),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
 
-  return A;
+  return array;
 }
 
 /** https://tc39.es/ecma262/#sec-arrayspeciescreate */
@@ -116,35 +116,35 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
   if (isArray === Value.false) {
     return Q(ArrayCreate(length));
   }
-  let C = Q(yield* Get(originalArray, Value('constructor')));
-  if (IsConstructor(C)) {
+  let constructor = Q(yield* Get(originalArray, Value('constructor')));
+  if (IsConstructor(constructor)) {
     const thisRealm = surroundingAgent.currentRealmRecord;
-    const realmC = Q(GetFunctionRealm(C));
-    if (thisRealm !== realmC) {
-      if (SameValue(C, realmC.Intrinsics['%Array%'])) {
-        C = Value.undefined;
+    const constructorRealm = Q(GetFunctionRealm(constructor));
+    if (thisRealm !== constructorRealm) {
+      if (SameValue(constructor, constructorRealm.Intrinsics['%Array%'])) {
+        constructor = Value.undefined;
       }
     }
   }
-  if (C instanceof ObjectValue) {
-    C = Q(yield* Get(C, wellKnownSymbols.species));
-    if (C === Value.null) {
-      C = Value.undefined;
+  if (constructor instanceof ObjectValue) {
+    constructor = Q(yield* Get(constructor, wellKnownSymbols.species));
+    if (constructor === Value.null) {
+      constructor = Value.undefined;
     }
   }
-  if (C === Value.undefined) {
+  if (constructor === Value.undefined) {
     return Q(ArrayCreate(length));
   }
-  if (!IsConstructor(C)) {
-    return Throw.TypeError('$1 is not a constructor', C);
+  if (!IsConstructor(constructor)) {
+    return Throw.TypeError('$1 is not a constructor', constructor);
   }
-  return Q(yield* Construct(C, [F(length)]));
+  return Q(yield* Construct(constructor, [F(length)]));
 }
 
 /** https://tc39.es/ecma262/#sec-arraysetlength */
-export function* ArraySetLength(A: OrdinaryObject, Desc: Descriptor): ValueEvaluator<BooleanValue> {
+export function* ArraySetLength(array: OrdinaryObject, Desc: Descriptor): ValueEvaluator<BooleanValue> {
   if (Desc.Value === undefined) {
-    return yield* OrdinaryDefineOwnProperty(A, Value('length'), Desc);
+    return yield* OrdinaryDefineOwnProperty(array, Value('length'), Desc);
   }
   let newLenDesc = Desc;
   const newLen = R(Q(yield* ToUint32(Desc.Value)));
@@ -153,13 +153,13 @@ export function* ArraySetLength(A: OrdinaryObject, Desc: Descriptor): ValueEvalu
     return Throw.RangeError('Array length must be uint32.');
   }
   newLenDesc = Descriptor({ ...Desc, Value: F(newLen) });
-  const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
+  const oldLenDesc = OrdinaryGetOwnProperty(array, Value('length'));
   Assert(!(oldLenDesc instanceof UndefinedValue));
   Assert(IsDataDescriptor(oldLenDesc));
   Assert(oldLenDesc.Configurable === Value.false);
   const oldLen = R(oldLenDesc.Value as NumberValue);
   if (newLen >= oldLen) {
-    return yield* OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
+    return yield* OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc);
   }
   if (oldLenDesc.Writable === Value.false) {
     return Value.false;
@@ -171,30 +171,30 @@ export function* ArraySetLength(A: OrdinaryObject, Desc: Descriptor): ValueEvalu
     newWritable = false;
     newLenDesc = Descriptor({ ...newLenDesc, Writable: Value.true });
   }
-  const succeeded = X(OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc));
+  const succeeded = X(OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc));
   if (succeeded === Value.false) {
     return Value.false;
   }
   const keys: JSStringValue[] = [];
-  A.properties.forEach((_value, key) => {
+  array.properties.forEach((_value, key) => {
     if (isArrayIndex(key) && Number((key as JSStringValue).stringValue()) >= newLen) {
       keys.push(key as JSStringValue);
     }
   });
   keys.sort((a, b) => Number(b.stringValue()) - Number(a.stringValue()));
   for (const P of keys) {
-    const deleteSucceeded = X(A.Delete(P));
+    const deleteSucceeded = X(array.Delete(P));
     if (deleteSucceeded === Value.false) {
       newLenDesc = Descriptor({ ...newLenDesc, Value: F(R(X(ToUint32(P))) + 1) });
       if (newWritable === false) {
         newLenDesc = Descriptor({ ...newLenDesc, Writable: Value.false });
       }
-      X(OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc));
+      X(OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc));
       return Value.false;
     }
   }
   if (newWritable === false) {
-    const s = yield* OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({ Writable: Value.false }));
+    const s = yield* OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({ Writable: Value.false }));
     Assert(s === Value.true);
   }
   return Value.true;

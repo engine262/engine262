@@ -43,9 +43,9 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
     return Throw.TypeError('$1 is not a $2 object', promise, 'Promise');
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-  const C = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
+  const constructor = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   // 4. Assert: IsConstructor(C) is true.
-  Assert(IsConstructor(C));
+  Assert(IsConstructor(constructor));
   let thenFinally;
   let catchFinally;
   // 5. If IsCallable(onFinally) is false, then
@@ -60,7 +60,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       // i. Let result be ? Call(onFinally, undefined).
       const result = Q(yield* Call(onFinally, Value.undefined));
       // ii. Let promise be ? PromiseResolve(C, result).
-      const promiseInner = Q(yield* PromiseResolve(C, result));
+      const promiseInner = Q(yield* PromiseResolve(constructor, result));
       // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
       //   1. Return value.
       const returnValue = () => value;
@@ -78,7 +78,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       // i. Let result be ? Call(onFinally, undefined).
       const result = Q(yield* Call(onFinally, Value.undefined));
       // ii. Let promise be ? PromiseResolve(C, result).
-      const promiseInner = Q(yield* PromiseResolve(C, result));
+      const promiseInner = Q(yield* PromiseResolve(constructor, result));
       // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
       //   1. Return Throw(reason).
       const throwReason = () => Throw(reason);
@@ -105,9 +105,9 @@ function* PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.u
     return Throw.TypeError('$1 is not a $2 object', promise, 'Promise');
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-  const C = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
+  const constructor = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   // 4. Let resultCapability be ? NewPromiseCapability(C).
-  const resultCapability = Q(yield* NewPromiseCapability(C));
+  const resultCapability = Q(yield* NewPromiseCapability(constructor));
   // 5. Return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability).
   Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
   return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
