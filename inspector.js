@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b249d351e89be2efdb59fecbc291d7aca6fd6e4c
+ * engine262 0.0.1 cc537adc5f343799ff4e6a591d8c578e0ce2d6c5
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -25,7 +25,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('./engine262.mjs')) :
   typeof define === 'function' && define.amd ? define(['exports', './engine262.mjs'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["@magic-works/engine262/inspector"] = {}, global["@engine262/engine262"]));
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["@engine262/engine262/inspector"] = {}, global["@engine262/engine262"]));
 })(this, (function (exports, engine262_mjs) { 'use strict';
 
   const Null = {
@@ -128,7 +128,7 @@
   };
   const Number = {
     toRemoteObject(value) {
-      const v = engine262_mjs.R(value);
+      const v = value.value;
       let description = v.toString();
       const isNeg0 = Object.is(v, -0);
       // Includes values `-0`, `NaN`, `Infinity`, `-Infinity`, and bigint literals.
@@ -169,140 +169,11 @@
       };
     },
     toDescription: value => {
-      const r = engine262_mjs.R(value);
+      const r = value.value;
       return value instanceof engine262_mjs.BigIntValue ? `${r}n` : r.toString();
     }
   };
 
-  const cascadeStack = new WeakMap();
-  // This is modified based on PerformEval, used internally for devtools console.
-  function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
-    let inFunction = false;
-    let inMethod = false;
-    let inDerivedConstructor = false;
-    let inClassFieldInitializer = false;
-    let scriptContext;
-    if (!engine262_mjs.surroundingAgent.runningExecutionContext?.LexicalEnvironment) {
-      // top level devtools eval
-      const globalEnv = evalRealm.GlobalEnv;
-      scriptContext = new engine262_mjs.ExecutionContext();
-      scriptContext.Function = engine262_mjs.Value.null;
-      scriptContext.Realm = evalRealm;
-      scriptContext.VariableEnvironment = globalEnv;
-      if (!cascadeStack.has(globalEnv)) {
-        cascadeStack.set(globalEnv, new engine262_mjs.DeclarativeEnvironmentRecord(globalEnv));
-      }
-      scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv);
-      scriptContext.PrivateEnvironment = engine262_mjs.Value.null;
-      engine262_mjs.surroundingAgent.executionContextStack.push(scriptContext);
-    }
-    const thisEnv = engine262_mjs.GetThisEnvironment();
-    if (thisEnv instanceof engine262_mjs.FunctionEnvironmentRecord) {
-      const F = thisEnv.FunctionObject;
-      inFunction = true;
-      inMethod = thisEnv.HasSuperBinding() === engine262_mjs.Value.true;
-      if (F.ConstructorKind === 'derived') {
-        inDerivedConstructor = true;
-      }
-      const classFieldInitializerName = F.ClassFieldInitializerName;
-      if (classFieldInitializerName !== undefined) {
-        inClassFieldInitializer = true;
-      }
-    }
-    let isAsync = false;
-    const script = engine262_mjs.wrappedParse({
-      source,
-      allowAllPrivateNames: true
-    }, parser => parser.scope.with({
-      strict: strictCaller,
-      newTarget: inFunction,
-      superProperty: inMethod,
-      superCall: inDerivedConstructor,
-      private: true
-    }, () => parser.try(() => parser.parseScript()) || parser.scope.with({
-      await: true
-    }, () => {
-      isAsync = true;
-      return parser.parseScript();
-    })));
-    if (Array.isArray(script)) {
-      if (scriptContext) {
-        engine262_mjs.surroundingAgent.executionContextStack.pop(scriptContext);
-      }
-      return engine262_mjs.ThrowCompletion(script[0]);
-    }
-    if (!script.ScriptBody) {
-      if (scriptContext) {
-        engine262_mjs.surroundingAgent.executionContextStack.pop(scriptContext);
-      }
-      return engine262_mjs.Value.undefined;
-    }
-    const body = script.ScriptBody;
-    if (inClassFieldInitializer && engine262_mjs.ContainsArguments(body)) {
-      return engine262_mjs.Throw.SyntaxError('arguments cannot be referenced in a class field initializer');
-    }
-    const scriptId = doNotTrack ? undefined : engine262_mjs.surroundingAgent.addDynamicParsedSource(engine262_mjs.surroundingAgent.currentRealmRecord, source, script);
-    if (!doNotTrack) {
-      engine262_mjs.surroundingAgent.parsedSources.get(scriptId).HostDefined.isInspectorEval = true;
-      if (scriptContext) {
-        scriptContext.HostDefined ??= {};
-        scriptContext.HostDefined.scriptId = scriptId;
-      }
-    }
-    let strictEval;
-    if (script) {
-      strictEval = engine262_mjs.IsStrict(script);
-    } else {
-      strictEval = true;
-    }
-    const runningContext = engine262_mjs.surroundingAgent.runningExecutionContext;
-    let parentLexicalEnvironment;
-    if (cascadeStack.has(runningContext.LexicalEnvironment)) {
-      parentLexicalEnvironment = cascadeStack.get(runningContext.LexicalEnvironment);
-    } else {
-      parentLexicalEnvironment = runningContext.LexicalEnvironment;
-    }
-    const lexEnv = new engine262_mjs.DeclarativeEnvironmentRecord(parentLexicalEnvironment);
-    cascadeStack.set(runningContext.LexicalEnvironment, lexEnv);
-    let varEnv;
-    const privateEnv = runningContext.PrivateEnvironment;
-    varEnv = runningContext.VariableEnvironment;
-    if (strictEval === true) {
-      varEnv = lexEnv;
-    }
-    const evalContext = new engine262_mjs.ExecutionContext();
-    evalContext.HostDefined ??= {};
-    evalContext.HostDefined.scriptId = scriptId;
-    evalContext.Function = engine262_mjs.Value.null;
-    evalContext.Realm = evalRealm;
-    evalContext.ScriptOrModule = runningContext.ScriptOrModule;
-    evalContext.VariableEnvironment = varEnv;
-    evalContext.LexicalEnvironment = lexEnv;
-    evalContext.PrivateEnvironment = privateEnv;
-    engine262_mjs.surroundingAgent.executionContextStack.push(evalContext);
-    let result;
-    result = engine262_mjs.EnsureCompletion(yield* engine262_mjs.EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
-    if (result.Type === 'normal') {
-      if (isAsync) {
-        const promiseCapability = engine262_mjs.unwrapCompletion(engine262_mjs.NewPromiseCapability(engine262_mjs.surroundingAgent.intrinsic('%Promise%')));
-        engine262_mjs.unwrapCompletion(yield* engine262_mjs.AsyncBlockStart(promiseCapability, function* evaluate() {
-          return yield* engine262_mjs.Evaluate(body);
-        }, evalContext));
-        result = promiseCapability.Promise;
-      } else {
-        result = engine262_mjs.EnsureCompletion(yield* engine262_mjs.Evaluate(body));
-      }
-    }
-    result = engine262_mjs.EnsureCompletion(result);
-    if (result.Type === 'normal' && result.Value === undefined) {
-      result = engine262_mjs.NormalCompletion(engine262_mjs.Value.undefined);
-    }
-    engine262_mjs.surroundingAgent.executionContextStack.pop(evalContext);
-    if (scriptContext) {
-      engine262_mjs.surroundingAgent.executionContextStack.pop(scriptContext);
-    }
-    return result;
-  }
   function nativeEvalInAnyRealm(closure, context) {
     const realm = engine262_mjs.surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
     if (!realm) return undefined;
@@ -318,6 +189,9 @@
   function unwrapFunction(value) {
     if (engine262_mjs.isWrappedFunctionExoticObject(value)) {
       return unwrapFunction(value.WrappedTargetFunction);
+    }
+    if (engine262_mjs.isBoundFunctionObject(value)) {
+      return unwrapFunction(value.BoundTargetFunction);
     }
     return value;
   }
@@ -338,11 +212,11 @@
   }
   const Function = {
     toRemoteObject(value, getObjectId) {
-      value = unwrapFunction(value);
       const result = {
         type: 'function',
         objectId: getObjectId(value)
       };
+      value = unwrapFunction(value);
       result.description = engine262_mjs.IntrinsicsFunctionToString(value);
       if (engine262_mjs.isECMAScriptFunctionObject(value) && value.ECMAScriptCode) {
         if (value.ECMAScriptCode.type === 'FunctionBody') {
@@ -367,12 +241,51 @@
     toObjectPreview(value) {
       return {
         type: 'function',
-        description: engine262_mjs.IntrinsicsFunctionToString(value),
+        description: engine262_mjs.IntrinsicsFunctionToString(unwrapFunction(value)),
         overflow: false,
         properties: []
       };
     },
     toInternalProperties(value, getObjectId, context) {
+      const result = [];
+      while (true) {
+        if (engine262_mjs.isWrappedFunctionExoticObject(value)) {
+          if (!result.some(p => p.name === '[[WrappedTargetFunction]]')) {
+            result.push({
+              name: '[[WrappedTargetFunction]]',
+              value: context.toRemoteObject(value.WrappedTargetFunction, {
+                generatePreview: true
+              })
+            });
+          }
+          value = value.WrappedTargetFunction;
+          continue;
+        }
+        if (engine262_mjs.isBoundFunctionObject(value)) {
+          const v = value;
+          if (!result.some(p => p.name === '[[BoundTargetFunction]]')) {
+            result.push({
+              name: '[[BoundTargetFunction]]',
+              value: context.toRemoteObject(v.BoundTargetFunction, {
+                generatePreview: true
+              })
+            }, {
+              name: '[[BoundThis]]',
+              value: context.toRemoteObject(v.BoundThis, {
+                generatePreview: true
+              })
+            }, {
+              name: '[[BoundArguments]]',
+              value: context.toRemoteObject(engine262_mjs.unwrapCompletion(nativeEvalInAnyRealm(() => engine262_mjs.CreateArrayFromList(v.BoundArguments), context)), {
+                generatePreview: true
+              })
+            });
+          }
+          value = v.BoundTargetFunction;
+          continue;
+        }
+        break;
+      }
       if (engine262_mjs.isECMAScriptFunctionObject(value)) {
         if (!value.ECMAScriptCode) return [];
         const scope = [];
@@ -392,13 +305,12 @@
           subtype: 'internal#scopeList',
           type: 'object'
         } : undefined;
-        return [toLocation(value.ECMAScriptCode.location, value.scriptId), {
+        result.push(toLocation(value.ECMAScriptCode.location, value.scriptId), {
           name: '[[Scopes]]',
           value: scopeDesc
-        }];
+        });
       }
       if (engine262_mjs.isBuiltinFunctionObject(value)) {
-        const result = [];
         if (value.HostLocation) {
           const [scriptId, location] = value.HostLocation;
           result.push(toLocation(location, scriptId));
@@ -412,9 +324,8 @@
             }
           });
         }
-        return result;
       }
-      return [];
+      return result;
     },
     toDescription: () => 'Function'
   };
@@ -753,7 +664,7 @@
   const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
 
   const Date$1 = new ObjectInspector('Date', 'date', value => {
-    if (!globalThis.Number.isFinite(engine262_mjs.R(value.DateValue))) {
+    if (!globalThis.Number.isFinite(value.DateValue)) {
       return 'Invalid Date';
     }
     const val = engine262_mjs.DateProto_toISOString([], {
@@ -765,7 +676,7 @@
   const TemporalInstant = new ObjectInspector('Temporal.Instant', 'date', value => `Temporal.Instant <${engine262_mjs.TemporalInstantToString(value, undefined, 'auto')}>`);
   const TemporalDuration = new ObjectInspector('Temporal.Duration', 'date', value => `Temporal.Duration <${engine262_mjs.TemporalDurationToString(value, 'auto')}>`);
   const TemporalPlainDate = new ObjectInspector('Temporal.PlainDate', 'date', value => `Temporal.PlainDate <${engine262_mjs.TemporalDateToString(value, 'auto')}>`);
-  const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${engine262_mjs.ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
+  const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${engine262_mjs.FormatISODateTime(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
   const TemporalPlainMonthDay = new ObjectInspector('Temporal.PlainMonthDay', 'date', value => `Temporal.PlainMonthDay <${engine262_mjs.TemporalMonthDayToString(value, 'auto')}>`);
   const TemporalPlainTime = new ObjectInspector('Temporal.PlainTime', 'date', value => `Temporal.PlainTime <${engine262_mjs.TimeRecordToString(value.Time, 'auto')}>`);
   const TemporalPlainYearMonth = new ObjectInspector('Temporal.PlainYearMonth', 'date', value => `Temporal.PlainYearMonth <${engine262_mjs.TemporalYearMonthToString(value, 'auto')}>`);
@@ -782,7 +693,7 @@
       value: getInspector(Value).toObjectPreview(Value, context)
     }))
   });
-  const Set = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
+  const Set$1 = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
     additionalProperties: value => [['size', engine262_mjs.Value(value.SetData.filter(globalThis.Boolean).length)]],
     internalProperties: value => [['[[Entries]]', value.SetData]],
     entries: (value, context) => value.SetData.filter(globalThis.Boolean).map(Value => ({
@@ -877,7 +788,7 @@
       case engine262_mjs.isMapObject(value):
         return Map$1;
       case engine262_mjs.isSetObject(value):
-        return Set;
+        return Set$1;
       case engine262_mjs.isWeakMapObject(value):
         return WeakMap$1;
       case engine262_mjs.isWeakSetObject(value):
@@ -949,24 +860,6 @@
       });
       const oldInspector = realm.HostDefined.attachingInspector;
       realm.HostDefined.attachingInspector = this.#io;
-      const oldPromiseRejectionTracker = realm.HostDefined.promiseRejectionTracker;
-      realm.HostDefined.promiseRejectionTracker = (promise, operation) => {
-        oldPromiseRejectionTracker?.(promise, operation);
-        if (operation === 'reject') {
-          this.#io.sendEvent['Runtime.exceptionThrown']({
-            timestamp: Date.now(),
-            exceptionDetails: this.createExceptionDetails(promise, true)
-          });
-        } else {
-          const id = this.#exceptionMap.get(promise);
-          if (id) {
-            this.#io.sendEvent['Runtime.exceptionRevoked']({
-              reason: 'Handler added to rejected promise',
-              exceptionId: id
-            });
-          }
-        }
-      };
       this.#io.sendEvent['Runtime.executionContextCreated']({
         context: descriptor
       });
@@ -1135,7 +1028,6 @@
         privateProperties
       };
     }
-    #exceptionMap = new WeakMap();
     createExceptionDetails(completion, isPromise) {
       const value = completion instanceof engine262_mjs.ThrowCompletion ? completion.Value : completion;
       const {
@@ -1144,7 +1036,6 @@
       const frames = InspectorContext.callSiteToCallFrame(callStack);
       const exceptionId = this.#objectCounter;
       this.#objectCounter += 1;
-      this.#exceptionMap.set(value, exceptionId);
       return {
         text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
         stackTrace: callStack ? {
@@ -1213,7 +1104,7 @@
     evaluateMode = 'script';
   }
   function HostGetThisEnvironment(env) {
-    while (!(env instanceof engine262_mjs.NullValue)) {
+    while (env !== null) {
       const exists = env.HasThisBinding();
       if (exists === engine262_mjs.Value.true) {
         const value = env.GetThisBinding();
@@ -1309,29 +1200,41 @@
     setBlackboxPatterns() {},
     setBlackboxExecutionContexts() {},
     // #region breakpoints
-    getPossibleBreakpoints() {
-      // getPossibleBreakpoints({ start, end, restrictToFunction }) {
+    getPossibleBreakpoints({
+      start,
+      end,
+      restrictToFunction
+    }) {
       return {
-        locations: []
+        locations: [...engine262_mjs.getBreakpointCandidateNodes(start, end, restrictToFunction)].map(node => engine262_mjs.parseNodeToBreakpointLocation(start.scriptId, node))
       };
-      // return { locations: getBreakpointCandidates(start, end, restrictToFunction) };
     },
     removeBreakpoint({
       breakpointId
     }) {
       engine262_mjs.surroundingAgent?.removeBreakpoint(breakpointId);
     },
-    // setBreakpoint({ location, condition }) { },
-    setBreakpointByUrl(req) {
-      return engine262_mjs.surroundingAgent?.addBreakpointByUrl(req);
+    setBreakpoint(req) {
+      return engine262_mjs.surroundingAgent.addBreakpointByLocation(req);
     },
-    // setBreakpointOnFunctionCall({ objectId, condition }) { },
+    setBreakpointByUrl(req) {
+      return engine262_mjs.surroundingAgent.addBreakpointByUrl(req);
+    },
+    setBreakpointOnFunctionCall(req, context) {
+      const f = context.context.getObject(req.objectId);
+      if (!f || !engine262_mjs.isFunctionObject(f)) return {
+        breakpointId: null
+      };
+      return engine262_mjs.surroundingAgent.addBreakpointOnFunctionCall(f, req.condition);
+    },
+    setInstrumentationBreakpoint(req) {
+      return engine262_mjs.surroundingAgent.addInstrumentationBreakpoint(req);
+    },
     setBreakpointsActive({
       active
     }) {
       engine262_mjs.surroundingAgent.breakpointsEnabled = active;
     },
-    // setInstrumentationBreakpoint({ instrumentation }) { },
     setPauseOnExceptions({
       state
     }) {
@@ -1458,7 +1361,7 @@
       }
       const {
         Value: F
-      } = realmDesc.realm.evaluateScript(`(${options.functionDeclaration})`, {
+      } = realmDesc.realm.evaluateScriptSkipDebugger(`(${options.functionDeclaration})`, {
         doNotTrackScriptId: true
       });
       const thisValue = options.objectId ? context.getObject(options.objectId) : engine262_mjs.Value.undefined;
@@ -1641,7 +1544,7 @@
     const promise = new Promise(resolve => {
       let toBeEvaluated;
       if (isPreview || options.evalMode === 'console' || isCallOnFrame) {
-        toBeEvaluated = performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
+        toBeEvaluated = engine262_mjs.performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
       } else {
         let parsed;
         const realm = context.getRealm(options.uniqueContextId);
@@ -1678,14 +1581,32 @@
         noDebuggerEvaluate();
         return;
       }
-      const completion = realm.realm.evaluate(toBeEvaluated, completion => {
-        resolve(context.createEvaluationResult(completion));
+      if (toBeEvaluated instanceof engine262_mjs.ModuleRecord) {
+        realm.realm.evaluateModule(toBeEvaluated, undefined, completion => {
+          if (completion instanceof engine262_mjs.ThrowCompletion) {
+            resolve(context.createEvaluationResult(completion));
+          } else {
+            resolve(context.createEvaluationResult(engine262_mjs.NormalCompletion(engine262_mjs.GetModuleNamespace(toBeEvaluated, 'evaluation'))));
+          }
+          engine262_mjs.runJobQueue();
+        });
+      } else if (toBeEvaluated instanceof engine262_mjs.ScriptRecord) {
+        let completion;
+        realm.realm.evaluateScript(toBeEvaluated, {}, c => {
+          completion = c;
+          resolve(context.createEvaluationResult(completion));
+        });
+        if (!completion) engine262_mjs.surroundingAgent.resumeEvaluate();
         engine262_mjs.runJobQueue();
-      });
-      if (completion) {
-        return;
+      } else {
+        let completion;
+        engine262_mjs.surroundingAgent.evaluate(toBeEvaluated, c => {
+          completion = c;
+          resolve(context.createEvaluationResult(c));
+        });
+        if (!completion) engine262_mjs.surroundingAgent.resumeEvaluate();
+        engine262_mjs.runJobQueue();
       }
-      engine262_mjs.surroundingAgent.resumeEvaluate();
     });
     promise.then(() => {
       if (callOnFramePoppedLevel) {
@@ -1701,13 +1622,17 @@
     }, err => {
       const expr = engine262_mjs.surroundingAgent.runningExecutionContext?.callSite.lastNode?.sourceText;
       const frame = InspectorContext.callSiteToCallFrame(engine262_mjs.captureStack().stack);
+      // @ts-expect-error
+      // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+
+      if (typeof console === 'object') console.error(err);
       inspectorContext.sendEvent['Runtime.exceptionThrown']({
         timestamp: Date.now(),
         exceptionDetails: {
           stackTrace: frame.length ? {
             callFrames: frame
           } : undefined,
-          text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length + 1)}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
+          text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length).split('\n').map(line => `  ${line}`).join('\n')}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
           columnNumber: frame[0]?.columnNumber,
           lineNumber: frame[0]?.lineNumber,
           scriptId: frame[0]?.scriptId,
@@ -1778,15 +1703,41 @@
   class Inspector {
     #context = new InspectorContext(this);
     #agents = [];
+    #unhandledExceptionIds = new WeakMap();
     attachAgent(agent, priorRealms) {
       const oldOnDebugger = agent.hostDefinedOptions.onDebugger;
-      agent.hostDefinedOptions.onDebugger = () => {
-        oldOnDebugger?.();
-        this.sendEvent['Debugger.paused']({
-          reason: 'debugCommand',
+      agent.hostDefinedOptions.onDebugger = reason => {
+        oldOnDebugger?.(reason);
+        const pausedEvent = {
+          reason: reason?.reason ?? 'debugCommand',
           callFrames: this.#context.getDebuggerCallFrame()
-        });
+        };
+        if (reason?.hitBreakpoints) {
+          pausedEvent.hitBreakpoints = [...reason.hitBreakpoints];
+        }
+        this.sendEvent['Debugger.paused'](pausedEvent);
       };
+      agent.hostDefinedOptions.hostHooks ??= {};
+      agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers ??= new Set();
+      const tracker = (promise, operation) => {
+        if (operation === 'reject') {
+          const detail = this.#context.createExceptionDetails(promise, true);
+          this.#unhandledExceptionIds.set(promise, detail.exceptionId);
+          this.sendEvent['Runtime.exceptionThrown']({
+            timestamp: Date.now(),
+            exceptionDetails: detail
+          });
+        } else {
+          const id = this.#unhandledExceptionIds.get(promise);
+          if (id) {
+            this.sendEvent['Runtime.exceptionRevoked']({
+              reason: 'Handler added to rejected promise',
+              exceptionId: id
+            });
+          }
+        }
+      };
+      agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers.add(tracker);
       const oldOnRealmCreated = agent.hostDefinedOptions.onRealmCreated;
       agent.hostDefinedOptions.onRealmCreated = realm => {
         oldOnRealmCreated?.(realm);
@@ -1807,6 +1758,7 @@
           agent.hostDefinedOptions.onDebugger = oldOnDebugger;
           agent.hostDefinedOptions.onRealmCreated = oldOnRealmCreated;
           agent.hostDefinedOptions.onScriptParsed = oldOnScriptParsed;
+          agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers.delete(tracker);
           this.#agents = this.#agents.filter(x => x.agent !== agent);
         }
       });

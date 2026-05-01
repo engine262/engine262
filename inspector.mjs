@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b249d351e89be2efdb59fecbc291d7aca6fd6e4c
+ * engine262 0.0.1 cc537adc5f343799ff4e6a591d8c578e0ce2d6c5
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { R, BigIntValue, SymbolDescriptiveString, surroundingAgent, isEvaluator, skipDebugger, ExecutionContext, Value, DeclarativeEnvironmentRecord, GetThisEnvironment, FunctionEnvironmentRecord, wrappedParse, ThrowCompletion, ContainsArguments, Throw, IsStrict, EnsureCompletion, EvalDeclarationInstantiation, unwrapCompletion, NewPromiseCapability, AsyncBlockStart, Evaluate, NormalCompletion, isECMAScriptFunctionObject, EnvironmentRecord, isBuiltinFunctionObject, IntrinsicsFunctionToString, CreateArrayFromList, isWrappedFunctionExoticObject, ObjectValue, ArrayExoticObjectInternalMethods, Descriptor, F, isTypedArrayObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, JSStringValue, PrivateName, Get, CreateBuiltinFunction, IsCallable, NumberValue, isIntegerIndex, TemporalZonedDateTimeToString, TemporalYearMonthToString, TimeRecordToString, TemporalMonthDayToString, ISODateTimeToString, TemporalDateToString, TemporalDurationToString, TemporalInstantToString, DateProto_toISOString, ValueOfNormalCompletion, getHostDefinedErrorDetails, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, SymbolValue, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, ModuleEnvironmentRecord, ManagedRealm, IsAccessorDescriptor, getCurrentStack, NullValue, SourceTextModuleRecord, evalQ, Call, ParseModule, ParseScript, kInternal, runJobQueue, Assert, captureStack, DefinePropertyOrThrow, CreateDataProperty } from './engine262.mjs';
+import { BigIntValue, SymbolDescriptiveString, surroundingAgent, isEvaluator, skipDebugger, isWrappedFunctionExoticObject, isBoundFunctionObject, unwrapCompletion, isECMAScriptFunctionObject, EnvironmentRecord, isBuiltinFunctionObject, IntrinsicsFunctionToString, CreateArrayFromList, Value, ObjectValue, ArrayExoticObjectInternalMethods, Descriptor, F, isTypedArrayObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, JSStringValue, PrivateName, EnsureCompletion, Get, NormalCompletion, CreateBuiltinFunction, IsCallable, NumberValue, R, isIntegerIndex, TemporalZonedDateTimeToString, TemporalYearMonthToString, TimeRecordToString, TemporalMonthDayToString, FormatISODateTime, TemporalDateToString, TemporalDurationToString, TemporalInstantToString, DateProto_toISOString, ValueOfNormalCompletion, getHostDefinedErrorDetails, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, SymbolValue, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, FunctionEnvironmentRecord, ModuleEnvironmentRecord, ManagedRealm, IsAccessorDescriptor, ThrowCompletion, getCurrentStack, SourceTextModuleRecord, isFunctionObject, getBreakpointCandidateNodes, parseNodeToBreakpointLocation, evalQ, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, ModuleRecord, GetModuleNamespace, runJobQueue, ScriptRecord, Assert, captureStack, DefinePropertyOrThrow, CreateDataProperty } from './engine262.mjs';
 
 const Null = {
   toRemoteObject: () => ({
@@ -124,7 +124,7 @@ const String$1 = {
 };
 const Number = {
   toRemoteObject(value) {
-    const v = R(value);
+    const v = value.value;
     let description = v.toString();
     const isNeg0 = Object.is(v, -0);
     // Includes values `-0`, `NaN`, `Infinity`, `-Infinity`, and bigint literals.
@@ -165,140 +165,11 @@ const Number = {
     };
   },
   toDescription: value => {
-    const r = R(value);
+    const r = value.value;
     return value instanceof BigIntValue ? `${r}n` : r.toString();
   }
 };
 
-const cascadeStack = new WeakMap();
-// This is modified based on PerformEval, used internally for devtools console.
-function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
-  let inFunction = false;
-  let inMethod = false;
-  let inDerivedConstructor = false;
-  let inClassFieldInitializer = false;
-  let scriptContext;
-  if (!surroundingAgent.runningExecutionContext?.LexicalEnvironment) {
-    // top level devtools eval
-    const globalEnv = evalRealm.GlobalEnv;
-    scriptContext = new ExecutionContext();
-    scriptContext.Function = Value.null;
-    scriptContext.Realm = evalRealm;
-    scriptContext.VariableEnvironment = globalEnv;
-    if (!cascadeStack.has(globalEnv)) {
-      cascadeStack.set(globalEnv, new DeclarativeEnvironmentRecord(globalEnv));
-    }
-    scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv);
-    scriptContext.PrivateEnvironment = Value.null;
-    surroundingAgent.executionContextStack.push(scriptContext);
-  }
-  const thisEnv = GetThisEnvironment();
-  if (thisEnv instanceof FunctionEnvironmentRecord) {
-    const F = thisEnv.FunctionObject;
-    inFunction = true;
-    inMethod = thisEnv.HasSuperBinding() === Value.true;
-    if (F.ConstructorKind === 'derived') {
-      inDerivedConstructor = true;
-    }
-    const classFieldInitializerName = F.ClassFieldInitializerName;
-    if (classFieldInitializerName !== undefined) {
-      inClassFieldInitializer = true;
-    }
-  }
-  let isAsync = false;
-  const script = wrappedParse({
-    source,
-    allowAllPrivateNames: true
-  }, parser => parser.scope.with({
-    strict: strictCaller,
-    newTarget: inFunction,
-    superProperty: inMethod,
-    superCall: inDerivedConstructor,
-    private: true
-  }, () => parser.try(() => parser.parseScript()) || parser.scope.with({
-    await: true
-  }, () => {
-    isAsync = true;
-    return parser.parseScript();
-  })));
-  if (Array.isArray(script)) {
-    if (scriptContext) {
-      surroundingAgent.executionContextStack.pop(scriptContext);
-    }
-    return ThrowCompletion(script[0]);
-  }
-  if (!script.ScriptBody) {
-    if (scriptContext) {
-      surroundingAgent.executionContextStack.pop(scriptContext);
-    }
-    return Value.undefined;
-  }
-  const body = script.ScriptBody;
-  if (inClassFieldInitializer && ContainsArguments(body)) {
-    return Throw.SyntaxError('arguments cannot be referenced in a class field initializer');
-  }
-  const scriptId = doNotTrack ? undefined : surroundingAgent.addDynamicParsedSource(surroundingAgent.currentRealmRecord, source, script);
-  if (!doNotTrack) {
-    surroundingAgent.parsedSources.get(scriptId).HostDefined.isInspectorEval = true;
-    if (scriptContext) {
-      scriptContext.HostDefined ??= {};
-      scriptContext.HostDefined.scriptId = scriptId;
-    }
-  }
-  let strictEval;
-  if (script) {
-    strictEval = IsStrict(script);
-  } else {
-    strictEval = true;
-  }
-  const runningContext = surroundingAgent.runningExecutionContext;
-  let parentLexicalEnvironment;
-  if (cascadeStack.has(runningContext.LexicalEnvironment)) {
-    parentLexicalEnvironment = cascadeStack.get(runningContext.LexicalEnvironment);
-  } else {
-    parentLexicalEnvironment = runningContext.LexicalEnvironment;
-  }
-  const lexEnv = new DeclarativeEnvironmentRecord(parentLexicalEnvironment);
-  cascadeStack.set(runningContext.LexicalEnvironment, lexEnv);
-  let varEnv;
-  const privateEnv = runningContext.PrivateEnvironment;
-  varEnv = runningContext.VariableEnvironment;
-  if (strictEval === true) {
-    varEnv = lexEnv;
-  }
-  const evalContext = new ExecutionContext();
-  evalContext.HostDefined ??= {};
-  evalContext.HostDefined.scriptId = scriptId;
-  evalContext.Function = Value.null;
-  evalContext.Realm = evalRealm;
-  evalContext.ScriptOrModule = runningContext.ScriptOrModule;
-  evalContext.VariableEnvironment = varEnv;
-  evalContext.LexicalEnvironment = lexEnv;
-  evalContext.PrivateEnvironment = privateEnv;
-  surroundingAgent.executionContextStack.push(evalContext);
-  let result;
-  result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
-  if (result.Type === 'normal') {
-    if (isAsync) {
-      const promiseCapability = unwrapCompletion(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-      unwrapCompletion(yield* AsyncBlockStart(promiseCapability, function* evaluate() {
-        return yield* Evaluate(body);
-      }, evalContext));
-      result = promiseCapability.Promise;
-    } else {
-      result = EnsureCompletion(yield* Evaluate(body));
-    }
-  }
-  result = EnsureCompletion(result);
-  if (result.Type === 'normal' && result.Value === undefined) {
-    result = NormalCompletion(Value.undefined);
-  }
-  surroundingAgent.executionContextStack.pop(evalContext);
-  if (scriptContext) {
-    surroundingAgent.executionContextStack.pop(scriptContext);
-  }
-  return result;
-}
 function nativeEvalInAnyRealm(closure, context) {
   const realm = surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
   if (!realm) return undefined;
@@ -314,6 +185,9 @@ function nativeEvalInAnyRealm(closure, context) {
 function unwrapFunction(value) {
   if (isWrappedFunctionExoticObject(value)) {
     return unwrapFunction(value.WrappedTargetFunction);
+  }
+  if (isBoundFunctionObject(value)) {
+    return unwrapFunction(value.BoundTargetFunction);
   }
   return value;
 }
@@ -334,11 +208,11 @@ function toLocation(location, scriptId) {
 }
 const Function = {
   toRemoteObject(value, getObjectId) {
-    value = unwrapFunction(value);
     const result = {
       type: 'function',
       objectId: getObjectId(value)
     };
+    value = unwrapFunction(value);
     result.description = IntrinsicsFunctionToString(value);
     if (isECMAScriptFunctionObject(value) && value.ECMAScriptCode) {
       if (value.ECMAScriptCode.type === 'FunctionBody') {
@@ -363,12 +237,51 @@ const Function = {
   toObjectPreview(value) {
     return {
       type: 'function',
-      description: IntrinsicsFunctionToString(value),
+      description: IntrinsicsFunctionToString(unwrapFunction(value)),
       overflow: false,
       properties: []
     };
   },
   toInternalProperties(value, getObjectId, context) {
+    const result = [];
+    while (true) {
+      if (isWrappedFunctionExoticObject(value)) {
+        if (!result.some(p => p.name === '[[WrappedTargetFunction]]')) {
+          result.push({
+            name: '[[WrappedTargetFunction]]',
+            value: context.toRemoteObject(value.WrappedTargetFunction, {
+              generatePreview: true
+            })
+          });
+        }
+        value = value.WrappedTargetFunction;
+        continue;
+      }
+      if (isBoundFunctionObject(value)) {
+        const v = value;
+        if (!result.some(p => p.name === '[[BoundTargetFunction]]')) {
+          result.push({
+            name: '[[BoundTargetFunction]]',
+            value: context.toRemoteObject(v.BoundTargetFunction, {
+              generatePreview: true
+            })
+          }, {
+            name: '[[BoundThis]]',
+            value: context.toRemoteObject(v.BoundThis, {
+              generatePreview: true
+            })
+          }, {
+            name: '[[BoundArguments]]',
+            value: context.toRemoteObject(unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(v.BoundArguments), context)), {
+              generatePreview: true
+            })
+          });
+        }
+        value = v.BoundTargetFunction;
+        continue;
+      }
+      break;
+    }
     if (isECMAScriptFunctionObject(value)) {
       if (!value.ECMAScriptCode) return [];
       const scope = [];
@@ -388,13 +301,12 @@ const Function = {
         subtype: 'internal#scopeList',
         type: 'object'
       } : undefined;
-      return [toLocation(value.ECMAScriptCode.location, value.scriptId), {
+      result.push(toLocation(value.ECMAScriptCode.location, value.scriptId), {
         name: '[[Scopes]]',
         value: scopeDesc
-      }];
+      });
     }
     if (isBuiltinFunctionObject(value)) {
-      const result = [];
       if (value.HostLocation) {
         const [scriptId, location] = value.HostLocation;
         result.push(toLocation(location, scriptId));
@@ -408,9 +320,8 @@ const Function = {
           }
         });
       }
-      return result;
     }
-    return [];
+    return result;
   },
   toDescription: () => 'Function'
 };
@@ -749,7 +660,7 @@ const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(
 const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
 
 const Date$1 = new ObjectInspector('Date', 'date', value => {
-  if (!globalThis.Number.isFinite(R(value.DateValue))) {
+  if (!globalThis.Number.isFinite(value.DateValue)) {
     return 'Invalid Date';
   }
   const val = DateProto_toISOString([], {
@@ -761,7 +672,7 @@ const Date$1 = new ObjectInspector('Date', 'date', value => {
 const TemporalInstant = new ObjectInspector('Temporal.Instant', 'date', value => `Temporal.Instant <${TemporalInstantToString(value, undefined, 'auto')}>`);
 const TemporalDuration = new ObjectInspector('Temporal.Duration', 'date', value => `Temporal.Duration <${TemporalDurationToString(value, 'auto')}>`);
 const TemporalPlainDate = new ObjectInspector('Temporal.PlainDate', 'date', value => `Temporal.PlainDate <${TemporalDateToString(value, 'auto')}>`);
-const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${ISODateTimeToString(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
+const TemporalPlainDateTime = new ObjectInspector('Temporal.PlainDateTime', 'date', value => `Temporal.PlainDateTime <${FormatISODateTime(value.ISODateTime, value.Calendar, 'auto', 'auto')}>`);
 const TemporalPlainMonthDay = new ObjectInspector('Temporal.PlainMonthDay', 'date', value => `Temporal.PlainMonthDay <${TemporalMonthDayToString(value, 'auto')}>`);
 const TemporalPlainTime = new ObjectInspector('Temporal.PlainTime', 'date', value => `Temporal.PlainTime <${TimeRecordToString(value.Time, 'auto')}>`);
 const TemporalPlainYearMonth = new ObjectInspector('Temporal.PlainYearMonth', 'date', value => `Temporal.PlainYearMonth <${TemporalYearMonthToString(value, 'auto')}>`);
@@ -778,7 +689,7 @@ const Map$1 = new ObjectInspector('Map', 'map', value => `Map(${value.MapData.fi
     value: getInspector(Value).toObjectPreview(Value, context)
   }))
 });
-const Set = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
+const Set$1 = new ObjectInspector('Set', 'set', value => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
   additionalProperties: value => [['size', Value(value.SetData.filter(globalThis.Boolean).length)]],
   internalProperties: value => [['[[Entries]]', value.SetData]],
   entries: (value, context) => value.SetData.filter(globalThis.Boolean).map(Value => ({
@@ -873,7 +784,7 @@ function getInspector(value) {
     case isMapObject(value):
       return Map$1;
     case isSetObject(value):
-      return Set;
+      return Set$1;
     case isWeakMapObject(value):
       return WeakMap$1;
     case isWeakSetObject(value):
@@ -945,24 +856,6 @@ class InspectorContext {
     });
     const oldInspector = realm.HostDefined.attachingInspector;
     realm.HostDefined.attachingInspector = this.#io;
-    const oldPromiseRejectionTracker = realm.HostDefined.promiseRejectionTracker;
-    realm.HostDefined.promiseRejectionTracker = (promise, operation) => {
-      oldPromiseRejectionTracker?.(promise, operation);
-      if (operation === 'reject') {
-        this.#io.sendEvent['Runtime.exceptionThrown']({
-          timestamp: Date.now(),
-          exceptionDetails: this.createExceptionDetails(promise, true)
-        });
-      } else {
-        const id = this.#exceptionMap.get(promise);
-        if (id) {
-          this.#io.sendEvent['Runtime.exceptionRevoked']({
-            reason: 'Handler added to rejected promise',
-            exceptionId: id
-          });
-        }
-      }
-    };
     this.#io.sendEvent['Runtime.executionContextCreated']({
       context: descriptor
     });
@@ -1131,7 +1024,6 @@ class InspectorContext {
       privateProperties
     };
   }
-  #exceptionMap = new WeakMap();
   createExceptionDetails(completion, isPromise) {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
     const {
@@ -1140,7 +1032,6 @@ class InspectorContext {
     const frames = InspectorContext.callSiteToCallFrame(callStack);
     const exceptionId = this.#objectCounter;
     this.#objectCounter += 1;
-    this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
       stackTrace: callStack ? {
@@ -1209,7 +1100,7 @@ class InspectorContext {
   evaluateMode = 'script';
 }
 function HostGetThisEnvironment(env) {
-  while (!(env instanceof NullValue)) {
+  while (env !== null) {
     const exists = env.HasThisBinding();
     if (exists === Value.true) {
       const value = env.GetThisBinding();
@@ -1305,29 +1196,41 @@ const Debugger = {
   setBlackboxPatterns() {},
   setBlackboxExecutionContexts() {},
   // #region breakpoints
-  getPossibleBreakpoints() {
-    // getPossibleBreakpoints({ start, end, restrictToFunction }) {
+  getPossibleBreakpoints({
+    start,
+    end,
+    restrictToFunction
+  }) {
     return {
-      locations: []
+      locations: [...getBreakpointCandidateNodes(start, end, restrictToFunction)].map(node => parseNodeToBreakpointLocation(start.scriptId, node))
     };
-    // return { locations: getBreakpointCandidates(start, end, restrictToFunction) };
   },
   removeBreakpoint({
     breakpointId
   }) {
     surroundingAgent?.removeBreakpoint(breakpointId);
   },
-  // setBreakpoint({ location, condition }) { },
-  setBreakpointByUrl(req) {
-    return surroundingAgent?.addBreakpointByUrl(req);
+  setBreakpoint(req) {
+    return surroundingAgent.addBreakpointByLocation(req);
   },
-  // setBreakpointOnFunctionCall({ objectId, condition }) { },
+  setBreakpointByUrl(req) {
+    return surroundingAgent.addBreakpointByUrl(req);
+  },
+  setBreakpointOnFunctionCall(req, context) {
+    const f = context.context.getObject(req.objectId);
+    if (!f || !isFunctionObject(f)) return {
+      breakpointId: null
+    };
+    return surroundingAgent.addBreakpointOnFunctionCall(f, req.condition);
+  },
+  setInstrumentationBreakpoint(req) {
+    return surroundingAgent.addInstrumentationBreakpoint(req);
+  },
   setBreakpointsActive({
     active
   }) {
     surroundingAgent.breakpointsEnabled = active;
   },
-  // setInstrumentationBreakpoint({ instrumentation }) { },
   setPauseOnExceptions({
     state
   }) {
@@ -1454,7 +1357,7 @@ const Runtime = {
     }
     const {
       Value: F
-    } = realmDesc.realm.evaluateScript(`(${options.functionDeclaration})`, {
+    } = realmDesc.realm.evaluateScriptSkipDebugger(`(${options.functionDeclaration})`, {
       doNotTrackScriptId: true
     });
     const thisValue = options.objectId ? context.getObject(options.objectId) : Value.undefined;
@@ -1674,14 +1577,32 @@ function evaluate(options, inspectorContext) {
       noDebuggerEvaluate();
       return;
     }
-    const completion = realm.realm.evaluate(toBeEvaluated, completion => {
-      resolve(context.createEvaluationResult(completion));
+    if (toBeEvaluated instanceof ModuleRecord) {
+      realm.realm.evaluateModule(toBeEvaluated, undefined, completion => {
+        if (completion instanceof ThrowCompletion) {
+          resolve(context.createEvaluationResult(completion));
+        } else {
+          resolve(context.createEvaluationResult(NormalCompletion(GetModuleNamespace(toBeEvaluated, 'evaluation'))));
+        }
+        runJobQueue();
+      });
+    } else if (toBeEvaluated instanceof ScriptRecord) {
+      let completion;
+      realm.realm.evaluateScript(toBeEvaluated, {}, c => {
+        completion = c;
+        resolve(context.createEvaluationResult(completion));
+      });
+      if (!completion) surroundingAgent.resumeEvaluate();
       runJobQueue();
-    });
-    if (completion) {
-      return;
+    } else {
+      let completion;
+      surroundingAgent.evaluate(toBeEvaluated, c => {
+        completion = c;
+        resolve(context.createEvaluationResult(c));
+      });
+      if (!completion) surroundingAgent.resumeEvaluate();
+      runJobQueue();
     }
-    surroundingAgent.resumeEvaluate();
   });
   promise.then(() => {
     if (callOnFramePoppedLevel) {
@@ -1697,13 +1618,17 @@ function evaluate(options, inspectorContext) {
   }, err => {
     const expr = surroundingAgent.runningExecutionContext?.callSite.lastNode?.sourceText;
     const frame = InspectorContext.callSiteToCallFrame(captureStack().stack);
+    // @ts-expect-error
+    // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+
+    if (typeof console === 'object') console.error(err);
     inspectorContext.sendEvent['Runtime.exceptionThrown']({
       timestamp: Date.now(),
       exceptionDetails: {
         stackTrace: frame.length ? {
           callFrames: frame
         } : undefined,
-        text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length + 1)}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
+        text: `engine262 error when evaluating the following node:\n\n    ${expr}\n\n${err.constructor.name}: ${err.message}\n${err.stack.slice(err.stack.indexOf(err.message) + err.message.length).split('\n').map(line => `  ${line}`).join('\n')}\n\nFrom now on, the engine262 VM state is broken, please press the reload button.`,
         columnNumber: frame[0]?.columnNumber,
         lineNumber: frame[0]?.lineNumber,
         scriptId: frame[0]?.scriptId,
@@ -1774,15 +1699,41 @@ const ignoreMethods = [];
 class Inspector {
   #context = new InspectorContext(this);
   #agents = [];
+  #unhandledExceptionIds = new WeakMap();
   attachAgent(agent, priorRealms) {
     const oldOnDebugger = agent.hostDefinedOptions.onDebugger;
-    agent.hostDefinedOptions.onDebugger = () => {
-      oldOnDebugger?.();
-      this.sendEvent['Debugger.paused']({
-        reason: 'debugCommand',
+    agent.hostDefinedOptions.onDebugger = reason => {
+      oldOnDebugger?.(reason);
+      const pausedEvent = {
+        reason: reason?.reason ?? 'debugCommand',
         callFrames: this.#context.getDebuggerCallFrame()
-      });
+      };
+      if (reason?.hitBreakpoints) {
+        pausedEvent.hitBreakpoints = [...reason.hitBreakpoints];
+      }
+      this.sendEvent['Debugger.paused'](pausedEvent);
     };
+    agent.hostDefinedOptions.hostHooks ??= {};
+    agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers ??= new Set();
+    const tracker = (promise, operation) => {
+      if (operation === 'reject') {
+        const detail = this.#context.createExceptionDetails(promise, true);
+        this.#unhandledExceptionIds.set(promise, detail.exceptionId);
+        this.sendEvent['Runtime.exceptionThrown']({
+          timestamp: Date.now(),
+          exceptionDetails: detail
+        });
+      } else {
+        const id = this.#unhandledExceptionIds.get(promise);
+        if (id) {
+          this.sendEvent['Runtime.exceptionRevoked']({
+            reason: 'Handler added to rejected promise',
+            exceptionId: id
+          });
+        }
+      }
+    };
+    agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers.add(tracker);
     const oldOnRealmCreated = agent.hostDefinedOptions.onRealmCreated;
     agent.hostDefinedOptions.onRealmCreated = realm => {
       oldOnRealmCreated?.(realm);
@@ -1803,6 +1754,7 @@ class Inspector {
         agent.hostDefinedOptions.onDebugger = oldOnDebugger;
         agent.hostDefinedOptions.onRealmCreated = oldOnRealmCreated;
         agent.hostDefinedOptions.onScriptParsed = oldOnScriptParsed;
+        agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers.delete(tracker);
         this.#agents = this.#agents.filter(x => x.agent !== agent);
       }
     });
