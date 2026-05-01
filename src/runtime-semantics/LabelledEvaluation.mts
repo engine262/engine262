@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  JSStringValue, ObjectValue, ReferenceRecord, Value,
+  JSStringValue, ObjectValue, Value,
 } from '../value.mts';
 import {
   Evaluate, type Evaluator, type PlainEvaluator, type StatementEvaluator,
@@ -52,6 +52,7 @@ import {
   SameValue,
   Throw,
   type IteratorRecord,
+  ValueOfNormalCompletion,
 } from '#self';
 import { DeclarativeEnvironmentRecord } from '#self';
 
@@ -580,156 +581,95 @@ function EnumerateObjectProperties(O: ObjectValue) {
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset */
 function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, iteratorRecord: IteratorRecord, iterationKind: 'enumerate' | 'iterate', lhsKind: 'assignment' | 'lexicalBinding' | 'varBinding', labelSet: JSStringSet, iteratorKind?: 'sync' | 'async'): StatementEvaluator {
-  // 1. If iteratorKind is not present, set iteratorKind to sync.
-  if (iteratorKind === undefined) {
-    iteratorKind = 'sync';
-  }
-  // 2. Let oldEnv be the running execution context's LexicalEnvironment.
+  if (iteratorKind === undefined) iteratorKind = 'sync';
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 3. Let V be undefined.
-  let V: Value = Value.undefined;
-  // 4. Let destructuring be IsDestructuring of lhs.
+  let iterationResult: Value = Value.undefined;
   const destructuring = IsDestructuring(lhs);
-  // 5. If destructuring is true and if lhsKind is assignment, then
   let assignmentPattern;
   if (destructuring && lhsKind === 'assignment') {
     // a. Assert: lhs is a LeftHandSideExpression.
-    // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
     assignmentPattern = refineLeftHandSideExpression(lhs as DestructuringParseNode);
   }
-  // 6. Repeat,
   while (true) {
-    // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
     let nextResult = Q(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
-    // b. If iteratorKind is async, then set nextResult to ? Await(nextResult).
-    if (iteratorKind === 'async') {
-      nextResult = Q(yield* Await(nextResult));
-    }
-    // c. If Type(nextResult) is not Object, throw a TypeError exception.
+    if (iteratorKind === 'async') nextResult = Q(yield* Await(nextResult));
     if (!(nextResult instanceof ObjectValue)) {
       return Throw.TypeError('The return value ($1) of the next() on an iterator ($2) must be an object', nextResult, iteratorRecord.Iterator);
     }
-    // d. Let done be ? IteratorComplete(nextResult).
     const done = Q(yield* IteratorComplete(nextResult));
-    // e. If done is true, return NormalCompletion(V).
-    if (done === Value.true) {
-      return NormalCompletion(V);
-    }
-    // f. Let nextValue be ? IteratorValue(nextResult).
+    if (done === Value.true) return iterationResult;
     const nextValue = Q(yield* IteratorValue(nextResult));
-    // g. If lhsKind is either assignment or varBinding, then
     let lhsRef;
     let iterationEnv;
+    let status: NormalCompletion<Value | void> | AbruptCompletion;
     if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
-      // i. If destructuring is false, then
-      if (destructuring === false) {
-        // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
+      if (destructuring) {
+        if (lhsKind === 'assignment') {
+          status = EnsureCompletion(yield* DestructuringAssignmentEvaluation(assignmentPattern as ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern, nextValue));
+        } else {
+          Assert(lhsKind === 'varBinding');
+          Assert(lhs.type === 'ForBinding');
+          status = EnsureCompletion(yield* BindingInitialization(lhs, nextValue, Value.undefined));
+        }
+      } else {
         lhsRef = yield* Evaluate(lhs);
+        // 2. If lhsKind is assignment and the AssignmentTargetType of lhs is web-compat, throw a ReferenceError exception.
+        if (lhsRef instanceof AbruptCompletion) {
+          status = lhsRef;
+        } else {
+          lhsRef = ValueOfNormalCompletion(lhsRef);
+          if (lhsRef === undefined) lhsRef = Value.undefined;
+          status = EnsureCompletion(yield* PutValue(lhsRef, nextValue));
+        }
       }
-    } else { // h. Else,
-      // i. Assert: lhsKind is lexicalBinding.
+    } else {
       Assert(lhsKind === 'lexicalBinding');
-      // ii. Assert: lhs is a ForDeclaration.
       Assert(lhs.type === 'ForDeclaration');
-      // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
       iterationEnv = new DeclarativeEnvironmentRecord(oldEnv);
-      // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
-      BindingInstantiation(lhs, iterationEnv);
-      // v. Set the running execution context's LexicalEnvironment to iterationEnv.
+      ForDeclarationBindingInstantiation(lhs, iterationEnv);
       surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv;
-      // vi. If destructuring is false, then
-      if (destructuring === false) {
+      if (destructuring) {
+        status = EnsureCompletion(yield* BindingInitialization(lhs, nextValue, iterationEnv));
+      } else {
         // 1. Assert: lhs binds a single name.
-        // 2. Let lhsName be the sole element of BoundNames of lhs.
-        const lhsName = BoundNames(lhs)[0];
-        // 3. Let lhsRef be ! ResolveBinding(lhsName).
-        lhsRef = X(ResolveBinding(lhsName, undefined, lhs.strict));
+        const boundNames = BoundNames(lhs);
+        Assert(boundNames.length === 1);
+
+        const lhsName = boundNames[0];
+        lhsRef = X(ResolveBinding(lhsName));
+        status = EnsureCompletion(yield* InitializeReferencedBinding(lhsRef, nextValue));
       }
     }
-    let status: PlainCompletion<unknown>;
-    // i. If destructuring is false, then
-    if (destructuring === false) {
-      // i. If lhsRef is an abrupt completion, then
-      if (lhsRef instanceof AbruptCompletion) {
-        // 1. Let status be lhsRef.
-        status = lhsRef;
-      } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
-        // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
-        status = yield* InitializeReferencedBinding(Q(lhsRef) as ReferenceRecord, nextValue);
-      } else { // iii. Else,
-        status = yield* PutValue(Q(lhsRef) as ReferenceRecord, nextValue);
-      }
-    } else { // j. Else,
-      // i. If lhsKind is assignment, then
-      if (lhsKind === 'assignment') {
-        // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
-        status = yield* DestructuringAssignmentEvaluation(assignmentPattern as ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern, nextValue);
-      } else if (lhsKind === 'varBinding') { // ii. Else if lhsKind is varBinding, then
-        // 1. Assert: lhs is a ForBinding.
-        Assert(lhs.type === 'ForBinding');
-        // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
-        status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
-      } else { // iii. Else,
-        // 1. Assert: lhsKind is lexicalBinding.
-        Assert(lhsKind === 'lexicalBinding');
-        // 2. Assert: lhs is a ForDeclaration.
-        Assert(lhs.type === 'ForDeclaration');
-        // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
-        status = yield* BindingInitialization(lhs, nextValue, iterationEnv!);
-      }
-    }
-    // k. If status is an abrupt completion, then
+    Assert(typeof status! !== 'undefined');
     if (status instanceof AbruptCompletion) {
-      // i. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      // ii. if iterationKind is enumerate, then
-      if (iterationKind === 'enumerate') {
-        // 1. Return status.
-        return status as Completion<Value | void>;
-      } else { // iv. Else,
-        // 1. Assert: iterationKind is iterate.
-        Assert(iterationKind === 'iterate');
-        // 2. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-        if (iteratorKind === 'async') {
-          return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
-        }
-        // 3 .Return ? IteratorClose(iteratorRecord, status).
-        return Q(yield* IteratorClose(iteratorRecord, EnsureCompletion(status)));
+      if (iterationKind === 'enumerate') return status;
+      Assert(iterationKind === 'iterate');
+      if (iteratorKind === 'async') {
+        return Q(yield* AsyncIteratorClose(iteratorRecord, status));
       }
+      return Q(yield* IteratorClose(iteratorRecord, status));
     }
-    // l. Let result be the result of evaluating stmt.
     const result = EnsureCompletion(yield* Evaluate(stmt));
-    // m. Set the running execution context's LexicalEnvironment to oldEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-    // n. If LoopContinues(result, labelSet) is false, then
     if (LoopContinues(result, labelSet) === Value.false) {
-      // Set _status_ to Completion(UpdateEmpty(_result_, _V_)).
-      status = UpdateEmpty(result, V);
-      // i. If iterationKind is enumerate, then
-      if (iterationKind === 'enumerate') {
-        // 1. Return ? _status_.
-        return Q(status as Completion<Value | void>);
-      } else { // ii. Else,
-        // 1. Assert: iterationKind is iterate.
-        Assert(iterationKind === 'iterate');
-        // 2. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-        if (iteratorKind === 'async') {
-          return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
-        }
-        // 3. Return ? IteratorClose(iteratorRecord, status).
-        return Q(yield* IteratorClose(iteratorRecord, EnsureCompletion(status)));
+      status = UpdateEmpty(result, iterationResult);
+      if (iterationKind === 'enumerate') return status;
+      Assert(iterationKind === 'iterate');
+      if (iteratorKind === 'async') {
+        return Q(yield* AsyncIteratorClose(iteratorRecord, status));
       }
+      return Q(yield* IteratorClose(iteratorRecord, status));
     }
-    // o. If result.[[Value]] is not empty, set V to result.[[Value]].
     if (result.Value !== undefined) {
-      V = result.Value;
+      iterationResult = result.Value;
     }
   }
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
-function BindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment: DeclarativeEnvironmentRecord) {
+function ForDeclarationBindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment: DeclarativeEnvironmentRecord) {
   // 1. Assert: environment is a declarative Environment Record.
   Assert(environment instanceof DeclarativeEnvironmentRecord);
   // 2. For each element name of the BoundNames of ForBinding, do
