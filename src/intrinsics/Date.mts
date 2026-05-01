@@ -16,7 +16,6 @@ import {
   OrdinaryCreateFromConstructor,
   ToPrimitive,
   ToNumber,
-  ToIntegerOrInfinity,
   ToString,
   MakeDate,
   MakeDay,
@@ -34,6 +33,7 @@ import {
   BalanceISODateTime,
   CheckISODaysRange,
   IsValidEpochNanoseconds,
+  MakeFullYear,
 } from '#self';
 
 export interface DateObject extends OrdinaryObject {
@@ -84,18 +84,8 @@ function* DateConstructor(values: Arguments, { NewTarget }: FunctionCallContext)
     } else {
       milli = F(+0);
     }
-    let yr;
-    if (y.isNaN()) {
-      yr = F(NaN);
-    } else {
-      const yi = X(ToIntegerOrInfinity(y));
-      if (yi >= 0 && yi <= 99) {
-        yr = F(1900 + yi);
-      } else {
-        yr = y;
-      }
-    }
-    const finalDate = MakeDate(MakeDay(R(yr), R(m), R(dt)), MakeTime(R(h), R(min), R(s), R(milli)));
+    const yr = MakeFullYear(y);
+    const finalDate = MakeDate(MakeDay(yr, R(m), R(dt)), MakeTime(R(h), R(min), R(s), R(milli)));
     const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
     O.DateValue = TimeClip(UTC_TemporalEdited(finalDate));
     return O;
@@ -182,19 +172,8 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     milli = F(+0);
   }
 
-  let yr;
-  if (y.isNaN()) {
-    yr = F(NaN);
-  } else {
-    const yi = X(ToIntegerOrInfinity(y));
-    if (yi >= 0 && yi <= 99) {
-      yr = F(1900 + yi);
-    } else {
-      yr = y;
-    }
-  }
-
-  return Value(TimeClip(MakeDate(MakeDay(R(yr), R(m), R(dt)), MakeTime(R(h), R(min), R(s), R(milli)))));
+  const yr = MakeFullYear(y);
+  return Value(TimeClip(MakeDate(MakeDay(yr, R(m), R(dt)), MakeTime(R(h), R(min), R(s), R(milli)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date-time-string-format */

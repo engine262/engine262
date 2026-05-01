@@ -204,6 +204,17 @@ export function MakeDate(day: Num, time: Num): Num {
   return tv;
 }
 
+/** https://tc39.es/ecma262/#sec-makefullyear */
+export function MakeFullYear(year: NumberValue): IntegralNumber | NaN {
+  if (year.isNaN() || year.isInfinity()) return NaN;
+  const truncated = X(ToIntegerOrInfinity(year));
+  if (truncated >= 0 && truncated <= 99) {
+    return 1900 + truncated;
+  }
+  return truncated;
+}
+
+
 /** https://tc39.es/ecma262/#sec-timeclip */
 export function TimeClip(time: Num): Num {
   // 1. If time is not finite, return NaN.
