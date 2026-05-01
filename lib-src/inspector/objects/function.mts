@@ -8,7 +8,6 @@ import {
   isBuiltinFunctionObject,
   type DefaultConstructorBuiltinFunction,
   EnvironmentRecord,
-  NullValue,
   ObjectValue,
   CreateArrayFromList,
   unwrapCompletion,
@@ -115,7 +114,7 @@ export const Function: Inspector<FunctionObject> = {
       if (!value.ECMAScriptCode) return [];
 
       const scope: ObjectValue[] = [];
-      let env: EnvironmentRecord | NullValue = value.Environment;
+      let env: EnvironmentRecord | null = value.Environment;
       while (env instanceof EnvironmentRecord) {
         const result = getDisplayObjectFromEnvironmentRecord(env);
         if (result) {

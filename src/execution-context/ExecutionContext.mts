@@ -108,7 +108,7 @@ export function GetThisEnvironment(): EnvironmentRecordWithThisBinding {
     // c. Let outer be env.[[OuterEnv]].
     const outer = env.OuterEnv;
     // d. Assert: outer is not null.
-    Assert(!(outer instanceof NullValue));
+    Assert(outer !== null);
     // e. Set env to outer.
     env = outer;
   }

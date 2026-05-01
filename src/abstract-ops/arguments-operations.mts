@@ -30,6 +30,7 @@ import {
   type Arguments,
   type ObjectInternalMethods,
   EnvironmentRecord,
+  type ECMAScriptFunctionObject,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -183,7 +184,7 @@ function MakeArgSetter(name: JSStringValue, env: EnvironmentRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-createmappedargumentsobject */
-export function CreateMappedArgumentsObject(func: ObjectValue, formals: ParseNode.FormalParameters, argumentsList: Arguments, env: EnvironmentRecord) {
+export function CreateMappedArgumentsObject(func: ECMAScriptFunctionObject, formals: ParseNode.FormalParameters, argumentsList: Arguments, env: EnvironmentRecord) {
   // Assert: formals does not contain a rest parameter, any binding
   // patterns, or any initializers. It may contain duplicate identifiers.
   const len = argumentsList.length;

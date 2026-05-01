@@ -10,6 +10,10 @@
 ; https://github.com/tc39/ecma262/issues/3592
 built-ins/RegExp/regexp-modifiers/add-ignoreCase-affects-slash-upper-p.js
 
+; https://github.com/tc39/ecma262/pull/3826/changes#r3174328651
+staging/sm/RegExp/match-trace.js
+built-ins/JSON/stringify/value-array-proxy.js
+built-ins/JSON/stringify/value-array-abrupt.js
 
 # To be investigated
 ## Infinite recursion

@@ -14,7 +14,7 @@ const agent = new Agent({
       fileSystemModuleLoader,
       createBuiltinModuleLoader({
         builtinModules: new Map([[{ Specifier: 'builtin', Attributes: [] }, (realm) => {
-          const env = new ModuleEnvironmentRecord(Value.null);
+          const env = new ModuleEnvironmentRecord(null);
           const module = new SyntheticModuleRecord({
             Environment: env,
             ExportNames: [Value('foo')],

@@ -8,7 +8,6 @@ import {
   wellKnownSymbols,
   BooleanValue,
   JSStringValue,
-  NullValue,
 } from '../value.mts';
 import { type GCMarker } from '../host-defined/engine.mts';
 import {
@@ -31,13 +30,14 @@ import {
   isECMAScriptFunctionObject,
   type ECMAScriptFunctionObject,
   Throw,
+  type FunctionObject,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-environment-records */
 export abstract class EnvironmentRecord {
-  readonly OuterEnv: EnvironmentRecord | NullValue;
+  readonly OuterEnv: EnvironmentRecord | null;
 
-  constructor(outerEnv: EnvironmentRecord | NullValue) {
+  constructor(outerEnv: EnvironmentRecord | null) {
     this.OuterEnv = outerEnv;
   }
 
@@ -455,7 +455,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   IsWithEnvironment: BooleanValue;
 
   /** https://tc39.es/ecma262/#sec-newobjectenvironment */
-  constructor(O: ObjectValue, W: BooleanValue, E: EnvironmentRecord | NullValue) {
+  constructor(O: ObjectValue, W: BooleanValue, E: EnvironmentRecord | null) {
     super(E);
     this.BindingObject = O;
     this.IsWithEnvironment = W;
@@ -612,11 +612,11 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   /** https://tc39.es/ecma262/#sec-newglobalenvironment */
   constructor(G: ObjectValue, thisValue: ObjectValue) {
     // 1. Let objRec be NewObjectEnvironment(G, false, null).
-    const objRec = new ObjectEnvironmentRecord(G, Value.false, Value.null);
+    const objRec = new ObjectEnvironmentRecord(G, Value.false, null);
     // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-    const dclRec = new DeclarativeEnvironmentRecord(Value.null);
+    const dclRec = new DeclarativeEnvironmentRecord(null);
     // 3. Let env be a new global Environment Record.
-    super(Value.null);
+    super(null);
     // 4. Set env.[[ObjectRecord]] to objRec.
     this.ObjectRecord = objRec;
     // 5. Set env.[[GlobalThisValue]] to thisValue.
@@ -875,7 +875,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
-  * CreateGlobalFunctionBinding(N: JSStringValue, V: Value, D: BooleanValue): PlainEvaluator {
+  * CreateGlobalFunctionBinding(N: JSStringValue, V: FunctionObject, D: BooleanValue): PlainEvaluator {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -920,9 +920,9 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 export type EnvironmentRecordWithThisBinding = FunctionEnvironmentRecord | GlobalEnvironmentRecord | ModuleEnvironmentRecord;
 
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
-export function* GetIdentifierReference(env: EnvironmentRecord | NullValue, name: JSStringValue, strict: BooleanValue): PlainEvaluator<ReferenceRecord> {
+export function* GetIdentifierReference(env: EnvironmentRecord | null, name: JSStringValue, strict: BooleanValue): PlainEvaluator<ReferenceRecord> {
   // 1. If lex is the value null, then
-  if (env instanceof NullValue) {
+  if (env === null) {
     // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
     return NormalCompletion(new ReferenceRecord({
       Base: 'unresolvable',

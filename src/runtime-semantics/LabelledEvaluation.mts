@@ -501,7 +501,7 @@ function* CreatePerIterationEnvironment(perIterationBindings: readonly JSStringV
     // b. Let outer be lastIterationEnv.[[OuterEnv]].
     const outer = lastIterationEnv.OuterEnv;
     // c. Assert: outer is not null.
-    Assert(outer !== Value.null);
+    Assert(outer !== null);
     // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
     const thisIterationEnv = new DeclarativeEnvironmentRecord(outer);
     // e. For each element bn of perIterationBindings, do

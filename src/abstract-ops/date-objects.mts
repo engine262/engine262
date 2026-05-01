@@ -176,7 +176,7 @@ export function MakeTime(hour: Num, min: Num, sec: Num, ms: Num): Num {
 const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
 /** https://tc39.es/ecma262/#sec-makeday */
-export function MakeDay(year: Num, month: Num, date: Num): Num {
+export function MakeDay(year: Num, month: Num, date: Num): Num | NaN {
   if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(date)) {
     return NaN;
   }
@@ -193,7 +193,7 @@ export function MakeDay(year: Num, month: Num, date: Num): Num {
 }
 
 /** https://tc39.es/ecma262/#sec-makedate */
-export function MakeDate(day: Num, time: Num): Num {
+export function MakeDate(day: Num, time: Num): Num | NaN {
   if (!Number.isFinite(day) || !Number.isFinite(time)) {
     return NaN;
   }
@@ -216,7 +216,7 @@ export function MakeFullYear(year: NumberValue): IntegralNumber | NaN {
 
 
 /** https://tc39.es/ecma262/#sec-timeclip */
-export function TimeClip(time: Num): Num {
+export function TimeClip(time: Num): TimeValue {
   // 1. If time is not finite, return NaN.
   if (!Number.isFinite(time)) {
     return NaN;

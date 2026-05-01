@@ -279,7 +279,7 @@ export class InspectorContext {
         return undefined!;
       }
       const scopeChain: Protocol.Debugger.Scope[] = [];
-      let env: EnvironmentRecord | NullValue = stack.context.LexicalEnvironment;
+      let env: EnvironmentRecord | null = stack.context.LexicalEnvironment;
       while (env instanceof EnvironmentRecord) {
         const result = getDisplayObjectFromEnvironmentRecord(env);
         if (result) {
@@ -311,8 +311,8 @@ export class InspectorContext {
   evaluateMode: 'script' | 'module' | 'console' = 'script';
 }
 
-function HostGetThisEnvironment(env: EnvironmentRecord | NullValue): Value {
-  while (!(env instanceof NullValue)) {
+function HostGetThisEnvironment(env: EnvironmentRecord | null): Value {
+  while (env !== null) {
     const exists = env.HasThisBinding();
     if (exists === Value.true) {
       const value = (env as EnvironmentRecordWithThisBinding).GetThisBinding();
