@@ -94,9 +94,9 @@ function printResult(value: ValueCompletion) {
 inspector.attachAgent(surroundingAgent, [realm]);
 // Run a script with debugger support
 {
-  let completion;
   // the evaluation may be sync or async.
   console.log('--------- evaluateScript ---------');
+  let completion;
   realm.evaluateScript(`
     function f() { debugger; return 1; }
     f();

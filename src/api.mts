@@ -348,7 +348,8 @@ export class ManagedRealm extends Realm {
    * Evaluate a script (skip the debugger).
    */
   evaluateScriptSkipDebugger(sourceText: string | ScriptRecord, options: { specifier?: string, doNotTrackScriptId?: boolean } = {}): ValueCompletion {
-    let completion = this.evaluateScript(sourceText, options, (c) => {
+    let completion;
+    this.evaluateScript(sourceText, options, (c) => {
       completion = c;
     });
     if (!completion) surroundingAgent.resumeEvaluate({ noBreakpoint: true });
