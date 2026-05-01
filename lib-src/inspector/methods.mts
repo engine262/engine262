@@ -348,7 +348,8 @@ function evaluate(options: {
         runJobQueue();
       });
     } else if (toBeEvaluated instanceof ScriptRecord) {
-      let completion = realm.realm.evaluateScript(toBeEvaluated, {}, (c) => {
+      let completion;
+      realm.realm.evaluateScript(toBeEvaluated, {}, (c) => {
         completion = c;
         resolve(context.createEvaluationResult(completion));
       });

@@ -4,7 +4,7 @@ import * as impl from './methods.mts';
 import type { DebuggerContext, DebuggerPreference, DevtoolEvents } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
 import {
-  Agent, ManagedRealm, Realm, type Arguments,
+  Agent, HostPromiseRejectionTracker, ManagedRealm, Realm, Value, type Arguments,
 } from '#self';
 
 const ignoreNamespaces = ['Network'];
@@ -22,6 +22,8 @@ export abstract class Inspector {
 
   #agents: AgentRecord[] = [];
 
+  #unhandledExceptionIds = new WeakMap<Value, number>();
+
   attachAgent(agent: Agent, priorRealms: ManagedRealm[]) {
     const oldOnDebugger = agent.hostDefinedOptions.onDebugger;
     agent.hostDefinedOptions.onDebugger = (reason) => {
@@ -35,6 +37,28 @@ export abstract class Inspector {
       }
       this.sendEvent['Debugger.paused'](pausedEvent);
     };
+
+    agent.hostDefinedOptions.hostHooks ??= {};
+    agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers ??= new Set();
+    const tracker: HostPromiseRejectionTracker = (promise, operation) => {
+      if (operation === 'reject') {
+        const detail = this.#context.createExceptionDetails(promise, true);
+        this.#unhandledExceptionIds.set(promise, detail.exceptionId);
+        this.sendEvent['Runtime.exceptionThrown']({
+          timestamp: Date.now(),
+          exceptionDetails: detail,
+        });
+      } else {
+        const id = this.#unhandledExceptionIds.get(promise);
+        if (id) {
+          this.sendEvent['Runtime.exceptionRevoked']({
+            reason: 'Handler added to rejected promise',
+            exceptionId: id,
+          });
+        }
+      }
+    };
+    agent.hostDefinedOptions.hostHooks.HostPromiseRejectionTrackers.add(tracker);
 
     const oldOnRealmCreated = agent.hostDefinedOptions.onRealmCreated;
     agent.hostDefinedOptions.onRealmCreated = (realm) => {
@@ -57,6 +81,7 @@ export abstract class Inspector {
         agent.hostDefinedOptions.onDebugger = oldOnDebugger;
         agent.hostDefinedOptions.onRealmCreated = oldOnRealmCreated;
         agent.hostDefinedOptions.onScriptParsed = oldOnScriptParsed;
+        agent.hostDefinedOptions.hostHooks!.HostPromiseRejectionTrackers!.delete(tracker);
         this.#agents = this.#agents.filter((x) => x.agent !== agent);
       },
     });

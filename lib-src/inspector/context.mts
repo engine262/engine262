@@ -66,24 +66,6 @@ export class InspectorContext {
     });
     const oldInspector = realm.HostDefined.attachingInspector;
     realm.HostDefined.attachingInspector = this.#io;
-    const oldPromiseRejectionTracker = realm.HostDefined.promiseRejectionTracker;
-    realm.HostDefined.promiseRejectionTracker = (promise, operation) => {
-      oldPromiseRejectionTracker?.(promise, operation);
-      if (operation === 'reject') {
-        this.#io.sendEvent['Runtime.exceptionThrown']({
-          timestamp: Date.now(),
-          exceptionDetails: this.createExceptionDetails(promise, true),
-        });
-      } else {
-        const id = this.#exceptionMap.get(promise);
-        if (id) {
-          this.#io.sendEvent['Runtime.exceptionRevoked']({
-            reason: 'Handler added to rejected promise',
-            exceptionId: id,
-          });
-        }
-      }
-    };
     this.#io.sendEvent['Runtime.executionContextCreated']({ context: descriptor });
   }
 
@@ -256,15 +238,12 @@ export class InspectorContext {
     return { result: properties, internalProperties, privateProperties };
   }
 
-  #exceptionMap = new WeakMap<Value, number>();
-
   createExceptionDetails(completion: ThrowCompletion | Value, isPromise: boolean): Protocol.Runtime.ExceptionDetails {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
     const { callStack } = getHostDefinedErrorDetails(value);
     const frames = InspectorContext.callSiteToCallFrame(callStack);
     const exceptionId = this.#objectCounter;
     this.#objectCounter += 1;
-    this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
       stackTrace: callStack ? { callFrames: frames } : undefined,
