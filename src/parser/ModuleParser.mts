@@ -10,6 +10,7 @@ export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :
   //   `import` ImportClause FromClause WithClause? `;`
   //   `import` ModuleSpecifier WithClause? `;`
+  //   `import` `source` ImportedBinding FromClause WithClause? `;`
   parseImportDeclaration(): ParseNode.ImportDeclaration | ParseNode.ExpressionStatement | ParseNode.LabelledStatement {
     if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
       // `import` `(`
@@ -19,19 +20,48 @@ export abstract class ModuleParser extends StatementParser {
     const node = this.startNode<ParseNode.ImportDeclaration>();
     this.next();
     if (this.test(Token.STRING)) {
+      node.Phase = 'evaluation';
       node.ModuleSpecifier = this.parsePrimaryExpression();
     } else {
-      if (this.test('defer') && this.testAhead(Token.MUL)) {
+      if (this.test('source')) {
+        const importClause = this.startNode<ParseNode.ImportClause>();
+        importClause.ImportedDefaultBinding = this.parseImportedDefaultBinding();
+
+        let isImportSource = false;
+        if (this.test('from')) {
+          // import source from '...' (normal import)
+          // import source from from '...' (import source)
+          //               ^ this.test('from')
+          //                    ^ this.testAhead(Token.STRING)
+          isImportSource = !this.testAhead(Token.STRING);
+        } else {
+          // import source , { ... } from '...' (normal import)
+          // import source x from '...' (import source)
+          //               ^ this.test(Token.COMMA)
+          isImportSource = !this.test(Token.COMMA);
+        }
+
+        if (isImportSource) {
+          node.Phase = 'source';
+          node.ImportedBinding = this.parseBindingIdentifier();
+          this.scope.declare(node.ImportedBinding, 'import');
+        } else {
+          node.Phase = 'evaluation';
+          node.ImportClause = this.parseImportClause(importClause);
+          this.scope.declare(node.ImportClause, 'import');
+        }
+      } else if (this.test('defer') && this.testAhead(Token.MUL)) {
         this.next(); // defer
         node.Phase = 'defer';
         const importClause = this.startNode<ParseNode.ImportClause>();
         importClause.NameSpaceImport = this.parseNameSpaceImport();
         node.ImportClause = this.finishNode(importClause, 'ImportClause');
+        this.scope.declare(node.ImportClause, 'import');
       } else {
         node.Phase = 'evaluation';
         node.ImportClause = this.parseImportClause();
+        this.scope.declare(node.ImportClause, 'import');
       }
-      this.scope.declare(node.ImportClause, 'import');
       node.FromClause = this.parseFromClause();
     }
     if (this.test(Token.WITH)) {
@@ -50,10 +80,9 @@ export abstract class ModuleParser extends StatementParser {
   //
   // ImportedBinding :
   //   BindingIdentifier
-  parseImportClause(): ParseNode.ImportClause {
-    const node = this.startNode<ParseNode.ImportClause>();
+  parseImportClause(node = this.startNode<ParseNode.ImportClause>()): ParseNode.ImportClause {
     if (this.test(Token.IDENTIFIER)) {
-      node.ImportedDefaultBinding = this.parseImportedDefaultBinding();
+      node.ImportedDefaultBinding ??= this.parseImportedDefaultBinding();
       if (!this.eat(Token.COMMA)) {
         return this.finishNode(node, 'ImportClause');
       }

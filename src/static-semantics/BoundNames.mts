@@ -44,6 +44,11 @@ export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValu
         return BoundNames(node.BindingIdentifier);
       }
       return [Value('*default*')];
+    case 'ImportDeclaration':
+      if (node.ImportedBinding) {
+        return BoundNames(node.ImportedBinding);
+      }
+      return [];
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
     case 'ExportDeclaration':

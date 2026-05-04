@@ -21,7 +21,7 @@ import {
   Q, X, ThrowCompletion,
   IfAbruptRejectPromise,
 } from './completion.mts';
-import { type Mutable } from './utils/language.mts';
+import { OutOfRange, type Mutable } from './utils/language.mts';
 import { JSStringSet } from './utils/container.mts';
 import {
   Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
@@ -61,11 +61,11 @@ export interface LoadedModuleRequestRecord {
 export class ResolvedBindingRecord {
   readonly Module: AbstractModuleRecord;
 
-  readonly BindingName: 'namespace' | 'deferred-namespace' | JSStringValue;
+  readonly BindingName: 'namespace' | 'deferred-namespace' | 'source' | JSStringValue;
 
   constructor({ Module, BindingName }: Pick<ResolvedBindingRecord, 'BindingName' | 'Module'>) {
     Assert(Module instanceof AbstractModuleRecord);
-    Assert(BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName instanceof JSStringValue);
+    Assert(BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName === 'source' || BindingName instanceof JSStringValue);
     this.Module = Module;
     this.BindingName = BindingName;
   }
@@ -83,7 +83,13 @@ export type ModuleRecordHostDefined = {
   scriptId?: string;
   readonly doNotTrackScriptId?: boolean;
 };
-export type AbstractModuleInit = Pick<AbstractModuleRecord, 'Realm' | 'Environment' | 'Namespace' | 'HostDefined'>;
+export interface AbstractModuleInit {
+  readonly Realm: AbstractModuleRecord['Realm'];
+  readonly Environment: AbstractModuleRecord['Environment'];
+  readonly HostDefined: AbstractModuleRecord['HostDefined'];
+  readonly ModuleSource?: AbstractModuleRecord['ModuleSource'];
+  readonly Namespace: AbstractModuleRecord['Namespace'];
+}
 
 interface ResolveSetItem {
   readonly Module: AbstractModuleRecord;
@@ -102,6 +108,12 @@ export abstract class AbstractModuleRecord {
 
   abstract Evaluate(): Evaluator<PromiseObject>;
 
+  // https://github.com/tc39/ecma262/pull/3492/#abstract-get-module-source-kind
+  GetModuleSourceKind(): string {
+    // For Module Records that do not have a source representation (currently all ECMA-262-defined Module Records), GetModuleSourceKind() is never called.
+    throw new Error('GetModuleSourceKind must be implemented by module records that have a ModuleSource');
+  }
+
   readonly Realm: Realm;
 
   readonly Environment: ModuleEnvironmentRecord | undefined;
@@ -110,11 +122,14 @@ export abstract class AbstractModuleRecord {
 
   readonly DeferredNamespace: ObjectValue | undefined = undefined;
 
+  readonly ModuleSource: ObjectValue | undefined = undefined;
+
   readonly HostDefined: ModuleRecordHostDefined | undefined;
 
   constructor(init: AbstractModuleInit) {
     this.Realm = init.Realm;
     this.Environment = init.Environment;
+    this.ModuleSource = init.ModuleSource;
     this.HostDefined = init.HostDefined;
   }
 
@@ -123,6 +138,7 @@ export abstract class AbstractModuleRecord {
     m(this.Environment);
     m(this.Namespace);
     m(this.DeferredNamespace);
+    m(this.ModuleSource);
   }
 }
 
@@ -182,8 +198,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       PromiseCapability: pc,
       HostDefined: hostDefined,
     });
-    // 4. Perform InnerModuleLoading(state, module).
-    InnerModuleLoading(state, module);
+    InnerModuleLoading(state, module, 'recursive-load');
     // 5. Return pc.[[Promise]].
     return pc.Promise;
   }
@@ -446,6 +461,12 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
               BindingName: 'namespace',
             });
           }
+        } else if (e.ImportName === 'source') {
+          // Assert: _module_ does not provide the direct binding for this export.
+          return new ResolvedBindingRecord({
+            Module: importedModule,
+            BindingName: 'source',
+          });
         } else { // iv. Else,
           // 1. Assert: module imports a specific binding for this export.
           // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
@@ -486,16 +507,19 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             return 'ambiguous';
           }
           // 3. If _resolution_.[[BindingName]] is not _starResolution_.[[BindingName]], return ~ambiguous~.
-          if (resolution.BindingName === starResolution.BindingName) {
+          const l = resolution.BindingName;
+          const r = starResolution.BindingName;
+          if (l === r) {
             // pass
-          } else if (
-            (resolution.BindingName === 'namespace' && starResolution.BindingName !== 'namespace')
-            || (resolution.BindingName !== 'namespace' && starResolution.BindingName === 'namespace')
-          ) {
+          } else if (l instanceof JSStringValue && !(r instanceof JSStringValue)) {
             return 'ambiguous';
-          } else if ((resolution.BindingName as JSStringValue).stringValue() !== (starResolution.BindingName as JSStringValue).stringValue()) {
+          } else if (!(l instanceof JSStringValue) && r instanceof JSStringValue) {
             return 'ambiguous';
-          }
+          } else if (l instanceof JSStringValue && r instanceof JSStringValue) {
+            if (l.value !== r.value) return 'ambiguous';
+          } else if (l !== r) {
+            return 'ambiguous';
+          } else throw OutOfRange.nonExhaustive(l);
         }
       }
     }
@@ -534,14 +558,22 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     for (const ie of module.ImportEntries) {
       // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
       const importedModule = GetImportedModule(module, ie.ModuleRequest);
-      // b. If in.[[ImportName]] is ~namespace~, then
       if (ie.ImportName === 'namespace') {
         // i. Let namespace be GetModuleNamespace(importedModule).
-        const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase);
+        Assert(ie.ModuleRequest.Phase !== 'source');
+        const namespacePhase = ie.ModuleRequest.Phase === 'defer' ? 'defer' : 'evaluation';
+        const namespace = GetModuleNamespace(importedModule, namespacePhase);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
         X(env.InitializeBinding(ie.LocalName, namespace));
+      } else if (ie.ImportName === 'source') {
+        const moduleSourceObject = importedModule.ModuleSource;
+        if (moduleSourceObject === undefined) {
+          return Throw.SyntaxError('Module source is not available');
+        }
+        X(env.CreateImmutableBinding(ie.LocalName, Value.true));
+        X(env.InitializeBinding(ie.LocalName, moduleSourceObject));
       } else { // c. Else,
         // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
         const resolution = importedModule.ResolveExport(ie.ImportName);
@@ -563,6 +595,14 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
           X(env.InitializeBinding(ie.LocalName, namespace));
+        } else if (resolution.BindingName === 'source') {
+          // No spec text
+          const moduleSourceObject = resolution.Module.ModuleSource;
+          if (moduleSourceObject === undefined) {
+            return Throw.SyntaxError('Module source is not available');
+          }
+          X(env.CreateImmutableBinding(ie.LocalName, Value.true));
+          X(env.InitializeBinding(ie.LocalName, moduleSourceObject));
         } else { // iv. Else,
           // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
           X(env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName));

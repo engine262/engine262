@@ -246,7 +246,7 @@ export function getHostDefinedErrorDetails(O: Value) {
 function captureAsyncStack(stack: CallSite[]) {
   let promise = stack[0].context.promiseCapability!.Promise;
   for (let i = 0; i < 10; i += 1) {
-    if (promise.PromiseFulfillReactions!.length !== 1) {
+    if (promise.PromiseFulfillReactions?.length !== 1) {
       return;
     }
     const [reaction] = promise.PromiseFulfillReactions!;

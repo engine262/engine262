@@ -1,7 +1,63 @@
 import { assert, expect, test } from 'vitest';
 import {
-  AbstractModuleRecord, Agent, Call, EnsureCompletion, FinishLoadingImportedModule, JSStringValue, ManagedRealm, NewPromiseCapability, PromiseCapabilityRecord, setSurroundingAgent, skipDebugger, Throw, Value, type PromiseObject,
+  AbstractModuleRecord, Agent, Call, CreateNonEnumerableDataPropertyOrThrow, EnsureCompletion, FinishLoadingImportedModule, isPromiseObject, JSStringValue, ManagedRealm, NewPromiseCapability, NormalCompletion, OrdinaryObjectCreate, PromiseCapabilityRecord, setSurroundingAgent, skipDebugger, Throw, Value, type ModuleSourceObject, type PromiseObject,
 } from '#self';
+
+class CustomSourceModuleRecord extends AbstractModuleRecord {
+  readonly SourceObject: ModuleSourceObject;
+
+  constructor(realm: ManagedRealm, sourceObject?: ModuleSourceObject) {
+    const moduleSource = sourceObject ?? realm.scope(() => {
+      const sourcePrototype = OrdinaryObjectCreate(realm.Intrinsics['%AbstractModuleSource.prototype%']);
+      return OrdinaryObjectCreate(sourcePrototype) as ModuleSourceObject;
+    });
+    super({
+      Realm: realm,
+      Environment: undefined,
+      Namespace: undefined,
+      ModuleSource: moduleSource,
+      HostDefined: {},
+    });
+    this.SourceObject = moduleSource;
+  }
+
+  _pc(): PromiseCapabilityRecord {
+    const promise = EnsureCompletion(skipDebugger(NewPromiseCapability(this.Realm.Intrinsics['%Promise%'])));
+    const completion = promise;
+    if (completion.Type !== 'normal') {
+      throw completion.Value;
+    }
+    return completion.Value;
+  }
+
+  override GetModuleSourceKind() {
+    return 'Custom Module Source';
+  }
+
+  override LoadRequestedModules(): PromiseObject {
+    const pc = this._pc();
+    Call(pc.Resolve, Value.undefined, []);
+    return pc.Promise;
+  }
+
+  override Link() {
+    return NormalCompletion(undefined);
+  }
+
+  override* Evaluate() {
+    const pc = this._pc();
+    yield* Call(pc.Resolve, Value.undefined, [Value.undefined]);
+    return pc.Promise;
+  }
+
+  override GetExportedNames(): readonly JSStringValue[] {
+    return [];
+  }
+
+  override ResolveExport() {
+    return null;
+  }
+}
 
 test('Import attributes', () => {
   let attributes!: Map<string, string>;
@@ -123,4 +179,42 @@ test('Custom module records', () => {
   assert(calls.length >= 2); // there is a third call, for the promise of the entrypoint
   assert.deepStrictEqual(calls[0], [evaluationPromise!, 'reject'], "first call should be 'reject'");
   assert.deepStrictEqual(calls[1], [evaluationPromise!, 'handle'], "second call should be 'handle'");
+});
+
+test('Custom host module sources resolve through import.source and toStringTag', () => {
+  let loadedPhase!: string;
+  let sourceObject!: ModuleSourceObject;
+  let module!: CustomSourceModuleRecord;
+
+  const agent = new Agent({
+    hostHooks: {
+      HostGetModuleSourceModuleRecord(specifier) {
+        if (specifier === sourceObject) {
+          return module;
+        }
+        return 'not-a-source';
+      },
+      HostLoadImportedModule(referrer, moduleRequest, _hostDefined, payload) {
+        loadedPhase = moduleRequest.Phase;
+        module = new CustomSourceModuleRecord(realm);
+        sourceObject = module.SourceObject;
+        FinishLoadingImportedModule(referrer, moduleRequest, payload, module);
+      },
+    },
+  });
+  setSurroundingAgent(agent);
+  const realm = new ManagedRealm();
+
+  const importResult = EnsureCompletion(realm.evaluateScriptSkipDebugger('import.source("host-module-source");'));
+  expect(importResult instanceof NormalCompletion).toBeTruthy();
+  const promise = importResult.Value as PromiseObject;
+  expect(isPromiseObject(promise)).toBeTruthy();
+
+  expect(loadedPhase).toBe('source');
+  expect(promise.PromiseState).toBe('fulfilled');
+  expect(promise.PromiseResult).toBe(sourceObject);
+
+  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('sourceObject'), sourceObject);
+  const tagResult = realm.evaluateScriptSkipDebugger('Object.prototype.toString.call(sourceObject)') as NormalCompletion<JSStringValue>;
+  expect(tagResult.Value.stringValue()).toBe('[object Custom Module Source]');
 });

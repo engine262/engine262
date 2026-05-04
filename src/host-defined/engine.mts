@@ -117,6 +117,8 @@ export interface HostHooks {
   HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator | PlainCompletion<void>;
   /** https://tc39.es/proposal-shadowrealm/#sec-hostinitializeshadowrealm */
   HostInitializeShadowRealm?(realmRec: Realm, innerContext: ExecutionContext, O: ShadowRealmObject): PlainEvaluator | PlainCompletion<void>;
+  /** https://tc39.es/ecma262/#sec-hostgetmodulesourcemodulerecord */
+  HostGetModuleSourceModuleRecord?(specifier: ObjectValue): AbstractModuleRecord | 'not-a-source';
   /** https://tc39.es/ecma262/#sec-#sec-HostLoadImportedModule */
   HostLoadImportedModule?(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: HostLoadImportedModulePayloadOpaque): void;
   /** https://tc39.es/ecma262/#sec-host-promise-rejection-tracker */
@@ -243,6 +245,15 @@ export function HostGetSupportedImportAttributes(): readonly string[] {
     return surroundingAgent.hostDefinedOptions.supportedImportAttributes;
   }
   return [];
+}
+
+/** https://tc39.es/ecma262/#sec-hostgetmodulesourcemodulerecord */
+export function HostGetModuleSourceModuleRecord(specifier: ObjectValue): AbstractModuleRecord | 'not-a-source' {
+  const HostHook = surroundingAgent.hostDefinedOptions.hostHooks?.HostGetModuleSourceModuleRecord;
+  if (HostHook) {
+    return HostHook(specifier);
+  }
+  return 'not-a-source';
 }
 
 // #sec-HostLoadImportedModule

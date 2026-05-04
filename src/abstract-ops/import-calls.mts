@@ -5,6 +5,7 @@ import {
   AbstractModuleRecord,
   Assert,
   Call, CreateBuiltinFunction, GatherAsynchronousTransitiveDependencies, GetModuleNamespace, PerformPromiseThen, PromiseCapabilityRecord, Value,
+  Throw,
   type Arguments,
   type PromiseObject,
 } from '../index.mts';
@@ -16,8 +17,8 @@ import { SafePerformPromiseAll } from '../intrinsics/Promise.mts';
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
 export function ContinueDynamicImport(
   promiseCapability: PromiseCapabilityRecord,
+  phase: 'source' | 'defer' | 'evaluation',
   moduleCompletion: PlainCompletion<AbstractModuleRecord>,
-  phase: 'defer' | 'evaluation',
 ) {
   // 1. If moduleCompletion is an abrupt completion, then
   if (moduleCompletion instanceof AbruptCompletion) {
@@ -28,6 +29,16 @@ export function ContinueDynamicImport(
   }
   // 2. Let module be moduleCompletion.[[Value]].
   const module = ValueOfNormalCompletion(moduleCompletion);
+
+  if (phase === 'source') {
+    const moduleSource = module.ModuleSource;
+    if (moduleSource === undefined) {
+      X(Call(promiseCapability.Reject, Value.undefined, [Throw.SyntaxError('Module source is not available').Value]));
+    } else { // c. Else,
+      X(Call(promiseCapability.Resolve, Value.undefined, [moduleSource]));
+    }
+    return;
+  }
 
   // 3. Let loadPromise be module.LoadRequestedModules().
   const loadPromise = module.LoadRequestedModules();
@@ -57,6 +68,7 @@ export function ContinueDynamicImport(
 
     // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {
+      Assert(phase !== 'source');
       // i. Let namespace be GetModuleNamespace(module).
       const namespace = GetModuleNamespace(module, phase);
       // ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace »).
