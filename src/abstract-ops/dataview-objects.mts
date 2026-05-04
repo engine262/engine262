@@ -121,7 +121,7 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   // 4. If IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
   // 5. Otherwise, let numberValue be ? ToNumber(value).
   let numberValue;
-  if (IsBigIntElementType(type) === Value.true) {
+  if (IsBigIntElementType(type)) {
     numberValue = Q(yield* ToBigInt(value));
   } else {
     numberValue = Q(yield* ToNumber(value));

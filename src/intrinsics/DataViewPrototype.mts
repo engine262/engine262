@@ -85,6 +85,15 @@ function* DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32 */
+function* DataViewProto_getFloat16([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const v = thisValue;
+  if (littleEndian === undefined) {
+    littleEndian = Value.false;
+  }
+  return Q(yield* GetViewValue(v, byteOffset, littleEndian, 'Float16'));
+}
+
+/** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32 */
 function* DataViewProto_getFloat32([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const v = thisValue;
   if (littleEndian === undefined) {
@@ -175,6 +184,15 @@ function* DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Valu
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
+function* DataViewProto_setFloat16([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const v = thisValue;
+  if (littleEndian === undefined) {
+    littleEndian = Value.false;
+  }
+  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float16', value));
+}
+
+/** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
 function* DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const v = thisValue;
   if (littleEndian === undefined) {
@@ -247,6 +265,7 @@ export function bootstrapDataViewPrototype(realmRec: Realm) {
     ['byteOffset', [DataViewProto_byteOffset]],
     ['getBigInt64', DataViewProto_getBigInt64, 1],
     ['getBigUint64', DataViewProto_getBigUint64, 1],
+    ['getFloat16', DataViewProto_getFloat16, 1],
     ['getFloat32', DataViewProto_getFloat32, 1],
     ['getFloat64', DataViewProto_getFloat64, 1],
     ['getInt8', DataViewProto_getInt8, 1],
@@ -257,6 +276,7 @@ export function bootstrapDataViewPrototype(realmRec: Realm) {
     ['getUint32', DataViewProto_getUint32, 1],
     ['setBigInt64', DataViewProto_setBigInt64, 2],
     ['setBigUint64', DataViewProto_setBigUint64, 2],
+    ['setFloat16', DataViewProto_setFloat16, 2],
     ['setFloat32', DataViewProto_setFloat32, 2],
     ['setFloat64', DataViewProto_setFloat64, 2],
     ['setInt8', DataViewProto_setInt8, 2],

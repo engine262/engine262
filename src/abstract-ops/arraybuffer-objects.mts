@@ -1,4 +1,12 @@
 import { typedArrayInfoByType, type TypedArrayTypes } from '../intrinsics/TypedArray.mts';
+import {
+  decodeFloat16,
+  decodeFloat32,
+  decodeFloat64,
+  encodeFloat16,
+  encodeFloat32,
+  encodeFloat64,
+} from '../host-defined/ieee754.mts';
 import { IsGrowableSharedArrayBuffer, sharedArrayBufferNotSupported } from './shared-arraybuffer.mts';
 import {
   surroundingAgent,
@@ -16,6 +24,7 @@ import {
   type FunctionObject,
   type OrdinaryObject,
   Throw,
+  R,
 } from '#self';
 
 export interface ArrayBufferObject extends OrdinaryObject {
@@ -63,6 +72,17 @@ export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: nu
   return obj;
 }
 
+/** https://tc39.es/ecma262/#sec-arraybufferbytelength */
+export function ArrayBufferByteLength(arrayBuffer: ArrayBufferObject, _order: 'seq-cst' | 'unordered'): number {
+  if (IsGrowableSharedArrayBuffer(arrayBuffer)) {
+    sharedArrayBufferNotSupported();
+  }
+  Assert(!IsDetachedBuffer(arrayBuffer));
+  return arrayBuffer.ArrayBufferByteLength;
+}
+
+// TODO: ArrayBufferCopyAndDetach
+
 /** https://tc39.es/ecma262/#sec-isdetachedbuffer */
 export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
   if (arrayBuffer.ArrayBufferData === Value.null) {
@@ -105,30 +125,68 @@ export function* CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: n
   return targetBuffer;
 }
 
+// TODO: GetArrayBufferMaxByteLengthOption
+
+// TODO: HostResizeArrayBuffer
+
+/** https://tc39.es/ecma262/#sec-isfixedlengtharraybuffer */
+export function IsFixedLengthArrayBuffer(arrayBuffer: ArrayBufferObject) {
+  return !('ArrayBufferMaxByteLength' in arrayBuffer);
+}
+
+/** https://tc39.es/ecma262/#sec-isunsignedelementtype */
+export function IsUnsignedElementType(type: TypedArrayTypes) {
+  if (type === 'Uint8' || type === 'Uint8C' || type === 'Uint16' || type === 'Uint32' || type === 'BigUint64') return true;
+  return false;
+}
+
+// TODO: IsUnclampedIntegerElementType
+
 /** https://tc39.es/ecma262/#sec-isbigintelementtype */
 export function IsBigIntElementType(type: TypedArrayTypes) {
-  // 1. If type is BigUint64 or BigInt64, return true.
-  if (type === 'BigUint64' || type === 'BigInt64') {
-    return Value.true;
-  }
-  // 2. Return false
-  return Value.false;
+  if (type === 'BigUint64' || type === 'BigInt64') return true;
+  return false;
 }
 
-const throwawayBuffer = new ArrayBuffer(8);
-const throwawayDataView = new DataView(throwawayBuffer);
-const throwawayArray = new Uint8Array(throwawayBuffer);
+// TODO: IsNoTearConfiguration
 
 /** https://tc39.es/ecma262/#sec-rawbytestonumeric */
-export function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: number[], isLittleEndian: boolean) {
-  // 1. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+export function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: readonly number[], isLittleEndian: boolean) {
   const elementSize = typedArrayInfoByType[type].ElementSize;
-  Assert(elementSize === rawBytes.length);
-  const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-  Object.assign(throwawayArray, rawBytes);
-  const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian);
-  return IsBigIntElementType(type) === Value.true ? Z(result as bigint) : F(result as number);
+  rawBytes = isLittleEndian ? rawBytes : rawBytes.toReversed();
+
+  if (type === 'Float16') {
+    return F(decodeFloat16(rawBytes));
+  }
+  if (type === 'Float32') {
+    return F(decodeFloat32(rawBytes));
+  }
+  if (type === 'Float64') {
+    return F(decodeFloat64(rawBytes));
+  }
+
+  // If IsUnsignedElementType(type) is true, then
+  //     Let intValue be the byte elements of rawBytes concatenated and interpreted as a bit string encoding of an unsigned little-endian binary number.
+  // Else,
+  //     Let intValue be the byte elements of rawBytes concatenated and interpreted as a bit string encoding of a binary little-endian two's complement number of bit length elementSize × 8.
+  const isUnsigned = IsUnsignedElementType(type);
+  const bits = BigInt(elementSize * 8);
+  let intValue = 0n;
+  for (let i = 0; i < rawBytes.length; i += 1) {
+    intValue |= BigInt(rawBytes[i]!) << BigInt(i * 8);
+  }
+
+  if (!isUnsigned) {
+    const signBit = 1n << (bits - 1n);
+    if ((intValue & signBit) !== 0n) {
+      intValue -= 1n << bits;
+    }
+  }
+
+  return IsBigIntElementType(type) ? Z(intValue) : F(Number(intValue));
 }
+
+// TODO: GetRawBytesFromSharedBlock
 
 /** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
 export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, _isTypedArray: boolean, _order: 'unordered', isLittleEndian?: boolean) {
@@ -156,41 +214,37 @@ export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: nu
   return RawBytesToNumeric(type, rawValue, isLittleEndian);
 }
 
-const float32NaNLE = Object.freeze([0, 0, 192, 127]);
-const float32NaNBE = Object.freeze([127, 192, 0, 0]);
-const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
-const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
-
 /** https://tc39.es/ecma262/#sec-numerictorawbytes */
 export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | BigIntValue, isLittleEndian: boolean) {
-  let rawBytes;
-  // One day, we will write our own IEEE 754 and two's complement encoder…
-  if (type === 'Float32') {
-    if (Number.isNaN(value.value)) {
-      rawBytes = isLittleEndian ? [...float32NaNLE] : [...float32NaNBE];
-    } else {
-      throwawayDataView.setFloat32(0, Number(value.value), isLittleEndian);
-      rawBytes = [...throwawayArray.subarray(0, 4)];
-    }
+  let rawBytes: number[];
+  if (type === 'Float16') {
+    rawBytes = encodeFloat16(Number(value.value));
+  } else if (type === 'Float32') {
+    rawBytes = encodeFloat32(Number(value.value));
   } else if (type === 'Float64') {
-    if (Number.isNaN(value.value)) {
-      rawBytes = isLittleEndian ? [...float64NaNLE] : [...float64NaNBE];
-    } else {
-      throwawayDataView.setFloat64(0, Number(value.value), isLittleEndian);
-      rawBytes = [...throwawayArray.subarray(0, 8)];
-    }
+    rawBytes = encodeFloat64(Number(value.value));
   } else {
-    // a. Let n be the Element Size value specified in Table 61 for Element Type type.
-    const n = typedArrayInfoByType[type].ElementSize;
-    // b. Let convOp be the abstract operation named in the Conversion Operation column in Table 61 for Element Type type.
-    const convOp = typedArrayInfoByType[type].ConversionOperation as (argument: Value) => ValueEvaluator<NumberValue | BigIntValue>;
-    // c. Let intValue be convOp(value) treated as a mathematical value, whether the result is a BigInt or Number.
-    const intValue = X(convOp(value));
-    const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-    throwawayDataView[`set${dataViewType}`](0, intValue.value as bigint & number, isLittleEndian);
-    rawBytes = [...throwawayArray.subarray(0, n)];
+    const conversionOperation = typedArrayInfoByType[type].ConversionOperation as (argument: Value) => ValueEvaluator<NumberValue | BigIntValue>;
+    const intValue = R(X(conversionOperation(value)));
+    // If intValue ≥ 0, then
+    //     Let rawBytes be a List whose elements are the n-byte binary encoding of intValue. The bytes are ordered in little endian order.
+    // Else,
+    //     Let rawBytes be a List whose elements are the n-byte binary two's complement encoding of intValue. The bytes are ordered in little endian order.
+    const byteCount = typedArrayInfoByType[type].ElementSize;
+    const mod = 1n << BigInt(byteCount * 8);
+    let bits = typeof intValue === 'bigint' ? intValue : BigInt(intValue);
+    if (bits < 0) {
+      bits += mod;
+    }
+
+    const nextRawBytes = new Array<number>(byteCount);
+    for (let i = 0; i < byteCount; i += 1) {
+      nextRawBytes[i] = Number((bits >> BigInt(i * 8)) & 0xFFn);
+    }
+    rawBytes = nextRawBytes;
   }
-  return rawBytes;
+  if (isLittleEndian) return rawBytes;
+  return rawBytes.toReversed();
 }
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
@@ -201,7 +255,7 @@ export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: num
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex));
   // 4. Assert: Type(value) is BigInt if IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
-  if (IsBigIntElementType(type) === Value.true) {
+  if (IsBigIntElementType(type)) {
     Assert(value instanceof BigIntValue);
   } else {
     Assert(value instanceof NumberValue);
@@ -230,16 +284,4 @@ export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: num
   return NormalCompletion(Value.undefined);
 }
 
-/** https://tc39.es/ecma262/#sec-arraybufferbytelength */
-export function ArrayBufferByteLength(arrayBuffer: ArrayBufferObject, _order: 'seq-cst' | 'unordered'): number {
-  if (IsGrowableSharedArrayBuffer(arrayBuffer)) {
-    sharedArrayBufferNotSupported();
-  }
-  Assert(!IsDetachedBuffer(arrayBuffer));
-  return arrayBuffer.ArrayBufferByteLength;
-}
-
-/** https://tc39.es/ecma262/#sec-isfixedlengtharraybuffer */
-export function IsFixedLengthArrayBuffer(arrayBuffer: ArrayBufferObject) {
-  return !('ArrayBufferMaxByteLength' in arrayBuffer);
-}
+// TODO: GetModifySetValueInBuffer

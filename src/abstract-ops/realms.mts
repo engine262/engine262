@@ -111,6 +111,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%EvalError.prototype%': ObjectValue;
   '%EvalError%': FunctionObject;
   '%FinalizationRegistry.prototype%': ObjectValue;
+  '%Float16Array.prototype%': ObjectValue;
   '%Float32Array.prototype%': ObjectValue;
   '%Float32Array%': FunctionObject;
   '%Float64Array.prototype%': ObjectValue;

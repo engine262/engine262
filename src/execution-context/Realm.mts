@@ -313,6 +313,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
     'Error',
     'EvalError',
     'FinalizationRegistry',
+    'Float16Array',
     'Float32Array',
     'Float64Array',
     'Function',

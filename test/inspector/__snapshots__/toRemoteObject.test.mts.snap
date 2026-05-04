@@ -644,7 +644,7 @@ exports[`data view > new DataView(new ArrayBuffer(0)) non-indexed owned properti
 
 exports[`data view > new DataView(new ArrayBuffer(0)) non-indexed owned properties 1`] = `[]`;
 
-exports[`data view > new DataView(new ArrayBuffer(0)) non-indexed properties (prototype) 1`] = `"buffer, byteLength, byteOffset, getBigInt64, getBigUint64, getFloat32, getFloat64, getInt8, getInt16, getInt32, getUint8, getUint16, getUint32, setBigInt64, setBigUint64, setFloat32, setFloat64, setInt8, setInt16, setInt32, setUint8, setUint16, setUint32, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`data view > new DataView(new ArrayBuffer(0)) non-indexed properties (prototype) 1`] = `"buffer, byteLength, byteOffset, getBigInt64, getBigUint64, getFloat16, getFloat32, getFloat64, getInt8, getInt16, getInt32, getUint8, getUint16, getUint32, setBigInt64, setBigUint64, setFloat16, setFloat32, setFloat64, setInt8, setInt16, setInt32, setUint8, setUint16, setUint32, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`data view > new DataView(new ArrayBuffer(0)) properties 1`] = `
 {
@@ -658,7 +658,7 @@ exports[`data view > new DataView(new ArrayBuffer(10)) 1`] = `
 {
   "className": "DataView",
   "description": "DataView(10)",
-  "objectId": "default:41",
+  "objectId": "default:43",
   "preview": {
     "description": "DataView(10)",
     "overflow": false,
@@ -679,7 +679,7 @@ exports[`data view > new DataView(new ArrayBuffer(10)) non-indexed owned propert
 
 exports[`data view > new DataView(new ArrayBuffer(10)) non-indexed owned properties 1`] = `[]`;
 
-exports[`data view > new DataView(new ArrayBuffer(10)) non-indexed properties (prototype) 1`] = `"buffer, byteLength, byteOffset, getBigInt64, getBigUint64, getFloat32, getFloat64, getInt8, getInt16, getInt32, getUint8, getUint16, getUint32, setBigInt64, setBigUint64, setFloat32, setFloat64, setInt8, setInt16, setInt32, setUint8, setUint16, setUint32, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`data view > new DataView(new ArrayBuffer(10)) non-indexed properties (prototype) 1`] = `"buffer, byteLength, byteOffset, getBigInt64, getBigUint64, getFloat16, getFloat32, getFloat64, getInt8, getInt16, getInt32, getUint8, getUint16, getUint32, setBigInt64, setBigUint64, setFloat16, setFloat32, setFloat64, setInt8, setInt16, setInt32, setUint8, setUint16, setUint32, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`data view > new DataView(new ArrayBuffer(10)) properties 1`] = `
 {
@@ -693,7 +693,7 @@ exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x 1`
 {
   "className": "DataView",
   "description": "DataView(10)",
-  "objectId": "default:42",
+  "objectId": "default:44",
   "preview": {
     "description": "DataView(10)",
     "overflow": false,
@@ -735,7 +735,7 @@ exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x no
 ]
 `;
 
-exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x non-indexed properties (prototype) 1`] = `"buffer, byteLength, byteOffset, getBigInt64, getBigUint64, getFloat32, getFloat64, getInt8, getInt16, getInt32, getUint8, getUint16, getUint32, setBigInt64, setBigUint64, setFloat32, setFloat64, setInt8, setInt16, setInt32, setUint8, setUint16, setUint32, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x non-indexed properties (prototype) 1`] = `"buffer, byteLength, byteOffset, getBigInt64, getBigUint64, getFloat16, getFloat32, getFloat64, getInt8, getInt16, getInt32, getUint8, getUint16, getUint32, setBigInt64, setBigUint64, setFloat16, setFloat32, setFloat64, setInt8, setInt16, setInt32, setUint8, setUint16, setUint32, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`data view > var x = new DataView(new ArrayBuffer(10), 0); x.a = 1; x properties 1`] = `
 {

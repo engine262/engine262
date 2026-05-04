@@ -122,6 +122,12 @@ export const typedArrayInfoByName = {
     ElementSize: 8,
     ConversionOperation: ToBigUint64,
   },
+  Float16Array: {
+    IntrinsicName: '%Float16Array%',
+    ElementType: 'Float16',
+    ElementSize: 2,
+    ConversionOperation: undefined,
+  },
   Float32Array: {
     IntrinsicName: '%Float32Array%',
     ElementType: 'Float32',
@@ -147,6 +153,7 @@ export const typedArrayInfoByType = {
   Uint32: typedArrayInfoByName.Uint32Array,
   BigInt64: typedArrayInfoByName.BigInt64Array,
   BigUint64: typedArrayInfoByName.BigUint64Array,
+  Float16: typedArrayInfoByName.Float16Array,
   Float32: typedArrayInfoByName.Float32Array,
   Float64: typedArrayInfoByName.Float64Array,
 } as const;

@@ -212,6 +212,9 @@ export function CompletePropertyDescriptor(Desc: Descriptor) {
 /** https://tc39.es/ecma262/#sec-createbytedatablock */
 export function CreateByteDataBlock(size: number) {
   Assert(isNonNegativeInteger(size));
+  if (size > 2 ** 53 - 1) {
+    return Throw.RangeError('Invalid length');
+  }
   let db;
   try {
     db = new DataBlock(size);
