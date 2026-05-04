@@ -15,6 +15,7 @@ import {
 
 /** https://tc39.es/ecma262/#table-well-known-intrinsic-objects */
 interface Intrinsics_Table6 {
+  '%AbstractModuleSource%': FunctionObject;
   '%AggregateError%': FunctionObject;
   '%Array%': FunctionObject;
   '%ArrayBuffer%': FunctionObject;
@@ -89,6 +90,7 @@ interface Intrinsics_Table6 {
   '%WrapForValidIteratorPrototype%': ObjectValue;
 }
 export interface Intrinsics extends Intrinsics_Table6 {
+  '%AbstractModuleSource.prototype%': ObjectValue;
   '%AggregateError.prototype%': ObjectValue;
   '%Array.prototype.values%': FunctionObject;
   '%Array.prototype%': ObjectValue;

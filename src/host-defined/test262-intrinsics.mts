@@ -52,7 +52,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
     CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('print'), print);
 
     const $262 = OrdinaryObjectCreate.from({
-      // TODO: AbstractModuleSource
+      AbstractModuleSource: realm.Intrinsics['%AbstractModuleSource%'],
       createRealm: function* createRealm(): ValueEvaluator {
         Q(surroundingAgent.debugger_cannotPreview);
         const realm = new ManagedRealm();

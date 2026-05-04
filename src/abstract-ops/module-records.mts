@@ -60,18 +60,17 @@ export class GraphLoadingState {
 }
 
 /** https://tc39.es/ecma262/#sec-InnerModuleLoading */
-export function InnerModuleLoading(state: GraphLoadingState, module: AbstractModuleRecord) {
+export function InnerModuleLoading(state: GraphLoadingState, module: AbstractModuleRecord, loadType: 'single' | 'recursive-load') {
   // 1. Assert: state.[[IsLoading]] is true.
   Assert(Boolean(state.IsLoading === true)); // this Boolean() is let step 2.d.iii not having a type error.
 
-  // 2. If module is a Cyclic Module Record, module.[[Status]] is new, and state.[[Visited]] does not contain module, then
-  if (module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
+  if (loadType === 'recursive-load' && module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
     // a. Append module to state.[[Visited]].
     state.Visited.add(module);
     // b. Let requestedModulesCount be the number of elements in module.[[RequestedModules]].
-    const requestedModulesCout = module.RequestedModules.length;
+    const requestedModulesCount = module.RequestedModules.length;
     // c. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] + requestedModulesCount.
-    state.PendingModules += requestedModulesCout;
+    state.PendingModules += requestedModulesCount;
     // d. For each ModuleRequest Record request of module.[[RequestedModules]], do
     for (const request of module.RequestedModules) {
       // i. If AllImportAttributesSupported(request.[[Attributes]]) is false, then
@@ -80,13 +79,13 @@ export function InnerModuleLoading(state: GraphLoadingState, module: AbstractMod
         // 1. Let error be ThrowCompletion(a newly created SyntaxError object).
         const error = Throw.SyntaxError('Unsupported import attribute $1', invalidAttributeKey);
         // 2. Perform ContinueModuleLoading(state, error).
-        ContinueModuleLoading(state, error);
+        ContinueModuleLoading(state, request.Phase, error);
       } else {
         // ii. Else if module.[[LoadedModules]] contains a LoadedModuleRequest Record record such that ModuleRequestsEqual(record, request) is true, then
         const record = getRecordWithSpecifier(module.LoadedModules, request);
         if (record !== undefined) {
-          // 1. Perform InnerModuleLoading(state, record.[[Module]]).
-          InnerModuleLoading(state, record.Module);
+          const innerLoadType = request.Phase === 'source' ? 'single' : 'recursive-load';
+          InnerModuleLoading(state, record.Module, innerLoadType);
         } else { // iii. Else,
           // 1. Perform HostLoadImportedModule(module, request, state.[[HostDefined]], state).
           HostLoadImportedModule(module, request, state.HostDefined, { data: state });
@@ -123,7 +122,7 @@ export function InnerModuleLoading(state: GraphLoadingState, module: AbstractMod
 }
 
 /** https://tc39.es/ecma262/#sec-ContinueModuleLoading */
-export function ContinueModuleLoading(state: GraphLoadingState, result: PlainCompletion<AbstractModuleRecord>) {
+export function ContinueModuleLoading(state: GraphLoadingState, phase: 'source' | 'defer' | 'evaluation', result: PlainCompletion<AbstractModuleRecord>) {
   // 1. If state.[[IsLoading]] is false, return unused.
   if (state.IsLoading === false) {
     return;
@@ -131,8 +130,8 @@ export function ContinueModuleLoading(state: GraphLoadingState, result: PlainCom
   result = EnsureCompletion(result);
   // 2. If moduleCompletion is a normal completion, then
   if (result instanceof NormalCompletion) {
-    // a. Perform InnerModuleLoading(state, moduleCompletion.[[Value]]).
-    InnerModuleLoading(state, result.Value);
+    const loadType = phase === 'source' ? 'single' : 'recursive-load';
+    InnerModuleLoading(state, result.Value, loadType);
     // 3. Else,
   } else {
     // a. Set state.[[IsLoading]] to false.
@@ -160,6 +159,11 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
   index += 1;
   stack.push(module);
   for (const required of module.RequestedModules) {
+    // Source-phase requests are not linked; deferred namespace imports still
+    // need linked modules so their namespace objects can be created.
+    if (required.Phase === 'source') {
+      continue;
+    }
     const requiredModule = GetImportedModule(module, required);
     index = Q(InnerModuleLinking(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
@@ -239,7 +243,9 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
   const evaluationList: ModuleRecord[] = [];
   for (const request of module.RequestedModules) {
     const requiredModule = GetImportedModule(module, request);
-    if (request.Phase === 'defer') {
+    if (request.Phase === 'source') {
+      continue;
+    } else if (request.Phase === 'defer') {
       const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule);
       for (const additionalModule of additionalModules) {
         if (!evaluationList.includes(additionalModule)) {
@@ -332,6 +338,9 @@ export function GatherAsynchronousTransitiveDependencies(module: ModuleRecord, s
   }
   // 8. For each ModuleRequest Record request of module.[[RequestedModules]], do
   for (const request of module.RequestedModules) {
+    if (request.Phase === 'source') {
+      continue;
+    }
     // a. Let requiredModule be GetImportedModule(module, request).
     const requiredModule = GetImportedModule(module, request);
     // b. Let additionalModules be GatherAsynchronousTransitiveDependencies(requiredModule, seen).
@@ -497,11 +506,11 @@ export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModul
   // 2. If payload is a GraphLoadingState Record, then
   if (payload_ instanceof GraphLoadingState) {
     // a. Perform ContinueModuleLoading(payload, result).
-    ContinueModuleLoading(payload_, result);
+    ContinueModuleLoading(payload_, moduleRequest.Phase, result);
     // 3. Else,
   } else {
     // a. Perform ContinueDynamicImport(payload, result).
-    ContinueDynamicImport(payload_, result, moduleRequest.Phase);
+    ContinueDynamicImport(payload_, moduleRequest.Phase, result);
   }
 
   // 4. Return unused.

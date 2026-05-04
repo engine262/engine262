@@ -46,6 +46,7 @@ export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 export { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 export { isErrorObject, type ErrorObject } from './intrinsics/Error.mts';
 export { isShadowRealmObject, type ShadowRealmObject } from './intrinsics/ShadowRealm.mts';
+export { type ModuleSourceObject } from './intrinsics/AbstractModuleSource.mts';
 
 export { isTemporalDurationObject, type TemporalDurationObject } from './intrinsics/Temporal/Duration.mts';
 export { isTemporalInstantObject, type TemporalInstantObject } from './intrinsics/Temporal/Instant.mts';

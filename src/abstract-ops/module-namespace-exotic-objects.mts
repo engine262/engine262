@@ -157,6 +157,8 @@ const InternalMethods = {
     if (!targetEnv) {
       return Throw.ReferenceError('$1 is not defined', P);
     }
+    // https://github.com/tc39/ecma262/pull/3492#issuecomment-4365941050
+    Assert(binding.BindingName !== 'source');
     // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
   },
@@ -298,6 +300,9 @@ export function ReadyForSyncExecution(module: ModuleRecord, seen?: Set<CyclicMod
     return Value.false;
   }
   for (const request of module.RequestedModules) {
+    if (request.Phase === 'source') {
+      continue;
+    }
     const requiredModule = GetImportedModule(module, request);
     if (ReadyForSyncExecution(requiredModule, seen) === Value.false) {
       return Value.false;

@@ -1,6 +1,9 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { JSStringValue } from '../value.mts';
-import { ImportEntriesForModule, ModuleRequests, type ModuleRequestRecord } from './all.mts';
+import {
+  BoundNames,
+  ImportEntriesForModule, ModuleRequests, type ModuleRequestRecord,
+} from './all.mts';
 
 export function ImportEntries(node: ParseNode): ImportEntry[] {
   switch (node.type) {
@@ -17,6 +20,15 @@ export function ImportEntries(node: ParseNode): ImportEntry[] {
       return entries;
     }
     case 'ImportDeclaration':
+      if (node.ImportedBinding) {
+        const module = ModuleRequests(node)[0];
+        const localName = BoundNames(node.ImportedBinding)[0];
+        return [{
+          ModuleRequest: module,
+          ImportName: 'source',
+          LocalName: localName,
+        }];
+      }
       if (node.FromClause) {
         // 1. Let module be the sole element of ModuleRequests of FromClause.
         const module = ModuleRequests(node)[0];
@@ -31,6 +43,6 @@ export function ImportEntries(node: ParseNode): ImportEntry[] {
 
 export interface ImportEntry {
   readonly ModuleRequest: ModuleRequestRecord;
-  readonly ImportName: JSStringValue | 'namespace';
+  readonly ImportName: JSStringValue | 'namespace' | 'source';
   readonly LocalName: JSStringValue;
 }

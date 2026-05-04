@@ -12,8 +12,6 @@ Temporal = temporal
 -await-dictionary
 -explicit-resource-management
 -immutable-arraybuffer
--source-phase-imports
--source-phase-imports-module-source
 
 # Hard to implement
 -Atomics

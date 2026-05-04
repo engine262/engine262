@@ -20,14 +20,14 @@ import {
 // ImportCall : `import` `(` AssignmentExpression `)`
 export function* Evaluate_ImportCall(ImportCall: ParseNode.ImportCall): ValueEvaluator<PromiseObject> {
   Q(surroundingAgent.debugger_cannotPreview);
-  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.OptionsExpression, ImportCall.Phase);
+  return yield* EvaluateImportCall(ImportCall.AssignmentExpression, ImportCall.Phase, ImportCall.OptionsExpression);
 }
 
 /** https://tc39.es/ecma262/#sec-evaluate-import-call */
 function* EvaluateImportCall(
   specifiersExpression: ParseNode.AssignmentExpressionOrHigher,
+  phase: 'source' | 'defer' | 'evaluation',
   optionsExpression: undefined | ParseNode.AssignmentExpressionOrHigher,
-  phase: 'defer' | 'evaluation',
 ): ValueEvaluator<PromiseObject> {
   // 1. Let referrer be ! GetActiveScriptOrModule().
   let referrer: NullValue | AbstractModuleRecord | ScriptRecord | Realm = X(GetActiveScriptOrModule());

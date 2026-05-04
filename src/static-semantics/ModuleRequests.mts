@@ -6,7 +6,7 @@ import { type LoadedModuleRequestRecord } from '#self';
 export interface ModuleRequestRecord {
   readonly Specifier: string;
   readonly Attributes: readonly ImportAttributeRecord[];
-  readonly Phase: 'defer' | 'evaluation';
+  readonly Phase: 'source' | 'defer' | 'evaluation';
 }
 
 // https://tc39.es/ecma262/#importattribute-record

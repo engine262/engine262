@@ -1,6 +1,7 @@
 import { AddRestrictedFunctionProperties, type Intrinsics } from '../abstract-ops/realms.mts';
 import { bootstrapAggregateError } from '../intrinsics/AggregateError.mts';
 import { bootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mts';
+import { bootstrapAbstractModuleSource } from '../intrinsics/AbstractModuleSource.mts';
 import { bootstrapArray } from '../intrinsics/Array.mts';
 import { bootstrapArrayBuffer } from '../intrinsics/ArrayBuffer.mts';
 import { bootstrapArrayBufferPrototype } from '../intrinsics/ArrayBufferPrototype.mts';
@@ -158,6 +159,7 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapAggregateError(realmRec);
 
   bootstrapFunction(realmRec);
+  bootstrapAbstractModuleSource(realmRec);
 
   bootstrapIteratorPrototype(realmRec);
   bootstrapIterator(realmRec);
