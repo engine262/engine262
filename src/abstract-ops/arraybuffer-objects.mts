@@ -17,7 +17,8 @@ import {
   type Mutable,
   Assert, OrdinaryCreateFromConstructor,
   isNonNegativeInteger, CreateByteDataBlock,
-  SameValue, CopyDataBlockBytes,
+  CopyDataBlockBytes,
+  RequireInternalSlot,
   F,
   Z,
   type FunctionObject,
@@ -33,7 +34,7 @@ import {
 export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferData: DataBlock | null;
   readonly ArrayBufferByteLength: number;
-  readonly ArrayBufferDetachKey: Value;
+  readonly ArrayBufferDetachKey: unknown;
 }
 
 export interface ResizableArrayBufferObject extends ArrayBufferObject {
@@ -87,7 +88,46 @@ export function ArrayBufferByteLength(arrayBuffer: ArrayBufferObject, _order: 's
   return arrayBuffer.ArrayBufferByteLength;
 }
 
-// TODO: ArrayBufferCopyAndDetach
+/** https://tc39.es/ecma262/#sec-arraybuffercopyanddetach */
+export function* ArrayBufferCopyAndDetach(
+  _arrayBuffer: Value,
+  newLength: Value,
+  preserveResizability: 'preserve-resizability' | 'fixed-length',
+): ValueEvaluator<ArrayBufferObject> {
+  Q(RequireInternalSlot(_arrayBuffer, 'ArrayBufferData'));
+  const arrayBuffer = _arrayBuffer as Mutable<ArrayBufferObject>;
+  if (IsSharedArrayBuffer(arrayBuffer)) {
+    return Throw.TypeError('Attempt to access shared ArrayBuffer');
+  }
+
+  let newByteLength;
+  if (newLength === Value.undefined) {
+    newByteLength = arrayBuffer.ArrayBufferByteLength;
+  } else {
+    newByteLength = Q(yield* ToIndex(newLength));
+  }
+
+  if (IsDetachedBuffer(arrayBuffer)) {
+    return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  }
+
+  let newMaxByteLength;
+  if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
+    newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
+  }
+
+  if (arrayBuffer.ArrayBufferDetachKey) {
+    return Throw.TypeError('Cannot transfer detached ArrayBuffer');
+  }
+
+  const newBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength));
+  const copyLength = Math.min(newByteLength, arrayBuffer.ArrayBufferByteLength);
+  const fromBlock = arrayBuffer.ArrayBufferData!;
+  const toBlock = newBuffer.ArrayBufferData!;
+  CopyDataBlockBytes(toBlock, 0, fromBlock, 0, copyLength);
+  X(DetachArrayBuffer(arrayBuffer));
+  return newBuffer;
+}
 
 /** https://tc39.es/ecma262/#sec-isdetachedbuffer */
 export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
@@ -98,7 +138,7 @@ export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
-export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
+export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: unknown) {
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(!IsSharedArrayBuffer(arrayBuffer));
   // 3. If key is not present, set key to undefined.
@@ -106,8 +146,8 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
     key = Value.undefined;
   }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (!SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
-    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
+  if (arrayBuffer.ArrayBufferDetachKey !== key) {
+    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', String(key));
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.

@@ -15,6 +15,7 @@ import {
   ToIndex,
   HostResizeArrayBuffer,
   IsFixedLengthArrayBuffer,
+  ArrayBufferCopyAndDetach,
   Realm,
   Throw,
 } from '#self';
@@ -181,6 +182,16 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   return newO;
 }
 
+/** https://tc39.es/ecma262/#sec-arraybuffer.prototype.transfer */
+function* ArrayBufferProto_transfer([newLength = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  return yield* ArrayBufferCopyAndDetach(thisValue, newLength, 'preserve-resizability');
+}
+
+/** https://tc39.es/ecma262/#sec-arraybuffer.prototype.transfertofixedlength */
+function* ArrayBufferProto_transferToFixedLength([newLength = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  return yield* ArrayBufferCopyAndDetach(thisValue, newLength, 'fixed-length');
+}
+
 export function bootstrapArrayBufferPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
@@ -189,6 +200,8 @@ export function bootstrapArrayBufferPrototype(realmRec: Realm) {
     ['resizable', [ArrayBufferProto_resizable]],
     ['resize', ArrayBufferProto_resize, 1],
     ['slice', ArrayBufferProto_slice, 2],
+    ['transfer', ArrayBufferProto_transfer, 0],
+    ['transferToFixedLength', ArrayBufferProto_transferToFixedLength, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
 
   realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
