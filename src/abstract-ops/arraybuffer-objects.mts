@@ -17,6 +17,7 @@ import {
   type Mutable,
   Assert, OrdinaryCreateFromConstructor,
   isNonNegativeInteger, CreateByteDataBlock,
+  SameValue,
   CopyDataBlockBytes,
   RequireInternalSlot,
   F,
@@ -34,7 +35,7 @@ import {
 export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferData: DataBlock | null;
   readonly ArrayBufferByteLength: number;
-  readonly ArrayBufferDetachKey: unknown;
+  readonly ArrayBufferDetachKey: Value;
 }
 
 export interface ResizableArrayBufferObject extends ArrayBufferObject {
@@ -116,8 +117,8 @@ export function* ArrayBufferCopyAndDetach(
     newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
   }
 
-  if (arrayBuffer.ArrayBufferDetachKey) {
-    return Throw.TypeError('Cannot transfer detached ArrayBuffer');
+  if (arrayBuffer.ArrayBufferDetachKey !== Value.undefined) {
+    return Throw.TypeError('Cannot transfer ArrayBuffer with custom detach key');
   }
 
   const newBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength));
@@ -138,7 +139,7 @@ export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
-export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: unknown) {
+export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(!IsSharedArrayBuffer(arrayBuffer));
   // 3. If key is not present, set key to undefined.
@@ -146,8 +147,8 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
     key = Value.undefined;
   }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (arrayBuffer.ArrayBufferDetachKey !== key) {
-    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', String(key));
+  if (!SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
+    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
@@ -195,8 +196,11 @@ export function HostResizeArrayBuffer(buffer: ArrayBufferObject, newByteLength: 
       return 'unhandled';
     }
   });
-  const result = f?.(buffer, newByteLength);
-  return result ?? 'unhandled';
+  const result = f?.(buffer, newByteLength) ?? 'unhandled';
+  if (result === 'handled') {
+    (buffer as Mutable<ArrayBufferObject>).ArrayBufferByteLength = newByteLength;
+  }
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-isfixedlengtharraybuffer */

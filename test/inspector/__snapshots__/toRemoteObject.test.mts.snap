@@ -425,7 +425,7 @@ exports[`array buffer > new ArrayBuffer(0) 1`] = `
 }
 `;
 
-exports[`array buffer > new ArrayBuffer(0) accessor properties (prototype) 1`] = `"byteLength, __proto__"`;
+exports[`array buffer > new ArrayBuffer(0) accessor properties (prototype) 1`] = `"byteLength, detached, maxByteLength, resizable, __proto__"`;
 
 exports[`array buffer > new ArrayBuffer(0) accessor properties 1`] = `[]`;
 
@@ -433,7 +433,7 @@ exports[`array buffer > new ArrayBuffer(0) non-indexed owned properties (private
 
 exports[`array buffer > new ArrayBuffer(0) non-indexed owned properties 1`] = `[]`;
 
-exports[`array buffer > new ArrayBuffer(0) non-indexed properties (prototype) 1`] = `"byteLength, slice, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array buffer > new ArrayBuffer(0) non-indexed properties (prototype) 1`] = `"byteLength, detached, maxByteLength, resizable, resize, slice, transfer, transferToFixedLength, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array buffer > new ArrayBuffer(0) properties 1`] = `
 {
@@ -464,7 +464,7 @@ exports[`array buffer > new ArrayBuffer(10) 1`] = `
 {
   "className": "ArrayBuffer",
   "description": "ArrayBuffer(10)",
-  "objectId": "default:20",
+  "objectId": "default:26",
   "preview": {
     "description": "ArrayBuffer(10)",
     "overflow": false,
@@ -488,7 +488,7 @@ exports[`array buffer > new ArrayBuffer(10) 1`] = `
 }
 `;
 
-exports[`array buffer > new ArrayBuffer(10) accessor properties (prototype) 1`] = `"byteLength, __proto__"`;
+exports[`array buffer > new ArrayBuffer(10) accessor properties (prototype) 1`] = `"byteLength, detached, maxByteLength, resizable, __proto__"`;
 
 exports[`array buffer > new ArrayBuffer(10) accessor properties 1`] = `[]`;
 
@@ -496,7 +496,7 @@ exports[`array buffer > new ArrayBuffer(10) non-indexed owned properties (privat
 
 exports[`array buffer > new ArrayBuffer(10) non-indexed owned properties 1`] = `[]`;
 
-exports[`array buffer > new ArrayBuffer(10) non-indexed properties (prototype) 1`] = `"byteLength, slice, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array buffer > new ArrayBuffer(10) non-indexed properties (prototype) 1`] = `"byteLength, detached, maxByteLength, resizable, resize, slice, transfer, transferToFixedLength, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array buffer > new ArrayBuffer(10) properties 1`] = `
 {
@@ -527,7 +527,7 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x 1`] = `
 {
   "className": "ArrayBuffer",
   "description": "ArrayBuffer(10)",
-  "objectId": "default:21",
+  "objectId": "default:27",
   "preview": {
     "description": "ArrayBuffer(10)",
     "overflow": false,
@@ -556,7 +556,7 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x 1`] = `
 }
 `;
 
-exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x accessor properties (prototype) 1`] = `"byteLength, __proto__"`;
+exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x accessor properties (prototype) 1`] = `"byteLength, detached, maxByteLength, resizable, __proto__"`;
 
 exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x accessor properties 1`] = `[]`;
 
@@ -579,7 +579,7 @@ exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x non-indexed owne
 ]
 `;
 
-exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x non-indexed properties (prototype) 1`] = `"byteLength, slice, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x non-indexed properties (prototype) 1`] = `"byteLength, detached, maxByteLength, resizable, resize, slice, transfer, transferToFixedLength, Symbol(Symbol.toStringTag), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array buffer > var x = new ArrayBuffer(10); x.a = 1; x properties 1`] = `
 {
