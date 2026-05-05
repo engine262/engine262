@@ -193,11 +193,7 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
       key = key.stringValue();
     }
     const value = typeof key === 'string' ? Value(key) : key;
-    if (this.#map.getOrInsertComputed) return this.#map.getOrInsertComputed(key, () => defaultValueFn(value));
-    if (!this.#map.has(key)) {
-      this.#map.set(key, defaultValueFn(value));
-    }
-    return this.#map.get(key)!;
+    return this.#map.getOrInsertComputed(key, () => defaultValueFn(value));
   }
 
   declare [Symbol.iterator]: () => MapIterator<[PropertyKeyValue, V]>;

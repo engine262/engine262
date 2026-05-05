@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  DataBlock, Value, type Arguments, type FunctionCallContext,
+  Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -9,6 +9,12 @@ import {
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
   F,
   type ArrayBufferObject,
+  type ResizableArrayBufferObject,
+  type Mutable,
+  CreateByteDataBlock,
+  ToIndex,
+  HostResizeArrayBuffer,
+  IsFixedLengthArrayBuffer,
   Realm,
   Throw,
 } from '#self';
@@ -31,6 +37,70 @@ function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCa
   const length = O.ArrayBufferByteLength;
   // 6. Return length.
   return F(length);
+}
+
+/** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.detached */
+function ArrayBufferProto_detached(_args: Arguments, { thisValue }: FunctionCallContext) {
+  const O = thisValue as ArrayBufferObject;
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O)) {
+    return Throw.TypeError('Invalid call to ArrayBuffer.prototype.detached on shared ArrayBuffer');
+  }
+  return Value(IsDetachedBuffer(O));
+}
+
+/** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.maxbytelength */
+function ArrayBufferProto_maxByteLength(_args: Arguments, { thisValue }: FunctionCallContext) {
+  const O = thisValue as ArrayBufferObject;
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O)) {
+    return Throw.TypeError('Invalid call to ArrayBuffer.prototype.maxByteLength on shared ArrayBuffer');
+  }
+  if (IsDetachedBuffer(O)) {
+    return F(+0);
+  }
+  if (IsFixedLengthArrayBuffer(O)) {
+    return F(O.ArrayBufferByteLength);
+  }
+  return F((O as ResizableArrayBufferObject).ArrayBufferMaxByteLength);
+}
+
+/** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.resizable */
+function ArrayBufferProto_resizable(_args: Arguments, { thisValue }: FunctionCallContext) {
+  const O = thisValue as ArrayBufferObject;
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O)) {
+    return Throw.TypeError('Invalid call to ArrayBuffer.prototype.resizable on shared ArrayBuffer');
+  }
+  return Value(!IsFixedLengthArrayBuffer(O));
+}
+
+/** https://tc39.es/ecma262/#sec-arraybuffer.prototype.resize */
+function* ArrayBufferProto_resize([newLength = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  const obj = thisValue as Mutable<ResizableArrayBufferObject>;
+  Q(RequireInternalSlot(obj, 'ArrayBufferMaxByteLength'));
+  if (IsSharedArrayBuffer(obj)) {
+    return Throw.TypeError('Invalid call to ArrayBuffer.prototype.resize on shared ArrayBuffer');
+  }
+  const newByteLength = Q(yield* ToIndex(newLength));
+  if (IsDetachedBuffer(obj)) {
+    return Throw.TypeError('Invalid call to ArrayBuffer.prototype.resize on detached ArrayBuffer');
+  }
+  if (newByteLength > obj.ArrayBufferMaxByteLength) {
+    return Throw.RangeError('Cannot resize ArrayBuffer to bigger than maxByteLength');
+  }
+  Q(surroundingAgent.debugger_cannotPreview);
+  const hostHandled = HostResizeArrayBuffer(obj, newByteLength);
+  if (hostHandled === 'handled') {
+    return Value.undefined;
+  }
+  const oldBlock = obj.ArrayBufferData!;
+  const newBlock = Q(CreateByteDataBlock(newByteLength));
+  const copyLength = Math.min(newByteLength, obj.ArrayBufferByteLength);
+  CopyDataBlockBytes(newBlock, 0, oldBlock, 0, copyLength);
+  obj.ArrayBufferData = newBlock;
+  obj.ArrayBufferByteLength = newByteLength;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
@@ -101,19 +171,23 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   if (IsDetachedBuffer(O)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
-  // 20. Let fromBuf be O.[[ArrayBufferData]].
-  const fromBuf = O.ArrayBufferData as DataBlock;
-  // 21. Let toBuf be new.[[ArrayBufferData]].
-  const toBuf = newO.ArrayBufferData as DataBlock;
-  // 22. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen).
-  CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen);
-  // 23. Return new.
+  const fromBuf = O.ArrayBufferData!;
+  const toBuf = newO.ArrayBufferData!;
+  const currentLen = O.ArrayBufferByteLength;
+  if (first < currentLen) {
+    const count = Math.min(newLen, currentLen - first);
+    CopyDataBlockBytes(toBuf, 0, fromBuf, first, count);
+  }
   return newO;
 }
 
 export function bootstrapArrayBufferPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
+    ['detached', [ArrayBufferProto_detached]],
+    ['maxByteLength', [ArrayBufferProto_maxByteLength]],
+    ['resizable', [ArrayBufferProto_resizable]],
+    ['resize', ArrayBufferProto_resize, 1],
     ['slice', ArrayBufferProto_slice, 2],
   ], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
 

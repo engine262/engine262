@@ -45,7 +45,6 @@ export function MakeDataViewWithBufferWitnessRecord(obj: DataViewObject, order: 
 export function GetViewByteLength(viewRecord: DataViewWithBufferWitnessRecord): number {
   Assert(!IsViewOutOfBounds(viewRecord));
   const view = viewRecord.Object;
-  // @ts-expect-error
   if (view.ByteLength !== 'auto') {
     return view.ByteLength;
   }
@@ -67,7 +66,6 @@ export function IsViewOutOfBounds(viewRecord: DataViewWithBufferWitnessRecord): 
   Assert(typeof bufferByteLength === 'number' && bufferByteLength >= 0);
   const byteOffsetStart = view.ByteOffset;
   let byteOffsetEnd;
-  // @ts-expect-error
   if (view.ByteLength === 'auto') {
     byteOffsetEnd = bufferByteLength;
   } else {

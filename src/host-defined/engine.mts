@@ -19,6 +19,7 @@ import {
   Realm,
   isEvaluator,
   type EpochNanoseconds,
+  type ArrayBufferObject,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PromiseObject } from '../intrinsics/Promise.mts';
@@ -123,6 +124,8 @@ export interface HostHooks {
   HostLoadImportedModule?(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: HostLoadImportedModulePayloadOpaque): void;
   /** https://tc39.es/ecma262/#sec-host-promise-rejection-tracker */
   HostPromiseRejectionTrackers?: Set<HostPromiseRejectionTracker>;
+  /** https://tc39.es/ecma262/#sec-hostresizearraybuffer */
+  HostResizeArrayBuffer?(buffer: ArrayBufferObject, newByteLength: number): 'handled' | 'unhandled';
   /** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
   HostSystemUTCEpochNanoseconds?(global: ObjectValue): EpochNanoseconds;
 }
@@ -133,6 +136,7 @@ export interface DebuggerPauseReason {
 }
 
 export interface AgentHostDefined {
+  resizableArrayBufferMaxByteLength?: number;
   hostHooks?: HostHooks;
   hasSourceTextAvailable?(f: FunctionObject): void;
   ensureCanCompileStrings?(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void>;

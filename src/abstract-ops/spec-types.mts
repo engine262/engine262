@@ -9,7 +9,7 @@ import {
   Value,
   BooleanValue,
 } from '../value.mts';
-import { NormalCompletion, Q, X } from '../completion.mts';
+import { Q, X } from '../completion.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import type { Decimal } from '../host-defined/decimal.mts';
 import {
@@ -209,15 +209,24 @@ export function CompletePropertyDescriptor(Desc: Descriptor) {
   return Desc;
 }
 
+/** @internal */
+export let hostSupportResizableArrayBuffer = false;
+
 /** https://tc39.es/ecma262/#sec-createbytedatablock */
-export function CreateByteDataBlock(size: number) {
+export function CreateByteDataBlock(size: number, _notInSpecMaxByteLength?: number | undefined) {
   Assert(isNonNegativeInteger(size));
   if (size > 2 ** 53 - 1) {
     return Throw.RangeError('Invalid length');
   }
   let db;
   try {
-    db = new DataBlock(size);
+    const buffer = new ArrayBuffer(size, {
+      get maxByteLength() {
+        hostSupportResizableArrayBuffer = true;
+        return _notInSpecMaxByteLength;
+      },
+    });
+    db = new DataBlock(buffer);
   } catch (err) {
     return Throw.RangeError('Cannot allocate memory');
   }
@@ -240,5 +249,4 @@ export function CopyDataBlockBytes(toBlock: DataBlock, toIndex: number, fromBloc
     fromIndex += 1;
     count -= 1;
   }
-  return NormalCompletion(undefined);
 }

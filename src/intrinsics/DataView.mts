@@ -6,6 +6,8 @@ import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   IsDetachedBuffer,
+  ArrayBufferByteLength,
+  IsFixedLengthArrayBuffer,
   OrdinaryCreateFromConstructor,
   ToIndex,
   RequireInternalSlot,
@@ -14,12 +16,14 @@ import {
   type ArrayBufferObject,
   Realm,
   Throw,
+  Assert,
 } from '#self';
 
+/** https://tc39.es/ecma262/#sec-dataview-objects */
 export interface DataViewObject extends OrdinaryObject {
   readonly DataView: string;
   readonly ViewedArrayBuffer: Value;
-  readonly ByteLength: number;
+  readonly ByteLength: number | 'auto';
   readonly ByteOffset: number;
 }
 export function isDataViewObject(V: Value): V is DataViewObject {
@@ -27,51 +31,46 @@ export function isDataViewObject(V: Value): V is DataViewObject {
 }
 /** https://tc39.es/ecma262/#sec-dataview-constructor */
 function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
-  // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('DataView cannot be invoked without new');
   }
-  // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
   Q(RequireInternalSlot(buffer, 'ArrayBufferData'));
-  // 3. Let offset be ? ToIndex(byteOffset).
   const offset = Q(yield* ToIndex(byteOffset));
-  // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   __ts_cast__<ArrayBufferObject>(buffer);
   if (IsDetachedBuffer(buffer)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
-  // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-  const bufferByteLength = (buffer).ArrayBufferByteLength;
-  // 6. If offset > bufferByteLength, throw a RangeError exception.
+  let bufferByteLength = ArrayBufferByteLength(buffer, 'seq-cst');
   if (offset > bufferByteLength) {
     return Throw.RangeError('Offset is outside the bounds of the DataView');
   }
-  let viewByteLength;
-  // 7. If byteLength is undefined, then
+  const bufferIsFixedLength = IsFixedLengthArrayBuffer(buffer);
+  let viewByteLength: DataViewObject['ByteLength'];
   if (byteLength === Value.undefined) {
-    // a. Let viewByteLength be bufferByteLength - offset.
-    viewByteLength = bufferByteLength - offset;
+    viewByteLength = bufferIsFixedLength ? bufferByteLength - offset : 'auto';
   } else {
-    // a. Let viewByteLength be ? ToIndex(byteLength).
     viewByteLength = Q(yield* ToIndex(byteLength));
-    // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
     if (offset + viewByteLength > bufferByteLength) {
       return Throw.RangeError('Offset is outside the bounds of the DataView');
     }
   }
-  // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
   const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset'])) as Mutable<DataViewObject>;
-  // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
-  // 11. Set O.[[ViewedArrayBuffer]] to buffer.
+  bufferByteLength = ArrayBufferByteLength(buffer, 'seq-cst');
+  if (offset > bufferByteLength) {
+    return Throw.RangeError('Offset is outside the bounds of the DataView');
+  }
+  if (byteLength !== Value.undefined) {
+    Assert(typeof viewByteLength === 'number');
+    if (offset + viewByteLength > bufferByteLength) {
+      return Throw.RangeError('Offset is outside the bounds of the DataView');
+    }
+  }
   O.ViewedArrayBuffer = buffer;
-  // 12. Set O.[[ByteLength]] to viewByteLength.
   O.ByteLength = viewByteLength;
-  // 13. Set O.[[ByteOffset]] to offset.
   O.ByteOffset = offset;
-  // 14. Return O.
   return O;
 }
 

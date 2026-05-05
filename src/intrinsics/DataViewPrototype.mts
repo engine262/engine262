@@ -4,12 +4,13 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import type { DataViewObject } from './DataView.mts';
 import {
   Assert,
+  GetViewByteLength,
   GetViewValue,
+  IsViewOutOfBounds,
+  MakeDataViewWithBufferWitnessRecord,
   SetViewValue,
-  IsDetachedBuffer,
   RequireInternalSlot,
   F,
-  type ArrayBufferObject,
   Realm,
   Throw,
 } from '#self';
@@ -36,15 +37,11 @@ function* DataViewProto_byteLength(_args: Arguments, { thisValue }: FunctionCall
   Q(RequireInternalSlot(O, 'DataView'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
-  // 4. Let buffer be O.[[ViewedArrayBuffer]].
-  const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
-  // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer)) {
-    return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const viewRecord = MakeDataViewWithBufferWitnessRecord(O, 'seq-cst');
+  if (IsViewOutOfBounds(viewRecord)) {
+    return Throw.TypeError('Offset is out of bound');
   }
-  // 6. Let size be O.[[ByteLength]].
-  const size = O.ByteLength;
-  // 7. Return 𝔽(size).
+  const size = GetViewByteLength(viewRecord);
   return F(size);
 }
 
@@ -56,15 +53,11 @@ function* DataViewProto_byteOffset(_args: Arguments, { thisValue }: FunctionCall
   Q(RequireInternalSlot(O, 'DataView'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
-  // 4. Let buffer be O.[[ViewedArrayBuffer]].
-  const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
-  // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer)) {
-    return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const viewRecord = MakeDataViewWithBufferWitnessRecord(O, 'seq-cst');
+  if (IsViewOutOfBounds(viewRecord)) {
+    return Throw.TypeError('Offset is out of bound');
   }
-  // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
-  // 7. Return 𝔽(offset).
   return F(offset);
 }
 

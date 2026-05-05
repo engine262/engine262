@@ -7,7 +7,6 @@ import { PropertyKeyMap } from './utils/container.mts';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
 import type { PlainEvaluator } from './evaluator.mts';
 import {
-  Assert,
   OrdinaryDefineOwnProperty,
   OrdinaryDelete,
   OrdinaryGet,
@@ -945,16 +944,7 @@ export @callable() class Descriptor {
   }
 }
 
-export class DataBlock extends Uint8Array {
-  constructor(sizeOrBuffer: number | ArrayBuffer, byteOffset?: number, length?: number) {
-    if (sizeOrBuffer instanceof ArrayBuffer) {
-      super(sizeOrBuffer, byteOffset, length);
-    } else {
-      Assert(typeof sizeOrBuffer === 'number');
-      super(sizeOrBuffer);
-    }
-  }
-}
+export class DataBlock extends Uint8Array {}
 
 /** https://tc39.es/ecma262/#sec-sametype */
 export function SameType(x: Value, y: Value) {

@@ -5,20 +5,19 @@ import { Q } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   ToIndex, AllocateArrayBuffer, type FunctionObject,
+  GetArrayBufferMaxByteLengthOption,
   Throw,
   Realm,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-arraybuffer-length */
-function* ArrayBufferConstructor(this: FunctionObject, [length = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
-  // 1. If NewTarget is undefined, throw a TypeError exception.
+function* ArrayBufferConstructor(this: FunctionObject, [length = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('ArrayBuffer cannot be invoked without new');
   }
-  // 2. Let byteLength be ? ToIndex(length).
   const byteLength = Q(yield* ToIndex(length));
-  // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
-  return Q(yield* AllocateArrayBuffer(NewTarget, byteLength));
+  const requestedMaxByteLength = Q(yield* GetArrayBufferMaxByteLengthOption(options));
+  return Q(yield* AllocateArrayBuffer(NewTarget, byteLength, requestedMaxByteLength));
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.isview */

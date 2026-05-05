@@ -17,7 +17,6 @@ Temporal = temporal
 -Atomics
 -Atomics.pause
 -Atomics.waitAsync
--resizable-arraybuffer
 -SharedArrayBuffer
 -tail-call-optimization
 
