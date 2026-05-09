@@ -44,7 +44,6 @@ import {
   TemporalDurationFromInternal,
   TemporalDurationToString,
   TemporalUnit,
-  TemporalUnitCategory,
   Throw,
   ToInternalDurationRecord,
   ToInternalDurationRecordWith24HourDays,
@@ -56,6 +55,7 @@ import {
   ValidateTemporalUnitValue,
   Value,
   X,
+  isDateUnit,
   ZeroDateDuration,
   type Arguments,
   type FunctionCallContext,
@@ -250,7 +250,7 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
   if (maximum !== 'unset') {
     Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false));
   }
-  if (roundingIncrement > 1 && largestUnit !== smallestUnit && TemporalUnitCategory(smallestUnit) === 'date') {
+  if (roundingIncrement > 1 && largestUnit !== smallestUnit && isDateUnit(smallestUnit)) {
     return Throw.RangeError('roundingIncrement must be 1 when rounding a date unit to a larger unit');
   }
 
@@ -261,7 +261,7 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
     const relativeEpochNs = zonedRelativeTo.EpochNanoseconds;
     const targetEpochNs = Q(AddZonedDateTime(relativeEpochNs, timeZone, calendar, internalDuration, 'constrain'));
     internalDuration = Q(DifferenceZonedDateTimeWithRounding(relativeEpochNs, targetEpochNs, timeZone, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode));
-    if (TemporalUnitCategory(largestUnit) === 'date') {
+    if (isDateUnit(largestUnit)) {
       largestUnit = TemporalUnit.Hour;
     }
     return Q(yield* TemporalDurationFromInternal(internalDuration, largestUnit));

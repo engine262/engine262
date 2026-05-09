@@ -12,7 +12,7 @@ import {
 } from './addition.mts';
 import { CalendarDateAdd, type CalendarType, CalendarDateUntil } from './calendar.mts';
 import {
-  TemporalUnit, TemporalUnitCategory, RoundNumberToIncrement, ISODateToEpochDays, type TimeUnit, Table21_LengthInNanoSeconds, type DateUnit, GetUnsignedRoundingMode, ApplyUnsignedRoundingMode, IsCalendarUnit, __IsTimeUnit, LargerOfTwoTemporalUnits, __IsDateUnit, FormatFractionalSeconds,
+  TemporalUnit, isDateUnit, RoundNumberToIncrement, ISODateToEpochDays, type TimeUnit, Table21_LengthInNanoSeconds, type DateUnit, GetUnsignedRoundingMode, ApplyUnsignedRoundingMode, IsCalendarUnit, isTimeUnit, LargerOfTwoTemporalUnits, FormatFractionalSeconds,
   type Float64RepresentableInteger,
   type EpochNanoseconds,
 } from './temporal.mts';
@@ -88,7 +88,7 @@ export function TemporalDurationFromInternal(internalDuration: InternalDurationR
   let microseconds = 0n;
   const sign = TimeDurationSign(internalDuration.Time);
   let nanoseconds = abs(internalDuration.Time);
-  if (TemporalUnitCategory(largestUnit) === 'date') {
+  if (isDateUnit(largestUnit)) {
     microseconds = floorDiv(nanoseconds, 1000n);
     nanoseconds = modulo(nanoseconds, 1000n);
     milliseconds = floorDiv(microseconds, 1000n);
@@ -798,7 +798,7 @@ export function NudgeToDayOrTime(
   const nudgedEpochNs = AddTimeDurationToEpochNanoseconds(diffTime, destEpochNs);
   let days = 0n;
   let remainder = roundedTime;
-  if (TemporalUnitCategory(largestUnit) === 'date') {
+  if (isDateUnit(largestUnit)) {
     days = roundedWholeDays;
     remainder = X(AddTimeDuration(roundedTime, TimeDurationFromComponents(-roundedWholeDays * BigInt(HoursPerDay), 0n, 0n, 0n, 0n, 0n)));
   }
@@ -905,16 +905,16 @@ export function RoundRelativeDuration(
     const record = Q(NudgeToCalendarUnit(sign, duration, originEpochNs, destEpochNs, isoDateTime, timeZone, calendar, increment, smallestUnit as DateUnit, roundingMode));
     nudgeResult = record.NudgeResult;
   } else if (timeZone !== undefined) {
-    Assert(__IsTimeUnit(smallestUnit));
+    Assert(isTimeUnit(smallestUnit));
     nudgeResult = Q(NudgeToZonedTime(sign, duration, isoDateTime, timeZone, calendar, increment, smallestUnit, roundingMode));
   } else {
-    Assert(__IsTimeUnit(smallestUnit) || smallestUnit === TemporalUnit.Day);
+    Assert(isTimeUnit(smallestUnit) || smallestUnit === TemporalUnit.Day);
     nudgeResult = Q(NudgeToDayOrTime(duration, destEpochNs, largestUnit, increment, smallestUnit, roundingMode));
   }
   duration = nudgeResult.Duration;
   if (nudgeResult.DidExpandCalendarUnit && smallestUnit !== TemporalUnit.Week) {
     const startUnit = LargerOfTwoTemporalUnits(smallestUnit, TemporalUnit.Day);
-    Assert(__IsDateUnit(startUnit));
+    Assert(isDateUnit(startUnit));
     duration = Q(BubbleRelativeDuration(sign, duration, nudgeResult.NudgedEpochNs, isoDateTime, timeZone, calendar, largestUnit, startUnit));
   }
   return duration;

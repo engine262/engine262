@@ -16,7 +16,6 @@ import {
   ValidateTemporalRoundingIncrement,
   ValidateTemporalUnitValue,
   type TimeUnit,
-  __IsTimeUnit,
 } from '../../abstract-ops/temporal/temporal.mts';
 import {
   CalendarEquals, CalendarISOToDate, CalendarMergeFields, PrepareCalendarFields,
