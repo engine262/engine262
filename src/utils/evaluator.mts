@@ -1,5 +1,5 @@
 import {
-  type Evaluator, ExecutionContext, type EvaluatorNextType, Value, OutOfRange,
+  type Evaluator, ExecutionContext, type EvaluatorNextType, OutOfRange,
   type YieldOrAwaitEvaluator,
 } from '#self';
 

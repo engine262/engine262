@@ -207,73 +207,64 @@ export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<n
   return truncate(R(number));
 }
 
+/** https://tc39.es/ecma262/#sec-tofixedsizeinteger */
+export function ToFixedSizeInteger(int: number, signed: 'signed' | 'unsigned', bitWidth: number): number;
+export function ToFixedSizeInteger(int: bigint, signed: 'signed' | 'unsigned', bitWidth: bigint): bigint;
+export function ToFixedSizeInteger(
+  int: number | bigint,
+  signed: 'signed' | 'unsigned',
+  bitWidth: number | bigint,
+): number | bigint {
+  const one = (typeof int === 'number' ? 1 : 1n) as bigint;
+  const two = (typeof int === 'number' ? 2 : 2n) as bigint;
+  if (int === Infinity || int === -Infinity) {
+    return 0;
+  }
+  const modulus = two ** (bitWidth as bigint);
+  let fixedInt = modulo(int as bigint, modulus);
+  if (signed === 'signed') {
+    const signBit = two ** (bitWidth as bigint - one);
+    if (fixedInt >= signBit) {
+      fixedInt -= modulus;
+    }
+  }
+  return fixedInt;
+}
+
 /** https://tc39.es/ecma262/#sec-toint32 */
 export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
-  if (!Number.isFinite(int)) return F(0);
-  // 4. Let int32bit be int modulo 2^32.
-  const int32bit = modulo(int, 2 ** 32);
-  // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
-  if (int32bit >= (2 ** 31)) {
-    return F(int32bit - (2 ** 32));
-  }
-  return F(int32bit);
+  return F(ToFixedSizeInteger(int, 'signed', 32));
 }
 
 /** https://tc39.es/ecma262/#sec-touint32 */
 export function* ToUint32(argument: Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
-  if (!Number.isFinite(int)) return F(0);
-  // 4. Let int32bit be int modulo 2^32.
-  const int32bit = modulo(int, 2 ** 32);
-  // 5. Return 𝔽(int32bit).
-  return F(int32bit);
+  return F(ToFixedSizeInteger(int, 'unsigned', 32));
 }
 
 /** https://tc39.es/ecma262/#sec-toint16 */
 export function* ToInt16(argument: Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
-  if (!Number.isFinite(int)) return F(0);
-  // 4. Let int16bit be int modulo 2^16.
-  const int16bit = modulo(int, 2 ** 16);
-  // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
-  if (int16bit >= (2 ** 15)) {
-    return F(int16bit - (2 ** 16));
-  }
-  return F(int16bit);
+  return F(ToFixedSizeInteger(int, 'signed', 16));
 }
 
 /** https://tc39.es/ecma262/#sec-touint16 */
 export function* ToUint16(argument: Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
-  if (!Number.isFinite(int)) return F(0);
-  // 4. Let int16bit be int modulo 2^16.
-  const int16bit = modulo(int, 2 ** 16);
-  // 5. Return 𝔽(int16bit).
-  return F(int16bit);
+  return F(ToFixedSizeInteger(int, 'unsigned', 16));
 }
 
 /** https://tc39.es/ecma262/#sec-toint8 */
 export function* ToInt8(argument: Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
-  if (!Number.isFinite(int)) return F(0);
-  // 4. Let int8bit be int modulo 2^8.
-  const int8bit = modulo(int, 2 ** 8);
-  // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
-  if (int8bit >= (2 ** 7)) {
-    return F(int8bit - (2 ** 8));
-  }
-  return F(int8bit);
+  return F(ToFixedSizeInteger(int, 'signed', 8));
 }
 
 /** https://tc39.es/ecma262/#sec-touint8 */
 export function* ToUint8(argument: Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
-  if (!Number.isFinite(int)) return F(0);
-  // 4. Let int8bit be int modulo 2^8.
-  const int8bit = modulo(int, 2 ** 8);
-  // 5. Return 𝔽(int8bit).
-  return F(int8bit);
+  return F(ToFixedSizeInteger(int, 'unsigned', 8));
 }
 
 /** https://tc39.es/ecma262/#sec-touint8clamp */
@@ -360,25 +351,14 @@ export function StringToBigInt(argument: JSStringValue) {
 
 /** https://tc39.es/ecma262/#sec-tobigint64 */
 export function* ToBigInt64(argument: Value): ValueEvaluator<BigIntValue> {
-  // 1. Let n be ? ToBigInt(argument).
-  const n = Q(yield* (ToBigInt(argument)));
-  // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = modulo(R(n), BigInt(2n ** 64n));
-  // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
-  if (int64bit >= 2n ** 63n) {
-    return Z(int64bit - (2n ** 64n));
-  }
-  return Z(int64bit);
+  const int = R(Q(yield* ToBigInt(argument)));
+  return Z(ToFixedSizeInteger(int, 'signed', 64n));
 }
 
 /** https://tc39.es/ecma262/#sec-tobiguint64 */
 export function* ToBigUint64(argument: Value): ValueEvaluator<BigIntValue> {
-  // 1. Let n be ? ToBigInt(argument).
-  const n = Q(yield* (ToBigInt(argument)));
-  // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = R(n) % (2n ** 64n);
-  // 3. Return ℤ(int64bit).
-  return Z(int64bit);
+  const int = R(Q(yield* ToBigInt(argument)));
+  return Z(ToFixedSizeInteger(int, 'unsigned', 64n));
 }
 
 /** https://tc39.es/ecma262/#sec-tostring */
