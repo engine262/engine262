@@ -1,5 +1,6 @@
 import {
-  type Evaluator, ExecutionContext, type EvaluatorNextType, type YieldEvaluator, Value, OutOfRange,
+  type Evaluator, ExecutionContext, type EvaluatorNextType, Value, OutOfRange,
+  type YieldOrAwaitEvaluator,
 } from '#self';
 
 
@@ -19,7 +20,7 @@ export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T 
   }
 }
 
-export function* resume(context: ExecutionContext, completion: EvaluatorNextType): YieldEvaluator {
+export function* resume(context: ExecutionContext, completion: EvaluatorNextType): YieldOrAwaitEvaluator {
   let result;
   while (true) {
     result = context.codeEvaluationState!.next(completion);
@@ -30,7 +31,7 @@ export function* resume(context: ExecutionContext, completion: EvaluatorNextType
     if (value.type === 'debugger' || value.type === 'potential-debugger') {
       completion = yield value;
     } else if (value.type === 'await' || value.type === 'async-generator-yield') {
-      return Value.undefined;
+      return undefined;
     } else if (value.type === 'yield') {
       return value.value;
     } else {

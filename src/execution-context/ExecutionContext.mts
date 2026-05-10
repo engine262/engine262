@@ -1,4 +1,6 @@
 import type { ExecutionContextHostDefined, GCMarker } from '../host-defined/engine.mts';
+import { EnsureCompletion, type ReturnCompletion, type ValueCompletion } from '../completion.mts';
+import { resume } from '../utils/evaluator.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import {
   type YieldEvaluator, NullValue, type FunctionObject, Value, type GeneratorObject, type AsyncGeneratorObject, AbstractModuleRecord, type ScriptRecord, EnvironmentRecord, PrivateEnvironmentRecord, CallSite, PromiseCapabilityRecord, Realm,
@@ -9,12 +11,15 @@ import {
   UndefinedValue,
   type EnvironmentRecordWithThisBinding,
   ObjectValue,
+  type EvaluatorNextType,
+  type YieldOrAwaitEvaluator,
+  type PlainCompletion,
 } from '#self';
 
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
-  codeEvaluationState?: YieldEvaluator;
+  codeEvaluationState?: YieldOrAwaitEvaluator;
 
   Function: NullValue | FunctionObject = Value.null;
 
@@ -131,4 +136,20 @@ export function GetNewTarget(): ObjectValue | UndefinedValue {
 export function GetGlobalObject() {
   const currentRealm = surroundingAgent.currentRealmRecord;
   return currentRealm.GlobalObject;
+}
+
+/** https://tc39.es/ecma262/#sec-runsuspendedcontext */
+// _resumeType is for assertion.
+export function RunSuspendedContext(context: ExecutionContext, completionRecord: ValueCompletion | PlainCompletion<void>, _resumeType: 'await-resume'): YieldOrAwaitEvaluator;
+export function RunSuspendedContext(context: ExecutionContext, completionRecord: ValueCompletion | ReturnCompletion, _resumeType: 'generator-resume' | 'async-generator-resume'): YieldEvaluator;
+export function* RunSuspendedContext(
+  context: ExecutionContext,
+  completionRecord: ValueCompletion | PlainCompletion<void> | ReturnCompletion,
+  _resumeType: Exclude<EvaluatorNextType['type'], 'debugger-resume'>,
+): YieldOrAwaitEvaluator {
+  const callerContext = surroundingAgent.runningExecutionContext;
+  surroundingAgent.executionContextStack.push(context);
+  const result = EnsureCompletion(yield* resume(context, { type: _resumeType, value: completionRecord } as EvaluatorNextType));
+  Assert(surroundingAgent.runningExecutionContext === callerContext);
+  return result;
 }

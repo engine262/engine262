@@ -16,7 +16,6 @@ import {
   type NativeSteps,
 } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
-import { resume } from '../utils/evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
@@ -32,7 +31,7 @@ import {
   SameValue,
   type OrdinaryObject,
 } from './all.mts';
-import { Throw, type Realm } from '#self';
+import { RunSuspendedContext, Throw, type Realm } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
@@ -185,19 +184,11 @@ export function* AsyncGeneratorResume(generator: AsyncGeneratorObject, completio
   Assert(generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield');
   // 2. Let genContext be generator.[[AsyncGeneratorContext]].
   const genContext = generator.AsyncGeneratorContext;
-  // 3. Let callerContext be the running execution context.
-  const callerContext = surroundingAgent.runningExecutionContext;
-  // 4. Suspend callerContext.
-  // 5. Set generator.[[AsyncGeneratorState]] to executing.
+  // 3. Set generator.[[AsyncGeneratorState]] to executing.
   generator.AsyncGeneratorState = 'executing';
-  // 6. Push genContext onto the execution context stack; genContext is now the running execution context.
-  surroundingAgent.executionContextStack.push(genContext);
-  // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
-  const result = yield* resume(genContext, { type: 'async-generator-resume', value: completion });
-  // 8. Assert: result is never an abrupt completion.
-  Assert(!(result instanceof AbruptCompletion));
-  // 9. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
-  Assert(surroundingAgent.runningExecutionContext === callerContext);
+  // 4. Perform ! RunSuspendedContext(genContext, completion).
+  X(yield* RunSuspendedContext(genContext, completion, 'async-generator-resume'));
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption */
