@@ -89,6 +89,7 @@ export type ExpressionEvaluator = Evaluator<PlainCompletion<ReferenceRecord | Va
 export type StatementEvaluator = Evaluator<PlainCompletion<void | Value> | AbruptCompletion>;
 export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
 export type YieldEvaluator = Evaluator<YieldCompletion | Value>;
+export type YieldOrAwaitEvaluator = Evaluator<YieldCompletion | PlainCompletion<void> | Value>;
 export type AsyncBuiltinSteps = () => Evaluator<Value | NormalCompletion<Value> | ThrowCompletion | ReturnCompletion>;
 export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
 
@@ -298,10 +299,7 @@ export type EvaluatorNextType = {
   type: 'await-resume',
   value: ValueCompletion
 } | {
-  type: 'generator-resume',
-  value: ValueCompletion | ReturnCompletion
-} | {
-  type: 'async-generator-resume',
+  type: 'generator-resume' | 'async-generator-resume',
   value: ValueCompletion | ReturnCompletion
 }
 

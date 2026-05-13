@@ -8,7 +8,7 @@ import {
   type TimeZoneIdentifier, GetUTCEpochNanoseconds, RoundingMode,
 } from './addition.mts';
 import {
-  type PlainCompletion, Assert, Q, GetStartOfDay, GetEpochNanosecondsFor, CheckISODaysRange, IsValidEpochNanoseconds, Throw, GetPossibleEpochNanoseconds, RoundNumberToIncrement, DisambiguatePossibleEpochNanoseconds, Value, type ValueEvaluator, type CalendarType, ObjectValue, GetTemporalDisambiguationOption, GetTemporalOffsetOption, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, JSStringValue, ToTemporalTimeZoneIdentifier, CanonicalizeCalendar, CreateISODateRecord, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, RoundEpochNanoseconds, TemporalUnit, GetOffsetNanosecondsFor, GetISODateTimeFor, FormatDateTimeUTCOffsetRounded, FormatCalendarAnnotation, type InternalDurationRecord, DateDurationSign, AddEpochNanoseconds, CalendarDateAdd, CombineDateAndTimeDuration, ZeroDateDuration, CompareISODate, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, AddDaysToISODate, LargerOfTwoTemporalUnits, CalendarDateUntil, type DateUnit, TemporalUnitCategory, DifferenceEpochNanoseconds, type TimeUnit, RoundRelativeDuration, TotalTimeDuration, TotalRelativeDuration, CalendarEquals, GetDifferenceSettings, TemporalDurationFromInternal, CreateNegatedTemporalDuration, TimeZoneEquals, CreateTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
+  type PlainCompletion, Assert, Q, GetStartOfDay, GetEpochNanosecondsFor, CheckISODaysRange, IsValidEpochNanoseconds, Throw, GetPossibleEpochNanoseconds, RoundNumberToIncrement, DisambiguatePossibleEpochNanoseconds, Value, type ValueEvaluator, type CalendarType, ObjectValue, GetTemporalDisambiguationOption, GetTemporalOffsetOption, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, JSStringValue, ToTemporalTimeZoneIdentifier, CanonicalizeCalendar, CreateISODateRecord, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, RoundEpochNanoseconds, TemporalUnit, GetOffsetNanosecondsFor, GetISODateTimeFor, FormatDateTimeUTCOffsetRounded, FormatCalendarAnnotation, type InternalDurationRecord, DateDurationSign, AddEpochNanoseconds, CalendarDateAdd, CombineDateAndTimeDuration, ZeroDateDuration, CompareISODate, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, AddDaysToISODate, LargerOfTwoTemporalUnits, CalendarDateUntil, type DateUnit, isTimeUnit, DifferenceEpochNanoseconds, type TimeUnit, RoundRelativeDuration, TotalTimeDuration, TotalRelativeDuration, CalendarEquals, GetDifferenceSettings, TemporalDurationFromInternal, CreateNegatedTemporalDuration, TimeZoneEquals, CreateTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
   BalanceISODateTime,
   CombineISODateAndTimeRecord,
   DifferenceTime,
@@ -280,7 +280,7 @@ export function DifferenceZonedDateTimeWithRounding(
   smallestUnit: TemporalUnit,
   roundingMode: RoundingMode,
 ): PlainCompletion<InternalDurationRecord> {
-  if (TemporalUnitCategory(largestUnit) === 'time') {
+  if (isTimeUnit(largestUnit)) {
     return DifferenceEpochNanoseconds(ns1, ns2, roundingIncrement, smallestUnit as TimeUnit, roundingMode);
   }
   const difference = Q(DifferenceZonedDateTime(ns1, ns2, timeZone, calendar, largestUnit));
@@ -299,7 +299,7 @@ export function DifferenceZonedDateTimeWithTotal(
   calendar: CalendarType,
   unit: TemporalUnit,
 ): PlainCompletion<MathematicalValue> {
-  if (TemporalUnitCategory(unit) === 'time') {
+  if (isTimeUnit(unit)) {
     const difference = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
     return TotalTimeDuration(difference, unit as TimeUnit);
   }
@@ -321,7 +321,7 @@ export function* DifferenceTemporalZonedDateTime(
   }
   const resolvedOptions = Q(GetOptionsObject(options));
   const settings = Q(yield* GetDifferenceSettings(operation, resolvedOptions, 'datetime', [], TemporalUnit.Nanosecond, TemporalUnit.Hour));
-  if (TemporalUnitCategory(settings.LargestUnit) === 'time') {
+  if (isTimeUnit(settings.LargestUnit)) {
     const internalDuration = DifferenceEpochNanoseconds(zonedDateTime.EpochNanoseconds, other.EpochNanoseconds, settings.RoundingIncrement, settings.SmallestUnit as TimeUnit, settings.RoundingMode);
     let result = X(TemporalDurationFromInternal(internalDuration, settings.LargestUnit));
     if (operation === 'since') {

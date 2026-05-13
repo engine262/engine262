@@ -165,7 +165,7 @@ export enum TemporalUnit {
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export type TimeUnit = TemporalUnit.Hour | TemporalUnit.Minute | TemporalUnit.Second | TemporalUnit.Millisecond | TemporalUnit.Microsecond | TemporalUnit.Nanosecond;
 
-export function __IsTimeUnit(unit: TemporalUnit): unit is TimeUnit {
+export function isTimeUnit(unit: TemporalUnit): unit is TimeUnit {
   return (unit === TemporalUnit.Hour
     || unit === TemporalUnit.Minute
     || unit === TemporalUnit.Second
@@ -177,6 +177,14 @@ export function __IsTimeUnit(unit: TemporalUnit): unit is TimeUnit {
 
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export type DateUnit = TemporalUnit.Year | TemporalUnit.Month | TemporalUnit.Week | TemporalUnit.Day;
+
+export function isDateUnit(unit: TemporalUnit): unit is DateUnit {
+  return (unit === TemporalUnit.Year
+    || unit === TemporalUnit.Month
+    || unit === TemporalUnit.Week
+    || unit === TemporalUnit.Day
+  );
+}
 
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export const Table21_LengthInNanoSeconds = {
@@ -201,14 +209,6 @@ export const Table21_CategoryByValue = {
   [TemporalUnit.Microsecond]: 'time',
   [TemporalUnit.Nanosecond]: 'time',
 } as const;
-
-export function __IsDateUnit(unit: TemporalUnit): unit is DateUnit {
-  return (unit === TemporalUnit.Year
-    || unit === TemporalUnit.Month
-    || unit === TemporalUnit.Week
-    || unit === TemporalUnit.Day
-  );
-}
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporaloverflowoption */
 export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator<'constrain' | 'reject'> {
@@ -524,7 +524,8 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   }
   let offsetNs;
   if (offsetBehaviour === 'option') {
-    offsetNs = X(ParseDateTimeUTCOffset(offsetString!));
+    Assert(typeof offsetString === 'string');
+    offsetNs = X(ParseDateTimeUTCOffset(offsetString));
   } else {
     offsetNs = 0n;
   }
@@ -561,14 +562,6 @@ export function LargerOfTwoTemporalUnits(u1: TemporalUnit, u2: TemporalUnit): Te
 /** https://tc39.es/proposal-temporal/#sec-iscalendarunit */
 export function IsCalendarUnit(unit: TemporalUnit): unit is TemporalUnit.Year | TemporalUnit.Month | TemporalUnit.Week {
   return unit === TemporalUnit.Year || unit === TemporalUnit.Month || unit === TemporalUnit.Week;
-}
-
-/** https://tc39.es/proposal-temporal/#sec-temporalunitcategory */
-export function TemporalUnitCategory(unit: TemporalUnit): 'date' | 'time' {
-  if (unit === TemporalUnit.Year || unit === TemporalUnit.Month || unit === TemporalUnit.Week || unit === TemporalUnit.Day) {
-    return 'date';
-  }
-  return 'time';
 }
 
 /** https://tc39.es/proposal-temporal/#sec-maximumtemporaldurationroundingincrement */

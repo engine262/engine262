@@ -4,7 +4,6 @@ import {
 } from './value.mts';
 import { kAsyncContext } from './utils/internal.mts';
 import { callable, OutOfRange } from './utils/language.mts';
-import { resume } from './utils/evaluator.mts';
 import type { Evaluator, ValueEvaluator } from './evaluator.mts';
 import {
   Assert,
@@ -12,6 +11,7 @@ import {
   PerformPromiseThen,
   PromiseCapabilityRecord,
   PromiseResolve,
+  RunSuspendedContext,
   type IteratorRecord,
 } from '#self';
 import { skipDebugger } from '#self';
@@ -461,16 +461,7 @@ export function* Await(value: Value): ValueEvaluator {
   const promise = Q(yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
   const fulfilledClosure = function* fulfilledClosure([v = Value.undefined]: Arguments) {
-    // a. Let prevContext be the running execution context.
-    const prevContext = surroundingAgent.runningExecutionContext;
-    // b. Suspend prevContext.
-    // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-    surroundingAgent.executionContextStack.push(asyncContext);
-    // d. Resume the suspended evaluation of asyncContext using NormalCompletion(value) as the result of the operation that suspended it.
-    yield* resume(asyncContext, { type: 'await-resume', value: NormalCompletion(v) });
-    // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
-    Assert(surroundingAgent.runningExecutionContext === prevContext);
-    // f. Return undefined.
+    yield* RunSuspendedContext(asyncContext, NormalCompletion(v), 'await-resume');
     return Value.undefined;
   };
   // 4. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
@@ -479,16 +470,7 @@ export function* Await(value: Value): ValueEvaluator {
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
   const rejectedClosure = function* rejectedClosure([reason = Value.undefined]: Arguments) {
-    // a. Let prevContext be the running execution context.
-    const prevContext = surroundingAgent.runningExecutionContext;
-    // b. Suspend prevContext.
-    // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-    surroundingAgent.executionContextStack.push(asyncContext);
-    // d. Resume the suspended evaluation of asyncContext using ThrowCompletion(reason) as the result of the operation that suspended it.
-    yield* resume(asyncContext, { type: 'await-resume', value: ThrowCompletion(reason) });
-    // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
-    Assert(surroundingAgent.runningExecutionContext === prevContext);
-    // f. Return undefined.
+    yield* RunSuspendedContext(asyncContext, ThrowCompletion(reason), 'await-resume');
     return Value.undefined;
   };
   // 6. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).

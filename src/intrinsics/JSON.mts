@@ -32,7 +32,6 @@ import {
   SetIntegrityLevel,
   SameValue,
   type PropertyKeyValue,
-  isProxyExoticObject,
 } from '../index.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
@@ -463,7 +462,6 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
   if (value instanceof ObjectValue && !IsCallable(value)) {
     const isArray = Q(IsArray(value));
     if (isArray === Value.true) {
-      Assert(!isProxyExoticObject(value));
       return Q(yield* SerializeJSONArray(state, value));
     }
     return Q(yield* SerializeJSONObject(state, value));

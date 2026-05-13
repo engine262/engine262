@@ -7,7 +7,7 @@ import {
   GetUTCEpochNanoseconds, RoundingMode, type TimeZoneIdentifier, GetOptionsObject,
 } from './addition.mts';
 import {
-  type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, CheckISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, Table21_LengthInNanoSeconds, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalUnit, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, TemporalUnitCategory, ToInternalDurationRecordWith24HourDays,
+  type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, CheckISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, Table21_LengthInNanoSeconds, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalUnit, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays,
   BalanceISODateTime,
   FormatISODateTime,
   type EpochNanoseconds,
@@ -171,7 +171,7 @@ export function* AddDurationToInstant(
     duration = CreateNegatedTemporalDuration(duration);
   }
   const largestUnit = DefaultTemporalLargestUnit(duration);
-  if (TemporalUnitCategory(largestUnit) === 'date') {
+  if (isDateUnit(largestUnit)) {
     return Throw.RangeError('Cannot add a date to an instant');
   }
   const internalDuration = ToInternalDurationRecordWith24HourDays(duration);

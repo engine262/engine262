@@ -1,6 +1,5 @@
-import { resume } from '../utils/evaluator.mts';
 import {
-  EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord,
+  EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord, NormalCompletion, RunSuspendedContext,
   type AsyncBuiltinSteps,
 } from '#self';
 
@@ -11,8 +10,8 @@ import {
 export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext) {
   asyncContext.promiseCapability = promiseCapability;
 
-  const runningContext = surroundingAgent.runningExecutionContext;
-  asyncContext.codeEvaluationState = (function* resumer() {
+  asyncContext.codeEvaluationState = (function* closure() {
+    const acAsyncContext = surroundingAgent.runningExecutionContext;
     let result;
     if (typeof asyncBody === 'function') {
       result = EnsureCompletion(yield* asyncBody());
@@ -20,7 +19,7 @@ export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asy
       result = EnsureCompletion(yield* Evaluate(asyncBody));
     }
     // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
-    surroundingAgent.executionContextStack.pop(asyncContext);
+    surroundingAgent.executionContextStack.pop(acAsyncContext);
     if (result.Type === 'normal') {
       X(Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]));
     } else if (result.Type === 'return') {
@@ -29,12 +28,10 @@ export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asy
       Assert(result.Type === 'throw');
       X(Call(promiseCapability.Reject, Value.undefined, [result.Value]));
     }
-    return Value.undefined;
+    return undefined;
   }());
-  surroundingAgent.executionContextStack.push(asyncContext);
-  const result = EnsureCompletion(yield* resume(asyncContext, { type: 'await-resume', value: Value.undefined }));
-  Assert(surroundingAgent.runningExecutionContext === runningContext);
-  Assert(result.Type === 'normal' && result.Value === Value.undefined);
+  const result = X(yield* RunSuspendedContext(asyncContext, NormalCompletion(undefined), 'await-resume'));
+  Assert(result === undefined);
   return Value.undefined;
 }
 

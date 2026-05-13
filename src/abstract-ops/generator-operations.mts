@@ -16,7 +16,6 @@ import {
   Evaluate, type ValueEvaluator, type YieldEvaluator,
 } from '../evaluator.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
-import { resume } from '../utils/evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
@@ -28,7 +27,7 @@ import {
   type IteratorRecord,
   type OrdinaryObject,
 } from './all.mts';
-import { Throw } from '#self';
+import { RunSuspendedContext, Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 export interface GeneratorObject extends OrdinaryObject {
@@ -161,22 +160,10 @@ export function* GeneratorResume(generator: Value, value: Value | void, generato
   Assert(state === 'suspendedStart' || state === 'suspendedYield');
   // 4. Let genContext be generator.[[GeneratorContext]].
   const genContext = generator.GeneratorContext!;
-  // 5. Let methodContext be the running execution context.
-  // 6. Suspend methodContext.
-  const methodContext = surroundingAgent.runningExecutionContext;
-  // 7. Set generator.[[GeneratorState]] to executing.
+  // 5. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
-  // 8. Push genContext onto the execution context stack.
-  surroundingAgent.executionContextStack.push(genContext);
-  // 9. Resume the suspended evaluation of genContext using NormalCompletion(value) as
-  //    the result of the operation that suspended it. Let result be the value returned by
-  //    the resumed computation.
-  const result = EnsureCompletion(yield* resume(genContext, { type: 'generator-resume', value: NormalCompletion(value || Value.undefined) }));
-  // 10. Assert: When we return here, genContext has already been removed from the execution
-  //     context stack and methodContext is the currently running execution context.
-  Assert(surroundingAgent.runningExecutionContext === methodContext);
-  // 11. Return Completion(result).
-  return Completion(result);
+  // 6. Return ? RunSuspendedContext(genContext, NormalCompletion(value)).
+  return yield* RunSuspendedContext(genContext, NormalCompletion(value || Value.undefined), 'generator-resume');
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
@@ -209,22 +196,10 @@ export function* GeneratorResumeAbrupt(generator: Value, abruptCompletion: Throw
   Assert(state === 'suspendedYield');
   // 5. Let genContext be generator.[[GeneratorContext]].
   const genContext = generator.GeneratorContext!;
-  // 6. Let methodContext be the running execution context.
-  // 7. Suspend methodContext.
-  const methodContext = surroundingAgent.runningExecutionContext;
-  // 8. Set generator.[[GeneratorState]] to executing.
+  // 6. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
-  // 9. Push genContext onto the execution context stack.
-  surroundingAgent.executionContextStack.push(genContext);
-  // 10. Resume the suspended evaluation of genContext using abruptCompletion as the
-  //     result of the operation that suspended it. Let result be the completion record
-  //     returned by the resumed computation.
-  const result = EnsureCompletion(yield* resume(genContext, { type: 'generator-resume', value: abruptCompletion }));
-  // 11. Assert: When we return here, genContext has already been removed from the
-  //     execution context stack and methodContext is the currently running execution context.
-  Assert(surroundingAgent.runningExecutionContext === methodContext);
-  // 12. Return Completion(result).
-  return Completion(result);
+  // 7. Return ? RunSuspendedContext(genContext, abruptCompletion).
+  return yield* RunSuspendedContext(genContext, abruptCompletion, 'generator-resume');
 }
 
 /** https://tc39.es/ecma262/#sec-getgeneratorkind */

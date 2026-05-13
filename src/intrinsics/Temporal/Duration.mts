@@ -19,8 +19,8 @@ import {
   ToTemporalDuration,
   GetTemporalRelativeToOption,
   IsCalendarUnit,
-  TemporalUnitCategory,
   AddZonedDateTime,
+  isDateUnit,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances */
@@ -101,7 +101,7 @@ function* Duration_Compare([_one = Value.undefined, _two = Value.undefined, opti
   const duration1 = ToInternalDurationRecord(one);
   const duration2 = ToInternalDurationRecord(two);
   if (zonedRelativeTo !== undefined
-    && (TemporalUnitCategory(largestUnit1) === 'date' || TemporalUnitCategory(largestUnit2) === 'date')) {
+    && (isDateUnit(largestUnit1) || isDateUnit(largestUnit2))) {
     const timeZone = zonedRelativeTo.TimeZone;
     const calendar = zonedRelativeTo.Calendar;
     const after1 = Q(AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, duration1, 'constrain'));
