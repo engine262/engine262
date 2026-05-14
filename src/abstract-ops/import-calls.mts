@@ -101,7 +101,7 @@ export function ContinueDynamicImport(
       // i. Assert: phase is EVALUATION.
       Assert(phase === 'evaluation');
       // ii. Let evaluatePromise be module.Evaluate().
-      evaluatePromise = yield* module.Evaluate();
+      evaluatePromise = yield* module.Evaluate("all");
     }
 
     // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).

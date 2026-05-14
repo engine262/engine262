@@ -667,7 +667,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return requests;
   }
 
-  /** https://tc39.es/proposal-deferred-reexports/#sec-source-text-module-record-initialize-environment */
+  /** https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
   InitializeEnvironment() {
     const module = this as Mutable<SourceTextModuleRecord>;
     // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
