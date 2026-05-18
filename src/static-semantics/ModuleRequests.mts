@@ -63,15 +63,8 @@ function WithClauseToAttributes(node: ParseNode.WithClause): ImportAttributeReco
   return attributes;
 }
 
-/** Compute [[ImportedNames]] for a ModuleRequest derived from an ImportDeclaration's ImportClause.
- * Per proposal-deferred-reexports:
- * - `import "m"` (no clause) → « »
- * - `import * as ns from "m"` (NameSpaceImport) → ~all~
- * - `import a from "m"` (DefaultBinding) → « "default" »
- * - `import { x, y as z } from "m"` (NamedImports) → « "x", "y" »
- * - Combinations are unioned.
- */
-function importedNamesFromImportClause(importClause: ParseNode.ImportClause | undefined): ImportedNamesValue {
+// https://tc39.es/proposal-deferred-reexports/#sec-ImportedNames
+function ImportedNames_FromImportClause(importClause: ParseNode.ImportClause | undefined): ImportedNamesValue {
   if (!importClause) {
     return [];
   }
@@ -90,16 +83,11 @@ function importedNamesFromImportClause(importClause: ParseNode.ImportClause | un
   return names;
 }
 
-/** Compute [[ImportedNames]] for a ModuleRequest derived from an ExportFromClause.
- * Per proposal-deferred-reexports:
- * - `export * from "m"` → ~all-but-default~ (default is excluded for star re-exports)
- * - `export * as ns from "m"` → ~all~
- * - `export { x, y as z } from "m"` → « "x", "y" »
- */
-function importedNamesFromExportFromClause(clause: ParseNode.ExportFromClauseLike): ImportedNamesValue {
+// https://tc39.es/proposal-deferred-reexports/#sec-ImportedNames
+function ImportedNames_FromExportFromClause(clause: ParseNode.ExportFromClauseLike): ImportedNamesValue {
   if (clause.type === 'ExportFromClause') {
-    // export * from "m"  → ModuleExportName absent  → 'all-but-default'
-    // export * as ns from "m"  → ModuleExportName present  → 'all'
+    // export * from "m" -> ModuleExportName absent -> 'all-but-default'
+    // export * as ns from "m" -> ModuleExportName present -> 'all'
     return clause.ModuleExportName ? 'all' : 'all-but-default';
   }
   // NamedExports (export { a, b as c } from "m")
@@ -110,7 +98,7 @@ function importedNamesFromExportFromClause(clause: ParseNode.ExportFromClauseLik
 export function ExportFromDeclarationModuleRequest(node: ParseNode.ExportDeclaration_NamedFrom): ModuleRequestRecord {
   const specifier = StringValue(node.FromClause);
   const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-  const importedNames = importedNamesFromExportFromClause(node.ExportFromClause);
+  const importedNames = ImportedNames_FromExportFromClause(node.ExportFromClause);
   return {
     Specifier: specifier.value, Attributes: attributes, Phase: 'evaluation', ImportedNames: importedNames,
   };
@@ -148,7 +136,7 @@ export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
         throw new Error('Unreachable: all imports must have either an ImportClause or a ModuleSpecifier');
       }
       const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
-      const importedNames = importedNamesFromImportClause(node.ImportClause);
+      const importedNames = ImportedNames_FromImportClause(node.ImportClause);
       return [{
         Specifier: specifier.value, Attributes: attributes, Phase: node.Phase, ImportedNames: importedNames,
       }];
