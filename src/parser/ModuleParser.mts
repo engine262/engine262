@@ -1,6 +1,7 @@
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mts';
 import type { Mutable } from '../utils/language.mts';
 import { Throw } from '../host-defined/error-messages.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Token, isKeywordRaw } from './tokens.mts';
 import { StatementParser } from './StatementParser.mts';
 import { FunctionKind } from './FunctionParser.mts';
@@ -174,6 +175,16 @@ export abstract class ModuleParser extends StatementParser {
     node.Decorators = decoratorsBeforeExportKeyword;
     this.expect(Token.EXPORT);
     node.default = this.eat(Token.DEFAULT);
+    let isDefer = false;
+    if (
+      !node.default
+      && surroundingAgent.feature('export-defer')
+      && this.test('defer')
+      && (this.testAhead(Token.MUL) || this.testAhead(Token.LBRACE))
+    ) {
+      this.next(); // consume `defer`
+      isDefer = true;
+    }
     if (node.default) {
       switch (this.peek().type) {
         case Token.FUNCTION:
@@ -225,10 +236,14 @@ export abstract class ModuleParser extends StatementParser {
           if (this.test('from')) {
             node.ExportFromClause = NamedExports;
             node.FromClause = this.parseFromClause();
+            node.Phase = isDefer ? 'defer' : 'evaluation';
             if (this.test(Token.WITH)) {
               node.WithClause = this.parseWithClause();
             }
           } else {
+            if (isDefer) {
+              this.unexpected();
+            }
             NamedExports.ExportsList.forEach((n) => {
               if (n.localName.type === 'StringLiteral') {
                 this.addEarlyError(Throw.SyntaxError('Import name cannot be a string'), n.localName);
@@ -246,9 +261,12 @@ export abstract class ModuleParser extends StatementParser {
           if (this.eat('as')) {
             inner.ModuleExportName = this.parseModuleExportName();
             this.scope.declare(inner.ModuleExportName, 'export');
+          } else if (isDefer) {
+            this.unexpected();
           }
           node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
           node.FromClause = this.parseFromClause();
+          node.Phase = isDefer ? 'defer' : 'evaluation';
           if (this.test(Token.WITH)) {
             node.WithClause = this.parseWithClause();
           }

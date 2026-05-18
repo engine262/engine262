@@ -39,7 +39,7 @@ export { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 export { isDataViewObject, type DataViewObject } from './intrinsics/DataView.mts';
 export { isDateObject, type DateObject } from './intrinsics/Date.mts';
 export { DateProto_toISOString } from './intrinsics/DatePrototype.mts';
-export { isPromiseObject, type PromiseObject } from './intrinsics/Promise.mts';
+export { isPromiseObject, SafePerformPromiseAll, type PromiseObject } from './intrinsics/Promise.mts';
 export { isTypedArrayObject, type TypedArrayObject } from './intrinsics/TypedArray.mts';
 export { isProxyExoticObject, type ProxyObject } from './intrinsics/Proxy.mts';
 export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';

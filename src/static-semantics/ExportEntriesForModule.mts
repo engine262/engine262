@@ -16,7 +16,8 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
       if (node.ModuleExportName) {
         // 1. Let exportName be the StringValue of ModuleExportName.
         const exportName = StringValue(node.ModuleExportName);
-        // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all~, [[LocalName]]: null, [[ExportName]]: exportName }.
+        // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace~, [[LocalName]]: null, [[ExportName]]: exportName }.
+        //    (proposal-deferred-reexports renamed ~all~ to ~namespace~ for star-as exports.)
         const entry: ExportEntry = {
           ModuleRequest: module,
           ImportName: 'namespace',

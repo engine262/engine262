@@ -26,6 +26,7 @@ import {
   CyclicModuleRecord,
   SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
+import type { ImportedNamesValue } from './static-semantics/ModuleRequests.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
@@ -417,8 +418,8 @@ export class ManagedRealm extends Realm {
 }
 
 class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
-  override* Evaluate() {
-    const r = yield* super.Evaluate();
+  override* Evaluate(importedNames?: ImportedNamesValue) {
+    const r = yield* super.Evaluate(importedNames);
     runJobQueue();
     return r;
   }

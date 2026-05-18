@@ -49,7 +49,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
     case 'NameSpaceImport': {
       // 1. Let localName be the StringValue of ImportedBinding.
       const localName = StringValue(node.ImportedBinding);
-      // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace-object~, [[LocalName]]: localName }.
+      // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace~, [[LocalName]]: localName }.
       const entry: ImportEntry = {
         ModuleRequest: module,
         ImportName: 'namespace',

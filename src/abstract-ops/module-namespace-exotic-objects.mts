@@ -1,5 +1,7 @@
 import { Q, X } from '../completion.mts';
 import { AbstractModuleRecord, CyclicModuleRecord, ResolvedBindingRecord } from '../modules.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
+import type { ImportedNamesValue } from '../static-semantics/ModuleRequests.mts';
 import {
   SymbolValue,
   Value,
@@ -10,7 +12,6 @@ import {
   UndefinedValue,
   type PropertyKeyValue,
   ObjectValue,
-  BooleanValue,
 } from '../value.mts';
 import { type Mutable } from '../utils/language.mts';
 import { JSStringSet } from '../utils/container.mts';
@@ -31,9 +32,8 @@ import {
   GetModuleNamespace, R,
   type ExoticObject,
   EvaluateModuleSync,
-  GetImportedModule,
 } from './all.mts';
-import { Throw, type ModuleRecord, type PlainEvaluator } from '#self';
+import { Throw } from '#self';
 
 export interface ModuleNamespaceObject extends ExoticObject {
   readonly Module: AbstractModuleRecord;
@@ -120,21 +120,28 @@ const InternalMethods = {
   * Get(P, Receiver) {
     const O = this;
 
-    // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
-    // 2. If Type(P) is Symbol, then
+    // 1. If IsSymbolLikeNamespaceKey(P, O), return ! OrdinaryGet(O, P, Receiver).
     if (IsSymbolLikeNamespaceKey(P, O)) {
-      // a. Return ? OrdinaryGet(O, P, Receiver).
-      return yield* OrdinaryGet(O, P, Receiver);
+      return X(yield* OrdinaryGet(O, P, Receiver));
     }
+    // 2. Let exports be ? GetModuleExportsList(O).
     const exports = Q(yield* GetModuleExportsList(O));
-    // 4. If P is not an element of exports, return undefined.
+    // 3. If exports does not contain P, return undefined.
     if (!exports.has(P as JSStringValue)) {
       return Value.undefined;
     }
-    // 5. Let m be O.[[Module]].
+    // 4. Let m be O.[[Module]].
     const m = O.Module;
-    // 6. Let binding be ! m.ResolveExport(P).
+    // 5. If m is a Cyclic Module Record and m.GetOptionalIndirectExportsModuleRequests(« P ») is not empty, then
+    if (m instanceof CyclicModuleRecord) {
+      const importedNames: ImportedNamesValue = [P as JSStringValue];
+      if (m.GetOptionalIndirectExportsModuleRequests(importedNames).length > 0) {
+        // a. Perform ? EvaluateModuleSync(m, « P »).
+        Q(yield* EvaluateModuleSync(m, importedNames));
+      }
+    }
+    // 6. Let binding be m.ResolveExport(P).
     const binding = m.ResolveExport(P as JSStringValue);
     // 7. Assert: binding is a ResolvedBinding Record.
     Assert(binding instanceof ResolvedBindingRecord);
@@ -142,24 +149,25 @@ const InternalMethods = {
     const targetModule = binding.Module;
     // 9. Assert: targetModule is not undefined.
     Assert(!(targetModule instanceof UndefinedValue));
-    // 10. If binding.[[BindingName]] is ~namespace~, then
+    // 10. If binding.[[BindingName]] is namespace, then
     if (binding.BindingName === 'namespace') {
-      // a. Return ? GetModuleNamespace(targetModule).
-      return Q(GetModuleNamespace(targetModule, 'evaluation'));
+      // a. Return GetModuleNamespace(targetModule, evaluation).
+      return GetModuleNamespace(targetModule, 'evaluation');
     }
-    // https://tc39.es/proposal-defer-import-eval/#sec-module-namespace-exotic-objects-get-p-receiver
+    // 11. If binding.[[BindingName]] is deferred-namespace, then
     if (binding.BindingName === 'deferred-namespace') {
-      return Q(GetModuleNamespace(targetModule, 'defer'));
+      // a. Return GetModuleNamespace(targetModule, defer).
+      return GetModuleNamespace(targetModule, 'defer');
     }
-    // 11. Let targetEnv be targetModule.[[Environment]].
+    // 12. Let targetEnv be targetModule.[[Environment]].
     const targetEnv = targetModule.Environment;
-    // 12. If targetEnv is undefined, throw a ReferenceError exception.
+    // 13. If targetEnv is empty, throw a ReferenceError exception.
     if (!targetEnv) {
       return Throw.ReferenceError('$1 is not defined', P);
     }
     // https://github.com/tc39/ecma262/pull/3492#issuecomment-4365941050
     Assert(binding.BindingName !== 'source');
-    // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
+    // 14. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
   },
   * Set() {
@@ -269,44 +277,13 @@ function IsSymbolLikeNamespaceKey(P: PropertyKeyValue, ns: ModuleNamespaceObject
 
 /** https://tc39.es/proposal-defer-import-eval/#sec-GetModuleExportsList */
 function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<JSStringSet> {
+  // 1. If O.[[Deferred]] is true, then
   if (O.Deferred) {
+    // a. Let m be O.[[Module]].
     const m = O.Module;
-    if (ReadyForSyncExecution(m) === Value.false) {
-      return Throw.TypeError('Module "$1" is not ready for synchronous execution', m.HostDefined?.specifier ?? '<anonymous module>');
-    }
+    // b. Perform ? EvaluateModuleSync(m).
     Q(yield* EvaluateModuleSync(m));
   }
+  // 2. Return O.[[Exports]].
   return O.Exports;
-}
-
-/** https://tc39.es/proposal-defer-import-eval/#sec-ReadyForSyncExecution */
-export function ReadyForSyncExecution(module: ModuleRecord, seen?: Set<CyclicModuleRecord>): BooleanValue {
-  if (!(module instanceof CyclicModuleRecord)) {
-    return Value.true;
-  }
-  seen ??= new Set();
-  if (seen.has(module)) {
-    return Value.true;
-  }
-  seen.add(module);
-  if (module.Status === 'evaluated') {
-    return Value.true;
-  }
-  if (module.Status === 'evaluating' || module.Status === 'evaluating-async') {
-    return Value.false;
-  }
-  Assert(module.Status === 'linked');
-  if (module.HasTLA === Value.true) {
-    return Value.false;
-  }
-  for (const request of module.RequestedModules) {
-    if (request.Phase === 'source') {
-      continue;
-    }
-    const requiredModule = GetImportedModule(module, request);
-    if (ReadyForSyncExecution(requiredModule, seen) === Value.false) {
-      return Value.false;
-    }
-  }
-  return Value.true;
 }

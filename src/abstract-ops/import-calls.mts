@@ -40,7 +40,8 @@ export function ContinueDynamicImport(
     return;
   }
 
-  // 3. Let loadPromise be module.LoadRequestedModules().
+  // 3. Let loadPromise be module.LoadRequestedModules(all).
+  //    (default for LoadRequestedModules' importedNames is 'all'.)
   const loadPromise = module.LoadRequestedModules();
 
   // 4. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures promiseCapability and performs the following steps when called:
@@ -54,7 +55,8 @@ export function ContinueDynamicImport(
 
   // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
   function* linkAndEvaluateClosure() {
-    // a. Let link be Completion(module.Link()).
+    // a. Let link be Completion(module.Link(all)).
+    //    (default for Link's importedNames is 'all'.)
     const link = module.Link();
     // b. If link is an abrupt completion, then
     if (link instanceof AbruptCompletion) {
@@ -99,7 +101,7 @@ export function ContinueDynamicImport(
       // i. Assert: phase is EVALUATION.
       Assert(phase === 'evaluation');
       // ii. Let evaluatePromise be module.Evaluate().
-      evaluatePromise = yield* module.Evaluate();
+      evaluatePromise = yield* module.Evaluate('all');
     }
 
     // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
