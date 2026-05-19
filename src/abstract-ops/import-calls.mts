@@ -4,10 +4,12 @@
 import {
   AbstractModuleRecord,
   Assert,
-  Call, CreateBuiltinFunction, GatherAsynchronousTransitiveDependencies, GetModuleNamespace, PerformPromiseThen, PromiseCapabilityRecord, Value,
+  Call, CreateBuiltinFunction, GatherAsynchronousTransitiveDependencies, GatherAsynchronousTransitiveDependenciesForRequests, GetModuleNamespace, PerformPromiseThen, PromiseCapabilityRecord, Value,
   Throw,
   type Arguments,
   type PromiseObject,
+  ListAppendUnique,
+  CyclicModuleRecord,
 } from '../index.mts';
 import {
   AbruptCompletion, ValueOfNormalCompletion, X, type PlainCompletion,
@@ -68,7 +70,7 @@ export function ContinueDynamicImport(
 
     let evaluatePromise: PromiseObject;
 
-    // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
+    // c. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {
       Assert(phase !== 'source');
       // i. Let namespace be GetModuleNamespace(module).
@@ -78,38 +80,71 @@ export function ContinueDynamicImport(
       // iii. Return unused.
     };
 
-    // e. If phase is "defer", then
+    // d. If phase is "defer", then
     if (phase === 'defer') {
       // i. Let evaluationList be module.GatherAsynchronousTransitiveDependencies().
       const evaluationList = GatherAsynchronousTransitiveDependencies(module);
-      // ii. If evaluationList is empty, then
+      // ii. If module is a Cyclic Module Record, then
+      if (module instanceof CyclicModuleRecord) {
+        // 1. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(all).
+        const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests("all");
+        // 2. Let seen be a new empty List.
+        const seen = new Set<AbstractModuleRecord>();
+        // 3. Perform ListAppendUnique(evaluationList, GatherAsynchronousTransitiveDependenciesForRequests(module, optionalIndirectRequests, seen)).
+        ListAppendUnique(evaluationList, GatherAsynchronousTransitiveDependenciesForRequests(module, optionalIndirectRequests, seen));
+      }
+
+      // iii. If evaluationList is empty, then
       if (evaluationList.length === 0) {
         // 1. Perform fulfilledClosure().
         fulfilledClosure();
         // 2. Return unused.
         return;
       }
-      // iii. Let asyncDepsEvaluationPromises be a new empty List.
+      // iv. Let asyncDepsEvaluationPromises be a new empty List.
       const asyncDepsEvaluationPromises = [];
-      // iv. For each dep in evaluationList, append dep.Evaluate() to asyncDepsEvaluationPromises.
+      // v. For each dep in evaluationList, append dep.Evaluate() to asyncDepsEvaluationPromises.
       for (const dep of evaluationList) {
         asyncDepsEvaluationPromises.push(yield* dep.Evaluate());
       }
-      // vii. Let evaluatePromise be ! SafePerformPromiseAll(asyncDepsEvaluationPromises).
+      // vi. Let evaluatePromise be ! SafePerformPromiseAll(asyncDepsEvaluationPromises).
       evaluatePromise = SafePerformPromiseAll(asyncDepsEvaluationPromises);
-    } else { // f. Else,
+    } else { // e. Else,
       // i. Assert: phase is EVALUATION.
       Assert(phase === 'evaluation');
-      // ii. Let evaluatePromise be module.Evaluate().
-      evaluatePromise = yield* module.Evaluate('all');
+      // ii. Let asyncEvaluationList be a new empty List.
+      let asyncEvaluationList: AbstractModuleRecord[] = [];
+      // iii. If module is a Cyclic Module Record, then
+      if (module instanceof CyclicModuleRecord) {
+        // 1. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(all).
+        const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests("all");
+        // 2. Let seen be a new empty List.
+        const seen = new Set<AbstractModuleRecord>();
+        // 3. Perform ListAppendUnique(asyncEvaluationList, GatherAsynchronousTransitiveDependenciesForRequests(module, optionalIndirectRequests, seen)).
+        asyncEvaluationList = GatherAsynchronousTransitiveDependenciesForRequests(module, optionalIndirectRequests, seen);
+      }
+      // iv. If evaluationList is empty, then
+      if (asyncEvaluationList.length === 0) {
+        //  1. Let evaluatePromise be module.Evaluate().
+        evaluatePromise = yield* module.Evaluate();
+      } else { // v. Else,
+        // 1. Let evaluationPromises be « module.Evaluate() ».
+        const evaluationPromises = [yield* module.Evaluate()];
+        // 2. For each Module Record dep of asyncEvaluationList, append dep.Evaluate() to evaluationPromises.
+        for (const dep of asyncEvaluationList) {
+          evaluationPromises.push(yield* dep.Evaluate());
+        }
+        // 3. Let evaluatePromise be SafePerformPromiseAll(evaluationPromises).
+        evaluatePromise = SafePerformPromiseAll(evaluationPromises);
+      }
     }
 
-    // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+    // f. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
     const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), []);
 
-    // f. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
+    // g. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
     PerformPromiseThen(evaluatePromise!, onFulfilled, onRejected);
-    // g. Return unused.
+    // h. Return unused.
   }
   // 7. Let linkAndEvaluate be CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", « »).
   const linkAndEvaluate = CreateBuiltinFunction(linkAndEvaluateClosure, 0, Value(''), []);
