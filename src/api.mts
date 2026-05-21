@@ -161,13 +161,11 @@ export function gc() {
 
 /** https://tc39.es/ecma262/#sec-jobs */
 export function runJobQueue() {
-  if (surroundingAgent.executionContextStack.some((e) => e.ScriptOrModule !== Value.null)) {
-    return;
-  }
+  const hasRunningExecutionContext = () => surroundingAgent.isPaused() || surroundingAgent.executionContextStack.some((e) => e.ScriptOrModule !== Value.null);
 
   // At some future point in time, when there is no running execution context
   // and the execution context stack is empty, the implementation must:
-  while (surroundingAgent.jobQueue.length > 0) { // eslint-disable-line no-constant-condition
+  while (!hasRunningExecutionContext() && surroundingAgent.jobQueue.length > 0) { // eslint-disable-line no-constant-condition
     const {
       job: abstractClosure,
       callerRealm,
@@ -192,12 +190,12 @@ export function runJobQueue() {
       return Value.undefined;
     }()), (completion) => {
       c = completion;
+      // 3. Perform any host-defined cleanup steps, after which the execution context stack must be empty.
+      ClearKeptObjects();
+      gc();
+      surroundingAgent.executionContextStack.pop(newContext);
     });
     if (!c) surroundingAgent.resumeEvaluate();
-    // 3. Perform any host-defined cleanup steps, after which the execution context stack must be empty.
-    ClearKeptObjects();
-    gc();
-    surroundingAgent.executionContextStack.pop(newContext);
   }
 }
 
@@ -362,7 +360,6 @@ export class ManagedRealm extends Realm {
 
 
   evaluateModule<T extends CyclicModuleRecord>(sourceText: string | T, specifier: string | undefined, finish: (completion: ValueCompletion<PromiseObject>) => void) {
-    using _ = this.scope();
     if (sourceText === undefined || sourceText === null) throw new TypeError('sourceText must be a string or a ModuleRecord');
     const moduleCompletion = typeof sourceText === 'string' ? this.compileModule(sourceText, { specifier }) : sourceText;
 
@@ -377,17 +374,19 @@ export class ManagedRealm extends Realm {
     }
     const module = X(moduleCompletion);
 
-    PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
-      const link = module.Link();
-      if (link instanceof ThrowCompletion) {
-        finish(link);
+    this.scope(() => {
+      PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
+        const link = module.Link();
+        if (link instanceof ThrowCompletion) {
+          finish(link);
+          return Value.undefined;
+        }
+        finish(yield* module.Evaluate());
         return Value.undefined;
-      }
-      finish(yield* module.Evaluate());
-      return Value.undefined;
-    }), CreateBuiltinFunction.from((err = Value.undefined) => {
-      finish(ThrowCompletion(err));
-    }));
+      }), CreateBuiltinFunction.from((err = Value.undefined) => {
+        finish(ThrowCompletion(err));
+      }));
+    });
     runJobQueue();
   }
 

@@ -126,6 +126,10 @@ export class Agent {
     return undefined;
   }
 
+  isPaused() {
+    return !!this.#pausedEvaluator;
+  }
+
   resumeEvaluate(options?: ResumeEvaluateOptions): IteratorResult<void, ValueCompletion> {
     const { noBreakpoint } = options || {};
     if (!this.#pausedEvaluator) {
