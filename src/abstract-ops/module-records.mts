@@ -718,7 +718,7 @@ export function GatherAsynchronousTransitiveDependenciesForRequests(
   const result: ModuleRecord[] = [];
   // 2. For each ModuleRequest Record request of moduleRequests, do
   for (const request of requests) {
-    if (request.Phase == 'source') {
+    if (request.Phase === 'source') {
       continue;
     }
     // a. Let requiredModule be GetImportedModule(referrer, request).

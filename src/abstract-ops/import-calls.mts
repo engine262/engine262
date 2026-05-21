@@ -87,7 +87,7 @@ export function ContinueDynamicImport(
       // ii. If module is a Cyclic Module Record, then
       if (module instanceof CyclicModuleRecord) {
         // 1. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(all).
-        const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests("all");
+        const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests('all');
         // 2. Let seen be a new empty List.
         const seen = new Set<AbstractModuleRecord>();
         // 3. Perform ListAppendUnique(evaluationList, GatherAsynchronousTransitiveDependenciesForRequests(module, optionalIndirectRequests, seen)).
@@ -117,7 +117,7 @@ export function ContinueDynamicImport(
       // iii. If module is a Cyclic Module Record, then
       if (module instanceof CyclicModuleRecord) {
         // 1. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(all).
-        const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests("all");
+        const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests('all');
         // 2. Let seen be a new empty List.
         const seen = new Set<AbstractModuleRecord>();
         // 3. Perform ListAppendUnique(asyncEvaluationList, GatherAsynchronousTransitiveDependenciesForRequests(module, optionalIndirectRequests, seen)).
@@ -128,7 +128,7 @@ export function ContinueDynamicImport(
         //  1. Let evaluatePromise be module.Evaluate().
         evaluatePromise = yield* module.Evaluate();
       } else { // v. Else,
-        // 1. Let evaluationPromises be « module.Evaluate() ».
+        // 1. Let evaluationPromises be « module.Evaluate() ».
         const evaluationPromises = [yield* module.Evaluate()];
         // 2. For each Module Record dep of asyncEvaluationList, append dep.Evaluate() to evaluationPromises.
         for (const dep of asyncEvaluationList) {
