@@ -5,7 +5,8 @@ import {
   Agent, ManagedRealm, setSurroundingAgent,
 } from '#self';
 
-test('evaluateModule', async () => {
+test('evaluateModule', () => {
+  const { promise, resolve } = Promise.withResolvers<void>();
   const agent = new Agent({
     onDebugger() {
       setTimeout(() => {
@@ -18,7 +19,9 @@ test('evaluateModule', async () => {
   let c;
   realm.evaluateModule('debugger; globalThis.x = 1;', undefined, (completion) => {
     c = completion;
+    expect(realm.GlobalObject.properties.has('x')).toBeTruthy();
+    resolve();
   });
   if (!c) agent.resumeEvaluate({});
-  expect(realm.GlobalObject.properties.has('x')).toBeTruthy();
+  return promise;
 });
