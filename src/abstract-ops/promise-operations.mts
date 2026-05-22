@@ -210,9 +210,9 @@ function FulfillPromise(promise: PromiseObject, value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-newpromisecapability */
-export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilityRecord> {
-  if (!IsConstructor(C)) {
-    return Throw.TypeError('$1 is not a Promise constructor', C);
+export function* NewPromiseCapability(constructor: Value): PlainEvaluator<PromiseCapabilityRecord> {
+  if (!IsConstructor(constructor)) {
+    return Throw.TypeError('$1 is not a Promise constructor', constructor);
   }
   const resolvingFunctions = { Resolve: Value.undefined as Value, Reject: Value.undefined as Value };
   const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]: Arguments) => {
@@ -227,7 +227,7 @@ export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilit
     return Value.undefined;
   };
   const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), []));
-  const promise = Q(yield* Construct(C, [executor])) as PromiseObject;
+  const promise = Q(yield* Construct(constructor, [executor])) as PromiseObject;
   if (!IsCallable(resolvingFunctions.Resolve)) {
     return Throw.TypeError('Promise resolve function $1 is not callable', resolvingFunctions.Resolve || Value.undefined);
   }
@@ -280,16 +280,16 @@ function TriggerPromiseReactions(reactions: readonly PromiseReactionRecord[], ar
 }
 
 /** https://tc39.es/ecma262/#sec-promise-resolve */
-export function* PromiseResolve(C: ObjectValue, x: Value): ValueEvaluator<PromiseObject> {
-  Assert(C instanceof ObjectValue);
-  if (IsPromise(x) === Value.true) {
-    const xConstructor = Q(yield* Get(x as PromiseObject, Value('constructor')));
-    if (SameValue(xConstructor, C)) {
-      return x as PromiseObject;
+export function* PromiseResolve(constructor: ObjectValue, resolution: Value): ValueEvaluator<PromiseObject> {
+  Assert(constructor instanceof ObjectValue);
+  if (IsPromise(resolution) === Value.true) {
+    const xConstructor = Q(yield* Get(resolution as PromiseObject, Value('constructor')));
+    if (SameValue(xConstructor, constructor)) {
+      return resolution as PromiseObject;
     }
   }
-  const promiseCapability = Q(yield* NewPromiseCapability(C));
-  Q(yield* Call(promiseCapability.Resolve, Value.undefined, [x]));
+  const promiseCapability = Q(yield* NewPromiseCapability(constructor));
+  Q(yield* Call(promiseCapability.Resolve, Value.undefined, [resolution]));
   return promiseCapability.Promise;
 }
 

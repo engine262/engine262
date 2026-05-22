@@ -469,8 +469,8 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
   return Value.undefined;
 }
 
-export function UnicodeEscape(C: string) {
-  const n = C.charCodeAt(0);
+export function UnicodeEscape(codeUnit: string) {
+  const n = codeUnit.charCodeAt(0);
   Assert(n < 0xFFFF);
   return `\u005Cu${n.toString(16).padStart(4, '0')}`;
 }

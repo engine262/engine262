@@ -351,18 +351,18 @@ export function* Invoke(V: Value, P: PropertyKeyValue, argumentsList: Arguments 
 }
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
-export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<BooleanValue> {
-  if (!IsCallable(C)) {
+export function* OrdinaryHasInstance(constructor: Value, O: Value): ValueEvaluator<BooleanValue> {
+  if (!IsCallable(constructor)) {
     return Value.false;
   }
-  if (isBoundFunctionObject(C)) {
-    const BC = C.BoundTargetFunction;
+  if (isBoundFunctionObject(constructor)) {
+    const BC = constructor.BoundTargetFunction;
     return Q(yield* InstanceofOperator(O, BC));
   }
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const P = Q(yield* Get(C, Value('prototype')));
+  const P = Q(yield* Get(constructor, Value('prototype')));
   if (!(P instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', P);
   }
