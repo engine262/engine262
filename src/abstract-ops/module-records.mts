@@ -660,25 +660,8 @@ export function GatherAsynchronousTransitiveDependencies(module: ModuleRecord, s
     // b. Return result.
     return result;
   }
-  // 8. For each ModuleRequest Record request of module.[[RequestedModules]], do
-  for (const request of module.RequestedModules) {
-    if (request.Phase === 'source') {
-      continue;
-    }
-    // a. Let requiredModule be GetImportedModule(module, request).
-    const requiredModule = GetImportedModule(module, request);
-    // b. Let additionalModules be GatherAsynchronousTransitiveDependencies(requiredModule, seen).
-    const additionalModules = GatherAsynchronousTransitiveDependencies(requiredModule, seen);
-    // c. For each Module Record m of additionalModules, do
-    for (const m of additionalModules) {
-      // i. If result does not contain m, append m to result.
-      if (!result.includes(m)) {
-        result.push(m);
-      }
-    }
-  }
-  // 9. Return result.
-  return result;
+  // 8. Return GatherAsynchronousTransitiveDependenciesForRequests(module, module.[[RequestedModules]], seen)
+  return GatherAsynchronousTransitiveDependenciesForRequests(module, module.RequestedModules, seen);
 }
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-BuildEvaluationList */
@@ -735,6 +718,9 @@ export function GatherAsynchronousTransitiveDependenciesForRequests(
   const result: ModuleRecord[] = [];
   // 2. For each ModuleRequest Record request of moduleRequests, do
   for (const request of requests) {
+    if (request.Phase === 'source') {
+      continue;
+    }
     // a. Let requiredModule be GetImportedModule(referrer, request).
     const requiredModule = GetImportedModule(referrer, request);
     // b. Perform ListAppendUnique(result, GatherAsynchronousTransitiveDependencies(requiredModule, seen)).
