@@ -114,30 +114,23 @@ inspector.attachAgent(surroundingAgent, [realm]);
 }
 
 // Run a module
-{
-  let completion;
-  console.log('--------- evaluateModule ---------');
-  realm.evaluateModule(`
-    import { foo } from "builtin";
-    foo({ toString() { return "X" } });
-  `, undefined, (result) => {
-    completion = result;
-    if (result instanceof ThrowCompletion) {
-      console.error('Module evaluate error: ', inspect(result.Value));
-    } else {
-      PerformPromiseThen(
-        ValueOfNormalCompletion(result),
-        CreateBuiltinFunction.from(() => {
-          console.log('Module evaluated successfully');
-        }),
-        CreateBuiltinFunction.from((error = Value.undefined) => {
-          console.error('Module evaluation error:', inspect(error));
-        }),
-      );
-    }
-  });
-  if (!completion) {
-    agent.resumeEvaluate();
+console.log('--------- evaluateModule ---------');
+realm.evaluateModule(`
+  import { foo } from "builtin";
+  foo({ toString() { return "X" } });
+`, undefined, (result) => {
+  if (result instanceof ThrowCompletion) {
+    console.error('Module evaluate error: ', inspect(result.Value));
+  } else {
+    PerformPromiseThen(
+      ValueOfNormalCompletion(result),
+      CreateBuiltinFunction.from(() => {
+        console.log('Module evaluated successfully');
+      }),
+      CreateBuiltinFunction.from((error = Value.undefined) => {
+        console.error('Module evaluation error:', inspect(error));
+      }),
+    );
   }
-}
+});
 inspector.stop();
