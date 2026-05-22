@@ -60,37 +60,30 @@ function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallConte
 
 /** https://tc39.es/proposal-error-stack-accessor/#sec-get-error.prototype.stack */
 function* ErrorProto_stack_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<JSStringValue | UndefinedValue> {
-  // 1. Let E be the this value.
-  const E = thisValue;
-  // 2. If E is not an Object, throw a TypeError exception.
-  if (!(E instanceof ObjectValue)) {
-    return Throw.TypeError('this value $1 is not an object', E);
+  const error = thisValue;
+  if (!(error instanceof ObjectValue)) {
+    return Throw.TypeError('this value $1 is not an object', error);
   }
-  // 3. If E does not have an [[ErrorData]] internal slot, return undefined.
-  if (!isErrorObject(E)) {
+  if (!isErrorObject(error)) {
     return Value.undefined;
   }
-  // 4. Return an implementation-defined string that represents the stack trace of E.
-  Assert(typeof E.HostDefinedFormattedStack === 'string');
-  return Value(E.HostDefinedMessageString + E.HostDefinedFormattedStack);
+  // 4. Return an implementation-defined string that represents the stack trace of error.
+  Assert(typeof error.HostDefinedFormattedStack === 'string');
+  return Value(error.HostDefinedMessageString + error.HostDefinedFormattedStack);
 }
 
 /** https://tc39.es/proposal-error-stack-accessor/#sec-set-error.prototype.stack */
 function* ErrorProto_stack_setter(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
-  const [v = Value.undefined] = args;
+  const [value = Value.undefined] = args;
 
-  // 1. Let E be the this value.
-  const E = thisValue;
-  // 2. If E is not an Object, throw a TypeError exception.
-  if (!(E instanceof ObjectValue)) {
-    return Throw.TypeError('this value $1 is not an object', E);
+  const error = thisValue;
+  if (!(error instanceof ObjectValue)) {
+    return Throw.TypeError('this value $1 is not an object', error);
   }
-  if (!(v instanceof JSStringValue)) {
-    return Throw.TypeError('stack property must be set to a string value, but got $1', v);
+  if (!(value instanceof JSStringValue)) {
+    return Throw.TypeError('stack property must be set to a string value, but got $1', value);
   }
-  // 3. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Error.prototype%, "stack", v).
-  Q(yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Error.prototype%'), Value('stack'), v));
-  // 4. Return undefined.
+  Q(yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Error.prototype%'), Value('stack'), value));
   return Value.undefined;
 }
 
