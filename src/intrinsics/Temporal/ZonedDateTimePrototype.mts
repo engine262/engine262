@@ -62,7 +62,7 @@ import {
 } from '../../abstract-ops/temporal/plain-date-time.mts';
 import { CreateTemporalInstant } from '../../abstract-ops/temporal/instant.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
-import { floorDiv } from '../../abstract-ops/math.mts';
+import { floorDiv, min } from '../../abstract-ops/math.mts';
 import type { TemporalZonedDateTimeObject } from './ZonedDateTime.mts';
 import {
   AddTimeDurationToEpochNanoseconds,
@@ -403,7 +403,7 @@ function* ZonedDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
   if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1n) {
     return X(CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, zonedDateTime.TimeZone, zonedDateTime.Calendar));
   }
-  const thisNs = zonedDateTime.EpochNanoseconds;
+  let thisNs = zonedDateTime.EpochNanoseconds;
   const timeZone = zonedDateTime.TimeZone;
   const calendar = zonedDateTime.Calendar;
   const isoDateTime = GetISODateTimeFor(timeZone, thisNs);
@@ -414,7 +414,7 @@ function* ZonedDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
     const startNs = Q(GetStartOfDay(timeZone, dateStart));
     Assert(thisNs >= startNs);
     const endNs = Q(GetStartOfDay(timeZone, dateEnd));
-    Assert(thisNs < endNs);
+    thisNs = min(thisNs, endNs - 1n);
     const dayLengthNs = endNs - startNs;
     const dayProgressNs = TimeDurationFromEpochNanosecondsDifference(thisNs, startNs);
     const roundedDayNs = X(RoundTimeDurationToIncrement(dayProgressNs, dayLengthNs, roundingMode));

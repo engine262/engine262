@@ -633,7 +633,7 @@ export function ComputeNudgeWindow(
   if (sign === 1n) Assert(r1.greaterThanOrEqual(0) && r1.lessThan(r2));
   if (sign === -1n) Assert(r1.lessThanOrEqual(0) && r1.greaterThan(r2));
   let startEpochNs;
-  if (r1.equals(0)) {
+  if (DateDurationSign(startDateDuration) === 0n) {
     startEpochNs = originEpochNs;
   } else {
     const start = Q(CalendarDateAdd(calendar, isoDateTime.ISODate, startDateDuration, 'constrain'));
