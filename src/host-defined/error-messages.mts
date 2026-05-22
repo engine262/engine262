@@ -486,6 +486,7 @@ export interface Throw {
   | 'Count $1 is invalid'
   | 'Critical annotation "$1" failed.'
   | 'Duplicate import attribute $1'
+  | 'Duplicate regular expression flag "$1"'
   | 'Duplicated capture group $1'
   | 'Expect a CharacterClassEscape but $1 found'
   | "Expected 'this' value to be a function but got $1"
@@ -562,6 +563,7 @@ export interface Throw {
   | 'option.padding $1 is not an object'
   | 'options.padding $1 is not an object'
   | 'overflow option is invalid ($1), only "constrain" and "reject" are accepted'
+  | 'stack property must be set to a string value, but got $1'
   | 'super ($1) is not a constructor'
   | 'targetOffset ($1) cannot be negative'
   | 'temporalCalendarLike must be a string or a Temporal object, but got $1'
@@ -572,7 +574,6 @@ export interface Throw {
   (m:
 '"add" property ($1) of object $2 is not a function'
   | '"set" property ($1) of object $2 is not a function'
-  | '$1 argument required, but only $2 present'
   | '$1 called on invalid receiver: $2'
   | '$1 does not exist on $2'
   | '$1 does not match any of productions ($2)'

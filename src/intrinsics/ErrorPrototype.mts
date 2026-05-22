@@ -85,19 +85,12 @@ function* ErrorProto_stack_setter(args: Arguments, { thisValue }: FunctionCallCo
   if (!(E instanceof ObjectValue)) {
     return Throw.TypeError('this value $1 is not an object', E);
   }
-  // 3. Let numberOfArgs be the number of arguments passed to this function call.
-  const numberOfArgs = args.length;
-  // 4. If numberOfArgs is 0, throw a TypeError exception.
-  if (numberOfArgs === 0) {
-    return Throw.TypeError('$1 argument required, but only $2 present', 1, numberOfArgs);
+  if (!(v instanceof JSStringValue)) {
+    return Throw.TypeError('stack property must be set to a string value, but got $1', v);
   }
-  // 5. If E does not have an [[ErrorData]] internal slot, return undefined.
-  if (!isErrorObject(E)) {
-    return Value.undefined;
-  }
-  // 6. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Error.prototype%, "stack", v).
+  // 3. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Error.prototype%, "stack", v).
   Q(yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Error.prototype%'), Value('stack'), v));
-  // 7. Return undefined.
+  // 4. Return undefined.
   return Value.undefined;
 }
 
