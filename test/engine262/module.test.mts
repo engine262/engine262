@@ -159,6 +159,7 @@ test('Custom module records', () => {
             Environment: undefined,
             Namespace: undefined,
             HostDefined: {},
+            ModuleSource: undefined,
           }));
         }
       },

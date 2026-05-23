@@ -91,7 +91,8 @@ export interface AbstractModuleInit {
   readonly Realm: AbstractModuleRecord['Realm'];
   readonly Environment: AbstractModuleRecord['Environment'];
   readonly HostDefined: AbstractModuleRecord['HostDefined'];
-  readonly ModuleSource: AbstractModuleRecord['ModuleSource'];
+  // change to non optional after proposal merged
+  readonly ModuleSource?: AbstractModuleRecord['ModuleSource'];
   readonly Namespace: AbstractModuleRecord['Namespace'];
 }
 

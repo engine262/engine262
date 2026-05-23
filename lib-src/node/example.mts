@@ -28,6 +28,7 @@ const agent = new Agent({
             },
             HostDefined: {},
             Namespace: undefined,
+            ModuleSource: undefined,
             Realm: realm,
           });
           return module;
