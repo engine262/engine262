@@ -198,7 +198,7 @@ export function InnerModuleLoading(
   state: GraphLoadingState,
   module: AbstractModuleRecord,
   importedNames: ImportedNamesValue = 'all',
-  loadType: 'single' | 'recursive-load' = 'recursive-load',
+  loadType: 'single' | 'recursive-load',
 ) {
   // 1. Assert: state.[[IsLoading]] is true.
   Assert(Boolean(state.IsLoading === true));
@@ -1009,6 +1009,7 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
     Realm: surroundingAgent.currentRealmRecord,
     Environment: undefined,
     Namespace: undefined,
+    ModuleSource: undefined,
     HostDefined: undefined,
     ExportNames: [Value('default')],
     EvaluationSteps: closure,

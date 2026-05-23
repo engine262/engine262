@@ -154,6 +154,10 @@ const InternalMethods = {
       // a. Return GetModuleNamespace(targetModule, evaluation).
       return GetModuleNamespace(targetModule, 'evaluation');
     }
+    if (binding.BindingName === 'source') {
+      Assert(!!targetModule.ModuleSource);
+      return targetModule.ModuleSource;
+    }
     // 11. If binding.[[BindingName]] is deferred-namespace, then
     if (binding.BindingName === 'deferred-namespace') {
       // a. Return GetModuleNamespace(targetModule, defer).
@@ -165,8 +169,6 @@ const InternalMethods = {
     if (!targetEnv) {
       return Throw.ReferenceError('$1 is not defined', P);
     }
-    // https://github.com/tc39/ecma262/pull/3492#issuecomment-4365941050
-    Assert(binding.BindingName !== 'source');
     // 14. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
   },

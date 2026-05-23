@@ -91,7 +91,7 @@ export interface AbstractModuleInit {
   readonly Realm: AbstractModuleRecord['Realm'];
   readonly Environment: AbstractModuleRecord['Environment'];
   readonly HostDefined: AbstractModuleRecord['HostDefined'];
-  readonly ModuleSource?: AbstractModuleRecord['ModuleSource'];
+  readonly ModuleSource: AbstractModuleRecord['ModuleSource'];
   readonly Namespace: AbstractModuleRecord['Namespace'];
 }
 
@@ -210,7 +210,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       HostDefined: hostDefined,
     });
     // 5. Perform InnerModuleLoading(state, module, importedNames).
-    InnerModuleLoading(state, module, importedNames);
+    InnerModuleLoading(state, module, importedNames, 'recursive-load');
     // 6. Return pc.[[Promise]].
     return pc.Promise;
   }
@@ -547,8 +547,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           });
         } else { // iv. Else,
           // 1. Assert: module imports a specific binding for this export.
+          Assert(e.ImportName instanceof JSStringValue);
           // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
-          return importedModule.ResolveExport(e.ImportName as JSStringValue, resolveSet);
+          return importedModule.ResolveExport(e.ImportName, resolveSet);
         }
       }
     }
@@ -736,7 +737,6 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
           X(env.InitializeBinding(ie.LocalName, namespace));
         } else if (resolution.BindingName === 'source') {
-          // No spec text
           const moduleSourceObject = resolution.Module.ModuleSource;
           if (moduleSourceObject === undefined) {
             return Throw.SyntaxError('Module source is not available');

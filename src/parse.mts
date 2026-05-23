@@ -204,6 +204,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     AsyncParentModules: [],
     DFSAncestorIndex: undefined,
     PendingAsyncDependencies: undefined,
+    ModuleSource: undefined,
   });
   if (!hostDefined.doNotTrackScriptId) {
     surroundingAgent.addParsedSource(module);

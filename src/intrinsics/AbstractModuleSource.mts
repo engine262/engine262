@@ -22,7 +22,7 @@ function AbstractModuleSourceConstructor(_args: Arguments, _context: FunctionCal
 }
 
 /** https://tc39.es/proposal-source-phase-imports/#sec-get-%abstractmodulesource%.prototype-%symbol.tostringtag% */
-function AbstractModuleSourceToStringTag(_args: Arguments, { thisValue }: FunctionCallContext) {
+function AbstractModuleSourceProto_toStringTagGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
     return Value.undefined;
@@ -38,7 +38,7 @@ function AbstractModuleSourceToStringTag(_args: Arguments, { thisValue }: Functi
 
 export function bootstrapAbstractModuleSource(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
-    [wellKnownSymbols.toStringTag, [AbstractModuleSourceToStringTag, Value.undefined]],
+    [wellKnownSymbols.toStringTag, [AbstractModuleSourceProto_toStringTagGetter, Value.undefined]],
   ], realmRec.Intrinsics['%Object.prototype%']);
   const constructor = bootstrapConstructor(realmRec, AbstractModuleSourceConstructor, 'AbstractModuleSource', 0, proto);
   constructor.Prototype = realmRec.Intrinsics['%Function.prototype%'];
