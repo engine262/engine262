@@ -73,7 +73,7 @@ import {
 
 export interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
-  readonly InitialName: JSStringValue | NullValue;
+  InitialName: JSStringValue | NullValue;
   readonly Async: boolean;
   // https://github.com/tc39/ecma262/pull/3212/
   readonly IsClassConstructor: BooleanValue;
@@ -104,7 +104,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
    * Note: this is different than InitialName, which is used and observable in Function.prototype.toString.
    * This is only used in the inspector.
    */
-  readonly HostInitialName: PropertyKeyValue | PrivateName;
+  HostInitialName: PropertyKeyValue | PrivateName;
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
@@ -541,44 +541,37 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
-export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
-  // 1. Assert: F is an extensible object that does not have a "name" own property.
-  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('name'))) === Value.false);
-  // 2. If Type(name) is Symbol, then
+export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
+  Assert(X(IsExtensible(func)) === Value.true && X(HasOwnProperty(func, Value('name'))) === Value.false);
   if (name instanceof SymbolValue) {
-    // a. Let description be name's [[Description]] value.
     const description = name.Description;
-    // b. If description is undefined, set name to the empty String.
     if (description === Value.undefined) {
       name = Value('');
     } else {
-      // c. Else, set name to the string-concatenation of "[", description, and "]".
       name = Value(`[${(description as JSStringValue).stringValue()}]`);
     }
-  } else if (name instanceof PrivateName) { // 3. Else if name is a Private Name, then
-    // a. Set name to name.[[Description]].
+  } else if (name instanceof PrivateName) {
     name = name.Description;
   }
-  // 4. If F has an [[InitialName]] internal slot, then
-  if ('InitialName' in F) {
-    // a. Set F.[[InitialName]] to name.
-    (F as Mutable<FunctionObject>).InitialName = name;
+  if ('InitialName' in func) {
+    func.InitialName = name;
   }
-  if ('HostInitialName' in F) {
-    // a. Set F.[[InitialName]] to name.
-    (F as Mutable<ECMAScriptFunctionObject>).HostInitialName = name;
+
+  // non-spec
+  if ('HostInitialName' in func) {
+    func.HostInitialName = name;
   }
-  // 5. If prefix is present, then
+
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
     name = Value(`${prefix.stringValue()} ${name.stringValue()}`);
-    // b. If F has an [[InitialName]] internal slot, then
-    if ('InitialName' in F) {
-      // i. Optionally, set F.[[InitialName]] to name.
+    if ('InitialName' in func) {
+      // i. NOTE: The choice in the following step is made independently each time this Abstract Operation is invoked.
+      // i. Set _func_.[[InitialName]] to an implementation-defined choice of either _name_ or _prefixedName_.
+      func.InitialName = name;
     }
   }
-  // 6. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-  X(DefinePropertyOrThrow(F, Value('name'), Descriptor({
+  X(DefinePropertyOrThrow(func, Value('name'), Descriptor({
     Value: name,
     Writable: Value.false,
     Enumerable: Value.false,

@@ -62,7 +62,8 @@ export function gc() {
   //     i. Set ref.[[WeakRefTarget]] to empty.
   //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, and cell.[[WeakRefTarget]] is obj,
   //     i. Set cell.[[WeakRefTarget]] to empty.
-  //     ii. Optionally, perform ! HostEnqueueFinalizationRegistryCleanupJob(fg).
+  //     ii. Let _enqueueCleanup_ be an implementation-defined choice of either *true* or *false*.
+  //     iii. If _enqueueCleanup_ is *true*, perform HostEnqueueFinalizationRegistryCleanupJob(_fg_).
   //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
   //     i. Set r.[[Key]] to empty.
   //     ii. Set r.[[Value]] to empty.
