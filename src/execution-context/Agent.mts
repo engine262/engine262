@@ -20,6 +20,7 @@ import {
   performDevtoolsEval,
   ManagedRealm,
   ToBoolean,
+  type GlobalSymbolRegistryRecord,
 } from '#self';
 
 let agentSignifier = 0;
@@ -36,6 +37,7 @@ export interface AgentRecord {
   CandidateExecution: never;
   KeptAlive: Set<ObjectValue | SymbolValue>;
   ModuleAsyncEvaluationCount: number;
+  readonly GlobalSymbolRegistry: GlobalSymbolRegistryRecord[];
 }
 
 /** https://tc39.es/ecma262/#sec-agents */
@@ -64,6 +66,7 @@ export class Agent {
       CandidateExecution: undefined!,
       KeptAlive: new Set(),
       ModuleAsyncEvaluationCount: 0,
+      GlobalSymbolRegistry: [],
     };
 
     this.hostDefinedOptions = {

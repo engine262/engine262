@@ -1,6 +1,5 @@
 import {
   Descriptor,
-  type JSStringValue,
   SymbolValue,
   Value,
   wellKnownSymbols,
@@ -13,17 +12,12 @@ import {
   KeyForSymbol,
   Realm,
   SameValue,
+  surroundingAgent,
   Throw,
   ToString,
   type FunctionObject,
   type OrdinaryObject,
 } from '#self';
-
-export interface GlobalSymbolRegistryRecord {
-  readonly Key: JSStringValue;
-  readonly Symbol: SymbolValue;
-}
-export const GlobalSymbolRegistry: GlobalSymbolRegistryRecord[] = [];
 
 export interface SymbolObject extends OrdinaryObject {
   readonly SymbolData: SymbolValue;
@@ -52,8 +46,9 @@ function* SymbolConstructor(this: FunctionObject, [description = Value.undefined
 function* Symbol_for([key = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let stringKey be ? ToString(key).
   const stringKey = Q(yield* ToString(key));
-  // 2. For each element e of the GlobalSymbolRegistry List, do
-  for (const e of GlobalSymbolRegistry) {
+  const agentRecord = surroundingAgent.AgentRecord;
+  const globalSymbolRegistry = agentRecord.GlobalSymbolRegistry;
+  for (const e of globalSymbolRegistry) {
     // a. If SameValue(e.[[Key]], stringKey) is true, return e.[[Symbol]].
     if (SameValue(e.Key, stringKey)) {
       return e.Symbol;
@@ -63,7 +58,7 @@ function* Symbol_for([key = Value.undefined]: Arguments): ValueEvaluator {
   // 4. Let newSymbol be a new unique Symbol value whose [[Description]] value is stringKey.
   const newSymbol = new SymbolValue(stringKey);
   // 5. Append the Record { [[Key]]: stringKey, [[Symbol]]: newSymbol } to the GlobalSymbolRegistry List.
-  GlobalSymbolRegistry.push({ Key: stringKey, Symbol: newSymbol });
+  globalSymbolRegistry.push({ Key: stringKey, Symbol: newSymbol });
   // 6. Return newSymbol.
   return newSymbol;
 }
