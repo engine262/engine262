@@ -307,6 +307,8 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
   let index = 0;
   const length = string.length;
   while (true) {
+    // Assert: The number of elements in bytes is evenly divisible by 3.
+    Assert(bytes.length % 3 === 0);
     index = SkipAsciiWhitespace(string, index);
     if (index === length) {
       if (chunkLength > 0) {
