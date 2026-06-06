@@ -1,6 +1,5 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import {
-  GetOptionsObject,
   GetRoundingIncrementOption,
   GetRoundingModeOption,
   RoundingMode,
@@ -33,6 +32,7 @@ import {
   CreateDataPropertyOrThrow,
   F,
   Get,
+  GetOptionsObject,
   HoursPerDay,
   JSStringValue,
   MinutesPerHour,

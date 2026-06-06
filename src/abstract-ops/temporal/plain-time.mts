@@ -7,10 +7,11 @@ import {
   abs, floorDiv, max, min, modulo,
 } from '../math.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
-import { GetOptionsObject, SnapToInteger, type RoundingMode } from './addition.mts';
+import { SnapToInteger, type RoundingMode } from './addition.mts';
 import {
   Assert, type TimeDuration, TimeDurationFromComponents, nsPerDay, Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetISODateTimeFor, JSStringValue, Throw, type PlainEvaluator, UndefinedValue, type PlainCompletion, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, Get, FormatTimeString, type TimeUnit, TemporalUnit, Table21_LengthInNanoSeconds, RoundNumberToIncrement, GetDifferenceSettings, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
   type Integer,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-time-records */

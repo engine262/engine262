@@ -19,7 +19,6 @@ import {
   type FunctionCallContext,
   wellKnownSymbols,
 } from '../value.mts';
-import { GetOptionsObject } from '../abstract-ops/temporal/addition.mts';
 import { type IteratorZipMode, IteratorZip } from '../abstract-ops/iterator-operations.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
@@ -45,6 +44,7 @@ import {
   type Realm,
   Throw,
   type YieldEvaluator,
+  GetOptionsObject,
 } from '#self';
 
 
@@ -246,10 +246,10 @@ function* Iterator_zipKeyed([iterables = Value.undefined, _options = Value.undef
   const keys: PropertyKeyValue[] = [];
 
   for (const key of allKeys) {
-    const _desc = yield* iterables.GetOwnProperty(key);
-    IfAbruptCloseIterators(_desc, iters);
-    const desc = X(_desc);
-    if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+    const _propertyDesc = yield* iterables.GetOwnProperty(key);
+    IfAbruptCloseIterators(_propertyDesc, iters);
+    const propertyDesc = X(_propertyDesc);
+    if (!(propertyDesc instanceof UndefinedValue) && propertyDesc.Enumerable === Value.true) {
       const _value = yield* Get(iterables, key);
       IfAbruptCloseIterators(_value, iters);
       const value = X(_value);

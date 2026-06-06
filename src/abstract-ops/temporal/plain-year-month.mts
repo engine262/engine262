@@ -3,12 +3,13 @@ import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import { type TemporalPlainYearMonthObject, isTemporalPlainYearMonthObject, type ISOYearMonthRecord } from '../../intrinsics/Temporal/PlainYearMonth.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { floorDiv, modulo } from '../math.mts';
-import { GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from './addition.mts';
+import { GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from './addition.mts';
 import {
   Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarYearMonthFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateToFields, type CalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation, CalendarEquals, GetDifferenceSettings, TemporalUnit, CompareISODate, CreateTemporalDuration, CalendarDateFromFields, CalendarDateUntil, type DateUnit, AdjustDateDurationRecord, CombineDateAndTimeDuration, RoundRelativeDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord, CalendarDateAdd,
   CombineISODateAndTimeRecord,
   MidnightTimeRecord,
   type Integer,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth */

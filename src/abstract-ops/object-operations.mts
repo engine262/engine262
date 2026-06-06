@@ -46,6 +46,7 @@ import {
   ToPropertyKey,
   CanonicalizeKeyedCollectionKey,
   Throw,
+  OrdinaryObjectCreate,
 } from '#self';
 
 
@@ -476,29 +477,14 @@ export function* CopyDataProperties(target: ObjectValue, source: Value, excluded
   return target;
 }
 
-/** https://tc39.es/ecma262/#sec-SetterThatIgnoresPrototypeProperties */
-export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: ObjectValue, propertyKey: PropertyKeyValue, value: Value): PlainEvaluator {
-  // 1. If thisValue is not an Object, then
-  if (!(thisValue instanceof ObjectValue)) {
-    // a. Throw a TypeError exception.
-    return Throw.TypeError('$1 is not an object', thisValue);
-  }
-  // 2. If SameValue(thisValue, home) is true, then
-  if (SameValue(thisValue, home)) {
-    // a. NOTE: Throwing here emulates assignment to a non-writable data property on the home object in strict mode code.
-    // b. Throw a TypeError exception.
-    return Throw.TypeError('Cannot set property $1 on $2', propertyKey, thisValue);
-  }
-  // 3. Let desc be ? thisValue.[[GetOwnProperty]](p).
-  const desc = Q(yield* thisValue.GetOwnProperty(propertyKey));
-  // 4. If desc is undefined, then
-  if (desc === Value.undefined) {
-    Q(yield* CreateDataPropertyOrThrow(thisValue, propertyKey, value));
-  } else {
-    Q(yield* Set(thisValue, propertyKey, value, Value.true));
-  }
-  return undefined;
-}
+export { PrivateElementFind } from './private-names.mts';
+export { PrivateFieldAdd } from './private-names.mts';
+export { PrivateMethodOrAccessorAdd } from './private-names.mts';
+// HostEnsureCanAddPrivateElement only for browsers
+export { PrivateGet } from './private-names.mts';
+export { PrivateSet } from './private-names.mts';
+export { DefineField } from './function-operations.mts';
+export { InitializeInstanceElements } from './function-operations.mts';
 
 export type KeyedGroupRecord = {
   Key: PropertyKeyValue,
@@ -506,7 +492,7 @@ export type KeyedGroupRecord = {
 };
 
 /** https://tc39.es/ecma262/#sec-add-value-to-keyed-group */
-function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue, value: Value): void {
+export function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue, value: Value): void {
   /*
     1. For each Record { [[Key]], [[Elements]] } g of groups, do
       a. If SameValue(g.[[Key]], key) is true, then
@@ -535,6 +521,7 @@ function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue,
   groups.push(group);
 }
 
+/** https://tc39.es/ecma262/#sec-groupby */
 export function* GroupBy(items: Value, callback: Value, keyCoercion: 'property' | 'collection'): PlainEvaluator<KeyedGroupRecord[]> {
   /*
   1. Perform ? RequireObjectCoercible(items).
@@ -598,4 +585,39 @@ export function* GroupBy(items: Value, callback: Value, keyCoercion: 'property' 
     AddValueToKeyedGroup(groups, key, value);
     k += 1;
   }
+}
+
+/** https://tc39.es/proposal-temporal/#sec-getoptionsobject */
+export function GetOptionsObject(options: Value) {
+  if (options instanceof UndefinedValue) {
+    return OrdinaryObjectCreate(Value.null);
+  }
+  if (options instanceof ObjectValue) {
+    return options;
+  }
+  return Throw.TypeError('$1 is not an object', options);
+}
+
+/** https://tc39.es/ecma262/#sec-SetterThatIgnoresPrototypeProperties */
+export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: ObjectValue, propertyKey: PropertyKeyValue, value: Value): PlainEvaluator {
+  // 1. If thisValue is not an Object, then
+  if (!(thisValue instanceof ObjectValue)) {
+    // a. Throw a TypeError exception.
+    return Throw.TypeError('$1 is not an object', thisValue);
+  }
+  // 2. If SameValue(thisValue, home) is true, then
+  if (SameValue(thisValue, home)) {
+    // a. NOTE: Throwing here emulates assignment to a non-writable data property on the home object in strict mode code.
+    // b. Throw a TypeError exception.
+    return Throw.TypeError('Cannot set property $1 on $2', propertyKey, thisValue);
+  }
+  // 3. Let desc be ? thisValue.[[GetOwnProperty]](p).
+  const desc = Q(yield* thisValue.GetOwnProperty(propertyKey));
+  // 4. If desc is undefined, then
+  if (desc === Value.undefined) {
+    Q(yield* CreateDataPropertyOrThrow(thisValue, propertyKey, value));
+  } else {
+    Q(yield* Set(thisValue, propertyKey, value, Value.true));
+  }
+  return undefined;
 }

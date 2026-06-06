@@ -1,6 +1,5 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import {
-  GetOptionsObject,
   GetRoundingIncrementOption,
   GetRoundingModeOption,
   IsOffsetTimeZoneIdentifier,
@@ -86,6 +85,7 @@ import {
   type Realm,
   type ValueEvaluator,
   TotalTimeDuration,
+  GetOptionsObject,
 } from '#self';
 
 function thisTemporalZonedDateTimeValue(value: Value): PlainCompletion<TemporalZonedDateTimeObject> {

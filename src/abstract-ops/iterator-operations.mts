@@ -45,6 +45,7 @@ import {
 import {
   type ValueCompletion, type PromiseObject, type OrdinaryObject, Throw,
   ReturnCompletion,
+  IfAbruptCloseIterators,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -394,9 +395,7 @@ export function IteratorZip(
       }
       const _results = finishResults(results);
       const completion = yield* Yield(_results);
-      if (completion instanceof AbruptCompletion) {
-        return Q(yield* IteratorCloseAll(openIters, completion));
-      }
+      IfAbruptCloseIterators(completion, openIters);
     }
   };
   const gen = CreateIteratorFromClosure(

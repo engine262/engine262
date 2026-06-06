@@ -2,7 +2,7 @@ import { bootstrapPrototype } from '../bootstrap.mts';
 import { abs } from '../../abstract-ops/math.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
 import {
-  GetOptionsObject, GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
+  GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   type TemporalDurationObject,
@@ -64,6 +64,7 @@ import {
   type ValueEvaluator,
   type MathematicalValue,
   type Integer,
+  GetOptionsObject,
 } from '#self';
 
 function thisTemporalDurationValue(value: Value): PlainCompletion<TemporalDurationObject> {

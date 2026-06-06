@@ -4,7 +4,6 @@ import { type TemporalZonedDateTimeObject, isTemporalZonedDateTimeObject } from 
 import { ParseISODateTime, ParseDateTimeUTCOffset, DateParser } from '../../parser/TemporalParser.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  GetOptionsObject,
   type TimeZoneIdentifier, GetUTCEpochNanoseconds, RoundingMode,
 } from './addition.mts';
 import {
@@ -19,6 +18,7 @@ import {
   type Integer,
   type EpochNanoseconds,
   type MathematicalValue,
+  GetOptionsObject,
 } from '#self';
 
 export type ISODateTimeOffsetBehaviour = 'option' | 'exact' | 'wall';

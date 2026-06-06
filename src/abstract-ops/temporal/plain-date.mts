@@ -6,7 +6,7 @@ import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import {
   abs, max, min, truncateDiv,
 } from '../math.mts';
-import { GetOptionsObject, GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from './addition.mts';
+import { GetUTCEpochNanoseconds, ToZeroPaddedDecimalString } from './addition.mts';
 import {
   Assert, type CalendarType, type FunctionObject, type ValueEvaluator, Throw, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, GetTemporalOverflowOption, X, GetISODateTimeFor, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarDateFromFields, JSStringValue, CanonicalizeCalendar, CalendarISOToDate, type PlainCompletion, ISODaysInMonth, ISODateToEpochDays, EpochDaysToEpochMs, EpochTimeToEpochYear, EpochTimeToMonthInYear, EpochTimeToDate, FormatCalendarAnnotation, CalendarEquals, GetDifferenceSettings, TemporalUnit, CreateTemporalDuration, CalendarDateUntil, type DateUnit, CombineDateAndTimeDuration, RoundRelativeDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, CalendarDateAdd,
   BalanceISOYearMonth,
@@ -19,6 +19,7 @@ import {
   CreateDateDurationRecord,
   type CalendarDateRecord,
   type Integer,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record */

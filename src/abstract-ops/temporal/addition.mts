@@ -22,7 +22,7 @@ import {
   MakeDate,
   MakeDay,
   MakeTime,
-  ObjectValue, OrdinaryObjectCreate, Q, Throw, TimeValueToISODateTimeRecord, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator,
+  ObjectValue, Q, Throw, TimeValueToISODateTimeRecord, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
@@ -43,17 +43,6 @@ export function* SnapToInteger(argument: Value, mode: 'strict' | 'truncate-stric
   if (minimum !== undefined && mv < minimum) return Throw.RangeError('$1 is too small', number);
   if (maximum !== undefined && mv > maximum) return Throw.RangeError('$1 is too large', number);
   return BigInt(mv);
-}
-
-/** https://tc39.es/proposal-temporal/#sec-getoptionsobject */
-export function GetOptionsObject(options: Value) {
-  if (options instanceof UndefinedValue) {
-    return OrdinaryObjectCreate(Value.null);
-  }
-  if (options instanceof ObjectValue) {
-    return options;
-  }
-  return Throw.TypeError('$1 is not an object', options);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-getroundingmodeoption */

@@ -1,6 +1,6 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import {
-  GetOptionsObject, GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
+  GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
@@ -43,6 +43,7 @@ import {
   Assert,
   CreateDataPropertyOrThrow,
   F,
+  GetOptionsObject,
   JSStringValue,
   ObjectValue,
   OrdinaryObjectCreate,

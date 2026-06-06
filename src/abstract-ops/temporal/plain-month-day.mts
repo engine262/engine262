@@ -1,9 +1,10 @@
 import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import { type TemporalPlainMonthDayObject, isTemporalPlainMonthDayObject } from '../../intrinsics/Temporal/PlainMonthDay.mts';
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
-import { GetOptionsObject, ToZeroPaddedDecimalString } from './addition.mts';
+import { ToZeroPaddedDecimalString } from './addition.mts';
 import {
   Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarMonthDayFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateWithinLimits, ISODateToFields, type CalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday */

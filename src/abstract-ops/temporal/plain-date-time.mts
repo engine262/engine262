@@ -6,7 +6,6 @@ import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { abs } from '../math.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  GetOptionsObject,
   GetUTCEpochNanoseconds, ToZeroPaddedDecimalString, type RoundingMode,
 } from './addition.mts';
 import {
@@ -18,6 +17,7 @@ import {
   EpochTimeToEpochYear,
   EpochTimeToMonthInYear,
   EpochTimeToDate,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-timevaluetoisodatetimerecord */

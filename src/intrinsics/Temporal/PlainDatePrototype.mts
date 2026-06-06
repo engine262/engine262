@@ -1,5 +1,4 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
-import { GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
 import type { TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalPlainDateObject } from './PlainDate.mts';
 import {
@@ -45,6 +44,7 @@ import {
   type ValueEvaluator,
   ObjectValue,
   TemporalDateToString,
+  GetOptionsObject,
 } from '#self';
 
 function thisTemporalDateValue(value: Value): PlainCompletion<TemporalPlainDateObject> {

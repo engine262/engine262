@@ -1,5 +1,4 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
-import { GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
 import {
   GetTemporalOverflowOption,
   GetTemporalShowCalendarNameOption,
@@ -25,6 +24,7 @@ import {
 import type { TemporalPlainYearMonthObject } from './PlainYearMonth.mts';
 import {
   F,
+  GetOptionsObject,
   ObjectValue,
   Q,
   RequireInternalSlot,

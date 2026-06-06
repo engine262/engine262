@@ -4,7 +4,7 @@ import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDa
 import { ParseISODateTime, ParseDateTimeUTCOffset } from '../../parser/TemporalParser.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  GetUTCEpochNanoseconds, RoundingMode, type TimeZoneIdentifier, GetOptionsObject,
+  GetUTCEpochNanoseconds, RoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
 import {
   type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, CheckISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, Table21_LengthInNanoSeconds, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalUnit, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays,
@@ -12,6 +12,7 @@ import {
   FormatISODateTime,
   type EpochNanoseconds,
   type Integer,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#eqn-nsPerDay */

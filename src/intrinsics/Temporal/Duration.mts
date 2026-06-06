@@ -1,6 +1,6 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
-import { SnapToInteger, GetOptionsObject } from '../../abstract-ops/temporal/addition.mts';
+import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
 import { bootstrapTemporalDurationPrototype } from './DurationPrototype.mts';
 import {
   ObjectValue, Q, Value, type OrdinaryObject, type ValueEvaluator,
@@ -21,6 +21,7 @@ import {
   IsCalendarUnit,
   AddZonedDateTime,
   isDateUnit,
+  GetOptionsObject,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances */
