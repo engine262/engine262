@@ -851,6 +851,10 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
         this[s].forEach(m);
       }
     });
+
+    this.PrivateElements.forEach((pr) => {
+      m(pr);
+    });
   }
 
   static {
