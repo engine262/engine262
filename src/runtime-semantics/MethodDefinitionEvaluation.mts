@@ -17,6 +17,7 @@ import {
   MakeMethod,
   sourceTextMatchedBy,
   type FunctionObject,
+  type GCMarker,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
@@ -41,6 +42,13 @@ export const PrivateElementRecord = function PrivateElementRecord(value: Private
 } as {
   (value: PrivateElementRecord): PrivateElementRecord;
   [Symbol.hasInstance](instance: unknown): instance is PrivateElementRecord;
+};
+
+// NON-SPEC
+PrivateElementRecord.prototype.mark = function mark(m: GCMarker): void {
+  m(this.Value);
+  m(this.Get);
+  m(this.Set);
 };
 
 // -decorator
