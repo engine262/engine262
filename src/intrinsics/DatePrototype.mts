@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue,
   NumberValue,
@@ -17,6 +16,7 @@ import { LocalTime_TemporalEdited, UTC_TemporalEdited } from '../abstract-ops/te
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { DateObject } from './Date.mts';
 import {
+  surroundingAgent,
   Assert,
   DateFromTime,
   Day,

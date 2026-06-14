@@ -17,7 +17,7 @@ import {
 export interface Job {
   readonly queueName: string;
   readonly job: () => PlainEvaluator<unknown>;
-  readonly callerRealm: Realm;
+  readonly callerRealm: Realm | undefined;
   readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
 }
 
@@ -53,7 +53,7 @@ export function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: Realm | 
 
   const callerRealm = realm || surroundingAgent.currentRealmRecord;
   const scriptOrModule = GetActiveScriptOrModule();
-  surroundingAgent.jobQueue.push({
+  surroundingAgent.jobQueue.enqueuePromiseJob({
     queueName: 'PromiseJobs',
     job,
     callerRealm,

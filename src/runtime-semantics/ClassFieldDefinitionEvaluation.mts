@@ -1,9 +1,9 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { X, Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './PropertyName.mts';
 import {
+  surroundingAgent,
   CreateBuiltinFunction, DefinePropertyOrThrow, MakeMethod, OrdinaryFunctionCreate, PrivateGet, PrivateSet, SymbolDescriptiveString,
 } from '#self';
 import {

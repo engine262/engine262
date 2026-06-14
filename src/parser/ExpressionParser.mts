@@ -6,7 +6,6 @@ import {
   ContainsArguments,
 } from '../static-semantics/all.mts';
 import type { Mutable } from '../utils/language.mts';
-import { surroundingAgent, type Feature } from '../host-defined/engine.mts';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
@@ -19,6 +18,7 @@ import { isLineTerminator, type TokenData } from './Lexer.mts';
 import { FunctionParser, FunctionKind } from './FunctionParser.mts';
 import { RegExpParser, type RegExpParserContext } from './RegExpParser.mts';
 import type { Location, ParseNode } from './ParseNode.mts';
+import { surroundingAgent, type Feature } from '#self';
 import { Throw } from '#self';
 
 export abstract class ExpressionParser extends FunctionParser {

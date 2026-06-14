@@ -1,7 +1,4 @@
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   Await,
   IfAbruptCloseIterator,
   Q,
@@ -20,6 +17,11 @@ import {
 } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  surroundingAgent,
+  Realm,
+  IfAbruptCloseAsyncIterator, IteratorValue, Throw,
+} from '#self';
 import {
   ArrayCreate,
   Assert,
@@ -47,10 +49,6 @@ import {
   AsyncIteratorClose,
   IteratorComplete,
   SameValueZero,
-} from '#self';
-import {
-  Realm,
-  IfAbruptCloseAsyncIterator, IteratorValue, Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */

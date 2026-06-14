@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
   NullValue,
@@ -41,6 +40,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { isBooleanObject } from './Boolean.mts';
 import { isBigIntObject } from './BigInt.mts';
 import {
+  surroundingAgent,
   Assert,
   Call,
   CreateDataProperty,

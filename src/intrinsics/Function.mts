@@ -1,7 +1,7 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q } from '../completion.mts';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   type Arguments, type ValueEvaluator, type FunctionCallContext, type FunctionObject, type Realm,
   Value,

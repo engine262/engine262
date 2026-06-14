@@ -1,6 +1,5 @@
-import { HostEnsureCanCompileStrings, surroundingAgent } from '../host-defined/engine.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
-import { JSStringValue, NullValue, Value } from '../value.mts';
+import { JSStringValue, Value } from '../value.mts';
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mts';
 import {
   IsStrict,
@@ -26,6 +25,7 @@ import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Assert } from './all.mts';
 import {
+  HostEnsureCanCompileStrings, surroundingAgent,
   GetThisEnvironment,
   DeclarativeEnvironmentRecord,
   EnvironmentRecord,
@@ -95,8 +95,8 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
   //   g. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
   //   h. If inClassFieldInitializer is true, and ContainsArguments of body is true, throw a SyntaxError exception.
   const privateIdentifiers: string[] = [];
-  let pointer = direct ? surroundingAgent.runningExecutionContext.PrivateEnvironment : Value.null;
-  while (!(pointer instanceof NullValue)) {
+  let pointer = direct ? surroundingAgent.runningExecutionContext.PrivateEnvironment : null;
+  while (pointer !== null) {
     for (const binding of pointer.Names) {
       privateIdentifiers.push(binding.Description.stringValue());
     }
@@ -138,7 +138,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
   const runningContext = surroundingAgent.runningExecutionContext;
   let lexEnv;
   let varEnv;
-  let privateEnv;
+  let privateEnv: null | PrivateEnvironmentRecord;
   // 14. NOTE: If direct is true, runningContext will be the execution context that performed the direct eval.
   //     If direct is false, runningContext will be the execution context for the invocation of the eval function.
   // 15. If direct is true, then
@@ -155,7 +155,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
     // b. Let varEnv be evalRealm.[[GlobalEnv]].
     varEnv = evalRealm.GlobalEnv;
     // c. Let privateEnv be null.
-    privateEnv = Value.null;
+    privateEnv = null;
   }
   // 17. If strictEval is true, set varEnv to lexEnv.
   if (strictEval === true) {
@@ -200,7 +200,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
 }
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
-export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainEvaluator {
+export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null, strict: boolean): PlainEvaluator {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
   // 2. Let varDeclarations be the VarScopedDeclarations of body.
@@ -247,7 +247,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
   // 5. Let pointer be privateEnv.
   let pointer = privateEnv;
   // 6. Repeat, while pointer is not null,
-  while (!(pointer instanceof NullValue)) {
+  while (pointer !== null) {
     // a. For each Private Name binding of pointer.[[Names]], do
     for (const binding of pointer.Names) {
       // i. If privateIdentifiers does not contain binding.[[Description]], append binding.[[Description]] to privateIdentifiers.

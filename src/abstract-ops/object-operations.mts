@@ -9,9 +9,6 @@ import {
   NullValue,
   type Arguments,
 } from '../value.mts';
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { InstanceofOperator } from '../runtime-semantics/all.mts';
 import {
   EnsureCompletion,
@@ -21,6 +18,9 @@ import {
 import { __ts_cast__, isArray } from '../utils/language.mts';
 import { isBoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   ArrayCreate,
   Assert,

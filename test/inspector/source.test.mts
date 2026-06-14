@@ -3,8 +3,9 @@
 import { expect, test } from 'vitest';
 import { TestInspector } from './utils.mts';
 import {
-  Agent, Construct, CreateBuiltinFunction, Descriptor, evalQ, getHostDefinedErrorDetails, ManagedRealm, setSurroundingAgent,
+  Agent, Construct, CreateBuiltinFunction, Descriptor, getHostDefinedErrorDetails, ManagedRealm, setSurroundingAgent,
   surroundingAgent,
+  X,
   Value,
   type ShadowRealmObject,
 } from '#self';
@@ -16,13 +17,13 @@ test('code in eval', async () => {
   const realm = new ManagedRealm();
   inspector.attachAgent(agent, [realm]);
   const messages: unknown[] = [];
-  realm.scope(() => {
-    realm.GlobalObject.properties.set('e', new Descriptor({
-      Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
-      }),
-    }));
-  });
+  const pop = realm.pushTopContext();
+  realm.GlobalObject.properties.set('e', new Descriptor({
+    Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
+      messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    }),
+  }));
+  pop?.();
 
   await inspector.eval([
     `e(new Error());`,
@@ -41,13 +42,13 @@ test('code in new Function', async () => {
   const realm = new ManagedRealm();
   inspector.attachAgent(agent, [realm]);
   const messages: unknown[] = [];
-  realm.scope(() => {
-    realm.GlobalObject.properties.set('e', new Descriptor({
-      Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
-      }),
-    }));
-  });
+  const pop = realm.pushTopContext();
+  realm.GlobalObject.properties.set('e', new Descriptor({
+    Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
+      messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    }),
+  }));
+  pop?.();
 
   await inspector.eval(`
     new Function(\`
@@ -69,19 +70,17 @@ test('code in ShadowRealm', async () => {
   const realm = new ManagedRealm();
   inspector.attachAgent(agent, [realm]);
   const messages: unknown[] = [];
-  realm.scope(() => {
-    evalQ((_Q, X) => {
-      const shadowRealm = X(Construct(surroundingAgent.intrinsic('%ShadowRealm%'))) as ShadowRealmObject;
-      realm.GlobalObject.properties.set('r', new Descriptor({
-        Value: shadowRealm,
-      }));
-      shadowRealm.ShadowRealm.GlobalObject.properties.set('e', new Descriptor({
-        Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-          messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
-        }),
-      }));
-    });
-  });
+  const pop = realm.pushTopContext();
+  const shadowRealm = X(Construct(surroundingAgent.intrinsic('%ShadowRealm%'))) as ShadowRealmObject;
+  realm.GlobalObject.properties.set('r', new Descriptor({
+    Value: shadowRealm,
+  }));
+  shadowRealm.ShadowRealm.GlobalObject.properties.set('e', new Descriptor({
+    Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
+      messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    }),
+  }));
+  pop?.();
 
   await inspector.eval(`
     r.evaluate('e(new Error())');

@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   NullValue,
   JSStringValue,
@@ -19,6 +18,7 @@ import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
 import { isRegExpObject, type RegExpObject } from './RegExp.mts';
+import { surroundingAgent } from '#self';
 import {
   ArrayCreate,
   Assert,

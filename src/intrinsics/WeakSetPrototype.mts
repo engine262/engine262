@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value,
   type Arguments,
@@ -8,6 +7,7 @@ import { Q, type ValueCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakSetObject } from './WeakSet.mts';
 import {
+  surroundingAgent,
   SameValue,
   RequireInternalSlot,
   CanBeHeldWeakly,

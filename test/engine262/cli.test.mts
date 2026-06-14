@@ -19,9 +19,6 @@ function waitUntilProcessExit(getChildProcess: () => ChildProcess) {
     cp.on('close', (code) => {
       resolve({ code, stdout, stderr });
     });
-    cp.on('exit', (code) => {
-      resolve({ code, stdout, stderr });
-    });
     cp.on('error', (err) => {
       reject(err);
     });

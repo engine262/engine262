@@ -1,6 +1,6 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { surroundingAgent } from '#self';
 import { Assert, type StatementEvaluator } from '#self';
 
 /** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */

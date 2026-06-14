@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, ObjectValue, Value,
 } from '../value.mts';
@@ -34,6 +33,7 @@ import {
   DestructuringAssignmentEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
+import { surroundingAgent, DeclarativeEnvironmentRecord } from '#self';
 import {
   Assert,
   Call,
@@ -54,7 +54,6 @@ import {
   type IteratorRecord,
   ValueOfNormalCompletion,
 } from '#self';
-import { DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-loopcontinues */
 function LoopContinues(completion: Completion<Value | void>, labelSet: JSStringSet) {

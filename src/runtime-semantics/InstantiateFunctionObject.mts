@@ -1,10 +1,10 @@
 import { X } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { OutOfRange } from '../utils/language.mts';
 import { Descriptor, Value } from '../value.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  surroundingAgent,
   DefinePropertyOrThrow,
   MakeConstructor,
   OrdinaryObjectCreate,
@@ -12,13 +12,13 @@ import {
   OrdinaryFunctionCreate,
   sourceTextMatchedBy,
 } from '#self';
-import type { EnvironmentRecord, NullValue, PrivateEnvironmentRecord } from '#self';
+import type { EnvironmentRecord, PrivateEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
+export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -38,7 +38,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
+export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -65,7 +65,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 //  AsyncFunctionDeclaration :
 //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncBody `}`
 //    `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
-export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
+export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -83,7 +83,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
 //  AsyncGeneratorDeclaration :
 //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
 //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
+export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -106,7 +106,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   return F;
 }
 
-export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
+export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   switch (AnyFunctionDeclaration.type) {
     case 'FunctionDeclaration':
       return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);

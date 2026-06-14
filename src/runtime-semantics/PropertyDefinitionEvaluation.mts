@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, NullValue, ObjectValue, type PropertyKeyValue, JSStringValue, BooleanValue,
 } from '../value.mts';
@@ -18,6 +17,7 @@ import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mts';
 import {
+  surroundingAgent,
   Assert,
   GetValue,
   CreateDataPropertyOrThrow,

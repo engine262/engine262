@@ -4,10 +4,10 @@ import {
   UndefinedValue,
   NullValue,
 } from '../value.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert,
   SameValue,

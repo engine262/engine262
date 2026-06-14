@@ -7,7 +7,6 @@ import {
   type ValueEvaluator,
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue,
   ObjectValue,
@@ -21,6 +20,7 @@ import {
 } from '../value.mts';
 import { type IteratorZipMode, IteratorZip } from '../abstract-ops/iterator-operations.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   Call,
   CreateArrayFromList,

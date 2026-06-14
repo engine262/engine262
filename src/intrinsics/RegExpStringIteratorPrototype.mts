@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -7,6 +6,7 @@ import {
 } from '../completion.mts';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   CreateIteratorFromClosure,
   GeneratorResume,

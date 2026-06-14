@@ -1,10 +1,8 @@
 import {
   AbstractModuleRecord,
   FinishLoadingImportedModule,
-  ManagedRealm,
   NormalCompletion,
   Realm,
-  runJobQueue,
   surroundingAgent,
   Throw,
   ThrowCompletion,
@@ -36,7 +34,7 @@ export function composeModuleLoaders(loaders: readonly ModuleLoader[]): NonNulla
   return (referrer, moduleRequest, hostDefined, payload) => {
     const executionContext = surroundingAgent.runningExecutionContext;
     const errors: string[] = [];
-    function fin(completion: PlainCompletion<AbstractModuleRecord>) {
+    function finish(completion: PlainCompletion<AbstractModuleRecord>) {
       let async = false;
       if (surroundingAgent.runningExecutionContext !== executionContext) {
         async = true;
@@ -44,23 +42,28 @@ export function composeModuleLoaders(loaders: readonly ModuleLoader[]): NonNulla
       }
       FinishLoadingImportedModule(referrer, moduleRequest, payload, completion);
       if (async) surroundingAgent.executionContextStack.pop(executionContext);
-      runJobQueue();
+      surroundingAgent.eventLoop.runOnce();
     }
     function tryNextLoader(loader: ModuleLoader | undefined, restLoaders: readonly ModuleLoader[]): void {
       if (!loader) {
         const errorMessage = errors.map((error) => `\n    - ${error}`).join('');
-        fin((executionContext.Realm as ManagedRealm).scope(() => Throw.SyntaxError('No module loader can load this module request.$1', errorMessage)));
+        surroundingAgent.executionContextStack.push(executionContext);
+        const error = Throw.SyntaxError('No module loader can load this module request.$1', errorMessage);
+        surroundingAgent.executionContextStack.pop(executionContext);
+        finish(error);
         return;
       }
       loader(referrer, moduleRequest, hostDefined, (completion): void => {
         if (!completion && !restLoaders.length) {
+          surroundingAgent.executionContextStack.push(executionContext);
           completion = Throw.Error('Cannot load module $1', moduleRequest.Specifier);
+          surroundingAgent.executionContextStack.pop(executionContext);
         }
         if (!completion) {
           tryNextLoader(restLoaders[0], restLoaders.slice(1));
           return;
         }
-        fin(completion);
+        finish(completion);
       }, (error) => {
         errors.push(error);
       });

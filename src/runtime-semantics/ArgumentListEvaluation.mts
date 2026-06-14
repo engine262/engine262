@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type Arguments,
 } from '../value.mts';
@@ -8,6 +7,7 @@ import { OutOfRange, isArray } from '../utils/language.mts';
 import { TemplateStrings } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  surroundingAgent,
   Assert,
   ArrayCreate,
   SetIntegrityLevel,

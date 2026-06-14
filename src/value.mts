@@ -1,4 +1,4 @@
-import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
+import { type GCMarker } from './host-defined/engine.mts';
 import {
   Q, X, type ValueEvaluator, type PlainCompletion,
 } from './completion.mts';
@@ -26,6 +26,7 @@ import {
   type ECMAScriptFunctionObject,
   type DefaultConstructorBuiltinFunction, EnvironmentRecord,
   Throw,
+  surroundingAgent,
 } from '#self';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor

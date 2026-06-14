@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
   BoundNames,
@@ -17,6 +16,7 @@ import {
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mts';
+import { surroundingAgent, DeclarativeEnvironmentRecord } from '#self';
 import {
   Assert,
   CreateListIteratorRecord,
@@ -24,7 +24,6 @@ import {
   CreateUnmappedArgumentsObject,
   type ECMAScriptFunctionObject,
 } from '#self';
-import { DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
 export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject, argumentsList: Arguments): PlainEvaluator<void> {

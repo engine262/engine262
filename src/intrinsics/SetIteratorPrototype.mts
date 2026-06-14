@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X, type ValueCompletion } from '../completion.mts';
 import {
   Value, type Arguments, type FunctionCallContext,
@@ -6,6 +5,7 @@ import {
 import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { SetObject } from './Set.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert,
   CreateArrayFromList,

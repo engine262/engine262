@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, ReferenceRecord, Value, type PropertyKeyValue,
 } from '../value.mts';
@@ -25,6 +24,7 @@ import {
   NamedEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
+import { surroundingAgent } from '#self';
 import {
   ArrayCreate,
   CopyDataProperties,

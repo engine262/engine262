@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
   JSStringValue,
@@ -42,6 +41,7 @@ import {
   Yield,
   type GeneratorObject,
 } from './all.mts';
+import { surroundingAgent } from '#self';
 import {
   type ValueCompletion, type PromiseObject, type OrdinaryObject, Throw,
   ReturnCompletion,

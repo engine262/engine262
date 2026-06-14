@@ -10,7 +10,7 @@ import {
   EnvironmentRecord,
   ObjectValue,
   CreateArrayFromList,
-  unwrapCompletion,
+  X,
   isBoundFunctionObject,
 } from '#self';
 
@@ -99,7 +99,7 @@ export const Function: Inspector<FunctionObject> = {
           }, {
             name: '[[BoundArguments]]',
             value: context.toRemoteObject(
-              unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(v.BoundArguments), context))!,
+              X(nativeEvalInAnyRealm(false, context, () => CreateArrayFromList(v.BoundArguments)))!,
               { generatePreview: true },
             ),
           });
@@ -122,7 +122,7 @@ export const Function: Inspector<FunctionObject> = {
         }
         env = env.OuterEnv;
       }
-      const scopeObject = unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(scope), context));
+      const scopeObject = X(nativeEvalInAnyRealm(false, context, () => CreateArrayFromList(scope)));
       const scopeDesc: Protocol.Runtime.RemoteObject | undefined = scopeObject ? {
         className: 'Array',
         description: `Scopes[${scope.length}]`,

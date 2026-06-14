@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   DataBlock,
@@ -23,7 +22,7 @@ import {
   type FunctionObject,
 } from './all.mts';
 import { isNonNegativeInteger } from './data-types-and-values.mts';
-import { Throw } from '#self';
+import { surroundingAgent, Throw } from '#self';
 
 /** https://tc39.es/ecma262/#mathematical-value */
 export type MathematicalValue = Decimal;

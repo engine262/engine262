@@ -5,9 +5,6 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
@@ -21,6 +18,7 @@ import {
   type OrdinaryObject,
   type Mutable,
   isEvaluator,
+  surroundingAgent,
 } from '#self';
 
 export interface ShadowRealmObject extends OrdinaryObject {
@@ -31,7 +29,7 @@ export function isShadowRealmObject(value: Value): value is ShadowRealmObject {
   return 'ShadowRealm' in value;
 }
 
-/** https://tc39.es/ecma262/#sec-symbol-description */
+/** https://tc39.es/proposal-shadowrealm/#sec-shadowrealm */
 function* ShadowRealmConstructor(this: FunctionObject, _args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   Q(surroundingAgent.debugger_cannotPreview);
   if (NewTarget instanceof UndefinedValue) {
@@ -39,11 +37,10 @@ function* ShadowRealmConstructor(this: FunctionObject, _args: Arguments, { NewTa
   }
   const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%ShadowRealm.prototype%', ['ShadowRealm'])) as Mutable<ShadowRealmObject>;
   // Note: wait for https://github.com/tc39/ecma262/pull/3728
-  const realm = Q(MakeRealm({
+  const innerContext = Q(MakeRealm({
     name: 'ShadowRealm',
     specifier: surroundingAgent.currentRealmRecord.HostDefined.specifier,
   }));
-  const innerContext = realm.topContext;
 
   const realmRec = innerContext.Realm;
   O.ShadowRealm = realmRec;

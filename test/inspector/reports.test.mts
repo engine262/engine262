@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { TestInspector } from './utils.mts';
 import {
-  Agent, ManagedRealm, runJobQueue, setSurroundingAgent,
+  Agent, ManagedRealm, setSurroundingAgent,
 } from '#self';
 import { createConsole } from '#self/inspector';
 
@@ -189,7 +189,6 @@ test('unhandled promise rejection', async () => {
   `);
 
   await inspector.eval('void a.catch(() => {});');
-  runJobQueue();
   expect(inspector.flush()).toMatchInlineSnapshot(`
     [
       {

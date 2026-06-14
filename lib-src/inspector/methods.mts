@@ -7,7 +7,7 @@ import type {
 import { getParsedEvent } from './internal-utils.mts';
 import { InspectorContext } from './context.mts';
 import {
-  Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
+  Call, NormalCompletion, ObjectValue, ParseScript, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
   ParseModule,
   SourceTextModuleRecord,
   ValueOfNormalCompletion,
@@ -23,6 +23,7 @@ import {
   isFunctionObject,
   ModuleRecord,
   GetModuleNamespace,
+  X,
 } from '#self';
 
 export const Debugger: DebuggerNamespace = {
@@ -125,13 +126,13 @@ export const Runtime: RuntimeNamespace = {
     if (!realm) {
       return unsupportedError;
     }
-    realm.realm.scope(() => {
-      if (context.evaluateMode === 'module') {
-        parsed = ParseModule(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript });
-      } else {
-        parsed = ParseScript(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript, [kInternal]: { allowAllPrivateNames: true, allowAwait: true } });
-      }
-    });
+    const pop = realm.realm.pushTopContext();
+    if (context.evaluateMode === 'module') {
+      parsed = ParseModule(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript });
+    } else {
+      parsed = ParseScript(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript, [kInternal]: { allowAllPrivateNames: true, allowAwait: true } });
+    }
+    pop?.();
     if (!parsed) {
       throw new Error('No parsed result');
     }
@@ -173,23 +174,23 @@ export const Runtime: RuntimeNamespace = {
       }
       return Value.undefined;
     });
-    return realmDesc.realm.scope((): Protocol.Runtime.CallFunctionOnResponse => {
-      const completion = evalQ((Q, X): Protocol.Runtime.CallFunctionOnResponse => {
-        const r = Q(skipDebugger(Call(F, thisValue, args || [])));
-        if (options.returnByValue) {
-          const value = X(Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], Value.undefined, [r]));
-          if (value instanceof JSStringValue) {
-            const valueRealized = JSON.parse(value.stringValue());
-            return { result: { type: typeof value, value: valueRealized } };
-          }
+    const pop = realmDesc.realm.pushTopContext();
+    const completion = evalQ((Q): Protocol.Runtime.CallFunctionOnResponse => {
+      const r = Q(skipDebugger(Call(F, thisValue, args || [])));
+      if (options.returnByValue) {
+        const value = X(Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], Value.undefined, [r]));
+        if (value instanceof JSStringValue) {
+          const valueRealized = JSON.parse(value.stringValue());
+          return { result: { type: typeof value, value: valueRealized } };
         }
-        return context.createEvaluationResult(r);
-      });
-      if (completion instanceof ThrowCompletion) {
-        return { result: { type: 'undefined' }, exceptionDetails: context.createExceptionDetails(completion, false) };
       }
-      return completion.Value;
+      return context.createEvaluationResult(r);
     });
+    pop?.();
+    if (completion instanceof ThrowCompletion) {
+      return { result: { type: 'undefined' }, exceptionDetails: context.createExceptionDetails(completion, false) };
+    }
+    return completion.Value;
   },
   evaluate(options, context) {
     return evaluate({
@@ -308,13 +309,15 @@ function evaluate(options: {
     } else {
       let parsed!: ScriptRecord | SourceTextModuleRecord | ObjectValue[];
       const realm = context.getRealm(options.uniqueContextId);
-      realm?.realm.scope(() => {
-        if (options.evalMode === 'module') {
-          parsed = ParseModule(options.expression, realm.realm);
-        } else {
-          parsed = ParseScript(options.expression, realm.realm);
-        }
-      });
+      if (!realm) {
+        resolve(unsupportedError);
+        return;
+      }
+      if (options.evalMode === 'module') {
+        parsed = ParseModule(options.expression, realm.realm);
+      } else {
+        parsed = ParseScript(options.expression, realm.realm);
+      }
       if (Array.isArray(parsed)) {
         const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
         resolve({ exceptionDetails: e, result: { type: 'undefined' } });
@@ -345,16 +348,11 @@ function evaluate(options: {
         } else {
           resolve(context.createEvaluationResult(NormalCompletion(GetModuleNamespace(toBeEvaluated, 'evaluation'))));
         }
-        runJobQueue();
       });
     } else if (toBeEvaluated instanceof ScriptRecord) {
-      let completion;
-      realm.realm.evaluateScript(toBeEvaluated, {}, (c) => {
-        completion = c;
+      realm.realm.evaluateScript(toBeEvaluated, {}, (completion) => {
         resolve(context.createEvaluationResult(completion));
       });
-      if (!completion) surroundingAgent.resumeEvaluate();
-      runJobQueue();
     } else {
       let completion;
       surroundingAgent.evaluate(toBeEvaluated, (c) => {
@@ -362,7 +360,6 @@ function evaluate(options: {
         resolve(context.createEvaluationResult(c));
       });
       if (!completion) surroundingAgent.resumeEvaluate();
-      runJobQueue();
     }
   });
   promise.then(() => {

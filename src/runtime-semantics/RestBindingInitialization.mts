@@ -1,9 +1,9 @@
 import { Value } from '../value.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  surroundingAgent,
   CopyDataProperties,
   InitializeReferencedBinding,
   OrdinaryObjectCreate,

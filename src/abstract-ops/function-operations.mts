@@ -1,6 +1,3 @@
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
   Descriptor,
@@ -69,6 +66,7 @@ import {
   type AbstractModuleRecord, type CanBeNativeSteps, type DefaultConstructorBuiltinFunction, type DescriptorInit, type FunctionCallContext, type ModuleRecord, type PrivateEnvironmentRecord, type ScriptRecord,
   Throw,
   isEvaluator,
+  surroundingAgent,
 } from '#self';
 
 export interface BaseFunctionObject extends OrdinaryObject {
@@ -83,7 +81,7 @@ export interface BaseFunctionObject extends OrdinaryObject {
 export type Body = ParseNode.AsyncGeneratorBody | ParseNode.GeneratorBody | ParseNode.AsyncBody | ParseNode.FunctionBody | ParseNode.AsyncConciseBodyLike | ParseNode.ConciseBodyLike | ParseNode.ClassStaticBlockBody | ParseNode.AssignmentExpressionOrHigher;
 export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly Environment: EnvironmentRecord;
-  readonly PrivateEnvironment: PrivateEnvironmentRecord | NullValue;
+  readonly PrivateEnvironment: PrivateEnvironmentRecord | null;
   readonly FormalParameters: ParseNode.FormalParameters;
   readonly ECMAScriptCode: Body | null;
   readonly ConstructorKind: 'base' | 'derived';
@@ -400,7 +398,7 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
 }
 
 /** https://tc39.es/ecma262/#sec-functionallocate */
-export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceText: string, ParameterList: ParseNode.FormalParameters, Body: Body, thisMode: 'lexical-this' | 'non-lexical-this', Scope: EnvironmentRecord, PrivateEnv: PrivateEnvironmentRecord | NullValue) {
+export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceText: string, ParameterList: ParseNode.FormalParameters, Body: Body, thisMode: 'lexical-this' | 'non-lexical-this', Scope: EnvironmentRecord, PrivateEnv: PrivateEnvironmentRecord | null) {
   // 1. Assert: Type(functionPrototype) is Object.
   Assert(functionPrototype instanceof ObjectValue);
   // 2. Let internalSlotsList be the internal slots listed in Table 33.
@@ -449,7 +447,6 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
   // 14. Set F.[[Environment]] to Scope.
   F.Environment = Scope;
   // 15. Set F.[[PrivateEnvironment]] to PrivateScope.
-  Assert(!!PrivateEnv);
   F.PrivateEnvironment = PrivateEnv;
   // 16. Set F.[[ScriptOrModule]] to GetActiveScriptOrModule().
   F.ScriptOrModule = GetActiveScriptOrModule() as ScriptRecord | ModuleRecord;

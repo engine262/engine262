@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value,
   NumberValue,
@@ -9,6 +8,7 @@ import { Decimal } from '../host-defined/decimal.mts';
 import { decodeFloat16, encodeFloat16 } from '../host-defined/ieee754.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
+  surroundingAgent,
   ToNumber,
   F, R,
   Realm,

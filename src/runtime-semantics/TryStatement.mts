@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
 import {
@@ -12,7 +11,7 @@ import { BoundNames } from '../static-semantics/all.mts';
 import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { BindingInitialization } from './all.mts';
-import { DeclarativeEnvironmentRecord } from '#self';
+import { surroundingAgent, DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
 //   TryStatement :

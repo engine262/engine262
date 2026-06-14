@@ -1,9 +1,9 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
 import { Value, type Arguments } from '../value.mts';
 import type { YieldEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
+  surroundingAgent,
   Assert,
   CreateArrayFromList,
   CreateIteratorFromClosure,

@@ -1,6 +1,5 @@
 import { Parser, type ParserOptions } from './parser/Parser.mts';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
-import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
 import {
   SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
 } from './modules.mts';
@@ -20,12 +19,12 @@ import { JSStringSet } from './utils/container.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';
+import { surroundingAgent, type GCMarker, Realm } from '#self';
 import {
   CreateDefaultExportSyntheticModule,
   ToString,
   Throw,
 } from '#self';
-import type { Realm } from '#self';
 
 export { Parser, RegExpParser };
 

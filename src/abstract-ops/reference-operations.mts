@@ -1,10 +1,8 @@
-import { DynamicParsedCodeRecord, surroundingAgent } from '../host-defined/engine.mts';
 import {
   ReferenceRecord,
   Value,
   PrivateName,
   JSStringValue,
-  NullValue,
   ObjectValue,
 } from '../value.mts';
 import {
@@ -24,7 +22,9 @@ import {
   ToPropertyKey,
   getActiveScriptId,
 } from './all.mts';
-import { EnvironmentRecord, GetGlobalObject, Throw } from '#self';
+import {
+  DynamicParsedCodeRecord, surroundingAgent, EnvironmentRecord, GetGlobalObject, Throw,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
 export function IsPropertyReference(V: ReferenceRecord) {
@@ -180,7 +180,7 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 2. Assert: privEnv is not null.
   // but we allow private reference to be accessed directly in the inspector eval
-  if (privEnv instanceof NullValue) {
+  if (privEnv === null) {
     const scriptId = getActiveScriptId();
     const script = surroundingAgent.parsedSources.get(scriptId!);
     if (script instanceof DynamicParsedCodeRecord && script?.HostDefined?.isInspectorEval) {
@@ -196,11 +196,11 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
         ThisValue: undefined,
       });
     } else {
-      Assert(!(privEnv instanceof NullValue));
+      Assert(privEnv !== null);
     }
   }
   // 3. Let privateName be ! ResolvePrivateIdentifier(privEnv, privateIdentifier).
-  const privateName = ResolvePrivateIdentifier(privEnv, privateIdentifier);
+  const privateName = ResolvePrivateIdentifier(privEnv!, privateIdentifier);
   // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: privateName, [[Strict]]: true, [[ThisValue]]: empty }.
   return new ReferenceRecord({
     Base: baseValue,

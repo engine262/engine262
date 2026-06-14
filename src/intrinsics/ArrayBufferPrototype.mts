@@ -1,9 +1,9 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,

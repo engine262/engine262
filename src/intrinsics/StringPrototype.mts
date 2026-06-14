@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue,
   JSStringValue,
@@ -23,6 +22,7 @@ import { Q, X } from '../completion.mts';
 import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
 import { assignProps } from './bootstrap.mts';
 import {
+  surroundingAgent,
   ArrayCreate,
   Assert,
   Call,

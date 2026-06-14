@@ -7,7 +7,6 @@ import {
   ReturnCompletion,
   ThrowCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
@@ -27,7 +26,7 @@ import {
   type IteratorRecord,
   type OrdinaryObject,
 } from './all.mts';
-import { RunSuspendedContext, Throw } from '#self';
+import { RunSuspendedContext, Throw, surroundingAgent } from '#self';
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 export interface GeneratorObject extends OrdinaryObject {
@@ -96,7 +95,7 @@ export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseN
 
   // 5. Set the code evaluation state of genContext such that when evaluation is resumed
   //    for that execution context, closure will be called with no arguments.
-  genContext.codeEvaluationState = (function* resumer() {
+  genContext.CodeEvaluationState = (function* resumer() {
     return yield* closure();
   }());
 

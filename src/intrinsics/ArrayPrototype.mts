@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
   Descriptor,
@@ -17,6 +16,7 @@ import { __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { assignProps } from './bootstrap.mts';
 import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
+import { surroundingAgent } from '#self';
 import {
   ArrayCreate,
   ArraySpeciesCreate,

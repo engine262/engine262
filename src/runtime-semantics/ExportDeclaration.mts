@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
@@ -11,6 +10,7 @@ import {
   BindingClassDeclarationEvaluation,
   DecoratorListEvaluation,
 } from './all.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert, GetValue, type ECMAScriptFunctionObject, type FunctionDeclaration,
 } from '#self';

@@ -72,13 +72,4 @@ export class ModuleCache {
     if (entry.result) callback(entry.result);
     else if (entry.pending) entry.pending.promise.then(callback);
   }
-
-  hasUnfinishedRequests() {
-    return this.#cache.values().some((entry) => !entry.result);
-  }
-
-  untilAllRequestFinished() {
-    const pending = Array.from(this.#cache.values()).filter((entry) => !!entry.pending).map((entry) => entry.pending!.promise);
-    return Promise.all(pending);
-  }
 }

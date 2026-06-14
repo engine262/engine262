@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import { Q, NormalCompletion } from '../completion.mts';
@@ -7,6 +6,7 @@ import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
   InitializeBoundName, ClassDefinitionEvaluation, type DecoratorDefinitionRecord, DecoratorListEvaluation,
 } from './all.mts';
+import { surroundingAgent } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
 //   ClassDeclaration :

@@ -8,7 +8,7 @@ import {
   EvalDeclarationInstantiation,
   Evaluate,
   ExecutionContext,
-  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NewPromiseCapability, NormalCompletion, surroundingAgent, Throw, ThrowCompletion, unwrapCompletion, Value, wrappedParse, type PlainCompletion, type ValueCompletion, type ValueEvaluator,
+  FunctionEnvironmentRecord, GetThisEnvironment, IsStrict, ManagedRealm, NewPromiseCapability, NormalCompletion, surroundingAgent, Throw, ThrowCompletion, X, Value, wrappedParse, type PlainCompletion, type ValueCompletion, type ValueEvaluator,
 } from '#self';
 
 const cascadeStack = new WeakMap<EnvironmentRecord, EnvironmentRecord>();
@@ -31,7 +31,7 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
       cascadeStack.set(globalEnv, new DeclarativeEnvironmentRecord(globalEnv));
     }
     scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv)!;
-    scriptContext.PrivateEnvironment = Value.null;
+    scriptContext.PrivateEnvironment = null;
     surroundingAgent.executionContextStack.push(scriptContext);
   }
 
@@ -128,8 +128,8 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
   result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
   if (result.Type === 'normal') {
     if (isAsync) {
-      const promiseCapability = unwrapCompletion(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-      unwrapCompletion(yield* AsyncBlockStart(promiseCapability, function* evaluate(): ValueEvaluator {
+      const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+      X(yield* AsyncBlockStart(promiseCapability, function* evaluate(): ValueEvaluator {
         return yield* Evaluate(body);
       }, evalContext));
       result = promiseCapability.Promise;

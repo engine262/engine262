@@ -2,7 +2,6 @@ import {
   Value, JSStringValue, ObjectValue, UndefinedValue, BooleanValue,
   NullValue,
 } from './value.mts';
-import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
 import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
   VarScopedDeclarations,
@@ -28,6 +27,13 @@ import {
 } from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import {
+  surroundingAgent, type GCMarker,
+  type ImportAttributeRecord,
+  type ImportedNamesValue,
+  type ModuleRequestRecord,
+  type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
+} from '#self';
+import {
   Assert,
   Call,
   NewPromiseCapability,
@@ -46,12 +52,6 @@ import {
   Realm,
   Throw,
   isEvaluator,
-} from '#self';
-import {
-  type ImportAttributeRecord,
-  type ImportedNamesValue,
-  type ModuleRequestRecord,
-  type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
 } from '#self';
 
 // https://tc39.es/ecma262/#loadedmodulerequest-record
@@ -765,7 +765,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment!;
     // 15. Set the PrivateEnvironment of moduleContext to null.
-    moduleContext.PrivateEnvironment = Value.null;
+    moduleContext.PrivateEnvironment = null;
     // 16. Set module.[[Context]] to moduleContext.
     module.Context = moduleContext;
     // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
@@ -811,7 +811,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           || d.type === 'AsyncFunctionDeclaration'
           || d.type === 'AsyncGeneratorDeclaration') {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
-          const fo = InstantiateFunctionObject(d, env, Value.null);
+          const fo = InstantiateFunctionObject(d, env, null);
           // 2. Call env.InitializeBinding(dn, fo).
           X(env.InitializeBinding(dn, fo));
         }
@@ -936,7 +936,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     moduleContext.VariableEnvironment = module.Environment!;
     // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment!;
-    moduleContext.PrivateEnvironment = Value.null;
+    moduleContext.PrivateEnvironment = null;
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
     // 9. Let steps be module.[[EvaluationSteps]].

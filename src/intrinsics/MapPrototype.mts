@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   NumberValue,
   Value,
@@ -9,6 +8,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateMapIterator } from './MapIteratorPrototype.mts';
 import type { MapObject } from './Map.mts';
 import {
+  surroundingAgent,
   Call,
   CanonicalizeKeyedCollectionKey,
   F,

@@ -1,8 +1,4 @@
 import { Q, ThrowCompletion, X } from '../completion.mts';
-import {
-  HostEnsureCanCompileStrings,
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { Parser, wrappedParse } from '../parse.mts';
 import { Token } from '../parser/tokens.mts';
 import {
@@ -12,6 +8,10 @@ import {
 import { __ts_cast__, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { FunctionKind } from '../parser/FunctionParser.mts';
+import {
+  HostEnsureCanCompileStrings,
+  surroundingAgent,
+} from '#self';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -133,7 +133,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   }
   const proto = Q(yield* GetPrototypeFromConstructor(newTarget, fallbackProto));
   const env = currentRealm.GlobalEnv;
-  const privateEnv = Value.null;
+  const privateEnv = null;
   const F = OrdinaryFunctionCreate(proto, sourceText, parametersNode, bodyNode, 'non-lexical-this', env, privateEnv);
   F.scriptId = scriptId;
   SetFunctionName(F, Value('anonymous'));

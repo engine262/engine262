@@ -10,12 +10,12 @@ import {
   SymbolValue,
   JSStringValue,
 } from '../value.mts';
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { AddEntriesFromIterable } from './Map.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   Assert,
   CreateArrayFromList,

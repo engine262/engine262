@@ -10,7 +10,7 @@ import {
 export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext) {
   asyncContext.promiseCapability = promiseCapability;
 
-  asyncContext.codeEvaluationState = (function* closure() {
+  asyncContext.CodeEvaluationState = (function* closure() {
     const acAsyncContext = surroundingAgent.runningExecutionContext;
     let result;
     if (typeof asyncBody === 'function') {

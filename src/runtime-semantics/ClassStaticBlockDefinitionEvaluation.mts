@@ -1,6 +1,6 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { surroundingAgent } from '#self';
 import {
   MakeMethod,
   OrdinaryFunctionCreate,

@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, PrivateName, UndefinedValue, type PropertyKeyValue, ObjectValue, BooleanValue,
 } from '../value.mts';
@@ -9,6 +8,7 @@ import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { ClassElementDefinitionRecord, DefineMethod, Evaluate_PropertyName } from './all.mts';
+import { surroundingAgent } from '#self';
 import {
   OrdinaryObjectCreate,
   OrdinaryFunctionCreate,

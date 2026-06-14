@@ -3,12 +3,12 @@ import {
   Q, X,
 } from '../completion.mts';
 import { Value } from '../value.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { IsAnonymousFunctionDefinition, StringValue, type FunctionDeclaration } from '../static-semantics/all.mts';
 import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
+  surroundingAgent,
   GetValue,
   InitializeReferencedBinding,
   ResolveBinding,

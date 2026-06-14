@@ -1,7 +1,4 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
-import {
-  NullValue,
-} from '../value.mts';
+import { surroundingAgent, NullValue } from '#self';
 
 /** Used in the inspector infrastructure to track the real source (or compiled) */
 export function getActiveScriptId(): string | undefined {
