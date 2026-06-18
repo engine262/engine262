@@ -59,6 +59,7 @@
     "watch:dts": "tsgo -b . -w",
     "build:engine": "rollup -c ./scripts/rollup.config.mts",
     "watch:engine": "npm run build:engine -- --watch",
+    "spec:update": "node scripts/update_spec.mts",
     "test": "run-s -c test:inspector test:owned test:json test:test262",
     "test:test262": "node test/test262/test262.mts",
     "test:owned": "vitest test/engine262 --watch=false",
@@ -142,6 +143,7 @@
     "tinyglobby": "^0.2.15",
     "typescript": "^5.9.3",
     "vitest": "^4.1.2",
-    "ws": "^8.20.0"
+    "ws": "^8.20.0",
+    "zod": "^4.4.3"
   }
 }

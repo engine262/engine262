@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en-GB-oxendict">
+<head>
+<meta charset="utf8">
+</head>
+
+<body>
+<pre class="metadata">
+title: 'ShadowRealm API'
+stage: 2.7
+contributors: Dave Herman, Caridy Patiño, Mark Miller, Leo Balter
+status: proposal
+copyright: false
+location: https://tc39.es/proposal-shadowrealm/
+</pre>
+
+<emu-clause id="sec-well-known-intrinsic-objects">
+	<h1>Well-Known intrinsic objects</h1>
+	<emu-table id="table-7" caption="Well-Known Intrinsic Objects">
+		<table>
+			<tbody>
+				<tr>
+					<th>Intrinsic Name</th>
+					<th>Global Name</th>
+					<th>ECMAScript Language Association</th>
+				</tr>
+				<tr>
+					<td>%ShadowRealm%</td>
+					<td>`ShadowRealm`</td>
+					<td>The ShadowRealm constructor (<emu-xref href="#sec-shadowrealm-constructor"></emu-xref>)</td>
+				</tr>
+			</tbody>
+		</table>
+	</emu-table>
+</emu-clause>
+
+<emu-clause id="sec-wrapped-function-exotic-objects">
+	<h1>Wrapped Function Exotic Objects</h1>
+	<p>A wrapped function exotic object is an exotic object that wraps a callable object. A wrapped function exotic object is callable (it has a [[Call]] internal method). Calling a wrapped function exotic object generally results in a call of its wrapped function.</p>
+
+	<p>An object is a <dfn id="wrapped-function-exotic-object">wrapped function exotic object</dfn> if its [[Call]] internal method uses the following implementation, and its other essential internal methods use the definitions found in <emu-xref href="#sec-ordinary-object-internal-methods-and-internal-slots"></emu-xref>. These methods are installed in WrappedFunctionCreate.</p>
+
+	<p>Wrapped function exotic objects do not have the internal slots of ECMAScript function objects listed in <emu-xref href="#table-internal-slots-of-ecmascript-function-objects"></emu-xref>. Instead they have the internal slots listed in <emu-xref href="#table-internal-slots-of-wrapped-function-exotic-objects"></emu-xref>, in addition to [[Prototype]] and [[Extensible]].</p>
+	<emu-table id="table-internal-slots-of-wrapped-function-exotic-objects" caption="Internal Slots of Wrapped Function Exotic Objects">
+	<table>
+		<tbody>
+		<tr>
+		<th>
+			Internal Slot
+		</th>
+		<th>
+			Type
+		</th>
+		<th>
+			Description
+		</th>
+		</tr>
+		<tr>
+		<td>
+			[[WrappedTargetFunction]]
+		</td>
+		<td>
+			Callable Object
+		</td>
+		<td>
+			Stores the callable object.
+		</td>
+		</tr>
+		<tr>
+		<td>
+			[[Call]]
+		</td>
+		<td>
+			The [[Call]] internal method
+		</td>
+		<td>
+			Executes code associated with this object's [[WrappedTargetFunction]].
+		</td>
+		</tr>
+		<tr>
+		<td>
+			[[Realm]]
+		</td>
+		<td>
+			Realm Record
+		</td>
+		<td>
+			The realm in which the function was created.
+		</td>
+		</tr>
+		</tbody>
+	</table>
+	</emu-table>
+
+	<emu-clause id="sec-wrapped-function-exotic-objects-call-thisargument-argumentslist" type="internal method">
+		<h1>
+			[[Call]] (
+				_thisArgument_: an ECMAScript language value,
+				_argumentsList_: a List of ECMAScript language values,
+			): either a normal completion containing either a primitive value or a wrapped function exotic object, or a throw completion
+		</h1>
+		<dl class="header">
+			<dt>for</dt>
+			<dd>a wrapped function exotic object _F_</dd>
+		</dl>
+		<emu-alg>
+			1. Let _callerContext_ be the running execution context.
+			1. Let _calleeContext_ be PrepareForWrappedFunctionCall(_F_).
+			1. Assert: _calleeContext_ is now the running execution context.
+			1. Let _result_ be Completion(OrdinaryWrappedFunctionCall(_F_, _thisArgument_, _argumentsList_)).
+			1. Remove _calleeContext_ from the execution context stack and restore _callerContext_ as the running execution context.
+			1. Return ? _result_.
+		</emu-alg>
+		<p>
+			If an execution in a ShadowRealm _R1_ oblivious of host or implementation-defined APIs can observe the identity of an object _O1_, a host or implementation-defined API must not allow an execution in any other realm than _R1_ to also observe the identity of _O1_. Similarly if an execution in a realm _R2_ can observe the identity of an object _O2_, a host or implementation-defined API must not allow execution in any other realm than _R2_ that is a ShadowRealm to also observe the identity of _O2_.
+		</p>
+		<emu-note>
+			The text above imposes the callable boundary semantics only when at least one of the two realms involved is a ShadowRealm. Other realms can continue sharing objects whose identities can be observed.
+			Colloquially, the environment must not allow ECMAScript code running in a ShadowRealm to observe the identity of an object from any other realm. Similarly, the environment must not allow ECMAScript code running in a realm to observe the identity of an object from a ShadowRealm.
+		</emu-note>
+	</emu-clause>
+
+	<emu-clause id="sec-create-type-error-copy" type="abstract operation">
+		<h1>
+			CreateTypeErrorCopy (
+				_realmRecord_: a Realm Record,
+				_originalError_: an ECMAScript language value
+			): a *TypeError* object
+		</h1>
+		<dl class="header">
+		</dl>
+		<emu-alg>
+			1. Let _newError_ be a newly created *TypeError* object.
+			1. NOTE: _newError_ is created in _realmRecord_.
+			1. Return _newError_.
+		</emu-alg>
+		<p>
+			Host environments may provide implementation-specific message value. CreateTypeErrorCopy abstract operation must not cause any ECMAScript code execution. The implementation may store additional information on _originalError_ to produce the _newError_'s message.
+		</p>
+	</emu-clause>
+
+	<emu-clause id="sec-ordinary-wrapped-function-call" type="abstract operation">
+		<h1>
+			OrdinaryWrappedFunctionCall (
+				_F_: a wrapped function exotic object,
+				_thisArgument_: an ECMAScript language value,
+				_argumentsList_: a List of ECMAScript language values,
+			): either a normal completion containing either a primitive value or a wrapped function exotic object, or a throw completion
+		</h1>
+		<dl class="header">
+			<dt>description</dt>
+			<dd>...</dd>
+		</dl>
+		<emu-alg>
+			1. Let _target_ be _F_.[[WrappedTargetFunction]].
+			1. Assert: IsCallable(_target_) is *true*.
+			1. Let _callerRealm_ be _F_.[[Realm]].
+			1. NOTE: Any exception objects produced after this point are associated with _callerRealm_.
+			1. Let _targetRealm_ be ? GetFunctionRealm(_target_).
+			1. Let _wrappedArgs_ be a new empty List.
+			1. For each element _arg_ of _argumentsList_, do
+				1. Let _wrappedValue_ be ? GetWrappedValue(_targetRealm_, _arg_).
+				1. Append _wrappedValue_ to _wrappedArgs_.
+			1. Let _wrappedThisArgument_ be ? GetWrappedValue(_targetRealm_, _thisArgument_).
+			1. Let _result_ be Completion(Call(_target_, _wrappedThisArgument_, _wrappedArgs_)).
+			1. If _result_.[[Type]] is ~normal~, then
+				1. Return ? GetWrappedValue(_callerRealm_, _result_.[[Value]]).
+			1. Else,
+				1. Let _copiedError_ be CreateTypeErrorCopy(_callerRealm_, _result_.[[Value]]).
+				1. Return ThrowCompletion(_copiedError_).
+		</emu-alg>
+	</emu-clause>
+
+	<emu-clause id="sec-prepare-for-wrapped-function-call" type="abstract operation">
+		<h1>
+			PrepareForWrappedFunctionCall (
+				_F_: a wrapped function exotic object,
+			): an execution context
+		</h1>
+		<dl class="header">
+			<dt>description</dt>
+			<dd>...</dd>
+		</dl>
+		<emu-alg>
+			1. Let _callerContext_ be the running execution context.
+			1. Let _calleeContext_ be a new execution context.
+			1. Set the Function of _calleeContext_ to _F_.
+			1. Let _calleeRealm_ be _F_.[[Realm]].
+			1. Set the Realm of _calleeContext_ to _calleeRealm_.
+			1. Set the ScriptOrModule of _calleeContext_ to *null*.
+			1. If _callerContext_ is not already suspended, suspend _callerContext_.
+			1. Push _calleeContext_ onto the execution context stack; _calleeContext_ is now the running execution context.
+			1. NOTE: Any exception objects produced after this point are associated with _calleeRealm_.
+			1. Return _calleeContext_.
+		</emu-alg>
+	</emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-shadowrealm-objects">
+	<h1>ShadowRealm Objects</h1>
+	<emu-clause id="sec-shadowrealm-abstracts">
+		<h1>ShadowRealm Abstract Operations</h1>
+
+		<emu-clause id="sec-wrappedfunctioncreate" type="abstract operation">
+			<h1>
+				WrappedFunctionCreate (
+					_callerRealm_: a Realm Record,
+					_Target_: a function object,
+				): either a normal completion containing a wrapped function exotic object, or a throw completion
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>It is used to specify the creation of new wrapped function exotic objects.</dd>
+			</dl>
+			<emu-alg>
+				1. Let _internalSlotsList_ be the internal slots listed in <emu-xref href="#table-internal-slots-of-wrapped-function-exotic-objects"></emu-xref>, plus [[Prototype]] and [[Extensible]].
+				1. Let _wrapped_ be MakeBasicObject(_internalSlotsList_).
+				1. Set _wrapped_.[[Prototype]] to _callerRealm_.[[Intrinsics]].[[%Function.prototype%]].
+				1. Set _wrapped_.[[Call]] as described in <emu-xref href="#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist"></emu-xref>.
+				1. Set _wrapped_.[[WrappedTargetFunction]] to _Target_.
+				1. Set _wrapped_.[[Realm]] to _callerRealm_.
+				1. Let _result_ be Completion(CopyNameAndLength(_wrapped_, _Target_)).
+				1. If _result_ is an abrupt completion, throw a *TypeError* exception.
+				1. Return _wrapped_.
+			</emu-alg>
+		</emu-clause>
+
+		<emu-clause id="sec-copynameandlength" type="abstract operation">
+			<h1>
+				CopyNameAndLength (
+					_F_: a function object,
+					_Target_: a function object,
+					optional _prefix_: a String,
+					optional _argCount_: a Number,
+				): either a normal completion containing ~unused~ or a throw completion
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>...</dd>
+			</dl>
+			<emu-alg>
+				1. If _argCount_ is not present, set _argCount_ to 0.
+				1. Let _L_ be 0.
+				1. Let _targetHasLength_ be ? HasOwnProperty(_Target_, *"length"*).
+				1. If _targetHasLength_ is *true*, then
+					1. Let _targetLen_ be ? Get(_Target_, *"length"*).
+					1. If _targetLen_ is a Number, then
+						1. If _targetLen_ is *+∞*<sub>𝔽</sub>, then
+							1. Set _L_ to +∞.
+						1. Else if _targetLen_ is *-∞*<sub>𝔽</sub>, then
+							1. Set _L_ to 0.
+						1. Else,
+							1. Let _targetLenAsInt_ be ! ToIntegerOrInfinity(_targetLen_).
+							1. Assert: _targetLenAsInt_ is finite.
+							1. Set _L_ to max(_targetLenAsInt_ - _argCount_, 0).
+				1. Perform SetFunctionLength(_F_, _L_).
+				1. Let _targetName_ be ? Get(_Target_, *"name"*).
+				1. If _targetName_ is not a String, set _targetName_ to the empty String.
+				1. If _prefix_ is present, then
+					1. Perform SetFunctionName(_F_, _targetName_, _prefix_).
+				1. Else,
+					1. Perform SetFunctionName(_F_, _targetName_).
+			</emu-alg>
+
+			<emu-note type=editor>
+				Function.prototype.bind can replace some steps with this abstraction.
+			</emu-note>
+
+			<emu-clause id="sec-function.prototype.bind">
+				<h1>Function.prototype.bind ( _thisArg_, ..._args_ )</h1>
+				<p>This method performs the following steps when called:</p>
+				<emu-alg>
+					1. Let _Target_ be the *this* value.
+					1. If IsCallable(_Target_) is *false*, throw a *TypeError* exception.
+					1. Let _F_ be ? BoundFunctionCreate(_Target_, _thisArg_, _args_).
+					1. <ins>Let _argCount_ be the number of elements in _args_.</ins>
+					1. <ins>Perform ? CopyNameAndLength(_F_, _Target_, *"bound"*, _argCount_).</ins>
+					1. <del>Let _L_ be 0.</del>
+					1. <del>Let _targetHasLength_ be ? HasOwnProperty(_Target_, *"length"*).</del>
+					1. <del>If _targetHasLength_ is *true*, then</del>
+						1. <del>Let _targetLen_ be ? Get(_Target_, *"length"*).</del>
+						1. <del>If _targetLen_ is a Number, then</del>
+							1. <del>If _targetLen_ is *+∞*<sub>𝔽</sub>, then</del>
+								1. <del>Set _L_ to +∞.</del>
+							1. <del>Else if _targetLen_ is *-∞*<sub>𝔽</sub>, then</del>
+								1. <del>Set _L_ to 0.</del>
+							1. <del>Else,</del>
+								1. <del>Let _targetLenAsInt_ be ! ToIntegerOrInfinity(_targetLen_).</del>
+								1. <del>Assert: _targetLenAsInt_ is finite.</del>
+								1. <del>Let _argCount_ be the number of elements in _args_.</del>
+								1. <del>Set _L_ to max(_targetLenAsInt_ - _argCount_, 0).</del>
+					1. <del>Perform SetFunctionLength(_F_, _L_).</del>
+					1. <del>Let _targetName_ be ? Get(_Target_, *"name"*).</del>
+					1. <del>If _targetName_ is not a String, set _targetName_ to the empty String.</del>
+					1. <del>Perform SetFunctionName(_F_, _targetName_, *"bound"*).</del>
+					1. Return _F_.
+				</emu-alg>
+			</emu-clause>
+		</emu-clause>
+
+		<emu-clause id="sec-performshadowrealmeval" type="abstract operation">
+			<h1>
+				PerformShadowRealmEval (
+					_sourceText_: a String,
+					_callerRealm_: a Realm Record,
+					_evalRealm_: a Realm Record,
+				): either a normal completion containing either a primitive value or a wrapped function exotic object, or a throw completion
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>...</dd>
+			</dl>
+			<emu-alg>
+				1. Perform ? HostEnsureCanCompileStrings(_evalRealm_, « », _sourceText_, *false*).
+				1. Perform the following substeps in an implementation-defined order, possibly interleaving parsing and error detection:
+					1. Let _script_ be ParseText(StringToCodePoints(_sourceText_), |Script|).
+					1. If _script_ is a List of errors, throw a *SyntaxError* exception.
+					1. If _script_ Contains |ScriptBody| is *false*, return *undefined*.
+					1. Let _body_ be the |ScriptBody| of _script_.
+					1. If _body_ Contains |NewTarget| is *true*, throw a *SyntaxError* exception.
+					1. If _body_ Contains |SuperProperty| is *true*, throw a *SyntaxError* exception.
+					1. If _body_ Contains |SuperCall| is *true*, throw a *SyntaxError* exception.
+				1. Let _strictEval_ be ScriptIsStrict of _script_.
+				1. Let _runningContext_ be the running execution context.
+				1. If _runningContext_ is not already suspended, suspend _runningContext_.
+				1. Let _evalContext_ be GetShadowRealmContext(_evalRealm_, _strictEval_).
+				1. Let _lexEnv_ be _evalContext_'s LexicalEnvironment.
+				1. Let _varEnv_ be _evalContext_'s VariableEnvironment.
+				1. Push _evalContext_ onto the execution context stack; _evalContext_ is now the running execution context.
+				1. Let _result_ be Completion(EvalDeclarationInstantiation(_body_, _varEnv_, _lexEnv_, *null*, _strictEval_)).
+				1. If _result_.[[Type]] is ~normal~, then
+					1. Set _result_ to Completion(Evaluation of _body_).
+				1. If _result_.[[Type]] is ~normal~ and _result_.[[Value]] is ~empty~, then
+					1. Set _result_ to NormalCompletion(*undefined*).
+				1. Suspend _evalContext_ and remove it from the execution context stack.
+				1. Resume the context that is now on the top of the execution context stack as the running execution context.
+				1. If _result_.[[Type]] is not ~normal~, then
+					1. Let _copiedError_ be CreateTypeErrorCopy(_callerRealm_, _result_.[[Value]]).
+					1. Return ThrowCompletion(_copiedError_).
+				1. Return ? GetWrappedValue(_callerRealm_, _result_.[[Value]]).
+			</emu-alg>
+			<emu-note type=editor>
+				In the case of an abrupt ~throw~ completion, the type of error to be created should match the type of the abrupt throw completion record. This could be revisited when merging into the main specification. Additionally, in the case of a ~break~ or ~continue~ completion, since those are not supported, a TypeError is expected. There should be no ~return~ completion because this is a top level script evaluation, in which case a return |Statement| must result in a parsing error.
+			</emu-note>
+			<emu-note type=editor>
+				Some steps from PerformShadowRealmEval are shared with `eval` and `Function` and should result into a shared abstraction when merged to ECMA-262.
+			</emu-note>
+			<emu-note>
+				This abstraction requires the performed evaluation to result into a normal completion. Otherwise, if the result is not a normal completion, the abstraction will throw a TypeError exception associated to its original running execution context.
+			</emu-note>
+		</emu-clause>
+
+		<emu-clause id="sec-shadowrealmimportvalue" type="abstract operation">
+			<h1>
+				ShadowRealmImportValue (
+					_specifierString_: a String,
+					_exportNameString_: a String,
+					_callerRealm_: a Realm Record,
+					_evalRealm_: a Realm Record,
+				): an ECMAScript language value
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>...</dd>
+			</dl>
+			<emu-alg>
+				1. Let _evalContext_ be GetShadowRealmContext(_evalRealm_, *true*).
+				1. Let _innerCapability_ be ! NewPromiseCapability(%Promise%).
+				1. Let _runningContext_ be the running execution context.
+				1. If _runningContext_ is not already suspended, suspend _runningContext_.
+				1. Push _evalContext_ onto the execution context stack; _evalContext_ is now the running execution context.
+				1. Let _referrer_ be the Realm component of _evalContext_.
+				1. Perform HostLoadImportedModule(_referrer_, _specifierString_, ~empty~, _innerCapability_).
+				1. Suspend _evalContext_ and remove it from the execution context stack.
+				1. Resume the context that is now on the top of the execution context stack as the running execution context.
+				1. Let _steps_ be the algorithm steps defined in <emu-xref href="#sec-export-getter-functions" title></emu-xref>.
+				1. Let _onFulfilled_ be CreateBuiltinFunction(_steps_, 1, *""*, « [[ExportNameString]] », _callerRealm_).
+				1. Set _onFulfilled_.[[ExportNameString]] to _exportNameString_.
+				1. Let _errorSteps_ be the algorithm steps defined in <emu-xref href="#sec-import-value-error-functions" title></emu-xref>.
+				1. Let _onRejected_ be CreateBuiltinFunction(_errorSteps_, 1, *""*, «», _callerRealm_).
+				1. Let _promiseCapability_ be ! NewPromiseCapability(%Promise%).
+				1. Return PerformPromiseThen(_innerCapability_.[[Promise]], _onFulfilled_, _onRejected_, _promiseCapability_).
+			</emu-alg>
+
+			<emu-clause id="sec-export-getter-functions">
+				<h1>ExportGetter functions</h1>
+				<p>An ExportGetter function is an anonymous built-in function that has an [[ExportNameString]] internal slot.</p>
+				<p>When an ExportGetter function is called with argument _exports_, it performs the following steps:</p>
+				<emu-alg>
+					1. Assert: _exports_ is a module namespace exotic object.
+					1. Let _f_ be the active function object.
+					1. Let _string_ be _f_.[[ExportNameString]].
+					1. Assert: _string_ is a String.
+					1. Let _hasOwn_ be ? HasOwnProperty(_exports_, _string_).
+					1. If _hasOwn_ is *false*, throw a *TypeError* exception.
+					1. Let _value_ be ? Get(_exports_, _string_).
+					1. Let _realm_ be _f_.[[Realm]].
+					1. Return ? GetWrappedValue(_realm_, _value_).
+				</emu-alg>
+			</emu-clause>
+
+			<emu-clause id="sec-import-value-error-functions">
+				<h1>ImportValueError functions</h1>
+				<p>An ImportValueError function is an anonymous built-in function.</p>
+				<p>When an ImportValueError function is called with argument _error_, it performs the following steps:</p>
+				<emu-alg>
+					1. Let _realmRecord_ be the function's associated Realm Record.
+					1. Let _copiedError_ be CreateTypeErrorCopy(_realmRecord_, _error_).
+					1. Return ThrowCompletion(_copiedError_).
+				</emu-alg>
+			</emu-clause>
+		</emu-clause>
+
+		<emu-clause id="sec-getwrappedvalue" type="abstract operation">
+			<h1>
+				GetWrappedValue (
+					_callerRealm_: a Realm Record,
+					_value_: an ECMAScript language value,
+				): either a normal completion containing either a primitive value or an wrapped function exotic object, or a throw completion
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>...</dd>
+			</dl>
+			<emu-alg>
+				1. If _value_ is an Object, then
+					1. If IsCallable(_value_) is *false*, throw a *TypeError* exception.
+					1. Return ? WrappedFunctionCreate(_callerRealm_, _value_).
+				1. Return _value_.
+			</emu-alg>
+		</emu-clause>
+
+		<emu-clause id="sec-validateshadowrealmobject" type="abstract operation">
+			<h1>
+				ValidateShadowRealmObject (
+					_O_: an ECMAScript value,
+				): either a normal completion containing ~unused~ or a throw completion
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>...</dd>
+			</dl>
+			<emu-alg>
+				1. Perform ? RequireInternalSlot(_O_, [[ShadowRealm]]).
+				1. Return ~unused~.
+			</emu-alg>
+		</emu-clause>
+
+		<emu-clause id="sec-getshadowrealmcontext" type="abstract operation">
+			<h1>
+				GetShadowRealmContext (
+					_shadowRealmRecord_: a Realm Record,
+					_strictEval_: a Boolean,
+				): an ECMAScript code execution context
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd></dd>
+			</dl>
+			<emu-alg>
+				1. Let _lexEnv_ be NewDeclarativeEnvironment(_shadowRealmRecord_.[[GlobalEnv]]).
+				1. Let _varEnv_ be _shadowRealmRecord_.[[GlobalEnv]].
+				1. If _strictEval_ is *true*, set _varEnv_ to _lexEnv_.
+				1. Let _context_ be a new ECMAScript code execution context.
+				1. Set _context_'s Function to *null*.
+				1. Set _context_'s Realm to _shadowRealmRecord_.
+				1. Set _context_'s ScriptOrModule to *null*.
+				1. Set _context_'s VariableEnvironment to _varEnv_.
+				1. Set _context_'s LexicalEnvironment to _lexEnv_.
+				1. Set _context_'s PrivateEnvironment to *null*.
+				1. Return _context_.
+			</emu-alg>
+		</emu-clause>
+	</emu-clause>
+
+	<emu-clause id="sec-shadowrealm-constructor">
+		<h1>The ShadowRealm Constructor</h1>
+		<p>The ShadowRealm constructor:</p>
+		<ul>
+			<li>is the intrinsic object <dfn>%ShadowRealm%</dfn>.</li>
+			<li>is the initial value of the *"ShadowRealm"* property of the global object.</li>
+			<li>is not intended to be called as a function and will throw an exception when called in that manner.</li>
+			<li>creates and initializes a new ShadowRealm object when called as a constructor.</li>
+			<li>may be used as the value in an `extends` clause of a class definition. Subclass constructors that intend to inherit the specified ShadowRealm behaviour must include a `super` call to the ShadowRealm constructor to create and initialize a subclass instance with the internal state necessary to support the `ShadowRealm.prototype` built-in methods.</li>
+		</ul>
+
+		<emu-clause id="sec-shadowrealm">
+			<h1>ShadowRealm ( )</h1>
+			<p>This function performs the following steps when called:</p>
+			<emu-alg>
+				1. If NewTarget is *undefined*, throw a *TypeError* exception.
+				1. Let _O_ be ? OrdinaryCreateFromConstructor(NewTarget, *"%ShadowRealm.prototype%"*, « [[ShadowRealm]] »).
+				1. Let _callerContext_ be the running execution context.
+				1. Perform ? InitializeHostDefinedRealm().
+				1. Let _innerContext_ be the running execution context.
+				1. Remove _innerContext_ from the execution context stack and restore _callerContext_ as the running execution context.
+				1. Let _realmRec_ be the Realm of _innerContext_.
+				1. Set _O_.[[ShadowRealm]] to _realmRec_.
+				1. Perform ? HostInitializeShadowRealm(_realmRec_, _innerContext_, _O_).
+				1. Assert: _realmRec_.[[GlobalObject]] is an ordinary object.
+				1. Return _O_.
+			</emu-alg>
+		</emu-clause>
+	</emu-clause>
+
+	<emu-clause id="sec-properties-of-the-shadowRealm-constructor">
+		<h1>Properties of the ShadowRealm Constructor</h1>
+		<p>The ShadowRealm constructor:</p>
+		<ul>
+			<li>has a [[Prototype]] internal slot whose value is %Function.prototype%.</li>
+			<li>has the following properties:</li>
+		</ul>
+
+		<emu-clause id="sec-shadowrealm.prototype">
+			<h1>ShadowRealm.prototype</h1>
+			<p>The initial value of *ShadowRealm.prototype* is %ShadowRealm.prototype%.</p>
+			<p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+		</emu-clause>
+	</emu-clause>
+
+	<emu-clause id="sec-properties-of-the-shadowrealm-prototype-object">
+		<h1>Properties of the ShadowRealm Prototype Object</h1>
+		<p>The ShadowRealm prototype object:</p>
+		<ul>
+			<li>has a [[Prototype]] internal slot whose value is %Object.prototype%.</li>
+			<li>is <dfn>%ShadowRealm.prototype%</dfn>.</li>
+			<li>is an ordinary object.</li>
+			<li>does not have a [[ShadowRealm]] or any other of the internal slots that are specific to ShadowRealm instance objects.</li>
+		</ul>
+
+		<emu-clause id="sec-shadowrealm.prototype.evaluate">
+			<h1>ShadowRealm.prototype.evaluate ( _sourceText_ )</h1>
+
+			<p>Synchronously execute a top-level script. The _sourceText_ is interpreted as a Script and evaluated with this bound to the ShadowRealm's global object.</p>
+
+			<emu-alg>
+				1. Let _O_ be the *this* value.
+				1. Perform ? ValidateShadowRealmObject(_O_).
+				1. If _sourceText_ is not a String, throw a *TypeError* exception.
+				1. Let _callerRealm_ be the current Realm Record.
+				1. Let _evalRealm_ be _O_.[[ShadowRealm]].
+				1. Return ? PerformShadowRealmEval(_sourceText_, _callerRealm_, _evalRealm_).
+			</emu-alg>
+
+			<emu-note type=editor>
+				Extensible web: This is the dynamic equivalent of a &lt;script&gt; in HTML.
+			</emu-note>
+		</emu-clause>
+
+		<emu-clause id="sec-shadowrealm.prototype.importvalue">
+			<h1>ShadowRealm.prototype.importValue ( _specifier_, _exportName_ )</h1>
+			<p>The following steps are performed:</p>
+			<emu-alg>
+				1. Let _O_ be the *this* value.
+				1. Perform ? ValidateShadowRealmObject(_O_).
+				1. Let _specifierString_ be ? ToString(_specifier_).
+				1. If _exportName_ is not a String, throw a *TypeError* exception.
+				1. Let _callerRealm_ be the current Realm Record.
+				1. Let _evalRealm_ be _O_.[[ShadowRealm]].
+				1. Return ShadowRealmImportValue(_specifierString_, _exportName_, _callerRealm_, _evalRealm_).
+			</emu-alg>
+
+			<emu-note type=editor>
+				Extensible web: This is equivalent to dynamic import without having to evaluate a script source, which might not be available (e.g.: when CSP is blocking source evaluation).
+			</emu-note>
+		</emu-clause>
+
+		<emu-clause id="sec-shadowrealm.prototype-@@tostringtag">
+			<h1>ShadowRealm.prototype [ @@toStringTag ]</h1>
+			<p>The initial value of the @@toStringTag property is the String value *"ShadowRealm"*.</p>
+			<p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+		</emu-clause>
+	</emu-clause>
+
+	<emu-clause id="sec-properties-of-shadowrealm-instances">
+		<h1>Properties of ShadowRealm Instances</h1>
+		<p>ShadowRealm instances are ordinary objects that inherit properties from the ShadowRealm prototype object (the intrinsic %ShadowRealm.prototype%). ShadowRealm instances are initially created with the internal slots described in <emu-xref href="#table-internal-slots-of-shadowrealm-instances"></emu-xref>.</p>
+
+		<emu-table id="table-internal-slots-of-shadowrealm-instances" caption="Internal Slots of ShadowRealm Instances">
+			<table>
+				<tbody>
+					<tr>
+						<th>Internal Slot</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>[[ShadowRealm]]</td>
+						<td>Realm Record</td>
+						<td>The Realm Record for the initial execution context.</td>
+					</tr>
+				</tbody>
+			</table>
+		</emu-table>
+	</emu-clause>
+
+	<emu-clause id="sec-shadowrealm-host-operations">
+		<h1>Host operations</h1>
+		<emu-clause id="sec-hostinitializeshadowrealm" type="host-defined abstract operation">
+			<h1>
+				HostInitializeShadowRealm (
+					_realm_: a Realm Record,
+					_context_: an execution context,
+					_O_: a ShadowRealm object,
+				): either a normal completion containing ~unused~ or a throw completion
+			</h1>
+			<dl class="header">
+				<dt>description</dt>
+				<dd>
+					It is used to inform the host of any newly created realms from the
+					ShadowRealm constructor.
+					The idea of this hook is to initialize host data structures related
+					to the ShadowRealm, e.g., for module loading.
+				</dd>
+			</dl>
+			<emu-note>
+				<p>
+					This specification does not recommend any specific addition.
+					In the Web embedding, HTML and WebIDL will specify which
+					interfaces are included. The Web Platform and Web-like
+					environments may decide to include `EventTarget`,
+					`atob`, `TextEncoder`, `URL`, etc. while at the same time not
+					including `HTMLElement`, `localStorage`, `fetch`, etc.
+				</p>
+			</emu-note>
+		</emu-clause>
+		<emu-clause id="sec-shadowrealm-host-requirements">
+			<h1>Requirements on host-defined global objects</h1>
+			<p>
+				If a host defines that a specific global object is to be used for a ShadowRealm, that
+				object must be an extensible ordinary object, and any properties on it must be configurable.
+			</p>
+		</emu-clause>
+	</emu-clause>
+</emu-clause>
+</body>
+</html>

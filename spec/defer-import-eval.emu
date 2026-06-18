@@ -1,0 +1,2387 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<link rel="stylesheet" href="./spec.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
+<script src="./spec.js"></script>
+<pre class="metadata">
+title: Deferred Imports Evaluation
+stage: 3
+contributors: Nicolò Ribaudo
+</pre>
+
+<style>
+
+  .corner-cell {
+    position: relative;
+    height: 2lh;
+  }
+  .corner-cell .slash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom left, transparent calc(50% - 1px), gray, transparent calc(50% + 1px));
+  }
+  .corner-cell > .column {
+    position: absolute;
+    bottom: 0.4em;
+    left: 1em;
+  }
+  .corner-cell > .row {
+    position: absolute;
+    top: 0.4em;
+    right: 1em;
+  }
+</style>
+
+<emu-clause id="sec-ordinary-and-exotic-objects-behaviours" number="10">
+  <h1>Ordinary and Exotic Objects Behaviours</h1>
+
+  <emu-clause id="sec-built-in-exotic-object-internal-methods-and-slots" number="4">
+    <h1>Built-in Exotic Object Internal Methods and Slots</h1>
+    <p>This specification defines several kinds of built-in exotic objects. These objects generally behave similar to ordinary objects except for a few specific situations. The following exotic objects use the ordinary object internal methods except where it is explicitly specified otherwise below:</p>
+
+    <!-- NOTE!!!!: the oldids here is new, don't forget it in the ecma262 PR -->
+
+    <emu-clause id="sec-module-namespace-exotic-objects" oldids="sec-module-namespace-objects" number="6">
+      <h1>Module Namespace Exotic Objects</h1>
+      <p>A module namespace exotic object is an exotic object that exposes the bindings exported from an ECMAScript |Module| (See <emu-xref href="#sec-exports"></emu-xref>). There is a one-to-one correspondence between the String-keyed own properties of a module namespace exotic object and the binding names exported by the |Module|. The exported bindings include any bindings that are indirectly exported using `export *` export items. Each String-valued own property key is the StringValue of the corresponding exported binding name. These are the only String-keyed properties of a module namespace exotic object. Each such property has the attributes { [[Writable]]: *true*, [[Enumerable]]: *true*, [[Configurable]]: *false* }. Module namespace exotic objects are not extensible.</p>
+      <p>An object is a <dfn id="module-namespace-exotic-object" variants="module namespace exotic objects">module namespace exotic object</dfn> if its [[GetPrototypeOf]], [[SetPrototypeOf]], [[IsExtensible]], [[PreventExtensions]], [[GetOwnProperty]], [[DefineOwnProperty]], [[HasProperty]], [[Get]], [[Set]], [[Delete]], and [[OwnPropertyKeys]] internal methods use the definitions in this section, and its other essential internal methods use the definitions found in <emu-xref href="#sec-ordinary-object-internal-methods-and-internal-slots"></emu-xref>. These methods are installed by ModuleNamespaceCreate.</p>
+      <p>Module namespace exotic objects have the internal slots defined in <emu-xref href="#table-internal-slots-of-module-namespace-exotic-objects"></emu-xref>.</p>
+      <emu-table id="table-internal-slots-of-module-namespace-exotic-objects" caption="Internal Slots of Module Namespace Exotic Objects" oldids="table-29">
+        <table>
+          <tr>
+            <th>
+              Internal Slot
+            </th>
+            <th>
+              Type
+            </th>
+            <th>
+              Description
+            </th>
+          </tr>
+          <tr>
+            <td>
+              [[Module]]
+            </td>
+            <td>
+              a Module Record
+            </td>
+            <td>
+              The Module Record whose exports this namespace exposes.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Exports]]
+            </td>
+            <td>
+              a List of Strings
+            </td>
+            <td>
+              A List whose elements are the String values of the exported names exposed as own properties of this object. The list is ordered as if an Array of those String values had been sorted using %Array.prototype.sort% using *undefined* as _comparefn_.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <ins>[[Deferred]]</ins>
+            </td>
+            <td>
+              <ins>a Boolean</ins>
+            </td>
+            <td>
+              <ins>Whether this module namespace was obtained through `import defer`/`import.defer()`. Deferred namespaces can have side effects when accessing properties on them.</ins>
+            </td>
+          </tr>
+        </table>
+      </emu-table>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-getownproperty-p" type="internal method" number="5">
+        <h1>
+          [[GetOwnProperty]] (
+            _P_: a property key,
+          ): either a normal completion containing either a Property Descriptor or *undefined*, or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If <del>_P_ is a Symbol</del><ins>IsSymbolLikeNamespaceKey(_P_, _O_)</ins> is *true*, return OrdinaryGetOwnProperty(_O_, _P_).
+          1. Let _exports_ be <del>_O_.[[Exports]]</del><ins>? GetModuleExportsList(_O_)</ins>.
+          1. If _exports_ does not contain _P_, return *undefined*.
+          1. Let _value_ be ? _O_.[[Get]](_P_, _O_).
+          1. Return PropertyDescriptor { [[Value]]: _value_, [[Writable]]: *true*, [[Enumerable]]: *true*, [[Configurable]]: *false* }.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-defineownproperty-p-desc" type="internal method">
+        <h1>
+          [[DefineOwnProperty]] (
+            _P_: a property key,
+            _Desc_: a Property Descriptor,
+          ): either a normal completion containing a Boolean or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If <del>_P_ is a Symbol</del><ins>IsSymbolLikeNamespaceKey(_P_, _O_)</ins>, return ! OrdinaryDefineOwnProperty(_O_, _P_, _Desc_).
+          1. Let _current_ be ? _O_.[[GetOwnProperty]](_P_).
+          1. <ins>NOTE: If _O_.[[Deferred]] is *true*, the step above will ensure that the module is evaluated.</ins>
+          1. If _current_ is *undefined*, return *false*.
+          1. If _Desc_ has a [[Configurable]] field and _Desc_.[[Configurable]] is *true*, return *false*.
+          1. If _Desc_ has an [[Enumerable]] field and _Desc_.[[Enumerable]] is *false*, return *false*.
+          1. If IsAccessorDescriptor(_Desc_) is *true*, return *false*.
+          1. If _Desc_ has a [[Writable]] field and _Desc_.[[Writable]] is *false*, return *false*.
+          1. If _Desc_ has a [[Value]] field, return SameValue(_Desc_.[[Value]], _current_.[[Value]]).
+          1. Return *true*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-hasproperty-p" type="internal method">
+        <h1>
+          [[HasProperty]] (
+            _P_: a property key,
+          ): a normal completion containing a Boolean
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If <del>_P_ is a Symbol</del><ins>IsSymbolLikeNamespaceKey(_P_, _O_)</ins>, return ! OrdinaryHasProperty(_O_, _P_).
+          1. Let _exports_ be <del>_O_.[[Exports]]</del><ins>? GetModuleExportsList(_O_)</ins>.
+          1. If _exports_ contains _P_, return *true*.
+          1. Return *false*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-get-p-receiver" type="internal method">
+        <h1>
+          [[Get]] (
+            _P_: a property key,
+            _Receiver_: an ECMAScript language value,
+          ): either a normal completion containing an ECMAScript language value or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If <del>_P_ is a Symbol</del><ins>IsSymbolLikeNamespaceKey(_P_, _O_)</ins>, return ! OrdinaryGet(_O_, _P_, _Receiver_).
+          1. Let _exports_ be <del>_O_.[[Exports]]</del><ins>? GetModuleExportsList(_O_)</ins>.
+          1. If _exports_ does not contain _P_, return *undefined*.
+          1. Let _m_ be _O_.[[Module]].
+          1. Let _binding_ be _m_.ResolveExport(_P_).
+          1. Assert: _binding_ is a ResolvedBinding Record.
+          1. Let _targetModule_ be _binding_.[[Module]].
+          1. Assert: _targetModule_ is not *undefined*.
+          1. If _binding_.[[BindingName]] is ~namespace~, then
+            1. Return GetModuleNamespace(_targetModule_, <ins>~evaluation~</ins>).
+          1. <ins>If _binding_.[[BindingName]] is ~deferred-namespace~, then</ins>
+            1. <ins>Return GetModuleNamespace(_targetModule_, ~defer~).</ins>
+          1. Let _targetEnv_ be _targetModule_.[[Environment]].
+          1. If _targetEnv_ is ~empty~, throw a *ReferenceError* exception.
+          1. Return ? _targetEnv_.GetBindingValue(_binding_.[[BindingName]], *true*).
+        </emu-alg>
+        <emu-note>
+          <p>ResolveExport is side-effect free. Each time this operation is called with a specific _exportName_, _resolveSet_ pair as arguments it must return the same result. An implementation might choose to pre-compute or cache the ResolveExport results for the [[Exports]] of each module namespace exotic object.</p>
+        </emu-note>
+      </emu-clause>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-set-p-v-receiver" type="internal method">
+        <h1>
+          [[Set]] (
+            _P_: a property key,
+            _V_: an ECMAScript language value,
+            _Receiver_: an ECMAScript language value,
+          ): a normal completion containing *false*
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object</dd>
+        </dl>
+        <emu-alg>
+          1. Return *false*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-delete-p" type="internal method">
+        <h1>
+          [[Delete]] (
+            _P_: a property key,
+          ): a normal completion containing a Boolean
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If <del>_P_ is a Symbol</del><ins>IsSymbolLikeNamespaceKey(_P_, _O_)</ins>, return ! OrdinaryDelete(_O_, _P_).
+          1. Let _exports_ be <del>_O_.[[Exports]]</del><ins>? GetModuleExportsList(_O_)</ins>.
+          1. If _exports_ contains _P_, return *false*.
+          1. Return *true*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-module-namespace-exotic-objects-ownpropertykeys" type="internal method">
+        <h1>[[OwnPropertyKeys]] ( ): a normal completion containing a List of property keys</h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a module namespace exotic object _O_</dd>
+        </dl>
+        <emu-alg>
+          1. Let _exports_ be <del>_O_.[[Exports]]</del><ins>? GetModuleExportsList(_O_)</ins>.
+          1. Let _symbolKeys_ be OrdinaryOwnPropertyKeys(_O_).
+          1. Return the list-concatenation of _exports_ and _symbolKeys_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-modulenamespacecreate" type="abstract operation">
+        <h1>
+          ModuleNamespaceCreate (
+            _module_: a Module Record,
+            _exports_: a List of Strings,
+            <ins>_phase_: ~defer~ or ~evaluation~,</ins>
+          ): a module namespace exotic object
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It is used to specify the creation of new module namespace exotic objects.</dd>
+        </dl>
+        <emu-alg>
+          1. <del>Assert: _module_.[[Namespace]] is ~empty~.</del>
+          1. Let _internalSlotsList_ be the internal slots listed in <emu-xref href="#table-internal-slots-of-module-namespace-exotic-objects"></emu-xref>.
+          1. Let _M_ be MakeBasicObject(_internalSlotsList_).
+          1. Set _M_'s essential internal methods to the definitions specified in <emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref>.
+          1. Set _M_.[[Module]] to _module_.
+          1. [declared="comparefn"] Let _sortedExports_ be a List whose elements are the elements of _exports_ ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using *undefined* as _comparefn_.
+          1. Set _M_.[[Exports]] to _sortedExports_.
+          1. <del>Create own properties of _M_ corresponding to the definitions in <emu-xref href="#sec-module-namespace-objects"></emu-xref>.</del>
+          1. <ins>If _phase_ is ~defer~, then</ins>
+            1. <ins>Assert: _module_.[[DeferredNamespace]] is ~empty~.</ins>
+            1. <ins>Set _module_.[[DeferredNamespace]] to _M_.</ins>
+            1. <ins>Set _M_.[[Deferred]] to *true*.</ins>
+            1. <ins>Let _toStringTag_ be *"Deferred Module"*.</ins>
+          1. <ins>Else,</ins>
+            1. <ins>Assert: _module_.[[Namespace]] is ~empty~.</ins>
+            1. Set _module_.[[Namespace]] to _M_.
+            1. <ins>Set _M_.[[Deferred]] to *false*.</ins>
+            1. <ins>Let _toStringTag_ be *"Module"*.</ins>
+          1. <ins>Create an own data property of _M_ named %Symbol.toStringTag% whose [[Value]] is _toStringTag_ and whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are *false*.</ins>
+          1. Return _M_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-IsSymbolLikeNamespaceKey" type="abstract operation">
+        <h1>
+          <ins>IsSymbolLikeNamespaceKey (
+            _P_: a property key,
+            _ns_: a module namespace exotic object,
+          ): a Boolean</ins>
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It determines if a property of _ns_ with key _P_ would be an ordinary property, rather than being mapped to one of the module exports.</dd>
+        </dl>
+
+        <emu-alg>
+          1. If _P_ is a Symbol, return *true*.
+          1. If _ns_.[[Deferred]] is *true* and _P_ is *"then"*, return *true*.
+          1. Return *false*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-GetModuleExportsList" type="abstract operation">
+        <h1>
+          <ins>GetModuleExportsList (
+            _O_: a module namespace exotic object,
+          ): either a normal completion containing a List of Strings, or a throw completion</ins>
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It returns a List whose elements are the names of the module's exports, triggering module evaluation if needed.</dd>
+        </dl>
+        <emu-alg>
+          1. If _O_.[[Deferred]] is *true*, then
+            1. Let _m_ be _O_.[[Module]].
+            1. Perform ? EvaluateModuleSync(_m_).
+          1. Return _O_.[[Exports]].
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-ecmascript-language-expressions" number="13">
+  <h1>ECMAScript Language: Expressions</h1>
+
+  <emu-clause id="sec-left-hand-side-expressions" number="3">
+    <h1>Left-Hand-Side Expressions</h1>
+    <h2>Syntax</h2>
+    <emu-grammar type="definition">
+      ImportCall[Yield, Await] :
+        <del>`import` `(` AssignmentExpression[+In, ?Yield, ?Await] `,`? `)`</del>
+        <del>`import` `(` AssignmentExpression[+In, ?Yield, ?Await] `,` AssignmentExpression[+In, ?Yield, ?Await] `,`? `)`</del>
+        <ins>`import` ImportCallArguments[?Yield, ?Await]</ins>
+        <ins>`import` `.` `defer` ImportCallArguments[?Yield, ?Await]</ins>
+
+      <ins>
+      ImportCallArguments[Yield, Await] :
+        `(` AssignmentExpression[+In, ?Yield, ?Await] `,`? `)`
+        `(` AssignmentExpression[+In, ?Yield, ?Await] `,` AssignmentExpression[+In, ?Yield, ?Await] `,`? `)`
+      </ins>
+    </emu-grammar>
+
+    <emu-clause id="sec-import-calls" number="10">
+      <h1>Import Calls</h1>
+
+      <emu-note type="editor">
+        The changes to this section are intended to mirror the changes proposed by the
+        <a href="https://tc39.es/proposal-source-phase-imports/#sec-import-calls">Source
+          Phase Imports</a> proposal, but adapted to the ~defer~ phase.
+      </emu-note>
+
+      <emu-clause id="sec-import-call-runtime-semantics-evaluation" type="sdo">
+        <h1>Runtime Semantics: Evaluation</h1>
+
+        <emu-grammar><del>ImportCall : `import` `(` AssignmentExpression `,`? `)`</del></emu-grammar>
+        <emu-alg>
+          1. <del>Return ? EvaluateImportCall(|AssignmentExpression|).</del>
+        </emu-alg>
+
+        <emu-grammar><del>ImportCall : `import` `(` AssignmentExpression `,` AssignmentExpression `,`? `)`</del></emu-grammar>
+        <emu-alg>
+          1. <del>Return ? EvaluateImportCall(the first |AssignmentExpression|, the second |AssignmentExpression|).</del>
+        </emu-alg>
+
+        <emu-grammar>ImportCall : `import` ImportCallArguments</emu-grammar>
+        <emu-alg>
+          1. <ins>Return ? EvaluateImportCall(|ImportCallArguments|, ~evaluation~).</ins>
+        </emu-alg>
+
+        <emu-grammar>ImportCall : `import` `.` `defer` ImportCallArguments</emu-grammar>
+        <emu-alg>
+          1. <ins>Return ? EvaluateImportCall(|ImportCallArguments|, ~defer~).</ins>
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-import-call-runtime-semantics-EvaluateImportCallSpecifier" type="sdo">
+        <h1><ins>Runtime Semantics: EvaluateImportCallSpecifier</ins></h1>
+
+        <emu-grammar>ImportCallArguments : `(` AssignmentExpression `,`? `)`</emu-grammar>
+        <emu-alg>
+          1. Let _ref_ be ? Evaluation of |AssignmentExpression|.
+          1. Return ? GetValue(_ref_).
+        </emu-alg>
+
+        <emu-grammar>ImportCallArguments : `(` AssignmentExpression `,` AssignmentExpression `,`? `)`</emu-grammar>
+        <emu-alg>
+          1. Let _ref_ be ? Evaluation of the first |AssignmentExpression|.
+          1. Return ? GetValue(_ref_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-import-call-runtime-semantics-EvaluateImportCallOptions" type="sdo">
+        <h1><ins>Runtime Semantics: EvaluateImportCallOptions</ins></h1>
+
+        <emu-grammar>ImportCallArguments : `(` AssignmentExpression `,`? `)`</emu-grammar>
+        <emu-alg>
+          1. Return *undefined*.
+        </emu-alg>
+
+        <emu-grammar>ImportCallArguments : `(` AssignmentExpression `,` AssignmentExpression `,`? `)`</emu-grammar>
+        <emu-alg>
+          1. Let _ref_ be ? Evaluation of the second |AssignmentExpression|.
+          1. Return ? GetValue(_ref_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-evaluate-import-call" type="abstract operation">
+        <h1>
+          EvaluateImportCall (
+            <ins>_arguments_: a Parse Node,</ins>
+            <ins>_phase_: ~defer~ or ~evaluation~,</ins>
+            <del>_specifierExpression_: a Parse Node,</del>
+            <del>optional _optionsExpression_: a Parse Node,</del>
+          ): either a normal completion containing a Promise or an abrupt completion
+        </h1>
+        <dl class="header"></dl>
+        <emu-alg>
+          1. Let _referrer_ be GetActiveScriptOrModule().
+          1. If _referrer_ is *null*, set _referrer_ to the current Realm Record.
+          1. <del>Let _specifierRef_ be ? Evaluation of _specifierExpression_.</del>
+          1. Let _specifier_ be ? <del>GetValue(_specifierRef_)</del><ins>EvaluateImportCallSpecifier of _arguments_</ins>.
+          1. <del>If _optionsExpression_ is present, then</del>
+            1. <del>Let _optionsRef_ be ? Evaluation of _optionsExpression_.</del>
+            1. <del>Let _options_ be ? GetValue(_optionsRef_).</del>
+          1. <del>Else,</del>
+            1. <del>Let _options_ be *undefined*.</del>
+          1. <ins>Let _options_ be ? EvaluateImportCallOptions of _arguments_.</ins>
+          1. Let _promiseCapability_ be ! NewPromiseCapability(%Promise%).
+          1. Let _specifierString_ be Completion(ToString(_specifier_)).
+          1. IfAbruptRejectPromise(_specifierString_, _promiseCapability_).
+          1. Let _attributes_ be a new empty List.
+          1. If _options_ is not *undefined*, then
+            1. If _options_ is not an Object, then
+              1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « a newly created *TypeError* object »).
+              1. Return _promiseCapability_.[[Promise]].
+            1. Let _attributesObj_ be Completion(Get(_options_, *"with"*)).
+            1. IfAbruptRejectPromise(_attributesObj_, _promiseCapability_).
+            1. If _attributesObj_ is not *undefined*, then
+              1. If _attributesObj_ is not an Object, then
+                1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « a newly created *TypeError* object »).
+                1. Return _promiseCapability_.[[Promise]].
+              1. Let _entries_ be Completion(EnumerableOwnProperties(_attributesObj_, ~key+value~)).
+              1. IfAbruptRejectPromise(_entries_, _promiseCapability_).
+              1. For each element _entry_ of _entries_, do
+                1. Let _key_ be ! Get(_entry_, *"0"*).
+                1. Let _value_ be ! Get(_entry_, *"1"*).
+                1. If _key_ is a String, then
+                  1. If _value_ is not a String, then
+                    1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « a newly created *TypeError* object »).
+                    1. Return _promiseCapability_.[[Promise]].
+                  1. Append the ImportAttribute Record { [[Key]]: _key_, [[Value]]: _value_ } to _attributes_.
+            1. If AllImportAttributesSupported(_attributes_) is *false*, then
+              1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « a newly created *TypeError* object »).
+              1. Return _promiseCapability_.[[Promise]].
+            1. Sort _attributes_ according to the lexicographic order of their [[Key]] field, treating the value of each such field as a sequence of UTF-16 code unit values. NOTE: This sorting is observable only in that hosts are prohibited from changing behaviour based on the order in which attributes are enumerated.
+          1. Let _moduleRequest_ be a new ModuleRequest Record { [[Specifier]]: _specifierString_, [[Attributes]]: _attributes_, <ins>[[Phase]]: _phase_</ins> }.
+          1. Perform HostLoadImportedModule(_referrer_, _moduleRequest_, ~empty~, _promiseCapability_).
+          1. Return _promiseCapability_.[[Promise]].
+        </emu-alg>
+
+        <emu-clause id="sec-ContinueDynamicImport" type="abstract operation">
+          <h1>
+            ContinueDynamicImport (
+              _promiseCapability_: a PromiseCapability Record,
+              _moduleCompletion_: either a normal completion containing a Module Record or a throw completion,
+              <ins>_phase_: ~defer~ or ~evaluation~,</ins>
+            ): ~unused~
+          </h1>
+          <dl class="header">
+            <dt>description</dt>
+            <dd>It completes the process of a dynamic import originally started by an <emu-xref href="#sec-import-calls">`import()`</emu-xref> call, resolving or rejecting the promise returned by that call as appropriate.</dd>
+          </dl>
+          <emu-alg>
+            1. If _moduleCompletion_ is an abrupt completion, then
+              1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « _moduleCompletion_.[[Value]] »).
+              1. Return ~unused~.
+            1. Let _module_ be _moduleCompletion_.[[Value]].
+            1. Let _loadPromise_ be _module_.LoadRequestedModules().
+            1. Let _rejectedClosure_ be a new Abstract Closure with parameters (_reason_) that captures _promiseCapability_ and performs the following steps when called:
+              1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « _reason_ »).
+              1. Return ~unused~.
+            1. Let _onRejected_ be CreateBuiltinFunction(_rejectedClosure_, 1, *""*, « »).
+            1. Let _linkAndEvaluateClosure_ be a new Abstract Closure with no parameters that captures _module_, _promiseCapability_, <ins>_phase_</ins> and _onRejected_ and performs the following steps when called:
+              1. Let _link_ be Completion(_module_.Link()).
+              1. If _link_ is an abrupt completion, then
+                1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « _link_.[[Value]] »).
+                1. Return ~unused~.
+              1. <del>Let _evaluatePromise_ be _module_.Evaluate().</del>
+              1. Let _fulfilledClosure_ be a new Abstract Closure with no parameters that captures _module_, <ins>_phase_,</ins> and _promiseCapability_ and performs the following steps when called:
+                1. Let _namespace_ be GetModuleNamespace(_module_, <ins>_phase_</ins>).
+                1. Perform ! Call(_promiseCapability_.[[Resolve]], *undefined*, « _namespace_ »).
+                1. Return ~unused~.
+              1. <ins>If _phase_ is ~defer~, then</ins>
+                1. <ins>Let _evaluationList_ be GatherAsynchronousTransitiveDependencies(_module_).</ins>
+                1. <ins>If _evaluationList_ is empty, then</ins>
+                  1. <ins>Perform _fulfilledClosure_().</ins>
+                  1. <ins>Return ~unused~.</ins>
+                1. <ins>Let _asyncDepsEvaluationPromises_ be a new empty List.</ins>
+                1. <ins>For each Module Record _dep_ of _evaluationList_, append _dep_.Evaluate() to _asyncDepsEvaluationPromises_.</ins>
+                1. <ins>Let _evaluatePromise_ be SafePerformPromiseAll(_asyncDepsEvaluationPromises_).</ins>
+              1. <ins>Else,</ins>
+                1. <ins>Assert: _phase_ is ~evaluation~.</ins>
+                1. <ins>Let _evaluatePromise_ be _module_.Evaluate().</ins>
+              1. Let _onFulfilled_ be CreateBuiltinFunction(_fulfilledClosure_, *""*, 0, « »).
+              1. Perform PerformPromiseThen(_evaluatePromise_, _onFulfilled_, _onRejected_).
+              1. Return ~unused~.
+            1. Let _linkAndEvaluate_ be CreateBuiltinFunction(_linkAndEvaluateClosure_, *""*, 0, « »).
+            1. Perform PerformPromiseThen(_loadPromise_, _linkAndEvaluate_, _onRejected_).
+            1. Return ~unused~.
+          </emu-alg>
+        </emu-clause>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-ecmascript-language-scripts-and-modules" number="16">
+  <h1>ECMAScript Language: Scripts and Modules</h1>
+
+  <emu-clause id="sec-modules" number="2">
+    <h1>Modules</h1>
+    <h2>Syntax</h2>
+    <emu-grammar type="definition">
+      Module :
+        ModuleBody?
+
+      ModuleBody :
+        ModuleItemList
+
+      ModuleItemList :
+        ModuleItem
+        ModuleItemList ModuleItem
+
+      ModuleItem :
+        ImportDeclaration
+        ExportDeclaration
+        StatementListItem[~Yield, +Await, ~Return]
+
+      ModuleExportName :
+        IdentifierName
+        StringLiteral
+    </emu-grammar>
+
+    <emu-clause id="sec-module-semantics">
+      <h1>Module Semantics</h1>
+
+      <emu-clause id="sec-modulerequest-record">
+        <h1><ins>ModuleRequest Records</ins></h1>
+
+        <p>A <dfn id="modulerequest-record" variants="ModuleRequest Records">ModuleRequest Record</dfn> represents the request to import a module with given import attributes <ins>and import phase</ins>. It consists of the following fields:</p>
+        <emu-table id="table-modulerequest-fields" caption="ModuleRequest Record Fields">
+          <table>
+            <tr>
+              <th>
+                Field Name
+              </th>
+              <th>
+                Value Type
+              </th>
+              <th>
+                Meaning
+              </th>
+            </tr>
+            <tr>
+              <td>
+                [[Specifier]]
+              </td>
+              <td>
+                a String
+              </td>
+              <td>
+                The module specifier
+              </td>
+            </tr>
+            <tr>
+              <td>
+                [[Attributes]]
+              </td>
+              <td>
+                a List of ImportAttribute Records
+              </td>
+              <td>
+                The import attributes
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <ins>[[Phase]]</ins>
+              </td>
+              <td>
+                <ins>~defer~ or ~evaluation~</ins>
+              </td>
+              <td>
+                <ins>The target import phase</ins>
+              </td>
+            </tr>
+          </table>
+        </emu-table>
+
+        <emu-clause id="del-sec-ModuleRequestsEqual">
+          <h1><del>ModuleRequestsEqual ( _left_, _right_ )</del></h1>
+        </emu-clause>
+
+        <emu-clause id="sec-ModuleRequestsKeyEqual" oldids="sec-ModuleRequestsEqual" type="abstract operation">
+          <h1>
+            <ins>ModuleRequestsKeyEqual (
+              _left_: a ModuleRequest Record or a LoadedModuleRequest Record,
+              _right_: a ModuleRequest Record or a LoadedModuleRequest Record,
+            ): a Boolean</ins>
+          </h1>
+          <dl class="header">
+            <dt>description</dt>
+            <dd>&zwj;<ins>It checks whether the two ModuleRequest Records have the same specifier and attributes.</ins></dd>
+          </dl>
+
+          <emu-alg>
+            1. If _left_.[[Specifier]] is not _right_.[[Specifier]], return *false*.
+            1. Let _leftAttrs_ be _left_.[[Attributes]].
+            1. Let _rightAttrs_ be _right_.[[Attributes]].
+            1. Let _leftAttrsCount_ be the number of elements in _leftAttrs_.
+            1. Let _rightAttrsCount_ be the number of elements in _rightAttrs_.
+            1. If _leftAttrsCount_ ≠ _rightAttrsCount_, return *false*.
+            1. For each ImportAttribute Record _l_ of _leftAttrs_, do
+              1. If _rightAttrs_ does not contain an ImportAttribute Record _r_ such that _l_.[[Key]] is _r_.[[Key]] and _l_.[[Value]] is _r_.[[Value]], return *false*.
+            1. Return *true*.
+          </emu-alg>
+        </emu-clause>
+      </emu-clause>
+
+      <emu-clause id="sec-static-semantics-modulerequests" type="sdo" number="3">
+        <h1>Static Semantics: ModuleRequests ( ): a List of ModuleRequest Records</h1>
+        <dl class="header">
+        </dl>
+        <emu-grammar>Module : [empty]</emu-grammar>
+        <emu-alg>
+          1. Return a new empty List.
+        </emu-alg>
+        <emu-grammar>ModuleItemList : ModuleItem</emu-grammar>
+        <emu-alg>
+          1. Return ModuleRequests of |ModuleItem|.
+        </emu-alg>
+        <emu-grammar>ModuleItemList : ModuleItemList ModuleItem</emu-grammar>
+        <emu-alg>
+          1. Let _requests_ be the ModuleRequests of |ModuleItemList|.
+          1. Let _additionalRequests_ be the ModuleRequests of |ModuleItem|.
+          1. For each ModuleRequest Record _mr_ of _additionalRequests_, do
+            1. If _requests_ does not contain a ModuleRequest Record _mr2_ such that <del>ModuleRequestsEqual</del><ins>ModuleRequestsKeyEqual</ins>(_mr_, _mr2_) is *true* <ins>and _mr_.[[Phase]] is _mr2_.[[Phase]]</ins>, then
+              1. Append _mr_ to _requests_.
+          1. Return _requests_.
+        </emu-alg>
+        <emu-grammar>ModuleItem : StatementListItem</emu-grammar>
+        <emu-alg>
+          1. Return a new empty List.
+        </emu-alg>
+        <emu-grammar>
+          ImportDeclaration : `import` ImportClause FromClause `;`
+        </emu-grammar>
+        <emu-alg>
+          1. Let _specifier_ be the SV of |FromClause|.
+          1. Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: « », <ins>[[Phase]]: ~evaluation~</ins> }.
+        </emu-alg>
+        <emu-grammar>ImportDeclaration : `import` ImportClause FromClause WithClause `;`</emu-grammar>
+        <emu-alg>
+          1. Let _specifier_ be the SV of |FromClause|.
+          1. Let _attributes_ be WithClauseToAttributes of |WithClause|.
+          1. Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: _attributes_, <ins>[[Phase]]: ~evaluation~</ins> }.
+        </emu-alg>
+        <emu-grammar>
+          <ins>ImportDeclaration : `import` `defer` NameSpaceImport FromClause `;`</ins>
+        </emu-grammar>
+        <emu-alg>
+          1. <ins>Let _specifier_ be SV of |FromClause|.</ins>
+          1. <ins>Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: « », [[Phase]]: ~defer~ }.</ins>
+        </emu-alg>
+        <emu-grammar>
+          <ins>ImportDeclaration : `import` `defer` NameSpaceImport FromClause WithClause `;`</ins>
+        </emu-grammar>
+        <emu-alg>
+          1. <ins>Let _specifier_ be SV of |FromClause|.</ins>
+          1. <ins>Let _attributes_ be WithClauseToAttributes of |WithClause|.</ins>
+          1. <ins>Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: _attributes_, [[Phase]]: ~defer~ }.</ins>
+        </emu-alg>
+        <emu-grammar><del>ModuleSpecifier : StringLiteral</del></emu-grammar>
+        <emu-alg>
+          1. <del>Return a List whose sole element is the SV of |StringLiteral|.</del>
+        </emu-alg>
+        <emu-grammar>
+          ExportDeclaration : `export` ExportFromClause FromClause `;`
+        </emu-grammar>
+        <emu-alg>
+          1. Let _specifier_ be SV of |FromClause|.
+          1. Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: « », <ins>[[Phase]]: ~evaluation~</ins> }.
+        </emu-alg>
+        <emu-grammar>
+          ExportDeclaration : `export` ExportFromClause FromClause WithClause `;`
+        </emu-grammar>
+        <emu-alg>
+          1. Let _specifier_ be the SV of |FromClause|.
+          1. Let _attributes_ be WithClauseToAttributes of |WithClause|.
+          1. Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: _attributes_, <ins>[[Phase]]: ~evaluation~</ins> }.
+        </emu-alg>
+        <emu-grammar>
+          ExportDeclaration :
+            `export` NamedExports `;`
+            `export` VariableStatement
+            `export` Declaration
+            `export` `default` HoistableDeclaration
+            `export` `default` ClassDeclaration
+            `export` `default` AssignmentExpression `;`
+        </emu-grammar>
+        <emu-alg>
+          1. Return a new empty List.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abstract-module-records" number="4">
+        <h1>Abstract Module Records</h1>
+        <p>A <dfn variants="Module Records">Module Record</dfn> encapsulates structural information about the imports and exports of a single module. This information is used to link the imports and exports of sets of connected modules. A Module Record includes four fields that are only used when evaluating a module.</p>
+        <p>For specification purposes Module Record values are values of the Record specification type and can be thought of as existing in a simple object-oriented hierarchy where Module Record is an abstract class with both abstract and concrete subclasses. This specification defines the abstract subclass named Cyclic Module Record and its concrete subclass named Source Text Module Record. Other specifications and implementations may define additional Module Record subclasses corresponding to alternative module definition facilities that they defined.</p>
+        <p>Module Record defines the fields listed in <emu-xref href="#table-module-record-fields"></emu-xref>. All Module Definition subclasses include at least those fields. Module Record also defines the abstract method list in <emu-xref href="#table-abstract-methods-of-module-records"></emu-xref>. All Module definition subclasses must provide concrete implementations of these abstract methods.</p>
+        <emu-table id="table-module-record-fields" caption="Module Record Fields" oldids="table-36">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  Field Name
+                </th>
+                <th>
+                  Value Type
+                </th>
+                <th>
+                  Meaning
+                </th>
+              </tr>
+            </thead>
+            <tr>
+              <td>
+                [[Realm]]
+              </td>
+              <td>
+                a Realm Record
+              </td>
+              <td>
+                The Realm within which this module was created.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                [[Environment]]
+              </td>
+              <td>
+                a Module Environment Record or ~empty~
+              </td>
+              <td>
+                The Environment Record containing the top level bindings for this module. This field is set when the module is linked.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                [[Namespace]]
+              </td>
+              <td>
+                an Object or ~empty~
+              </td>
+              <td>
+                The Module Namespace Object (<emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref>) whose [[Deferred]] slot is *false*, if one has been created for this module.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <ins>[[DeferredNamespace]]</ins>
+              </td>
+              <td>
+                <ins>an Object or ~empty~</ins>
+              </td>
+              <td>
+                <ins>The Module Namespace Object (<emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref>) whose [[Deferred]] slot is *true*, if one has been requested for this module.</ins>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                [[HostDefined]]
+              </td>
+              <td>
+                anything (default value is *undefined*)
+              </td>
+              <td>
+                Field reserved for use by host environments that need to associate additional information with a module.
+              </td>
+            </tr>
+          </table>
+        </emu-table>
+        <emu-table id="table-abstract-methods-of-module-records" type="abstract methods" of="Module Records" oldids="table-37">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  Method
+                </th>
+                <th>
+                  Purpose
+                </th>
+                <th>
+                  Definitions
+                </th>
+              </tr>
+            </thead>
+            <tr id="abstract-loadrequestedmodules">
+              <td>
+                LoadRequestedModules (
+                  optional _hostDefined_: anything,
+                ): a Promise
+              </td>
+              <td>
+                <p>It prepares the module for linking by recursively loading all its dependencies.</p>
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="LoadRequestedModules"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+            <tr id="abstract-getexportednames">
+              <td>
+                GetExportedNames (
+                  optional _exportStarSet_: a List of Source Text Module Records,
+                ): a List of Strings
+              </td>
+              <td>
+                <p>It returns a list of all names that are either directly or indirectly exported from this module.</p>
+                <p>LoadRequestedModules must have completed successfully prior to invoking this method.</p>
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="GetExportedNames"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+            <tr id="abstract-resolveexport">
+              <td>
+                ResolveExport (
+                  _exportName_: a String,
+                  optional _resolveSet_: a List of Records with fields [[Module]] (a Module Record) and [[ExportName]] (a String),
+                ): a ResolvedBinding Record, *null*, or ~ambiguous~
+              </td>
+              <td>
+                <p>It returns the binding of a name exported by this module. Bindings are represented by a <dfn id="resolvedbinding-record" variants="ResolvedBinding Records">ResolvedBinding Record</dfn>, of the form { [[Module]]: Module Record, [[BindingName]]: String | ~namespace~ <ins>| ~deferred-namespace~</ins> }. If the export is a Module Namespace Object without a direct binding in any module, [[BindingName]] will be set to ~namespace~ <ins>or ~deferred-namespace~ (depending on whether the binding comes from a deferred import or not)</ins>. It returns *null* if the name cannot be resolved, or ~ambiguous~ if multiple bindings were found.</p>
+                <p>Each time this operation is called with a specific _exportName_, _resolveSet_ pair as arguments it must return the same result.</p>
+                <p>LoadRequestedModules must have completed successfully prior to invoking this method.</p>
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="ResolveExport"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+            <tr id="abstract-link">
+              <td>Link ( ): either a normal completion containing ~unused~ or a throw completion</td>
+              <td>
+                <p>It prepares the module for evaluation by transitively resolving all module dependencies and creating a Module Environment Record.</p>
+                <p>LoadRequestedModules must have completed successfully prior to invoking this method.</p>
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="Link"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+            <tr id="abstract-evaluate">
+              <td>Evaluate ( ): a Promise</td>
+              <td>
+                <p>It returns a promise for the evaluation of this module and its dependencies, resolving on successful evaluation or if it has already been evaluated successfully, and rejecting for an evaluation error or if it has already been evaluated unsuccessfully. If the promise is rejected, hosts are expected to handle the promise rejection and rethrow the evaluation error. Unless this module is a Cyclic Module Record, the returned promise must be already settled.</p>
+                <p>Link must have completed successfully prior to invoking this method.</p>
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="Evaluate"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+          </table>
+        </emu-table>
+
+        <emu-clause id="sec-EvaluateModuleSync" type="abstract operation">
+          <h1>
+            EvaluateModuleSync (
+              _module_: a Module Record,
+            ): either a normal completion containing ~unused~ or a throw completion
+          </h1>
+          <dl class="header">
+            <dt>description</dt>
+            <dd>It synchronously evaluates _module_, <del>provided that the caller guarantees that</del><ins>throwing before evaluating if</ins> _module_'s evaluation <del>will</del><ins>would not</ins> return an already settled promise.</dd>
+          </dl>
+
+          <emu-alg>
+            1. <del>Assert: _module_ is not a Cyclic Module Record.</del>
+            1. <ins>If ReadyForSyncExecution(_module_) is *false*, throw a *TypeError* exception.</ins>
+            1. Let _promise_ be _module_.Evaluate().
+            1. Assert: _promise_.[[PromiseState]] is either ~fulfilled~ or ~rejected~.
+            1. If _promise_.[[PromiseState]] is ~rejected~, then
+              1. If _promise_.[[PromiseIsHandled]] is *false*, perform HostPromiseRejectionTracker(_promise_, *"handle"*).
+              1. Set _promise_.[[PromiseIsHandled]] to *true*.
+              1. Return ThrowCompletion(_promise_.[[PromiseResult]]).
+            1. Return ~unused~.
+          </emu-alg>
+
+          <emu-clause id="sec-ReadyForSyncExecution" type="abstract operation">
+            <h1>
+              <ins>ReadyForSyncExecution (
+                _module_: a Module Record,
+                optional _seen_: a List of Module Records,
+              ): a Boolean</ins>
+            </h1>
+            <dl class="header"></dl>
+            <emu-alg>
+              1. If _module_ is not a Cyclic Module Record, return *true*.
+              1. If _seen_ is not present, set _seen_ to a new empty List.
+              1. If _seen_ contains _module_, return *true*.
+              1. Append _module_ to _seen_.
+              1. If _module_.[[Status]] is ~evaluated~, return *true*.
+              1. If _module_.[[Status]] is ~evaluating~ or ~evaluating-async~, return *false*.
+              1. Assert: _module_.[[Status]] is ~linked~.
+              1. If _module_.[[HasTLA]] is *true*, return *false*.
+              1. For each ModuleRequest Record _request_ of _module_.[[RequestedModules]], do
+                1. Let _requiredModule_ be GetImportedModule(_module_, _request_).
+                1. If ReadyForSyncExecution(_requiredModule_, _seen_) is *false*, then
+                  1. Return *false*.
+              1. Return *true*.
+            </emu-alg>
+          </emu-clause>
+        </emu-clause>
+      </emu-clause>
+
+      <emu-clause id="sec-cyclic-module-records" number="5">
+        <h1>Cyclic Module Records</h1>
+
+        <p>A <dfn id="cyclic-module-record" variants="Cyclic Module Records">Cyclic Module Record</dfn> is used to represent information about a module that can participate in dependency cycles with other modules that are subclasses of the Cyclic Module Record type. Module Records that are not subclasses of the Cyclic Module Record type must not participate in dependency cycles with Source Text Module Records.</p>
+
+        <p>In addition to the methods defined in <emu-xref href="#table-abstract-methods-of-module-records"></emu-xref> Cyclic Module Records have the additional methods listed in <emu-xref href="#table-cyclic-module-methods"></emu-xref>:</p>
+        <emu-table id="table-cyclic-module-methods" type="abstract methods" of="Cyclic Module Records" caption="Additional Abstract Methods of Cyclic Module Records">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  Method
+                </th>
+                <th>
+                  Purpose
+                </th>
+                <th>
+                  Definitions
+                </th>
+              </tr>
+            </thead>
+            <tr id="abstract-initializeenvironment">
+              <td>InitializeEnvironment ( ): either a normal completion containing ~unused~ or a throw completion</td>
+              <td>
+                It initializes the Environment Record of the module, including resolving all imported bindings, and creates the module's execution context.
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="InitializeEnvironment"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+            <tr id="abstract-executemodule">
+              <td>
+                ExecuteModule (
+                  optional _capability_: a PromiseCapability Record,
+                ): either a normal completion containing ~unused~ or a throw completion
+              </td>
+              <td>
+                It evaluates the module's code within its execution context. If this module has *true* in [[HasTLA]], then a PromiseCapability Record is passed as an argument, and the method is expected to resolve or reject the given capability. In this case, the method must not throw an exception, but instead reject the PromiseCapability Record if necessary.
+              </td>
+              <td>
+                Within this specification it has definitions in the following types; hosts may provide additional types with their own definitions:
+                <emu-concrete-method-dfns for="ExecuteModule"></emu-concrete-method-dfns>
+              </td>
+            </tr>
+          </table>
+        </emu-table>
+
+        <emu-clause id="sec-LoadRequestedModules" type="concrete method">
+          <h1>
+            LoadRequestedModules (
+              optional _hostDefined_: anything,
+            ): a Promise
+          </h1>
+          <dl class="header">
+            <dt>for</dt>
+            <dd>a Cyclic Module Record _module_</dd>
+          </dl>
+
+          <emu-clause id="sec-InnerModuleLoading" type="abstract operation">
+            <h1>
+              InnerModuleLoading (
+                _state_: a GraphLoadingState Record,
+                _module_: a Module Record,
+              ): ~unused~
+            </h1>
+            <dl class="header">
+            </dl>
+
+            <emu-note>
+              <ins>There is no special handling for ModuleRequests whose [[Phase]] is ~defer~: any error from loading or parsing the corresponding modules will make InnerModuleLoading fail.</ins>
+            </emu-note>
+          </emu-clause>
+        </emu-clause>
+
+        <emu-clause id="sec-moduledeclarationlinking" type="concrete method" oldids="sec-moduledeclarationinstantiation">
+          <h1>Link ( ): either a normal completion containing ~unused~ or a throw completion</h1>
+          <dl class="header">
+            <dt>for</dt>
+            <dd>a Cyclic Module Record _module_</dd>
+          </dl>
+
+          <emu-clause id="sec-InnerModuleLinking" type="abstract operation" oldids="sec-innermoduleinstantiation">
+            <h1>
+              InnerModuleLinking (
+                _module_: a Module Record,
+                _stack_: a List of Cyclic Module Records,
+                _index_: a non-negative integer,
+              ): either a normal completion containing a non-negative integer or a throw completion
+            </h1>
+            <dl class="header">
+            </dl>
+
+            <emu-note>
+              <ins>There is no special handling for ModuleRequests whose [[Phase]] is ~defer~: any error from linking the corresponding modules will make InnerModuleLinking fail.</ins>
+            </emu-note>
+          </emu-clause>
+        </emu-clause>
+
+        <emu-clause id="sec-moduleevaluation" type="concrete method">
+          <h1>Evaluate ( ): a Promise</h1>
+          <dl class="header">
+            <dt>for</dt>
+            <dd>a Cyclic Module Record _module_</dd>
+
+            <dt>description</dt>
+            <dd>Evaluate transitions this module's [[Status]] from ~linked~ to either ~evaluating-async~ or ~evaluated~. The first time it is called on a module in a given strongly connected component, Evaluate creates and returns a Promise which resolves when the module has finished evaluating. This Promise is stored in the [[TopLevelCapability]] field of the [[CycleRoot]] for the component. Future invocations of Evaluate on any module in the component return the same Promise. (Most of the work is done by the auxiliary function InnerModuleEvaluation.)</dd>
+          </dl>
+
+          <emu-alg>
+            1. <del>Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.</del>.
+            1. <ins>Assert: None of _module_ or any of its recursive dependencies have [[Status]] set to ~evaluating~, ~linking~, ~unlinked~, or ~new~.</ins>
+            1. Assert: _module_.[[Status]] is one of ~linked~, ~evaluating-async~, or ~evaluated~.
+            1. If _module_.[[Status]] is either ~evaluating-async~ or ~evaluated~, set _module_ to _module_.[[CycleRoot]].
+            1. If _module_.[[TopLevelCapability]] is not ~empty~, then
+              1. Return _module_.[[TopLevelCapability]].[[Promise]].
+            1. Let _stack_ be a new empty List.
+            1. Let _capability_ be ! NewPromiseCapability(%Promise%).
+            1. Set _module_.[[TopLevelCapability]] to _capability_.
+            1. Let _result_ be Completion(InnerModuleEvaluation(_module_, _stack_, 0)).
+            1. If _result_ is an abrupt completion, then
+              1. For each Cyclic Module Record _m_ of _stack_, do
+                1. Assert: _m_.[[Status]] is ~evaluating~.
+                1. Assert: _m_.[[AsyncEvaluationOrder]] is ~unset~.
+                1. Set _m_.[[Status]] to ~evaluated~.
+                1. Set _m_.[[EvaluationError]] to _result_.
+              1. Assert: _module_.[[Status]] is ~evaluated~.
+              1. Assert: _module_.[[EvaluationError]] is _result_.
+              1. Perform ! Call(_capability_.[[Reject]], *undefined*, « _result_.[[Value]] »).
+            1. Else,
+              1. Assert: _module_.[[Status]] is either ~evaluating-async~ or ~evaluated~.
+              1. Assert: _module_.[[EvaluationError]] is ~empty~.
+              1. If _module_.[[Status]] is ~evaluated~, then
+                1. NOTE: This implies that evaluation of _module_ completed synchronously.
+                1. Assert: _module_.[[AsyncEvaluationOrder]] is ~unset~.
+                1. Perform ! Call(_capability_.[[Resolve]], *undefined*, « *undefined* »).
+              1. Assert: _stack_ is empty.
+            1. Return _capability_.[[Promise]].
+          </emu-alg>
+
+          <emu-clause id="sec-innermoduleevaluation" type="abstract operation">
+            <h1>
+              InnerModuleEvaluation (
+                _module_: a Module Record,
+                _stack_: a List of Cyclic Module Records,
+                _index_: a non-negative integer,
+              ): either a normal completion containing a non-negative integer or a throw completion
+            </h1>
+            <dl class="header">
+              <dt>description</dt>
+              <dd>It is used by Evaluate to perform the actual evaluation process for _module_, as well as recursively on all other modules in the dependency graph. The _stack_ and _index_ parameters, as well as _module_'s [[DFSAncestorIndex]] field, are used the same way as in InnerModuleLinking.</dd>
+            </dl>
+
+            <emu-alg>
+              1. If _module_ is not a Cyclic Module Record, then
+                1. Perform ? EvaluateModuleSync(_module_).
+                1. Return _index_.
+              1. If _module_.[[Status]] is either ~evaluating-async~ or ~evaluated~, then
+                1. If _module_.[[EvaluationError]] is ~empty~, return _index_.
+                1. Otherwise, return ? _module_.[[EvaluationError]].
+              1. If _module_.[[Status]] is ~evaluating~, return _index_.
+              1. Assert: _module_.[[Status]] is ~linked~.
+              1. Set _module_.[[Status]] to ~evaluating~.
+              1. Let _moduleIndex_ be _index_.
+              1. Set _module_.[[DFSAncestorIndex]] to _index_.
+              1. Set _module_.[[PendingAsyncDependencies]] to 0.
+              1. Set _index_ to _index_ + 1.
+              1. <ins>Let _evaluationList_ be a new empty List.</ins>
+              1. <ins>For each ModuleRequest Record _request_ of _module_.[[RequestedModules]], do</ins>
+                1. <ins>Let _requiredModule_ be GetImportedModule(_module_, _request_).</ins>
+                1. <ins>If _request_.[[Phase]] is ~defer~, then</ins>
+                  1. <ins>Let _additionalModules_ be GatherAsynchronousTransitiveDependencies(_requiredModule_).</ins>
+                  1. <ins>For each Module Record _additionalModule_ of _additionalModules_, do</ins>
+                    1. <ins>If _evaluationList_ does not contain _additionalModule_, then</ins>
+                      1. <ins>Append _additionalModule_ to _evaluationList_.</ins>
+                1. <ins>Else if _evaluationList_ does not contain _requiredModule_, then</ins>
+                  1. <ins>Append _requiredModule_ to _evaluationList_.</ins>
+              1. Append _module_ to _stack_.
+              1. <del>For each ModuleRequest Record _request_ of _module_.[[RequestedModules]], do</del>
+                1. <del>Let _requiredModule_ be GetImportedModule(_module_, _request_).</del>
+              1. <ins>For each Module Record _requiredModule_ of _evaluationList_, do</ins>
+                1. Set _index_ to ? InnerModuleEvaluation(_requiredModule_, _stack_, _index_).
+                1. If _requiredModule_ is a Cyclic Module Record, then
+                  1. Assert: _requiredModule_.[[Status]] is one of ~evaluating~, ~evaluating-async~, or ~evaluated~.
+                  1. Assert: _requiredModule_.[[Status]] is ~evaluating~ if and only if _stack_ contains _requiredModule_.
+                  1. If _requiredModule_.[[Status]] is ~evaluating~, then
+                    1. Set _module_.[[DFSAncestorIndex]] to min(_module_.[[DFSAncestorIndex]], _requiredModule_.[[DFSAncestorIndex]]).
+                  1. Else,
+                    1. Set _requiredModule_ to _requiredModule_.[[CycleRoot]].
+                    1. Assert: _requiredModule_.[[Status]] is either ~evaluating-async~ or ~evaluated~.
+                    1. If _requiredModule_.[[EvaluationError]] is not ~empty~, return ? _requiredModule_.[[EvaluationError]].
+                  1. If _requiredModule_.[[AsyncEvaluationOrder]] is an integer, then
+                    1. Set _module_.[[PendingAsyncDependencies]] to _module_.[[PendingAsyncDependencies]] + 1.
+                    1. Append _module_ to _requiredModule_.[[AsyncParentModules]].
+              1. If _module_.[[PendingAsyncDependencies]] > 0 or _module_.[[HasTLA]] is *true*, then
+                1. Assert: _module_.[[AsyncEvaluationOrder]] is ~unset~.
+                1. Set _module_.[[AsyncEvaluationOrder]] to IncrementModuleAsyncEvaluationCount().
+                1. If _module_.[[PendingAsyncDependencies]] = 0, perform ExecuteAsyncModule(_module_).
+              1. Else,
+                1. Perform ? <emu-meta effects="user-code">_module_.ExecuteModule()</emu-meta>.
+              1. Assert: _module_ occurs exactly once in _stack_.
+              1. Assert: _module_.[[DFSAncestorIndex]] ≤ _moduleIndex_.
+              1. If _module_.[[DFSAncestorIndex]] = _moduleIndex_, then
+                1. Let _done_ be *false*.
+                1. Repeat, while _done_ is *false*,
+                  1. Let _requiredModule_ be the last element of _stack_.
+                  1. Remove the last element of _stack_.
+                  1. Assert: _requiredModule_ is a Cyclic Module Record.
+                  1. Assert: _requiredModule_.[[AsyncEvaluationOrder]] is either an integer or ~unset~.
+                  1. If _requiredModule_.[[AsyncEvaluationOrder]] is ~unset~, set _requiredModule_.[[Status]] to ~evaluated~.
+                  1. Otherwise, set _requiredModule_.[[Status]] to ~evaluating-async~.
+                  1. If _requiredModule_ and _module_ are the same Module Record, set _done_ to *true*.
+                  1. Set _requiredModule_.[[CycleRoot]] to _module_.
+              1. Return _index_.
+            </emu-alg>
+            <emu-note>
+              <p>A module is ~evaluating~ while it is being traversed by InnerModuleEvaluation. A module is ~evaluated~ on execution completion or ~evaluating-async~ during execution if its [[HasTLA]] field is *true* or if it has asynchronous dependencies.</p>
+            </emu-note>
+            <emu-note>
+              <p>Any modules depending on a module of an asynchronous cycle when that cycle is not ~evaluating~ will instead depend on the execution of the root of the cycle via [[CycleRoot]]. This ensures that the cycle state can be treated as a single strongly connected component through its root module state.</p>
+            </emu-note>
+          </emu-clause>
+
+          <emu-clause id="sec-GatherAsynchronousTransitiveDependencies" type="abstract operation">
+            <h1>
+              <ins>GatherAsynchronousTransitiveDependencies (
+                _module_: a Module Record,
+                optional _seen_: a List of Module Records,
+              ): a List of Module Records</ins>
+            </h1>
+            <dl class="header">
+              <dt>description</dt>
+              <dd>Collects the direct post-order list of asynchronous unexecuted transitive dependencies, stopping the depth-first search for a branch when an asynchronous dependency is found.</dd>
+            </dl>
+
+            <emu-alg>
+              1. If _seen_ is not present, set _seen_ to a new empty List.
+              1. Let _result_ be a new empty List.
+              1. If _seen_ contains _module_, return _result_.
+              1. Append _module_ to _seen_.
+              1. If _module_ is not a Cyclic Module Record, return _result_.
+              1. If _module_.[[Status]] is either ~evaluating~ or ~evaluated~, return _result_.
+              1. If _module_.[[HasTLA]] is *true*, then
+                1. Append _module_ to _result_.
+                1. Return _result_.
+              1. For each ModuleRequest Record _request_ of _module_.[[RequestedModules]], do
+                1. Let _requiredModule_ be GetImportedModule(_module_, _request_).
+                1. Let _additionalModules_ be GatherAsynchronousTransitiveDependencies(_requiredModule_, _seen_).
+                1. For each Module Record _m_ of _additionalModules_, do
+                  1. If _result_ does not contain _m_, append _m_ to _result_.
+              1. Return _result_.
+            </emu-alg>
+          </emu-clause>
+        </emu-clause>
+
+        <emu-clause id="sec-example-cyclic-module-record-graphs">
+          <h1>Example Cyclic Module Record Graphs</h1>
+
+          <p>This non-normative section gives a series of examples of the linking and evaluation of a few common module graphs, with a specific focus on how errors can occur.</p>
+
+          <p>First consider the following simple module graph:</p>
+
+          <emu-figure id="figure-module-graph-simple" caption="A simple module graph">
+            <img alt="A module graph in which module A depends on module B, and module B depends on module C" width="60" height="198" src="img/module-graph-simple.svg">
+          </emu-figure>
+
+          <p>Let's first assume that there are no error conditions. When a host first calls _A_.LoadRequestedModules(), this will complete successfully by assumption, and recursively load the dependencies of _B_ and _C_ as well (respectively, _C_ and none), and then set _A_.[[Status]] = _B_.[[Status]] = _C_.[[Status]] = ~unlinked~. Then, when the host calls _A_.Link(), it will complete successfully (again by assumption) such that _A_.[[Status]] = _B_.[[Status]] = _C_.[[Status]] = linked. These preparatory steps can be performed at any time. Later, when the host is ready to incur any possible side effects of the modules, it can call _A_.Evaluate(), which will complete successfully, returning a Promise resolving to *undefined* (again by assumption), recursively having evaluated first _C_ and then _B_. Each module's [[Status]] at this point will be ~evaluated~.</p>
+
+          <p>Consider then cases involving linking errors, after a successful call to _A_.LoadRequestedModules(). If InnerModuleLinking of _C_ succeeds but, thereafter, fails for _B_, for example because it imports something that _C_ does not provide, then the original _A_.Link() will fail, and both _A_ and _B_'s [[Status]] remain ~unlinked~. _C_'s [[Status]] has become ~linked~, though.</p>
+
+          <p>Finally, consider a case involving evaluation errors after a successful call to Link(). If InnerModuleEvaluation of _C_ succeeds but, thereafter, fails for _B_, for example because _B_ contains code that throws an exception, then the original _A_.Evaluate() will fail, returning a rejected Promise. The resulting exception will be recorded in both _A_ and _B_'s [[EvaluationError]] fields, and their [[Status]] will become ~evaluated~. _C_ will also become ~evaluated~ but, in contrast to _A_ and _B_, will remain without an [[EvaluationError]], as it successfully completed evaluation. Storing the exception ensures that any time a host tries to reuse _A_ or _B_ by calling their Evaluate() method, it will encounter the same exception. (Hosts are not required to reuse Cyclic Module Records; similarly, hosts are not required to expose the exception objects thrown by these methods. However, the specification enables such uses.)</p>
+
+          <p>Now consider a different type of error condition:</p>
+
+          <emu-figure id="figure-module-graph-missing" caption="A module graph with an unresolvable module">
+            <img alt="A module graph in which module A depends on a missing (unresolvable) module, represented by ???" width="60" height="121" src="img/module-graph-missing.svg">
+          </emu-figure>
+
+          <p>In this scenario, module _A_ declares a dependency on some other module, but no Module Record exists for that module, i.e. HostLoadImportedModule calls FinishLoadingImportedModule with an exception when asked for it. This could occur for a variety of reasons, such as the corresponding resource not existing, or the resource existing but ParseModule returning some errors when trying to parse the resulting source text. Hosts can choose to expose the cause of failure via the completion they pass to FinishLoadingImportedModule. In any case, this exception causes a loading failure, which results in _A_'s [[Status]] remaining ~new~.</p>
+
+          <p>The difference here between loading, linking and evaluation errors is due to the following characteristic:</p>
+          <ul>
+            <li>Evaluation must be only performed once, as it can cause side effects; it is thus important to remember whether evaluation has already been performed, even if unsuccessfully. (In the error case, it makes sense to also remember the exception because otherwise subsequent Evaluate() calls would have to synthesize a new one.)</li>
+            <li>Linking, on the other hand, is side-effect-free, and thus even if it fails, it can be retried at a later time with no issues.</li>
+            <li>Loading closely interacts with the host, and it may be desirable for some of them to allow users to retry failed loads (for example, if the failure is caused by temporarily bad network conditions).</li>
+          </ul>
+
+          <p>Now, consider a module graph with a cycle:</p>
+
+          <emu-figure id="figure-module-graph-cycle" caption="A cyclic module graph">
+            <img alt="A module graph in which module A depends on module B and C, but module B also depends on module A" width="181" height="121" src="img/module-graph-cycle.svg">
+          </emu-figure>
+
+          <p>Here we assume that the entry point is module _A_, so that the host proceeds by calling _A_.LoadRequestedModules(), which performs InnerModuleLoading on _A_. This in turn calls InnerModuleLoading on _B_ and _C_. Because of the cycle, this again triggers InnerModuleLoading on _A_, but at this point it is a no-op since _A_'s dependencies loading has already been triggered during this LoadRequestedModules process. When all the modules in the graph have been successfully loaded, their [[Status]] transitions from ~new~ to ~unlinked~ at the same time.</p>
+
+          <p>Then the host proceeds by calling _A_.Link(), which performs InnerModuleLinking on _A_. This in turn calls InnerModuleLinking on _B_. Because of the cycle, this again triggers InnerModuleLinking on _A_, but at this point it is a no-op since _A_.[[Status]] is already ~linking~. _B_.[[Status]] itself remains ~linking~ when control gets back to _A_ and InnerModuleLinking is triggered on _C_. After this returns with _C_.[[Status]] being ~linked~, both _A_ and _B_ transition from ~linking~ to ~linked~ together; this is by design, since they form a strongly connected component. It's possible to transition the status of modules in the same SCC at the same time because during this phase the module graph is traversed with a depth-first search.</p>
+
+          <p>An analogous story occurs for the evaluation phase of a cyclic module graph, in the success case.</p>
+
+          <p>Now consider a case where _A_ has a linking error; for example, it tries to import a binding from _C_ that does not exist. In that case, the above steps still occur, including the early return from the second call to InnerModuleLinking on _A_. However, once we unwind back to the original InnerModuleLinking on _A_, it fails during InitializeEnvironment, namely right after _C_.ResolveExport(). The thrown *SyntaxError* exception propagates up to _A_.Link, which resets all modules that are currently on its _stack_ (these are always exactly the modules that are still ~linking~). Hence both _A_ and _B_ become ~unlinked~. Note that _C_ is left as ~linked~.</p>
+
+          <p>Alternatively, consider a case where _A_ has an evaluation error; for example, its source code throws an exception. In that case, the evaluation-time analogue of the above steps still occurs, including the early return from the second call to InnerModuleEvaluation on _A_. However, once we unwind back to the original InnerModuleEvaluation on _A_, it fails by assumption. The exception thrown propagates up to _A_.Evaluate(), which records the error in all modules that are currently on its _stack_ (i.e., the modules that are still ~evaluating~) as well as via [[AsyncParentModules]], which form a chain for modules which contain or depend on top-level `await` through the whole dependency graph through the AsyncModuleExecutionRejected algorithm. Hence both _A_ and _B_ become ~evaluated~ and the exception is recorded in both _A_ and _B_'s [[EvaluationError]] fields, while _C_ is left as ~evaluated~ with no [[EvaluationError]].</p>
+
+          <p>Lastly, consider a module graph with a cycle, where all modules complete asynchronously:</p>
+          <emu-figure id="figure-module-graph-cycle-async" caption="An asynchronous cyclic module graph">
+            <img alt="A module graph in which module A depends on module B and C, module B depends on module D, module C depends on module D and E, and module D depends on module A" width="241" height="211" src="img/module-graph-cycle-async.svg">
+          </emu-figure>
+          <p>Loading and linking happen as before, and all modules end up with [[Status]] set to ~linked~.</p>
+
+          <p>Calling _A_.Evaluate() calls InnerModuleEvaluation on _A_, _B_, and _D_, which all transition to ~evaluating~. Then InnerModuleEvaluation is called on _A_ again, which is a no-op because it is already ~evaluating~. At this point, _D_.[[PendingAsyncDependencies]] is 0, so ExecuteAsyncModule(_D_) is called and we call _D_.ExecuteModule with a new PromiseCapability tracking the asynchronous execution of _D_. We unwind back to the InnerModuleEvaluation on _B_, setting _B_.[[PendingAsyncDependencies]] to 1 and _B_.[[AsyncEvaluationOrder]] to 1. We unwind back to the original InnerModuleEvaluation on _A_, setting _A_.[[PendingAsyncDependencies]] to 1. In the next iteration of the loop over _A_'s dependencies, we call InnerModuleEvaluation on _C_ and thus on _D_ (again a no-op) and _E_. As _E_ has no dependencies and is not part of a cycle, we call ExecuteAsyncModule(_E_) in the same manner as _D_ and _E_ is immediately removed from the stack. We unwind once more to the InnerModuleEvaluation on _C_, setting _C_.[[AsyncEvaluationOrder]] to 3. Now we finish the loop over _A_'s dependencies, set _A_.[[AsyncEvaluationOrder]] to 4, and remove the entire strongly connected component from the stack, transitioning all of the modules to ~evaluating-async~ at once. At this point, the fields of the modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-1"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-1" caption="Module fields after the initial Evaluate() call">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                  <th>_B_</th>
+                  <th>_C_</th>
+                  <th>_D_</th>
+                  <th>_E_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluating-async~</td>
+                <td>~evaluating-async~</td>
+                <td>~evaluating-async~</td>
+                <td>~evaluating-async~</td>
+                <td>~evaluating-async~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>4</td>
+                <td>1</td>
+                <td>3</td>
+                <td>0</td>
+                <td>2*</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+                <td>« _A_ »</td>
+                <td>« _A_ »</td>
+                <td>« _B_, _C_ »</td>
+                <td>« _C_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>2 (_B_ and _C_)</td>
+                <td>1 (_D_)</td>
+                <td>2 (_D_ and _E_)</td>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>Let us assume that _E_ finishes executing first. When that happens, AsyncModuleExecutionFulfilled is called, _E_.[[Status]] is set to ~evaluated~ and _C_.[[PendingAsyncDependencies]] is decremented to become 1. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-2"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-2" caption="Module fields after module _E_ finishes executing">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_C_</th>
+                  <th>_E_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluating-async~</td>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>3</td>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« _A_ »</td>
+                <td>« _C_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>1 (_D_)</td>
+                <td>0</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>_D_ is next to finish (as it was the only module that was still executing). When that happens, AsyncModuleExecutionFulfilled is called again and _D_.[[Status]] is set to ~evaluated~. Its ancestors available for execution are _B_ (whose [[AsyncEvaluationOrder]] is 1) and _C_ (whose [[AsyncEvaluationOrder]] is 3), thus _B_ will be handled first: _B_.[[PendingAsyncDependencies]] is decremented to become 0, ExecuteAsyncModule is called on _B_, and it starts executing. _C_.[[PendingAsyncDependencies]] is also decremented to become 0, and _C_ starts executing (potentially in parallel to _B_ if _B_ contains an `await`). The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-3"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-3" caption="Module fields after module _D_ finishes executing">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_B_</th>
+                  <th>_C_</th>
+                  <th>_D_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluating-async~</td>
+                <td>~evaluating-async~</td>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>1</td>
+                <td>3</td>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« _A_ »</td>
+                <td>« _A_ »</td>
+                <td>« _B_, _C_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>Let us assume that _C_ finishes executing next. When that happens, AsyncModuleExecutionFulfilled is called again, _C_.[[Status]] is set to ~evaluated~ and _A_.[[PendingAsyncDependencies]] is decremented to become 1. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-4"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-4" caption="Module fields after module _C_ finishes executing">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                  <th>_C_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluating-async~</td>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>4</td>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+                <td>« _A_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>1 (_B_)</td>
+                <td>0</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>Then, _B_ finishes executing. When that happens, AsyncModuleExecutionFulfilled is called again and _B_.[[Status]] is set to ~evaluated~. _A_.[[PendingAsyncDependencies]] is decremented to become 0, so ExecuteAsyncModule is called and it starts executing. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-5"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-5" caption="Module fields after module _B_ finishes executing">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                  <th>_B_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluating-async~</td>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>4</td>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+                <td>« _A_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>Finally, _A_ finishes executing. When that happens, AsyncModuleExecutionFulfilled is called again and _A_.[[Status]] is set to ~evaluated~. At this point, the Promise in _A_.[[TopLevelCapability]] (which was returned from _A_.Evaluate()) is resolved, and this concludes the handling of this module graph. The fields of the updated module are as given in <emu-xref href="#table-module-graph-cycle-async-fields-6"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-6" caption="Module fields after module _A_ finishes executing">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>0</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>Alternatively, consider a failure case where _C_ fails execution and returns an error before _B_ has finished executing. When that happens, AsyncModuleExecutionRejected is called, which sets _C_.[[Status]] to ~evaluated~ and _C_.[[EvaluationError]] to the error. It then propagates this error to all of the AsyncParentModules by performing AsyncModuleExecutionRejected on each of them. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-7"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-7" caption="Module fields after module _C_ finishes with an error">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                  <th>_C_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluated~</td>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>~done~</td>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+                <td>« _A_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>1 (_B_)</td>
+                <th>0</th>
+              </tr>
+              <tr>
+                <th>[[EvaluationError]]</th>
+                <td>~empty~</td>
+                <td>_C_'s evaluation error</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>_A_ will be rejected with the same error as _C_ since _C_ will call AsyncModuleExecutionRejected on _A_ with _C_'s error. _A_.[[Status]] is set to ~evaluated~. At this point the Promise in _A_.[[TopLevelCapability]] (which was returned from _A_.Evaluate()) is rejected. The fields of the updated module are as given in <emu-xref href="#table-module-graph-cycle-async-fields-8"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-8" caption="Module fields after module _A_ is rejected">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[EvaluationError]]</th>
+
+                <td>_C_'s Evaluation Error</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <p>Then, _B_ finishes executing without an error. When that happens, AsyncModuleExecutionFulfilled is called again and _B_.[[Status]] is set to ~evaluated~. GatherAvailableAncestors is called on _B_. However, _A_.[[CycleRoot]] is _A_ which has an evaluation error, so it will not be added to the returned _sortedExecList_ and AsyncModuleExecutionFulfilled will return without further processing. Any future importer of _B_ will resolve the rejection of _B_.[[CycleRoot]].[[EvaluationError]] from the evaluation error from _C_ that was set on the cycle root _A_. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-9"></emu-xref>.</p>
+
+          <emu-table id="table-module-graph-cycle-async-fields-9" caption="Module fields after module _B_ finishes executing in an erroring graph">
+            <table>
+              <thead>
+                <tr>
+                  <th class="corner-cell">
+                    <span class="column">Field</span>
+                    <div class="slash">
+                    </div>
+                    <span class="row">Module</span>
+                  </th>
+                  <th>_A_</th>
+                  <th>_B_</th>
+                </tr>
+              </thead>
+              <tr>
+                <th>[[DFSAncestorIndex]]</th>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[Status]]</th>
+                <td>~evaluated~</td>
+                <td>~evaluated~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncEvaluationOrder]]</th>
+                <td>~done~</td>
+                <td>~done~</td>
+              </tr>
+              <tr>
+                <th>[[AsyncParentModules]]</th>
+                <td>« »</td>
+                <td>« _A_ »</td>
+              </tr>
+              <tr>
+                <th>[[PendingAsyncDependencies]]</th>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <th>[[EvaluationError]]</th>
+                <td>_C_'s Evaluation Error</td>
+                <td>~empty~</td>
+              </tr>
+            </table>
+          </emu-table>
+
+          <emu-clause id="sec-example-cyclic-module-record-graphs-deferred-imports">
+            <h1><ins>Example Cyclic Module Record Graphs with Deferred Imports</ins></h1>
+
+            <p>Deferred imports complicate handling of module graphs, because they allow deferring evaluation of part of the graph while still eagerly evaluating the asynchronous subgraphs of a deferred portion. In this section, deferred imports are marked with dashed arrows and modules using top-level await are marked with <sub><strong>TLA</strong></sub>.</p>
+
+            <p>Consider the following graph, assuming that all the modules have already their [[Status]] set to ~linked~:</p>
+
+            <emu-figure id="figure-module-graph-deferred-simple" caption="A simple module graph with a deferred import">
+              <img alt="A module graph in which module A depends on module B with a deferred import, and module B depends on module C" width="181" height="211" src="img/module-graph-deferred-simple.svg">
+            </emu-figure>
+
+            <p>Calling _A_.Evaluate() calls InnerModuleEvaluation _A_, which transitions _A_.[[Status]] to ~evaluating~. _A_ has a deferred import for _B_, so it performs GatherAsynchronousTransitiveDependencies(_B_). _B_ doesn't have any transitive dependency using top-level await, so that AO doesn't collect any module. _A_ also imports _D_, so the list of modules that _A_'s evaluation depends on is « _D_ »: the InnerModuleEvaluation algorithm run on _A_ performs InnerModuleEvaluation on _D_, transitioning its [[Status]] to ~evaluating~ and then ~evaluated~, and then it calls _A_.ExecuteModule(). If _A_'s execution triggers _B_.Evaluate(), then InnerModuleEvaluation will be called on _B_ and _C_ executing them and transitioning their [[Status]] to ~evaluated~. Finally, _A_.[[Status]] transitions to ~evaluated~.</p>
+
+            <p>Consider the same graph, but with _C_ using top-level await:</p>
+
+            <emu-figure id="figure-module-graph-deferred-async" caption="A simple module graph with a deferred import and a transitive asynchronous dependency">
+              <img alt="A module graph in which module A depends on module B with a deferred import, and module B depends on module C, which uses top-level await." width="181" height="211" src="img/module-graph-deferred-async.svg">
+            </emu-figure>
+
+            <p>Calling _A_.Evaluate() calls InnerModuleEvaluation _A_, which transitions _A_.[[Status]] to ~evaluating~. It then performs GatherAsynchronousTransitiveDependencies(_B_), finding the module _C_: the list of modules whose evaluation _A_'s evaluation depends on is « _C_, _D_ ». It then calls InnerModuleEvaluation on _C_ and _D_, transitioning their [[Status]] respectively to ~evaluating-async~ and ~evaluated~ and registering _A_'s evaluation as pending on the asynchronous dependency _C_. At this point, the fields of the modules are given in <emu-xref href="#table-module-graph-deferred-async-fields-1"></emu-xref>:</p>
+
+            <emu-table id="table-module-graph-deferred-async-fields-1" class="module-overflow" caption="Module fields after the initial Evaluate() call">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="corner-cell">
+                      <span class="column">Field</span>
+                      <div class="slash">
+                      </div>
+                      <span class="row">Module</span>
+                    </th>
+                    <th>_A_</th>
+                    <th>_B_</th>
+                    <th>_C_</th>
+                    <th>_D_</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <th>[[Status]]</th>
+                  <td>~evaluating-async~</td>
+                  <td>~linked~</td>
+                  <td>~evaluating-async~</td>
+                  <td>~evaluated~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncEvaluationOrder]]</th>
+                  <td>1</td>
+                  <td>~unset~</td>
+                  <td>0</td>
+                  <td>~unset~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncParentModules]]</th>
+                  <td>« »</td>
+                  <td>« »</td>
+                  <td>« _A_ »</td>
+                  <td>« »</td>
+                </tr>
+                <tr>
+                  <th>[[PendingAsyncDependencies]]</th>
+                  <td>1 (_C_)</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+              </table>
+            </emu-table>
+
+            <p>Let us assume that _C_ succesfully finishes evaluating. When that happens, AsyncModuleExecutionFulfilled(_C_) is called, _C_.[[Status]] is set to ~evaluated~, _A_.ExecuteModule() is called and upon successful completion _A_.[[Status]] is set to ~evaluted~. The fields of the modules are now as given in <emu-xref href="#table-module-graph-deferred-async-fields-2"></emu-xref>:</p>
+
+            <emu-table id="table-module-graph-deferred-async-fields-2" class="module-overflow" caption="Module fields after _C_ finishes executing">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="corner-cell">
+                      <span class="column">Field</span>
+                      <div class="slash">
+                      </div>
+                      <span class="row">Module</span>
+                    </th>
+                    <th>_A_</th>
+                    <th>_B_</th>
+                    <th>_C_</th>
+                    <th>_D_</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <th>[[Status]]</th>
+                  <td>~evaluated~</td>
+                  <td>~linked~</td>
+                  <td>~evaluated~</td>
+                  <td>~evaluated~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncEvaluationOrder]]</th>
+                  <td>~done~</td>
+                  <td>~unset~</td>
+                  <td>~done~</td>
+                  <td>~unset~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncParentModules]]</th>
+                  <td>« »</td>
+                  <td>« »</td>
+                  <td>« _A_ »</td>
+                  <td>« »</td>
+                </tr>
+                <tr>
+                  <th>[[PendingAsyncDependencies]]</th>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+              </table>
+            </emu-table>
+
+            <p>If later _B_.Evaluate() is called, then the InnerModuleEvaluation call on _B_ will transition _B_.[[Status]] to ~evaluating~ and will call InnerModuleEvaluation on _C_. Since at this point _C_.[[Status]] is already ~evaluated~, _B_.ExecuteModule() will be called synchronously and _B_.[[Status]] will synchronously transition to ~evaluated~.</p>
+
+            <p>Alternatively, consider a failure case where _C_ fails to execute with an exception _error_. When that happens, AsyncModuleExecutionRejected(_C_, _error_) is called, it sets _C_.[[Status]] = _A_.[[Status]] to ~evaluated~ and _C_.[[EvaluationError]] = _A_.[[EvaluationError]] to ThrowCompletion(_error_). The fields of the modules are this as given in <emu-xref href="#table-module-graph-deferred-async-fields-3"></emu-xref>:</p>
+
+            <emu-table id="table-module-graph-deferred-async-fields-3" class="module-overflow" caption="Module fields after _C_ finishes executing with an exception">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="corner-cell">
+                      <span class="column">Field</span>
+                      <div class="slash">
+                      </div>
+                      <span class="row">Module</span>
+                    </th>
+                    <th>_A_</th>
+                    <th>_B_</th>
+                    <th>_C_</th>
+                    <th>_D_</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <th>[[Status]]</th>
+                  <td>~evaluated~</td>
+                  <td>~linked~</td>
+                  <td>~evaluated~</td>
+                  <td>~evaluated~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncEvaluationOrder]]</th>
+                  <td>~done~</td>
+                  <td>~unset~</td>
+                  <td>~done~</td>
+                  <td>~unset~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncParentModules]]</th>
+                  <td>« »</td>
+                  <td>« »</td>
+                  <td>« _B_ »</td>
+                  <td>« »</td>
+                </tr>
+                <tr>
+                  <th>[[PendingAsyncDependencies]]</th>
+                  <td>1 (_C_)</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <th>[[EvaluationError]]</th>
+                  <td>_error_</td>
+                  <td>~empty~</td>
+                  <td>_error_</td>
+                  <td>~empty~</td>
+                </tr>
+              </table>
+            </emu-table>
+
+            <p>If at any later point in time _B_.Evaluate() is called, it will perform InnerModuleEvaluation on _C_ which immediately returns with ThrowCompletion(_error_), transitioning _B_.[[Status]] to ~evalauted~ and setting _B_.[[EvaluationError]] to _error_.</p>
+
+            <p>Consider now a graph with a deferred import taking part in a dependencies cycle, and assume that the evaluation of _A_ calls _B_.Evaluate():</p>
+
+            <emu-figure id="figure-module-graph-deferred-async-cycle-root" caption="A module graph with a deferred import and a cycle back to the root">
+              <img alt="A module graph in which module A depends on module B with a deferred import, module B depends on module C, which uses top-level await and depends on A" width="181" height="121" src="img/module-graph-deferred-async-cycle-root.svg">
+            </emu-figure>
+
+            <p>As in the previous example, calling _A_.Evaluate() calls InnerModuleEvaluation on _A_, GatherAsynchronousTransitiveDependencies on _B_ will find _C_ and thus it performs InnerModuleEvaluation on _C_, transitioning their _A_ and _C_'s [[Status]] to ~evaluating-async~. When InnerModuleEvaluation iterates over _C_'s dependencies, it finds _A_ and sets _A_.[[CycleRoot]] = _C_.[[CycleRoot]] = _A_. At this point, the fields of the modules are given in <emu-xref href="#table-module-graph-deferred-async-cycle-root-fields-1"></emu-xref>:</p>
+
+            <emu-table id="table-module-graph-deferred-async-cycle-root-fields-1" class="module-overflow" caption="Module fields after the initial Evaluate() call">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="corner-cell">
+                      <span class="column">Field</span>
+                      <div class="slash">
+                      </div>
+                      <span class="row">Module</span>
+                    </th>
+                    <th>_A_</th>
+                    <th>_B_</th>
+                    <th>_C_</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <th>[[Status]]</th>
+                  <td>~evaluating-async~</td>
+                  <td>~linked~</td>
+                  <td>~evaluating-async~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncEvaluationOrder]]</th>
+                  <td>1</td>
+                  <td>~unset~</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncParentModules]]</th>
+                  <td>« »</td>
+                  <td>« »</td>
+                  <td>« _A_ »</td>
+                </tr>
+                <tr>
+                  <th>[[PendingAsyncDependencies]]</th>
+                  <td>1 (_C_)</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <th>[[CycleRoot]]</th>
+                  <td>_A_</td>
+                  <td>~empty~</td>
+                  <td>_A_</td>
+                </tr>
+              </table>
+            </emu-table>
+
+            <p>Assume now that _C_ succesfully finishes evaluating. When that happens AsyncModuleExecutionFulfilled(_C_) is called, it sets _C_.[[Status]] to ~evaluated~, and it performs _A_.ExecuteModule(). As stated, _A_'s execution causes a call to _B_.Evaluate(), which calls InnerModuleEvaluation on _B_ and on _C_. Since _C_.[[Status]] is ~evaluated~, _B_.ExecuteModule() is called synchronously and, assuming it completes succesfully, transitions _B_.[[Status]] to ~evaluated~. At this point, the fields of the modules are given in <emu-xref href="#table-module-graph-deferred-async-cycle-root-fields-2"></emu-xref>:</p>
+
+            <emu-table id="table-module-graph-deferred-async-cycle-root-fields-2" class="module-overflow" caption="Module fields after the _B_.ExecuteModule() call">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="corner-cell">
+                      <span class="column">Field</span>
+                      <div class="slash">
+                      </div>
+                      <span class="row">Module</span>
+                    </th>
+                    <th>_A_</th>
+                    <th>_B_</th>
+                    <th>_C_</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <th>[[Status]]</th>
+                  <td>~evaluating-async~</td>
+                  <td>~evaluated~</td>
+                  <td>~evaluated~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncEvaluationOrder]]</th>
+                  <td>1</td>
+                  <td>~unset~</td>
+                  <td>~done~</td>
+                </tr>
+                <tr>
+                  <th>[[AsyncParentModules]]</th>
+                  <td>« »</td>
+                  <td>« »</td>
+                  <td>« _A_ »</td>
+                </tr>
+                <tr>
+                  <th>[[PendingAsyncDependencies]]</th>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <th>[[CycleRoot]]</th>
+                  <td>_A_</td>
+                  <td>_B_</td>
+                  <td>_A_</td>
+                </tr>
+              </table>
+            </emu-table>
+
+            <p>Once the call to _A_.ExecuteModule() completes, _A_.[[Status]] transitions to ~evaluated~.</p>
+          </emu-clause>
+        </emu-clause>
+      </emu-clause>
+
+      <emu-clause id="sec-source-text-module-records">
+        <h1>Source Text Module Records</h1>
+
+        <emu-clause id="sec-source-text-module-record-initialize-environment" type="concrete method">
+          <h1>InitializeEnvironment ( ): either a normal completion containing ~unused~ or a throw completion</h1>
+          <dl class="header">
+            <dt>for</dt>
+            <dd>a Source Text Module Record _module_</dd>
+          </dl>
+
+          <emu-alg>
+            1. For each ExportEntry Record _e_ of _module_.[[IndirectExportEntries]], do
+              1. Let _resolution_ be _module_.ResolveExport(_e_.[[ExportName]]).
+              1. If _resolution_ is either *null* or ~ambiguous~, throw a *SyntaxError* exception.
+              1. Assert: _resolution_ is a ResolvedBinding Record.
+            1. Assert: All named exports from _module_ are resolvable.
+            1. Let _realm_ be _module_.[[Realm]].
+            1. Assert: _realm_ is not *undefined*.
+            1. Let _env_ be NewModuleEnvironment(_realm_.[[GlobalEnv]]).
+            1. Set _module_.[[Environment]] to _env_.
+            1. For each ImportEntry Record _in_ of _module_.[[ImportEntries]], do
+              1. Let _importedModule_ be GetImportedModule(_module_, _in_.[[ModuleRequest]]).
+              1. If _in_.[[ImportName]] is ~namespace~, then
+                1. Let _namespace_ be GetModuleNamespace(_importedModule_, <ins>_in_.[[ModuleRequest]].[[Phase]]</ins>).
+                1. Perform ! _env_.CreateImmutableBinding(_in_.[[LocalName]], *true*).
+                1. Perform ! _env_.InitializeBinding(_in_.[[LocalName]], _namespace_).
+              1. Else,
+                1. Let _resolution_ be _importedModule_.ResolveExport(_in_.[[ImportName]]).
+                1. If _resolution_ is either *null* or ~ambiguous~, throw a *SyntaxError* exception.
+                1. If _resolution_.[[BindingName]] is ~namespace~ <ins>or ~deferred-namespace~</ins>, then
+                  1. <ins>If _resolution_.[[BindingName]] is ~namespace~ let _phase_ be ~evaluation~, else let _phase_ be ~defer~.</ins>
+                  1. Let _namespace_ be GetModuleNamespace(_resolution_.[[Module]], <ins>_phase_</ins>).
+                  1. Perform ! _env_.CreateImmutableBinding(_in_.[[LocalName]], *true*).
+                  1. Perform ! _env_.InitializeBinding(_in_.[[LocalName]], _namespace_).
+                1. Else,
+                  1. Perform CreateImportBinding(_env_, _in_.[[LocalName]], _resolution_.[[Module]], _resolution_.[[BindingName]]).
+            1. Let _moduleContext_ be a new ECMAScript code execution context.
+            1. Set the Function of _moduleContext_ to *null*.
+            1. Assert: _module_.[[Realm]] is not *undefined*.
+            1. Set the Realm of _moduleContext_ to _module_.[[Realm]].
+            1. Set the ScriptOrModule of _moduleContext_ to _module_.
+            1. Set the VariableEnvironment of _moduleContext_ to _module_.[[Environment]].
+            1. Set the LexicalEnvironment of _moduleContext_ to _module_.[[Environment]].
+            1. Set the PrivateEnvironment of _moduleContext_ to *null*.
+            1. Set _module_.[[Context]] to _moduleContext_.
+            1. Push _moduleContext_ onto the execution context stack; _moduleContext_ is now the running execution context.
+            1. Let _code_ be _module_.[[ECMAScriptCode]].
+            1. Let _varDeclarations_ be the VarScopedDeclarations of _code_.
+            1. Let _declaredVarNames_ be a new empty List.
+            1. For each element _d_ of _varDeclarations_, do
+              1. For each element _dn_ of the BoundNames of _d_, do
+                1. If _declaredVarNames_ does not contain _dn_, then
+                  1. Perform ! _env_.CreateMutableBinding(_dn_, *false*).
+                  1. Perform ! _env_.InitializeBinding(_dn_, *undefined*).
+                  1. Append _dn_ to _declaredVarNames_.
+            1. Let _lexDeclarations_ be the LexicallyScopedDeclarations of _code_.
+            1. Let _privateEnv_ be *null*.
+            1. For each element _d_ of _lexDeclarations_, do
+              1. For each element _dn_ of the BoundNames of _d_, do
+                1. If IsConstantDeclaration of _d_ is *true*, then
+                  1. Perform ! _env_.CreateImmutableBinding(_dn_, *true*).
+                1. Else,
+                  1. Perform ! _env_.CreateMutableBinding(_dn_, *false*).
+                1. If _d_ is either a |FunctionDeclaration|, a |GeneratorDeclaration|, an |AsyncFunctionDeclaration|, or an |AsyncGeneratorDeclaration|, then
+                  1. Let _fo_ be InstantiateFunctionObject of _d_ with arguments _env_ and _privateEnv_.
+                  1. Perform ! _env_.InitializeBinding(_dn_, _fo_).
+            1. Remove _moduleContext_ from the execution context stack.
+            1. Return ~unused~.
+          </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-resolveexport" type="concrete method">
+          <h1>
+            ResolveExport (
+              _exportName_: a String,
+              optional _resolveSet_: a List of Records with fields [[Module]] (a Module Record) and [[ExportName]] (a String),
+            ): a ResolvedBinding Record, *null*, or ~ambiguous~
+          </h1>
+          <dl class="header">
+            <dt>for</dt>
+            <dd>a Source Text Module Record _module_</dd>
+
+            <dt>description</dt>
+            <dd>
+              <p>ResolveExport attempts to resolve an imported binding to the actual defining module and local binding name. The defining module may be the module represented by the Module Record this method was invoked on or some other module that is imported by that module. The parameter _resolveSet_ is used to detect unresolved circular import/export paths. If a pair consisting of specific Module Record and _exportName_ is reached that is already in _resolveSet_, an import circularity has been encountered. Before recursively calling ResolveExport, a pair consisting of _module_ and _exportName_ is added to _resolveSet_.</p>
+              <p>If a defining module is found, a ResolvedBinding Record { [[Module]], [[BindingName]] } is returned. This record identifies the resolved binding of the originally requested export, unless this is the export of a namespace with no local binding. In this case, [[BindingName]] will be set to ~namespace~ <ins>or ~deferred-namespace~</ins>. If no definition was found or the request is found to be circular, *null* is returned. If the request is found to be ambiguous, ~ambiguous~ is returned.</p>
+            </dd>
+          </dl>
+
+          <emu-alg>
+            1. Assert: _module_.[[Status]] is not ~new~.
+            1. If _resolveSet_ is not present, set _resolveSet_ to a new empty List.
+            1. For each Record { [[Module]], [[ExportName]] } _r_ of _resolveSet_, do
+              1. If _module_ and _r_.[[Module]] are the same Module Record and _exportName_ is _r_.[[ExportName]], then
+                1. Assert: This is a circular import request.
+                1. Return *null*.
+            1. Append the Record { [[Module]]: _module_, [[ExportName]]: _exportName_ } to _resolveSet_.
+            1. For each ExportEntry Record _e_ of _module_.[[LocalExportEntries]], do
+              1. If _e_.[[ExportName]] is _exportName_, then
+                1. Assert: _module_ provides the direct binding for this export.
+                1. Return ResolvedBinding Record { [[Module]]: _module_, [[BindingName]]: _e_.[[LocalName]] }.
+            1. For each ExportEntry Record _e_ of _module_.[[IndirectExportEntries]], do
+              1. If _e_.[[ExportName]] is _exportName_, then
+                1. Assert: _e_.[[ModuleRequest]] is not *null*.
+                1. Let _importedModule_ be GetImportedModule(_module_, _e_.[[ModuleRequest]]).
+                1. If _e_.[[ImportName]] is ~namespace~, then
+                  1. Assert: _module_ does not provide the direct binding for this export.
+                  1. <ins>If _e_.[[ModuleRequest]].[[Phase]] is ~defer~, then</ins>
+                    1. <ins>Return ResolvedBinding Record { [[Module]]: _importedModule_, [[BindingName]]: ~deferred-namespace~ }.</ins>
+                  1. <ins>Else,</ins>
+                    1. <ins>Assert: _e_.[[Phase]] is ~evaluation~.</ins>
+                    1. Return ResolvedBinding Record { [[Module]]: _importedModule_, [[BindingName]]: ~namespace~ }.
+                1. Else,
+                  1. Assert: _module_ imports a specific binding for this export.
+                  1. Assert: _e_.[[ImportName]] is a String.
+                  1. Return _importedModule_.ResolveExport(_e_.[[ImportName]], _resolveSet_).
+            1. If _exportName_ is *"default"*, then
+              1. Assert: A `default` export was not explicitly defined by this module.
+              1. Return *null*.
+              1. NOTE: A `default` export cannot be provided by an `export * from "mod"` declaration.
+            1. Let _starResolution_ be *null*.
+            1. For each ExportEntry Record _e_ of _module_.[[StarExportEntries]], do
+              1. Assert: _e_.[[ModuleRequest]] is not *null*.
+              1. Let _importedModule_ be GetImportedModule(_module_, _e_.[[ModuleRequest]]).
+              1. Let _resolution_ be _importedModule_.ResolveExport(_exportName_, _resolveSet_).
+              1. If _resolution_ is ~ambiguous~, return ~ambiguous~.
+              1. If _resolution_ is not *null*, then
+                1. Assert: _resolution_ is a ResolvedBinding Record.
+                1. If _starResolution_ is *null*, then
+                  1. Set _starResolution_ to _resolution_.
+                1. Else,
+                  1. Assert: There is more than one `*` export that includes the requested name.
+                  1. If _resolution_.[[Module]] and _starResolution_.[[Module]] are not the same Module Record, return ~ambiguous~.
+                  1. If _resolution_.[[BindingName]] is not _starResolution_.[[BindingName]], return ~ambiguous~.
+            1. Return _starResolution_.
+          </emu-alg>
+        </emu-clause>
+      </emu-clause>
+
+      <emu-clause id="sec-FinishLoadingImportedModule" type="abstract operation" oldids="sec-finishdynamicimport" number="11">
+        <h1>
+          FinishLoadingImportedModule (
+            _referrer_: a Script Record, a Cyclic Module Record, or a Realm Record,
+            _moduleRequest_: a ModuleRequest Record,
+            _payload_: a GraphLoadingState Record or a PromiseCapability Record,
+            _result_: either a normal completion containing a Module Record or a throw completion,
+          ): ~unused~
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd></dd>
+        </dl>
+        <emu-alg>
+          1. If _result_ is a normal completion, then
+            1. If _referrer_.[[LoadedModules]] contains a LoadedModuleRequest Record _record_ such that <del>ModuleRequestsEqual</del><ins>ModuleRequestsKeyEqual</ins>(_record_, _moduleRequest_) is *true*, then
+              1. Assert: _record_.[[Module]] and _result_.[[Value]] are the same Module Record.
+            1. Else,
+              1. Append the LoadedModuleRequest Record { [[Specifier]]: _moduleRequest_.[[Specifier]], [[Attributes]]: _moduleRequest_.[[Attributes]], [[Module]]: _result_.[[Value]] } to _referrer_.[[LoadedModules]].
+          1. If _payload_ is a GraphLoadingState Record, then
+            1. Perform ContinueModuleLoading(_payload_, _result_).
+          1. Else,
+            1. Perform ContinueDynamicImport(_payload_, _result_, <ins>_moduleRequest_.[[Phase]]</ins>).
+          1. Return ~unused~.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-getmodulenamespace" type="abstract operation" number="13">
+        <h1>
+          GetModuleNamespace (
+            _module_: an instance of a concrete subclass of Module Record,
+            <ins>_phase_: ~defer~ or ~evaluation~,</ins>
+          ): a Module Namespace Object
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It retrieves the Module Namespace Object representing _module_'s exports, lazily creating it the first time it was requested, and storing it in _module_.[[Namespace]] for future retrieval.</dd>
+        </dl>
+
+        <emu-alg>
+          1. Assert: If _module_ is a Cyclic Module Record, then _module_.[[Status]] is not ~new~ or ~unlinked~.
+          1. <ins>If _phase_ is ~defer~, let _namespace_ be _module_.[[DeferredNamespace]]. Otherwise,</ins> let _namespace_ be _module_.[[Namespace]].
+          1. If _namespace_ is ~empty~, then
+            1. Let _exportedNames_ be _module_.GetExportedNames().
+            1. Let _unambiguousNames_ be a new empty List.
+            1. For each element _name_ of _exportedNames_, do
+              1. <ins>If _phase_ is not ~defer~ or _name_ is not *"then"*, then</ins>
+                1. Let _resolution_ be _module_.ResolveExport(_name_).
+                1. If _resolution_ is a ResolvedBinding Record, append _name_ to _unambiguousNames_.
+            1. Set _namespace_ to ModuleNamespaceCreate(_module_, _unambiguousNames_, <ins>_phase_</ins>).
+          1. Return _namespace_.
+        </emu-alg>
+        <emu-note>
+          <p>GetModuleNamespace never throws. Instead, unresolvable names are simply excluded from the namespace at this point. They will lead to a real linking error later unless they are all ambiguous star exports that are not explicitly requested anywhere.</p>
+        </emu-note>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-imports">
+      <h1>Imports</h1>
+      <h2>Syntax</h2>
+      <emu-grammar type="definition">
+        ImportDeclaration :
+          `import` ImportClause FromClause WithClause? `;`
+          <ins>`import` `defer` NameSpaceImport FromClause WithClause? `;`</ins>
+          `import` ModuleSpecifier WithClause? `;`
+
+        ImportClause :
+          ImportedDefaultBinding
+          NameSpaceImport
+          NamedImports
+          ImportedDefaultBinding `,` NameSpaceImport
+          ImportedDefaultBinding `,` NamedImports
+
+        ImportedDefaultBinding :
+          ImportedBinding
+
+        NameSpaceImport :
+          `*` `as` ImportedBinding
+
+        NamedImports :
+          `{` `}`
+          `{` ImportsList `}`
+          `{` ImportsList `,` `}`
+
+        FromClause :
+          `from` ModuleSpecifier
+
+        ImportsList :
+          ImportSpecifier
+          ImportsList `,` ImportSpecifier
+
+        ImportSpecifier :
+          ImportedBinding
+          ModuleExportName `as` ImportedBinding
+
+        ModuleSpecifier :
+          StringLiteral
+
+        ImportedBinding :
+          BindingIdentifier[~Yield, +Await]
+
+        WithClause :
+          `with` `{` `}`
+          `with` `{` WithEntries `,`? `}`
+
+        WithEntries :
+          AttributeKey `:` StringLiteral
+          AttributeKey `:` StringLiteral `,` WithEntries
+
+        AttributeKey :
+          IdentifierName
+          StringLiteral
+      </emu-grammar>
+
+      <emu-clause id="sec-imports-static-semantics-early-errors">
+        <h1>Static Semantics: Early Errors</h1>
+        <emu-grammar>ModuleItem : ImportDeclaration</emu-grammar>
+        <ul>
+          <li>
+            It is a Syntax Error if the BoundNames of |ImportDeclaration| contains any duplicate entries.
+          </li>
+        </ul>
+      </emu-clause>
+
+      <emu-clause id="sec-static-semantics-importentries" oldids="sec-module-semantics-static-semantics-importentries,sec-imports-static-semantics-importentries" type="sdo">
+        <h1>Static Semantics: ImportEntries ( ): a List of ImportEntry Records</h1>
+        <dl class="header">
+        </dl>
+        <emu-grammar>Module : [empty]</emu-grammar>
+        <emu-alg>
+          1. Return a new empty List.
+        </emu-alg>
+        <emu-grammar>ModuleItemList : ModuleItemList ModuleItem</emu-grammar>
+        <emu-alg>
+          1. Let _entries1_ be ImportEntries of |ModuleItemList|.
+          1. Let _entries2_ be ImportEntries of |ModuleItem|.
+          1. Return the list-concatenation of _entries1_ and _entries2_.
+        </emu-alg>
+        <emu-grammar>
+          ModuleItem :
+            ExportDeclaration
+            StatementListItem
+        </emu-grammar>
+        <emu-alg>
+          1. Return a new empty List.
+        </emu-alg>
+        <emu-grammar>ImportDeclaration : `import` ImportClause FromClause WithClause? `;`</emu-grammar>
+        <emu-alg>
+          1. Let _module_ be <del>the sole element of ModuleRequests</del><ins>SV</ins> of |FromClause|.
+          1. Return ImportEntriesForModule of |ImportClause| with arguments _module_.
+        </emu-alg>
+        <emu-grammar><ins>ImportDeclaration : `import` `defer` NameSpaceImport FromClause WithClause? `;`</ins></emu-grammar>
+        <emu-alg>
+          1. <ins>Let _module_ be SV of |FromClause|.</ins>
+          1. <ins>Return ImportEntriesForModule of |NameSpaceImport| with arguments _module_.</ins>
+        </emu-alg>
+        <emu-grammar>ImportDeclaration : `import` ModuleSpecifier WithClause? `;`</emu-grammar>
+        <emu-alg>
+          1. Return a new empty List.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-control-abstraction-objects" number="27">
+  <h1>Control Abstraction Objects</h1>
+
+  <emu-clause id="sec-promise-objects" number="2">
+    <h1>Promise Objects</h1>
+
+    <emu-clause id="sec-properties-of-the-promise-constructor" number="4">
+      <h1>Properties of the Promise Constructor</h1>
+
+      <emu-clause id="sec-promise.all">
+        <h1>Promise.all ( _iterable_ )</h1>
+
+        <emu-clause id="sec-create-promise-all-resolve-element" type="abstract operation">
+          <h1>
+            <ins>CreatePromiseAllResolveElement (
+              _index_: a non-negative integer,
+              _values_: a List,
+              _resultCapability_: a PromiseCapability Record,
+              _remainingElementsCount_: a Record { [[Value]]: a non-negative integer },
+            ): a function object</ins>
+          </h1>
+          <dl class="header">
+            <dt>description</dt>
+            <dd>It creates a resolve element function for use with PerformPromiseAll and SafePerformPromiseAll.</dd>
+          </dl>
+          <emu-alg>
+            1. Let _fulfilledSteps_ be a new Abstract Closure with parameters (_value_) that captures _values_, _resultCapability_, and _remainingElementsCount_ and performs the following steps when called:
+              1. Let _F_ be the active function object.
+              1. If _F_.[[AlreadyCalled]] is *true*, return *undefined*.
+              1. Set _F_.[[AlreadyCalled]] to *true*.
+              1. Let _thisIndex_ be _F_.[[Index]].
+              1. Set _values_[_thisIndex_] to _value_.
+              1. Set _remainingElementsCount_.[[Value]] to _remainingElementsCount_.[[Value]] - 1.
+              1. If _remainingElementsCount_.[[Value]] = 0, then
+                1. Let _valuesArray_ be CreateArrayFromList(_values_).
+                1. Return ? Call(_resultCapability_.[[Resolve]], *undefined*, « _valuesArray_ »).
+              1. Return *undefined*.
+            1. Let _onFulfilled_ be CreateBuiltinFunction(_fulfilledSteps_, 1, *""*, « [[AlreadyCalled]], [[Index]] »).
+            1. Set _onFulfilled_.[[AlreadyCalled]] to *false*.
+            1. Set _onFulfilled_.[[Index]] to _index_.
+            1. Return _onFulfilled_.
+          </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-performpromiseall" oldids="sec-promise.all-resolve-element-functions" type="abstract operation">
+          <h1>
+            PerformPromiseAll (
+              _iteratorRecord_: an Iterator Record,
+              _constructor_: a constructor,
+              _resultCapability_: a PromiseCapability Record,
+              _promiseResolve_: a function object,
+            ): either a normal completion containing an ECMAScript language value or a throw completion
+          </h1>
+          <dl class="header">
+          </dl>
+          <emu-alg>
+            1. Let _values_ be a new empty List.
+            1. [declared="remainingElementsCount"] NOTE: _remainingElementsCount_ starts at 1 instead of 0 to ensure _resultCapability_.[[Resolve]] is only called once, even in the presence of a misbehaving *"then"* which calls the passed callback before the input iterator is exhausted.
+            1. Let _remainingElementsCount_ be the Record { [[Value]]: 1 }.
+            1. Let _index_ be 0.
+            1. Repeat,
+              1. Let _next_ be ? IteratorStepValue(_iteratorRecord_).
+              1. If _next_ is ~done~, then
+                1. Set _remainingElementsCount_.[[Value]] to _remainingElementsCount_.[[Value]] - 1.
+                1. If _remainingElementsCount_.[[Value]] = 0, then
+                  1. Let _valuesArray_ be CreateArrayFromList(_values_).
+                  1. Perform ? Call(_resultCapability_.[[Resolve]], *undefined*, « _valuesArray_ »).
+                1. Return _resultCapability_.[[Promise]].
+              1. Append *undefined* to _values_.
+              1. Let _nextPromise_ be ? Call(_promiseResolve_, _constructor_, « _next_ »).
+              1. <del>Let _fulfilledSteps_ be a new Abstract Closure with parameters (_value_) that captures _values_, _resultCapability_, and _remainingElementsCount_ and performs the following steps when called:</del>
+                1. <del>Let _F_ be the active function object.</del>
+                1. <del>If _F_.[[AlreadyCalled]] is *true*, return *undefined*.</del>
+                1. <del>Set _F_.[[AlreadyCalled]] to *true*.</del>
+                1. <del>Let _thisIndex_ be _F_.[[Index]].</del>
+                1. <del>Set _values_[_thisIndex_] to _value_.</del>
+                1. <del>Set _remainingElementsCount_.[[Value]] to _remainingElementsCount_.[[Value]] - 1.</del>
+                1. <del>If _remainingElementsCount_.[[Value]] = 0, then</del>
+                  1. <del>Let _valuesArray_ be CreateArrayFromList(_values_).</del>
+                  1. <del>Return ? Call(_resultCapability_.[[Resolve]], *undefined*, « _valuesArray_ »).</del>
+                1. <del>Return *undefined*.</del>
+              1. <del>Let _onFulfilled_ be CreateBuiltinFunction(_fulfilledSteps_, 1, *""*, « [[AlreadyCalled]], [[Index]] »).</del>
+              1. <del>Set _onFulfilled_.[[AlreadyCalled]] to *false*.</del>
+              1. <del>Set _onFulfilled_.[[Index]] to _index_.</del>
+              1. <ins>Let _onFulfilled_ be CreatePromiseAllResolveElement(_index_, _values_, _resultCapability_, _remainingElementsCount_).</ins>
+              1. Set _index_ to _index_ + 1.
+              1. Set _remainingElementsCount_.[[Value]] to _remainingElementsCount_.[[Value]] + 1.
+              1. Perform ? Invoke(_nextPromise_, *"then"*, « _onFulfilled_, _resultCapability_.[[Reject]] »).
+          </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-safe-perform-promise-all" type="abstract operation">
+          <h1>
+            <ins>SafePerformPromiseAll (
+              _promises_: a List of Promises,
+            ): a Promise</ins>
+          </h1>
+          <dl class="header">
+            <dt>description</dt>
+            <dd>It performs a Promise.all operation on a list of native promises, calling PerformPromiseThen directly instead of looking up *"then"* on each promise.</dd>
+          </dl>
+          <emu-alg>
+            1. Let _resultCapability_ be ! NewPromiseCapability(%Promise%).
+            1. If _promises_ is empty, then
+              1. Perform ! Call(_resultCapability_.[[Resolve]], *undefined*, « CreateArrayFromList(« ») »).
+              1. Return _resultCapability_.[[Promise]].
+            1. Let _values_ be a new empty List.
+            1. Let _remainingElementsCount_ be the Record { [[Value]]: the number of elements in _promises_ }.
+            1. Let _index_ be 0.
+            1. For each element _promise_ of _promises_, do
+              1. Append *undefined* to _values_.
+              1. Let _onFulfilled_ be CreatePromiseAllResolveElement(_index_, _values_, _resultCapability_, _remainingElementsCount_).
+              1. Set _index_ to _index_ + 1.
+              1. Perform PerformPromiseThen(_promise_, _onFulfilled_, _resultCapability_.[[Reject]]).
+            1. Return _resultCapability_.[[Promise]].
+          </emu-alg>
+        </emu-clause>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-reflection" number="28">
+  <h1>Reflection</h1>
+
+  <emu-clause id="sec-module-namespace-objects" number="3">
+    <h1><del>Module Namespace Objects</del></h1>
+    <p><del>A Module Namespace Object is a module namespace exotic object that provides runtime property-based access to a module's exported bindings. There is no constructor function for Module Namespace Objects. Instead, such an object is created for each module that is imported by an |ImportDeclaration| that contains a |NameSpaceImport|.</del></p>
+    <p><del>In addition to the properties specified in <emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref> each Module Namespace Object has the following own property:</del></p>
+
+    <emu-clause oldids="sec-@@tostringtag" id="sec-%symbol.tostringtag%">
+      <h1><del>%Symbol.toStringTag%</del></h1>
+      <p><del>The initial value of the %Symbol.toStringTag% property is the String value *"Module"*.</del></p>
+      <p><del>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</del></p>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>

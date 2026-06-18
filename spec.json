@@ -1,0 +1,86 @@
+{
+  "$schema": "./scripts/spec.schema.json",
+  "spec": [
+    {
+      "name": "temporal",
+      "description": "Temporal proposal",
+      "source": "https://github.com/tc39/ecma262/pull/3759",
+      "commit": "f64279386423efe9c62da2331d44cb844990ac61",
+      "path": ["temporal/*.emu"],
+      "diff": ["spec.html"]
+    },
+    {
+      "name": "decorators",
+      "description": "Decorators proposal",
+      "source": "https://github.com/tc39/ecma262/pull/2417",
+      "commit": "59003ed603d09485b957a0f579b46697f49a96a6",
+      "path": [],
+      "diff": ["spec.html"]
+    },
+    {
+      "name": "iterator-join",
+      "description": "Iterator.prototype.join proposal",
+      "source": "https://github.com/tc39/proposal-iterator-join",
+      "commit": "68db99eea27ec8098e8ba521d69897a6da09d523",
+      "path": ["spec.html"]
+    },
+    {
+      "name": "await-dictionary",
+      "description": "Promise.allKeyed proposal",
+      "source": "https://github.com/tc39/proposal-await-dictionary",
+      "commit": "75e4432e7fab49ec7ada6463ec53f30216326ca4",
+      "path": ["spec.emu"]
+    },
+    {
+      "name": "cleanup-some",
+      "description": "FinalizationRegistry.prototype.cleanupSome proposal",
+      "source": "https://github.com/tc39/proposal-cleanup-some",
+      "commit": "3e3e8645c0ffe1d7e86f02a0d5f0e88413b487d3",
+      "path": ["spec/*.html"]
+    },
+    {
+      "name": "regexp-buffer-boundaries",
+      "description": "RegExp Buffer Boundaries proposal",
+      "source": "https://github.com/tc39/proposal-regexp-buffer-boundaries",
+      "commit": "55f2b3f58db39de4370808144df4f6621355accf",
+      "path": ["spec/index.html"]
+    },
+    {
+      "name": "deferred-reexports",
+      "description": "Deferred Re-exports proposal",
+      "source": "https://github.com/tc39/proposal-deferred-reexports",
+      "commit": "077b1319aaf95f5da0b341d7300cee504d8c6e27",
+      "path": ["spec.emu"]
+    },
+    {
+      "name": "shadowrealm",
+      "description": "ShadowRealm proposal",
+      "source": "https://github.com/tc39/proposal-shadowrealm",
+      "commit": "9ff2a01f1ec68a427f6f37ce710aa7cba8150678",
+      "path": ["spec.html"]
+    },
+    {
+      "name": "source-phase-imports",
+      "description": "Source Phase Imports proposal",
+      "source": "https://github.com/tc39/ecma262/pull/3492",
+      "commit": "d9b07d921649e39a170d1cbb4e009ed60d6ded28",
+      "path": [],
+      "diff": ["spec.html"]
+    },
+    {
+      "name": "error-stack-accessor",
+      "description": "Error.prototype.stack accessor proposal",
+      "source": "https://github.com/tc39/ecma262/pull/3878",
+      "commit": "ec683b02dfcc67e72a5952b0f07b905466118266",
+      "path": [],
+      "diff": ["spec.html"]
+    },
+    {
+      "name": "defer-import-eval",
+      "description": "Defer import eval proposal",
+      "source": "https://github.com/tc39/proposal-defer-import-eval",
+      "commit": "012cc74e4a8fa27ed017e7579e3087ac1278387b",
+      "path": ["spec.emu"]
+    }
+  ]
+}
