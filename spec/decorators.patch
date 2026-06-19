@@ -1,58 +1,8 @@
 diff --git a/spec.html b/spec.html
-index cbcc033..609ef92 100644
+index 1acba1d..609ef92 100644
 --- a/spec.html
 +++ b/spec.html
-@@ -40,6 +40,16 @@
-     width: 100%;
-     font-size: 80%;
-   }
-+
-+  .module-overflow {
-+    overflow-y: scroll;
-+    display: block;
-+  }
-+
-+  .module-overflow-note {
-+    overflow-y: scroll;
-+  }
-+
- </style>
- <pre class="metadata">
-   title: ECMAScript&reg; 2024 Language&nbsp;Specification
-@@ -162,19 +172,14 @@
- <emu-clause id="sec-normative-references">
-   <h1>Normative References</h1>
-   <p>The following referenced documents are indispensable for the application of this document. For dated references, only the edition cited applies. For undated references, the latest edition of the referenced document (including any amendments) applies.</p>
--  <p>IEEE 754-2019, <i>IEEE Standard for Floating-Point Arithmetic</i>.</p>
--  <p>
--    The Unicode Standard.<br>
--    <a href="https://unicode.org/versions/latest">https://unicode.org/versions/latest</a>
--  </p>
--  <p>ISO/IEC 10646, <i>Information Technology — Universal Multiple-Octet Coded Character Set (UCS)</i> plus Amendment 1:2005, Amendment 2:2006, Amendment 3:2008, Amendment 4:2008, and additional amendments and corrigenda, or successor.</p>
-+  <p>ISO/IEC 10646 <i>Information Technology — Universal Multiple-Octet Coded Character Set (UCS) plus Amendment 1:2005, Amendment 2:2006, Amendment 3:2008, and Amendment 4:2008</i>, plus additional amendments and corrigenda, or successor</p>
-   <p>
--    ECMA-402, <i>ECMAScript Internationalization API Specification</i>, specifically the annual edition corresponding to this edition of this specification.<br>
--    <a href="https://www.ecma-international.org/publications-and-standards/standards/ecma-402/">https://www.ecma-international.org/publications-and-standards/standards/ecma-402/</a>
-+    ECMA-402, <i>ECMAScript 2015 Internationalization API Specification</i>.<br>
-+    <a href="https://ecma-international.org/publications/standards/Ecma-402.htm">https://ecma-international.org/publications/standards/Ecma-402.htm</a>
-   </p>
-   <p>
-     ECMA-404, <i>The JSON Data Interchange Format</i>.<br>
--    <a href="https://www.ecma-international.org/publications-and-standards/standards/ecma-404/">https://www.ecma-international.org/publications-and-standards/standards/ecma-404/</a>
-+    <a href="https://ecma-international.org/publications/standards/Ecma-404.htm">https://ecma-international.org/publications/standards/Ecma-404.htm</a>
-   </p>
- </emu-clause>
- 
-@@ -3110,7 +3115,7 @@
-             If _P_ is described as a non-configurable, non-writable own data property, all future calls to [[GetOwnProperty]] ( _P_ ) must return Property Descriptor whose [[Value]] is SameValue as _P_'s [[Value]] attribute.
-           </li>
-           <li>
--            If _P_'s attributes other than [[Writable]] and [[Value]] may change over time, or if the property might be deleted, then _P_'s [[Configurable]] attribute must be *true*.
-+            If _P_'s attributes other than [[Writable]] may change over time or if the property might be deleted, then _P_'s [[Configurable]] attribute must be *true*.
-           </li>
-           <li>
-             If the [[Writable]] attribute may change from *false* to *true*, then the [[Configurable]] attribute must be *true*.
-@@ -4607,7 +4612,7 @@
+@@ -4612,7 +4612,7 @@
                [[Key]]
              </td>
              <td>
@@ -61,7 +11,7 @@ index cbcc033..609ef92 100644
              </td>
              <td>
                a Private Name
-@@ -4621,7 +4626,7 @@
+@@ -4626,7 +4626,7 @@
                [[Kind]]
              </td>
              <td>
@@ -70,7 +20,7 @@ index cbcc033..609ef92 100644
              </td>
              <td>
                ~field~, ~method~, or ~accessor~
-@@ -4676,16 +4681,55 @@
+@@ -4681,16 +4681,55 @@
        </emu-table>
      </emu-clause>
  
@@ -131,7 +81,7 @@ index cbcc033..609ef92 100644
              <th>
                Value
              </th>
-@@ -4695,7 +4739,10 @@
+@@ -4700,7 +4739,10 @@
            </tr>
            <tr>
              <td>
@@ -143,7 +93,7 @@ index cbcc033..609ef92 100644
              </td>
              <td>
                a Private Name, a String, or a Symbol
-@@ -4706,13 +4753,114 @@
+@@ -4711,13 +4753,114 @@
            </tr>
            <tr>
              <td>
@@ -180,13 +130,11 @@ index cbcc033..609ef92 100644
 +            </td>
 +            <td>
 +              ~accessor~ and ~getter~
-             </td>
-             <td>
--              an ECMAScript function object or ~empty~
++            </td>
++            <td>
 +              an ECMAScript function object
-             </td>
-             <td>
--              The initializer of the field, if any.
++            </td>
++            <td>
 +              The getter for an accessor definition.
 +            </td>
 +          </tr>
@@ -235,11 +183,13 @@ index cbcc033..609ef92 100644
 +          <tr>
 +            <td>
 +              [[Initializers]]
-+            </td>
-+            <td>
+             </td>
+             <td>
+-              an ECMAScript function object or ~empty~
 +              ~field~ and ~accessor~
-+            </td>
-+            <td>
+             </td>
+             <td>
+-              The initializer of the field, if any.
 +              a List of function objects
 +            </td>
 +            <td>
@@ -261,7 +211,7 @@ index cbcc033..609ef92 100644
              </td>
            </tr>
          </table>
-@@ -6721,27 +6869,69 @@
+@@ -6726,27 +6869,69 @@
        </emu-alg>
      </emu-clause>
  
@@ -340,7 +290,7 @@ index cbcc033..609ef92 100644
          1. Return ~unused~.
        </emu-alg>
      </emu-clause>
-@@ -6756,12 +6946,13 @@
+@@ -6761,12 +6946,13 @@
        <dl class="header">
        </dl>
        <emu-alg>
@@ -360,7 +310,7 @@ index cbcc033..609ef92 100644
          1. Return ~unused~.
        </emu-alg>
      </emu-clause>
-@@ -7323,11 +7514,11 @@
+@@ -7328,11 +7514,11 @@
        <emu-alg>
          1. Return « *"\*default\*"* ».
        </emu-alg>
@@ -374,7 +324,7 @@ index cbcc033..609ef92 100644
        <emu-alg>
          1. Return « *"\*default\*"* ».
        </emu-alg>
-@@ -7486,8 +7677,8 @@
+@@ -7491,8 +7677,8 @@
        </emu-alg>
        <emu-grammar>
          ClassDeclaration :
@@ -385,7 +335,7 @@ index cbcc033..609ef92 100644
        </emu-grammar>
        <emu-alg>
          1. Return *false*.
-@@ -8904,7 +9095,7 @@
+@@ -8909,7 +9095,7 @@
            CoverCallExpressionAndAsyncArrowHead `=>` AsyncConciseBody
  
          ClassExpression :
@@ -394,7 +344,7 @@ index cbcc033..609ef92 100644
        </emu-grammar>
        <emu-alg>
          1. Return *false*.
-@@ -8923,7 +9114,7 @@
+@@ -8928,7 +9114,7 @@
            `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
  
          ClassExpression :
@@ -403,7 +353,7 @@ index cbcc033..609ef92 100644
        </emu-grammar>
        <emu-alg>
          1. Return *true*.
-@@ -9064,7 +9255,7 @@
+@@ -9069,7 +9255,7 @@
            `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncFunctionBody `}`
  
          ClassExpression :
@@ -412,7 +362,7 @@ index cbcc033..609ef92 100644
        </emu-grammar>
        <emu-alg>
          1. Return *true*.
-@@ -9183,9 +9374,11 @@
+@@ -9188,9 +9374,11 @@
        <emu-alg>
          1. Return InstantiateAsyncArrowFunctionExpression of |AsyncArrowFunction| with argument _name_.
        </emu-alg>
@@ -426,7 +376,7 @@ index cbcc033..609ef92 100644
          1. Set _value_.[[SourceText]] to the source text matched by |ClassExpression|.
          1. Return _value_.
        </emu-alg>
-@@ -9374,6 +9567,22 @@
+@@ -9379,6 +9567,22 @@
          1. If _inList_ is *true*, return *true*.
          1. Return the result of ComputedPropertyContains of |ClassElement| with argument _symbol_.
        </emu-alg>
@@ -449,7 +399,7 @@ index cbcc033..609ef92 100644
        <emu-grammar>ClassElement : ClassStaticBlock</emu-grammar>
        <emu-alg>
          1. Return *false*.
-@@ -9881,6 +10090,22 @@
+@@ -9886,6 +10090,22 @@
        <emu-alg>
          1. Return PropName of |ClassElementName|.
        </emu-alg>
@@ -472,7 +422,7 @@ index cbcc033..609ef92 100644
        <emu-grammar>ClassElement : ClassStaticBlock</emu-grammar>
        <emu-alg>
          1. Return ~empty~.
-@@ -13179,24 +13404,24 @@
+@@ -13184,24 +13404,24 @@
          </tr>
          <tr>
            <td>
@@ -503,7 +453,7 @@ index cbcc033..609ef92 100644
            </td>
          </tr>
          <tr>
-@@ -13468,8 +13693,7 @@
+@@ -13473,8 +13693,7 @@
          1. Set _F_.[[ScriptOrModule]] to GetActiveScriptOrModule().
          1. Set _F_.[[Realm]] to the current Realm Record.
          1. Set _F_.[[HomeObject]] to *undefined*.
@@ -513,7 +463,7 @@ index cbcc033..609ef92 100644
          1. Set _F_.[[ClassFieldInitializerName]] to ~empty~.
          1. Let _len_ be the ExpectedArgumentCount of _ParameterList_.
          1. Perform SetFunctionLength(_F_, _len_).
-@@ -13573,21 +13797,25 @@
+@@ -13578,21 +13797,25 @@
        <h1>
          DefineMethodProperty (
            _homeObject_: an Object,
@@ -548,7 +498,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
      </emu-clause>
  
-@@ -18613,7 +18841,8 @@
+@@ -18618,7 +18841,8 @@
          </emu-alg>
          <emu-grammar>PropertyDefinition : MethodDefinition</emu-grammar>
          <emu-alg>
@@ -558,7 +508,7 @@ index cbcc033..609ef92 100644
            1. Return ~unused~.
          </emu-alg>
        </emu-clause>
-@@ -23800,8 +24029,7 @@
+@@ -23805,8 +24029,7 @@
        <h1>
          Runtime Semantics: MethodDefinitionEvaluation (
            _object_: an Object,
@@ -568,7 +518,7 @@ index cbcc033..609ef92 100644
        </h1>
        <dl class="header">
        </dl>
-@@ -23809,7 +24037,7 @@
+@@ -23814,7 +24037,7 @@
        <emu-alg>
          1. Let _methodDef_ be ? DefineMethod of |MethodDefinition| with argument _object_.
          1. Perform SetFunctionName(_methodDef_.[[Closure]], _methodDef_.[[Key]]).
@@ -577,7 +527,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
        <emu-grammar>MethodDefinition : `get` ClassElementName `(` `)` `{` FunctionBody `}`</emu-grammar>
        <emu-alg>
-@@ -23821,12 +24049,7 @@
+@@ -23826,12 +24049,7 @@
          1. Let _closure_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, _formalParameterList_, |FunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
          1. Perform MakeMethod(_closure_, _object_).
          1. Perform SetFunctionName(_closure_, _propKey_, *"get"*).
@@ -591,7 +541,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
        <emu-grammar>MethodDefinition : `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`</emu-grammar>
        <emu-alg>
-@@ -23837,12 +24060,7 @@
+@@ -23842,12 +24060,7 @@
          1. Let _closure_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, |PropertySetParameterList|, |FunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
          1. Perform MakeMethod(_closure_, _object_).
          1. Perform SetFunctionName(_closure_, _propKey_, *"set"*).
@@ -605,7 +555,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
        <emu-grammar>GeneratorMethod : `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`</emu-grammar>
        <emu-alg>
-@@ -23855,7 +24073,7 @@
+@@ -23860,7 +24073,7 @@
          1. Perform SetFunctionName(_closure_, _propKey_).
          1. Let _prototype_ be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
          1. Perform ! DefinePropertyOrThrow(_closure_, *"prototype"*, PropertyDescriptor { [[Value]]: _prototype_, [[Writable]]: *true*, [[Enumerable]]: *false*, [[Configurable]]: *false* }).
@@ -614,7 +564,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
        <emu-grammar>
          AsyncGeneratorMethod : `async` `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-@@ -23870,7 +24088,7 @@
+@@ -23875,7 +24088,7 @@
          1. Perform SetFunctionName(_closure_, _propKey_).
          1. Let _prototype_ be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
          1. Perform ! DefinePropertyOrThrow(_closure_, *"prototype"*, PropertyDescriptor { [[Value]]: _prototype_, [[Writable]]: *true*, [[Enumerable]]: *false*, [[Configurable]]: *false* }).
@@ -623,7 +573,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
        <emu-grammar>
          AsyncMethod : `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
-@@ -23883,7 +24101,7 @@
+@@ -23888,7 +24101,7 @@
          1. Let _closure_ be OrdinaryFunctionCreate(%AsyncFunction.prototype%, _sourceText_, |UniqueFormalParameters|, |AsyncFunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
          1. Perform MakeMethod(_closure_, _object_).
          1. Perform SetFunctionName(_closure_, _propKey_).
@@ -632,7 +582,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
      </emu-clause>
    </emu-clause>
-@@ -24315,16 +24533,287 @@
+@@ -24320,16 +24533,287 @@
      </emu-clause>
    </emu-clause>
  
@@ -923,7 +873,7 @@ index cbcc033..609ef92 100644
  
        ClassTail[Yield, Await] :
          ClassHeritage[?Yield, ?Await]? `{` ClassBody[?Yield, ?Await]? `}`
-@@ -24340,15 +24829,16 @@
+@@ -24345,15 +24829,16 @@
          ClassElementList[?Yield, ?Await] ClassElement[?Yield, ?Await]
  
        ClassElement[Yield, Await] :
@@ -944,7 +894,7 @@ index cbcc033..609ef92 100644
  
        ClassElementName[Yield, Await] :
          PropertyName[?Yield, ?Await]
-@@ -24389,7 +24879,7 @@
+@@ -24394,7 +24879,7 @@
            It is a Syntax Error if PrivateBoundIdentifiers of |ClassElementList| contains any duplicate entries, unless the name is used once for a getter and once for a setter and in no other entries, and the getter and setter are either both static or both non-static.
          </li>
        </ul>
@@ -953,7 +903,7 @@ index cbcc033..609ef92 100644
        <ul>
          <li>
            It is a Syntax Error if PropName of |MethodDefinition| is not *"constructor"* and HasDirectSuper of |MethodDefinition| is *true*.
-@@ -24398,7 +24888,7 @@
+@@ -24403,7 +24888,7 @@
            It is a Syntax Error if PropName of |MethodDefinition| is *"constructor"* and SpecialMethod of |MethodDefinition| is *true*.
          </li>
        </ul>
@@ -962,7 +912,7 @@ index cbcc033..609ef92 100644
        <ul>
          <li>
            It is a Syntax Error if HasDirectSuper of |MethodDefinition| is *true*.
-@@ -24408,12 +24898,12 @@
+@@ -24413,12 +24898,12 @@
          </li>
        </ul>
  
@@ -977,7 +927,7 @@ index cbcc033..609ef92 100644
        <ul>
          <li>
            It is a Syntax Error if PropName of |FieldDefinition| is either *"prototype"* or *"constructor"*.
-@@ -24423,6 +24913,7 @@
+@@ -24428,6 +24913,7 @@
        <emu-grammar>
          FieldDefinition :
            ClassElementName Initializer?
@@ -985,7 +935,7 @@ index cbcc033..609ef92 100644
        </emu-grammar>
        <ul>
          <li>It is a Syntax Error if |Initializer| is present and ContainsArguments of |Initializer| is *true*.</li>
-@@ -24467,16 +24958,16 @@
+@@ -24472,16 +24958,16 @@
        <h1>Static Semantics: ClassElementKind ( ): ~constructor-method~, ~non-constructor-method~, or ~empty~</h1>
        <dl class="header">
        </dl>
@@ -1006,7 +956,7 @@ index cbcc033..609ef92 100644
        </emu-grammar>
        <emu-alg>
          1. Return ~non-constructor-method~.
-@@ -24516,19 +25007,19 @@
+@@ -24521,19 +25007,19 @@
        <h1>Static Semantics: IsStatic ( ): a Boolean</h1>
        <dl class="header">
        </dl>
@@ -1030,7 +980,7 @@ index cbcc033..609ef92 100644
        <emu-alg>
          1. Return *true*.
        </emu-alg>
-@@ -24657,6 +25148,23 @@
+@@ -24662,6 +25148,23 @@
          1. Return a List whose sole element is the StringValue of |PrivateIdentifier|.
        </emu-alg>
  
@@ -1054,7 +1004,7 @@ index cbcc033..609ef92 100644
        <emu-grammar>
          ClassElementName :
            PropertyName
-@@ -24772,11 +25280,106 @@
+@@ -24777,11 +25280,106 @@
        </emu-alg>
      </emu-clause>
  
@@ -1162,7 +1112,7 @@ index cbcc033..609ef92 100644
        </h1>
        <dl class="header">
        </dl>
-@@ -24785,17 +25388,34 @@
+@@ -24790,17 +25388,34 @@
        </emu-grammar>
        <emu-alg>
          1. Let _name_ be ? Evaluation of |ClassElementName|.
@@ -1207,26 +1157,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
        <emu-note>
          The function created for _initializer_ is never directly accessible to ECMAScript code.
-@@ -24816,7 +25436,7 @@
-         1. Let _privateEnv_ be the running execution context's PrivateEnvironment.
-         1. Let _sourceText_ be the empty sequence of Unicode code points.
-         1. Let _formalParameters_ be an instance of the production <emu-grammar>FormalParameters : [empty]</emu-grammar>.
--        1. [id="step-synthetic-class-static-block-fn"] Let _bodyFunction_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, _formalParameters_, |ClassStaticBlockBody|, ~non-lexical-this~, _lex_, _privateEnv_).
-+        1. Let _bodyFunction_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, _formalParameters_, |ClassStaticBlockBody|, ~non-lexical-this~, _lex_, _privateEnv_).
-         1. Perform MakeMethod(_bodyFunction_, _homeObject_).
-         1. Return the ClassStaticBlockDefinition Record { [[BodyFunction]]: _bodyFunction_ }.
-       </emu-alg>
-@@ -24833,8 +25453,7 @@
-       </dl>
-       <emu-grammar>ClassStaticBlockBody : ClassStaticBlockStatementList</emu-grammar>
-       <emu-alg>
--        1. Assert: _functionObject_ is a synthetic function created by ClassStaticBlockDefinitionEvaluation step <emu-xref href="#step-synthetic-class-static-block-fn"></emu-xref>.
--        1. Perform ! FunctionDeclarationInstantiation(_functionObject_, « »).
-+        1. Perform ? FunctionDeclarationInstantiation(_functionObject_, « »).
-         1. Return ? Evaluation of |ClassStaticBlockStatementList|.
-       </emu-alg>
-     </emu-clause>
-@@ -24843,27 +25462,34 @@
+@@ -24847,27 +25462,34 @@
        <h1>
          Runtime Semantics: ClassElementEvaluation (
            _object_: an Object,
@@ -1269,7 +1200,7 @@ index cbcc033..609ef92 100644
        </emu-alg>
  
        <emu-grammar>ClassElement : ClassStaticBlock</emu-grammar>
-@@ -24884,6 +25510,7 @@
+@@ -24888,6 +25510,7 @@
          Runtime Semantics: ClassDefinitionEvaluation (
            _classBinding_: a String or *undefined*,
            _className_: a property key or a Private Name,
@@ -1277,7 +1208,7 @@ index cbcc033..609ef92 100644
          ): either a normal completion containing a function object or an abrupt completion
        </h1>
        <dl class="header">
-@@ -24957,103 +25584,139 @@
+@@ -24961,103 +25584,139 @@
          1. Perform CreateMethodProperty(_proto_, *"constructor"*, _F_).
          1. If |ClassBody?| is not present, let _elements_ be a new empty List.
          1. Else, let _elements_ be NonConstructorElements of |ClassBody|.
@@ -1465,106 +1396,7 @@ index cbcc033..609ef92 100644
          1. Set _value_.[[SourceText]] to the source text matched by |ClassExpression|.
          1. Return _value_.
        </emu-alg>
-@@ -27016,7 +27679,7 @@
- 
-           <p>Calling _A_.Evaluate() calls InnerModuleEvaluation on _A_, _B_, and _D_, which all transition to ~evaluating~. Then InnerModuleEvaluation is called on _A_ again, which is a no-op because it is already ~evaluating~. At this point, _D_.[[PendingAsyncDependencies]] is 0, so ExecuteAsyncModule(_D_) is called and we call _D_.ExecuteModule with a new PromiseCapability tracking the asynchronous execution of _D_. We unwind back to the InnerModuleEvaluation on _B_, setting _B_.[[PendingAsyncDependencies]] to 1 and _B_.[[AsyncEvaluation]] to *true*. We unwind back to the original InnerModuleEvaluation on _A_, setting _A_.[[PendingAsyncDependencies]] to 1. In the next iteration of the loop over _A_'s dependencies, we call InnerModuleEvaluation on _C_ and thus on _D_ (again a no-op) and _E_. As _E_ has no dependencies and is not part of a cycle, we call ExecuteAsyncModule(_E_) in the same manner as _D_ and _E_ is immediately removed from the stack. We unwind once more to the original InnerModuleEvaluation on _A_, setting _C_.[[AsyncEvaluation]] to *true*. Now we finish the loop over _A_'s dependencies, set _A_.[[AsyncEvaluation]] to *true*, and remove the entire strongly connected component from the stack, transitioning all of the modules to ~evaluating-async~ at once. At this point, the fields of the modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-1"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-1" caption="Module fields after the initial Evaluate() call">
-+          <emu-table id="table-module-graph-cycle-async-fields-1" class="module-overflow" caption="Module fields after the initial Evaluate() call">
-             <table>
-               <thead>
-                 <tr>
-@@ -27079,7 +27742,7 @@
- 
-           <p>Let us assume that _E_ finishes executing first. When that happens, AsyncModuleExecutionFulfilled is called, _E_.[[Status]] is set to ~evaluated~ and _C_.[[PendingAsyncDependencies]] is decremented to become 1. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-2"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-2" caption="Module fields after module _E_ finishes executing">
-+          <emu-table id="table-module-graph-cycle-async-fields-2" class="module-overflow" caption="Module fields after module _E_ finishes executing">
-             <table>
-               <thead>
-                 <tr>
-@@ -27115,7 +27778,7 @@
- 
-           <p>_D_ is next to finish (as it was the only module that was still executing). When that happens, AsyncModuleExecutionFulfilled is called again and _D_.[[Status]] is set to ~evaluated~. Then _B_.[[PendingAsyncDependencies]] is decremented to become 0, ExecuteAsyncModule is called on _B_, and it starts executing. _C_.[[PendingAsyncDependencies]] is also decremented to become 0, and _C_ starts executing (potentially in parallel to _B_ if _B_ contains an `await`). The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-3"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-3" caption="Module fields after module _D_ finishes executing">
-+          <emu-table id="table-module-graph-cycle-async-fields-3" class="module-overflow" caption="Module fields after module _D_ finishes executing">
-             <table>
-               <thead>
-                 <tr>
-@@ -27160,7 +27823,7 @@
- 
-           <p>Let us assume that _C_ finishes executing next. When that happens, AsyncModuleExecutionFulfilled is called again, _C_.[[Status]] is set to ~evaluated~ and _A_.[[PendingAsyncDependencies]] is decremented to become 1. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-4"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-4" caption="Module fields after module _C_ finishes executing">
-+          <emu-table id="table-module-graph-cycle-async-fields-4" class="module-overflow" caption="Module fields after module _C_ finishes executing">
-             <table>
-               <thead>
-                 <tr>
-@@ -27196,7 +27859,7 @@
- 
-           <p>Then, _B_ finishes executing. When that happens, AsyncModuleExecutionFulfilled is called again and _B_.[[Status]] is set to ~evaluated~. _A_.[[PendingAsyncDependencies]] is decremented to become 0, so ExecuteAsyncModule is called and it starts executing. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-5"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-5" caption="Module fields after module _B_ finishes executing">
-+          <emu-table id="table-module-graph-cycle-async-fields-5" class="module-overflow" caption="Module fields after module _B_ finishes executing">
-             <table>
-               <thead>
-                 <tr>
-@@ -27232,7 +27895,7 @@
- 
-           <p>Finally, _A_ finishes executing. When that happens, AsyncModuleExecutionFulfilled is called again and _A_.[[Status]] is set to ~evaluated~. At this point, the Promise in _A_.[[TopLevelCapability]] (which was returned from _A_.Evaluate()) is resolved, and this concludes the handling of this module graph. The fields of the updated module are as given in <emu-xref href="#table-module-graph-cycle-async-fields-6"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-6" caption="Module fields after module _A_ finishes executing">
-+          <emu-table id="table-module-graph-cycle-async-fields-6" class="module-overflow" caption="Module fields after module _A_ finishes executing">
-             <table>
-               <thead>
-                 <tr>
-@@ -27259,7 +27922,7 @@
- 
-           <p>Alternatively, consider a failure case where _C_ fails execution and returns an error before _B_ has finished executing. When that happens, AsyncModuleExecutionRejected is called, which sets _C_.[[Status]] to ~evaluated~ and _C_.[[EvaluationError]] to the error. It then propagates this error to all of the AsyncParentModules by performing AsyncModuleExecutionRejected on each of them. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-7"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-7" caption="Module fields after module _C_ finishes with an error">
-+          <emu-table id="table-module-graph-cycle-async-fields-7" class="module-overflow" caption="Module fields after module _C_ finishes with an error">
-             <table>
-               <thead>
-                 <tr>
-@@ -27298,7 +27961,7 @@
- 
-           <p>_A_ will be rejected with the same error as _C_ since _C_ will call AsyncModuleExecutionRejected on _A_ with _C_'s error. _A_.[[Status]] is set to ~evaluated~. At this point the Promise in _A_.[[TopLevelCapability]] (which was returned from _A_.Evaluate()) is rejected. The fields of the updated module are as given in <emu-xref href="#table-module-graph-cycle-async-fields-8"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-8" caption="Module fields after module _A_ is rejected">
-+          <emu-table id="table-module-graph-cycle-async-fields-8" class="module-overflow" caption="Module fields after module _A_ is rejected">
-             <table>
-               <thead>
-                 <tr>
-@@ -27327,7 +27990,7 @@
- 
-           <p>Then, _B_ finishes executing without an error. When that happens, AsyncModuleExecutionFulfilled is called again and _B_.[[Status]] is set to ~evaluated~. GatherAvailableAncestors is called on _B_. However, _A_.[[CycleRoot]] is _A_ which has an evaluation error, so it will not be added to the returned _sortedExecList_ and AsyncModuleExecutionFulfilled will return without further processing. Any future importer of _B_ will resolve the rejection of _B_.[[CycleRoot]].[[EvaluationError]] from the evaluation error from _C_ that was set on the cycle root _A_. The fields of the updated modules are as given in <emu-xref href="#table-module-graph-cycle-async-fields-9"></emu-xref>.</p>
- 
--          <emu-table id="table-module-graph-cycle-async-fields-9" caption="Module fields after module _B_ finishes executing in an erroring graph">
-+          <emu-table id="table-module-graph-cycle-async-fields-9" class="module-overflow" caption="Module fields after module _B_ finishes executing in an erroring graph">
-             <table>
-               <thead>
-                 <tr>
-@@ -27515,7 +28178,7 @@
-             </tr>
-           </table>
-         </emu-table>
--        <emu-note>
-+        <emu-note class="module-overflow-note">
-           <p><emu-xref href="#table-import-forms-mapping-to-importentry-records"></emu-xref> gives examples of ImportEntry records fields used to represent the syntactic import forms:</p>
-           <emu-table id="table-import-forms-mapping-to-importentry-records" caption="Import Forms Mappings to ImportEntry Records" informative oldids="table-40">
-             <table>
-@@ -27660,7 +28323,7 @@
-             </tr>
-           </table>
-         </emu-table>
--        <emu-note>
-+        <emu-note class="module-overflow-note">
-           <p><emu-xref href="#table-export-forms-mapping-to-exportentry-records"></emu-xref> gives examples of the ExportEntry record fields used to represent the syntactic export forms:</p>
-           <emu-table id="table-export-forms-mapping-to-exportentry-records" caption="Export Forms Mappings to ExportEntry Records" informative oldids="table-42">
-             <table>
-@@ -28405,10 +29068,10 @@
+@@ -28409,10 +29068,10 @@
            `export` ExportFromClause FromClause `;`
            `export` NamedExports `;`
            `export` VariableStatement[~Yield, +Await]
@@ -1578,7 +1410,7 @@ index cbcc033..609ef92 100644
  
          ExportFromClause :
            `*`
-@@ -28443,6 +29106,21 @@
+@@ -28447,6 +29106,21 @@
          <emu-note>
            <p>The above rule means that each ReferencedBindings of |NamedExports| is treated as an |IdentifierReference|.</p>
          </emu-note>
@@ -1600,7 +1432,7 @@ index cbcc033..609ef92 100644
        </emu-clause>
  
        <emu-clause id="sec-static-semantics-exportedbindings" oldids="sec-module-semantics-static-semantics-exportedbindings,sec-exports-static-semantics-exportedbindings" type="sdo">
-@@ -28757,17 +29435,25 @@
+@@ -28761,17 +29435,25 @@
          <emu-alg>
            1. Return ? Evaluation of |VariableStatement|.
          </emu-alg>
@@ -1630,94 +1462,7 @@ index cbcc033..609ef92 100644
            1. Let _className_ be the sole element of BoundNames of |ClassDeclaration|.
            1. If _className_ is *"\*default\*"*, then
              1. Let _env_ be the running execution context's LexicalEnvironment.
-@@ -28937,7 +29623,7 @@
-           1. If _x_ is not a String, return _x_.
-           1. Let _evalRealm_ be the current Realm Record.
-           1. NOTE: In the case of a direct eval, _evalRealm_ is the realm of both the caller of `eval` and of the `eval` function itself.
--          1. Perform ? HostEnsureCanCompileStrings(_evalRealm_, « », _x_, _direct_).
-+          1. Perform ? HostEnsureCanCompileStrings(_evalRealm_).
-           1. Let _inFunction_ be *false*.
-           1. Let _inMethod_ be *false*.
-           1. Let _inDerivedConstructor_ be *false*.
-@@ -29000,19 +29686,12 @@
-         <h1>
-           HostEnsureCanCompileStrings (
-             _calleeRealm_: a Realm Record,
--            _parameterStrings_: a List of Strings,
--            _bodyString_: a String,
--            _direct_: a Boolean,
-           ): either a normal completion containing ~unused~ or a throw completion
-         </h1>
-         <dl class="header">
-           <dt>description</dt>
-           <dd>It allows host environments to block certain ECMAScript functions which allow developers to interpret and evaluate strings as ECMAScript code.</dd>
-         </dl>
--        <p>
--          _parameterStrings_ represents the strings that, when using one of the function constructors, will be concatenated together to build the parameters list. _bodyString_ represents the function body or the string passed to an `eval` call.
--          _direct_ signifies whether the evaluation is a direct eval.
--        </p>
-         <p>The default implementation of HostEnsureCanCompileStrings is to return NormalCompletion(~unused~).</p>
-       </emu-clause>
- 
-@@ -30217,6 +30896,8 @@
-             <dd>_constructor_ is the constructor function that is performing this action. _newTarget_ is the constructor that `new` was initially applied to. _parameterArgs_ and _bodyArg_ reflect the argument values that were passed to _constructor_.</dd>
-           </dl>
-           <emu-alg>
-+            1. Let _currentRealm_ be the current Realm Record.
-+            1. Perform ? HostEnsureCanCompileStrings(_currentRealm_).
-             1. If _newTarget_ is *undefined*, set _newTarget_ to _constructor_.
-             1. If _kind_ is ~normal~, then
-               1. Let _prefix_ be *"function"*.
-@@ -30244,26 +30925,22 @@
-               1. Let _parameterSym_ be the grammar symbol |FormalParameters[+Yield, +Await]|.
-               1. Let _fallbackProto_ be *"%AsyncGeneratorFunction.prototype%"*.
-             1. Let _argCount_ be the number of elements in _parameterArgs_.
--            1. Let _bodyString_ be ? ToString(_bodyArg_).
--            1. Let _parameterStrings_ be a new empty List.
--            1. For each element _arg_ of _parameterArgs_, do
--              1. Append ? ToString(_arg_) to _parameterStrings_.
--            1. Let _currentRealm_ be the current Realm Record.
--            1. Perform ? HostEnsureCanCompileStrings(_currentRealm_, _parameterStrings_, _bodyString_, *false*).
-             1. Let _P_ be the empty String.
-             1. If _argCount_ > 0, then
--              1. Set _P_ to _parameterStrings_[0].
-+              1. Let _firstArg_ be _parameterArgs_[0].
-+              1. Set _P_ to ? ToString(_firstArg_).
-               1. Let _k_ be 1.
-               1. Repeat, while _k_ &lt; _argCount_,
--                1. Let _nextArgString_ be _parameterStrings_[_k_].
-+                1. Let _nextArg_ be _parameterArgs_[_k_].
-+                1. Let _nextArgString_ be ? ToString(_nextArg_).
-                 1. Set _P_ to the string-concatenation of _P_, *","* (a comma), and _nextArgString_.
-                 1. Set _k_ to _k_ + 1.
--            1. Let _bodyParseString_ be the string-concatenation of 0x000A (LINE FEED), _bodyString_, and 0x000A (LINE FEED).
--            1. Let _sourceString_ be the string-concatenation of _prefix_, *" anonymous("*, _P_, 0x000A (LINE FEED), *") {"*, _bodyParseString_, and *"}"*.
-+            1. Let _bodyString_ be the string-concatenation of 0x000A (LINE FEED), ? ToString(_bodyArg_), and 0x000A (LINE FEED).
-+            1. Let _sourceString_ be the string-concatenation of _prefix_, *" anonymous("*, _P_, 0x000A (LINE FEED), *") {"*, _bodyString_, and *"}"*.
-             1. Let _sourceText_ be StringToCodePoints(_sourceString_).
-             1. Let _parameters_ be ParseText(StringToCodePoints(_P_), _parameterSym_).
-             1. If _parameters_ is a List of errors, throw a *SyntaxError* exception.
--            1. Let _body_ be ParseText(StringToCodePoints(_bodyParseString_), _bodySym_).
-+            1. Let _body_ be ParseText(StringToCodePoints(_bodyString_), _bodySym_).
-             1. If _body_ is a List of errors, throw a *SyntaxError* exception.
-             1. NOTE: The parameters and body are parsed separately to ensure that each is valid alone. For example, `new Function("/*", "*/ ) {")` does not evaluate to a function.
-             1. NOTE: If this step is reached, _sourceText_ must have the syntax of _exprSym_ (although the reverse implication does not hold). The purpose of the next two steps is to enforce any Early Error rules which apply to _exprSym_ directly.
-@@ -31942,13 +32619,7 @@
-             1. If _nx_ is *-∞*<sub>𝔽</sub>, return an implementation-approximated Number value representing -π.
-             1. If _nx_ is either *+0*<sub>𝔽</sub> or *-0*<sub>𝔽</sub>, return an implementation-approximated Number value representing -π / 2.
-           1. Assert: _nx_ is finite and is neither *+0*<sub>𝔽</sub> nor *-0*<sub>𝔽</sub>.
--          1. Let _r_ be the inverse tangent of abs(ℝ(_ny_) / ℝ(_nx_)).
--          1. If _nx_ &lt; *-0*<sub>𝔽</sub>, then
--            1. If _ny_ > *+0*<sub>𝔽</sub>, set _r_ to π - _r_.
--            1. Else, set _r_ to -π + _r_.
--          1. Else,
--            1. If _ny_ &lt; *-0*<sub>𝔽</sub>, set _r_ to -_r_.
--          1. Return an implementation-approximated Number value representing _r_.
-+          1. Return an implementation-approximated Number value representing the result of the inverse tangent of the quotient ℝ(_ny_) / ℝ(_nx_).
-         </emu-alg>
-       </emu-clause>
- 
-@@ -49563,6 +50234,11 @@ THH:mm:ss.sss
+@@ -49552,6 +50234,11 @@ THH:mm:ss.sss
      <emu-prodref name="AsyncMethod"></emu-prodref>
      <emu-prodref name="AsyncFunctionBody"></emu-prodref>
      <emu-prodref name="AwaitExpression"></emu-prodref>
@@ -1729,19 +1474,3 @@ index cbcc033..609ef92 100644
      <emu-prodref name="ClassDeclaration"></emu-prodref>
      <emu-prodref name="ClassExpression"></emu-prodref>
      <emu-prodref name="ClassTail"></emu-prodref>
-@@ -49709,15 +50385,6 @@ THH:mm:ss.sss
-       <p>The syntax and semantics of <emu-xref href="#sec-comments"></emu-xref> is extended as follows except that this extension is not allowed when parsing source text using the goal symbol |Module|:</p>
-       <h2>Syntax</h2>
-       <emu-grammar type="definition">
--        InputElementHashbangOrRegExp ::
--          WhiteSpace
--          LineTerminator
--          Comment
--          CommonToken
--          HashbangComment
--          RegularExpressionLiteral
--          HTMLCloseComment
--
-         Comment ::
-           MultiLineComment
-           SingleLineComment

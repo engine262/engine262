@@ -61,16 +61,31 @@ async function calculateHash(filePath: string): Promise<string> {
   return createHash('sha256').update(content).digest('hex');
 }
 
+async function listFilesRecursive(root: string): Promise<string[]> {
+  const entries = await fs.readdir(root, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const fullPath = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      return listFilesRecursive(fullPath);
+    }
+    return [fullPath];
+  }));
+  return nested.flat().sort();
+}
+
 async function calculateEntryHash(name: string, specDir: string): Promise<string> {
   const files = await fs.readdir(specDir, { withFileTypes: true });
-  const entryFiles = files
-    .filter((f) => !f.isDirectory())
-    .map((f) => path.join(specDir, f.name))
-    .filter((f) => {
-      const rel = path.relative(specDir, f);
-      return rel.startsWith(`${name}.`) || rel.startsWith(`${name}${path.sep}`);
-    })
-    .sort();
+  const entryFiles = (
+    await Promise.all(files.map(async (entry) => {
+      const fullPath = path.join(specDir, entry.name);
+      if (entry.isDirectory()) {
+        return entry.name === name ? listFilesRecursive(fullPath) : [];
+      }
+
+      const rel = path.relative(specDir, fullPath);
+      return rel.startsWith(`${name}.`) ? [fullPath] : [];
+    }))
+  ).flat().sort();
 
   if (entryFiles.length === 0) return '';
 
@@ -139,8 +154,37 @@ async function gitGenerateDiff(
   prNumber: string,
   diffPaths: string[],
 ): Promise<string> {
-  await execFileAsync('git', ['fetch', 'origin', `pull/${prNumber}/merge`], { cwd: checkoutDir });
-  const { stdout } = await execFileAsync('git', ['diff', 'FETCH_HEAD^1', commit, '--', ...diffPaths], { cwd: checkoutDir });
+  const prHeadRef = `refs/remotes/origin/pr/${prNumber}/head`;
+  const prMergeRef = `refs/remotes/origin/pr/${prNumber}/merge`;
+  const fetchRefs = [
+    `pull/${prNumber}/head:${prHeadRef}`,
+    `pull/${prNumber}/merge:${prMergeRef}`,
+  ];
+
+  await execFileAsync('git', ['fetch', '--depth=1', 'origin', ...fetchRefs], { cwd: checkoutDir });
+
+  let mergeBase = '';
+  for (let attempts = 0; attempts < 5; attempts += 1) {
+    try {
+      // Diff from the PR branch point, not the current base branch tip.
+      // GitHub's synthetic merge ref uses the current base as first parent.
+      // For older PRs that can greatly inflate the patch unless we walk back to
+      // the actual merge-base with the PR head.
+      // eslint-disable-next-line no-await-in-loop
+      const { stdout: mergeBaseStdout } = await execFileAsync('git', ['merge-base', `${prMergeRef}^1`, prHeadRef], { cwd: checkoutDir });
+      mergeBase = (Buffer.isBuffer(mergeBaseStdout) ? mergeBaseStdout.toString('utf-8') : String(mergeBaseStdout)).trim();
+      break;
+    } catch {
+      // eslint-disable-next-line no-await-in-loop
+      await execFileAsync('git', ['fetch', '--deepen=50', 'origin', ...fetchRefs], { cwd: checkoutDir });
+    }
+  }
+
+  if (mergeBase === '') {
+    throw new Error(`Unable to determine merge base for PR ${prNumber}`);
+  }
+
+  const { stdout } = await execFileAsync('git', ['diff', mergeBase, commit, '--', ...diffPaths], { cwd: checkoutDir });
   return Buffer.isBuffer(stdout) ? stdout.toString('utf-8') : String(stdout);
 }
 

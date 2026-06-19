@@ -76,6 +76,14 @@
       "diff": ["spec.html"]
     },
     {
+      "name": "pr3212-IsClassConstructor",
+      "description": "Editorial: call MakeClassConstructor on default class constructor",
+      "source": "https://github.com/tc39/ecma262/pull/3212",
+      "commit": "12ba9a6a846d5cfdd168d4ecacb75bb6b5fceda9",
+      "path": [],
+      "diff": ["spec.html"]
+    },
+    {
       "name": "defer-import-eval",
       "description": "Defer import eval proposal",
       "source": "https://github.com/tc39/proposal-defer-import-eval",
