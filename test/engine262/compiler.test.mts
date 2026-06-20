@@ -5,7 +5,7 @@ import { expect, test } from 'vitest';
 import transformer from '../../scripts/transform.mts';
 
 function compile(comment: string, file: string) {
-  const result = babel.transform(file, { plugins: [transformer], sourceMaps: true });
+  const result = babel.transformSync(file, { plugins: [transformer], sourceMaps: true });
   expect(result?.code).toMatchSnapshot(comment);
   expect(JSON.stringify(result?.map, undefined, 2)).toMatchSnapshot(`${comment} source map`);
 }

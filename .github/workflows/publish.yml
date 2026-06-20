@@ -13,7 +13,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.head_commit.message, 'no-publish') }}
     permissions:
       contents: read
       id-token: write

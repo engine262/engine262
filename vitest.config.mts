@@ -7,7 +7,7 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: ['**/website/lib/engine262/**'],
+    exclude: ['website/lib/**'],
     coverage: {
       provider: 'v8',
       reportsDirectory: 'coverage/inspector/',

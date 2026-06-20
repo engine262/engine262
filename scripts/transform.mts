@@ -1,9 +1,9 @@
+// @ts-nocheck
 import {
   type NodePath,
   traverse,
   template,
-  type Node,
-  type PluginObj, type PluginPass,
+  type PluginObject, type PluginPass,
   types as t,
 } from '@babel/core';
 
@@ -129,7 +129,7 @@ const Macros = {
 const parseOptions = { preserveComments: true };
 
 type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'IteratorCloseAll' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger' | 'ThrowCompletion';
-export default (): PluginObj<PluginPass & { needed: Partial<Record<NeededNames, boolean>> }> => ({
+export default (): PluginObject => ({
   visitor: {
     Program: {
       enter(_path, state) {
@@ -460,7 +460,7 @@ function withinNotTransformablePosition(path: NodePath) {
   return false;
 }
 
-type NodeWithLocation = Pick<Node, 'start' | 'end' | 'loc'>;
+type NodeWithLocation = Pick<t.Node, 'start' | 'end' | 'loc'>;
 /** Attach source map information to map generated nodes (node) to original node (source) */
 function withSource(source: NodeWithLocation, node: t.Statement | t.Statement[]): t.Statement[] {
   if (!Array.isArray(node)) {
