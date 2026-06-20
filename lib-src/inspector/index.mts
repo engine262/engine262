@@ -3,8 +3,8 @@ import { InspectorContext } from './context.mts';
 import * as impl from './methods.mts';
 import type { DebuggerContext, DebuggerPreference, DevtoolEvents } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
-import {
-  Agent, HostPromiseRejectionTracker, ManagedRealm, Realm, Value, type Arguments,
+import type {
+  Agent, Arguments, HostPromiseRejectionTracker, ManagedRealm, Realm, Value,
 } from '#self';
 
 const ignoreNamespaces = ['Network'];

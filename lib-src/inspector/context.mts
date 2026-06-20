@@ -2,8 +2,12 @@ import type { Protocol } from 'devtools-protocol';
 import { getInspector } from './objects/index.mts';
 import type { Inspector } from './index.mts';
 import {
-  EnsureCompletion, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, Value,
+  EnsureCompletion, JSStringValue, ManagedRealm, ObjectValue, SymbolValue, ThrowCompletion, Value,
   getHostDefinedErrorDetails,
+  type Agent,
+  type CallFrame,
+  type CallSite,
+  type NullValue,
   type ValueCompletion,
   getCurrentStack,
   isECMAScriptFunctionObject,
@@ -18,12 +22,9 @@ import {
   OrdinaryObjectCreate,
   Descriptor,
   isArgumentExoticObject,
-  Agent,
   surroundingAgent,
   IsAccessorDescriptor,
   isIntegerIndex,
-  CallSite,
-  CallFrame,
   type OrdinaryObject,
 } from '#self';
 
