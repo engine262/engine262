@@ -11,9 +11,7 @@ exports[`Assert with source code > case source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "Assert",
-    "expr",
-    "expr2"
+    "Assert"
   ],
   "sources": [
     "unknown"
@@ -21,7 +19,7 @@ exports[`Assert with source code > case source map 1`] = `
   "sourcesContent": [
     "\\n    // optimized\\n    Assert(expr + expr2);\\n    // unoptimized\\n    Assert(expr) || true;\\n  "
   ],
-  "mappings": "AAEI,6CADA;AACAA,EAAA,CAAAA,GAAOC,IAAI,GAAGC,KAAK,CAAb,EAANF,KAAA,CAAAA,GAAA,CAAAA,MAAM,CAANA,KAAM,CAANA,cAAK,CAAC;AACN;AACAA,MAAM,CAACC,IAAI,SAAC,IAAI,IAAI",
+  "mappings": "AAEI,6CADA;AACAA,EAAA,CAAAA,GAAO,IAAI,GAAG,KAAK,CAAb,EAANA,KAAA,CAAAA,GAAA,OAAM,CAANA,KAAM,CAANA,cAAK,CAAC;AACN;AACA,MAAM,CAAC,IAAI,SAAC,IAAI,IAAI",
   "ignoreList": []
 }"
 `;
@@ -51,13 +49,8 @@ exports[`Completion optimization > case source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value1",
-    "_",
-    "value2",
     "NormalCompletion",
-    "Value",
-    "Q",
-    "value3"
+    "Q"
   ],
   "sources": [
     "unknown"
@@ -65,7 +58,7 @@ exports[`Completion optimization > case source map 1`] = `
   "sourcesContent": [
     "\\n    const value1 = _;\\n    // normal\\n    const value2 = NormalCompletion({ Value: 1 });\\n    // nested\\n    const value3 = NormalCompletion(Q(value1));\\n  "
   ],
-  "mappings": ";AACI,IAAMA,MAAM,GAAGC,CAAC;AAChB;AACA,MAAMC,MAAM,GAAGC;EAAAA,SAAgB,EAAhBA,gBAAgB,CAAhBA,SAAgB;EAAhBA,KAAgB,EAAC;IAAEC,KAAK,EAAE;EAAE;AAAb,CAAe;AAC7C;AACgC,oBAAAC,EAAA,CAAAA,CAAEL,MAAM,YAARK,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAEL,MAAM,YAARK,gBAAC,EAADA,MAAA,CAAEL,MAAM;EAANA,MAAM,GAANA,MAAM,CAARK,KAAC;AAAD;AAAhC,MAAMC,MAAM,GAAGH;EAAAA,SAAgB,EAAhBA,gBAAgB,CAAhBA,SAAgB;EAAhBA,KAAgB,EAAGH;AAAJ,CAAY",
+  "mappings": ";AACI,IAAM,MAAM,GAAG,CAAC;AAChB;AACA,MAAM,MAAM,GAAGA;EAAAA,SAAgB,EAAhB,gBAAgB,CAAhBA,SAAgB;EAAhBA,KAAgB,EAAC;IAAE,KAAK,EAAE;EAAE;AAAb,CAAe;AAC7C;AACgC,oBAAAC,EAAA,CAAAA,CAAE,MAAM,YAARA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,MAAM,YAARA,gBAAC,EAADA,MAAA,CAAE,MAAM;EAAN,MAAM,GAAN,MAAM,CAARA,KAAC;AAAD;AAAhC,MAAM,MAAM,GAAGD;EAAAA,SAAgB,EAAhB,gBAAgB,CAAhBA,SAAgB;EAAhBA,KAAgB,EAAG;AAAJ,CAAY",
   "ignoreList": []
 }"
 `;
@@ -80,20 +73,14 @@ exports[`Struct optimization > case 1`] = `
 exports[`Struct optimization > case source map 1`] = `
 "{
   "version": 3,
-  "names": [
-    "val",
-    "__proto__",
-    "AsyncGeneratorRequestRecord",
-    "prototype",
-    "Value"
-  ],
+  "names": [],
   "sources": [
     "unknown"
   ],
   "sourcesContent": [
     "\\n    const val = AsyncGeneratorRequestRecord({ Value: 1 });\\n  "
   ],
-  "mappings": "AACI,MAAMA,GAAG;EAAAC,SAAA,EAAAC,2BAAA,CAAAC,SAAA;EAAiCC,KAAK,EAAE;AAAC,CAAG",
+  "mappings": "AACI,MAAM,GAAG;EAAA;EAAiC,KAAK,EAAE;AAAC,CAAG",
   "ignoreList": []
 }"
 `;
@@ -125,22 +112,14 @@ export const Test4 = () => {};"
 exports[`function.section > case source map 1`] = `
 "{
   "version": 3,
-  "names": [
-    "Test",
-    "section",
-    "Test2",
-    "Test5",
-    "Test6",
-    "Test3",
-    "Test4"
-  ],
+  "names": [],
   "sources": [
     "unknown"
   ],
   "sourcesContent": [
     "\\n    /** https://tc39.es/ecma262/#sec-test */\\n    function Test() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export function Test2() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    const Test5 = function () {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    const Test6 = () => {}\\n\\n    // Not supported yet\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export const Test3 = function () {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export const Test4 = () => {}\\n  "
   ],
-  "mappings": "AACI;AACA,SAASA,IAAIA,CAAA,EAAG,CAAC;AADjBA,IAAwC,CAAxCC,OAAwC,GAAxC,mCAAwC;;AAExC;AACA,OAAO,SAASC,KAAKA,CAAA,EAAG,CAAC;AADzBA,KAAwC,CAAxCD,OAAwC,GAAxC,mCAAwC;;AAExC;AACA,MAAME,KAAK,GAAG,SAAAA,CAAA,EAAY,CAAC,CAAC;AAD5BA,KAAwC,CAAxCF,OAAwC,GAAxC,mCAAwC;;AAExC;AACA,MAAMG,KAAK,GAAGA,CAAA,KAAM,CAAC,CAAC;AADtBA,KAAwC,CAAxCH,OAAwC,GAAxC,mCAAwC;;AAGxC;AACA;AACA,OAAO,MAAMI,KAAK,GAAG,SAAAA,CAAA,EAAY,CAAC,CAAC;AACnC;AACA,OAAO,MAAMC,KAAK,GAAGA,CAAA,KAAM,CAAC,CAAC",
+  "mappings": "AACI;AACA,SAAS,IAAI,GAAG,CAAC;AADjB,IAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;;AAExC;AACA,OAAO,SAAS,KAAK,GAAG,CAAC;AADzB,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;;AAExC;AACA,MAAM,KAAK,GAAG,YAAY,CAAC,CAAC;AAD5B,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;;AAExC;AACA,MAAM,KAAK,GAAG,MAAM,CAAC,CAAC;AADtB,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;;AAGxC;AACA;AACA,OAAO,MAAM,KAAK,GAAG,YAAY,CAAC,CAAC;AACnC;AACA,OAAO,MAAM,KAAK,GAAG,MAAM,CAAC,CAAC",
   "ignoreList": []
 }"
 `;
@@ -162,21 +141,14 @@ switch (key) {
 exports[`transform OutOfRange > case source map 1`] = `
 "{
   "version": 3,
-  "names": [
-    "f",
-    "OutOfRange",
-    "exhaustive",
-    "key",
-    "value",
-    "nonExhaustive"
-  ],
+  "names": [],
   "sources": [
     "unknown"
   ],
   "sourcesContent": [
     "\\n    function f() { throw OutOfRange.exhaustive('message'); }\\n    switch (key) {\\n      case value:\\n        break;\\n      default:\\n        throw OutOfRange.nonExhaustive(key);\\n    }\\n  "
   ],
-  "mappings": "AACI,SAASA,CAACA,CAAA,EAAG;EAAA;EAAE,MAAMC,UAAU,CAACC,UAAU,CAAC,SAAS,CAAC;AAAE;AACvD,QAAQC,GAAG;EACT,KAAKC,KAAK;IACR;EAAM,+BACR;IAAA;IACE,MAAMH,UAAU,CAACI,aAAa,CAACF,GAAG,CAAC;AACvC",
+  "mappings": "AACI,SAAS,CAAC,GAAG;EAAA;EAAE,MAAM,UAAU,CAAC,UAAU,CAAC,SAAS,CAAC;AAAE;AACvD,QAAQ,GAAG;EACT,KAAK,KAAK;IACR;EAAM,+BACR;IAAA;IACE,MAAM,UAAU,CAAC,aAAa,CAAC,GAAG,CAAC;AACvC",
   "ignoreList": []
 }"
 `;
@@ -201,11 +173,7 @@ exports[`transform Q() correctly > complex source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
-    "Q",
-    "Call",
-    "completion",
-    "Apply"
+    "Q"
   ],
   "sources": [
     "unknown"
@@ -213,7 +181,7 @@ exports[`transform Q() correctly > complex source map 1`] = `
   "sourcesContent": [
     "\\n    let value;\\n    const completion = Apply(Q(Call(value)), Q(Call(value)));\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK;AACgB,oBAAAC,GAAA,CAAAA,WAAC,GAACC,IAAI,CAACF,KAAK,CAAX;AAAD,oBAAAC,EAAA,CAAAA,YAAC,YAADA,UAAC,EAADA;EAAAA,EAAA,CAAAA,YAAC,YAADA,gBAAC,EAADA,MAAA,CAAAA,WAAC;EAADA,WAAC,GAADA,WAAC,CAADA,KAAC;AAAD;AAAgB,oBAAAA,GAAA,CAAAA,YAAC,GAACC,IAAI,CAACF,KAAK,CAAX;AAAD,oBAAAC,EAAA,CAAAA,aAAC,YAADA,UAAC,EAADA;EAAAA,EAAA,CAAAA,aAAC,YAADA,gBAAC,EAADA,MAAA,CAAAA,YAAC;EAADA,YAAC,GAADA,YAAC,CAADA,KAAC;AAAD;AAAzC,MAAME,UAAU,GAAGC,KAAK,CAACH,WAAC,EAAeA,YAAc,CAAC",
+  "mappings": ";AACI,IAAI,KAAK;AACgB,oBAAAA,GAAA,CAAAA,WAAC,GAAC,IAAI,CAAC,KAAK,CAAX;AAAD,oBAAAA,EAAA,CAAAA,YAAC,YAADA,UAAC,EAADA;EAAAA,EAAA,CAAAA,YAAC,YAADA,gBAAC,EAADA,MAAA,CAAAA,WAAC;EAADA,WAAC,GAADA,WAAC,CAADA,KAAC;AAAD;AAAgB,oBAAAA,GAAA,CAAAA,YAAC,GAAC,IAAI,CAAC,KAAK,CAAX;AAAD,oBAAAA,EAAA,CAAAA,aAAC,YAADA,UAAC,EAADA;EAAAA,EAAA,CAAAA,aAAC,YAADA,gBAAC,EAADA,MAAA,CAAAA,YAAC;EAADA,YAAC,GAADA,YAAC,CAADA,KAAC;AAAD;AAAzC,MAAM,UAAU,GAAG,KAAK,CAACA,WAAC,EAAeA,YAAc,CAAC",
   "ignoreList": []
 }"
 `;
@@ -233,17 +201,14 @@ const f = () => value;"
 exports[`transform Q() correctly > return arrow source map 1`] = `
 "{
   "version": 3,
-  "names": [
-    "value",
-    "f"
-  ],
+  "names": [],
   "sources": [
     "unknown"
   ],
   "sourcesContent": [
     "\\n    let value;\\n    const f = () => Q(value);\\n  "
   ],
-  "mappings": "AACI,IAAIA,KAAK;AACT,MAAMC,CAAC,GAAGA,CAAA,KAAQD,KAAM",
+  "mappings": "AACI,IAAI,KAAK;AACT,MAAM,CAAC,GAAG,MAAQ,KAAM",
   "ignoreList": []
 }"
 `;
@@ -251,17 +216,14 @@ exports[`transform Q() correctly > return arrow source map 1`] = `
 exports[`transform Q() correctly > return source map 1`] = `
 "{
   "version": 3,
-  "names": [
-    "f",
-    "value"
-  ],
+  "names": [],
   "sources": [
     "unknown"
   ],
   "sourcesContent": [
     "\\n    function f() {\\n      let value;\\n      return Q(value);\\n    }\\n  "
   ],
-  "mappings": "AACI,SAASA,CAACA,CAAA,EAAG;EACX,IAAIC,KAAK;EACT,OAASA,KAAK;AAChB",
+  "mappings": "AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACT,OAAS,KAAK;AAChB",
   "ignoreList": []
 }"
 `;
@@ -279,7 +241,6 @@ exports[`transform Q() correctly > statement source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
     "Q"
   ],
   "sources": [
@@ -288,7 +249,7 @@ exports[`transform Q() correctly > statement source map 1`] = `
   "sourcesContent": [
     "\\n    let value;\\n    Q(value);\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK;AACT,oBAAAC,EAAA,CAAAA,CAAED,KAAK,YAAPC,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAED,KAAK,YAAPC,gBAAC,EAADA,MAAA,CAAED,KAAK;EAALA,KAAK,GAALA,KAAK,CAAPC,KAAC;AAAD",
+  "mappings": ";AACI,IAAI,KAAK;AACT,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;EAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;AAAD",
   "ignoreList": []
 }"
 `;
@@ -307,9 +268,7 @@ exports[`transform Q() correctly > value source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
-    "Q",
-    "x"
+    "Q"
   ],
   "sources": [
     "unknown"
@@ -317,7 +276,7 @@ exports[`transform Q() correctly > value source map 1`] = `
   "sourcesContent": [
     "\\n    let value;\\n    const x = Q(value);\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK;AACC,oBAAAC,EAAA,CAAAA,CAAED,KAAK,YAAPC,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAED,KAAK,YAAPC,gBAAC,EAADA,MAAA,CAAED,KAAK;EAALA,KAAK,GAALA,KAAK,CAAPC,KAAC;AAAD;AAAV,MAAMC,CAAC,GAAKF,KAAM",
+  "mappings": ";AACI,IAAI,KAAK;AACC,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;EAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;AAAD;AAAV,MAAM,CAAC,GAAK,KAAM",
   "ignoreList": []
 }"
 `;
@@ -336,8 +295,6 @@ exports[`transform Throw() correctly > case source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "f",
-    "value",
     "Throw"
   ],
   "sources": [
@@ -346,7 +303,7 @@ exports[`transform Throw() correctly > case source map 1`] = `
   "sourcesContent": [
     "\\n    function f(value) {\\n      Throw(value);\\n    }\\n  "
   ],
-  "mappings": ";AACI,SAASA,CAACA,CAACC,KAAK,EAAE;EAChB,WAAAC,MAAA,CAAAA;IAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;IAALA,KAAK,EAACD;EAAF,CAAC;AACP",
+  "mappings": ";AACI,SAAS,CAAC,CAAC,KAAK,EAAE;EAChB,WAAAA,MAAA,CAAAA;IAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;IAALA,KAAK,EAAC;EAAF,CAAC;AACP",
   "ignoreList": []
 }"
 `;
@@ -369,10 +326,7 @@ exports[`transform Throw() correctly > direct return source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "f",
-    "value",
-    "Throw",
-    "f2"
+    "Throw"
   ],
   "sources": [
     "unknown"
@@ -380,7 +334,7 @@ exports[`transform Throw() correctly > direct return source map 1`] = `
   "sourcesContent": [
     "\\n    function f(value) {\\n      return Throw(value);\\n    }\\n    const f2 = value => Throw(value);\\n  "
   ],
-  "mappings": ";AACI,SAASA,CAACA,CAACC,KAAK,EAAE;EAChB,OAAOC;IAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;IAALA,KAAK,EAACD;EAAF,CAAC;AACd;AACA,MAAME,EAAE,GAAGF,KAAK,KAAIC;EAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;EAALA,KAAK,EAACD;AAAF,CAAC,CAAO",
+  "mappings": ";AACI,SAAS,CAAC,CAAC,KAAK,EAAE;EAChB,OAAOA;IAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;IAALA,KAAK,EAAC;EAAF,CAAC;AACd;AACA,MAAM,EAAE,GAAG,KAAK,KAAIA;EAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;EAALA,KAAK,EAAC;AAAF,CAAC,CAAO",
   "ignoreList": []
 }"
 `;
@@ -403,10 +357,7 @@ exports[`transform X() correctly > complex source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
-    "X",
-    "Call",
-    "Apply"
+    "X"
   ],
   "sources": [
     "unknown"
@@ -414,7 +365,7 @@ exports[`transform X() correctly > complex source map 1`] = `
   "sourcesContent": [
     "\\n    let value;\\n    Apply(X(Call(value)));\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK;AACH,OAAAC,GAAA,CAAAA,KAAC,GAACC,IAAI,CAACF,KAAK,CAAX;AAAD,+BAAAC,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;AAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;EAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,6CAAC,EAADA;IAAAA,KAAC,EAADA;EAAA,EAAC;EAADA,KAAC,GAADA,KAAC,CAADA,KAAC;AAAD;AAANE,KAAK,CAACF,KAAc,CAAC",
+  "mappings": ";AACI,IAAI,KAAK;AACH,OAAAA,GAAA,CAAAA,KAAC,GAAC,IAAI,CAAC,KAAK,CAAX;AAAD,+BAAAA,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;AAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;EAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,6CAAC,EAADA;IAAAA,KAAC,EAADA;EAAA,EAAC;EAADA,KAAC,GAADA,KAAC,CAADA,KAAC;AAAD;AAAN,KAAK,CAACA,KAAc,CAAC",
   "ignoreList": []
 }"
 `;
@@ -441,11 +392,7 @@ exports[`transform X() correctly > condition source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "f",
-    "value",
-    "test",
-    "X",
-    "compute"
+    "X"
   ],
   "sources": [
     "unknown"
@@ -453,7 +400,7 @@ exports[`transform X() correctly > condition source map 1`] = `
   "sourcesContent": [
     "\\n    function f() {\\n      let value;\\n      if (test) return X(value.compute());\\n    }\\n  "
   ],
-  "mappings": ";AACI,SAASA,CAACA,CAAA,EAAG;EACX,IAAIC,KAAK;EACT,IAAIC,IAAI;IAAS,OAAAC,GAAA,CAAAA,KAAC,GAACF,KAAK,CAACG,OAAO,CAAC,CAAf;IAAD,+BAAAD,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;IAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;MAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,iDAAC,EAADA;QAAAA,KAAC,EAADA;MAAA,EAAC;MAADA,KAAC,GAADA,KAAC,CAADA,KAAC;IAAD;IAAP,OAAOA,KAAC;EAAkB;AACtC",
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACT,IAAI,IAAI;IAAS,OAAAA,GAAA,CAAAA,KAAC,GAAC,KAAK,CAAC,OAAO,CAAC,CAAf;IAAD,+BAAAA,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;IAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;MAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,iDAAC,EAADA;QAAAA,KAAC,EAADA;MAAA,EAAC;MAADA,KAAC,GAADA,KAAC,CAADA,KAAC;IAAD;IAAP,OAAOA,KAAC;EAAkB;AACtC",
   "ignoreList": []
 }"
 `;
@@ -474,8 +421,6 @@ exports[`transform X() correctly > return source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "f",
-    "value",
     "X"
   ],
   "sources": [
@@ -484,7 +429,7 @@ exports[`transform X() correctly > return source map 1`] = `
   "sourcesContent": [
     "\\n    function f() {\\n      let value;\\n      return X(value);\\n    }\\n  "
   ],
-  "mappings": ";AACI,SAASA,CAACA,CAAA,EAAG;EACX,IAAIC,KAAK;EACF,oBAAAC,EAAA,CAAAA,CAAED,KAAK,YAAPC,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAED,KAAK,YAAPC,gBAAC,EAADA,MAAA,CAAED,KAAK;IAALA,KAAK,GAALA,KAAK,CAAPC,KAAC;EAAD;EAAP,OAASD,KAAK;AAChB",
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACF,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;IAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;EAAD;EAAP,OAAS,KAAK;AAChB",
   "ignoreList": []
 }"
 `;
@@ -502,7 +447,6 @@ exports[`transform X() correctly > statement source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
     "X"
   ],
   "sources": [
@@ -511,7 +455,7 @@ exports[`transform X() correctly > statement source map 1`] = `
   "sourcesContent": [
     "\\n    const value = 1;\\n    X(value);\\n  "
   ],
-  "mappings": ";AACI,IAAMA,KAAK,GAAG,CAAC;AACf,oBAAAC,EAAA,CAAAA,CAAED,KAAK,YAAPC,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAED,KAAK,YAAPC,gBAAC,EAADA,MAAA,CAAED,KAAK;EAALA,KAAK,GAALA,KAAK,CAAPC,KAAC;AAAD",
+  "mappings": ";AACI,IAAM,KAAK,GAAG,CAAC;AACf,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;EAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;AAAD",
   "ignoreList": []
 }"
 `;
@@ -530,9 +474,7 @@ exports[`transform X() correctly > value source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
-    "X",
-    "x"
+    "X"
   ],
   "sources": [
     "unknown"
@@ -540,7 +482,7 @@ exports[`transform X() correctly > value source map 1`] = `
   "sourcesContent": [
     "\\n    let value;\\n    const x = X(value);\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK;AACC,oBAAAC,EAAA,CAAAA,CAAED,KAAK,YAAPC,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAED,KAAK,YAAPC,gBAAC,EAADA,MAAA,CAAED,KAAK;EAALA,KAAK,GAALA,KAAK,CAAPC,KAAC;AAAD;AAAV,MAAMC,CAAC,GAAKF,KAAM",
+  "mappings": ";AACI,IAAI,KAAK;AACC,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;EAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;AAAD;AAAV,MAAM,CAAC,GAAK,KAAM",
   "ignoreList": []
 }"
 `;
@@ -564,10 +506,6 @@ exports[`transform simple ternary > case source map 1`] = `
 "{
   "version": 3,
   "names": [
-    "value",
-    "error",
-    "x",
-    "condition",
     "Q"
   ],
   "sources": [
@@ -576,7 +514,7 @@ exports[`transform simple ternary > case source map 1`] = `
   "sourcesContent": [
     "\\n    let value, error;\\n    const x = condition ? Q(value) : (error);\\n  "
   ],
-  "mappings": ";AACI,IAAIA,KAAK,EAAEC,KAAK;AAAC,IAAAC,CAAA;AAAA,IACPC,SAAS;EAAG,oBAAAC,EAAA,CAAAA,CAAEJ,KAAK,YAAPI,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAEJ,KAAK,YAAPI,gBAAC,EAADA,MAAA,CAAEJ,KAAK;IAALA,KAAK,GAALA,KAAK,CAAPI,KAAC;EAAD;EAAhBF,CAAC,GAAiBF,KAAK;AAAA;EAAvBE,CAAC,GAA2BD,KAAK;AAAA",
+  "mappings": ";AACI,IAAI,KAAK,EAAE,KAAK;AAAC;AAAA,IACP,SAAS;EAAG,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;IAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;EAAD;EAAhB,CAAC,GAAiB,KAAK;AAAA;EAAvB,CAAC,GAA2B,KAAK;AAAA",
   "ignoreList": []
 }"
 `;

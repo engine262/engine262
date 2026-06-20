@@ -1,5 +1,5 @@
 import type { Protocol } from 'devtools-protocol';
-import { DynamicParsedCodeRecord, SourceTextModuleRecord, type ScriptRecord } from '#self';
+import { SourceTextModuleRecord, type DynamicParsedCodeRecord, type ScriptRecord } from '#self';
 
 export function getParsedEvent(source: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord, id: string, executionContextId: number): Protocol.Debugger.ScriptParsedEvent {
   const lines = source.ECMAScriptCode.sourceText.split('\n');

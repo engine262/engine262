@@ -1,6 +1,12 @@
 import type { Inspector } from './index.mts';
 import {
-  NullValue, UndefinedValue, BooleanValue, SymbolValue, SymbolDescriptiveString, JSStringValue, NumberValue, BigIntValue,
+  BigIntValue, SymbolDescriptiveString,
+  type BooleanValue,
+  type JSStringValue,
+  type NullValue,
+  type NumberValue,
+  type SymbolValue,
+  type UndefinedValue,
 } from '#self';
 
 export const Null: Inspector<NullValue> = {

@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { babel, type RollupBabelInputPluginOptions } from '@rollup/plugin-babel';
+import * as babel from '@babel/core';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { defineConfig, type Plugin, type RollupOptions } from 'rollup';
 import packageJson from '../package.json' with { type: 'json' };
 
-const commitHash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+const commitHash = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 
 const banner = `/*!
  * engine262 ${packageJson.version} ${commitHash}
@@ -17,27 +17,18 @@ const banner = `/*!
  */
 `;
 
-const babelOptions: RollupBabelInputPluginOptions = {
-  babelHelpers: 'bundled',
-  exclude: 'node_modules/**',
+const babelOptions: babel.TransformOptions = {
+  targets: ['last 2 node versions'],
   generatorOpts: {
     importAttributesKeyword: 'with',
   },
   presets: [[
     '@babel/preset-env',
-    {
-      // this includes at least 1 LTS for Node.js
-      targets: ['last 2 node versions'],
-      spec: true,
-      bugfixes: true,
-    },
+    {},
   ], [
     '@babel/preset-typescript',
-    {
-      allowDeclareFields: true,
-    },
+    {},
   ]],
-  extensions: ['.mts'],
 };
 
 const onLog: RollupOptions['onLog'] = function onLog(level, log, handler) {
@@ -54,7 +45,7 @@ export default defineConfig([
   {
     input: 'lib-src/inspector/index.mts',
     plugins: [
-      babel(babelOptions),
+      babelPlugin(babelOptions),
       {
         name: 'resolve-self',
         resolveId(source, _importer, _options) {
@@ -106,7 +97,7 @@ export default defineConfig([
       (json.default || json)({ compact: true }),
       (commonjs.default || commonjs)(),
       nodeResolve({ exportConditions: ['rollup'], extensions: ['.mts'] }),
-      babel({
+      babelPlugin({
         ...babelOptions,
         plugins: [
           './scripts/transform.mts',
@@ -176,6 +167,32 @@ function importUnicodeLib(): Plugin {
         return `export default new Map(JSON.parse(${str}).map(([cp1, cp2]) => [String.fromCodePoint(cp1), String.fromCodePoint(cp2)]));`;
       }
       return code;
+    },
+  };
+}
+
+function babelPlugin(options: babel.TransformOptions): Plugin {
+  return {
+    name: 'babel8',
+    async transform(code, id) {
+      if (id.includes('node_modules') || !id.endsWith('.mts')) {
+        return null;
+      }
+
+      const result = await babel.transformAsync(code, {
+        ...options,
+        filename: id,
+        sourceMaps: true,
+      });
+
+      if (!result?.code) {
+        return null;
+      }
+
+      return {
+        code: result.code,
+        map: result.map ?? null,
+      };
     },
   };
 }

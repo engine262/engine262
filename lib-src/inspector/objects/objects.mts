@@ -3,7 +3,7 @@ import type { InspectorContext } from '../context.mts';
 import { getInspector, type Inspector } from './index.mts';
 import {
   Descriptor,
-  isTypedArrayObject, JSStringValue, ObjectValue, PrivateElementRecord, PrivateName, SymbolDescriptiveString, SymbolValue, UndefinedValue, Value, type MapObject, type PropertyKeyValue, type SetObject,
+  isTypedArrayObject, JSStringValue, ObjectValue, PrivateName, SymbolDescriptiveString, SymbolValue, UndefinedValue, Value, type MapObject, type PrivateElementRecord, type PropertyKeyValue, type SetObject,
   DataBlock,
   TypedArrayGetElement,
   TypedArrayLength,
