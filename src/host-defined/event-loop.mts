@@ -6,7 +6,7 @@ import {
 } from '#self';
 
 /** https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick */
-export type NodeJSJobType = 'timers' | 'pending callbacks' | 'idle' | 'prepare' | 'poll' | 'check' | 'close callbacks';
+export type NodeJSJobType = 'timers' | 'pending callbacks' | 'idle-prepare' | 'poll' | 'check' | 'close callbacks';
 export type EventLoopRunType = 'manual' | 'automatic';
 
 export interface EventLoop extends Markable {
@@ -235,8 +235,7 @@ export class WebLikeEventLoop extends AbstractEventLoop {
 const NODEJS_PHASES = [
   'timers',
   'pending callbacks',
-  'idle',
-  'prepare',
+  'idle-prepare',
   'poll',
   'check',
   'close callbacks',
@@ -252,8 +251,7 @@ export class NodeJSLikeEventLoop extends AbstractEventLoop {
   protected jobsByType: Record<NodeJSJobType, Set<Job>> = {
     'timers': new Set(),
     'pending callbacks': new Set(),
-    'idle': new Set(),
-    'prepare': new Set(),
+    'idle-prepare': new Set(),
     'poll': new Set(),
     'check': new Set(),
     'close callbacks': new Set(),
