@@ -3,7 +3,7 @@
 import { isArray } from '../utils/language.mts';
 import harness from '../../lib/test262-harness.json' with { type: 'json' };
 import {
-  CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, skipDebugger, surroundingAgent, ToString, Value, type Arguments, type ValueCompletion, gc,
+  CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, surroundingAgent, ToString, Value, type Arguments, gc,
   ParseScript,
   ThrowCompletion,
   Throw,
@@ -21,7 +21,7 @@ import {
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
 export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log: (...args: unknown[]) => void = Reflect.get(globalThis, 'console').log) {
   const pop = realm.pushTopContext();
-  const print = CreateBuiltinFunction((args: Arguments): ValueCompletion => {
+  const print = CreateBuiltinFunction(function* (args: Arguments): ValueEvaluator {
     if (surroundingAgent.debugger_isPreviewing) {
       return NormalCompletion(Value.undefined);
     }
@@ -30,7 +30,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       const str: string[] = [];
       for (let i = 0; i < args.length; i += 1) {
         const arg = args[i]!;
-        const s = EnsureCompletion(skipDebugger(ToString(arg)));
+        const s = EnsureCompletion(yield* ToString(arg));
         if (s.Type === 'throw') {
           return s;
         }
@@ -95,7 +95,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       // eslint-disable-next-line no-debugger
       debugger;
       if (callValue !== Value.false) {
-        Q(skipDebugger(Call(value, Value.undefined, [])));
+        Q(yield* Call(value, Value.undefined, []));
       }
       return Value.undefined;
     },

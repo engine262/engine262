@@ -129,10 +129,10 @@ export class Agent {
 
   // NON-SPEC
   // #region Step-by-step evaluation
-  #pausedEvaluator?: ValueEvaluator;
-
-  /** Callback passed from .evaluate() */
-  #evaluateFinishedCallback?: (completion: NormalCompletion<Value> | ThrowCompletion) => void;
+  #pausedEvaluator?: {
+    evaluator: ValueEvaluator;
+    onFinish: (completion: NormalCompletion<Value> | ThrowCompletion) => void;
+  };
 
   /**
    * An event that is triggered when evaluators are finished and the agent is idle.
@@ -148,8 +148,10 @@ export class Agent {
       onFinished(EnsureCompletion(skipDebugger(evaluator)));
       return;
     }
-    this.#pausedEvaluator = evaluator;
-    this.#evaluateFinishedCallback = onFinished as (completion: NormalCompletion<Value> | ThrowCompletion) => void;
+    this.#pausedEvaluator = {
+      evaluator,
+      onFinish: onFinished as (completion: NormalCompletion<Value> | ThrowCompletion) => void,
+    };
     if (evaluationOptions !== false) {
       this.resumeEvaluate(evaluationOptions);
     }
@@ -164,6 +166,7 @@ export class Agent {
     if (!this.#pausedEvaluator) {
       throw new Error('No paused evaluator');
     }
+    const { evaluator, onFinish } = this.#pausedEvaluator;
     let nextLocation;
     if (options?.pauseAt === 'step-over') {
       nextLocation = this.runningExecutionContext.callSite.nextNode;
@@ -172,7 +175,7 @@ export class Agent {
     }
     let debuggerStatementCompletion = options?.debuggerStatementCompletion;
     while (true) {
-      const state = this.#pausedEvaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
+      const state = evaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
       debuggerStatementCompletion = undefined;
 
       if (!noBreakpoint && this.breakpointsEnabled && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
@@ -193,10 +196,8 @@ export class Agent {
       }
 
       if (state.done) {
-        const onFinished = this.#evaluateFinishedCallback!;
         this.#pausedEvaluator = undefined;
-        this.#evaluateFinishedCallback = undefined;
-        onFinished(EnsureCompletion(state.value));
+        onFinish(EnsureCompletion(state.value));
         callCallback(this.onNoEvaluator);
         return state;
       }
