@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 84b39804a82ed01249c73e430d09dc084c7ba48a
+ * engine262 0.0.1 f8b0fae219cebce4a08583f933fd41038328bbb1
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -85,7 +85,7 @@
     },
     toDescription: value => value.booleanValue().toString()
   };
-  const Symbol = {
+  const Symbol$1 = {
     toRemoteObject: (value, getObjectId) => ({
       type: 'symbol',
       description: engine262_mjs.SymbolDescriptiveString(value).stringValue(),
@@ -174,16 +174,18 @@
     }
   };
 
-  function nativeEvalInAnyRealm(closure, context) {
+  function nativeEvalInAnyRealm(enterPreview, context, closure) {
     const realm = engine262_mjs.surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
     if (!realm) return undefined;
-    return realm.scope(() => {
-      const result = closure();
-      if (engine262_mjs.isEvaluator(result)) {
-        return engine262_mjs.skipDebugger(result);
-      }
-      return result;
-    });
+    const exitPreview = enterPreview ? engine262_mjs.surroundingAgent.debugger_scopePreview() : undefined;
+    const pop = realm.pushTopContext();
+    let result = closure();
+    if (engine262_mjs.isEvaluator(result)) {
+      result = engine262_mjs.skipDebugger(result);
+    }
+    pop?.();
+    exitPreview?.[Symbol.dispose]();
+    return result;
   }
 
   function unwrapFunction(value) {
@@ -276,7 +278,7 @@
               })
             }, {
               name: '[[BoundArguments]]',
-              value: context.toRemoteObject(engine262_mjs.unwrapCompletion(nativeEvalInAnyRealm(() => engine262_mjs.CreateArrayFromList(v.BoundArguments), context)), {
+              value: context.toRemoteObject(engine262_mjs.X(nativeEvalInAnyRealm(false, context, () => engine262_mjs.CreateArrayFromList(v.BoundArguments))), {
                 generatePreview: true
               })
             });
@@ -297,7 +299,7 @@
           }
           env = env.OuterEnv;
         }
-        const scopeObject = engine262_mjs.unwrapCompletion(nativeEvalInAnyRealm(() => engine262_mjs.CreateArrayFromList(scope), context));
+        const scopeObject = engine262_mjs.X(nativeEvalInAnyRealm(false, context, () => engine262_mjs.CreateArrayFromList(scope)));
         const scopeDesc = scopeObject ? {
           className: 'Array',
           description: `Scopes[${scope.length}]`,
@@ -528,7 +530,7 @@
     additionalProperties: (module, context) => {
       const result = [];
       engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
-        nativeEvalInAnyRealm(() => {
+        nativeEvalInAnyRealm(true, context, () => {
           for (const key of module.Exports) {
             const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
             if (completion instanceof engine262_mjs.NormalCompletion) {
@@ -536,45 +538,43 @@
             }
           }
           return engine262_mjs.Value.undefined;
-        }, context);
+        });
       });
       return result;
     },
     exoticProperties(module, getObjectId, context, generatePreview) {
       const result = [];
-      engine262_mjs.surroundingAgent.debugger_scopePreview(() => {
-        nativeEvalInAnyRealm(() => {
-          for (const key of module.Exports) {
-            const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
-            if (completion instanceof engine262_mjs.NormalCompletion) {
-              result.push({
-                name: key.stringValue(),
-                value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
-                writable: false,
-                configurable: false,
-                enumerable: true,
-                isOwn: true
-              });
-            } else {
-              const realm = module.Module.Realm;
-              const evaluate = engine262_mjs.CreateBuiltinFunction(function* evaluate() {
-                return yield* engine262_mjs.Get(module, key);
-              }, 0, 'Module.evaluate', [], realm);
-              result.push({
-                name: key.stringValue(),
-                get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
-                set: {
-                  type: 'undefined'
-                },
-                writable: false,
-                configurable: false,
-                enumerable: true,
-                isOwn: true
-              });
-            }
+      nativeEvalInAnyRealm(true, context, () => {
+        for (const key of module.Exports) {
+          const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
+          if (completion instanceof engine262_mjs.NormalCompletion) {
+            result.push({
+              name: key.stringValue(),
+              value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
+              writable: false,
+              configurable: false,
+              enumerable: true,
+              isOwn: true
+            });
+          } else {
+            const realm = module.Module.Realm;
+            const evaluate = engine262_mjs.CreateBuiltinFunction(function* evaluate() {
+              return yield* engine262_mjs.Get(module, key);
+            }, 0, 'Module.evaluate', [], realm);
+            result.push({
+              name: key.stringValue(),
+              get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
+              set: {
+                type: 'undefined'
+              },
+              writable: false,
+              configurable: false,
+              enumerable: true,
+              isOwn: true
+            });
           }
-          return engine262_mjs.Value.undefined;
-        }, context);
+        }
+        return engine262_mjs.Value.undefined;
       });
       return result;
     }
@@ -719,8 +719,8 @@
 
   const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
     let text = '';
-    engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => {
-      const completion = engine262_mjs.EnsureCompletion(engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))), context)));
+    nativeEvalInAnyRealm(true, context, () => {
+      const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))));
       if (completion instanceof engine262_mjs.NormalCompletion && completion.Value instanceof engine262_mjs.JSStringValue) {
         text = completion.Value.stringValue();
         if (!text.includes('  at') && !text.includes('SyntaxError')) {
@@ -728,15 +728,15 @@
         }
       }
       return engine262_mjs.Value.undefined;
-    }, context));
+    });
     return text || 'Error';
   }, {
     internalProperties: (error, context) => {
       const unformattedMessage = engine262_mjs.getHostDefinedErrorDetails(error).message;
       if (!unformattedMessage) return [];
-      const value = nativeEvalInAnyRealm(() => engine262_mjs.CreateArrayFromList(unformattedMessage.map(part => typeof part === 'string' ? engine262_mjs.Value(part) : part)), context);
+      const value = nativeEvalInAnyRealm(false, context, () => engine262_mjs.CreateArrayFromList(unformattedMessage.map(part => typeof part === 'string' ? engine262_mjs.Value(part) : part)));
       if (!value) return [];
-      return [['[[UnformattedErrorMessage]]', engine262_mjs.unwrapCompletion(value)]];
+      return [['[[UnformattedErrorMessage]]', engine262_mjs.X(value)]];
     },
     customPreview: (error, getObjectId, context) => {
       const {
@@ -745,13 +745,13 @@
         stackGetterValue
       } = engine262_mjs.getHostDefinedErrorDetails(error);
       if (!message || !stackGetterValue) return undefined;
-      const stackC = engine262_mjs.EnsureCompletion(engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('stack'))), context)));
+      const stackC = engine262_mjs.EnsureCompletion(nativeEvalInAnyRealm(true, context, () => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('stack')))));
       if (stackC instanceof engine262_mjs.NormalCompletion && stackC.Value instanceof engine262_mjs.JSStringValue) {
         const stackMaybeModified = stackC.Value.stringValue();
         if (stackMaybeModified !== stackGetterValue) return undefined;
       }
       let constructorName = 'Error';
-      const nameC = engine262_mjs.EnsureCompletion(engine262_mjs.surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('name'))), context)));
+      const nameC = engine262_mjs.EnsureCompletion(nativeEvalInAnyRealm(true, context, () => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('name')))));
       if (nameC instanceof engine262_mjs.NormalCompletion && nameC.Value instanceof engine262_mjs.JSStringValue) constructorName = nameC.Value.stringValue();
       const header = JSON.stringify(['span', null, constructorName, ': ', ...message.map(part => typeof part === 'string' ? part : ['object', getInspector(part).toRemoteObject(part, getObjectId, context, false)]), stack]);
       return {
@@ -769,7 +769,7 @@
       case value === engine262_mjs.Value.true || value === engine262_mjs.Value.false:
         return Boolean$1;
       case value instanceof engine262_mjs.SymbolValue:
-        return Symbol;
+        return Symbol$1;
       case value instanceof engine262_mjs.JSStringValue:
         return String$1;
       case value instanceof engine262_mjs.NumberValue:
@@ -1312,23 +1312,23 @@
       if (!realm) {
         return unsupportedError;
       }
-      realm.realm.scope(() => {
-        if (context.evaluateMode === 'module') {
-          parsed = engine262_mjs.ParseModule(options.expression, realm.realm, {
-            specifier: options.sourceURL,
-            doNotTrackScriptId: !options.persistScript
-          });
-        } else {
-          parsed = engine262_mjs.ParseScript(options.expression, realm.realm, {
-            specifier: options.sourceURL,
-            doNotTrackScriptId: !options.persistScript,
-            [engine262_mjs.kInternal]: {
-              allowAllPrivateNames: true,
-              allowAwait: true
-            }
-          });
-        }
-      });
+      const pop = realm.realm.pushTopContext();
+      if (context.evaluateMode === 'module') {
+        parsed = engine262_mjs.ParseModule(options.expression, realm.realm, {
+          specifier: options.sourceURL,
+          doNotTrackScriptId: !options.persistScript
+        });
+      } else {
+        parsed = engine262_mjs.ParseScript(options.expression, realm.realm, {
+          specifier: options.sourceURL,
+          doNotTrackScriptId: !options.persistScript,
+          [engine262_mjs.kInternal]: {
+            allowAllPrivateNames: true,
+            allowAwait: true
+          }
+        });
+      }
+      pop?.();
       if (!parsed) {
         throw new Error('No parsed result');
       }
@@ -1378,33 +1378,33 @@
         }
         return engine262_mjs.Value.undefined;
       });
-      return realmDesc.realm.scope(() => {
-        const completion = engine262_mjs.evalQ((Q, X) => {
-          const r = Q(engine262_mjs.skipDebugger(engine262_mjs.Call(F, thisValue, args || [])));
-          if (options.returnByValue) {
-            const value = X(engine262_mjs.Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], engine262_mjs.Value.undefined, [r]));
-            if (value instanceof engine262_mjs.JSStringValue) {
-              const valueRealized = JSON.parse(value.stringValue());
-              return {
-                result: {
-                  type: typeof value,
-                  value: valueRealized
-                }
-              };
-            }
+      const pop = realmDesc.realm.pushTopContext();
+      const completion = engine262_mjs.evalQ(Q => {
+        const r = Q(engine262_mjs.skipDebugger(engine262_mjs.Call(F, thisValue, args || [])));
+        if (options.returnByValue) {
+          const value = engine262_mjs.X(engine262_mjs.Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], engine262_mjs.Value.undefined, [r]));
+          if (value instanceof engine262_mjs.JSStringValue) {
+            const valueRealized = JSON.parse(value.stringValue());
+            return {
+              result: {
+                type: typeof value,
+                value: valueRealized
+              }
+            };
           }
-          return context.createEvaluationResult(r);
-        });
-        if (completion instanceof engine262_mjs.ThrowCompletion) {
-          return {
-            result: {
-              type: 'undefined'
-            },
-            exceptionDetails: context.createExceptionDetails(completion, false)
-          };
         }
-        return completion.Value;
+        return context.createEvaluationResult(r);
       });
+      pop?.();
+      if (completion instanceof engine262_mjs.ThrowCompletion) {
+        return {
+          result: {
+            type: 'undefined'
+          },
+          exceptionDetails: context.createExceptionDetails(completion, false)
+        };
+      }
+      return completion.Value;
     },
     evaluate(options, context) {
       return evaluate({
@@ -1548,13 +1548,15 @@
       } else {
         let parsed;
         const realm = context.getRealm(options.uniqueContextId);
-        realm?.realm.scope(() => {
-          if (options.evalMode === 'module') {
-            parsed = engine262_mjs.ParseModule(options.expression, realm.realm);
-          } else {
-            parsed = engine262_mjs.ParseScript(options.expression, realm.realm);
-          }
-        });
+        if (!realm) {
+          resolve(unsupportedError);
+          return;
+        }
+        if (options.evalMode === 'module') {
+          parsed = engine262_mjs.ParseModule(options.expression, realm.realm);
+        } else {
+          parsed = engine262_mjs.ParseScript(options.expression, realm.realm);
+        }
         if (Array.isArray(parsed)) {
           const e = context.createExceptionDetails(engine262_mjs.ThrowCompletion(parsed[0]), false);
           resolve({
@@ -1588,16 +1590,11 @@
           } else {
             resolve(context.createEvaluationResult(engine262_mjs.NormalCompletion(engine262_mjs.GetModuleNamespace(toBeEvaluated, 'evaluation'))));
           }
-          engine262_mjs.runJobQueue();
         });
       } else if (toBeEvaluated instanceof engine262_mjs.ScriptRecord) {
-        let completion;
-        realm.realm.evaluateScript(toBeEvaluated, {}, c => {
-          completion = c;
+        realm.realm.evaluateScript(toBeEvaluated, {}, completion => {
           resolve(context.createEvaluationResult(completion));
         });
-        if (!completion) engine262_mjs.surroundingAgent.resumeEvaluate();
-        engine262_mjs.runJobQueue();
       } else {
         let completion;
         engine262_mjs.surroundingAgent.evaluate(toBeEvaluated, c => {
@@ -1605,7 +1602,6 @@
           resolve(context.createEvaluationResult(c));
         });
         if (!completion) engine262_mjs.surroundingAgent.resumeEvaluate();
-        engine262_mjs.runJobQueue();
       }
     });
     promise.then(() => {
@@ -1660,42 +1656,42 @@
 
   const consoleMethods = ['log', 'debug', 'info', 'error', 'warning', 'dir', 'dirxml', 'table', 'trace', 'clear', 'startGroup', 'startGroupCollapsed', 'endGroup', 'assert', 'profile', 'profileEnd', 'count', 'timeEnd'];
   function createConsole(realm, defaultBehaviour) {
-    realm.scope(() => {
-      const console = engine262_mjs.OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-      engine262_mjs.skipDebugger(engine262_mjs.DefinePropertyOrThrow(realm.GlobalObject, engine262_mjs.Value('console'), engine262_mjs.Descriptor({
-        Configurable: engine262_mjs.Value.true,
-        Enumerable: engine262_mjs.Value.false,
-        Writable: engine262_mjs.Value.true,
-        Value: console
-      })));
-      consoleMethods.forEach(method => {
-        const f = engine262_mjs.CreateBuiltinFunction(function* Console(args) {
-          if (engine262_mjs.surroundingAgent.debugger_isPreviewing) {
-            return engine262_mjs.Value.undefined;
-          }
-          let completion;
-          if (defaultBehaviour[method]) {
-            completion = defaultBehaviour[method](args);
-          } else if (defaultBehaviour.default) {
-            completion = defaultBehaviour.default(method, args);
-          }
-          if (completion) {
-            if (engine262_mjs.isEvaluator(completion)) {
-              completion = yield* completion;
-            }
-            // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
-            if (completion instanceof engine262_mjs.ThrowCompletion) {
-              return completion;
-            }
-          }
-          if (realm.HostDefined.attachingInspector) {
-            realm.HostDefined.attachingInspector.console(realm, method, args);
-          }
+    const pop = realm.pushTopContext();
+    const console = engine262_mjs.OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
+    engine262_mjs.X(engine262_mjs.DefinePropertyOrThrow(realm.GlobalObject, engine262_mjs.Value('console'), engine262_mjs.Descriptor({
+      Configurable: engine262_mjs.Value.true,
+      Enumerable: engine262_mjs.Value.false,
+      Writable: engine262_mjs.Value.true,
+      Value: console
+    })));
+    consoleMethods.forEach(method => {
+      const f = engine262_mjs.CreateBuiltinFunction(function* Console(args) {
+        if (engine262_mjs.surroundingAgent.debugger_isPreviewing) {
           return engine262_mjs.Value.undefined;
-        }, 1, engine262_mjs.Value(method), []);
-        engine262_mjs.skipDebugger(engine262_mjs.CreateDataProperty(console, engine262_mjs.Value(method), f));
-      });
+        }
+        let completion;
+        if (defaultBehaviour[method]) {
+          completion = defaultBehaviour[method](args);
+        } else if (defaultBehaviour.default) {
+          completion = defaultBehaviour.default(method, args);
+        }
+        if (completion) {
+          if (engine262_mjs.isEvaluator(completion)) {
+            completion = yield* completion;
+          }
+          // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
+          if (completion instanceof engine262_mjs.ThrowCompletion) {
+            return completion;
+          }
+        }
+        if (realm.HostDefined.attachingInspector) {
+          realm.HostDefined.attachingInspector.console(realm, method, args);
+        }
+        return engine262_mjs.Value.undefined;
+      }, 1, engine262_mjs.Value(method), []);
+      engine262_mjs.X(engine262_mjs.CreateDataProperty(console, engine262_mjs.Value(method), f));
     });
+    pop?.();
   }
 
   const ignoreNamespaces = ['Network'];

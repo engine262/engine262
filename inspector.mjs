@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 84b39804a82ed01249c73e430d09dc084c7ba48a
+ * engine262 0.0.1 f8b0fae219cebce4a08583f933fd41038328bbb1
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { BigIntValue, SymbolDescriptiveString, surroundingAgent, isEvaluator, skipDebugger, isWrappedFunctionExoticObject, isBoundFunctionObject, unwrapCompletion, isECMAScriptFunctionObject, EnvironmentRecord, isBuiltinFunctionObject, IntrinsicsFunctionToString, CreateArrayFromList, Value, ObjectValue, ArrayExoticObjectInternalMethods, Descriptor, F, isTypedArrayObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, JSStringValue, PrivateName, EnsureCompletion, Get, NormalCompletion, CreateBuiltinFunction, IsCallable, NumberValue, R, isIntegerIndex, TemporalZonedDateTimeToString, TemporalYearMonthToString, TimeRecordToString, TemporalMonthDayToString, FormatISODateTime, TemporalDateToString, TemporalDurationToString, TemporalInstantToString, DateProto_toISOString, ValueOfNormalCompletion, getHostDefinedErrorDetails, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, SymbolValue, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, FunctionEnvironmentRecord, ModuleEnvironmentRecord, ManagedRealm, IsAccessorDescriptor, ThrowCompletion, getCurrentStack, SourceTextModuleRecord, isFunctionObject, getBreakpointCandidateNodes, parseNodeToBreakpointLocation, evalQ, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, ModuleRecord, GetModuleNamespace, runJobQueue, ScriptRecord, Assert, captureStack, DefinePropertyOrThrow, CreateDataProperty } from './engine262.mjs';
+import { BigIntValue, SymbolDescriptiveString, surroundingAgent, isEvaluator, skipDebugger, isWrappedFunctionExoticObject, isBoundFunctionObject, X, isECMAScriptFunctionObject, EnvironmentRecord, isBuiltinFunctionObject, IntrinsicsFunctionToString, CreateArrayFromList, Value, ObjectValue, ArrayExoticObjectInternalMethods, Descriptor, F, isTypedArrayObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, JSStringValue, PrivateName, EnsureCompletion, Get, NormalCompletion, CreateBuiltinFunction, IsCallable, NumberValue, R, isIntegerIndex, TemporalZonedDateTimeToString, TemporalYearMonthToString, TimeRecordToString, TemporalMonthDayToString, FormatISODateTime, TemporalDateToString, TemporalDurationToString, TemporalInstantToString, DateProto_toISOString, ValueOfNormalCompletion, getHostDefinedErrorDetails, isTemporalZonedDateTimeObject, isTemporalPlainYearMonthObject, isTemporalPlainTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainDateTimeObject, isTemporalPlainDateObject, isTemporalDurationObject, isTemporalInstantObject, isShadowRealmObject, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, SymbolValue, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, ObjectEnvironmentRecord, GlobalEnvironmentRecord, FunctionEnvironmentRecord, ModuleEnvironmentRecord, ManagedRealm, IsAccessorDescriptor, ThrowCompletion, getCurrentStack, SourceTextModuleRecord, isFunctionObject, getBreakpointCandidateNodes, parseNodeToBreakpointLocation, evalQ, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, ModuleRecord, GetModuleNamespace, ScriptRecord, Assert, captureStack, DefinePropertyOrThrow, CreateDataProperty } from './engine262.mjs';
 
 const Null = {
   toRemoteObject: () => ({
@@ -81,7 +81,7 @@ const Boolean$1 = {
   },
   toDescription: value => value.booleanValue().toString()
 };
-const Symbol = {
+const Symbol$1 = {
   toRemoteObject: (value, getObjectId) => ({
     type: 'symbol',
     description: SymbolDescriptiveString(value).stringValue(),
@@ -170,16 +170,18 @@ const Number = {
   }
 };
 
-function nativeEvalInAnyRealm(closure, context) {
+function nativeEvalInAnyRealm(enterPreview, context, closure) {
   const realm = surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm;
   if (!realm) return undefined;
-  return realm.scope(() => {
-    const result = closure();
-    if (isEvaluator(result)) {
-      return skipDebugger(result);
-    }
-    return result;
-  });
+  const exitPreview = enterPreview ? surroundingAgent.debugger_scopePreview() : undefined;
+  const pop = realm.pushTopContext();
+  let result = closure();
+  if (isEvaluator(result)) {
+    result = skipDebugger(result);
+  }
+  pop?.();
+  exitPreview?.[Symbol.dispose]();
+  return result;
 }
 
 function unwrapFunction(value) {
@@ -272,7 +274,7 @@ const Function = {
             })
           }, {
             name: '[[BoundArguments]]',
-            value: context.toRemoteObject(unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(v.BoundArguments), context)), {
+            value: context.toRemoteObject(X(nativeEvalInAnyRealm(false, context, () => CreateArrayFromList(v.BoundArguments))), {
               generatePreview: true
             })
           });
@@ -293,7 +295,7 @@ const Function = {
         }
         env = env.OuterEnv;
       }
-      const scopeObject = unwrapCompletion(nativeEvalInAnyRealm(() => CreateArrayFromList(scope), context));
+      const scopeObject = X(nativeEvalInAnyRealm(false, context, () => CreateArrayFromList(scope)));
       const scopeDesc = scopeObject ? {
         className: 'Array',
         description: `Scopes[${scope.length}]`,
@@ -524,7 +526,7 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
   additionalProperties: (module, context) => {
     const result = [];
     surroundingAgent.debugger_scopePreview(() => {
-      nativeEvalInAnyRealm(() => {
+      nativeEvalInAnyRealm(true, context, () => {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
@@ -532,45 +534,43 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
           }
         }
         return Value.undefined;
-      }, context);
+      });
     });
     return result;
   },
   exoticProperties(module, getObjectId, context, generatePreview) {
     const result = [];
-    surroundingAgent.debugger_scopePreview(() => {
-      nativeEvalInAnyRealm(() => {
-        for (const key of module.Exports) {
-          const completion = EnsureCompletion(skipDebugger(Get(module, key)));
-          if (completion instanceof NormalCompletion) {
-            result.push({
-              name: key.stringValue(),
-              value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
-              writable: false,
-              configurable: false,
-              enumerable: true,
-              isOwn: true
-            });
-          } else {
-            const realm = module.Module.Realm;
-            const evaluate = CreateBuiltinFunction(function* evaluate() {
-              return yield* Get(module, key);
-            }, 0, 'Module.evaluate', [], realm);
-            result.push({
-              name: key.stringValue(),
-              get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
-              set: {
-                type: 'undefined'
-              },
-              writable: false,
-              configurable: false,
-              enumerable: true,
-              isOwn: true
-            });
-          }
+    nativeEvalInAnyRealm(true, context, () => {
+      for (const key of module.Exports) {
+        const completion = EnsureCompletion(skipDebugger(Get(module, key)));
+        if (completion instanceof NormalCompletion) {
+          result.push({
+            name: key.stringValue(),
+            value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
+            writable: false,
+            configurable: false,
+            enumerable: true,
+            isOwn: true
+          });
+        } else {
+          const realm = module.Module.Realm;
+          const evaluate = CreateBuiltinFunction(function* evaluate() {
+            return yield* Get(module, key);
+          }, 0, 'Module.evaluate', [], realm);
+          result.push({
+            name: key.stringValue(),
+            get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
+            set: {
+              type: 'undefined'
+            },
+            writable: false,
+            configurable: false,
+            enumerable: true,
+            isOwn: true
+          });
         }
-        return Value.undefined;
-      }, context);
+      }
+      return Value.undefined;
     });
     return result;
   }
@@ -715,8 +715,8 @@ const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
 
 const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
   let text = '';
-  surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => {
-    const completion = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(value, Value('stack'))), context)));
+  nativeEvalInAnyRealm(true, context, () => {
+    const completion = EnsureCompletion(skipDebugger(Get(value, Value('stack'))));
     if (completion instanceof NormalCompletion && completion.Value instanceof JSStringValue) {
       text = completion.Value.stringValue();
       if (!text.includes('  at') && !text.includes('SyntaxError')) {
@@ -724,15 +724,15 @@ const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
       }
     }
     return Value.undefined;
-  }, context));
+  });
   return text || 'Error';
 }, {
   internalProperties: (error, context) => {
     const unformattedMessage = getHostDefinedErrorDetails(error).message;
     if (!unformattedMessage) return [];
-    const value = nativeEvalInAnyRealm(() => CreateArrayFromList(unformattedMessage.map(part => typeof part === 'string' ? Value(part) : part)), context);
+    const value = nativeEvalInAnyRealm(false, context, () => CreateArrayFromList(unformattedMessage.map(part => typeof part === 'string' ? Value(part) : part)));
     if (!value) return [];
-    return [['[[UnformattedErrorMessage]]', unwrapCompletion(value)]];
+    return [['[[UnformattedErrorMessage]]', X(value)]];
   },
   customPreview: (error, getObjectId, context) => {
     const {
@@ -741,13 +741,13 @@ const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
       stackGetterValue
     } = getHostDefinedErrorDetails(error);
     if (!message || !stackGetterValue) return undefined;
-    const stackC = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(error, Value('stack'))), context)));
+    const stackC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('stack')))));
     if (stackC instanceof NormalCompletion && stackC.Value instanceof JSStringValue) {
       const stackMaybeModified = stackC.Value.stringValue();
       if (stackMaybeModified !== stackGetterValue) return undefined;
     }
     let constructorName = 'Error';
-    const nameC = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(error, Value('name'))), context)));
+    const nameC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('name')))));
     if (nameC instanceof NormalCompletion && nameC.Value instanceof JSStringValue) constructorName = nameC.Value.stringValue();
     const header = JSON.stringify(['span', null, constructorName, ': ', ...message.map(part => typeof part === 'string' ? part : ['object', getInspector(part).toRemoteObject(part, getObjectId, context, false)]), stack]);
     return {
@@ -765,7 +765,7 @@ function getInspector(value) {
     case value === Value.true || value === Value.false:
       return Boolean$1;
     case value instanceof SymbolValue:
-      return Symbol;
+      return Symbol$1;
     case value instanceof JSStringValue:
       return String$1;
     case value instanceof NumberValue:
@@ -1308,23 +1308,23 @@ const Runtime = {
     if (!realm) {
       return unsupportedError;
     }
-    realm.realm.scope(() => {
-      if (context.evaluateMode === 'module') {
-        parsed = ParseModule(options.expression, realm.realm, {
-          specifier: options.sourceURL,
-          doNotTrackScriptId: !options.persistScript
-        });
-      } else {
-        parsed = ParseScript(options.expression, realm.realm, {
-          specifier: options.sourceURL,
-          doNotTrackScriptId: !options.persistScript,
-          [kInternal]: {
-            allowAllPrivateNames: true,
-            allowAwait: true
-          }
-        });
-      }
-    });
+    const pop = realm.realm.pushTopContext();
+    if (context.evaluateMode === 'module') {
+      parsed = ParseModule(options.expression, realm.realm, {
+        specifier: options.sourceURL,
+        doNotTrackScriptId: !options.persistScript
+      });
+    } else {
+      parsed = ParseScript(options.expression, realm.realm, {
+        specifier: options.sourceURL,
+        doNotTrackScriptId: !options.persistScript,
+        [kInternal]: {
+          allowAllPrivateNames: true,
+          allowAwait: true
+        }
+      });
+    }
+    pop?.();
     if (!parsed) {
       throw new Error('No parsed result');
     }
@@ -1374,33 +1374,33 @@ const Runtime = {
       }
       return Value.undefined;
     });
-    return realmDesc.realm.scope(() => {
-      const completion = evalQ((Q, X) => {
-        const r = Q(skipDebugger(Call(F, thisValue, args || [])));
-        if (options.returnByValue) {
-          const value = X(Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], Value.undefined, [r]));
-          if (value instanceof JSStringValue) {
-            const valueRealized = JSON.parse(value.stringValue());
-            return {
-              result: {
-                type: typeof value,
-                value: valueRealized
-              }
-            };
-          }
+    const pop = realmDesc.realm.pushTopContext();
+    const completion = evalQ(Q => {
+      const r = Q(skipDebugger(Call(F, thisValue, args || [])));
+      if (options.returnByValue) {
+        const value = X(Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], Value.undefined, [r]));
+        if (value instanceof JSStringValue) {
+          const valueRealized = JSON.parse(value.stringValue());
+          return {
+            result: {
+              type: typeof value,
+              value: valueRealized
+            }
+          };
         }
-        return context.createEvaluationResult(r);
-      });
-      if (completion instanceof ThrowCompletion) {
-        return {
-          result: {
-            type: 'undefined'
-          },
-          exceptionDetails: context.createExceptionDetails(completion, false)
-        };
       }
-      return completion.Value;
+      return context.createEvaluationResult(r);
     });
+    pop?.();
+    if (completion instanceof ThrowCompletion) {
+      return {
+        result: {
+          type: 'undefined'
+        },
+        exceptionDetails: context.createExceptionDetails(completion, false)
+      };
+    }
+    return completion.Value;
   },
   evaluate(options, context) {
     return evaluate({
@@ -1544,13 +1544,15 @@ function evaluate(options, inspectorContext) {
     } else {
       let parsed;
       const realm = context.getRealm(options.uniqueContextId);
-      realm?.realm.scope(() => {
-        if (options.evalMode === 'module') {
-          parsed = ParseModule(options.expression, realm.realm);
-        } else {
-          parsed = ParseScript(options.expression, realm.realm);
-        }
-      });
+      if (!realm) {
+        resolve(unsupportedError);
+        return;
+      }
+      if (options.evalMode === 'module') {
+        parsed = ParseModule(options.expression, realm.realm);
+      } else {
+        parsed = ParseScript(options.expression, realm.realm);
+      }
       if (Array.isArray(parsed)) {
         const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
         resolve({
@@ -1584,16 +1586,11 @@ function evaluate(options, inspectorContext) {
         } else {
           resolve(context.createEvaluationResult(NormalCompletion(GetModuleNamespace(toBeEvaluated, 'evaluation'))));
         }
-        runJobQueue();
       });
     } else if (toBeEvaluated instanceof ScriptRecord) {
-      let completion;
-      realm.realm.evaluateScript(toBeEvaluated, {}, c => {
-        completion = c;
+      realm.realm.evaluateScript(toBeEvaluated, {}, completion => {
         resolve(context.createEvaluationResult(completion));
       });
-      if (!completion) surroundingAgent.resumeEvaluate();
-      runJobQueue();
     } else {
       let completion;
       surroundingAgent.evaluate(toBeEvaluated, c => {
@@ -1601,7 +1598,6 @@ function evaluate(options, inspectorContext) {
         resolve(context.createEvaluationResult(c));
       });
       if (!completion) surroundingAgent.resumeEvaluate();
-      runJobQueue();
     }
   });
   promise.then(() => {
@@ -1656,42 +1652,42 @@ var impl = /*#__PURE__*/Object.freeze({
 
 const consoleMethods = ['log', 'debug', 'info', 'error', 'warning', 'dir', 'dirxml', 'table', 'trace', 'clear', 'startGroup', 'startGroupCollapsed', 'endGroup', 'assert', 'profile', 'profileEnd', 'count', 'timeEnd'];
 function createConsole(realm, defaultBehaviour) {
-  realm.scope(() => {
-    const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    skipDebugger(DefinePropertyOrThrow(realm.GlobalObject, Value('console'), Descriptor({
-      Configurable: Value.true,
-      Enumerable: Value.false,
-      Writable: Value.true,
-      Value: console
-    })));
-    consoleMethods.forEach(method => {
-      const f = CreateBuiltinFunction(function* Console(args) {
-        if (surroundingAgent.debugger_isPreviewing) {
-          return Value.undefined;
-        }
-        let completion;
-        if (defaultBehaviour[method]) {
-          completion = defaultBehaviour[method](args);
-        } else if (defaultBehaviour.default) {
-          completion = defaultBehaviour.default(method, args);
-        }
-        if (completion) {
-          if (isEvaluator(completion)) {
-            completion = yield* completion;
-          }
-          // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
-          if (completion instanceof ThrowCompletion) {
-            return completion;
-          }
-        }
-        if (realm.HostDefined.attachingInspector) {
-          realm.HostDefined.attachingInspector.console(realm, method, args);
-        }
+  const pop = realm.pushTopContext();
+  const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
+  X(DefinePropertyOrThrow(realm.GlobalObject, Value('console'), Descriptor({
+    Configurable: Value.true,
+    Enumerable: Value.false,
+    Writable: Value.true,
+    Value: console
+  })));
+  consoleMethods.forEach(method => {
+    const f = CreateBuiltinFunction(function* Console(args) {
+      if (surroundingAgent.debugger_isPreviewing) {
         return Value.undefined;
-      }, 1, Value(method), []);
-      skipDebugger(CreateDataProperty(console, Value(method), f));
-    });
+      }
+      let completion;
+      if (defaultBehaviour[method]) {
+        completion = defaultBehaviour[method](args);
+      } else if (defaultBehaviour.default) {
+        completion = defaultBehaviour.default(method, args);
+      }
+      if (completion) {
+        if (isEvaluator(completion)) {
+          completion = yield* completion;
+        }
+        // Do not use Q(host) here. A host may return something invalid like ReturnCompletion.
+        if (completion instanceof ThrowCompletion) {
+          return completion;
+        }
+      }
+      if (realm.HostDefined.attachingInspector) {
+        realm.HostDefined.attachingInspector.console(realm, method, args);
+      }
+      return Value.undefined;
+    }, 1, Value(method), []);
+    X(CreateDataProperty(console, Value(method), f));
   });
+  pop?.();
 }
 
 const ignoreNamespaces = ['Network'];
