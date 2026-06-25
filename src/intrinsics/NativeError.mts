@@ -1,7 +1,4 @@
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   Descriptor,
   UndefinedValue,
   Value,
@@ -13,6 +10,9 @@ import { captureStack } from '../utils/stack.mts';
 import { setErrorHostInternalSlot } from './Error.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 import { ErrorHostInternalSlots, type ErrorObject } from './Error.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,

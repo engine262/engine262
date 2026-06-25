@@ -1,7 +1,4 @@
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   JSStringValue,
   ObjectValue,
   Value,
@@ -18,6 +15,9 @@ import {
 import { isAsciiLetter, isControlEscape, isSyntaxCharacter } from '../parser/RegExpParser.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { UnicodeEscape } from './JSON.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   Get,
   IsRegExp,

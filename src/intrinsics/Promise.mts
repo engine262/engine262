@@ -1,7 +1,4 @@
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   BooleanValue,
   Descriptor,
   ObjectValue,
@@ -21,6 +18,9 @@ import {
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   Assert,
   Call,

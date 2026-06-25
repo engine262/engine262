@@ -1,4 +1,3 @@
-import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   JSStringValue, Value, type Arguments,
 } from './value.mts';
@@ -6,6 +5,7 @@ import { kAsyncContext } from './utils/internal.mts';
 import { callable, OutOfRange } from './utils/language.mts';
 import type { Evaluator, ValueEvaluator } from './evaluator.mts';
 import {
+  type GCMarker, surroundingAgent,
   Assert,
   CreateBuiltinFunction,
   PerformPromiseThen,
@@ -346,14 +346,8 @@ export function isEvaluator(value: unknown): value is Evaluator<unknown> {
 
 /**
  * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName()
- * @internal Use unwrapCompletion for external code.
  */
-export function X<const T>(_completion: T | Evaluator<T>): Q<T> {
-  /* node:coverage ignore next */
-  throw new TypeError('X() requires build');
-}
-
-export function unwrapCompletion<const T>(completion: T | Evaluator<T>): Q<T> {
+export function X<const T>(completion: T | Evaluator<T>): Q<T> {
   /* node:coverage ignore next 3 */
   if (isEvaluator(completion)) {
     completion = skipDebugger(completion);
@@ -365,6 +359,8 @@ export function unwrapCompletion<const T>(completion: T | Evaluator<T>): Q<T> {
   /* node:coverage ignore next */
   throw new Assert.Error('Unexpected AbruptCompletion.', { cause: c });
 }
+
+export { X as unwrapCompletion };
 
 /**
  * https://tc39.es/ecma262/#sec-ifabruptcloseiterator
@@ -403,7 +399,7 @@ export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabili
 }
 
 /**
- * This is a util for code that cannot use Q() or X() marco to emulate this behaviour.
+ * This is a util for code that cannot use Q() macro to emulate this behaviour.
  *
  * @example
  * import { evalQ } from '...'
@@ -411,11 +407,11 @@ export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabili
  *     let val = Q(operation);
  * });
  */
-export function evalQ<T>(callback: (q: typeof Q, x: typeof X) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
-export function evalQ<T>(callback: (q: typeof Q, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion
-export function evalQ<T>(callback: (q: typeof Q, x: typeof X) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
+export function evalQ<T>(callback: (q: typeof Q) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
+export function evalQ<T>(callback: (q: typeof Q) => T): NormalCompletion<T> | ThrowCompletion
+export function evalQ<T>(callback: (q: typeof Q) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
   try {
-    const result = callback(Q_runtime, unwrapCompletion);
+    const result = callback(Q_runtime);
     if (result instanceof Promise) {
       return result.then(EnsureCompletion, (error) => {
         if (error instanceof ThrowCompletion) {

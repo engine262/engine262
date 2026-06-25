@@ -42,45 +42,43 @@ export function createBuiltinModuleLoader(options: BuiltinModuleLoaderOptions = 
       return;
     }
     const realm = (referrer instanceof Realm ? referrer : referrer.Realm) as ManagedRealm;
-    realm.scope(() => {
-      const cache = getModuleCache(realm);
-      const requestKey = ModuleCache.toCacheKey(moduleRequest);
-      const load: ModuleCacheLoader = (callback) => {
-        if (modules.has(requestKey)) {
-          next(modules.get(requestKey)!);
-        } else if (loadBuiltinModule) {
-          loadBuiltinModule(moduleRequest, realm, (result) => {
-            if (result instanceof ThrowCompletion) {
-              callback(result);
-              return;
-            }
-            const value = ValueOfNormalCompletion(result);
-            Assert(typeof value === 'string' || value instanceof Uint8Array || value instanceof AbstractModuleRecord);
-            next(value);
-          });
-        } else {
-          suggestError(`Module "${moduleRequest.Specifier}" is not a builtin module`);
-          finish(undefined);
-        }
-      };
-
-      if (cache) {
-        cache.load(requestKey, load, finish);
+    const cache = getModuleCache(realm);
+    const requestKey = ModuleCache.toCacheKey(moduleRequest);
+    const load: ModuleCacheLoader = (callback) => {
+      if (modules.has(requestKey)) {
+        next(modules.get(requestKey)!);
+      } else if (loadBuiltinModule) {
+        loadBuiltinModule(moduleRequest, realm, (result) => {
+          if (result instanceof ThrowCompletion) {
+            callback(result);
+            return;
+          }
+          const value = ValueOfNormalCompletion(result);
+          Assert(typeof value === 'string' || value instanceof Uint8Array || value instanceof AbstractModuleRecord);
+          next(value);
+        });
       } else {
-        load(finish);
+        suggestError(`Module "${moduleRequest.Specifier}" is not a builtin module`);
+        finish(undefined);
       }
+    };
 
-      function next(source: BuiltinModuleSource) {
-        if (typeof source === 'string') {
-          const moduleCompletion = realm.compileModule(source, { specifier: moduleRequest.Specifier });
-          finish(moduleCompletion);
-        } else if (source instanceof Uint8Array) {
-          finish(realm.createBytesModule(source));
-        } else if (typeof source === 'function') {
-          const moduleRecord = source(realm);
-          finish(NormalCompletion(moduleRecord));
-        } else throw OutOfRange.exhaustive(source);
-      }
-    });
+    if (cache) {
+      cache.load(requestKey, load, finish);
+    } else {
+      load(finish);
+    }
+
+    function next(source: BuiltinModuleSource) {
+      if (typeof source === 'string') {
+        const moduleCompletion = realm.compileModule(source, { specifier: moduleRequest.Specifier });
+        finish(moduleCompletion);
+      } else if (source instanceof Uint8Array) {
+        finish(realm.createBytesModule(source));
+      } else if (typeof source === 'function') {
+        const moduleRecord = source(realm);
+        finish(NormalCompletion(moduleRecord));
+      } else throw OutOfRange.exhaustive(source);
+    }
   };
 }

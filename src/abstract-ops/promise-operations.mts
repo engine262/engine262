@@ -1,8 +1,4 @@
 import {
-  HostPromiseRejectionTracker,
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   HostEnqueuePromiseJob,
   HostMakeJobCallback,
   HostCallJobCallback,
@@ -32,6 +28,10 @@ import {
   isFunctionObject,
   type BuiltinFunctionObject,
 } from './all.mts';
+import {
+  HostPromiseRejectionTracker,
+  surroundingAgent,
+} from '#self';
 import {
   Throw,
   type Realm,

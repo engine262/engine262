@@ -130,7 +130,7 @@ export abstract class Realm {
 
 /** https://tc39.es/ecma262/pr/3728/#sec-makerealm */
 export function MakeRealm(...args: ConstructorParameters<typeof ManagedRealm>) {
-  return new ManagedRealm(...args);
+  return new ManagedRealm(...args).topContext;
 }
 
 /** https://tc39.es/ecma262/#sec-createintrinsics */

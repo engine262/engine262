@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
   UndefinedValue,
@@ -25,7 +24,7 @@ import {
   F as toNumberValue,
   type FunctionObject,
 } from './all.mts';
-import { Throw } from '#self';
+import { surroundingAgent, Throw } from '#self';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {

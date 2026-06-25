@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
   Completion,
@@ -16,6 +15,7 @@ import {
   FunctionDeclarationInstantiation,
   NamedEvaluation,
 } from './all.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert,
   AsyncFunctionStart,

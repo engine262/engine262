@@ -6,11 +6,13 @@ import {
 class CustomSourceModuleRecord extends AbstractModuleRecord {
   readonly SourceObject: ModuleSourceObject;
 
-  constructor(realm: ManagedRealm, sourceObject?: ModuleSourceObject) {
-    const moduleSource = sourceObject ?? realm.scope(() => {
+  constructor(realm: ManagedRealm, moduleSource?: ModuleSourceObject) {
+    if (!moduleSource) {
+      const pop = realm.pushTopContext();
       const sourcePrototype = OrdinaryObjectCreate(realm.Intrinsics['%AbstractModuleSource.prototype%']);
-      return OrdinaryObjectCreate(sourcePrototype) as ModuleSourceObject;
-    });
+      moduleSource = OrdinaryObjectCreate(sourcePrototype) as ModuleSourceObject;
+      pop?.();
+    }
     super({
       Realm: realm,
       Environment: undefined,

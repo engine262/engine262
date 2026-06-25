@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { HostMakeJobCallback } from '../execution-context/Job.mts';
 import { type JobCallbackRecord } from '../execution-context/Job.mts';
 import {
@@ -7,6 +6,7 @@ import {
 import { Q } from '../completion.mts';
 import type { Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   IsCallable, OrdinaryCreateFromConstructor,
   type BuiltinFunctionObject, type FunctionObject, type OrdinaryObject,

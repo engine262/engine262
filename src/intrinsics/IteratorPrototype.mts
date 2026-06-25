@@ -11,7 +11,6 @@ import {
   type ValueEvaluator,
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
   NumberValue,
@@ -20,6 +19,7 @@ import {
   Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   Call,
   CreateArrayFromList,

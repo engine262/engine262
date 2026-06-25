@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor,
   NumberValue,
@@ -17,6 +16,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateSetIterator } from './SetIteratorPrototype.mts';
 import type { SetObject } from './Set.mts';
 import {
+  surroundingAgent,
   Call,
   F,
   IsCallable,

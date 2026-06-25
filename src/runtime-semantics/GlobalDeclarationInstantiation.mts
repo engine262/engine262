@@ -105,7 +105,7 @@ export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: G
   // 14. Let lexDeclarations be the LexicallyScopedDeclarations of script.
   const lexDeclarations = LexicallyScopedDeclarations(script);
   // 15. Let privateEnv be null.
-  const privateEnv = Value.null;
+  const privateEnv = null;
   // 16. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
     // a. NOTE: Lexically declared names are only instantiated here but not initialized.

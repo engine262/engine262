@@ -20,19 +20,23 @@ import {
   isEvaluator,
   type EpochNanoseconds,
   type ArrayBufferObject,
+  type Intrinsics,
+  type JobQueue,
+  type EventLoop,
+  type EventLoopRunType,
+  Agent,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PromiseObject } from '../intrinsics/Promise.mts';
 import type { FinalizationRegistryObject } from '../intrinsics/FinalizationRegistry.mts';
 import type { ShadowRealmObject } from '../intrinsics/ShadowRealm.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
-import type { Agent } from '../execution-context/Agent.mts';
 import {
-  Assert,
   FinishLoadingImportedModule,
   type FunctionObject,
   GraphLoadingState,
   PromiseCapabilityRecord,
+  surroundingAgent,
   Throw,
 } from '#self';
 
@@ -100,28 +104,15 @@ Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
 export type Feature = typeof FEATURES[number]['flag'];
 
-export class ExecutionContextStack extends Array<ExecutionContext> {
-  // This ensures that only the length taking overload is supported.
-  // This is necessary to support `ArraySpeciesCreate`, which invokes
-  // the constructor with argument `length`:
-  constructor(length = 0) {
-    super(+length);
-  }
-
-  // @ts-expect-error
-  override pop(ctx: ExecutionContext) {
-    if (!ctx.poppedForTailCall) {
-      const popped = super.pop();
-      Assert(popped === ctx);
-    }
-  }
-}
-
 /** https://tc39.es/ecma262/#sec-host-promise-rejection-tracker */
 export type HostPromiseRejectionTracker = (promise: PromiseObject, operation: 'reject' | 'handle') => void;
 export interface HostHooks {
+  /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
+  HostEnqueueFinalizationRegistryCleanupJob?(finalizationRegistry: FinalizationRegistryObject): void;
   /** https://tc39.es/ecma262/#sec-hostensurecancompilestrings */
   HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator | PlainCompletion<void>;
+  /** https://tc39.es/ecma262/#sec-hosthassourcetextavailable */
+  HostHasSourceTextAvailable?(func: FunctionObject): boolean;
   /** https://tc39.es/proposal-shadowrealm/#sec-hostinitializeshadowrealm */
   HostInitializeShadowRealm?(realmRec: Realm, innerContext: ExecutionContext, O: ShadowRealmObject): PlainEvaluator | PlainCompletion<void>;
   /** https://tc39.es/ecma262/#sec-hostgetmodulesourcemodulerecord */
@@ -142,22 +133,21 @@ export interface DebuggerPauseReason {
 }
 
 export interface AgentHostDefined {
-  resizableArrayBufferMaxByteLength?: number;
-  hostHooks?: HostHooks;
-  hasSourceTextAvailable?(f: FunctionObject): void;
-  ensureCanCompileStrings?(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void>;
-  cleanupFinalizationRegistry?(FinalizationRegistry: FinalizationRegistryObject): PlainCompletion<void>;
+  errorStackAttachNativeStack?: boolean;
   features?: readonly string[];
-  supportedImportAttributes?: readonly string[];
+  hostHooks?: HostHooks;
+  jobQueue?: JobQueue;
+  eventLoop?: (agent: Agent) => EventLoop;
+  eventLoopRunType?: EventLoopRunType;
+  startEventLoop?: boolean;
   onDebugger?(reason?: DebuggerPauseReason): void;
+  onNodeEvaluation?(node: ParseNode, realm: Realm): void;
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord | DynamicParsedCodeRecord, scriptId: string): void;
-  onNodeEvaluation?(node: ParseNode, realm: Realm): void;
-
+  resizableArrayBufferMaxByteLength?: number;
+  supportedImportAttributes?: readonly string[];
   /** Promise rejection is standardized, but uncaught exception is not. */
   uncaughtExceptionTrackers?: Set<(error: Value) => void>;
-
-  errorStackAttachNativeStack?: boolean;
 }
 
 export interface ResumeEvaluateOptions {
@@ -181,9 +171,9 @@ export class DynamicParsedCodeRecord {
   public ECMAScriptCode: { sourceText: string } | ParseNode.Script | ParseNode.Expression;
 }
 
-export let surroundingAgent: Agent;
-export function setSurroundingAgent(a: Agent) {
-  surroundingAgent = a;
+/** https://tc39.es/ecma262/#sec-well-known-intrinsic-objects */
+export function intrinsics(): Intrinsics {
+  return surroundingAgent.executionContextStack.at(-1)!.Realm.Intrinsics;
 }
 
 export interface ExecutionContextHostDefined {
@@ -200,7 +190,7 @@ export function* ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator {
   scriptContext.ScriptOrModule = scriptRecord;
   scriptContext.VariableEnvironment = globalEnv;
   scriptContext.LexicalEnvironment = globalEnv;
-  scriptContext.PrivateEnvironment = Value.null;
+  scriptContext.PrivateEnvironment = null;
   if (scriptRecord.HostDefined[kInternal]) {
     scriptContext.HostDefined = {
       [kInternal]: scriptRecord.HostDefined[kInternal],
@@ -243,9 +233,14 @@ export function HostPromiseRejectionTracker(promise: PromiseObject, operation: '
   surroundingAgent.hostDefinedOptions.hostHooks?.HostPromiseRejectionTrackers?.forEach((tracker) => tracker(promise, operation));
 }
 
+const HasSourceTextAvailable = new WeakMap<FunctionObject, boolean>();
 export function HostHasSourceTextAvailable(func: FunctionObject) {
-  if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
-    return X(surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func));
+  // It must be deterministic with respect to its parameters. Each time it is called with a specific func as its argument, it must return the same result.
+  if (HasSourceTextAvailable.has(func)) {
+    return HasSourceTextAvailable.get(func)!;
+  }
+  if (surroundingAgent.hostDefinedOptions.hostHooks?.HostHasSourceTextAvailable) {
+    return surroundingAgent.hostDefinedOptions.hostHooks.HostHasSourceTextAvailable(func);
   }
   return Value.true;
 }

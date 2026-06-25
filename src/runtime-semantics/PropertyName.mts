@@ -1,10 +1,10 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
 import { StringValue, NumericValue } from '../static-semantics/all.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  surroundingAgent,
   Assert,
   ToString,
   GetValue,

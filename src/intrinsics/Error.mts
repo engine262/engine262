@@ -7,13 +7,13 @@ import {
   type UndefinedValue,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   captureStack,
   callSiteToErrorStack,
 } from '../utils/stack.mts';
 import { type CallSite, CallFrame } from '../utils/stack.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,

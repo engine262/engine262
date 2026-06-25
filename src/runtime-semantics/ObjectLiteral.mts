@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -6,7 +5,7 @@ import type { ValueEvaluator } from '../evaluator.mts';
 import {
   PropertyDefinitionEvaluation_PropertyDefinitionList,
 } from './all.mts';
-import { OrdinaryObjectCreate } from '#self';
+import { surroundingAgent, OrdinaryObjectCreate } from '#self';
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 //   ObjectLiteral :

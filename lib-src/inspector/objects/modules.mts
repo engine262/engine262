@@ -11,7 +11,7 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
   additionalProperties: (module, context) => {
     const result: AdditionalPropertyItem[] = [];
     surroundingAgent.debugger_scopePreview(() => {
-      nativeEvalInAnyRealm(() => {
+      nativeEvalInAnyRealm(true, context, () => {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
@@ -19,43 +19,41 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
           }
         }
         return Value.undefined;
-      }, context);
+      });
     });
     return result;
   },
   exoticProperties(module, getObjectId, context, generatePreview): Protocol.Runtime.PropertyDescriptor[] {
     const result: Protocol.Runtime.PropertyDescriptor[] = [];
-    surroundingAgent.debugger_scopePreview(() => {
-      nativeEvalInAnyRealm(() => {
-        for (const key of module.Exports) {
-          const completion = EnsureCompletion(skipDebugger(Get(module, key)));
-          if (completion instanceof NormalCompletion) {
-            result.push({
-              name: key.stringValue(),
-              value: getInspector(completion.Value!).toRemoteObject(completion.Value!, getObjectId, context, generatePreview),
-              writable: false,
-              configurable: false,
-              enumerable: true,
-              isOwn: true,
-            });
-          } else {
-            const realm = module.Module.Realm as ManagedRealm;
-            const evaluate = CreateBuiltinFunction(function* evaluate() {
-              return yield* (Get(module, key));
-            }, 0, 'Module.evaluate', [], realm);
-            result.push({
-              name: key.stringValue(),
-              get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
-              set: { type: 'undefined' },
-              writable: false,
-              configurable: false,
-              enumerable: true,
-              isOwn: true,
-            });
-          }
+    nativeEvalInAnyRealm(true, context, () => {
+      for (const key of module.Exports) {
+        const completion = EnsureCompletion(skipDebugger(Get(module, key)));
+        if (completion instanceof NormalCompletion) {
+          result.push({
+            name: key.stringValue(),
+            value: getInspector(completion.Value!).toRemoteObject(completion.Value!, getObjectId, context, generatePreview),
+            writable: false,
+            configurable: false,
+            enumerable: true,
+            isOwn: true,
+          });
+        } else {
+          const realm = module.Module.Realm as ManagedRealm;
+          const evaluate = CreateBuiltinFunction(function* evaluate() {
+            return yield* (Get(module, key));
+          }, 0, 'Module.evaluate', [], realm);
+          result.push({
+            name: key.stringValue(),
+            get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
+            set: { type: 'undefined' },
+            writable: false,
+            configurable: false,
+            enumerable: true,
+            isOwn: true,
+          });
         }
-        return Value.undefined;
-      }, context);
+      }
+      return Value.undefined;
     });
     return result;
   },

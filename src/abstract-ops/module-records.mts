@@ -1,6 +1,3 @@
-import {
-  surroundingAgent, HostLoadImportedModule, HostPromiseRejectionTracker,
-} from '../host-defined/engine.mts';
 import { IncrementModuleAsyncEvaluationCount } from '../execution-context/Agent.mts';
 import {
   CyclicModuleRecord,
@@ -31,6 +28,9 @@ import {
   Construct,
   type ArrayBufferObject,
 } from './all.mts';
+import {
+  surroundingAgent, HostLoadImportedModule, HostPromiseRejectionTracker,
+} from '#self';
 import {
   Realm,
   HostGetSupportedImportAttributes,

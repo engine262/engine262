@@ -2,9 +2,9 @@ import { nativeEvalInAnyRealm } from '../evaluator.mts';
 import { ObjectInspector } from './objects.mts';
 import { getInspector } from './index.mts';
 import {
-  ObjectValue, surroundingAgent, skipDebugger, Get, Value, getHostDefinedErrorDetails,
+  ObjectValue, skipDebugger, Get, Value, getHostDefinedErrorDetails,
   CreateArrayFromList,
-  unwrapCompletion,
+  X,
   JSStringValue,
   EnsureCompletion,
   NormalCompletion,
@@ -12,8 +12,8 @@ import {
 
 export const Error = new ObjectInspector<ObjectValue>('Error', 'error', (value, context) => {
   let text = '';
-  surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => {
-    const completion = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(value, Value('stack'))), context)));
+  nativeEvalInAnyRealm(true, context, () => {
+    const completion = EnsureCompletion(skipDebugger(Get(value, Value('stack'))));
     if (completion instanceof NormalCompletion && completion.Value instanceof JSStringValue) {
       text = completion.Value.stringValue();
       if (!text.includes('  at') && !text.includes('SyntaxError')) {
@@ -21,28 +21,28 @@ export const Error = new ObjectInspector<ObjectValue>('Error', 'error', (value, 
       }
     }
     return Value.undefined;
-  }, context));
+  });
   return text || 'Error';
 }, {
   internalProperties: (error, context) => {
     const unformattedMessage = getHostDefinedErrorDetails(error).message;
     if (!unformattedMessage) return [];
-    const value = nativeEvalInAnyRealm(() => CreateArrayFromList(unformattedMessage.map((part) => (typeof part === 'string' ? Value(part) : part))), context);
+    const value = nativeEvalInAnyRealm(false, context, () => CreateArrayFromList(unformattedMessage.map((part) => (typeof part === 'string' ? Value(part) : part))));
     if (!value) return [];
-    return [['[[UnformattedErrorMessage]]', unwrapCompletion(value)]];
+    return [['[[UnformattedErrorMessage]]', X(value)]];
   },
   customPreview: (error, getObjectId, context) => {
     const { message, stack, stackGetterValue } = getHostDefinedErrorDetails(error);
     if (!message || !stackGetterValue) return undefined;
 
-    const stackC = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(error, Value('stack'))), context)));
+    const stackC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('stack')))));
     if (stackC instanceof NormalCompletion && stackC.Value instanceof JSStringValue) {
       const stackMaybeModified = stackC.Value.stringValue();
       if (stackMaybeModified !== stackGetterValue) return undefined;
     }
 
     let constructorName = 'Error';
-    const nameC = EnsureCompletion(surroundingAgent.debugger_scopePreview(() => nativeEvalInAnyRealm(() => skipDebugger(Get(error, Value('name'))), context)));
+    const nameC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('name')))));
     if (nameC instanceof NormalCompletion && nameC.Value instanceof JSStringValue) constructorName = nameC.Value.stringValue();
 
     const header = JSON.stringify(['span', null,

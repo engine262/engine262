@@ -1,10 +1,10 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, type Arguments, type FunctionCallContext, BooleanValue,
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { FinalizationRegistryCell, FinalizationRegistryObject } from './FinalizationRegistry.mts';
+import { surroundingAgent } from '#self';
 import {
   CanBeHeldWeakly,
   CleanupFinalizationRegistry,

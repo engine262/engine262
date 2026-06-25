@@ -1,11 +1,11 @@
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueCompletion } from '../completion.mts';
 import { assignProps } from './bootstrap.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   Assert,
   CreateBuiltinFunction,

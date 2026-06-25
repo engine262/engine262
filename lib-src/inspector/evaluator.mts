@@ -3,14 +3,17 @@ import {
   isEvaluator, ManagedRealm, skipDebugger, surroundingAgent, type PlainCompletion, type PlainEvaluator,
 } from '#self';
 
-export function nativeEvalInAnyRealm<T>(closure: (() => PlainCompletion<T>) | (() => PlainEvaluator<T>), context: InspectorContext): PlainCompletion<T> | undefined {
-  const realm = (surroundingAgent.runningExecutionContext?.Realm || context.getAnyRealm()?.realm) as ManagedRealm | undefined;
+export function nativeEvalInAnyRealm<T>(enterPreview: boolean, context: InspectorContext, closure: (() => PlainCompletion<T>) | (() => PlainEvaluator<T>)): PlainCompletion<T> | undefined {
+  const realm = surroundingAgent.runningExecutionContext?.Realm as ManagedRealm || context.getAnyRealm()?.realm;
   if (!realm) return undefined;
-  return realm.scope((): PlainCompletion<T> | undefined => {
-    const result = closure();
-    if (isEvaluator(result)) {
-      return skipDebugger(result);
-    }
-    return result;
-  });
+
+  const exitPreview = enterPreview ? surroundingAgent.debugger_scopePreview() : undefined;
+  const pop = realm.pushTopContext();
+  let result = closure();
+  if (isEvaluator(result)) {
+    result = skipDebugger(result);
+  }
+  pop?.();
+  exitPreview?.[Symbol.dispose]();
+  return result;
 }

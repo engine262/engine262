@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   PrivateName, Value, type PropertyKeyValue,
 } from '../value.mts';
@@ -6,6 +5,7 @@ import { StringValue } from '../static-semantics/all.mts';
 import { X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  surroundingAgent,
   Assert,
   OrdinaryFunctionCreate,
   SetFunctionName,

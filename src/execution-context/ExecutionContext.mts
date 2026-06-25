@@ -16,37 +16,58 @@ import {
   type PlainCompletion,
 } from '#self';
 
+/** https://tc39.es/ecma262/#running-execution-context */
+export function runningExecutionContext() {
+  return surroundingAgent.executionContextStack.at(-1)!;
+}
+
+/** https://tc39.es/ecma262/#current-realm */
+export function currentRealmRecord() {
+  return surroundingAgent.executionContextStack.at(-1)!.Realm;
+}
+
+/** https://tc39.es/ecma262/#active-function-object */
+export function activeFunctionObject() {
+  return surroundingAgent.executionContextStack.at(-1)!.Function;
+}
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
-  codeEvaluationState?: YieldOrAwaitEvaluator;
+  // Table 20: State Components for All Execution Contexts
+  // https://tc39.es/ecma262/#table-state-components-for-all-execution-contexts
+  CodeEvaluationState?: YieldOrAwaitEvaluator;
 
   Function: NullValue | FunctionObject = Value.null;
 
-  Generator?: GeneratorObject | AsyncGeneratorObject;
-
   ScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue = Value.null;
+
+  Realm!: Realm;
+
+  // Table 21: Additional State Components for ECMAScript Code Execution Contexts
+  // https://tc39.es/ecma262/#table-additional-state-components-for-ecmascript-code-execution-contexts
+  LexicalEnvironment!: EnvironmentRecord;
 
   VariableEnvironment!: EnvironmentRecord;
 
-  LexicalEnvironment!: EnvironmentRecord;
+  PrivateEnvironment: PrivateEnvironmentRecord | null = null;
 
-  PrivateEnvironment: PrivateEnvironmentRecord | NullValue = Value.null;
-
-  HostDefined?: ExecutionContextHostDefined;
+  // Table 22: Additional State Components for Generator Execution Contexts
+  // https://tc39.es/ecma262/#table-additional-state-components-for-generator-execution-contexts
+  Generator?: GeneratorObject | AsyncGeneratorObject;
 
   // NON-SPEC
+  HostDefined?: ExecutionContextHostDefined;
+
   callSite = new CallSite(this);
 
   promiseCapability?: PromiseCapabilityRecord;
 
   poppedForTailCall = false;
 
-  Realm!: Realm;
 
   copy() {
     const e = new ExecutionContext();
-    e.codeEvaluationState = this.codeEvaluationState;
+    e.CodeEvaluationState = this.CodeEvaluationState;
     e.Function = this.Function;
     e.Realm = this.Realm;
     e.ScriptOrModule = this.ScriptOrModule;
@@ -69,6 +90,23 @@ export class ExecutionContext {
     m(this.LexicalEnvironment);
     m(this.PrivateEnvironment);
     m(this.promiseCapability);
+  }
+}
+
+export class ExecutionContextStack extends Array<ExecutionContext> {
+  // This ensures that only the length taking overload is supported.
+  // This is necessary to support `ArraySpeciesCreate`, which invokes
+  // the constructor with argument `length`:
+  constructor(length = 0) {
+    super(+length);
+  }
+
+  // @ts-expect-error
+  override pop(ctx: ExecutionContext) {
+    if (!ctx.poppedForTailCall) {
+      const popped = super.pop();
+      Assert(popped === ctx);
+    }
   }
 }
 

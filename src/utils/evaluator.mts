@@ -23,7 +23,7 @@ export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T 
 export function* resume(context: ExecutionContext, completion: EvaluatorNextType): YieldOrAwaitEvaluator {
   let result;
   while (true) {
-    result = context.codeEvaluationState!.next(completion);
+    result = context.CodeEvaluationState!.next(completion);
     if (result.done) {
       return result.value;
     }

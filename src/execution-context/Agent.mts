@@ -3,12 +3,12 @@ import { shouldStepOnNode } from '../host-defined/debugger-util.mts';
 import {
 } from '../host-defined/engine.mts';
 import { isArray } from '../utils/language.mts';
+import { callCallback } from '../utils/callback.mts';
 import {
-  ObjectValue, SymbolValue, type Job, type Intrinsics, Value, ThrowCompletion, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
+  ObjectValue, SymbolValue, type Intrinsics, Value, ThrowCompletion, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
   ExecutionContextStack,
   type AgentHostDefined,
   DynamicParsedCodeRecord,
-  surroundingAgent,
   type Feature,
   type GCMarker,
   type ResumeEvaluateOptions,
@@ -20,21 +20,32 @@ import {
   performDevtoolsEval,
   ManagedRealm,
   ToBoolean,
+  type FinalizationRegistryObject,
+  BasicJobQueue,
+  type JobQueue,
+  WebLikeEventLoop,
+  type EventLoop,
   type GlobalSymbolRegistryRecord,
 } from '#self';
 
 let agentSignifier = 0;
 
+/** https://tc39.es/ecma262/#surrounding-agent */
+export let surroundingAgent: Agent;
+export function setSurroundingAgent(a: Agent) {
+  surroundingAgent = a;
+}
+
 /** https://tc39.es/ecma262/#table-agent-record */
 export interface AgentRecord {
   readonly LittleEndian: boolean;
-  CanBlock: boolean;
+  readonly CanBlock: boolean;
   readonly Signifier: number;
   readonly IsLockFree1: boolean;
   readonly IsLockFree2: boolean;
   readonly IsLockFree8: boolean;
   // unsupported
-  CandidateExecution: never;
+  readonly CandidateExecution?: never;
   KeptAlive: Set<ObjectValue | SymbolValue>;
   ModuleAsyncEvaluationCount: number;
   readonly GlobalSymbolRegistry: GlobalSymbolRegistryRecord[];
@@ -42,14 +53,26 @@ export interface AgentRecord {
 
 /** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
+  // An agent comprises a set of ECMAScript execution contexts, an execution context stack, a running execution context, an Agent Record, and an executing thread. Except for the executing thread, the constituents of an agent belong exclusively to that agent.
+  readonly executionContextStack = new ExecutionContextStack();
+
+  /** https://tc39.es/ecma262/#running-execution-context */
+  get runningExecutionContext() {
+    return this.executionContextStack.at(-1)!;
+  }
+
+  get hasRunningExecutionContext() {
+    return this.executionContextStack.length > 0;
+  }
+
   readonly AgentRecord: AgentRecord;
 
-  executionContextStack = new ExecutionContextStack();
-
   // NON-SPEC
-  readonly jobQueue: Job[] = [];
+  readonly jobQueue: JobQueue;
 
-  scheduledForCleanup = new Set();
+  readonly eventLoop: EventLoop;
+
+  readonly finalizationRegistryScheduledForCleanup = new Set<FinalizationRegistryObject>();
 
   hostDefinedOptions: AgentHostDefined;
 
@@ -69,29 +92,26 @@ export class Agent {
       GlobalSymbolRegistry: [],
     };
 
-    this.hostDefinedOptions = {
-      ...options,
-      features: options.features,
-    };
-  }
-
-  /** https://tc39.es/ecma262/#running-execution-context */
-  get runningExecutionContext() {
-    return this.executionContextStack[this.executionContextStack.length - 1];
+    this.hostDefinedOptions = options;
+    this.jobQueue = options.jobQueue || new BasicJobQueue();
+    this.eventLoop = options.eventLoop?.(this) || new WebLikeEventLoop(this);
+    if (options.startEventLoop !== false) {
+      this.eventLoop.run(options.eventLoopRunType || 'automatic');
+    }
   }
 
   /** https://tc39.es/ecma262/#current-realm */
   get currentRealmRecord() {
-    return this.runningExecutionContext.Realm;
+    return this.executionContextStack.at(-1)!.Realm;
   }
 
   /** https://tc39.es/ecma262/#active-function-object */
   get activeFunctionObject() {
-    return this.runningExecutionContext.Function;
+    return this.executionContextStack.at(-1)!.Function;
   }
 
   intrinsic<const T extends keyof Intrinsics>(name: T): Intrinsics[T] {
-    return this.currentRealmRecord.Intrinsics[name];
+    return this.executionContextStack.at(-1)!.Realm.Intrinsics[name];
   }
 
   // NON-SPEC: Check if a feature is enabled in this agent.
@@ -103,30 +123,38 @@ export class Agent {
   mark(m: GCMarker) {
     this.AgentRecord.KeptAlive.forEach(m);
     this.executionContextStack.forEach(m);
-    this.jobQueue.forEach((j) => {
-      m(j.callerRealm);
-      m(j.callerScriptOrModule);
-    });
+    this.jobQueue.mark(m);
+    this.eventLoop.mark(m);
   }
 
   // NON-SPEC
   // #region Step-by-step evaluation
-  #pausedEvaluator?: ValueEvaluator;
+  #pausedEvaluator?: {
+    evaluator: ValueEvaluator;
+    onFinish: (completion: NormalCompletion<Value> | ThrowCompletion) => void;
+  };
 
-  #onEvaluatorFin?: (completion: NormalCompletion<Value> | ThrowCompletion) => void;
+  /**
+   * An event that is triggered when evaluators are finished and the agent is idle.
+   * @internal
+   */
+  readonly onNoEvaluator = new Set<() => void>();
 
   // NON-SPEC
-  /** This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered. */
-  evaluate<T extends Value>(evaluator: ValueEvaluator<T>, onFinished: (completion: NormalCompletion<T> | ThrowCompletion) => void) {
+  /** Evaluate an evaluator. It will skip the debugger if the agent is already debugger-paused. */
+  evaluate<T extends Value>(evaluator: ValueEvaluator<T>, onFinished: (completion: NormalCompletion<T> | ThrowCompletion) => void, evaluationOptions?: ResumeEvaluateOptions | false): void {
     if (this.#pausedEvaluator) {
-      const result = EnsureCompletion(skipDebugger(evaluator));
-      // only the top evaluator can be evaluted step by step.
-      onFinished(result);
-      return result;
+      // cannot run a pausable evaluator when another evaluator is paused.
+      onFinished(EnsureCompletion(skipDebugger(evaluator)));
+      return;
     }
-    this.#pausedEvaluator = evaluator;
-    this.#onEvaluatorFin = onFinished as (completion: NormalCompletion<Value> | ThrowCompletion) => void;
-    return undefined;
+    this.#pausedEvaluator = {
+      evaluator,
+      onFinish: onFinished as (completion: NormalCompletion<Value> | ThrowCompletion) => void,
+    };
+    if (evaluationOptions !== false) {
+      this.resumeEvaluate(evaluationOptions);
+    }
   }
 
   isPaused() {
@@ -138,6 +166,7 @@ export class Agent {
     if (!this.#pausedEvaluator) {
       throw new Error('No paused evaluator');
     }
+    const { evaluator, onFinish } = this.#pausedEvaluator;
     let nextLocation;
     if (options?.pauseAt === 'step-over') {
       nextLocation = this.runningExecutionContext.callSite.nextNode;
@@ -146,7 +175,7 @@ export class Agent {
     }
     let debuggerStatementCompletion = options?.debuggerStatementCompletion;
     while (true) {
-      const state = this.#pausedEvaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
+      const state = evaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
       debuggerStatementCompletion = undefined;
 
       if (!noBreakpoint && this.breakpointsEnabled && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
@@ -168,8 +197,8 @@ export class Agent {
 
       if (state.done) {
         this.#pausedEvaluator = undefined;
-        this.#onEvaluatorFin!(EnsureCompletion(state.value));
-        this.#onEvaluatorFin = undefined;
+        onFinish(EnsureCompletion(state.value));
+        callCallback(this.onNoEvaluator);
         return state;
       }
     }
@@ -433,22 +462,20 @@ export type BreakpointRequest =
 
 /** https://tc39.es/ecma262/#sec-agentsignifier */
 export function AgentSignifier() {
-  // 1. Let AR be the Agent Record of the surrounding agent.
-  const AR = surroundingAgent.AgentRecord;
-  // 2. Return AR.[[Signifier]].
-  return AR.Signifier;
+  const agentRecord = surroundingAgent.AgentRecord;
+  return agentRecord.Signifier;
 }
 
 /** https://tc39.es/ecma262/#sec-agentcansuspend */
 export function AgentCanSuspend() {
-  const AR = surroundingAgent.AgentRecord;
-  return AR.CanBlock;
+  const agentRecord = surroundingAgent.AgentRecord;
+  return agentRecord.CanBlock;
 }
 
 // https://tc39.es/ecma262/#sec-IncrementModuleAsyncEvaluationCount
 export function IncrementModuleAsyncEvaluationCount() {
-  const AR = surroundingAgent.AgentRecord;
-  const count = AR.ModuleAsyncEvaluationCount;
-  AR.ModuleAsyncEvaluationCount = count + 1;
+  const agentRecord = surroundingAgent.AgentRecord;
+  const count = agentRecord.ModuleAsyncEvaluationCount;
+  agentRecord.ModuleAsyncEvaluationCount = count + 1;
   return count;
 }

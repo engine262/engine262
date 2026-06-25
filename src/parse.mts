@@ -1,6 +1,5 @@
 import { Parser, type ParserOptions } from './parser/Parser.mts';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
-import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
 import {
   SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
 } from './modules.mts';
@@ -15,17 +14,15 @@ import {
 } from './static-semantics/all.mts';
 import { kInternal } from './utils/internal.mts';
 import { type Mutable } from './utils/language.mts';
-import { skipDebugger } from './utils/evaluator.mts';
 import { JSStringSet } from './utils/container.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';
+import { surroundingAgent, type GCMarker, Realm } from '#self';
 import {
   CreateDefaultExportSyntheticModule,
-  ToString,
   Throw,
 } from '#self';
-import type { Realm } from '#self';
 
 export { Parser, RegExpParser };
 
@@ -213,9 +210,8 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText: Value): PlainCompletion<SyntheticModuleRecord> {
-  const string = Q(skipDebugger(ToString(sourceText)));
-  const parseResult = Q(ParseJSON(string.stringValue()));
+export function ParseJSONModule(source: JSStringValue): PlainCompletion<SyntheticModuleRecord> {
+  const parseResult = Q(ParseJSON(source.stringValue()));
   return CreateDefaultExportSyntheticModule(parseResult.Value);
 }
 

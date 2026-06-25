@@ -11,9 +11,6 @@ import {
   type PropertyKeyValue,
 } from '../value.mts';
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   Q, X,
   type ValueCompletion,
 } from '../completion.mts';
@@ -37,7 +34,10 @@ import {
   F, R,
 } from './all.mts';
 import { modulo, truncate } from './math.mts';
-import { Throw } from '#self';
+import {
+  surroundingAgent,
+  Throw,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
 export function* ToPrimitive(input: Value, preferredType?: 'string' | 'number'): ValueEvaluator<PrimitiveValue> {

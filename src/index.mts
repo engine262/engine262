@@ -4,6 +4,10 @@ export * from './static-semantics/all.mts';
 export * from './runtime-semantics/all.mts';
 export * from './value.mts';
 export * from './host-defined/engine.mts';
+export { runSingleJobInQueue, type JobQueue, BasicJobQueue } from './host-defined/job-queue.mts';
+export {
+  type EventLoop, type EventLoopRunType, type NodeJSJobType, AbstractEventLoop, MicroTaskEventLoop, WebLikeEventLoop, NodeJSLikeEventLoop,
+} from './host-defined/event-loop.mts';
 export * from './completion.mts';
 export * from './parse.mts';
 export * from './modules.mts';
@@ -13,7 +17,7 @@ export { type Formattable, Throw } from './host-defined/error-messages.mts';
 export * from './evaluator.mts';
 
 export {
-  gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
+  gc, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
 export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';

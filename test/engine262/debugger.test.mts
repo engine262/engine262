@@ -2,9 +2,10 @@
 /* eslint-disable quotes */
 import { expect, test } from 'vitest';
 import {
-  Agent, evalQ, ManagedRealm, NormalCompletion, NumberValue, R, setSurroundingAgent,
+  Agent, ManagedRealm, NormalCompletion, NumberValue, R, setSurroundingAgent,
   surroundingAgent,
   UndefinedValue,
+  X,
   Value,
   type ValueCompletion,
 } from '#self';
@@ -25,21 +26,16 @@ test('debugger statement should return the value passed to resumeEvaluate', asyn
   });
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
-  evalQ((_Q, X) => {
-    const script = X(realm.compileScript('debugger;'));
-    let completion!: ValueCompletion;
-    realm.evaluateScript(script, {}, (c) => {
-      completion = c;
-    });
-    // start the evaluation
-    X(surroundingAgent.resumeEvaluate({}));
-    // paused at the debugger statement, resume with a value
-    X(surroundingAgent.resumeEvaluate({
-      debuggerStatementCompletion: NormalCompletion(Value(42)),
-    }));
-    expect(completion).toBeDefined();
-    const value = X(completion) as NumberValue;
-    expect(value).toBeInstanceOf(NumberValue);
-    expect(R(value)).toBe(42);
+  let completion!: ValueCompletion;
+  realm.evaluateScript('debugger', {}, (c) => {
+    completion = c;
   });
+  // paused at the debugger statement, resume with a value
+  X(surroundingAgent.resumeEvaluate({
+    debuggerStatementCompletion: NormalCompletion(Value(42)),
+  }));
+  expect(completion).toBeDefined();
+  const value = X(completion) as NumberValue;
+  expect(value).toBeInstanceOf(NumberValue);
+  expect(R(value)).toBe(42);
 });

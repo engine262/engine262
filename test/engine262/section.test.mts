@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { createAgent, createRealm } from '../base.mts';
 import {
-  CreateArrayFromList, CreateBuiltinFunction, CreateDataProperty, EnsureCompletion, FEATURES, NormalCompletion, setSurroundingAgent, skipDebugger, ToString, UndefinedValue, Value, type Arguments,
+  CreateArrayFromList, CreateBuiltinFunction, CreateDataProperty, EnsureCompletion, FEATURES, NormalCompletion, setSurroundingAgent, skipDebugger, ToString, UndefinedValue, Value, X, type Arguments,
 } from '#self';
 
 test('Every built-in function should have a section property', { timeout: 10000 }, () => {
@@ -10,29 +10,29 @@ test('Every built-in function should have a section property', { timeout: 10000 
   });
   setSurroundingAgent(agent);
   const { realm } = createRealm();
-  realm.scope(() => {
-    skipDebugger(CreateDataProperty(
-      realm.GlobalObject,
-      Value('fail'),
-      CreateBuiltinFunction(([path = Value.undefined]: Arguments) => {
-        const o = EnsureCompletion(skipDebugger(ToString(path)));
-        if (o.Type === 'throw') {
-          return o;
-        }
-        throw new Error(`${o.Value.stringValue()} did not have a section`);
-      }, 1, Value(''), []),
-    ));
-    const targets: Value[] = [];
-    Object.entries(realm.Intrinsics)
-      .forEach(([k, v]) => {
-        targets.push(CreateArrayFromList([Value(k), v]));
-      });
-    skipDebugger(CreateDataProperty(
-      realm.GlobalObject,
-      Value('targets'),
-      CreateArrayFromList(targets),
-    ));
-  });
+  const pop = realm.pushTopContext();
+  X(CreateDataProperty(
+    realm.GlobalObject,
+    Value('fail'),
+    CreateBuiltinFunction(([path = Value.undefined]: Arguments) => {
+      const o = EnsureCompletion(skipDebugger(ToString(path)));
+      if (o.Type === 'throw') {
+        return o;
+      }
+      throw new Error(`${o.Value.stringValue()} did not have a section`);
+    }, 1, Value(''), []),
+  ));
+  const targets: Value[] = [];
+  Object.entries(realm.Intrinsics)
+    .forEach(([k, v]) => {
+      targets.push(CreateArrayFromList([Value(k), v]));
+    });
+  X(CreateDataProperty(
+    realm.GlobalObject,
+    Value('targets'),
+    CreateArrayFromList(targets),
+  ));
+  pop?.();
   const result = realm.evaluateScriptSkipDebugger(`
     'use strict';
 

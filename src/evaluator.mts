@@ -1,7 +1,6 @@
 import type {
   NormalCompletion, PlainCompletion, ThrowCompletion, YieldCompletion,
 } from './completion.mts';
-import { surroundingAgent } from './host-defined/engine.mts';
 import { OutOfRange } from './utils/language.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import {
@@ -77,6 +76,7 @@ import {
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
 import { avoid_using_children } from './parser/utils.mts';
+import { surroundingAgent } from '#self';
 import {
   type AbruptCompletion, Assert, type ReferenceRecord, type ReturnCompletion, Value,
   type ValueCompletion,

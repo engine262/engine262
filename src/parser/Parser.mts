@@ -1,10 +1,10 @@
-import { surroundingAgent, type Feature } from '../host-defined/engine.mts';
 import { LanguageParser } from './LanguageParser.mts';
 import type {
   ParseNode,
   ParseNodesByType,
 } from './ParseNode.mts';
 import { Scope } from './Scope.mts';
+import { surroundingAgent, type Feature } from '#self';
 
 export interface ParserOptions {
   readonly source: string;

@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value,
   type Arguments,
@@ -8,6 +7,7 @@ import { Q, type ValueCompletion, type ValueEvaluator } from '../completion.mts'
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakMapObject } from './WeakMap.mts';
 import {
+  surroundingAgent,
   Call,
   IsCallable,
   SameValue,

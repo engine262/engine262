@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, NullValue, ObjectValue, PrivateName,
   BooleanValue,
@@ -34,6 +33,13 @@ import {
   ClassFieldDefinitionEvaluation_decorator,
 } from './all.mts';
 import {
+  surroundingAgent,
+  DeclarativeEnvironmentRecord,
+  PrivateEnvironmentRecord,
+
+  CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
+} from '#self';
+import {
   Assert,
   Call,
   Construct,
@@ -56,12 +62,6 @@ import {
   DefineMethodProperty,
   IsCallable,
   getActiveScriptId,
-} from '#self';
-import {
-  DeclarativeEnvironmentRecord,
-  PrivateEnvironmentRecord,
-
-  CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-static-semantics-classelementevaluation */

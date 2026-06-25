@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
   Q, X,
@@ -31,7 +30,9 @@ import {
   SameValue,
   type OrdinaryObject,
 } from './all.mts';
-import { RunSuspendedContext, Throw, type Realm } from '#self';
+import {
+  RunSuspendedContext, Throw, type Realm, surroundingAgent,
+} from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
@@ -101,7 +102,7 @@ export function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBo
   };
   // 4. Set the code evaluation state of genContext such that when evaluation
   //    is resumed for that execution context the following steps will be performed:
-  genContext.codeEvaluationState = (closure());
+  genContext.CodeEvaluationState = (closure());
   // 5. Set generator.[[AsyncGeneratorContext]] to genContext.
   generator.AsyncGeneratorContext = genContext;
   // 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.

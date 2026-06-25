@@ -1,4 +1,3 @@
-import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import {
   Q, X, IfAbruptRejectPromise,
@@ -9,6 +8,7 @@ import {
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import {
+  surroundingAgent, HostLoadImportedModule,
   GetValue,
   ToString,
   NewPromiseCapability,

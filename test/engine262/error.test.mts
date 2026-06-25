@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import {
   Agent, CallSite, CreateBuiltinFunction, CreateDataPropertyOrThrow, isFunctionObject, isPromiseObject, JSStringValue, ManagedRealm, NormalCompletion, setSurroundingAgent,
-  unwrapCompletion,
+  X,
   Value,
   type PromiseObject,
 } from '#self';
@@ -95,15 +95,15 @@ test('native function names', () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
-  realm.scope(() => {
-    const f = CreateBuiltinFunction.from((f = Value.null) => {
-      if (isFunctionObject(f)) {
-        return Value(CallSite.getFunctionName(f) || '<CallSite.getFunctionName returned null>');
-      }
-      return Value('<not a function object>');
-    });
-    unwrapCompletion(CreateDataPropertyOrThrow(realm.GlobalObject, Value('getName'), f));
+  const pop = realm.pushTopContext();
+  const f = CreateBuiltinFunction.from((f = Value.null) => {
+    if (isFunctionObject(f)) {
+      return Value(CallSite.getFunctionName(f) || '<CallSite.getFunctionName returned null>');
+    }
+    return Value('<not a function object>');
   });
+  X(CreateDataPropertyOrThrow(realm.GlobalObject, Value('getName'), f));
+  pop?.();
   const result = realm.evaluateScriptSkipDebugger(`
   (${() => {
     // @ts-expect-error

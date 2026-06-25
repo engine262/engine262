@@ -1,10 +1,10 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import { DefinePropertyOrThrow, type FunctionObject, Realm } from '#self';
 
 /** https://tc39.es/ecma262/#sec-generatorfunction */

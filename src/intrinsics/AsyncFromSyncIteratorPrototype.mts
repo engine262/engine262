@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -7,6 +6,7 @@ import {
 } from '../completion.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   AsyncFromSyncIteratorContinuation,
   Call,

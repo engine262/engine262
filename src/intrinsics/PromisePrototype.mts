@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -8,6 +7,7 @@ import {
 import type { ValueEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { PromiseObject } from './Promise.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert,
   Call,

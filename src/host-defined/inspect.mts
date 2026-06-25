@@ -11,7 +11,7 @@ import type { StringObject } from '../intrinsics/String.mts';
 import type { SymbolObject } from '../intrinsics/Symbol.mts';
 import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
 import { isShadowRealmObject } from '../intrinsics/ShadowRealm.mts';
-import { surroundingAgent } from './engine.mts';
+import { surroundingAgent } from '#self';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern, R, type BuiltinFunctionObject,

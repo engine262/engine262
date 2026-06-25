@@ -1,7 +1,8 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '#self';
+import {
+  surroundingAgent, OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy,
+} from '#self';
 import type { PrivateName, PropertyKeyValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */

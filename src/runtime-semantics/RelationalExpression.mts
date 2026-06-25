@@ -1,6 +1,3 @@
-import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import {
   ObjectValue,
@@ -23,6 +20,7 @@ import {
   ToPropertyKey,
   PrivateElementFind,
   Throw,
+  surroundingAgent,
 } from '#self';
 import { ResolvePrivateIdentifier, type PrivateEnvironmentRecord } from '#self';
 

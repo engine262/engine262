@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Evaluate, type PlainEvaluator, type StatementEvaluator } from '../evaluator.mts';
 import {
   ReferenceRecord, Value,
@@ -18,6 +17,7 @@ import {
   Evaluate_StatementList,
 } from './all.mts';
 import {
+  surroundingAgent,
   Assert, GetValue, IsStrictlyEqual, DeclarativeEnvironmentRecord,
 } from '#self';
 

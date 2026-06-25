@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   X,
   NormalCompletion,
@@ -9,6 +8,7 @@ import {
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert,
   Call,

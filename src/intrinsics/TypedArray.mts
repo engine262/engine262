@@ -1,7 +1,6 @@
 import {
   Q, X, type PlainCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   BooleanValue,
@@ -15,6 +14,7 @@ import {
 import { type Mutable, __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import { surroundingAgent } from '#self';
 import {
   Assert,
   Call,

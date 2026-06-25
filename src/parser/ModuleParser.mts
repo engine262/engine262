@@ -1,11 +1,11 @@
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mts';
 import type { Mutable } from '../utils/language.mts';
 import { Throw } from '../host-defined/error-messages.mts';
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Token, isKeywordRaw } from './tokens.mts';
 import { StatementParser } from './StatementParser.mts';
 import { FunctionKind } from './FunctionParser.mts';
 import type { ParseNode } from './ParseNode.mts';
+import { surroundingAgent } from '#self';
 
 export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :

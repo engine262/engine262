@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type Arguments, type FunctionCallContext,
   UndefinedValue,
@@ -8,6 +7,7 @@ import { captureStack } from '../utils/stack.mts';
 import { setErrorHostInternalSlot } from './Error.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { ErrorHostInternalSlots, type ErrorObject } from './Error.mts';
+import { surroundingAgent } from '#self';
 import {
   ToString,
   IteratorToList,

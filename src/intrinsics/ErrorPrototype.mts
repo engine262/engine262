@@ -1,7 +1,4 @@
 import {
-  surroundingAgent,
-} from '../host-defined/engine.mts';
-import {
   JSStringValue,
   ObjectValue,
   Value,
@@ -12,6 +9,9 @@ import {
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { isErrorObject } from './Error.mts';
+import {
+  surroundingAgent,
+} from '#self';
 import {
   Assert,
   Get,

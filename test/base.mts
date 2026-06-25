@@ -172,15 +172,15 @@ export function createRealm({ printCompatMode = false, specifier, log = console.
     specifier,
   });
 
-  return realm.scope(() => {
-    const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    createTest262Intrinsics(realm, printCompatMode, log);
-    return {
-      realm,
-      $262,
-      resolverCache,
-    };
-  });
+  const pop = realm.pushTopContext();
+  const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
+  createTest262Intrinsics(realm, printCompatMode, log);
+  pop?.();
+  return {
+    realm,
+    $262,
+    resolverCache,
+  };
 }
 
 export function fatal_exit(message: string): never {

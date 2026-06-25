@@ -132,7 +132,7 @@ export function* PerformShadowRealmEval(sourceText: string, callerRealm: Realm, 
   Assert(lexEnv instanceof DeclarativeEnvironmentRecord);
   const varEnv = evalContext.VariableEnvironment;
   surroundingAgent.executionContextStack.push(evalContext);
-  let result: PlainCompletion<Value | void> = yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, Value.null, strictEval);
+  let result: PlainCompletion<Value | void> = yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval);
   if (result instanceof NormalCompletion) {
     result = yield* Evaluate(body);
   }
@@ -211,6 +211,6 @@ export function GetShadowRealmContext(shadowRealmRecord: Realm, strictEval: bool
   context.ScriptOrModule = Value.null;
   context.VariableEnvironment = varEnv;
   context.LexicalEnvironment = lexEnv;
-  context.PrivateEnvironment = Value.null;
+  context.PrivateEnvironment = null;
   return context;
 }

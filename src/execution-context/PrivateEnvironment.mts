@@ -1,15 +1,15 @@
 import {
-  type PrivateName, type GCMarker, Assert, JSStringValue, NullValue,
+  type PrivateName, type GCMarker, Assert, JSStringValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateenvironment-records */
 export class PrivateEnvironmentRecord {
-  readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | NullValue;
+  readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | null;
 
   readonly Names: PrivateName[] = [];
 
   /** https://tc39.es/ecma262/#sec-newprivateenvironment */
-  constructor(outerEnv: PrivateEnvironmentRecord | NullValue) {
+  constructor(outerEnv: PrivateEnvironmentRecord | null) {
     this.OuterPrivateEnvironment = outerEnv;
   }
 
@@ -34,7 +34,7 @@ export function ResolvePrivateIdentifier(privEnv: PrivateEnvironmentRecord, iden
     // a. Let outerPrivEnv be privEnv.[[OuterPrivateEnvironment]].
     const outerPrivEnv = privEnv.OuterPrivateEnvironment;
     // b. Assert: outerPrivEnv is not null.
-    Assert(!(outerPrivEnv instanceof NullValue));
+    Assert(outerPrivEnv !== null);
     // c. Return ResolvePrivateIdentifier(outerPrivEnv, identifier).
     return ResolvePrivateIdentifier(outerPrivEnv, identifier);
   }

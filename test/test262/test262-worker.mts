@@ -22,7 +22,6 @@ import {
   CallSite,
   CreateBuiltinFunction,
   PerformPromiseThen,
-  runJobQueue,
   type PlainCompletion,
   NormalCompletion,
   Descriptor,
@@ -114,10 +113,14 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
     const { message, callStack } = getHostDefinedErrorDetails(error);
     const reportStack = toDisplayStack(callStack);
     let msg = '';
-    for (const part of message || [realm.scope(() => inspect(error))]) {
+    const pop = realm.pushTopContext();
+    for (const part of message || [inspect(error)]) {
       if (typeof part === 'string') msg += part;
-      else if (part instanceof Value) msg += realm.scope(() => inspect(part));
+      else if (part instanceof Value) {
+        msg += inspect(part);
+      }
     }
+    pop?.();
     return {
       status: 'FAIL',
       file: test.file,
@@ -129,122 +132,131 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
     };
   }
 
-  const { realm, resolverCache } = createRealm({
+  const { realm } = createRealm({
     specifier: test.specifier,
     log: (...args) => log(test, toDisplayStack(captureStack().stack), ...args),
   });
   console.log = (...args: unknown[]) => log(test, toDisplayStack(captureStack().stack), ...args);
   async function untilFinished() {
-    while (resolverCache.hasUnfinishedRequests()) {
-      // eslint-disable-next-line no-await-in-loop
-      await resolverCache.untilAllRequestFinished();
-      runJobQueue();
+    if (!agent.eventLoop.hasPendingJobs && agent.jobQueue.length === 0) {
+      return;
     }
+    await new Promise<void>((resolve) => {
+      const onNoPendingJob = () => {
+        agent.eventLoop.onNoPendingJob.delete(onNoPendingJob);
+        resolve();
+      };
+      agent.eventLoop.onNoPendingJob.add(onNoPendingJob);
+      agent.eventLoop.runOnce();
+    });
   }
 
   const finishTest = Promise.withResolvers<PlainCompletion<unknown>>();
   const result = Promise.withResolvers<WorkerToSupervisor>();
-  realm.scope(() => {
-    test.attrs.includes.unshift('assert.js');
-    const asyncTestPromise = Promise.withResolvers<WorkerToSupervisor>();
-    let asyncTestCompleted = false;
+  test.attrs.includes.unshift('assert.js');
+  const asyncTestPromise = Promise.withResolvers<WorkerToSupervisor>();
+  let asyncTestCompleted = false;
 
-    // doneprintHandle.js
-    if (test.attrs.flags.async) {
-      const $DONE = CreateBuiltinFunction.from(function* $DONE(error = Value.undefined) {
-        if (asyncTestCompleted) {
-          log(test, toDisplayStack(getCurrentStack()), '$DONE called after test completion');
-          return;
-        }
-        asyncTestCompleted = true;
-        if (error !== Value.undefined) {
-          asyncTestPromise.resolve(fail(test, error));
-        } else {
-          asyncTestPromise.resolve({
-            status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
-          });
-        }
-      });
-      realm.GlobalObject.properties.set(Value('$DONE'), Descriptor({ Value: $DONE }));
-    }
-
-    // sta.js
-    {
-      const completion = realm.evaluateScriptSkipDebugger([
-        'var Test262Error = class Test262Error extends Error {};',
-        'Test262Error.thrower = (...args) => { throw new Test262Error(...args); };'].join('\n'));
-      if (completion instanceof AbruptCompletion) {
-        result.resolve(fail(test, completion.Value));
+  // doneprintHandle.js
+  const pop = realm.pushTopContext();
+  if (test.attrs.flags.async) {
+    const $DONE = CreateBuiltinFunction.from(function* $DONE(error = Value.undefined) {
+      if (asyncTestCompleted) {
+        log(test, toDisplayStack(getCurrentStack()), '$DONE called after test completion');
         return;
       }
-      const $DONOTEVALUATE = CreateBuiltinFunction.from(() => Throw.EvalError('Test262: This statement should not be evaluated.'));
-      realm.GlobalObject.properties.set(Value('$DONOTEVALUATE'), Descriptor({ Value: $DONOTEVALUATE }));
-    }
-
-    for (const include of test.attrs.includes) {
-      if (includeCache[include] === undefined) {
-        const p = path.resolve(TEST262, `harness/${include}`);
-        includeCache[include] = {
-          source: fs.readFileSync(p, 'utf8'),
-          specifier: p,
-        };
-      }
-      const entry = includeCache[include];
-      const completion = realm.evaluateScriptSkipDebugger(entry.source, { specifier: entry.specifier });
-      if (completion instanceof AbruptCompletion) {
-        result.resolve(fail(test, completion.Value));
-        return;
-      }
-    }
-    boostTest262Harness(realm);
-
-
-    const specifier = path.resolve(TEST262_TESTS, test.file);
-
-    finishTest.promise.then<WorkerToSupervisor>((completion) => {
-      if (completion instanceof ThrowCompletion) {
-        if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
-          return {
-            status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
-          };
-        } else {
-          return fail(test, completion.Value);
-        }
-      }
-
-      if (test.attrs.flags.async) return asyncTestPromise.promise;
-
-      if (test.attrs.negative) {
-        return fails(test, `Expected ${test.attrs.negative.type} during ${test.attrs.negative.phase}`, []);
+      asyncTestCompleted = true;
+      if (error !== Value.undefined) {
+        asyncTestPromise.resolve(fail(test, error));
       } else {
+        asyncTestPromise.resolve({
+          status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
+        });
+      }
+    });
+    realm.GlobalObject.properties.set(Value('$DONE'), Descriptor({ Value: $DONE }));
+  }
+
+  // sta.js
+  {
+    const completion = realm.evaluateScriptSkipDebugger([
+      'var Test262Error = class Test262Error extends Error {};',
+      'Test262Error.thrower = (...args) => { throw new Test262Error(...args); };'].join('\n'));
+    if (completion instanceof AbruptCompletion) {
+      result.resolve(fail(test, completion.Value));
+      pop?.();
+      return result.promise;
+    }
+    const $DONOTEVALUATE = CreateBuiltinFunction.from(() => Throw.EvalError('Test262: This statement should not be evaluated.'));
+    realm.GlobalObject.properties.set(Value('$DONOTEVALUATE'), Descriptor({ Value: $DONOTEVALUATE }));
+  }
+
+  for (const include of test.attrs.includes) {
+    if (includeCache[include] === undefined) {
+      const p = path.resolve(TEST262, `harness/${include}`);
+      includeCache[include] = {
+        source: fs.readFileSync(p, 'utf8'),
+        specifier: p,
+      };
+    }
+    const entry = includeCache[include];
+    const completion = realm.evaluateScriptSkipDebugger(entry.source, { specifier: entry.specifier });
+    if (completion instanceof AbruptCompletion) {
+      result.resolve(fail(test, completion.Value));
+      pop?.();
+      return result.promise;
+    }
+  }
+  boostTest262Harness(realm);
+
+
+  const specifier = path.resolve(TEST262_TESTS, test.file);
+
+  finishTest.promise.then<WorkerToSupervisor>((completion) => {
+    if (completion instanceof ThrowCompletion) {
+      if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
         return {
           status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
         };
-      }
-    }).then(result.resolve, result.reject);
-
-    if (test.attrs.flags.module) {
-      realm.evaluateModule(test.content, specifier, (completion) => {
-        if (completion instanceof ThrowCompletion) {
-          finishTest.resolve(completion);
-          return;
-        }
-        const promise = ValueOfNormalCompletion(completion);
-        PerformPromiseThen(promise, CreateBuiltinFunction.from(function* waitIO() {
-          untilFinished().then(() => finishTest.resolve(NormalCompletion(undefined)));
-          return Value.undefined;
-        }), CreateBuiltinFunction.from((err = Value.undefined) => {
-          finishTest.resolve(ThrowCompletion(err));
-        }));
-        runJobQueue();
-      });
-    } else {
-      const completion = realm.evaluateScriptSkipDebugger(test.content, { specifier });
-      if (completion instanceof AbruptCompletion) {
-        finishTest.resolve(completion);
+      } else {
+        return fail(test, completion.Value);
       }
     }
-  });
+
+    if (test.attrs.flags.async) return asyncTestPromise.promise;
+
+    if (test.attrs.negative) {
+      return fails(test, `Expected ${test.attrs.negative.type} during ${test.attrs.negative.phase}`, []);
+    } else {
+      return {
+        status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
+      };
+    }
+  }).then(result.resolve, result.reject);
+
+  if (test.attrs.flags.module) {
+    realm.evaluateModule(test.content, specifier, (completion) => {
+      if (completion instanceof ThrowCompletion) {
+        finishTest.resolve(completion);
+        return;
+      }
+      const promise = ValueOfNormalCompletion(completion);
+      PerformPromiseThen(promise, CreateBuiltinFunction.from(function* waitIO() {
+        untilFinished().then(() => finishTest.resolve(NormalCompletion(undefined)));
+        return Value.undefined;
+      }), CreateBuiltinFunction.from((err = Value.undefined) => {
+        finishTest.resolve(ThrowCompletion(err));
+      }));
+    });
+  } else {
+    const completion = realm.evaluateScriptSkipDebugger(test.content, { specifier });
+    if (completion instanceof AbruptCompletion) {
+      finishTest.resolve(completion);
+    }
+  }
+  pop?.();
+  // Promise jobs for async tests may have been enqueued before the worker pops the realm top context.
+  agent.eventLoop.runOnce();
   await untilFinished();
   finishTest.resolve(NormalCompletion(undefined));
 

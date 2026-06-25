@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, ReferenceRecord, JSStringValue } from '../value.mts';
 import { IsInTailPosition } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
@@ -6,6 +5,7 @@ import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { EvaluateCall, ArgumentListEvaluation } from './all.mts';
 import {
+  surroundingAgent,
   GetValue,
   IsPropertyReference,
   PerformEval,

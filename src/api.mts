@@ -1,6 +1,5 @@
 import { ObjectValue, Value, type PropertyKeyValue } from './value.mts';
 import {
-  surroundingAgent,
   ScriptEvaluation,
   type Markable,
 } from './host-defined/engine.mts';
@@ -23,10 +22,8 @@ import {
   type ParseScriptHostDefined,
 } from './parse.mts';
 import {
-  CyclicModuleRecord,
-  SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
+  CyclicModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
-import type { ImportedNamesValue } from './static-semantics/ModuleRequests.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
@@ -35,7 +32,7 @@ import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type { ModuleCache } from './utils/module.mts';
 import {
-  ClearKeptObjects,
+  surroundingAgent, type GCMarker,
   CreateIntrinsics,
   SetDefaultGlobalBindings,
   OrdinaryObjectCreate,
@@ -47,11 +44,9 @@ import {
   skipDebugger,
   CreateBytesModule,
   ValueOfNormalCompletion,
-} from '#self';
-import {
+  type ResumeEvaluateOptions,
   Realm,
   GlobalEnvironmentRecord, type Intrinsics,
-  type ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-weakref-execution */
@@ -77,7 +72,7 @@ export function gc() {
   const weaksets = new Set<WeakSetObject>();
   const ephemeronQueue: WeakMapObject['WeakMapData'][number][] = [];
 
-  const markCb = (O: unknown) => {
+  const markCb: GCMarker = (O) => {
     if (typeof O !== 'object' || O === null) {
       return;
     }
@@ -138,7 +133,7 @@ export function gc() {
       }
     });
     if (dirty) {
-      X(HostEnqueueFinalizationRegistryCleanupJob(fg));
+      HostEnqueueFinalizationRegistryCleanupJob(fg);
     }
   });
 
@@ -158,46 +153,6 @@ export function gc() {
       }
     });
   });
-}
-
-/** https://tc39.es/ecma262/#sec-jobs */
-export function runJobQueue() {
-  const hasRunningExecutionContext = () => surroundingAgent.isPaused() || surroundingAgent.executionContextStack.some((e) => e.ScriptOrModule !== Value.null);
-
-  // At some future point in time, when there is no running execution context
-  // and the execution context stack is empty, the implementation must:
-  while (!hasRunningExecutionContext() && surroundingAgent.jobQueue.length > 0) { // eslint-disable-line no-constant-condition
-    const {
-      job: abstractClosure,
-      callerRealm,
-      callerScriptOrModule,
-    } = surroundingAgent.jobQueue.shift()!;
-
-    // 1. Perform any implementation-defined preparation steps.
-    const newContext = new ExecutionContext();
-    surroundingAgent.executionContextStack.push(newContext);
-    newContext.Function = Value.null;
-    newContext.Realm = callerRealm;
-    newContext.ScriptOrModule = callerScriptOrModule;
-    // 2. Call the abstract closure.
-    let c;
-    surroundingAgent.evaluate((function* job(): ValueEvaluator {
-      const completion = yield* abstractClosure();
-      if (completion instanceof ThrowCompletion) {
-        surroundingAgent.hostDefinedOptions.uncaughtExceptionTrackers?.forEach((tracker) => {
-          tracker(completion.Value);
-        });
-      }
-      return Value.undefined;
-    }()), (completion) => {
-      c = completion;
-      // 3. Perform any host-defined cleanup steps, after which the execution context stack must be empty.
-      ClearKeptObjects();
-      gc();
-      surroundingAgent.executionContextStack.pop(newContext);
-    });
-    if (!c) surroundingAgent.resumeEvaluate();
-  }
 }
 
 export interface ManagedRealmHostDefined {
@@ -237,7 +192,18 @@ export class ManagedRealm extends Realm {
 
   topContext: ExecutionContext;
 
-  active = false;
+  /**
+   * Push this realm's top context (if it is not currently) as the running execution context.
+   *
+   * Callers must ensure to call the return value after the work is done.
+   */
+  pushTopContext(): (() => void) | undefined {
+    if (surroundingAgent.runningExecutionContext !== this.topContext) {
+      surroundingAgent.executionContextStack.push(this.topContext);
+      return () => surroundingAgent.executionContextStack.pop(this.topContext);
+    }
+    return undefined;
+  }
 
   /** https://tc39.es/ecma262/#sec-initializehostdefinedrealm */
   constructor(HostDefined: ManagedRealmHostDefined = {}, customizations?: (record: Realm) => [global: ObjectValue | undefined, thisValue: ObjectValue | undefined]) {
@@ -269,97 +235,66 @@ export class ManagedRealm extends Realm {
     surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
   }
 
-  scope(inspectorPreview?: boolean): Disposable | null;
-
-  scope<T>(cb: () => T, inspectorPreview?: boolean): T
-
-  scope<T>(arg0?: (() => T) | boolean, arg2?: boolean): T | Disposable | null {
-    if (typeof arg0 !== 'function') {
-      const inspectorPreview = arg0;
-      if (this.active) {
-        return null;
-      }
-      this.active = true;
-      surroundingAgent.executionContextStack.push(this.topContext);
-      using _ = inspectorPreview ? surroundingAgent.debugger_scopePreview() : null;
-      return {
-        [Symbol.dispose]: () => {
-          surroundingAgent.executionContextStack.pop(this.topContext);
-          this.active = false;
-        },
-      };
-    } else {
-      const callback = arg0;
-      if (this.active) {
-        return arg0();
-      }
-      this.active = true;
-      surroundingAgent.executionContextStack.push(this.topContext);
-      const result = arg2 ? surroundingAgent.debugger_scopePreview(callback) : callback();
-      surroundingAgent.executionContextStack.pop(this.topContext);
-      this.active = false;
-      return result;
-    }
-  }
-
   compileScript(sourceText: string, hostDefined?: ParseScriptHostDefined): PlainCompletion<ScriptRecord> {
-    return this.scope(() => {
-      const s = ParseScript(sourceText, this, hostDefined);
-      if (Array.isArray(s)) {
-        return ThrowCompletion(s[0]);
-      }
-      return NormalCompletion(s);
-    });
+    const pop = this.pushTopContext();
+    const s = ParseScript(sourceText, this, hostDefined);
+    pop?.();
+    if (Array.isArray(s)) {
+      return ThrowCompletion(s[0]);
+    }
+    return NormalCompletion(s);
   }
 
   compileModule(sourceText: string, hostDefined?: ModuleRecordHostDefined) {
-    return this.scope(() => {
-      const s = ParseModule(sourceText, this, {
-        SourceTextModuleRecord: ManagedSourceTextModuleRecord,
-        ...hostDefined,
-      });
-      if (Array.isArray(s)) {
-        return ThrowCompletion(s[0]);
-      }
-      return NormalCompletion(s);
-    });
+    const pop = this.pushTopContext();
+    const s = ParseModule(sourceText, this, hostDefined);
+    pop?.();
+    if (Array.isArray(s)) {
+      return ThrowCompletion(s[0]);
+    }
+    return NormalCompletion(s);
   }
 
-  evaluateScript(sourceText: string | ScriptRecord, options: { specifier?: string, doNotTrackScriptId?: boolean } = {}, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void): ValueCompletion | undefined {
+  /**
+   * Evaluate a script.
+   * @param callback will be called after the evaluation is finished. callback may be called synchronously.
+   * When the callback is called, any execution context pushed for the evaluation will have been popped. (safe to run `runJobQueue`).
+   */
+  evaluateScript(
+    sourceText: string | ScriptRecord,
+    scriptOptions: ParseScriptHostDefined = {},
+    callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void,
+    evaluationOptions?: ResumeEvaluateOptions | false,
+  ): void {
     if (typeof sourceText === 'string') {
-      const completion = this.compileScript(sourceText, options);
+      const completion = this.compileScript(sourceText, scriptOptions);
       if (completion instanceof ThrowCompletion) {
         callback(completion);
-        return completion;
+        return;
       }
       sourceText = ValueOfNormalCompletion(completion);
     }
     if (!sourceText) throw new TypeError('sourceText is null or undefined');
-    using _ = this.scope();
-    let result: ValueCompletion | undefined;
-    surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
-      result = completion;
-      callback(completion);
-    });
-    return result;
+    surroundingAgent.evaluate(ScriptEvaluation(sourceText), callback, evaluationOptions);
   }
 
   /**
    * Evaluate a script (skip the debugger).
    */
-  evaluateScriptSkipDebugger(sourceText: string | ScriptRecord, options: { specifier?: string, doNotTrackScriptId?: boolean } = {}): ValueCompletion {
+  evaluateScriptSkipDebugger(sourceText: string | ScriptRecord, scriptOptions: ParseScriptHostDefined = {}): ValueCompletion {
     let completion;
-    this.evaluateScript(sourceText, options, (c) => {
+    this.evaluateScript(sourceText, scriptOptions, (c) => {
       completion = c;
-    });
-    if (!completion) surroundingAgent.resumeEvaluate({ noBreakpoint: true });
+    }, { noBreakpoint: true });
     if (!completion) throw new Assert.Error('Expect evaluation completes synchronously');
-    runJobQueue();
-
     return completion;
   }
 
-
+  /**
+   * Evaluate a module.
+   * @param callback will be called after the evaluation is finished. callback may be called synchronously.
+   * callback will be called **with or without an execution context**.
+   */
   evaluateModule<T extends CyclicModuleRecord>(sourceText: string | T, specifier: string | undefined, finish: (completion: ValueCompletion<PromiseObject>) => void) {
     if (sourceText === undefined || sourceText === null) throw new TypeError('sourceText must be a string or a ModuleRecord');
     const moduleCompletion = typeof sourceText === 'string' ? this.compileModule(sourceText, { specifier }) : sourceText;
@@ -375,27 +310,29 @@ export class ManagedRealm extends Realm {
     }
     const module = X(moduleCompletion);
 
-    this.scope(() => {
-      PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
-        const link = module.Link();
-        if (link instanceof ThrowCompletion) {
-          finish(link);
-          return Value.undefined;
-        }
-        finish(yield* module.Evaluate());
+    const pop = this.pushTopContext();
+    PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
+      const link = module.Link();
+      if (link instanceof ThrowCompletion) {
+        finish(link);
         return Value.undefined;
-      }), CreateBuiltinFunction.from((err = Value.undefined) => {
-        finish(ThrowCompletion(err));
-      }));
-    });
-    runJobQueue();
+      }
+      finish(yield* module.Evaluate());
+      return Value.undefined;
+    }), CreateBuiltinFunction.from((err = Value.undefined) => {
+      finish(ThrowCompletion(err));
+    }));
+    pop?.();
+    surroundingAgent.eventLoop.runOnce();
   }
 
   createJSONModule(sourceText: string): PlainCompletion<SyntheticModuleRecord> {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    const module = this.scope(() => ParseJSONModule(Value(sourceText)));
+    const pop = this.pushTopContext();
+    const module = ParseJSONModule(Value(sourceText));
+    pop?.();
     return module;
   }
 
@@ -403,7 +340,9 @@ export class ManagedRealm extends Realm {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    const module = this.scope(() => CreateTextModule(Value(sourceText)));
+    const pop = this.pushTopContext();
+    const module = CreateTextModule(Value(sourceText));
+    pop?.();
     return module;
   }
 
@@ -411,16 +350,10 @@ export class ManagedRealm extends Realm {
     if (!(content instanceof Uint8Array)) {
       throw new TypeError('content must be a Uint8Array');
     }
+    const pop = this.pushTopContext();
     const arrayBuffer = Q(skipDebugger(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), content.buffer.byteLength)));
-    const module = this.scope(() => CreateBytesModule(arrayBuffer));
+    const module = CreateBytesModule(arrayBuffer);
+    pop?.();
     return module;
-  }
-}
-
-class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
-  override* Evaluate(importedNames?: ImportedNamesValue) {
-    const r = yield* super.Evaluate(importedNames);
-    runJobQueue();
-    return r;
   }
 }

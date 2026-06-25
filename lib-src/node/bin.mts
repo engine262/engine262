@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { start } from 'node:repl';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   format as _format, inspect as _inspect, parseArgs, styleText,
@@ -22,14 +22,12 @@ import {
   surroundingAgent,
   ThrowCompletion,
   ValueOfNormalCompletion,
-  ScriptEvaluation,
   type PlainEvaluator,
   importBundledTest262Harness,
   boostTest262Harness,
   ModuleCache,
   PerformPromiseThen,
   CreateBuiltinFunction,
-  runJobQueue,
   composeModuleLoaders,
   Descriptor,
   isFunctionObject,
@@ -44,6 +42,8 @@ import {
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
+const writeStdout = (text: string) => writeSync(process.stdout.fd, text);
+const writeStderr = (text: string) => writeSync(process.stderr.fd, text);
 const help = () => `
 engine262 v${packageJson.version}
 
@@ -113,7 +113,7 @@ const argv = parseArgs({
 });
 
 if (argv.values.help) {
-  process.stdout.write(help());
+  writeStdout(help());
   process.exit(0);
 }
 
@@ -146,10 +146,10 @@ const agent = new Agent({
         setTimeout(() => {
           if (!unhandledRejectionPendingLog.has(promise)) return;
           unhandledRejectionPendingLog.delete(promise);
-          realm.scope(() => {
-            const err = inspect(promise.PromiseResult!);
-            process.stderr.write(`Unhandled promise rejection: ${err}\n`);
-          });
+          const pop = realm.pushTopContext();
+          const err = inspect(promise.PromiseResult!);
+          pop?.();
+          writeStderr(`Unhandled promise rejection: ${err}\n`);
         }, 10);
       } else if (operation === 'handle') {
         unhandledExceptionCount -= 1;
@@ -159,14 +159,17 @@ const agent = new Agent({
   },
   uncaughtExceptionTrackers: new Set([(error) => {
     unhandledExceptionCount += 1;
+    const pop = realm.pushTopContext();
     const err = inspect(error);
-    process.stderr.write(`Uncaught exception: ${err}\n`);
+    pop?.();
+    writeStderr(`Uncaught exception: ${err}\n`);
   }]),
 });
 setSurroundingAgent(agent);
 
 const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'repl', specifier: process.cwd() });
-realm.scope(() => {
+{
+  const pop = realm.pushTopContext();
   realm.GlobalObject.properties.set('setTimeout', Descriptor({
     Value: CreateBuiltinFunction.from(function* timeout(f = Value.undefined, time = Value.undefined) {
       if (!isFunctionObject(f)) return Throw.TypeError('setTimeout($1, ...) should be a function', f);
@@ -180,14 +183,14 @@ realm.scope(() => {
         callerRealm: surroundingAgent.runningExecutionContext.Realm,
         callerScriptOrModule: GetActiveScriptOrModule(),
       };
-      setTimeout(() => {
-        surroundingAgent.jobQueue.push(job);
-        runJobQueue();
-      }, delayTime);
+      surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
+        setTimeout(enqueue, delayTime);
+      });
       return Value.undefined;
     }),
   }));
-});
+  pop?.();
+}
 
 // Define console.log
 {
@@ -201,20 +204,22 @@ realm.scope(() => {
   });
   createConsole(realm, {
     * log(args) {
-      process.stdout.write(`${yield* format(args)}\n`);
+      writeStdout(`${yield* format(args)}\n`);
     },
     * error(args) {
-      process.stderr.write(`${yield* format(args)}\n`);
+      writeStderr(`${yield* format(args)}\n`);
     },
     * debug(args) {
-      process.stderr.write(`${yield* format(args)}\n`);
+      writeStderr(`${yield* format(args)}\n`);
     },
   });
 }
 
 if (argv.values.test262) {
   // eslint-disable-next-line no-console
-  createTest262Intrinsics(realm, argv.values.test262, console.log);
+  createTest262Intrinsics(realm, argv.values.test262, (...args) => {
+    writeStdout(`${_format(...args)}\n`);
+  });
 }
 
 if (argv.values['test262-harness']) {
@@ -233,7 +238,7 @@ async function setupInspector(mode: 'file' | 'eval' | 'pipe' | 'repl') {
     has_ws = true;
   } catch {
     if (inspectArg) {
-      process.stderr.write('--inspect requires the "ws" package to be installed.\n');
+      writeStderr('--inspect requires the "ws" package to be installed.\n');
       process.exit(1);
     }
   }
@@ -242,7 +247,7 @@ async function setupInspector(mode: 'file' | 'eval' | 'pipe' | 'repl') {
   const inspector = await NodeWebsocketInspector.new();
   inspector.attachAgent(surroundingAgent, [realm]);
   inspector.preference.previewDebug = argv.values['preview-debug'] || false;
-  process.stdout.write([
+  writeStdout([
     `Inspector attached at 127.0.0.1:${inspector.port}${inspectArg ? '' : ', use --no-inspect to disable'}`,
     'Paste this URL into Chromium to open DevTools:',
     `    ${inspector.devtoolsFrontendUrl}`,
@@ -253,37 +258,36 @@ async function setupInspector(mode: 'file' | 'eval' | 'pipe' | 'repl') {
 
 
 function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: string, filename: string) {
-  realm.scope(() => {
-    if (argv.values.module || filename.endsWith('.mjs')) {
-      realm.evaluateModule(source, filename, (promise) => {
-        if (promise instanceof ThrowCompletion) {
-          handleException(promise);
-          return;
-        }
-        PerformPromiseThen(ValueOfNormalCompletion(promise), Value.null, CreateBuiltinFunction.from((error = Value.undefined) => {
-          handleException(ThrowCompletion(error));
-        }));
-        runJobQueue();
-      });
-    } else {
-      let completion;
-      realm.evaluateScript(source, { specifier: filename }, (c) => {
-        completion = c;
-        handleException(completion);
-      });
-      if (!completion) surroundingAgent.resumeEvaluate();
-      runJobQueue();
-    }
-  });
+  if (argv.values.module || filename.endsWith('.mjs')) {
+    realm.evaluateModule(source, filename, (promise) => {
+      if (promise instanceof ThrowCompletion) {
+        handleResult(promise);
+        return;
+      }
+      PerformPromiseThen(ValueOfNormalCompletion(promise), Value.null, CreateBuiltinFunction.from((error = Value.undefined) => {
+        handleResult(ThrowCompletion(error));
+      }));
+    });
+  } else {
+    realm.evaluateScript(source, { specifier: filename }, (completion) => {
+      handleResult(completion);
+    });
+  }
 
-  inspector?.stop();
 
-  function handleException(completion: PlainCompletion<void | Value>) {
+  function handleResult(completion: PlainCompletion<void | Value>) {
     if (completion instanceof ThrowCompletion) {
+      const pop = surroundingAgent.hasRunningExecutionContext ? undefined : realm.pushTopContext();
       const inspected = inspect(completion);
-      process.stderr.write(`${inspected}\n`);
+      pop?.();
+      writeStderr(`${inspected}\n`);
       unhandledExceptionCount += 1;
     }
+    // Note: we don't have exit callback (process.on('beforeExit')), so it is impossible
+    // to have more code running after onNoPendingJob is fired.
+    surroundingAgent.eventLoop.onNoPendingJob.add(() => {
+      inspector?.stop();
+    });
   }
 }
 
@@ -306,36 +310,30 @@ if (argv.positionals[0]) {
   });
 } else {
   const inspector = await setupInspector('repl');
-  process.stdout.write(`Welcome to ${packageJson.name} v${String(packageJson.version).replace('0.0.1-', '')} Please report bugs to ${packageJson.bugs.url}\nType ".help" for more information.\n`);
+  writeStdout(`Welcome to ${packageJson.name} v${String(packageJson.version).replace('0.0.1-', '')} Please report bugs to ${packageJson.bugs.url}\nType ".help" for more information.\n`);
   const server = start({
     prompt: '> ',
     eval: (cmd, _context, _filename, callback) => {
       try {
-        const script = realm.compileScript(cmd, {});
-        if (script instanceof ThrowCompletion) {
-          callback(null, script);
-          return;
-        }
-        let c;
-        surroundingAgent.evaluate(ScriptEvaluation(ValueOfNormalCompletion(script)), (completion) => {
-          c = completion;
+        realm.evaluateScript(cmd, {}, (completion) => {
           callback(null, completion);
         });
-        if (!c) {
-          surroundingAgent.resumeEvaluate();
-        }
       } catch (e) {
         callback(e as Error, null);
       }
     },
     preview: false,
-    writer: (o) => realm.scope(() => {
+    writer: (o) => {
       if (o instanceof ThrowCompletion) o = o.Value;
       if (o instanceof NormalCompletion && o.Value instanceof Value) o = o.Value;
-      if (o instanceof Value) return o === Value.undefined ? '' : inspect(o);
-      return _inspect(o);
-    }),
+      let out;
+      const pop = realm.pushTopContext();
+      if (o instanceof Value) out = o === Value.undefined ? '' : inspect(o);
+      else out = _inspect(o);
+      pop?.();
+      return out;
+    },
   });
 
-  server.on('exit', () => inspector?.stop());
+  server.on('exit', () => surroundingAgent.eventLoop.onNoPendingJob.add(() => inspector?.stop()));
 }
