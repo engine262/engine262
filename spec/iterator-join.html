@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<pre class="metadata">
+title: Proposal Iterator Join
+stage: 0
+contributors: Kevin Gibbons
+</pre>
+
+<div id="metadata-block">
+  <h1>Contributing to this Proposal</h1>
+  <p>You can discuss this proposal <a href="https://github.com/bakkot/proposal-iterator-join">on GitHub</a>.</p>
+</div>
+
+<emu-clause id="sec-iterator.prototype.join">
+  <h1>Iterator.prototype.join ( _separator_ )</h1>
+  <p>This method converts the values of the iterator to Strings, and then concatenates these Strings, separated by occurrences of the _separator_. If no separator is provided, a single comma is used as the separator.</p>
+  <p>It performs the following steps when called:</p>
+  <emu-alg>
+    1. Let _O_ be the *this* value.
+    1. If _O_ is not an Object, throw a *TypeError* exception.
+    1. Let _iterated_ be the Iterator Record { [[Iterator]]: _O_, [[NextMethod]]: *undefined*, [[Done]]: *false* }.
+    1. If _separator_ is *undefined*, then
+      1. Let _sep_ be *","*.
+    1. Else,
+      1. Let _sep_ be Completion(ToString(_separator_)).
+      1. IfAbruptCloseIterator(_sep_, _iterated_).
+    1. Set _iterated_ to ? GetIteratorDirect(_O_).
+    1. Let _R_ be the empty String.
+    1. Let _first_ be *true*.
+    1. Repeat,
+      1. Let _value_ be ? IteratorStepValue(_iterated_).
+      1. If _value_ is ~done~, return _R_.
+      1. If _first_ is *true*, then
+        1. Set _first_ to *false*.
+      1. Else,
+        1. Set _R_ to the string-concatenation of _R_ and _sep_.
+      1. If _value_ is neither *undefined* nor *null*, then
+        1. Let _S_ be Completion(ToString(_value_)).
+        1. IfAbruptCloseIterator(_S_, _iterated_).
+        1. Set _R_ to the string-concatenation of _R_ and _S_.
+  </emu-alg>
+</emu-clause>

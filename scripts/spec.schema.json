@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "engine262 Spec Lock File",
+  "description": "A list of TC39 proposal specifications pinned to specific commits",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "spec": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique identifier for the proposal"
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief description of the proposal"
+          },
+          "source": {
+            "type": "string",
+            "format": "uri",
+            "description": "GitHub URL for the repository or PR"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$",
+            "description": "Full 40-character SHA-1 commit hash"
+          },
+          "path": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Glob patterns for files to copy into the spec directory"
+          },
+          "diff": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of files to include in a generated .patch file (primarily for PR sources)"
+          }
+        },
+        "required": ["name", "description", "source", "commit", "path"]
+      }
+    }
+  },
+  "required": ["spec"]
+}

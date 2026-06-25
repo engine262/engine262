@@ -1,0 +1,19 @@
+<emu-clause id="sec-finalization-registry.prototype.cleanupSome" normative-optional>
+  <h1>FinalizationRegistry.prototype.cleanupSome ( [ _callback_ ] )</h1>
+  <p>The following steps are taken:</p>
+  <emu-alg>
+    1. Let _finalizationRegistry_ be the *this* value.
+    1. Perform ? RequireInternalSlot(_finalizationRegistry_, [[Cells]]).
+    1. If _callback_ is present and IsCallable(_callback_) is
+    *false*, throw a *TypeError* exception.
+    1. Perform ? CleanupFinalizationRegistry(_finalizationRegistry_, _callback_).
+    1. Return *undefined*.
+  </emu-alg>
+  <emu-note type="editor">
+    This section is to be treated identically to the "Annex B" of ECMA-262, but to be written in-line with the main specification.
+  </emu-note>
+  <emu-note type="editor">
+    See <a href="https://github.com/whatwg/html/issues/5446">HTML issue #5446</a> for information about cleanupSome on browsers.
+  </emu-note>
+
+</emu-clause>
