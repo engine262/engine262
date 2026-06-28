@@ -175,14 +175,14 @@ export class Agent {
     }
     let debuggerStatementCompletion = options?.debuggerStatementCompletion;
     while (true) {
-      const state = evaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
+      const state = evaluator.next({ resume: 'debugger', value: debuggerStatementCompletion });
       debuggerStatementCompletion = undefined;
 
       if (!noBreakpoint && this.breakpointsEnabled && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
-        if (state.value.type === 'debugger') {
+        if (state.value.suspend === 'debugger') {
           this.hostDefinedOptions.onDebugger();
           return { done: false, value: undefined };
-        } else if (state.value.type === 'potential-debugger') {
+        } else if (state.value.suspend === 'potential-debugger') {
           if (options?.pauseAt === 'step-in' && shouldStepOnNode()) {
             this.hostDefinedOptions.onDebugger();
             return { done: false, value: undefined };

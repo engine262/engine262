@@ -24,7 +24,6 @@ export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harne
 export { type Mutable, OutOfRange } from './utils/language.mts';
 export { kInternal } from './utils/internal.mts';
 export { JSStringMap, JSStringSet, PropertyKeyMap } from './utils/container.mts';
-export { skipDebugger } from './utils/evaluator.mts';
 export {
   CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
 } from './utils/stack.mts';

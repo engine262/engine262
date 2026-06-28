@@ -12,6 +12,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   Call,
+  EnsureCompletion,
   GeneratorYield,
   GetGeneratorKind,
   GetIterator,
@@ -70,9 +71,9 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         }
         // vi. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
         if (generatorKind === 'async') {
-          received = yield* AsyncGeneratorYield(Q(yield* IteratorValue(innerResult)));
+          received = EnsureCompletion(yield* AsyncGeneratorYield(Q(yield* IteratorValue(innerResult))));
         } else { // vii. Else, set received to GeneratorYield(innerResult).
-          received = yield* GeneratorYield(innerResult);
+          received = EnsureCompletion(yield* GeneratorYield(innerResult));
         }
       } else if (received instanceof ThrowCompletion) { // b. Else if received is a throw completion, then
         // i. Let throw be ? GetMethod(iterator, "throw").
@@ -99,9 +100,9 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
           }
           // 7. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
           if (generatorKind === 'async') {
-            received = yield* AsyncGeneratorYield(Q(yield* IteratorValue(innerResult)));
+            received = EnsureCompletion(yield* AsyncGeneratorYield(Q(yield* IteratorValue(innerResult))));
           } else { // 8. Else, set received to GeneratorYield(innerResult).
-            received = yield* GeneratorYield(innerResult);
+            received = EnsureCompletion(yield* GeneratorYield(innerResult));
           }
         } else { // iii. Else,
           // 1. NOTE: If iterator does not have a throw method, this throw is going to terminate the yield* loop. But first we need to give iterator a chance to clean up.
@@ -154,9 +155,9 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         }
         // ix. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
         if (generatorKind === 'async') {
-          received = yield* AsyncGeneratorYield(Q(yield* IteratorValue(innerReturnResult)));
+          received = EnsureCompletion(yield* AsyncGeneratorYield(Q(yield* IteratorValue(innerReturnResult))));
         } else { // ixx. Else, set received to GeneratorYield(innerResult).
-          received = yield* GeneratorYield(innerReturnResult);
+          received = EnsureCompletion(yield* GeneratorYield(innerReturnResult));
         }
       }
     }

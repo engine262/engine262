@@ -3,9 +3,9 @@ import {
 } from './value.mts';
 import { kAsyncContext } from './utils/internal.mts';
 import { callable, OutOfRange } from './utils/language.mts';
-import type { Evaluator, ValueEvaluator } from './evaluator.mts';
+import type { Evaluator } from './evaluator.mts';
 import {
-  type GCMarker, surroundingAgent,
+  type GCMarker,
   Assert,
   CreateBuiltinFunction,
   PerformPromiseThen,
@@ -13,6 +13,10 @@ import {
   PromiseResolve,
   RunSuspendedContext,
   type IteratorRecord,
+  runningExecutionContext,
+  intrinsics,
+  RunCallerContext,
+  type ValueEvaluator,
 } from '#self';
 import { skipDebugger } from '#self';
 
@@ -106,7 +110,7 @@ export { type ValueEvaluator } from './evaluator.mts';
  * If the T is an ECMAScript language value, use ExpressionCompletion<T>.
  */
 export type PlainCompletion<T> = T | NormalCompletion<T> | ThrowCompletion;
-export type YieldCompletion = NormalCompletion<Value> | ThrowCompletion | ReturnCompletion;
+export type YieldCompletion = Value | NormalCompletion<Value> | ThrowCompletion | ReturnCompletion;
 
 /** https://tc39.es/ecma262/#sec-completion-ao */
 export const Completion = CompletionImpl as {
@@ -450,37 +454,24 @@ export function ValueOfNormalCompletion<T>(value: NormalCompletion<T> | T) {
   return value instanceof NormalCompletion ? value.Value : value;
 }
 
-export function* Await(value: Value): ValueEvaluator {
-  // 1. Let asyncContext be the running execution context.
-  const asyncContext = surroundingAgent.runningExecutionContext;
-  // 2. Let promise be ? PromiseResolve(%Promise%, value).
-  const promise = Q(yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
-  // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
+// TODO(spec): in which case Await might return NormalCompletion<empty>?
+export function* Await(arg: Value): ValueEvaluator {
+  const asyncContext = runningExecutionContext();
+  const promise = Q(yield* PromiseResolve(intrinsics()['%Promise%'], arg));
   const fulfilledClosure = function* fulfilledClosure([v = Value.undefined]: Arguments) {
-    yield* RunSuspendedContext(asyncContext, NormalCompletion(v), 'await-resume');
+    yield* RunSuspendedContext(asyncContext, { resume: 'await', value: NormalCompletion(v) });
     return Value.undefined;
   };
-  // 4. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
   const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
-  // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
   const rejectedClosure = function* rejectedClosure([reason = Value.undefined]: Arguments) {
-    yield* RunSuspendedContext(asyncContext, ThrowCompletion(reason), 'await-resume');
+    yield* RunSuspendedContext(asyncContext, { resume: 'await', value: ThrowCompletion(reason) });
     return Value.undefined;
   };
-  // 6. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
   const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onRejected[kAsyncContext] = asyncContext;
-  // 7. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
-  X(PerformPromiseThen(promise, onFulfilled, onRejected));
-  // 8. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
-  surroundingAgent.executionContextStack.pop(asyncContext);
-  // 9. Set the code evaluation state of asyncContext such that when evaluation is resumed with a Completion completion, the following steps of the algorithm that invoked Await will be performed, with completion available.
-  const completion = yield { type: 'await' };
-  Assert(completion.type === 'await-resume');
-  // 10. Return.
-  return completion.value;
-  // 11. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of asyncContext.
+  PerformPromiseThen(promise, onFulfilled, onRejected);
+  return yield* RunCallerContext({ suspend: 'await' });
 }

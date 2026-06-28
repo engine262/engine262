@@ -76,7 +76,7 @@ import {
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
 import { avoid_using_children } from './parser/utils.mts';
-import { surroundingAgent } from '#self';
+import { ObjectValue, surroundingAgent } from '#self';
 import {
   type AbruptCompletion, Assert, type ReferenceRecord, type ReturnCompletion, Value,
   type ValueCompletion,
@@ -88,8 +88,9 @@ export type ValueEvaluator<V extends Value = Value> = Evaluator<ValueCompletion<
 export type ExpressionEvaluator = Evaluator<PlainCompletion<ReferenceRecord | Value>>;
 export type StatementEvaluator = Evaluator<PlainCompletion<void | Value> | AbruptCompletion>;
 export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
-export type YieldEvaluator = Evaluator<YieldCompletion | Value>;
-export type YieldOrAwaitEvaluator = Evaluator<YieldCompletion | PlainCompletion<void> | Value>;
+export type YieldEvaluator = Evaluator<YieldCompletion>;
+export type AwaitEvaluator = Evaluator<void>;
+export type YieldOrAwaitEvaluator = Evaluator<YieldCompletion | void>;
 export type AsyncBuiltinSteps = () => Evaluator<Value | NormalCompletion<Value> | ThrowCompletion | ReturnCompletion>;
 export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
 
@@ -105,11 +106,11 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
   }
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
     if (surroundingAgent.testBreakpoint(node)) {
-      const resumption = yield { type: 'debugger' };
-      Assert(resumption.type === 'debugger-resume');
+      const resumption = yield { suspend: 'debugger' };
+      Assert(resumption.resume === 'debugger');
     } else {
-      const resumption = yield { type: 'potential-debugger' };
-      Assert(resumption.type === 'debugger-resume');
+      const resumption = yield { suspend: 'potential-debugger' };
+      Assert(resumption.resume === 'debugger');
     }
   }
 
@@ -235,8 +236,8 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'CallExpression': {
       surroundingAgent.runningExecutionContext.callSite.setCallLocation(node);
       const r = yield* Evaluate_CallExpression(node);
-      const resumption = yield { type: 'potential-debugger' };
-      Assert(resumption.type === 'debugger-resume');
+      const resumption = yield { suspend: 'potential-debugger' };
+      Assert(resumption.resume === 'debugger');
       surroundingAgent.runningExecutionContext.callSite.setCallLocation(null);
       return r;
     }
@@ -285,23 +286,41 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
   }
 }
 
-export type EvaluatorYieldType =
-  | { type: 'debugger' }
-  | { type: 'potential-debugger' }
-  | { type: 'await' }
-  | { type: 'yield', value: Value }
-  | { type: 'async-generator-yield' }
-
-export type EvaluatorNextType = {
-  type: 'debugger-resume',
-  value: ValueCompletion | undefined
-} | {
-  type: 'await-resume',
-  value: ValueCompletion
-} | {
-  type: 'generator-resume' | 'async-generator-resume',
-  value: ValueCompletion | ReturnCompletion
+/* node:coverage enable */
+export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T {
+  let steps = 0;
+  while (true) {
+    const { done, value } = iterator.next({ resume: 'debugger', value: undefined });
+    if (done) {
+      return value;
+    }
+    /* node:coverage ignore next 4 */
+    steps += 1;
+    if (steps > maxSteps) {
+      throw new RangeError('Max steps exceeded');
+    }
+  }
 }
+
+export type EvaluatorYieldType_Debugger = { suspend: 'debugger' } | { suspend: 'potential-debugger' }
+export type EvaluatorYieldType_Await = { suspend: 'await' }
+export type EvaluatorYieldType_Yield = { suspend: 'yield', value: ObjectValue }
+export type EvaluatorYieldType_AsyncYield = { suspend: 'async-yield' }
+export type EvaluatorYieldType =
+  | EvaluatorYieldType_Debugger
+  | EvaluatorYieldType_Await
+  | EvaluatorYieldType_Yield
+  | EvaluatorYieldType_AsyncYield
+
+export type EvaluatorNextType_Debugger = { resume: 'debugger', value: ValueCompletion | void }
+export type EvaluatorNextType_Await = { resume: 'await', value: ValueCompletion }
+export type EvaluatorNextType_Yield = { resume: 'yield', value: NormalCompletion<Value> | Value | void | ReturnCompletion | ThrowCompletion }
+export type EvaluatorNextType_AsyncYield = { resume: 'async-yield', value: void | YieldCompletion }
+export type EvaluatorNextType =
+  | EvaluatorNextType_Debugger
+  | EvaluatorNextType_Await
+  | EvaluatorNextType_Yield
+  | EvaluatorNextType_AsyncYield
 
 export interface BreakpointLocation {
   scriptId: string;

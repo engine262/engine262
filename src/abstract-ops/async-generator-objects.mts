@@ -32,6 +32,8 @@ import {
 } from './all.mts';
 import {
   RunSuspendedContext, Throw, type Realm, surroundingAgent,
+  RunCallerContext,
+  runningExecutionContext,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -151,7 +153,7 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
   // 5. Let promiseCapability be next.[[Capability]].
   const promiseCapability = next.Capability;
   // 6. Let value be completion.[[Value]].
-  const value = completion.Value;
+  const value = completion instanceof Value ? completion : completion.Value;
   // 7. If completion.[[Type]] is throw, then
   if (completion instanceof ThrowCompletion) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « value »).
@@ -188,7 +190,7 @@ export function* AsyncGeneratorResume(generator: AsyncGeneratorObject, completio
   // 3. Set generator.[[AsyncGeneratorState]] to executing.
   generator.AsyncGeneratorState = 'executing';
   // 4. Perform ! RunSuspendedContext(genContext, completion).
-  X(yield* RunSuspendedContext(genContext, completion, 'async-generator-resume'));
+  X(yield* RunSuspendedContext(genContext, { resume: 'async-yield', value: completion }));
   return undefined;
 }
 
@@ -204,58 +206,39 @@ function* AsyncGeneratorUnwrapYieldResumption(resumptionValue: YieldCompletion):
   if (awaited instanceof ThrowCompletion) {
     return Q(awaited);
   }
-  // 4. Assert: awaited.[[Type]] is normal.
   Assert(awaited instanceof NormalCompletion);
-  // 5. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
   return ReturnCompletion(awaited.Value);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratoryield */
-export function* AsyncGeneratorYield(value: Value): YieldEvaluator {
-  // 1. Let genContext be the running execution context.
-  const genContext = surroundingAgent.runningExecutionContext;
-  // 2. Assert: genContext is the execution context of a generator.
-  Assert(!!genContext.Generator);
-  // 3. Let generator be the value of the Generator component of genContext.
-  const generator = genContext.Generator as AsyncGeneratorObject;
-  // 4. Assert: GetGeneratorKind() is async.
-  Assert(GetGeneratorKind() === 'async');
-  // 5. Let completion be NormalCompletion(value).
-  const completion = NormalCompletion(value);
-  // 6. Assert: The execution context stack has at least two elements.
-  Assert(surroundingAgent.executionContextStack.length >= 2);
-  // 7. Let previousContext be the second to top element of the execution context stack.
-  const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
-  // 8. Let previousRealm be previousContext's Realm.
-  const previousRealm = previousContext.Realm;
-  // 9. Perform AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
-  AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm);
-  // 10. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue;
-  // 11. If queue is not empty, then
-  if (queue.length > 0) {
-    // a. NOTE: Execution continues without suspending the generator.
-    // b. Let toYield be the first element of queue.
-    const toYield = queue[0];
-    // c. Let resumptionValue be toYield.[[Completion]].
-    const resumptionValue = toYield.Completion;
-    // d. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
-    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
-  } else { // 12. Else,
-    // a. Set generator.[[AsyncGeneratorState]] to suspendedYield.
-    generator.AsyncGeneratorState = 'suspendedYield';
-    // b. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
-    surroundingAgent.executionContextStack.pop(genContext);
-    // c. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
-    const resumptionValue = yield { type: 'async-generator-yield' };
-    Assert(resumptionValue.type === 'async-generator-resume');
-    // i. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
-    return yield* AsyncGeneratorUnwrapYieldResumption(EnsureCompletion(resumptionValue.value));
-    // ii. NOTE: When the above step returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
+export function* AsyncGeneratorYield(arg: Value): YieldEvaluator {
+  const genContext = runningExecutionContext();
 
-    // d. Return undefined.
-    // e. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+  // Assert: genContext is the execution context of a generator.
+  Assert(genContext.Generator !== undefined);
+
+  const gen = genContext.Generator as AsyncGeneratorObject;
+  Assert(GetGeneratorKind() === 'async');
+  const completion = NormalCompletion(arg);
+
+  // Assert: The execution context stack has at least two elements.
+  Assert(surroundingAgent.executionContextStack.length >= 2);
+
+  // Let previousContext be the second to top element of the execution context stack.
+  const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
+
+  const previousRealm = previousContext.Realm;
+  AsyncGeneratorCompleteStep(gen, completion, Value.false, previousRealm);
+  const queue = gen.AsyncGeneratorQueue;
+  if (queue.length) {
+    // a. NOTE: Execution continues without suspending the generator.
+    const toYield = queue[0];
+    const resumptionValue = toYield.Completion;
+    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
   }
+  gen.AsyncGeneratorState = 'suspendedYield';
+  const resumptionValue = yield* RunCallerContext({ suspend: 'async-yield' });
+  return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */

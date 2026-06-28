@@ -1,5 +1,5 @@
 import {
-  EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord, NormalCompletion, RunSuspendedContext,
+  EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord, RunSuspendedContext,
   type AsyncBuiltinSteps,
 } from '#self';
 
@@ -30,7 +30,7 @@ export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asy
     }
     return undefined;
   }());
-  const result = X(yield* RunSuspendedContext(asyncContext, NormalCompletion(undefined), 'await-resume'));
+  const result = X(yield* RunSuspendedContext(asyncContext, { resume: 'async-yield', value: undefined }));
   Assert(result === undefined);
   return Value.undefined;
 }

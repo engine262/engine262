@@ -212,8 +212,8 @@ export function* Call(F: Value, V: Value, argumentsList: Arguments = []): ValueE
   }
 
   if (surroundingAgent.breakpointsByFunction.has(F)) {
-    const resumption = yield { type: 'debugger' };
-    Assert(resumption.type === 'debugger-resume');
+    const resumption = yield { suspend: 'debugger' };
+    Assert(resumption.resume === 'debugger');
   }
 
   return EnsureCompletion(Q(yield* F.Call(V, argumentsList)));

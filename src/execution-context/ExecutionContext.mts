@@ -1,9 +1,7 @@
 import type { ExecutionContextHostDefined, GCMarker } from '../host-defined/engine.mts';
-import { EnsureCompletion, type ReturnCompletion, type ValueCompletion } from '../completion.mts';
-import { resume } from '../utils/evaluator.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import {
-  type YieldEvaluator, NullValue, type FunctionObject, Value, type GeneratorObject, type AsyncGeneratorObject, AbstractModuleRecord, type ScriptRecord, EnvironmentRecord, PrivateEnvironmentRecord, CallSite, PromiseCapabilityRecord, Realm,
+  NullValue, type FunctionObject, Value, type GeneratorObject, type AsyncGeneratorObject, AbstractModuleRecord, type ScriptRecord, EnvironmentRecord, PrivateEnvironmentRecord, CallSite, PromiseCapabilityRecord, Realm,
   surroundingAgent,
   Assert,
   GetIdentifierReference,
@@ -11,9 +9,21 @@ import {
   UndefinedValue,
   type EnvironmentRecordWithThisBinding,
   ObjectValue,
-  type EvaluatorNextType,
   type YieldOrAwaitEvaluator,
-  type PlainCompletion,
+  type EvaluatorNextType_Await,
+  type EvaluatorNextType_Yield,
+  type EvaluatorYieldType_Await,
+  type EvaluatorYieldType_Yield,
+  type EvaluatorYieldType_AsyncYield,
+  type EvaluatorNextType_AsyncYield,
+  type Evaluator,
+  OutOfRange,
+  type EvaluatorNextType,
+  type YieldCompletion,
+  type EvaluatorYieldType,
+  type YieldEvaluator,
+  type ValueEvaluator,
+  type AwaitEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#running-execution-context */
@@ -177,17 +187,62 @@ export function GetGlobalObject() {
 }
 
 /** https://tc39.es/ecma262/#sec-runsuspendedcontext */
-// _resumeType is for assertion.
-export function RunSuspendedContext(context: ExecutionContext, completionRecord: ValueCompletion | PlainCompletion<void>, _resumeType: 'await-resume'): YieldOrAwaitEvaluator;
-export function RunSuspendedContext(context: ExecutionContext, completionRecord: ValueCompletion | ReturnCompletion, _resumeType: 'generator-resume' | 'async-generator-resume'): YieldEvaluator;
-export function* RunSuspendedContext(
-  context: ExecutionContext,
-  completionRecord: ValueCompletion | PlainCompletion<void> | ReturnCompletion,
-  _resumeType: Exclude<EvaluatorNextType['type'], 'debugger-resume'>,
-): YieldOrAwaitEvaluator {
+export function RunSuspendedContext(context: ExecutionContext, completionRecord: EvaluatorNextType_Yield): YieldEvaluator
+export function RunSuspendedContext(context: ExecutionContext, completionRecord: EvaluatorNextType_Await | EvaluatorNextType_AsyncYield): AwaitEvaluator
+export function* RunSuspendedContext(context: ExecutionContext, completionRecord: EvaluatorNextType): YieldOrAwaitEvaluator {
   const callerContext = surroundingAgent.runningExecutionContext;
+
+  // Suspend callerContext.
+  // Push context onto the execution context stack; context is now the running execution context.
   surroundingAgent.executionContextStack.push(context);
-  const result = EnsureCompletion(yield* resume(context, { type: _resumeType, value: completionRecord } as EvaluatorNextType));
-  Assert(surroundingAgent.runningExecutionContext === callerContext);
+
+  // Resume the suspended evaluation of context using completionRecord as the result of the operation that suspended it.
+  // Let result be the Completion Record returned by the resumed computation.
+  let iter_result: IteratorResult<EvaluatorYieldType, YieldCompletion | void>;
+  let result: YieldCompletion | void;
+  let completion: EvaluatorNextType = completionRecord;
+  while (true) {
+    // run the evaluator
+    iter_result = context.CodeEvaluationState!.next(completion);
+    if (iter_result.done) {
+      result = iter_result.value;
+      break;
+    }
+    const { value } = iter_result;
+    // if it is a debugger break, pop it to the evaluator runner
+    if (value.suspend === 'debugger' || value.suspend === 'potential-debugger') {
+      completion = yield value;
+    } else if (value.suspend === 'await' || value.suspend === 'async-yield') {
+      return undefined;
+    } else if (value.suspend === 'yield') {
+      return value.value;
+    } else {
+      throw OutOfRange.exhaustive(value);
+    }
+  }
+
+  // Assert: When we reach this step, context has already been removed from the execution context stack and callerContext is the running execution context again.
+  Assert(runningExecutionContext() === callerContext);
   return result;
+}
+
+/** https://tc39.es/ecma262/#sec-runcallercontext */
+export function RunCallerContext(passingValue: EvaluatorYieldType_Await): ValueEvaluator
+export function RunCallerContext(passingValue: EvaluatorYieldType_Yield | EvaluatorYieldType_AsyncYield): Evaluator<YieldCompletion>
+export function* RunCallerContext(passingValue: EvaluatorYieldType_Await | EvaluatorYieldType_Yield | EvaluatorYieldType_AsyncYield): Evaluator<YieldCompletion> {
+  const genContext = runningExecutionContext();
+
+  // Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+  surroundingAgent.executionContextStack.pop(genContext);
+
+  // Let callerContext be the running execution context.
+  // Resume callerContext, passing NormalCompletion(value).
+  const result: EvaluatorNextType = yield passingValue;
+  Assert(result.resume === passingValue.suspend);
+  // NOTE: The above step transfers control to callerContext and pauses. The only way for it to un-pause and have control proceed to the subsequent steps in this algorithm is for genContext to be resumed again, which might never happen.
+
+  Assert(genContext === runningExecutionContext());
+
+  // Let result be the Completion Record with which genContext was just resumed.
+  return result.value!;
 }

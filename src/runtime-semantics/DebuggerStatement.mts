@@ -11,8 +11,8 @@ export function* Evaluate_DebuggerStatement(_node: ParseNode.DebuggerStatement):
     // a. Perform an implementation-defined debugging action.
     // b. Let result be an implementation-defined Completion value.
     // TODO(debugger): this should respect conditional breakpoints.
-    const completion = yield { type: 'debugger' };
-    Assert(completion.type === 'debugger-resume');
+    const completion = yield { suspend: 'debugger' };
+    Assert(completion.resume === 'debugger');
     return completion.value;
   }
   // 2. Return result.
