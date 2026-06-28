@@ -26,7 +26,9 @@ import {
   type IteratorRecord,
   type OrdinaryObject,
 } from './all.mts';
-import { RunCallerContext, RunSuspendedContext, Throw, runningExecutionContext, surroundingAgent, type ValueCompletion } from '#self';
+import {
+  RunCallerContext, RunSuspendedContext, Throw, runningExecutionContext, surroundingAgent, type ValueCompletion,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 export interface GeneratorObject extends OrdinaryObject {
@@ -199,7 +201,7 @@ export function* GeneratorResumeAbrupt(generator: Value, abruptCompletion: Throw
   // 6. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
   // 7. Return ? RunSuspendedContext(genContext, abruptCompletion).
-  const r = yield* RunSuspendedContext(genContext, { resume: 'yield', value: abruptCompletion })
+  const r = yield* RunSuspendedContext(genContext, { resume: 'yield', value: abruptCompletion });
   return r as ValueCompletion;
 }
 

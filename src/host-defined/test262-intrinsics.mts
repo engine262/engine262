@@ -21,7 +21,7 @@ import {
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
 export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log: (...args: unknown[]) => void = Reflect.get(globalThis, 'console').log) {
   const pop = realm.pushTopContext();
-  const print = CreateBuiltinFunction(function* (args: Arguments): ValueEvaluator {
+  const print = CreateBuiltinFunction(function* print(args: Arguments): ValueEvaluator {
     if (surroundingAgent.debugger_isPreviewing) {
       return NormalCompletion(Value.undefined);
     }
