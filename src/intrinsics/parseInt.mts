@@ -6,7 +6,7 @@ import {
   CreateBuiltinFunction,
   ToInt32,
   ToString,
-  F, R as MathematicalValue,
+  F, R,
   Realm,
 } from '#self';
 
@@ -54,46 +54,30 @@ function searchNotRadixDigit(str: string, R: number) {
 /** https://tc39.es/ecma262/#sec-parseint-string-radix */
 function* ParseInt([string = Value.undefined, radix = Value.undefined]: Arguments): ValueEvaluator {
   const inputString = Q(yield* ToString(string));
-  let S = X(TrimString(inputString, 'start')).stringValue();
+  let radixMV = R(Q(yield* ToInt32(radix)));
+  if (radixMV !== 0 && (radixMV < 2 || radixMV > 36)) return F(NaN);
+  let trimmedString = X(TrimString(inputString, 'start')).stringValue();
+  if (trimmedString === '') return F(NaN);
   let sign = 1;
-  if (S !== '' && S[0] === '\x2D') {
+  if (trimmedString[0] === '\x2D') {
     sign = -1;
+    trimmedString = trimmedString.slice(1);
+  } else if (trimmedString[0] === '\x2B') {
+    trimmedString = trimmedString.slice(1);
   }
-  if (S !== '' && (S[0] === '\x2B' || S[0] === '\x2D')) {
-    S = S.slice(1);
-  }
-
-  let R = MathematicalValue(Q(yield* ToInt32(radix)));
-  let stripPrefix = true;
-  if (R !== 0) {
-    if (R < 2 || R > 36) {
-      return F(NaN);
+  if (radixMV === 0 || radixMV === 16) {
+    if (trimmedString.length >= 2 && trimmedString.slice(0, 2).toLowerCase() === '0x') {
+      trimmedString = trimmedString.slice(2);
+      radixMV = 16;
     }
-    if (R !== 16) {
-      stripPrefix = false;
-    }
-  } else {
-    R = 10;
+    if (radixMV === 0) radixMV = 10;
   }
-  if (stripPrefix === true) {
-    if (S.length >= 2 && (S.startsWith('0x') || S.startsWith('0X'))) {
-      S = S.slice(2);
-      R = 16;
-    }
-  }
-  const Z = S.slice(0, searchNotRadixDigit(S, R));
-  if (Z === '') {
-    return F(NaN);
-  }
-  const mathInt = stringToRadixNumber(Z, R);
-  if (mathInt === 0) {
-    if (sign === -1) {
-      return F(-0);
-    }
-    return F(+0);
-  }
-  const number = mathInt;
-  return F(sign * number);
+  const end = searchNotRadixDigit(trimmedString, radixMV);
+  const numberString = trimmedString.slice(0, end);
+  if (numberString === '') return F(NaN);
+  const mathInt = stringToRadixNumber(numberString, radixMV);
+  if (sign === -1 && mathInt === 0) return F(-0);
+  return F(sign * mathInt);
 }
 
 export function bootstrapParseInt(realmRec: Realm) {
