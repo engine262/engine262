@@ -160,7 +160,7 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Get: getter,
+    Getter: getter,
     Enumerable: Value.true,
     Configurable: Value.true,
   });
@@ -182,7 +182,7 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Set: setter,
+    Setter: setter,
     Enumerable: Value.true,
     Configurable: Value.true,
   });
@@ -209,7 +209,7 @@ function* ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisVa
     if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Get;
+        return desc.Getter;
       }
       // ii. Return undefined.
       return Value.undefined;
@@ -238,7 +238,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisVa
     if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Set;
+        return desc.Setter;
       }
       // ii. Return undefined.
       return Value.undefined;

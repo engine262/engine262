@@ -172,8 +172,8 @@ export class InspectorContext {
           name: value.Key.Description.stringValue(),
         };
         if (value.Value) desc.value = wrap(value.Value);
-        if (value.Get) desc.get = wrap(value.Get);
-        if (value.Set) desc.set = wrap(value.Set);
+        if (value.Getter) desc.get = wrap(value.Getter);
+        if (value.Setter) desc.set = wrap(value.Setter);
         privateProperties.push(desc);
       });
 
@@ -207,8 +207,8 @@ export class InspectorContext {
             isOwn: p === object,
           };
           if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
-          if (desc.Get) descriptor.get = wrap(desc.Get);
-          if (desc.Set) descriptor.set = wrap(desc.Set);
+          if (desc.Getter) descriptor.get = wrap(desc.Getter);
+          if (desc.Setter) descriptor.set = wrap(desc.Setter);
           if (key instanceof SymbolValue) descriptor.symbol = wrap(key);
           properties.push(descriptor);
         }

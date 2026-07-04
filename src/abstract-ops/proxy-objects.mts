@@ -342,7 +342,7 @@ const InternalMethods = {
           return Throw.TypeError("'get' on proxy: property $1 is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value", P);
         }
       }
-      if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === Value.undefined) {
+      if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Getter === Value.undefined) {
         if (trapResult !== Value.undefined) {
           return Throw.TypeError("'get' on proxy: property $1 is a non-configurable accessor property on the proxy target and does not have a getter function, but the trap did not return 'undefined'", P);
         }
@@ -377,7 +377,7 @@ const InternalMethods = {
         }
       }
       if (IsAccessorDescriptor(targetDesc) === true) {
-        if (targetDesc.Set === Value.undefined) {
+        if (targetDesc.Setter === Value.undefined) {
           return Throw.TypeError("'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable accessor property without a setter", P);
         }
       }

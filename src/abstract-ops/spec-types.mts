@@ -68,8 +68,8 @@ export function R(x: unknown) {
 }
 
 // 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc: Descriptor): Desc is Descriptor & { Get: Value; Set: Value } {
-  if (Desc.Get === undefined && Desc.Set === undefined) {
+export function IsAccessorDescriptor(Desc: Descriptor): Desc is Descriptor & { Getter: Value; Setter: Value } {
+  if (Desc.Getter === undefined && Desc.Setter === undefined) {
     return false;
   }
 
@@ -106,11 +106,11 @@ export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
   if (Desc.Writable !== undefined) {
     X(CreateDataProperty(obj, Value('writable'), Desc.Writable));
   }
-  if (Desc.Get !== undefined) {
-    X(CreateDataProperty(obj, Value('get'), Desc.Get));
+  if (Desc.Getter !== undefined) {
+    X(CreateDataProperty(obj, Value('get'), Desc.Getter));
   }
-  if (Desc.Set !== undefined) {
-    X(CreateDataProperty(obj, Value('set'), Desc.Set));
+  if (Desc.Setter !== undefined) {
+    X(CreateDataProperty(obj, Value('set'), Desc.Setter));
   }
   if (Desc.Enumerable !== undefined) {
     X(CreateDataProperty(obj, Value('enumerable'), Desc.Enumerable));
@@ -155,7 +155,7 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
     if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
       return Throw.TypeError('getter ($1) in a property descriptor $2 must be a function', getter, Obj);
     }
-    desc = Descriptor({ ...desc, Get: getter as FunctionObject });
+    desc = Descriptor({ ...desc, Getter: getter as FunctionObject });
   }
   const hasSet = Q(yield* HasProperty(Obj, Value('set')));
   if (hasSet === Value.true) {
@@ -163,9 +163,9 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
     if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
       return Throw.TypeError('setter ($1) in a property descriptor $2 must be a function', setter, Obj);
     }
-    desc = Descriptor({ ...desc, Set: setter as FunctionObject });
+    desc = Descriptor({ ...desc, Setter: setter as FunctionObject });
   }
-  if (desc.Get !== undefined || desc.Set !== undefined) {
+  if (desc.Getter !== undefined || desc.Setter !== undefined) {
     if (desc.Value !== undefined || desc.Writable !== undefined) {
       return Throw.TypeError('Property descriptors must not specify both accessors and a value or writable attribute, but $1 does', Obj);
     }
@@ -179,8 +179,8 @@ export function CompletePropertyDescriptor(Desc: Descriptor) {
   const like = Descriptor({
     Value: Value.undefined,
     Writable: Value.false,
-    Get: Value.undefined,
-    Set: Value.undefined,
+    Getter: Value.undefined,
+    Setter: Value.undefined,
     Enumerable: Value.false,
     Configurable: Value.false,
   });
@@ -192,11 +192,11 @@ export function CompletePropertyDescriptor(Desc: Descriptor) {
       Desc = Descriptor({ ...Desc, Writable: like.Writable });
     }
   } else {
-    if (Desc.Get === undefined) {
-      Desc = Descriptor({ ...Desc, Get: like.Get });
+    if (Desc.Getter === undefined) {
+      Desc = Descriptor({ ...Desc, Getter: like.Getter });
     }
-    if (Desc.Set === undefined) {
-      Desc = Descriptor({ ...Desc, Set: like.Set });
+    if (Desc.Setter === undefined) {
+      Desc = Descriptor({ ...Desc, Setter: like.Setter });
     }
   }
   if (Desc.Enumerable === undefined) {

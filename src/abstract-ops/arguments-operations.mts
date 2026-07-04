@@ -151,8 +151,8 @@ export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
     Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(obj, Value('callee'), Descriptor({
-    Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
+    Getter: surroundingAgent.intrinsic('%ThrowTypeError%'),
+    Setter: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
@@ -221,8 +221,8 @@ export function CreateMappedArgumentsObject(func: ECMAScriptFunctionObject, form
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);
         X(map.DefineOwnProperty(X(ToString(F(index))), Descriptor({
-          Set: p,
-          Get: g,
+          Setter: p,
+          Getter: g,
           Enumerable: Value.false,
           Configurable: Value.true,
         })));

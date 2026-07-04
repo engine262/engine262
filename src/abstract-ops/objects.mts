@@ -118,8 +118,8 @@ export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue) {
     D.Value = x.Value;
     D.Writable = x.Writable;
   } else if (IsAccessorDescriptor(x)) {
-    D.Get = x.Get;
-    D.Set = x.Set;
+    D.Getter = x.Getter;
+    D.Setter = x.Setter;
   }
   D.Enumerable = x.Enumerable;
   D.Configurable = x.Configurable;
@@ -163,8 +163,8 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
       Assert(IsAccessorDescriptor(Desc));
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P as PropertyKeyValue, Descriptor({
-          Get: Desc.Get === undefined ? Value.undefined : Desc.Get,
-          Set: Desc.Set === undefined ? Value.undefined : Desc.Set,
+          Getter: Desc.Getter === undefined ? Value.undefined : Desc.Getter,
+          Setter: Desc.Setter === undefined ? Value.undefined : Desc.Setter,
           Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
           Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable,
         }));
@@ -199,15 +199,15 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
         const entry = { ...O.properties.get(P as PropertyKeyValue)! };
         entry.Value = undefined;
         entry.Writable = undefined;
-        entry.Get = Value.undefined;
-        entry.Set = Value.undefined;
+        entry.Getter = Value.undefined;
+        entry.Setter = Value.undefined;
         O.properties.set(P as PropertyKeyValue, Descriptor(entry));
       }
     } else {
       if (!(O instanceof UndefinedValue)) {
         const entry = { ...O.properties.get(P as PropertyKeyValue) };
-        entry.Get = undefined;
-        entry.Set = undefined;
+        entry.Getter = undefined;
+        entry.Setter = undefined;
         entry.Value = Value.undefined;
         entry.Writable = Value.false;
         O.properties.set(P as PropertyKeyValue, Descriptor(entry));
@@ -226,10 +226,10 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
   } else {
     Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc));
     if (current.Configurable === Value.false) {
-      if (Desc.Set !== undefined && !SameValue(Desc.Set, current.Set)) {
+      if (Desc.Setter !== undefined && !SameValue(Desc.Setter, current.Setter)) {
         return Value.false;
       }
-      if (Desc.Get !== undefined && !SameValue(Desc.Get, current.Get)) {
+      if (Desc.Getter !== undefined && !SameValue(Desc.Getter, current.Getter)) {
         return Value.false;
       }
       return Value.true;
@@ -244,11 +244,11 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
     if (Desc.Writable !== undefined) {
       target.Writable = Desc.Writable;
     }
-    if (Desc.Get !== undefined) {
-      target.Get = Desc.Get;
+    if (Desc.Getter !== undefined) {
+      target.Getter = Desc.Getter;
     }
-    if (Desc.Set !== undefined) {
-      target.Set = Desc.Set;
+    if (Desc.Setter !== undefined) {
+      target.Setter = Desc.Setter;
     }
     if (Desc.Enumerable !== undefined) {
       target.Enumerable = Desc.Enumerable;
@@ -293,7 +293,7 @@ export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue, Receiver: Valu
     return desc.Value;
   }
   Assert(IsAccessorDescriptor(desc));
-  const getter = desc.Get;
+  const getter = desc.Getter;
   if (getter instanceof UndefinedValue) {
     return Value.undefined;
   }
@@ -347,7 +347,7 @@ export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValu
   }
 
   Assert(IsAccessorDescriptor(ownDesc));
-  const setter = ownDesc.Set;
+  const setter = ownDesc.Setter;
   if (setter === undefined || setter instanceof UndefinedValue) {
     return Value.false;
   }

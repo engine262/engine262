@@ -907,15 +907,15 @@ export class ReferenceRecord {
   }
 }
 
-export type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>;
+export type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>;
 // @ts-expect-error
 export function Descriptor(O: DescriptorInit): Descriptor // @ts-expect-error
 export @callable() class Descriptor {
   readonly Value?: Value;
 
-  readonly Get?: FunctionObject | UndefinedValue;
+  readonly Getter?: FunctionObject | UndefinedValue;
 
-  readonly Set?: FunctionObject | UndefinedValue;
+  readonly Setter?: FunctionObject | UndefinedValue;
 
   readonly Writable?: BooleanValue;
 
@@ -923,10 +923,10 @@ export @callable() class Descriptor {
 
   readonly Configurable?: BooleanValue;
 
-  constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>) {
+  constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>) {
     this.Value = O.Value;
-    this.Get = O.Get;
-    this.Set = O.Set;
+    this.Getter = O.Getter;
+    this.Setter = O.Setter;
     this.Writable = O.Writable;
     this.Enumerable = O.Enumerable;
     this.Configurable = O.Configurable;
@@ -934,8 +934,8 @@ export @callable() class Descriptor {
 
   everyFieldIsAbsent() {
     return this.Value === undefined
-      && this.Get === undefined
-      && this.Set === undefined
+      && this.Getter === undefined
+      && this.Setter === undefined
       && this.Writable === undefined
       && this.Enumerable === undefined
       && this.Configurable === undefined;
@@ -944,8 +944,8 @@ export @callable() class Descriptor {
   // NON-SPEC
   mark(m: GCMarker) {
     m(this.Value);
-    m(this.Get);
-    m(this.Set);
+    m(this.Getter);
+    m(this.Setter);
   }
 }
 

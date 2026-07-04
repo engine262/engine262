@@ -457,19 +457,19 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
           Assert(field.Kind === 'accessor' && existing.Kind === 'accessor');
           // 3. If field.[[Get]] is undefined, then
           let combined;
-          if (field.Get === Value.undefined) {
+          if (field.Getter === Value.undefined) {
             combined = PrivateElementRecord({
               Key: field.Key,
               Kind: 'accessor',
-              Get: existing.Get,
-              Set: field.Set,
+              Getter: existing.Getter,
+              Setter: field.Setter,
             });
           } else { // 4. Else
             combined = PrivateElementRecord({
               Key: field.Key,
               Kind: 'accessor',
-              Get: field.Get,
-              Set: existing.Set,
+              Getter: field.Getter,
+              Setter: existing.Setter,
             });
           }
           // 5. Replace existing in container with combined.

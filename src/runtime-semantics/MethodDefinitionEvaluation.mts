@@ -25,15 +25,15 @@ export interface PrivateElementRecord_Value {
   readonly Key: PrivateName;
   readonly Kind: 'method' | 'field';
   Value?: Value;
-  readonly Get?: undefined;
-  readonly Set?: undefined;
+  readonly Getter?: undefined;
+  readonly Setter?: undefined;
 }
 export interface PrivateElementRecord_Accessor {
   readonly Key: PrivateName;
   readonly Kind: 'accessor';
   Value?: Value;
-  readonly Get?: FunctionObject | UndefinedValue;
-  readonly Set?: FunctionObject | UndefinedValue;
+  readonly Getter?: FunctionObject | UndefinedValue;
+  readonly Setter?: FunctionObject | UndefinedValue;
 }
 export type PrivateElementRecord = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
 export const PrivateElementRecord = function PrivateElementRecord(value: PrivateElementRecord) {
@@ -128,13 +128,13 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
           return PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
-            Get: Value.undefined,
-            Set: closure,
+            Getter: Value.undefined,
+            Setter: closure,
           });
         } else { // 10. Else,
         // a. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
           const desc = Descriptor({
-            Set: closure,
+            Setter: closure,
             Enumerable: enumerable,
             Configurable: Value.true,
           });
@@ -176,13 +176,13 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
           return PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
-            Get: closure,
-            Set: Value.undefined,
+            Getter: closure,
+            Setter: Value.undefined,
           });
         } else { // 11. Else,
           // a. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
           const desc = Descriptor({
-            Get: closure,
+            Getter: closure,
             Enumerable: enumerable,
             Configurable: Value.true,
           });

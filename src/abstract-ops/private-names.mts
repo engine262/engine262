@@ -35,11 +35,11 @@ export function* PrivateGet(O: ObjectValue, P: PrivateName) {
   // 4. Assert: entry.[[Kind]] is accessor.
   Assert(entry.Kind === 'accessor');
   // 5. If entry.[[Get]] is undefined, throw a TypeError exception.
-  if (entry.Get === Value.undefined) {
+  if (entry.Getter === Value.undefined) {
     return Throw.TypeError('Private field $1 is not a getter', P);
   }
   // 6. Let getter be entry.[[Get]].
-  const getter = entry.Get!;
+  const getter = entry.Getter!;
   // 7. Return ? Call(getter, O).
   return Q(yield* Call(getter, O));
 }
@@ -62,11 +62,11 @@ export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
     // a. Assert: entry.[[Kind]] is accessor.
     Assert(entry.Kind === 'accessor');
     // b. If entry.[[Set]] is undefined, throw a TypeError exception.
-    if (entry.Set === Value.undefined) {
+    if (entry.Setter === Value.undefined) {
       return Throw.TypeError('Private field $1 is not a setter', P);
     }
     // c. Let setter be entry.[[Set]].
-    const setter = entry.Set!;
+    const setter = entry.Setter!;
     // d. Perform ? Call(setter, O, « value »).
     Q(yield* Call(setter, O, [value]));
   }
@@ -129,8 +129,8 @@ export function* InitializePrivateMethods(O: ObjectValue, elementDefinitions: re
         const privateElement = PrivateElementRecord({
           Key: element.Key,
           Kind: 'accessor',
-          Get: element.Get,
-          Set: element.Set,
+          Getter: element.Get,
+          Setter: element.Set,
         });
         privateMethods.push(privateElement);
       } else {
@@ -142,18 +142,18 @@ export function* InitializePrivateMethods(O: ObjectValue, elementDefinitions: re
         if (e) {
           Assert(e.Kind === 'accessor');
           existing = e;
-          if (e.Get !== undefined && e.Get !== Value.undefined) {
-            getter = e.Get;
+          if (e.Getter !== undefined && e.Getter !== Value.undefined) {
+            getter = e.Getter;
           }
-          if (e.Set !== undefined && e.Set !== Value.undefined) {
-            setter = e.Set;
+          if (e.Setter !== undefined && e.Setter !== Value.undefined) {
+            setter = e.Setter;
           }
         }
         const privateElement = PrivateElementRecord({
           Key: element.Key,
           Kind: 'accessor',
-          Get: getter,
-          Set: setter,
+          Getter: getter,
+          Setter: setter,
         });
         if (existing) {
           const index = privateMethods.indexOf(existing);

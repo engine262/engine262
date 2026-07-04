@@ -189,14 +189,14 @@ export function AddRestrictedFunctionProperties(F: ObjectValue, realm: Realm) {
   Assert(!!realm.Intrinsics['%ThrowTypeError%']);
   const thrower = realm.Intrinsics['%ThrowTypeError%'];
   X(DefinePropertyOrThrow(F, Value('caller'), Descriptor({
-    Get: thrower,
-    Set: thrower,
+    Getter: thrower,
+    Setter: thrower,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(F, Value('arguments'), Descriptor({
-    Get: thrower,
-    Set: thrower,
+    Getter: thrower,
+    Setter: thrower,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));

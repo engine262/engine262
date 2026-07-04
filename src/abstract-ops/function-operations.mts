@@ -524,10 +524,10 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
   if (!(key instanceof PrivateName)) {
     const desc: Mutable<DescriptorInit> = { Enumerable: Value(enumerable), Configurable: Value.true };
     if (methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'accessor') {
-      desc.Get = methodDefinition.Get;
+      desc.Getter = methodDefinition.Get;
     }
     if (methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor') {
-      desc.Set = methodDefinition.Set;
+      desc.Setter = methodDefinition.Set;
     }
     if (methodDefinition.Kind === 'method') {
       desc.Value = methodDefinition.Value;

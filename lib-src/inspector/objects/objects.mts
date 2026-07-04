@@ -152,7 +152,7 @@ function propertyNameToString(value: PropertyKeyValue | PrivateName): string {
 
 export function propertyToPropertyPreview(key: PropertyKeyValue | PrivateName, desc: Descriptor | PrivateElementRecord, context: InspectorContext): Protocol.Runtime.PropertyPreview {
   const name = propertyNameToString(key);
-  if (desc.Get || desc.Set) {
+  if (desc.Getter || desc.Setter) {
     return { name, type: 'accessor' };
   } else {
     return getInspector(desc.Value!).toPropertyPreview(name, desc.Value!, context);

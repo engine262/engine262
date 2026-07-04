@@ -76,8 +76,8 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
-        Get: getter,
-        Set: setter,
+        Getter: getter,
+        Setter: setter,
         Enumerable: Value.false,
         Configurable: Value.true,
         ...descriptor,

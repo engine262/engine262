@@ -120,8 +120,8 @@ export function* ClassFieldDefinitionEvaluation_decorator(FieldDefinition: Parse
     }
     if (!(name instanceof PrivateName)) {
       const desc = new Descriptor({
-        Get: getter,
-        Set: setter,
+        Getter: getter,
+        Setter: setter,
         Enumerable: Value.true,
         Configurable: Value.true,
       });
