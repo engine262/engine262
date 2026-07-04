@@ -1,6 +1,5 @@
 {
-    "typescript.tsdk": "node_modules/typescript/lib",
-    "typescript.preferences.quoteStyle": "single",
+    "js/ts.preferences.quoteStyle": "single",
     "editor.tabSize": 2,
     "npm.packageManager": "npm",
     "eslint.useFlatConfig": false,

@@ -115,7 +115,11 @@ export function importBundledTest262Harness(
   nameMapper = (str: string) => `https://github.com/tc39/test262/blob/main/harness/${str}`,
 ) {
   for (const [specifier, file] of Object.entries(harness)) {
-    X(realm.evaluateScriptSkipDebugger(file, { specifier: nameMapper(specifier) }));
+    if (specifier.includes('atomicsHelper.js')) continue;
+    const completion = realm.evaluateScriptSkipDebugger(file, { specifier: nameMapper(specifier) });
+    if (completion instanceof ThrowCompletion) {
+      throw completion;
+    }
   }
 }
 
