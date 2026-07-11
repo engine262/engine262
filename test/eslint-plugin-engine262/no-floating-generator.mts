@@ -1,6 +1,5 @@
 import type { Rule } from 'eslint';
-import type { ParserServices } from '@typescript-eslint/parser';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import ts from 'typescript';
 
 declare module 'typescript' {
@@ -18,9 +17,6 @@ const rule = {
   },
   create(context) {
     const services = getParserServices(context);
-    if (!services.program) {
-      throw new Error('No ts program found');
-    }
     const checker = services.program.getTypeChecker();
     const GeneratorSymbol = checker.resolveName('Generator', undefined, ts.SymbolFlags.Interface, false);
     const AsyncGeneratorSymbol = checker.resolveName('AsyncGenerator', undefined, ts.SymbolFlags.Interface, false);
@@ -31,8 +27,7 @@ const rule = {
     return {
       'ExpressionStatement[expression.type="CallExpression"]':
         (function VisitCallExpression({ expression }) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const callNode = services.esTreeNodeToTSNodeMap.get(expression as any);
+          const callNode = services.esTreeNodeToTSNodeMap.get(expression as TSESTree.Node);
           if (!ts.isCallExpression(callNode)) {
             return;
           }
@@ -53,17 +48,14 @@ const rule = {
 
 export default rule;
 
-function getParserServices(context: Rule.RuleContext): ParserServices {
+function getParserServices(context: Rule.RuleContext): ParserServicesWithTypeInformation {
+  const { parserServices } = context.sourceCode;
   if (
-    context.sourceCode.parserServices?.esTreeNodeToTSNodeMap == null
-    || context.sourceCode.parserServices.tsNodeToESTreeNodeMap == null
+    parserServices?.esTreeNodeToTSNodeMap == null
+    || parserServices.tsNodeToESTreeNodeMap == null
+    || parserServices.program == null
   ) {
-    throw new Error();
+    throw new Error('This rule requires type information from typescript-eslint');
   }
-
-  if (context.sourceCode.parserServices.program == null) {
-    throw new Error();
-  }
-
-  return context.sourceCode.parserServices;
+  return parserServices;
 }

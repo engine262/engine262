@@ -7,3 +7,11 @@ export const rules = {
   'safe-function-with-q': safeFunctionWithQ,
   'no-floating-generator': noFloatingGenerator,
 };
+
+export default {
+  meta: {
+    name: '@engine262/eslint-plugin',
+    version: '0.0.0',
+  },
+  rules,
+};
