@@ -1,7 +1,0 @@
-!.eslintrc.js
-lib
-bin/engine262.mjs
-test/engine262/fixture
-test/test262/test262
-test/json/JSONTestSuite
-website

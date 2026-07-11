@@ -1,9 +1,7 @@
 import { resolve } from 'node:path';
 import type { Rule } from 'eslint';
-import type { ParserServices } from '@typescript-eslint/parser';
-import type { TSESTree } from '@typescript-eslint/types';
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ESTree from 'estree';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import ts from 'typescript';
 
 const __dirname = import.meta.dirname;
@@ -26,9 +24,6 @@ const rule = {
   },
   create(context) {
     const services = getParserServices(context);
-    if (!services.program) {
-      throw new Error('No ts program found');
-    }
     const checker = services.program.getTypeChecker();
     const CompletionFile = services.program.getSourceFile(resolve(__dirname, '../../../src/completion.mts'));
     const PromiseFile = services.program.getSourceFile(resolve(__dirname, '../../../src/intrinsics/Promise.mts'));
@@ -139,17 +134,14 @@ const rule = {
 
 export default rule;
 
-function getParserServices(context: Rule.RuleContext): ParserServices {
+function getParserServices(context: Rule.RuleContext): ParserServicesWithTypeInformation {
+  const { parserServices } = context.sourceCode;
   if (
-    context.sourceCode.parserServices?.esTreeNodeToTSNodeMap == null
-    || context.sourceCode.parserServices.tsNodeToESTreeNodeMap == null
+    parserServices?.esTreeNodeToTSNodeMap == null
+    || parserServices.tsNodeToESTreeNodeMap == null
+    || parserServices.program == null
   ) {
-    throw new Error();
+    throw new Error('This rule requires type information from typescript-eslint');
   }
-
-  if (context.sourceCode.parserServices.program == null) {
-    throw new Error();
-  }
-
-  return context.sourceCode.parserServices;
+  return parserServices;
 }

@@ -3,7 +3,6 @@ import https from 'node:https';
 import { WebSocketServer, type AddressInfo } from 'ws';
 import packageJson from '../../package.json' with { type: 'json' };
 // Note: typescript will not copy json files, so it will not appear in the lib directory
-// eslint-disable-next-line import/no-useless-path-segments
 import protocol from '../../lib-src/inspector/js_protocol.json' with { type: 'json' };
 import { Inspector } from '../inspector/index.mts';
 

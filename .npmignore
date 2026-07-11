@@ -6,6 +6,4 @@ scripts
 coverage
 rollup.config.mts
 .eslintcache
-.eslintrc.js
-.eslintignore
 .travis.yml
