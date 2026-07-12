@@ -217,7 +217,11 @@ function* Object_fromEntries([iterable = Value.undefined]: Arguments): ValueEval
     return Value.undefined;
   }
   // 5. Let adder be ! CreateBuiltinFunction(closure, 2, "", « »).
-  const adder = X(CreateBuiltinFunction(closure, 2, Value(''), []));
+  const adder = X(CreateBuiltinFunction(closure, 2, Value(''), [],
+    {
+      captures: () => ({ obj }),
+    },
+  ));
   // 6. Return ? AddEntriesFromIterable(obj, iterable, adder).
   return Q(yield* AddEntriesFromIterable(obj, iterable, adder));
 }

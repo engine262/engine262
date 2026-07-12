@@ -37,8 +37,8 @@ import {
   ToString,
   Throw,
   Yield,
+  IteratorRecord,
   type GeneratorObject,
-  type IteratorRecord,
   type Realm,
 } from '#self';
 
@@ -70,7 +70,7 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. Let numLimit be Completion(ToNumber(limit)).
   const numLimit: ValueCompletion<NumberValue> = EnsureCompletion(yield* ToNumber(limit));
   // 5. IfAbruptCloseIterator(numLimit, iterated).
@@ -131,7 +131,7 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'], captures: () => ({ iterated }) },
   );
   // 12. Set result.[[UnderlyingIterators]] to iterated.
   result.UnderlyingIterators = [iterated];
@@ -148,7 +148,7 @@ function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisVa
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -191,7 +191,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -234,7 +234,10 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    {
+      extraSlots: ['UnderlyingIterators'],
+      captures: () => ({ iterated, predicate }),
+    },
   );
   // 8. Set result.[[UnderlyingIterators]] to iterated.
   result.UnderlyingIterators = [iterated];
@@ -251,7 +254,7 @@ function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisVal
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -294,7 +297,7 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(mapper) is false, then
   if (IsCallable(mapper) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -364,7 +367,10 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    {
+      extraSlots: ['UnderlyingIterators'],
+      captures: () => ({ iterated, mapper }),
+    },
   );
   // 8. Set result.[[UnderlyingIterators]] to iterated.
   result.UnderlyingIterators = [iterated];
@@ -381,7 +387,7 @@ function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { this
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(procedure) is false, then
   if (IsCallable(procedure) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -411,7 +417,7 @@ function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { this
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator% */
-function IteratorProto_iterator(_args: Arguments, { thisValue }: FunctionCallContext) {
+function IteratorProto_AtAt_iterator(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return the this value.
   return thisValue;
 }
@@ -425,7 +431,7 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(mapper) is false, then
   if (IsCallable(mapper) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -465,7 +471,10 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    {
+      extraSlots: ['UnderlyingIterators'],
+      captures: () => ({ iterated, mapper }),
+    },
   );
   // 8. Set result.[[UnderlyingIterators]] to [iterated].
   result.UnderlyingIterators = [iterated];
@@ -482,7 +491,7 @@ function* IteratorProto_reduce(args: Arguments, { thisValue }: FunctionCallConte
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(reducer) is false, then
   const reducer = args[0] ?? Value.undefined;
   if (IsCallable(reducer) === false) {
@@ -541,7 +550,7 @@ function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisVal
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. If IsCallable(predicate) is false, then
   if (IsCallable(predicate) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
@@ -584,7 +593,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
     return Throw.TypeError('$1 is not an object', O);
   }
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   // 4. Let numLimit be Completion(ToNumber(limit)).
   const numLimit: ValueCompletion<NumberValue> = yield* ToNumber(limit);
   // 5. IfAbruptCloseIterator(numLimit, iterated).
@@ -641,7 +650,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
     closure,
     Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'], captures: () => ({ iterated }) },
   );
   // 12. Set result.[[UnderlyingIterators]] to iterated.
   result.UnderlyingIterators = [iterated];
@@ -675,12 +684,12 @@ function* IteratorProto_toArray(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag% */
-function IteratorProto_toStringTagGetter() {
+function IteratorProto_AtAt_toStringTag_getter() {
   return Value('Iterator');
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag% */
-function* IteratorPrototype_toStringTag_setter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
+function* IteratorPrototype_AtAt_toStringTag_setter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   // 1. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Iterator.prototype%, %Symbol.toStringTag%, v).
   Q(yield* SetterThatIgnoresPrototypeProperties(
     thisValue,
@@ -698,7 +707,7 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
   if (!(O instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', O);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated = IteratorRecord({ Iterator: O, NextMethod: Value.undefined, Done: Value.false });
   let sep;
   if (separator === Value.undefined) {
     sep = ',';
@@ -743,8 +752,8 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['some', IteratorProto_some, 1],
     ['take', IteratorProto_take, 1],
     ['toArray', IteratorProto_toArray, 0],
-    [wellKnownSymbols.iterator, IteratorProto_iterator, 0],
-    [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]],
+    [wellKnownSymbols.iterator, IteratorProto_AtAt_iterator, 0],
+    [wellKnownSymbols.toStringTag, [IteratorProto_AtAt_toStringTag_getter, IteratorPrototype_AtAt_toStringTag_setter]],
     surroundingAgent.feature('iterator.join') ? ['join', IteratorProto_join, 1] : undefined,
   ], realmRec.Intrinsics['%Object.prototype%']);
 

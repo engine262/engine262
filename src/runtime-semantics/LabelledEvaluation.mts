@@ -33,8 +33,8 @@ import {
   DestructuringAssignmentEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
-import { surroundingAgent, DeclarativeEnvironmentRecord } from '#self';
 import {
+  surroundingAgent, DeclarativeEnvironmentRecord,
   Assert,
   Call,
   GetIterator,
@@ -51,7 +51,7 @@ import {
   ToObject,
   SameValue,
   Throw,
-  type IteratorRecord,
+  IteratorRecord,
   ValueOfNormalCompletion,
 } from '#self';
 
@@ -556,7 +556,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly JSStringValue[
     // d. Let nextMethod be ! GetV(iterator, "next").
     const nextMethod = X(GetV(iterator, Value('next')));
     // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    return { Iterator: iterator, NextMethod: nextMethod, Done: Value.false };
+    return IteratorRecord({ Iterator: iterator, NextMethod: nextMethod, Done: Value.false });
   } else { // 7. Else,
     // a. Assert: iterationKind is iterate or async-iterate.
     Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate');

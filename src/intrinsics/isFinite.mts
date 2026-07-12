@@ -19,5 +19,10 @@ function* IsFinite([number = Value.undefined]: Arguments): ValueEvaluator {
 }
 
 export function bootstrapIsFinite(realmRec: Realm) {
-  realmRec.Intrinsics['%isFinite%'] = CreateBuiltinFunction(IsFinite, 1, Value('isFinite'), [], realmRec);
+  realmRec.Intrinsics['%isFinite%'] = CreateBuiltinFunction(IsFinite, 1, Value('isFinite'), [],
+    {
+      captures: null,
+      realm: realmRec,
+    },
+  );
 }

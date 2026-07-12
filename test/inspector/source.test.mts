@@ -19,8 +19,11 @@ test('code in eval', async () => {
   const messages: unknown[] = [];
   const pop = realm.pushTopContext();
   realm.GlobalObject.properties.set('e', new Descriptor({
-    Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-      messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    Value: CreateBuiltinFunction.from({
+      steps: function* e(e = Value.undefined) {
+        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+      },
+      captures: null,
     }),
   }));
   pop?.();
@@ -44,8 +47,11 @@ test('code in new Function', async () => {
   const messages: unknown[] = [];
   const pop = realm.pushTopContext();
   realm.GlobalObject.properties.set('e', new Descriptor({
-    Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-      messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    Value: CreateBuiltinFunction.from({
+      steps: function* e(e = Value.undefined) {
+        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+      },
+      captures: null,
     }),
   }));
   pop?.();
@@ -76,8 +82,11 @@ test('code in ShadowRealm', async () => {
     Value: shadowRealm,
   }));
   shadowRealm.ShadowRealm.GlobalObject.properties.set('e', new Descriptor({
-    Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
-      messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    Value: CreateBuiltinFunction.from({
+      steps: function* e(e = Value.undefined) {
+        messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+      },
+      captures: null,
     }),
   }));
   pop?.();

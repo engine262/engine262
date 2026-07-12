@@ -46,7 +46,7 @@ export interface ISODateTimeRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime */
-function* PlainDateTimeConstructor([
+function* Temporal_PlainDateTimeConstructor([
   _isoYear = Value.undefined,
   _isoMonth = Value.undefined,
   _isoDay = Value.undefined,
@@ -104,7 +104,7 @@ function* PlainDateTime_compare([_one = Value.undefined, _two = Value.undefined]
 export function bootstrapTemporalPlainDateTime(realmRec: Realm) {
   const prototype = bootstrapTemporalPlainDateTimePrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, PlainDateTimeConstructor, 'PlainDateTime', 3, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_PlainDateTimeConstructor, 'PlainDateTime', 3, prototype, [
     ['from', PlainDateTime_from, 1],
     ['compare', PlainDateTime_compare, 2],
   ]);

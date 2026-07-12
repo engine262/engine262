@@ -228,7 +228,7 @@ export function AdvanceStringIndex(S: JSStringValue, index: number, unicode: boo
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll */
-function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_dotAll_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER S).
@@ -238,7 +238,7 @@ function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
-function* RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* RegExpProto_flags_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
@@ -280,7 +280,7 @@ function* RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.global */
-function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_global_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const R = thisValue as RegExpObject;
   if (!(R instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
@@ -299,7 +299,7 @@ function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
-function RegExpProto_hasIndicesGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_hasIndices_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER D).
@@ -309,7 +309,7 @@ function RegExpProto_hasIndicesGetter(_args: Arguments, { thisValue }: FunctionC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
-function RegExpProto_ignoreCaseGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_ignoreCase_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0069 (LATIN SMALL LETTER I).
@@ -319,7 +319,7 @@ function RegExpProto_ignoreCaseGetter(_args: Arguments, { thisValue }: FunctionC
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@match */
-function* RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* RegExpProto_AtAt_match([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let rx be the this value.
   const rx = thisValue;
   // 2. If Type(rx) is not Object, throw a TypeError exception.
@@ -377,7 +377,7 @@ function* RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }
 }
 
 /** https://tc39.es/ecma262/#sec-regexp-prototype-matchall */
-function* RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* RegExpProto_AtAt_matchAll([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
@@ -394,7 +394,7 @@ function* RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValu
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
-function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_multiline_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x006D (LATIN SMALL LETTER M).
@@ -404,7 +404,7 @@ function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCa
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
-function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* RegExpProto_AtAt_replace([string = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let rx be the this value.
   const rx = thisValue;
   // 2. If rx is not an Object, throw a TypeError exception.
@@ -550,7 +550,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@search */
-function* RegExpProto_search([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* RegExpProto_AtAt_search([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
@@ -576,7 +576,7 @@ function* RegExpProto_search([string = Value.undefined]: Arguments, { thisValue 
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.source */
-function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_source_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
@@ -594,7 +594,7 @@ function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@split */
-function* RegExpProto_split([string = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* RegExpProto_AtAt_split([string = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
@@ -677,7 +677,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined]:
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky */
-function RegExpProto_stickyGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_sticky_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0097 (LATIN SMALL LETTER Y).
@@ -713,7 +713,7 @@ function* RegExpProto_toString(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
-function RegExpProto_unicodeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_unicode_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0075 (LATIN SMALL LETTER U).
@@ -723,7 +723,7 @@ function RegExpProto_unicodeGetter(_args: Arguments, { thisValue }: FunctionCall
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicodeSets */
-function RegExpProto_unicodeSetsGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function RegExpProto_unicodeSets_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0076 (LATIN SMALL LETTER V).
@@ -737,23 +737,23 @@ export function bootstrapRegExpPrototype(realmRec: Realm) {
     realmRec,
     [
       ['exec', RegExpProto_exec, 1],
-      ['dotAll', [RegExpProto_dotAllGetter]],
-      ['flags', [RegExpProto_flagsGetter]],
-      ['global', [RegExpProto_globalGetter]],
-      ['hasIndices', [RegExpProto_hasIndicesGetter]],
-      ['ignoreCase', [RegExpProto_ignoreCaseGetter]],
-      [wellKnownSymbols.match, RegExpProto_match, 1],
-      [wellKnownSymbols.matchAll, RegExpProto_matchAll, 1],
-      ['multiline', [RegExpProto_multilineGetter]],
-      [wellKnownSymbols.replace, RegExpProto_replace, 2],
-      [wellKnownSymbols.search, RegExpProto_search, 1],
-      ['source', [RegExpProto_sourceGetter]],
-      [wellKnownSymbols.split, RegExpProto_split, 2],
-      ['sticky', [RegExpProto_stickyGetter]],
+      ['dotAll', [RegExpProto_dotAll_getter]],
+      ['flags', [RegExpProto_flags_getter]],
+      ['global', [RegExpProto_global_getter]],
+      ['hasIndices', [RegExpProto_hasIndices_getter]],
+      ['ignoreCase', [RegExpProto_ignoreCase_getter]],
+      [wellKnownSymbols.match, RegExpProto_AtAt_match, 1],
+      [wellKnownSymbols.matchAll, RegExpProto_AtAt_matchAll, 1],
+      ['multiline', [RegExpProto_multiline_getter]],
+      [wellKnownSymbols.replace, RegExpProto_AtAt_replace, 2],
+      [wellKnownSymbols.search, RegExpProto_AtAt_search, 1],
+      ['source', [RegExpProto_source_getter]],
+      [wellKnownSymbols.split, RegExpProto_AtAt_split, 2],
+      ['sticky', [RegExpProto_sticky_getter]],
       ['test', RegExpProto_test, 1],
       ['toString', RegExpProto_toString, 0],
-      ['unicode', [RegExpProto_unicodeGetter]],
-      ['unicodeSets', [RegExpProto_unicodeSetsGetter]],
+      ['unicode', [RegExpProto_unicode_getter]],
+      ['unicodeSets', [RegExpProto_unicodeSets_getter]],
     ],
     realmRec.Intrinsics['%Object.prototype%'],
   );

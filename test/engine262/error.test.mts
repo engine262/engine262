@@ -96,11 +96,14 @@ test('native function names', () => {
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
   const pop = realm.pushTopContext();
-  const f = CreateBuiltinFunction.from((f = Value.null) => {
-    if (isFunctionObject(f)) {
-      return Value(CallSite.getFunctionName(f) || '<CallSite.getFunctionName returned null>');
-    }
-    return Value('<not a function object>');
+  const f = CreateBuiltinFunction.from({
+    steps: (f = Value.null) => {
+      if (isFunctionObject(f)) {
+        return Value(CallSite.getFunctionName(f) || '<CallSite.getFunctionName returned null>');
+      }
+      return Value('<not a function object>');
+    },
+    captures: null,
   });
   X(CreateDataPropertyOrThrow(realm.GlobalObject, Value('getName'), f));
   pop?.();

@@ -32,7 +32,7 @@ export interface ISODateRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindate */
-function* PlainDateConstructor([isoYear = Value.undefined, isoMonth = Value.undefined, isoDay = Value.undefined, _calendar = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* Temporal_PlainDateConstructor([isoYear = Value.undefined, isoMonth = Value.undefined, isoDay = Value.undefined, _calendar = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.PlainDate constructor cannot be called without new');
   }
@@ -69,7 +69,7 @@ export function bootstrapTemporalPlainDate(realmRec: Realm) {
   const prototype = bootstrapTemporalPlainDatePrototype(realmRec);
   realmRec.Intrinsics['%Temporal.PlainDate.prototype%'] = prototype;
 
-  const constructor = bootstrapConstructor(realmRec, PlainDateConstructor, 'PlainDate', 3, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_PlainDateConstructor, 'PlainDate', 3, prototype, [
     ['from', PlainDate_From, 1],
     ['compare', PlainDate_Compare, 2],
   ]);

@@ -1,0 +1,40 @@
+gc-mark-complete: MissingMark contains GC references and must implement mark(trace).
+   ╭─[gc-mark-complete.invalid.fixture.mts:3:14]
+   │
+ 1 │ import type { GCMarkable, GCTrace, Value } from '#self';
+ 2 │ 
+ 3 │ export class MissingMark {
+   ·              ─┬─────────  
+   ·               ╰─ MissingMark contains GC references and must implement mark(trace).
+ 4 │   value: Value | undefined;
+ 5 │ }
+ 6 │ 
+───╯
+
+gc-mark-complete: mark(trace) must call super.mark(trace) for GC-relevant base fields.
+    ╭─[gc-mark-complete.invalid.fixture.mts:15:14]
+    │
+ 12 │   }
+ 13 │ }
+ 14 │ 
+ 15 │ export class MissingSuper extends MissingSuperBase {
+    ·              ─┬──────────  
+    ·               ╰─ mark(trace) must call super.mark(trace) for GC-relevant base fields.
+ 16 │   ownValue: Value | undefined;
+ 17 │ 
+ 18 │   override mark(trace: GCTrace): void {
+────╯
+
+gc-mark-complete: mark(trace) does not trace GC-relevant field value.
+    ╭─[gc-mark-complete.invalid.fixture.mts:23:14]
+    │
+ 20 │   }
+ 21 │ }
+ 22 │ 
+ 23 │ export class MentionsButDoesNotTrace implements GCMarkable {
+    ·              ─┬─────────────────────  
+    ·               ╰─ mark(trace) does not trace GC-relevant field value.
+ 24 │   value: Value | undefined;
+ 25 │ 
+ 26 │   mark(_trace: GCTrace): void {
+────╯

@@ -19,5 +19,10 @@ function* IsNaN([number = Value.undefined]: Arguments): ValueEvaluator {
 }
 
 export function bootstrapIsNaN(realmRec: Realm) {
-  realmRec.Intrinsics['%isNaN%'] = CreateBuiltinFunction(IsNaN, 1, Value('isNaN'), [], realmRec);
+  realmRec.Intrinsics['%isNaN%'] = CreateBuiltinFunction(IsNaN, 1, Value('isNaN'), [],
+    {
+      captures: null,
+      realm: realmRec,
+    },
+  );
 }

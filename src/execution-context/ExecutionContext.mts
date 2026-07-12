@@ -1,4 +1,5 @@
-import type { ExecutionContextHostDefined, GCMarker } from '../host-defined/engine.mts';
+import type { ExecutionContextHostDefined } from '../host-defined/engine.mts';
+import { stepEvaluator, type GCMarkable, type GCTrace } from '../gc.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import {
   NullValue, type FunctionObject, Value, type GeneratorObject, type AsyncGeneratorObject, AbstractModuleRecord, type ScriptRecord, EnvironmentRecord, PrivateEnvironmentRecord, CallSite, PromiseCapabilityRecord, Realm,
@@ -42,7 +43,7 @@ export function activeFunctionObject() {
 }
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
-export class ExecutionContext {
+export class ExecutionContext implements GCMarkable {
   // Table 20: State Components for All Execution Contexts
   // https://tc39.es/ecma262/#table-state-components-for-all-execution-contexts
   CodeEvaluationState?: YieldOrAwaitEvaluator;
@@ -92,14 +93,18 @@ export class ExecutionContext {
   }
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.Function);
-    m(this.Realm);
-    m(this.ScriptOrModule);
-    m(this.VariableEnvironment);
-    m(this.LexicalEnvironment);
-    m(this.PrivateEnvironment);
-    m(this.promiseCapability);
+  mark(trace: GCTrace) {
+    trace.strong('Function', this.Function, 'internal-slot');
+    trace.strong('Realm', this.Realm, 'internal-slot');
+    trace.strong('ScriptOrModule', this.ScriptOrModule, 'internal-slot');
+    trace.strong('VariableEnvironment', this.VariableEnvironment, 'internal-slot');
+    trace.strong('LexicalEnvironment', this.LexicalEnvironment, 'internal-slot');
+    trace.strong('PrivateEnvironment', this.PrivateEnvironment, 'internal-slot');
+    trace.strong('Generator', this.Generator, 'internal-slot');
+    trace.strong('CodeEvaluationState', this.CodeEvaluationState, 'capture');
+    trace.strong('HostDefined', this.HostDefined, 'host');
+    trace.strong('callSite', this.callSite, 'internal-slot');
+    trace.strong('promiseCapability', this.promiseCapability, 'internal-slot');
   }
 }
 
@@ -203,7 +208,7 @@ export function* RunSuspendedContext(context: ExecutionContext, completionRecord
   let completion: EvaluatorNextType = completionRecord;
   while (true) {
     // run the evaluator
-    iter_result = context.CodeEvaluationState!.next(completion);
+    iter_result = stepEvaluator(context.CodeEvaluationState!, completion);
     if (iter_result.done) {
       result = iter_result.value;
       break;

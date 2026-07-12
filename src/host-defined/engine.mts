@@ -1,4 +1,5 @@
 import { Value } from '../value.mts';
+import type { GCRootHandle } from '../gc.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -216,6 +217,7 @@ export function* ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator {
   return result as ValueCompletion;
 }
 
+/** https://tc39.es/ecma262/#sec-hostensurecancompilestrings */
 export function* HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator {
   const completion = surroundingAgent.hostDefinedOptions.hostHooks?.HostEnsureCanCompileStrings?.(calleeRealm, parameterStrings, bodyString, direct);
   if (!completion) {
@@ -263,11 +265,25 @@ export function HostGetModuleSourceModuleRecord(specifier: ObjectValue): Abstrac
 
 // #sec-HostLoadImportedModule
 export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: HostLoadImportedModulePayloadOpaque) {
+  const root = surroundingAgent.gc.addRootProvider('host:module-load', () => ({
+    referrer,
+    payload: payload.data,
+    specifier: moduleRequest.Specifier,
+    attributes: moduleRequest.Attributes,
+    importedNames: moduleRequest.ImportedNames,
+  }));
+  payload.gcRoot = root;
   const HostHook = surroundingAgent.hostDefinedOptions.hostHooks?.HostLoadImportedModule;
-  if (HostHook) {
-    HostHook(referrer, moduleRequest, hostDefined, payload);
-  } else {
-    FinishLoadingImportedModule(referrer, moduleRequest, payload, Throw.Error('Host does not set a module loader'));
+  try {
+    if (HostHook) {
+      HostHook(referrer, moduleRequest, hostDefined, payload);
+    } else {
+      FinishLoadingImportedModule(referrer, moduleRequest, payload, Throw.Error('Host does not set a module loader'));
+    }
+  } catch (error) {
+    payload.gcRoot = undefined;
+    root[Symbol.dispose]();
+    throw error;
   }
 }
 
@@ -275,6 +291,8 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
 export type HostLoadImportedModulePayloadOpaque = {
   /** @internal */
   data: GraphLoadingState | PromiseCapabilityRecord;
+  /** @internal */
+  gcRoot?: GCRootHandle;
   HostLoadImportedModulePayloadOpaque?: never
 };
 
@@ -294,9 +312,4 @@ export function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: Ab
     return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined?.public));
   }
   return Value.undefined;
-}
-
-export type GCMarker = (value: unknown) => void;
-export interface Markable {
-  mark(marker: GCMarker): void;
 }

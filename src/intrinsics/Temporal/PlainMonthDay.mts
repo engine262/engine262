@@ -36,7 +36,7 @@ export function isTemporalPlainMonthDayObject(o: Value): o is TemporalPlainMonth
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday */
-function* PlainMonthDayConstructor([
+function* Temporal_PlainMonthDayConstructor([
   isoMonth = Value.undefined,
   isoDay = Value.undefined,
   _calendar = Value.undefined,
@@ -73,7 +73,7 @@ function* PlainMonthDay_from([item = Value.undefined, options = Value.undefined]
 export function bootstrapTemporalPlainMonthDay(realmRec: Realm) {
   const prototype = bootstrapTemporalPlainMonthDayPrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, PlainMonthDayConstructor, 'PlainMonthDay', 2, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_PlainMonthDayConstructor, 'PlainMonthDay', 2, prototype, [
     ['from', PlainMonthDay_from, 1],
   ]);
   realmRec.Intrinsics['%Temporal.PlainMonthDay%'] = constructor;

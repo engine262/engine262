@@ -56,13 +56,11 @@ export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value
       // iv. Set numEntries to the number of elements of entries.
       numEntries = entries.length;
     }
-    // NON-SPEC
-    generator.HostCapturedValues = undefined;
     // e. Return undefined.
     return Value.undefined;
   };
   // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]));
+  const generator = X(CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%'), { captures: () => ({ map }) }));
   return generator;
 }
 

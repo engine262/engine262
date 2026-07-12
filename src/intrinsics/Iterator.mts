@@ -124,7 +124,7 @@ function* Iterator_concat(items: Arguments): ValueEvaluator {
       }
     }
     return Value.undefined;
-  }, Value('Iterator Helper'), surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
+  }, Value('Iterator Helper'), surroundingAgent.intrinsic('%IteratorHelperPrototype%'), { extraSlots: ['UnderlyingIterators'], captures: null });
   gen.UnderlyingIterators = [];
   return gen;
 }

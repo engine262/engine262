@@ -26,7 +26,7 @@ export class Parser extends LanguageParser {
     allowAllPrivateNames: boolean;
   };
 
-  readonly scope = new Scope(this);
+  override readonly scope = new Scope(this);
 
   protected readonly decoratingSource?: string;
 

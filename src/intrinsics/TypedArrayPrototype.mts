@@ -585,7 +585,7 @@ function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
-function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function TypedArrayProto_AtAt_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. If Type(O) is not Object, return undefined.
@@ -702,7 +702,7 @@ export function bootstrapTypedArrayPrototype(realmRec: Realm) {
     ['with', TypedArrayProto_with, 2],
     ['toReversed', TypedArrayProto_toReversed, 0],
     ['toString', ArrayProto_toString],
-    [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]],
+    [wellKnownSymbols.toStringTag, [TypedArrayProto_AtAt_toStringTag]],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   bootstrapArrayPrototypeShared(realmRec, proto, 'TypedArray');

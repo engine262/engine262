@@ -26,7 +26,7 @@ export function isTemporalPlainTimeObject(value: Value): value is TemporalPlainT
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime */
-function* PlainTimeConstructor([
+function* Temporal_PlainTimeConstructor([
   _hour = Value.undefined,
   _minute = Value.undefined,
   _second = Value.undefined,
@@ -65,7 +65,7 @@ function* PlainTime_compare([_one = Value.undefined, _two = Value.undefined]: Ar
 export function bootstrapTemporalPlainTime(realmRec: Realm) {
   const prototype = bootstrapTemporalPlainTimePrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, PlainTimeConstructor, 'PlainTime', 0, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_PlainTimeConstructor, 'PlainTime', 0, prototype, [
     ['from', PlainTime_from, 1],
     ['compare', PlainTime_compare, 2],
   ]);

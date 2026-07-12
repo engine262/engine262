@@ -1,4 +1,5 @@
 import { IncrementModuleAsyncEvaluationCount } from '../execution-context/Agent.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
@@ -168,7 +169,7 @@ export function GetNewOptionalIndirectExportsModuleRequests(
   return module.GetOptionalIndirectExportsModuleRequests(newImportedNames);
 }
 
-export class GraphLoadingState {
+export class GraphLoadingState implements GCMarkable {
   readonly PromiseCapability: PromiseCapabilityRecord;
 
   readonly HostDefined?: ModuleRecordHostDefined;
@@ -190,6 +191,14 @@ export class GraphLoadingState {
     this.PromiseCapability = PromiseCapability;
     this.HostDefined = HostDefined;
     this.PreviouslyImportedNames = PreviouslyImportedNames;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('PromiseCapability', this.PromiseCapability, 'internal-slot');
+    trace.strong('Visited', this.Visited, 'internal-slot');
+    this.PreviouslyImportedNames.forEach((entry, index) => {
+      trace.strong(`PreviouslyImportedNames[${index}].Module`, entry.Module, 'element');
+    });
   }
 }
 
@@ -752,7 +761,9 @@ function* ExecuteAsyncModule(module: CyclicModuleRecord) {
     return Value.undefined;
   }
   // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module'], {
+    captures: () => ({ module }),
+  });
   // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
   const rejectedClosure = ([error = Value.undefined]: Arguments) => {
     // a. Perform ! AsyncModuleExecutionRejected(module, error).
@@ -761,7 +772,9 @@ function* ExecuteAsyncModule(module: CyclicModuleRecord) {
     return Value.undefined;
   };
   // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module'], {
+    captures: () => ({ module }),
+  });
   // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
   // 9. Perform ! module.ExecuteModule(capability).
@@ -922,6 +935,8 @@ export function GetImportedModule(referrer: CyclicModuleRecord, request: ModuleR
 
 /** https://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
 export function FinishLoadingImportedModule(referrer: ScriptRecord | CyclicModuleRecord | Realm, moduleRequest: ModuleRequestRecord, payload: HostLoadImportedModulePayloadOpaque, result: PlainCompletion<AbstractModuleRecord>) {
+  using _ = payload.gcRoot;
+  payload.gcRoot = undefined;
   const payload_ = payload.data;
   result = EnsureCompletion(result);
   // 1. If result is a normal completion, then

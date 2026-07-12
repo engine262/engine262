@@ -13,20 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Set everything up
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
 
       # build and lint
-      - run: npm install
-      - run: npm run build
-      - run: npm run lint
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm run lint
 
       # upload build artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: engine262-lib
           path: |
@@ -36,7 +37,7 @@ jobs:
             lib/engine262.mjs.map
 
       # run tests/coverage
-      - run: npm run coverage
+      - run: pnpm run coverage
         env:
           CONTINUOUS_INTEGRATION: 1
           NUM_WORKERS: 1

@@ -14,13 +14,21 @@ test('Every built-in function should have a section property', { timeout: 10000 
   X(CreateDataProperty(
     realm.GlobalObject,
     Value('fail'),
-    CreateBuiltinFunction(([path = Value.undefined]: Arguments) => {
-      const o = EnsureCompletion(skipDebugger(ToString(path)));
-      if (o.Type === 'throw') {
-        return o;
-      }
-      throw new Error(`${o.Value.stringValue()} did not have a section`);
-    }, 1, Value(''), []),
+    CreateBuiltinFunction(
+      ([path = Value.undefined]: Arguments) => {
+        const o = EnsureCompletion(skipDebugger(ToString(path)));
+        if (o.Type === 'throw') {
+          return o;
+        }
+        throw new Error(`${o.Value.stringValue()} did not have a section`);
+      },
+      1,
+      Value(''),
+      [],
+      {
+        captures: null,
+      },
+    ),
   ));
   const targets: Value[] = [];
   Object.entries(realm.Intrinsics)

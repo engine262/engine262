@@ -26,12 +26,14 @@ import {
   Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
 } from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import type { GCTrace } from './gc.mts';
 import {
-  surroundingAgent, type GCMarker,
+  surroundingAgent,
   type ImportAttributeRecord,
   type ImportedNamesValue,
   type ModuleRequestRecord,
   type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
+  type GCMarkable,
 } from '#self';
 import {
   Assert,
@@ -62,7 +64,7 @@ export interface LoadedModuleRequestRecord {
 }
 
 // #resolvedbinding-record
-export class ResolvedBindingRecord {
+export class ResolvedBindingRecord implements GCMarkable {
   readonly Module: AbstractModuleRecord;
 
   readonly BindingName: 'namespace' | 'deferred-namespace' | 'source' | JSStringValue;
@@ -74,8 +76,9 @@ export class ResolvedBindingRecord {
     this.BindingName = BindingName;
   }
 
-  mark(m: GCMarker) {
-    m(this.Module);
+  mark(trace: GCTrace) {
+    trace.strong('Module', this.Module, 'internal-slot');
+    trace.strong('BindingName', this.BindingName, 'binding');
   }
 }
 
@@ -102,7 +105,7 @@ interface ResolveSetItem {
 }
 
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
-export abstract class AbstractModuleRecord {
+export abstract class AbstractModuleRecord implements GCMarkable {
   abstract LoadRequestedModules(hostDefined?: ModuleRecordHostDefined, importedNames?: ImportedNamesValue): PromiseObject;
 
   abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly JSStringValue[];
@@ -144,12 +147,12 @@ export abstract class AbstractModuleRecord {
     this.HostDefined = init.HostDefined;
   }
 
-  mark(m: GCMarker) {
-    m(this.Realm);
-    m(this.Environment);
-    m(this.Namespace);
-    m(this.DeferredNamespace);
-    m(this.ModuleSource);
+  mark(trace: GCTrace) {
+    trace.strong('Realm', this.Realm, 'internal-slot');
+    trace.strong('Environment', this.Environment, 'internal-slot');
+    trace.strong('Namespace', this.Namespace, 'internal-slot');
+    trace.strong('DeferredNamespace', this.DeferredNamespace, 'internal-slot');
+    trace.strong('ModuleSource', this.ModuleSource, 'internal-slot');
   }
 }
 
@@ -380,11 +383,16 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     return topLevelPromise;
   }
 
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.EvaluationError);
-    for (const v of this.LoadedModules) {
-      m(v.Module);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('EvaluationError', this.EvaluationError, 'internal-slot');
+    trace.strong('CycleRoot', this.CycleRoot, 'internal-slot');
+    trace.strong('TopLevelCapability', this.TopLevelCapability, 'internal-slot');
+    for (let index = 0; index < this.LoadedModules.length; index += 1) {
+      trace.strong(`LoadedModules[${index}]`, this.LoadedModules[index]!.Module, 'element');
+    }
+    for (let index = 0; index < this.AsyncParentModules.length; index += 1) {
+      trace.strong(`AsyncParentModules[${index}]`, this.AsyncParentModules[index], 'element');
     }
   }
 }
@@ -851,10 +859,10 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     }
   }
 
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.ImportMeta);
-    m(this.Context);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('ImportMeta', this.ImportMeta, 'internal-slot');
+    trace.strong('Context', this.Context, 'internal-slot');
   }
 }
 

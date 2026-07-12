@@ -76,7 +76,10 @@ import {
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
 import { avoid_using_children } from './parser/utils.mts';
-import { ObjectValue, surroundingAgent } from '#self';
+import { stepEvaluator } from './gc.mts';
+import {
+  ObjectValue, surroundingAgent,
+} from '#self';
 import {
   type AbruptCompletion, Assert, type ReferenceRecord, type ReturnCompletion, Value,
   type ValueCompletion,
@@ -290,7 +293,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
 export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T {
   let steps = 0;
   while (true) {
-    const { done, value } = iterator.next({ resume: 'debugger', value: undefined });
+    const { done, value } = stepEvaluator(iterator, { resume: 'debugger', value: undefined });
     if (done) {
       return value;
     }

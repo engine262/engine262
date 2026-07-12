@@ -46,18 +46,23 @@ export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
 }
 
 const InternalMethods = {
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-getprototypeof */
   * GetPrototypeOf() {
     return Value.null;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-setprototypeof-v */
   * SetPrototypeOf(V) {
     return Q(yield* SetImmutablePrototype(this, V));
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-isextensible */
   * IsExtensible() {
     return Value.false;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-preventextensions */
   * PreventExtensions() {
     return Value.true;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-getownproperty-p */
   * GetOwnProperty(P) {
     const O = this;
 
@@ -76,6 +81,7 @@ const InternalMethods = {
       Configurable: Value.false,
     });
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-defineownproperty-p-desc */
   * DefineOwnProperty(P, Desc) {
     const O = this;
 
@@ -104,6 +110,7 @@ const InternalMethods = {
     }
     return Value.true;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-hasproperty-p */
   * HasProperty(P) {
     const O = this;
 
@@ -172,9 +179,11 @@ const InternalMethods = {
     // 14. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-set-p-v-receiver */
   * Set() {
     return Value.false;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-delete-p */
   * Delete(P) {
     const O = this;
 
@@ -188,6 +197,7 @@ const InternalMethods = {
     }
     return Value.true;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-ownpropertykeys */
   * OwnPropertyKeys() {
     const O = this;
 

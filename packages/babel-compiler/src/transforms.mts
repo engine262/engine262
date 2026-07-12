@@ -6,15 +6,7 @@ import {
   type PluginObject, type PluginPass,
   types as t,
 } from '@babel/core';
-
-// For frequently used Record-like classes, inline them to get a better debug experience.
-const Structs = [
-  'AsyncGeneratorRequestRecord',
-  'ClassElementDefinitionRecord',
-  'ClassFieldDefinitionRecord',
-  'ClassStaticBlockDefinitionRecord',
-  'PrivateElementRecord',
-];
+import { analyzeQMacroTransformations } from './q-macro-analysis.mjs';
 
 const Completions = {
   NormalCompletion(source: NodeWithLocation, code: { value: t.Expression }) {
@@ -127,13 +119,31 @@ const Macros = {
 }>;
 
 const parseOptions = { preserveComments: true };
+const specLinkPattern = /https:\/\/tc39\.es\/[^\s#]+#[^\s]+|#sec-[^\s]+/;
 
 type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'IteratorCloseAll' | 'AsyncIteratorClose' | 'Value' | 'skipDebugger' | 'ThrowCompletion';
-export default (): PluginObject => ({
+
+export interface TransformOptions {
+  readonly internals?: string;
+}
+
+export default ({ internals = '@engine262/engine262' }: TransformOptions = {}): PluginObject => ({
   visitor: {
     Program: {
       enter(_path, state) {
         state.needed = Object.create(null);
+        state.overloadSpecComments = collectOverloadSpecComments(_path);
+        state.valueLiteralConstructors = Object.create(null);
+        const macroAnalysis = analyzeQMacroTransformations(_path.node, t.VISITOR_KEYS);
+        state.qMacroPlans = new Set(
+          macroAnalysis.plans.map(({ start, end }) => `${start}:${end}`),
+        );
+        state.qMacroDiagnostics = new Map(
+          macroAnalysis.diagnostics.map((diagnostic) => [
+            `${diagnostic.start}:${diagnostic.end}`,
+            diagnostic.message,
+          ]),
+        );
       },
       exit(path, state) {
         const imports: string[] = [];
@@ -142,12 +152,36 @@ export default (): PluginObject => ({
         });
         if (imports.length) {
           path.unshiftContainer('body', template.ast(`
-            import { ${imports.join(',')} } from "#self";
+            import { ${imports.join(',')} } from "${internals}";
           `));
+        }
+        for (const [constructor, binding] of Object.entries(state.valueLiteralConstructors)) {
+          if (binding.needsImport) addNamedImport(path, internals, constructor, binding.local);
+        }
+        path.scope.crawl();
+        const transformedMacros = new Set([
+          'Assert',
+          'Q',
+          'X',
+          'IfAbruptCloseIterator',
+          'IfAbruptCloseIterators',
+          'IfAbruptCloseAsyncIterator',
+          'IfAbruptRejectPromise',
+          'Throw',
+        ]);
+        for (const statement of path.get('body')) {
+          if (!statement.isImportDeclaration()) continue;
+          for (const specifier of statement.get('specifiers')) {
+            if (!specifier.isImportSpecifier() || !transformedMacros.has(specifier.node.local.name)) continue;
+            if (!path.scope.getBinding(specifier.node.local.name)?.referenced) specifier.remove();
+          }
+          if (statement.node.specifiers.length === 0) statement.remove();
         }
       },
     },
     CallExpression(path, state) {
+      if (transformRecordCreation(path, state)) return;
+      if (transformValueLiteralCreation(path, state)) return;
       const callee = path.node.callee;
       if (!t.isIdentifier(callee)) return;
       const argument = path.node.arguments[0];
@@ -162,20 +196,12 @@ export default (): PluginObject => ({
         return;
       }
 
-      // Struct optimization
-      if (Structs.includes(callee.name) && path.node.arguments.length === 1) {
-        const arg0 = path.node.arguments[0];
-        if (t.isObjectExpression(arg0)) {
-          path.replaceWith(t.objectExpression([
-            t.objectProperty(t.identifier('__proto__'), t.memberExpression(t.identifier(callee.name), t.identifier('prototype'))),
-            ...arg0.properties,
-          ]));
-          return;
-        }
-      }
-
       const macroName = (callee.name === 'Q' ? 'ReturnIfAbrupt' : callee.name) as keyof typeof Macros;
       if (!(macroName in Macros)) return;
+      const macroKey = `${path.node.start}:${path.node.end}`;
+      const diagnostic = state.qMacroDiagnostics.get(macroKey);
+      if (diagnostic) throw path.buildCodeFrameError(diagnostic);
+      if (!state.qMacroPlans.has(macroKey)) return;
       if (!t.isExpression(argument)) {
         throw path.get('arguments.0').buildCodeFrameError('First argument to macros must be an expression');
       }
@@ -344,6 +370,9 @@ export default (): PluginObject => ({
         }
       }
     },
+    NewExpression(path, state) {
+      transformRecordCreation(path, state);
+    },
     ThrowStatement(path) {
       const arg = path.get('argument');
       const callee = arg.get('callee');
@@ -356,33 +385,163 @@ export default (): PluginObject => ({
         }
       }
     },
-    FunctionDeclaration(path) {
-      addSectionFromComments(path);
+    FunctionDeclaration(path, state) {
+      if (path.parentPath?.isExportNamedDeclaration()) return;
+      addSectionFromComments(path, state.overloadSpecComments);
     },
-    VariableDeclaration(path) {
+    VariableDeclaration(path, state) {
       if (path.get('declarations.0.init').isArrowFunctionExpression() || path.get('declarations.0.init').isFunctionExpression()) {
-        addSectionFromComments(path);
+        addSectionFromComments(path, state.overloadSpecComments);
       }
     },
-    ExportNamedDeclaration(path) {
-      if (path.get('declaration').isFunctionDeclaration()) {
-        addSectionFromComments(path);
+    ExportNamedDeclaration(path, state) {
+      const declaration = path.get('declaration');
+      if (
+        declaration.isFunctionDeclaration()
+        || (declaration.isVariableDeclaration()
+          && (declaration.get('declarations.0.init').isArrowFunctionExpression()
+            || declaration.get('declarations.0.init').isFunctionExpression()))
+      ) {
+        addSectionFromComments(path, state.overloadSpecComments);
       }
     },
   },
 });
 
-function addSectionFromComments(path: NodePath<t.FunctionDeclaration> | NodePath<t.VariableDeclaration> | NodePath<t.ExportNamedDeclaration>) {
-  if (path.node.leadingComments) {
-    for (const c of path.node.leadingComments) {
+function transformRecordCreation(
+  path: NodePath<t.CallExpression | t.NewExpression>,
+  state: PluginPass & { recordCreations?: Set<string> },
+): boolean {
+  const { start, end } = path.node;
+  if (
+    start === null
+    || start === undefined
+    || end === null
+    || end === undefined
+    || !state.recordCreations?.has(`${start}:${end}`)
+  ) return false;
+  const [argument] = path.node.arguments;
+  if (!t.isObjectExpression(argument) || !t.isExpression(path.node.callee)) return false;
+  path.replaceWith(t.objectExpression([
+    t.objectProperty(
+      t.identifier('__proto__'),
+      t.memberExpression(t.cloneNode(path.node.callee), t.identifier('prototype')),
+    ),
+    ...argument.properties,
+  ]));
+  return true;
+}
+
+function transformValueLiteralCreation(
+  path: NodePath<t.CallExpression>,
+  state: PluginPass & {
+    valueLiteralCreations?: Map<string, { constructor: string; localConstructor: boolean }>;
+    valueLiteralConstructors?: Record<string, { local: string; needsImport: boolean }>;
+  },
+): boolean {
+  const { start, end } = path.node;
+  if (start === null || start === undefined || end === null || end === undefined) return false;
+  const plan = state.valueLiteralCreations?.get(`${start}:${end}`);
+  const [argument] = path.node.arguments;
+  if (!plan || !t.isExpression(argument)) return false;
+  const classIdentifier = valueLiteralConstructorIdentifier(
+    path,
+    state,
+    plan.constructor,
+    plan.localConstructor,
+  );
+  path.replaceWith(t.objectExpression([
+    t.objectProperty(
+      t.identifier('__proto__'),
+      t.memberExpression(t.identifier(classIdentifier), t.identifier('prototype')),
+    ),
+    t.objectProperty(t.identifier('value'), argument),
+  ]));
+  return true;
+}
+
+function valueLiteralConstructorIdentifier(
+  path: NodePath<t.CallExpression>,
+  state: PluginPass & {
+    valueLiteralConstructors?: Record<string, { local: string; needsImport: boolean }>;
+  },
+  constructor: string,
+  localConstructor: boolean,
+): string {
+  const existing = state.valueLiteralConstructors?.[constructor];
+  if (existing) return existing.local;
+  const program = path.findParent((parent) => parent.isProgram()) as NodePath<t.Program>;
+  if (localConstructor && program.scope.hasBinding(constructor)) {
+    state.valueLiteralConstructors[constructor] = { local: constructor, needsImport: false };
+    return constructor;
+  }
+  for (const statement of program.get('body')) {
+    if (!statement.isImportDeclaration()) continue;
+    for (const specifier of statement.get('specifiers')) {
+      if (
+        specifier.isImportSpecifier()
+        && statement.node.importKind !== 'type'
+        && specifier.node.importKind !== 'type'
+        && t.isIdentifier(specifier.node.imported, { name: constructor })
+      ) {
+        state.valueLiteralConstructors[constructor] = {
+          local: specifier.node.local.name,
+          needsImport: false,
+        };
+        return specifier.node.local.name;
+      }
+    }
+  }
+  const local = program.scope.hasBinding(constructor)
+    ? program.scope.generateUidIdentifier(constructor).name
+    : constructor;
+  state.valueLiteralConstructors[constructor] = { local, needsImport: true };
+  return local;
+}
+
+function addNamedImport(
+  program: NodePath<t.Program>,
+  source: string,
+  imported: string,
+  local: string,
+): void {
+  const specifier = t.importSpecifier(t.identifier(local), t.identifier(imported));
+  for (const statement of program.get('body')) {
+    if (
+      statement.isImportDeclaration()
+      && statement.node.source.value === source
+      && statement.node.importKind !== 'type'
+    ) {
+      statement.node.specifiers.push(specifier);
+      return;
+    }
+  }
+  program.unshiftContainer('body', t.importDeclaration([specifier], t.stringLiteral(source)));
+}
+
+function addSectionFromComments(
+  path: NodePath<t.FunctionDeclaration> | NodePath<t.VariableDeclaration> | NodePath<t.ExportNamedDeclaration>,
+  overloadSpecComments?: Map<string, t.Comment[]>,
+) {
+  const comments = specComments(path, overloadSpecComments);
+  if (comments) {
+    for (const c of comments) {
       let name: string;
       switch (path.type) {
         case 'FunctionDeclaration':
           name = path.node.id!.name;
           break;
-        case 'ExportNamedDeclaration':
-          name = (path.node.declaration as t.FunctionDeclaration).id!.name;
+        case 'ExportNamedDeclaration': {
+          const declaration = path.node.declaration!;
+          if (t.isFunctionDeclaration(declaration)) {
+            name = declaration.id!.name;
+          } else if (t.isVariableDeclaration(declaration)) {
+            name = (declaration.declarations[0].id as t.Identifier).name;
+          } else {
+            throw path.buildCodeFrameError('Internal error: Unsupported export declaration to addSectionFromComments');
+          }
           break;
+        }
         case 'VariableDeclaration':
           name = (path.node.declarations[0].id as t.Identifier).name;
           break;
@@ -391,10 +550,17 @@ function addSectionFromComments(path: NodePath<t.FunctionDeclaration> | NodePath
       }
       const lines = c.value.split('\n');
       for (const line of lines) {
-        if (/#sec/.test(line)) {
-          const section = line.split(' ').find((l) => l.includes('#sec'))!;
+        const section = line.match(specLinkPattern)?.[0];
+        if (section) {
           const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
-          const result = path.insertAfter(withSource(c, template.ast(`${name}.section = '${url}';`)));
+          const specName = name
+            .replace('Proto_', '#')
+            .replace(/(Constructor|_getter|_setter|Getter|Setter)$/, '')
+            .replaceAll(/([a-zA-Z])_([a-zA-Z])/g, '$1.$2');
+          const result = path.insertAfter(withSource(c, template.ast(`
+            ${name}.section = '${url}';
+            ${name}.specName = '${specName}';
+          `)));
           if (path.node.trailingComments) {
             result[result.length - 1].node.trailingComments = path.node.trailingComments;
             path.node.trailingComments = null;
@@ -404,6 +570,119 @@ function addSectionFromComments(path: NodePath<t.FunctionDeclaration> | NodePath
       }
     }
   }
+}
+
+function enclosingSpecFunction(
+  path: NodePath<t.CallExpression>,
+  overloadSpecComments?: Map<string, t.Comment[]>,
+): t.Expression | null {
+  let parent = path.parentPath;
+  while (parent) {
+    if (parent.isFunctionDeclaration()) {
+      const annotatedPath = parent.parentPath?.isExportNamedDeclaration()
+        ? parent.parentPath
+        : parent;
+      return hasSpecLink(annotatedPath, overloadSpecComments) ? t.identifier(parent.node.id!.name) : null;
+    }
+    if (parent.isFunctionExpression() || parent.isArrowFunctionExpression()) {
+      const declaration = parent.parentPath;
+      if (!declaration?.isVariableDeclarator() || !t.isIdentifier(declaration.node.id)) return null;
+      const variableDeclaration = declaration.parentPath!;
+      const annotatedPath = variableDeclaration.parentPath?.isExportNamedDeclaration()
+        ? variableDeclaration.parentPath
+        : variableDeclaration;
+      return hasSpecLink(annotatedPath) ? t.identifier(declaration.node.id.name) : null;
+    }
+    if (parent.isClassMethod()) {
+      if (!hasSpecLink(parent) || (!t.isIdentifier(parent.node.key) && !t.isStringLiteral(parent.node.key))) return null;
+      const classBody = parent.parentPath;
+      const classPath = classBody?.parentPath;
+      if (!classBody?.isClassBody() || !classPath?.isClassDeclaration() || !classPath.node.id) return null;
+      const methodIndex = classBody.node.body.indexOf(parent.node);
+      if (!t.isStaticBlock(classBody.node.body[methodIndex + 1])) return null;
+      const receiver = parent.node.static
+        ? t.identifier(classPath.node.id.name)
+        : t.memberExpression(t.identifier(classPath.node.id.name), t.identifier('prototype'));
+      return t.memberExpression(
+        receiver,
+        parent.node.key,
+        t.isStringLiteral(parent.node.key),
+      );
+    }
+    if (parent.isObjectMethod()) {
+      if (!hasSpecLink(parent)) return null;
+      if (t.isIdentifier(parent.node.key)) return t.stringLiteral(parent.node.key.name);
+      if (t.isStringLiteral(parent.node.key)) return t.stringLiteral(parent.node.key.value);
+      return null;
+    }
+    parent = parent.parentPath;
+  }
+  return null;
+}
+
+function hasSpecLink(path: NodePath, overloadSpecComments?: Map<string, t.Comment[]>): boolean {
+  return specComments(path, overloadSpecComments)?.some((comment) => specLinkPattern.test(comment.value)) === true;
+}
+
+function specComments(
+  path: NodePath,
+  overloadSpecComments?: Map<string, t.Comment[]>,
+): t.Comment[] | undefined {
+  const direct = path.node.leadingComments;
+  if (direct?.some((comment) => specLinkPattern.test(comment.value))) return direct;
+
+  let declaration = path;
+  let statement = path;
+  if (path.isExportNamedDeclaration()) {
+    declaration = path.get('declaration') as NodePath;
+  } else if (path.isFunctionDeclaration() && path.parentPath?.isExportNamedDeclaration()) {
+    statement = path.parentPath;
+  }
+  if (!declaration.isFunctionDeclaration() || !declaration.node.id) return direct;
+
+  const name = declaration.node.id.name;
+  const recorded = overloadSpecComments?.get(name);
+  if (recorded) return recorded;
+  let sibling = statement.getPrevSibling();
+  while (sibling.node) {
+    const siblingDeclaration = sibling.isExportNamedDeclaration()
+      ? sibling.get('declaration') as NodePath
+      : sibling;
+    if (
+      !(siblingDeclaration.isTSDeclareFunction() || siblingDeclaration.isFunctionDeclaration())
+      || siblingDeclaration.node.id?.name !== name
+      || siblingDeclaration.node.body
+    ) break;
+    const comments = [
+      ...(sibling.node.leadingComments ?? []),
+      ...(siblingDeclaration.node.leadingComments ?? []),
+    ];
+    if (comments.some((comment) => specLinkPattern.test(comment.value))) return comments;
+    sibling = sibling.getPrevSibling();
+  }
+  return direct;
+}
+
+function collectOverloadSpecComments(path: NodePath<t.Program>): Map<string, t.Comment[]> {
+  const result = new Map<string, t.Comment[]>();
+  for (const statement of path.get('body')) {
+    const declaration = statement.isExportNamedDeclaration()
+      ? statement.get('declaration') as NodePath
+      : statement;
+    if (
+      !(declaration.isTSDeclareFunction() || declaration.isFunctionDeclaration())
+      || declaration.node.body
+      || !declaration.node.id
+    ) continue;
+    const comments = [
+      ...(statement.node.leadingComments ?? []),
+      ...(declaration.node.leadingComments ?? []),
+    ];
+    if (comments.some((comment) => specLinkPattern.test(comment.value))) {
+      result.set(declaration.node.id.name, comments);
+    }
+  }
+  return result;
 }
 
 function skipDebugger(value: t.Identifier, callee: Node) {

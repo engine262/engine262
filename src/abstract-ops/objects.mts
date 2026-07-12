@@ -31,7 +31,9 @@ import {
   type FunctionObject,
   type Intrinsics,
 } from './all.mts';
-import { CreateBuiltinFunction, surroundingAgent } from '#self';
+import {
+  CreateBuiltinFunction, surroundingAgent,
+} from '#self';
 
 export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;
@@ -127,7 +129,7 @@ export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue) {
   return Descriptor(D);
 }
 
-// 9.1.6.1 OrdinaryDefineOwnProperty
+/** https://tc39.es/ecma262/#sec-ordinarydefineownproperty */
 export function* OrdinaryDefineOwnProperty(O: ObjectValue, P: PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue> {
   const current = Q(yield* O.GetOwnProperty(P));
   const extensible = Q(yield* IsExtensible(O));
@@ -262,7 +264,7 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
   return Value.true;
 }
 
-// 9.1.7.1 OrdinaryHasProperty
+/** https://tc39.es/ecma262/#sec-ordinaryhasproperty */
 export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
   Assert(IsPropertyKey(P));
 
@@ -277,7 +279,7 @@ export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue): Value
   return Value.false;
 }
 
-// 9.1.8.1
+/** https://tc39.es/ecma262/#sec-ordinaryget */
 export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue, Receiver: Value): ValueEvaluator {
   Assert(IsPropertyKey(P));
 
@@ -300,14 +302,14 @@ export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue, Receiver: Valu
   return Q(yield* Call(getter, Receiver));
 }
 
-// 9.1.9.1 OrdinarySet
+/** https://tc39.es/ecma262/#sec-ordinaryset */
 export function* OrdinarySet(O: ObjectValue, P: PropertyKeyValue, V: Value, Receiver: Value) {
   Assert(IsPropertyKey(P));
   const ownDesc = Q(yield* O.GetOwnProperty(P));
   return yield* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
 }
 
-// 9.1.9.2 OrdinarySetWithOwnDescriptor
+/** https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor */
 export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue> {
   Assert(IsPropertyKey(P));
 
@@ -355,7 +357,7 @@ export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValu
   return Value.true;
 }
 
-// 9.1.10.1 OrdinaryDelete
+/** https://tc39.es/ecma262/#sec-ordinarydelete */
 export function* OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
   Assert(IsPropertyKey(P));
   const desc = Q(yield* O.GetOwnProperty(P));
@@ -426,20 +428,24 @@ OrdinaryObjectCreate.from = (object: Record<string, Value | CanBeNativeSteps>, p
   for (const key in object) {
     if (Object.hasOwn(object, key)) {
       const value = object[key];
-      X(CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from(value, key)));
+      X(CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from({
+        steps: value,
+        name: key,
+        captures: null,
+      })));
     }
   }
   return O;
 };
 
-// 9.1.13 OrdinaryCreateFromConstructor
+/** https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor */
 export function* OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics, internalSlotsList?: readonly T[]): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(yield* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
-// 9.1.14 GetPrototypeFromConstructor
+/** https://tc39.es/ecma262/#sec-getprototypefromconstructor */
 export function* GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.

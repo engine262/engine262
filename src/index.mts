@@ -15,9 +15,10 @@ export * from './host-defined/inspect.mts';
 export { performDevtoolsEval } from './host-defined/devtoolsEval.mts';
 export { type Formattable, Throw } from './host-defined/error-messages.mts';
 export * from './evaluator.mts';
+export * from './gc.mts';
 
 export {
-  gc, type ManagedRealmHostDefined, ManagedRealm,
+  type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
 export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';

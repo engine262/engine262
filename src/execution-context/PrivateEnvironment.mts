@@ -1,9 +1,10 @@
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
-  type PrivateName, type GCMarker, Assert, JSStringValue,
+  type PrivateName, Assert, JSStringValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateenvironment-records */
-export class PrivateEnvironmentRecord {
+export class PrivateEnvironmentRecord implements GCMarkable {
   readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | null;
 
   readonly Names: PrivateName[] = [];
@@ -13,9 +14,10 @@ export class PrivateEnvironmentRecord {
     this.OuterPrivateEnvironment = outerEnv;
   }
 
-  mark(m: GCMarker) {
+  mark(trace: GCTrace) {
+    trace.strong('PrivateEnvironment', this.OuterPrivateEnvironment, 'internal-slot');
     this.Names.forEach((name) => {
-      m(name);
+      trace.strong('Names', name, 'private-element');
     });
   }
 }

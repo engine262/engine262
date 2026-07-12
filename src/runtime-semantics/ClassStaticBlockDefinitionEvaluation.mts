@@ -1,5 +1,7 @@
 import { X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
 import { surroundingAgent } from '#self';
 import {
   MakeMethod,
@@ -8,17 +10,24 @@ import {
   ObjectValue,
 } from '#self';
 
-/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */
-export interface ClassStaticBlockDefinitionRecord {
+type ClassStaticBlockDefinitionRecordInit = Omit<ClassStaticBlockDefinitionRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */ // @ts-expect-error
+export function ClassStaticBlockDefinitionRecord(O: ClassStaticBlockDefinitionRecordInit): ClassStaticBlockDefinitionRecord
+/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */ // @ts-expect-error
+export @callable() @record class ClassStaticBlockDefinitionRecord implements GCMarkable {
   readonly BodyFunction: ECMAScriptFunctionObject;
+
+  constructor(O: ClassStaticBlockDefinitionRecordInit) {
+    if (new.target !== ClassStaticBlockDefinitionRecord) {
+      throw new TypeError('ClassStaticBlockDefinitionRecord is a final class and cannot be subclassed');
+    }
+    this.BodyFunction = O.BodyFunction;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('BodyFunction', this.BodyFunction, 'capture');
+  }
 }
-export const ClassStaticBlockDefinitionRecord = function ClassStaticBlockDefinitionRecord(value: ClassStaticBlockDefinitionRecord) {
-  Object.setPrototypeOf(value, ClassStaticBlockDefinitionRecord.prototype);
-  return value;
-} as {
-  (value: ClassStaticBlockDefinitionRecord): ClassStaticBlockDefinitionRecord;
-  [Symbol.hasInstance](instance: unknown): instance is ClassStaticBlockDefinitionRecord;
-};
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
 //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`

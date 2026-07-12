@@ -5,7 +5,10 @@
  * MIT licensed: https://github.com/mziccard/node-timsort/blob/master/LICENSE.md
  */
 
-import { Q, type PlainEvaluator, type Value } from '#self';
+import type { GCMarkable, GCTrace } from '../gc.mts';
+import {
+  Q, type PlainEvaluator, type Value,
+} from '#self';
 
 /**
  * Default minimum size of a run.
@@ -286,7 +289,6 @@ function* gallopRight(value: Value, array: Value[], start: number, length: numbe
 
     while (offset < maxOffset) {
       if (!(Q(yield* compare(value, array[start + hint + offset])) >= 0)) break;
-      if (!Math && Q(yield* compare(value, array[start + hint + offset]))) break;
       lastOffset = offset;
       offset = (offset << 1) + 1;
 
@@ -325,7 +327,7 @@ function* gallopRight(value: Value, array: Value[], start: number, length: numbe
   return offset;
 }
 
-class TimSort {
+class TimSort implements GCMarkable {
   minGallop = DEFAULT_MIN_GALLOPING;
 
   length = 0;
@@ -357,6 +359,11 @@ class TimSort {
 
     this.runStart = new Array(this.stackLength);
     this.runLength = new Array(this.stackLength);
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('array', this.array, 'element');
+    trace.strong('tmp', this.tmp, 'element');
   }
 
   /**

@@ -72,6 +72,7 @@ function IteratorBindingInitialization_BindingElement(BindingElement: ParseNode.
 }
 
 // SingleNameBinding : BindingIdentifier Initializer?
+/** https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization */
 function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, Initializer }: ParseNode.SingleNameBinding, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier);
@@ -107,6 +108,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
 // BindingRestElement :
 //   `...` BindingIdentifier
 //   `...` BindingPattern
+/** https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization */
 function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, BindingPattern }: ParseNode.BindingRestElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
   if (BindingIdentifier) {
     // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
@@ -162,6 +164,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
   }
 }
 
+/** https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization */
 function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initializer }: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
   let v: Value = Value.undefined;
   // 1. If iteratorRecord.[[Done]] is false, then
@@ -194,6 +197,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.Elision, ite
   return NormalCompletion(undefined);
 }
 
+/** https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization */
 export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
   for (const BindingElement of BindingElementList) {
     if (BindingElement.type === 'Elision') {

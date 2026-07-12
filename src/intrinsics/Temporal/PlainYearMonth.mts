@@ -43,7 +43,7 @@ export interface ISOYearMonthRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth */
-function* PlainYearMonthConstructor([
+function* Temporal_PlainYearMonthConstructor([
   isoYear = Value.undefined,
   isoMonth = Value.undefined,
   _calendar = Value.undefined,
@@ -87,7 +87,7 @@ function* PlainYearMonth_compare([_one = Value.undefined, _two = Value.undefined
 export function bootstrapTemporalPlainYearMonth(realmRec: Realm) {
   const prototype = bootstrapTemporalPlainYearMonthPrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, PlainYearMonthConstructor, 'PlainYearMonth', 2, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_PlainYearMonthConstructor, 'PlainYearMonth', 2, prototype, [
     ['from', PlainYearMonth_from, 1],
     ['compare', PlainYearMonth_compare, 2],
   ]);

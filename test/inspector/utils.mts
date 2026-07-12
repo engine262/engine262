@@ -1,4 +1,9 @@
-import type { DebuggerContext, DebuggerNamespace, RuntimeNamespace } from '../../lib/inspector/types.d.mts';
+import type {
+  DebuggerContext,
+  DebuggerNamespace,
+  HeapProfilerNamespace,
+  RuntimeNamespace,
+} from '../../lib/inspector/types.d.mts';
 import { Inspector } from '#self/inspector';
 
 export class TestInspector extends Inspector {
@@ -43,6 +48,10 @@ export class TestInspector extends Inspector {
     [T in keyof RuntimeNamespace]-?: (params: RuntimeNamespace[T] extends undefined | ((params: infer O, context: DebuggerContext) => unknown) ? O : void) => Promise<object>;
   };
 
+  heapProfiler: {
+    [T in keyof HeapProfilerNamespace]-?: (params: HeapProfilerNamespace[T] extends undefined | ((params: infer O, context: DebuggerContext) => unknown) ? O : void) => Promise<object>;
+  };
+
   #callbacks: PromiseWithResolvers<unknown>[] = [];
 
   constructor() {
@@ -54,9 +63,9 @@ export class TestInspector extends Inspector {
             return undefined;
           }
           const f = (params: object) => {
-            this.onMessage(this.#callbacks.length, `${namespace}.${p}`, params);
             const promise = Promise.withResolvers();
             this.#callbacks.push(promise);
+            this.onMessage(this.#callbacks.length - 1, `${namespace}.${p}`, params);
             return promise.promise;
           };
           Reflect.defineProperty(receiver, p, { configurable: true, value: f });
@@ -66,6 +75,7 @@ export class TestInspector extends Inspector {
     );
     this.runtime = object('Runtime');
     this.debugger = object('Debugger');
+    this.heapProfiler = object('HeapProfiler');
     this.debugger.enable({});
   }
 

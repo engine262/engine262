@@ -5,7 +5,7 @@ import {
   type EventLoop,
   MicroTaskEventLoop,
   WebLikeEventLoop,
-  type Job,
+  Job,
   Value,
   setSurroundingAgent,
   NodeJSLikeEventLoop,
@@ -18,16 +18,18 @@ function createTrackedJob(
   calls: string[],
   onRun?: () => void,
 ): Job {
-  return {
+  return new Job({
+    name: queueName,
     queueName,
-    job: function* job() {
+    evaluate: function* job() {
       calls.push(queueName);
       onRun?.();
       return Value.undefined;
     },
     callerRealm: undefined,
     callerScriptOrModule: Value.null,
-  };
+    captures: null,
+  });
 }
 
 function createAgentWithEventLoop<T extends EventLoop>(EventLoop: EventLoopCtor<T>) {

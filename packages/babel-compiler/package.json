@@ -1,0 +1,32 @@
+{
+  "name": "@engine262/babel-compiler",
+  "version": "0.0.0",
+  "description": "Babel compiler transforms for engine262 evaluators and specification algorithms",
+  "type": "module",
+  "main": "./lib/index.mjs",
+  "types": "./lib/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.mts",
+      "import": "./lib/index.mjs"
+    }
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test"
+  },
+  "peerDependencies": {
+    "@babel/core": "^7.28.0 || ^8.0.0",
+    "typescript": ">=5.9.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/engine262/engine262.git",
+    "directory": "packages/babel-compiler"
+  }
+}

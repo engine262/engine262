@@ -1,8 +1,8 @@
-import { type GCMarker } from './host-defined/engine.mts';
+import type { GCMarkable, GCTrace } from './gc.mts';
 import {
   Q, X, type ValueEvaluator, type PlainCompletion,
 } from './completion.mts';
-import { OutOfRange, callable } from './utils/language.mts';
+import { OutOfRange, callable, record } from './utils/language.mts';
 import { PropertyKeyMap } from './utils/container.mts';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
 import type { PlainEvaluator } from './evaluator.mts';
@@ -214,7 +214,7 @@ export class JSStringValue extends PrimitiveValue {
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
-export class SymbolValue extends PrimitiveValue {
+export class SymbolValue extends PrimitiveValue implements GCMarkable {
   declare readonly type: 'Symbol'; // defined on prototype by static block
 
   readonly Description: JSStringValue | UndefinedValue;
@@ -222,6 +222,10 @@ export class SymbolValue extends PrimitiveValue {
   constructor(Description: JSStringValue | UndefinedValue) {
     super();
     this.Description = Description;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Description', this.Description, 'internal-slot');
   }
 
   static {
@@ -762,7 +766,7 @@ type ObjectSlotReturn = {
   [key in keyof ObjectInternalMethods<ObjectValue>]: ReturnType<NonNullable<ObjectInternalMethods<ObjectValue>[key]>>
 };
 /** https://tc39.es/ecma262/#sec-object-type */
-export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
+export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue>, GCMarkable {
   declare readonly type: 'Object'; // defined on prototype by static block
 
   readonly properties: PropertyKeyMap<Descriptor>;
@@ -843,18 +847,66 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
   }
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.properties);
-    this.internalSlotsList.forEach((s) => {
-      // @ts-ignore
-      m(this[s]);
-      if (s === 'HostCapturedValues' && s in this && Array.isArray(this[s])) {
-        this[s].forEach(m);
+  mark(trace: GCTrace) {
+    for (const [key, descriptor] of this.properties) {
+      const name = referencePropertyName(key);
+      if (key instanceof SymbolValue) {
+        trace.strong(`${name}:key`, key, 'property');
       }
-    });
+      trace.strong(name, descriptor.Value, referencePropertyReason(key));
+      trace.strong(`get ${name}`, descriptor.Getter, referencePropertyReason(key));
+      trace.strong(`set ${name}`, descriptor.Setter, referencePropertyReason(key));
+    }
 
-    this.PrivateElements.forEach((pr) => {
-      m(pr);
+    for (const slot of this.internalSlotsList) {
+      const descriptor = Object.getOwnPropertyDescriptor(this, slot);
+      const target = descriptor && 'value' in descriptor ? descriptor.value : undefined;
+      if (slot === 'WeakRefTarget') {
+        trace.weak(`[[${slot}]]`, target, 'internal-slot');
+      } else if (slot === 'WeakMapData' && Array.isArray(target)) {
+        target.forEach((entry, index) => {
+          if (entry && typeof entry === 'object') {
+            trace.weak(`[[WeakMapData]][${index}].key`, Reflect.get(entry, 'Key'), 'element');
+            trace.ephemeron(
+              `[[WeakMapData]][${index}].value`,
+              Reflect.get(entry, 'Key'),
+              Reflect.get(entry, 'Value'),
+              'element',
+            );
+          }
+        });
+      } else if (slot === 'WeakSetData' && Array.isArray(target)) {
+        target.forEach((entry, index) => trace.weak(`[[WeakSetData]][${index}]`, entry, 'element'));
+      } else if (slot === 'MapData' && Array.isArray(target)) {
+        target.forEach((entry, index) => {
+          if (entry && typeof entry === 'object') {
+            trace.strong(`[[MapData]][${index}].key`, Reflect.get(entry, 'Key'), 'element');
+            trace.strong(`[[MapData]][${index}].value`, Reflect.get(entry, 'Value'), 'element');
+          }
+        });
+      } else if (slot === 'SetData' && Array.isArray(target)) {
+        target.forEach((entry, index) => trace.strong(`[[SetData]][${index}]`, entry, 'element'));
+      } else if (slot === 'Cells' && Array.isArray(target)) {
+        target.forEach((cell, index) => {
+          if (cell && typeof cell === 'object') {
+            trace.weak(`[[Cells]][${index}].target`, Reflect.get(cell, 'WeakRefTarget'), 'element');
+            trace.weak(`[[Cells]][${index}].token`, Reflect.get(cell, 'UnregisterToken'), 'element');
+            trace.strong(`[[Cells]][${index}].heldValue`, Reflect.get(cell, 'HeldValue'), 'element');
+          }
+        });
+      } else {
+        trace.strong(`[[${slot}]]`, target, 'internal-slot');
+      }
+    }
+
+    this.PrivateElements.forEach((element, index) => {
+      trace.strong(`PrivateElements[${index}].key`, element.Key, 'private-element');
+      trace.strong(`PrivateElements[${index}].value`, element.Value, 'private-element');
+      trace.strong(`PrivateElements[${index}].getter`, element.Getter, 'private-element');
+      trace.strong(`PrivateElements[${index}].setter`, element.Setter, 'private-element');
+    });
+    this.ConstructedBy.forEach((constructor, index) => {
+      trace.strong(`ConstructedBy[${index}]`, constructor, 'internal-slot');
     });
   }
 
@@ -866,7 +918,7 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
 }
 
 /** https://tc39.es/ecma262/#sec-private-names */
-export class PrivateName {
+export class PrivateName implements GCMarkable {
   // NOTE: The following declaration distinguishes `PrivateName` from `SymbolValue` so that type guards can properly
   //       remove it from unions with `SymbolValue` due to structural overlap.
   declare private _: never;
@@ -876,9 +928,17 @@ export class PrivateName {
   constructor(description: JSStringValue) {
     this.Description = description;
   }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Description', this.Description, 'internal-slot');
+  }
 }
 
-export class ReferenceRecord {
+type ReferenceRecordInit = Omit<ReferenceRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-reference-record-specification-type */  // @ts-expect-error
+export function ReferenceRecord(O: ReferenceRecordInit): ReferenceRecord
+/** https://tc39.es/ecma262/#sec-reference-record-specification-type */  // @ts-expect-error
+export @callable() @record class ReferenceRecord implements GCMarkable {
   readonly Base: 'unresolvable' | Value | EnvironmentRecord;
 
   ReferencedName: Value | PrivateName;
@@ -887,30 +947,29 @@ export class ReferenceRecord {
 
   readonly ThisValue: Value | undefined;
 
-  constructor({
-    Base,
-    ReferencedName,
-    Strict,
-    ThisValue,
-  }: Pick<ReferenceRecord, 'Base' | 'ReferencedName' | 'Strict' | 'ThisValue'>) {
-    this.Base = Base;
-    this.ReferencedName = ReferencedName;
-    this.Strict = Strict;
-    this.ThisValue = ThisValue;
+  constructor(O: ReferenceRecordInit) {
+    if (new.target !== ReferenceRecord) {
+      throw new TypeError('ReferenceRecord is a final class and cannot be subclassed');
+    }
+    this.Base = O.Base;
+    this.ReferencedName = O.ReferencedName;
+    this.Strict = O.Strict;
+    this.ThisValue = O.ThisValue;
   }
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.Base);
-    m(this.ReferencedName);
-    m(this.ThisValue);
+  mark(trace: GCTrace) {
+    trace.strong('Base', this.Base, 'internal-slot');
+    trace.strong('ReferencedName', this.ReferencedName, 'internal-slot');
+    trace.strong('ThisValue', this.ThisValue, 'internal-slot');
   }
 }
 
 export type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>;
-// @ts-expect-error
-export function Descriptor(O: DescriptorInit): Descriptor // @ts-expect-error
-export @callable() class Descriptor {
+/** https://tc39.es/ecma262/#sec-property-descriptor-specification-type */ // @ts-expect-error
+export function Descriptor(O: DescriptorInit): Descriptor
+/** https://tc39.es/ecma262/#sec-property-descriptor-specification-type */ // @ts-expect-error
+export @callable() @record class Descriptor implements GCMarkable {
   readonly Value?: Value;
 
   readonly Getter?: FunctionObject | UndefinedValue;
@@ -924,6 +983,9 @@ export @callable() class Descriptor {
   readonly Configurable?: BooleanValue;
 
   constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>) {
+    if (new.target !== Descriptor) {
+      throw new TypeError('Descriptor is a final class and cannot be subclassed');
+    }
     this.Value = O.Value;
     this.Getter = O.Getter;
     this.Setter = O.Setter;
@@ -942,11 +1004,26 @@ export @callable() class Descriptor {
   }
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.Value);
-    m(this.Getter);
-    m(this.Setter);
+  mark(trace: GCTrace) {
+    trace.strong('Value', this.Value, 'internal-slot');
+    trace.strong('Getter', this.Getter, 'internal-slot');
+    trace.strong('Setter', this.Setter, 'internal-slot');
   }
+}
+
+function referencePropertyName(key: PropertyKeyValue): string {
+  if (key instanceof JSStringValue) return key.stringValue();
+  return key.Description instanceof JSStringValue
+    ? `Symbol(${key.Description.stringValue()})`
+    : 'Symbol()';
+}
+
+function referencePropertyReason(key: PropertyKeyValue): 'element' | 'property' {
+  if (!(key instanceof JSStringValue)) return 'property';
+  const name = key.stringValue();
+  if (!/^(?:0|[1-9]\d*)$/.test(name)) return 'property';
+  const index = Number(name);
+  return Number.isSafeInteger(index) ? 'element' : 'property';
 }
 
 export class DataBlock extends Uint8Array {}

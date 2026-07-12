@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "#self": ["../../src/index.mts"]
+    }
+  },
+  "include": ["./test/**/*.mts"],
+  "references": [
+    { "path": "./tsconfig.json" },
+    { "path": "../../src" }
+  ]
+}

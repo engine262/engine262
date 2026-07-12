@@ -57,10 +57,13 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
           0,
           name,
           [],
-          realmRec,
-          undefined,
-          Value('get'),
-          async,
+          {
+            captures: null,
+            realm: realmRec,
+            prototype: undefined,
+            prefix: Value('get'),
+            async,
+          },
         );
       }
       if (typeof setter === 'function') {
@@ -69,10 +72,13 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
           1,
           name,
           [],
-          realmRec,
-          undefined,
-          Value('set'),
-          async,
+          {
+            captures: null,
+            realm: realmRec,
+            prototype: undefined,
+            prefix: Value('set'),
+            async,
+          },
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
@@ -89,7 +95,15 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
       let value;
       if (typeof v === 'function') {
         Assert(typeof len === 'number');
-        value = CreateBuiltinFunction(v, len, name, [], realmRec, undefined, undefined, async);
+        value = CreateBuiltinFunction(v, len, name, [],
+          {
+            captures: null,
+            realm: realmRec,
+            prototype: undefined,
+            prefix: undefined,
+            async,
+          }
+        );
       } else {
         value = v;
       }
@@ -128,7 +142,10 @@ export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, 
     length,
     Value(name),
     [],
-    realmRec,
+    {
+      captures: null,
+      realm: realmRec,
+    },
   );
 
   X(cons.DefineOwnProperty(Value('prototype'), Descriptor({

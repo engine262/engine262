@@ -44,7 +44,7 @@ export function isTemporalDurationObject(item: Value): item is TemporalDurationO
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration */
-function* DurationConstructor([
+function* Temporal_DurationConstructor([
   years = Value.undefined,
   months = Value.undefined,
   weeks = Value.undefined,
@@ -131,7 +131,7 @@ function* Duration_Compare([_one = Value.undefined, _two = Value.undefined, opti
 export function bootstrapTemporalDuration(realmRec: Realm) {
   const prototype = bootstrapTemporalDurationPrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, DurationConstructor, 'Duration', 0, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_DurationConstructor, 'Duration', 0, prototype, [
     ['from', Duration_From, 1],
     ['compare', Duration_Compare, 2],
   ]);

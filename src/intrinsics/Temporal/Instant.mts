@@ -33,7 +33,7 @@ export function isTemporalInstantObject(o: Value): o is TemporalInstantObject {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant */
-function* InstantConstructor([_epochNanoseconds = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantConstructor([_epochNanoseconds = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.Instant cannot be called without new');
   }
@@ -79,7 +79,7 @@ function* Instant_compare([_one = Value.undefined, _two = Value.undefined]: Argu
 export function bootstrapTemporalInstant(realmRec: Realm) {
   const prototype = bootstrapTemporalInstantPrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, InstantConstructor, 'Instant', 1, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_InstantConstructor, 'Instant', 1, prototype, [
     ['from', Instant_from, 1],
     ['fromEpochMilliseconds', Instant_fromEpochMilliseconds, 1],
     ['fromEpochNanoseconds', Instant_fromEpochNanoseconds, 1],

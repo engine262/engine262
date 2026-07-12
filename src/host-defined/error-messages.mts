@@ -59,6 +59,17 @@ function ThrowFactory(intrinsicName: keyof Intrinsics & `%${string}Error%`): Thr
     return ThrowCompletion(E);
   };
 }
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace Throw {
+  let EvalError: Throw;
+  let RangeError: Throw;
+  let ReferenceError: Throw;
+  let SyntaxError: Throw;
+  let TypeError: Throw;
+  let URIError: Throw;
+  let Error: Throw;
+  let AggregateError: Throw;
+}
 Throw.EvalError = ThrowFactory('%EvalError%');
 Throw.RangeError = ThrowFactory('%RangeError%');
 Throw.ReferenceError = ThrowFactory('%ReferenceError%');
@@ -218,6 +229,7 @@ export interface Throw {
   | 'Cannot divide by zero'
   | 'Cannot make length of array-like object surpass the bounds of an integer index'
   | 'Cannot mix BigInt and other types, use explicit conversions'
+  | 'Cannot mix logical operator with ?? operator. Add parentheses to determine precedence.'
   | 'Cannot reduce an empty array with no initial value'
   | 'Cannot resize ArrayBuffer to bigger than maxByteLength'
   | 'Cannot serialize a BigInt to JSON'

@@ -4,9 +4,10 @@ import {
 import {
   Q, X,
 } from '../completion.mts';
-import { OutOfRange } from '../utils/language.mts';
+import { callable, OutOfRange, record } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import { ClassElementDefinitionRecord, DefineMethod, Evaluate_PropertyName } from './all.mts';
 import { surroundingAgent } from '#self';
 import {
@@ -17,39 +18,59 @@ import {
   MakeMethod,
   sourceTextMatchedBy,
   type FunctionObject,
-  type GCMarker,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export interface PrivateElementRecord_Value {
   readonly Key: PrivateName;
   readonly Kind: 'method' | 'field';
-  Value?: Value;
+  Value: Value;
   readonly Getter?: undefined;
   readonly Setter?: undefined;
 }
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export interface PrivateElementRecord_Accessor {
   readonly Key: PrivateName;
   readonly Kind: 'accessor';
   Value?: Value;
-  readonly Getter?: FunctionObject | UndefinedValue;
-  readonly Setter?: FunctionObject | UndefinedValue;
+  readonly Getter: FunctionObject | UndefinedValue;
+  readonly Setter: FunctionObject | UndefinedValue;
 }
-export type PrivateElementRecord = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
-export const PrivateElementRecord = function PrivateElementRecord(value: PrivateElementRecord) {
-  Object.setPrototypeOf(value, PrivateElementRecord.prototype);
-  return value;
-} as {
-  (value: PrivateElementRecord): PrivateElementRecord;
-  [Symbol.hasInstance](instance: unknown): instance is PrivateElementRecord;
-};
+type PrivateElementRecordInit = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
+type PrivateElementRecordFields = Omit<PrivateElementRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */ // @ts-expect-error
+export function PrivateElementRecord(O: PrivateElementRecordFields): PrivateElementRecord
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */ // @ts-expect-error
+export @callable() @record class PrivateElementRecord implements GCMarkable {
+  readonly Key: PrivateName;
 
-// NON-SPEC
-PrivateElementRecord.prototype.mark = function mark(m: GCMarker): void {
-  m(this.Value);
-  m(this.Get);
-  m(this.Set);
-};
+  readonly Kind: PrivateElementRecordInit['Kind'];
+
+  Value?: Value;
+
+  readonly Getter?: FunctionObject | UndefinedValue;
+
+  readonly Setter?: FunctionObject | UndefinedValue;
+
+  constructor(O: PrivateElementRecordFields) {
+    if (new.target !== PrivateElementRecord) {
+      throw new TypeError('PrivateElementRecord is a final class and cannot be subclassed');
+    }
+    this.Key = O.Key;
+    this.Kind = O.Kind;
+    this.Value = O.Value;
+    this.Getter = O.Getter;
+    this.Setter = O.Setter;
+  }
+
+  // NON-SPEC
+  mark(trace: GCTrace): void {
+    trace.strong('Key', this.Key, 'private-element');
+    trace.strong('Value', this.Value, 'private-element');
+    trace.strong('Getter', this.Getter, 'private-element');
+    trace.strong('Setter', this.Setter, 'private-element');
+  }
+}
 
 // -decorator
 // +decorator: remove this function

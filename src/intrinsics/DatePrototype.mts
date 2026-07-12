@@ -701,7 +701,7 @@ function DateProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext)
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive */
-function* DateProto_toPrimitive([hint = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* DateProto_AtAt_toPrimitive([hint = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a $2 object', O, 'Date');
@@ -763,7 +763,7 @@ export function bootstrapDatePrototype(realmRec: Realm) {
     surroundingAgent.feature('temporal') ? ['toTemporalInstant', DateProto_toTemporalInstant, 0] : undefined,
     ['toUTCString', DateProto_toUTCString, 0],
     ['valueOf', DateProto_valueOf, 0],
-    [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, { Writable: Value.false, Enumerable: Value.false, Configurable: Value.true }],
+    [wellKnownSymbols.toPrimitive, DateProto_AtAt_toPrimitive, 1, { Writable: Value.false, Enumerable: Value.false, Configurable: Value.true }],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Date.prototype%'] = proto;

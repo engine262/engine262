@@ -28,6 +28,10 @@ import {
 import { type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import {
+  withCapturedReferences,
+  type GCCaptureProvider,
+} from '../gc.mts';
 import { FunctionProto_toString, type BoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import {
   Assert,
@@ -106,8 +110,6 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
-  // NON-SPEC
-  HostCapturedValues?: readonly Value[];
 }
 export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject | BoundFunctionObject;
 // This file covers abstract operations defined in
@@ -647,8 +649,31 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
   }
 }
 
-/** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, async = false): BuiltinFunctionObject {
+export interface CreateBuiltinFunctionOptions {
+  readonly captures: GCCaptureProvider | null;
+  readonly realm?: Realm;
+  readonly prototype?: ObjectValue | NullValue;
+  readonly prefix?: JSStringValue;
+  readonly async?: boolean;
+}
+
+/**
+ * https://tc39.es/ecma262/#sec-createbuiltinfunction
+ * Signature differs from the ECMAScript spec because the options parameter includes `captures` to support GC.
+ */
+export function CreateBuiltinFunction(
+  behaviour: NativeSteps,
+  length: number,
+  name: string | PropertyKeyValue | PrivateName,
+  additionalInternalSlotsList: readonly string[],
+  {
+    captures,
+    realm,
+    prototype,
+    prefix,
+    async = false,
+  }: CreateBuiltinFunctionOptions,
+): BuiltinFunctionObject {
   if (typeof name === 'string') {
     name = Value(name);
   }
@@ -682,6 +707,13 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
   func.InitialName = Value.null;
   // https://github.com/tc39/ecma262/pull/3212/
   func.IsClassConstructor = Value.false;
+  if (captures) {
+    withCapturedReferences(func, {
+      name: typeof name === 'string' ? name : 'BuiltinFunction',
+      kind: 'callback',
+      captures,
+    });
+  }
   // 11. Perform ! SetFunctionLength(func, length).
   X(SetFunctionLength(func, length));
   // 12. If prefix is not present, then
@@ -697,7 +729,29 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
 }
 
 /** This is a helper function to define non-spec host functions. */
-CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name, async = false) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, name, [], surroundingAgent.currentRealmRecord, undefined, undefined, async);
+export interface CreateBuiltinFunctionFromOptions {
+  readonly steps: CanBeNativeSteps;
+  readonly name?: string;
+  readonly async?: boolean;
+  readonly captures: GCCaptureProvider | null;
+}
+
+CreateBuiltinFunction.from = ({
+  steps,
+  name = steps.name,
+  async = false,
+  captures,
+}: CreateBuiltinFunctionFromOptions) => CreateBuiltinFunction(
+  Reflect.apply.bind(null, steps, null),
+  steps.length,
+  name,
+  [],
+  {
+    captures,
+    realm: surroundingAgent.currentRealmRecord,
+    async,
+  },
+);
 
 export function markBuiltinFunctionAsConstructor(steps: NativeSteps) {
   steps.isConstructor = true;

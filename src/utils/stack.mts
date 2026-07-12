@@ -1,6 +1,8 @@
 import type { Protocol } from 'devtools-protocol';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import { kAsyncContext } from './internal.mts';
 import { isArray } from './language.mts';
+import { specFunctionName } from './spec-function-name.mts';
 import {
   ExecutionContext, type ParseNode, Value, NullValue, isECMAScriptFunctionObject, isBuiltinFunctionObject, type FunctionObject, isFunctionObject, JSStringValue, surroundingAgent, DynamicParsedCodeRecord,
   IsError as isErrorObject,
@@ -8,7 +10,7 @@ import {
 } from '#self';
 
 
-export class CallSite {
+export class CallSite implements GCMarkable {
   context: ExecutionContext;
 
   lastNode: ParseNode | null = null;
@@ -23,6 +25,10 @@ export class CallSite {
 
   constructor(context: ExecutionContext) {
     this.context = context;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('context', this.context, 'internal-slot');
   }
 
   clone(context = this.context) {
@@ -57,9 +63,12 @@ export class CallSite {
   static getFunctionName(func: FunctionObject | NullValue) {
     if (isFunctionObject(func)) {
       if (isBuiltinFunctionObject(func)) {
+        if ('specName' in func && typeof func.specName === 'string') {
+          return func.specName;
+        }
         const name = func.nativeFunction.name;
         if (name !== 'defaultConstructor') {
-          return name.replace('Proto_', '#').replace(/(Constructor|_getter|_setter|Getter|Setter)$/, '').replaceAll(/([a-zA-Z])_([a-zA-Z])/g, '$1.$2');
+          return specFunctionName(name);
         }
       }
       if (func.InitialName instanceof JSStringValue) {

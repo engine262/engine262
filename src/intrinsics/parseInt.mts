@@ -81,5 +81,10 @@ function* ParseInt([string = Value.undefined, radix = Value.undefined]: Argument
 }
 
 export function bootstrapParseInt(realmRec: Realm) {
-  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, Value('parseInt'), [], realmRec);
+  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, Value('parseInt'), [],
+    {
+      captures: null,
+      realm: realmRec,
+    },
+  );
 }

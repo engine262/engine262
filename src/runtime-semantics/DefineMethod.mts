@@ -1,6 +1,8 @@
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
 import { Evaluate_PropertyName } from './all.mts';
 import {
   surroundingAgent, OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy,
@@ -9,9 +11,27 @@ import type {
   ECMAScriptFunctionObject, ObjectValue, PrivateName, PropertyKeyValue,
 } from '#self';
 
-export interface DefineMethodRecord {
+type DefineMethodRecordInit = Omit<DefineMethodRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */ // @ts-expect-error
+export function DefineMethodRecord(O: DefineMethodRecordInit): DefineMethodRecord
+/** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */ // @ts-expect-error
+export @callable() @record class DefineMethodRecord implements GCMarkable {
   readonly Key: PropertyKeyValue | PrivateName;
+
   readonly Closure: ECMAScriptFunctionObject;
+
+  constructor(O: DefineMethodRecordInit) {
+    if (new.target !== DefineMethodRecord) {
+      throw new TypeError('DefineMethodRecord is a final class and cannot be subclassed');
+    }
+    this.Key = O.Key;
+    this.Closure = O.Closure;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Key', this.Key, 'private-element');
+    trace.strong('Closure', this.Closure, 'capture');
+  }
 }
 /** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */
 export function* DefineMethod(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, functionPrototype?: ObjectValue): PlainEvaluator<DefineMethodRecord> {
@@ -38,5 +58,5 @@ export function* DefineMethod(MethodDefinition: ParseNode.MethodDefinition, obje
   // 9. Perform MakeMethod(closure, object).
   MakeMethod(closure, object);
   // 10. Return the Record { [[Key]]: propKey, [[Closure]]: closure }.
-  return { Key: propKey, Closure: closure };
+  return DefineMethodRecord({ Key: propKey, Closure: closure });
 }

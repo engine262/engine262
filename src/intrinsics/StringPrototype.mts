@@ -754,7 +754,7 @@ function* StringProto_valueOf(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype-@@iterator */
-function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* StringProto_AtAt_iterator(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   // 2. Let s be ? ToString(O).
@@ -778,13 +778,16 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
       // v. Perform ? Yield(resultString).
       Q(yield* Yield(resultString));
     }
-    // NON-SPEC
-    generator.HostCapturedValues = undefined;
     // d. Return undefined.
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]));
+  const generator = X(CreateIteratorFromClosure(
+    closure,
+    Value('%StringIteratorPrototype%'),
+    surroundingAgent.intrinsic('%StringIteratorPrototype%'),
+    { captures: () => ({ O }) },
+  ));
   return generator;
 }
 
@@ -853,7 +856,7 @@ export function bootstrapStringPrototype(realmRec: Realm) {
     ['trimEnd', StringProto_trimEnd, 0],
     ['trimStart', StringProto_trimStart, 0],
     ['valueOf', StringProto_valueOf, 0],
-    [wellKnownSymbols.iterator, StringProto_iterator, 0],
+    [wellKnownSymbols.iterator, StringProto_AtAt_iterator, 0],
   ]);
 
   realmRec.Intrinsics['%String.prototype%'] = proto;

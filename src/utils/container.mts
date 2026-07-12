@@ -1,9 +1,10 @@
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
-  JSStringValue, Value, type GCMarker, type PropertyKeyValue, SymbolValue, NullValue,
+  JSStringValue, Value, type PropertyKeyValue, SymbolValue, NullValue,
 } from '#self';
 
 
-export class JSStringMap<V> implements Map<JSStringValue, V> {
+export class JSStringMap<V> implements Map<JSStringValue, V>, GCMarkable {
   #map = new Map<string, V>();
 
   clear() {
@@ -96,15 +97,17 @@ export class JSStringMap<V> implements Map<JSStringValue, V> {
     JSStringMap.prototype[Symbol.iterator] = JSStringMap.prototype.entries;
   }
 
-  mark(m: GCMarker) {
+  mark(trace: GCTrace) {
+    let index = 0;
     for (const [k, v] of this.#map.entries()) {
-      m(k);
-      m(v);
+      trace.strong(`${index}:key`, k, 'element');
+      trace.strong(`${index}:value`, v, 'element');
+      index += 1;
     }
   }
 }
 
-export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
+export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V>, GCMarkable {
   #map = new Map<string | SymbolValue, V>();
 
   clear() {
@@ -205,10 +208,12 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
     PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.entries;
   }
 
-  mark(m: GCMarker) {
+  mark(trace: GCTrace) {
+    let index = 0;
     for (const [k, v] of this.#map.entries()) {
-      m(k);
-      m(v);
+      trace.strong(`${index}:key`, k, 'element');
+      trace.strong(`${index}:value`, v, 'element');
+      index += 1;
     }
   }
 }
@@ -279,6 +284,4 @@ export class JSStringSet {
     JSStringSet.prototype[Symbol.iterator] = JSStringSet.prototype.values;
     JSStringSet.prototype.keys = JSStringSet.prototype.values;
   }
-
-  mark(_m: GCMarker) { }
 }

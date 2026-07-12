@@ -414,7 +414,7 @@ interface State {
 }
 /** https://tc39.es/ecma262/#sec-serializejsonproperty */
 function* SerializeJSONProperty(state: State, key: JSStringValue, holder: ObjectValue): ValueEvaluator<JSStringValue | UndefinedValue> {
-  let value = Q(yield* Get(holder, key)); // eslint-disable-line no-shadow
+  let value = Q(yield* Get(holder, key));
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
     const toJSON = Q(yield* GetV(value, Value('toJSON')));
     if (IsCallable(toJSON)) {

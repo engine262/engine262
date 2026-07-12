@@ -3,7 +3,7 @@
 import { isArray } from '../utils/language.mts';
 import harness from '../../lib/test262-harness.json' with { type: 'json' };
 import {
-  CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, surroundingAgent, ToString, Value, type Arguments, gc,
+  CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, surroundingAgent, ToString, Value, type Arguments,
   ParseScript,
   ThrowCompletion,
   Throw,
@@ -48,7 +48,11 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       log(formatted);
     }
     return Value.undefined;
-  }, 0, Value('print'), []);
+  }, 0, Value('print'), [],
+    {
+      captures: null,
+    },
+  );
   CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('print'), print);
 
   const $262 = OrdinaryObjectCreate.from({
@@ -77,7 +81,10 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       const status = yield* ScriptEvaluation(s);
       return status;
     },
-    gc,
+    gc: function* gc() {
+      surroundingAgent.gc.collect();
+      return Value.undefined;
+    },
     global: realm.GlobalObject,
     // TODO: agent only if we have multi-threading.
 
@@ -128,7 +135,11 @@ export function boostTest262Harness(realm: ManagedRealm) {
   const key = Value('buildString');
   const pop = realm.pushTopContext();
   if (X(HasProperty(realm.GlobalObject, key)) === Value.true) {
-    X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), Value.true));
+    X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, [],
+      {
+        captures: null,
+      },
+    ), Value.true));
   }
   pop?.();
 }

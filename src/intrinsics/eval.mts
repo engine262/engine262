@@ -12,5 +12,10 @@ function* Eval([x = Value.undefined]: Arguments): ValueEvaluator {
 }
 
 export function bootstrapEval(realmRec: Realm) {
-  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, Value('eval'), [], realmRec);
+  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, Value('eval'), [],
+    {
+      captures: null,
+      realm: realmRec,
+    }
+  );
 }

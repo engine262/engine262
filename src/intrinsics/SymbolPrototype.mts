@@ -35,7 +35,7 @@ function thisSymbolValue(value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.description */
-function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function SymbolProto_description_getter(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let s be the this value.
   const s = thisValue;
   // 2. Let sym be ? thisSymbolValue(s).
@@ -59,7 +59,7 @@ function SymbolProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
-function SymbolProto_toPrimitive(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function SymbolProto_AtAt_toPrimitive(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));
 }
@@ -72,9 +72,9 @@ export function bootstrapSymbolPrototype(realmRec: Realm) {
   };
   const proto = bootstrapPrototype(realmRec, [
     ['toString', SymbolProto_toString, 0],
-    ['description', [SymbolProto_descriptionGetter]],
+    ['description', [SymbolProto_description_getter]],
     ['valueOf', SymbolProto_valueOf, 0],
-    [wellKnownSymbols.toPrimitive, SymbolProto_toPrimitive, 1, override],
+    [wellKnownSymbols.toPrimitive, SymbolProto_AtAt_toPrimitive, 1, override],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Symbol');
 
   realmRec.Intrinsics['%Symbol.prototype%'] = proto;

@@ -1,0 +1,30 @@
+{
+  "name": "@engine262/external-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prebuild": "tsgo -b ../../src",
+    "build": "tsc --noEmit -p tsconfig.json && rollup -c rollup.config.mjs",
+    "lint": "eslint src",
+    "test": "pnpm run build && tsc --noEmit -p tsconfig.test.json && vitest run --config vitest.config.mjs"
+  },
+  "dependencies": {
+    "@engine262/engine262": "workspace:*"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.0",
+    "@babel/plugin-transform-explicit-resource-management": "^8.0.0",
+    "@babel/preset-typescript": "^8.0.0",
+    "@engine262/babel-compiler": "workspace:*",
+    "@engine262/eslint-plugin": "workspace:*",
+    "@rollup/plugin-babel": "^7.1.0",
+    "@types/node": "^25.5.2",
+    "@typescript/native-preview": "^7.0.0-dev.20260404.1",
+    "eslint": "^10.7.0",
+    "rollup": "^4.54.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.63.0",
+    "vitest": "^4.1.2"
+  }
+}

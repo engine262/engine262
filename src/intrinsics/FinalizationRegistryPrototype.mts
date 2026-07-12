@@ -12,6 +12,7 @@ import {
   RequireInternalSlot,
   SameValue,
   type FunctionObject,
+  JobCallbackRecord,
   Realm,
   Throw,
 } from '#self';
@@ -27,7 +28,7 @@ function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Ar
     return Throw.TypeError('$1 is not a function', callback);
   }
   // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
-  Q(yield* CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, { Callback: callback as FunctionObject, HostDefined: undefined }));
+  Q(yield* CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, JobCallbackRecord({ Callback: callback as FunctionObject, HostDefined: undefined })));
   // 5. Return *undefined*.
   return Value.undefined;
 }

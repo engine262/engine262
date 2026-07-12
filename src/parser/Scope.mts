@@ -1,6 +1,7 @@
 import {
   Assert, Parser, Throw, type ErrorObject,
 } from '../index.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import { isArray, OutOfRange } from '../utils/language.mts';
 import type { TokenData } from './Lexer.mts';
 import type { ParseNode } from './ParseNode.mts';
@@ -171,7 +172,7 @@ export interface Label {
   readonly nextToken?: TokenData | null;
 }
 
-export class Scope {
+export class Scope implements GCMarkable {
   private readonly parser: Parser;
 
   private readonly scopeStack: ScopeInfo[] = [];
@@ -198,6 +199,15 @@ export class Scope {
 
   constructor(parser: Parser) {
     this.parser = parser;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('parser', this.parser, 'internal-slot');
+    this.assignmentInfoStack.forEach((info, stackIndex) => {
+      info.earlyErrors.forEach((error, errorIndex) => {
+        trace.strong(`assignmentInfoStack[${stackIndex}].earlyErrors[${errorIndex}]`, error, 'element');
+      });
+    });
   }
 
   hasReturn() {

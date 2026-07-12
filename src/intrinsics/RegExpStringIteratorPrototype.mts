@@ -55,7 +55,12 @@ export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, glo
     }
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%RegExpStringIteratorPrototype%", %RegExpStringIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, Value('%RegExpStringIteratorPrototype%'), surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(
+    closure,
+    Value('%RegExpStringIteratorPrototype%'),
+    surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'),
+    { captures: () => ({ R, S }) },
+  ));
 }
 
 /** https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */

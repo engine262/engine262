@@ -22,7 +22,9 @@ import {
   type FunctionObject,
 } from './all.mts';
 import { isNonNegativeInteger } from './data-types-and-values.mts';
-import { surroundingAgent, Throw } from '#self';
+import {
+  surroundingAgent, Throw,
+} from '#self';
 
 /** https://tc39.es/ecma262/#mathematical-value */
 export type MathematicalValue = Decimal;
@@ -57,10 +59,10 @@ export function R(x: BigIntValue): bigint;
 export function R(x: BigIntValue | NumberValue): bigint | number;
 export function R(x: unknown) {
   if (x instanceof BigIntValue) {
-    return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+    return x.bigintValue();
   }
   Assert(x instanceof NumberValue);
-  const number = x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+  const number = x.numberValue();
   if (Object.is(number, -0)) {
     return 0;
   }

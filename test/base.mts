@@ -108,6 +108,7 @@ export interface Stack {
   source?: string;
   line: number;
   column: number;
+  range: readonly [startIndex: number, endIndex: number];
 }
 
 export type WorkerToSupervisor_Failed = {
