@@ -4,20 +4,18 @@ type ToIndex<T extends PropertyKey> =
   T extends `${bigint}` ? T extends `${infer I extends number}` ? I : never :
   never;
 
-type ReplaceType<T, U, V> = T extends U ? V : T;
-
-type TokenDefinition = readonly [name: string, value: string | null, precedence?: number];
+type TokenDefinition = readonly [name: string, value: string | null];
 
 type TokenArrayToAssignTokenArray<A extends readonly TokenDefinition[]> = {
-  readonly [P in keyof A]: readonly [`ASSIGN_${A[P][0]}`, `${A[P][1]}`, A[P][2]];
+  readonly [P in keyof A]: readonly [`ASSIGN_${A[P][0]}`, `${A[P][1]}=`];
 };
 
 type TokenArrayToEnumLike<A extends readonly TokenDefinition[]> = {
   readonly [I in ToIndex<keyof A> as A[I][0]]: I;
 };
 
-type TokenArrayToElementArray<A extends readonly TokenDefinition[], I extends 0 | 1 | 2, V = undefined> = {
-  readonly [P in keyof A]: ReplaceType<A[P][I], undefined, V>;
+type TokenArrayToElementArray<A extends readonly TokenDefinition[], I extends 0 | 1> = {
+  readonly [P in keyof A]: A[P][I];
 };
 
 type TokenArrayToKeywordsArray<A extends readonly TokenDefinition[]> = readonly {
@@ -30,25 +28,25 @@ type KeywordsArrayToEnumLike<A extends readonly string[]> = {
 
 const MaybeAssignTokens = [
   // Logical
-  ['NULLISH', '??', 3],
-  ['OR', '||', 4],
-  ['AND', '&&', 5],
+  ['NULLISH', '??'],
+  ['OR', '||'],
+  ['AND', '&&'],
 
   // Binop
-  ['BIT_OR', '|', 6],
-  ['BIT_XOR', '^', 7],
-  ['BIT_AND', '&', 8],
-  ['SHL', '<<', 11],
-  ['SAR', '>>', 11],
-  ['SHR', '>>>', 11],
-  ['MUL', '*', 13],
-  ['DIV', '/', 13],
-  ['MOD', '%', 13],
-  ['EXP', '**', 14],
+  ['BIT_OR', '|'],
+  ['BIT_XOR', '^'],
+  ['BIT_AND', '&'],
+  ['SHL', '<<'],
+  ['SAR', '>>'],
+  ['SHR', '>>>'],
+  ['MUL', '*'],
+  ['DIV', '/'],
+  ['MOD', '%'],
+  ['EXP', '**'],
 
   // Unop
-  ['ADD', '+', 12],
-  ['SUB', '-', 12],
+  ['ADD', '+'],
+  ['SUB', '-'],
 ] as const satisfies readonly TokenDefinition[];
 
 export const RawTokens = [
@@ -82,13 +80,12 @@ export const RawTokens = [
   // BEGIN ArrowOrAssign
   ['ARROW', '=>'],
   // BEGIN Assign
-  ['ASSIGN', '=', 2],
-  ...MaybeAssignTokens.map((t) => [`ASSIGN_${t[0]}`, `${t[1]}=`, 2]) as readonly TokenDefinition[] as TokenArrayToAssignTokenArray<typeof MaybeAssignTokens>,
+  ['ASSIGN', '='],
+  ...MaybeAssignTokens.map(([name, value]) => [`ASSIGN_${name}`, `${value}=`]) as readonly TokenDefinition[] as TokenArrayToAssignTokenArray<typeof MaybeAssignTokens>,
   // END Assign
   // END ArrowOrAssign
 
-  // Binary operators by precidence
-  ['COMMA', ',', 1],
+  ['COMMA', ','],
 
   ...MaybeAssignTokens,
 
@@ -104,16 +101,16 @@ export const RawTokens = [
   // END IsCountOp
   // END IsUnaryOrCountOp
 
-  ['EQ', '==', 9],
-  ['EQ_STRICT', '===', 9],
-  ['NE', '!=', 9],
-  ['NE_STRICT', '!==', 9],
-  ['LT', '<', 10],
-  ['GT', '>', 10],
-  ['LTE', '<=', 10],
-  ['GTE', '>=', 10],
-  ['INSTANCEOF', 'instanceof', 10],
-  ['IN', 'in', 10],
+  ['EQ', '=='],
+  ['EQ_STRICT', '==='],
+  ['NE', '!='],
+  ['NE_STRICT', '!=='],
+  ['LT', '<'],
+  ['GT', '>'],
+  ['LTE', '<='],
+  ['GTE', '>='],
+  ['INSTANCEOF', 'instanceof'],
+  ['IN', 'in'],
 
   ['BREAK', 'break'],
   ['CASE', 'case'],
@@ -181,8 +178,6 @@ export type Token = typeof Token[keyof typeof Token];
 export const TokenNames = RawTokens.map((r) => r[0]) as readonly string[] as TokenArrayToElementArray<typeof RawTokens, 0>;
 
 export const TokenValues = RawTokens.map((r) => r[1]) as readonly (string | null)[] as TokenArrayToElementArray<typeof RawTokens, 1>;
-
-export const TokenPrecedence = RawTokens.map((r) => (r[2] || 0)) as readonly number[] as TokenArrayToElementArray<typeof RawTokens, 2, 0>;
 
 const Keywords = RawTokens
   .filter(([name, raw]) => name.toLowerCase() === raw)

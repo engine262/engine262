@@ -7,7 +7,7 @@ import {
 } from '../static-semantics/all.mts';
 import type { Mutable } from '../utils/language.mts';
 import {
-  Token, TokenPrecedence,
+  Token,
   isPropertyOrCall,
   isMember,
   isKeywordRaw,
@@ -316,171 +316,166 @@ export abstract class ExpressionParser extends FunctionParser {
   //   CoalesceExpression
   //   BitwiseORExpression
   parseShortCircuitExpression(): ParseNode.ShortCircuitExpressionOrHigher {
-    // Start parse at BIT_OR, right above AND/OR/NULLISH
-    const expression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]) as ParseNode.BitwiseORExpressionOrHigher;
-    switch (this.peek().type) {
-      case Token.AND:
-      case Token.OR:
-        // Drop into normal binary chain starting at OR
-        return this.parseBinaryExpression(TokenPrecedence[Token.OR], expression) as ParseNode.LogicalORExpressionOrHigher;
-      case Token.NULLISH: {
-        let x: ParseNode.CoalesceExpressionHead = expression;
-        while (this.eat(Token.NULLISH)) {
-          const node = this.startNode<ParseNode.CoalesceExpression>();
-          node.CoalesceExpressionHead = x;
-          node.BitwiseORExpression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]) as ParseNode.BitwiseORExpressionOrHigher;
-          x = this.finishNode(node, 'CoalesceExpression');
-        }
-        return x;
-      }
-      default:
-        return expression;
+    if (this.state.json) {
+      return this.parseUnaryExpression();
     }
+    const expression = this.parseLogicalORExpression();
+    if (!this.test(Token.NULLISH)) return expression;
+    if (expression.type === 'LogicalANDExpression' || expression.type === 'LogicalORExpression') {
+      this.raise(Throw.SyntaxError('Cannot mix logical operator with ?? operator. Add parentheses to determine precedence.'));
+    }
+    let result: ParseNode.CoalesceExpressionHead = expression;
+    while (this.eat(Token.NULLISH)) {
+      const node: ParseNode.Unfinished<ParseNode.CoalesceExpression> = this.startNode(result);
+      node.CoalesceExpressionHead = result;
+      node.BitwiseORExpression = this.parseBitwiseORExpression();
+      result = this.finishNode(node, 'CoalesceExpression');
+    }
+    return result;
   }
 
-  parseBinaryExpression(precedence: number, x?: ParseNode.BinaryExpressionOrHigher | ParseNode.PrivateIdentifier): ParseNode.BinaryExpressionOrHigher | ParseNode.PrivateIdentifier {
-    if (!x) {
-      if (this.test(Token.PRIVATE_IDENTIFIER)) {
-        x = this.parsePrivateIdentifier();
-        const p = TokenPrecedence[this.peek().type];
-        if (!this.test(Token.IN) || p < precedence) {
-          this.unexpected();
-        }
-        this.scope.checkUndefinedPrivate(x);
-        return this.parseBinaryExpression(p, x);
-      } else {
-        x = this.parseUnaryExpression();
-      }
+  parseLogicalORExpression(): ParseNode.LogicalORExpressionOrHigher {
+    let result: ParseNode.LogicalORExpressionOrHigher = this.parseLogicalANDExpression();
+    while (this.eat(Token.OR)) {
+      const node: ParseNode.Unfinished<ParseNode.LogicalORExpression> = this.startNode(result);
+      node.LogicalORExpression = result;
+      node.LogicalANDExpression = this.parseLogicalANDExpression();
+      result = this.finishNode(node, 'LogicalORExpression');
     }
+    return result;
+  }
 
-    // NOTE: While the algorithm may be efficient, many casts below are inherently unsound as they depend on assumptions
-    //       that cannot be proven in the type system without runtime assertions.
-    let p = TokenPrecedence[this.peek().type];
-    if (p >= precedence) {
-      do {
-        while (TokenPrecedence[this.peek().type] === p) {
-          const left = x;
-          if (p === TokenPrecedence[Token.EXP] && (left.type === 'UnaryExpression' || left.type === 'AwaitExpression')) {
-            return left;
-          }
-          let node: ParseNode.Unfinished<ParseNode.BinaryExpression>;
-          if (this.peek().type === Token.IN && !this.scope.hasIn()) {
-            return left;
-          }
-          const op = this.next();
-          const right = this.parseBinaryExpression(op.type === Token.EXP ? p : p + 1);
-          let name: 'ExponentiationExpression'
-                  | 'MultiplicativeExpression'
-                  | 'AdditiveExpression'
-                  | 'ShiftExpression'
-                  | 'RelationalExpression'
-                  | 'EqualityExpression'
-                  | 'BitwiseANDExpression'
-                  | 'BitwiseXORExpression'
-                  | 'BitwiseORExpression'
-                  | 'LogicalANDExpression'
-                  | 'LogicalORExpression';
-          switch (op.type) {
-            case Token.EXP:
-              name = 'ExponentiationExpression';
-              node = this.startNode<ParseNode.ExponentiationExpression>(left);
-              node.UpdateExpression = left as ParseNode.UpdateExpressionOrHigher; // NOTE: unsound cast
-              node.ExponentiationExpression = right as ParseNode.ExponentiationExpressionOrHigher; // NOTE: unsound cast
-              break;
-            case Token.MUL:
-            case Token.DIV:
-            case Token.MOD:
-              name = 'MultiplicativeExpression';
-              node = this.startNode<ParseNode.MultiplicativeExpression>(left);
-              node.MultiplicativeExpression = left as ParseNode.MultiplicativeExpressionOrHigher; // NOTE: unsound cast
-              node.MultiplicativeOperator = op.value as ParseNode.MultiplicativeOperator; // NOTE: unsound cast
-              node.ExponentiationExpression = right as ParseNode.ExponentiationExpressionOrHigher; // NOTE: unsound cast
-              break;
-            case Token.ADD:
-            case Token.SUB:
-              name = 'AdditiveExpression';
-              node = this.startNode<ParseNode.AdditiveExpression>(left);
-              node.AdditiveExpression = left as ParseNode.AdditiveExpressionOrHigher; // NOTE: unsound cast
-              node.MultiplicativeExpression = right as ParseNode.MultiplicativeExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.AdditiveExpression['operator']; // NOTE: unsound cast
-              break;
-            case Token.SHL:
-            case Token.SAR:
-            case Token.SHR:
-              name = 'ShiftExpression';
-              node = this.startNode<ParseNode.ShiftExpression>(left);
-              node.ShiftExpression = left as ParseNode.ShiftExpressionOrHigher; // NOTE: unsound cast
-              node.AdditiveExpression = right as ParseNode.AdditiveExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.ShiftExpression['operator']; // NOTE: unsound cast
-              break;
-            case Token.LT:
-            case Token.GT:
-            case Token.LTE:
-            case Token.GTE:
-            case Token.INSTANCEOF:
-            case Token.IN:
-              name = 'RelationalExpression';
-              node = this.startNode<ParseNode.RelationalExpression>(left);
-              if (left.type === 'PrivateIdentifier') {
-                node.PrivateIdentifier = left;
-              } else {
-                node.RelationalExpression = left as ParseNode.RelationalExpressionOrHigher; // NOTE: unsound cast
-              }
-              node.ShiftExpression = right as ParseNode.ShiftExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.RelationalExpression['operator']; // NOTE: unsound cast
-              break;
-            case Token.EQ:
-            case Token.NE:
-            case Token.EQ_STRICT:
-            case Token.NE_STRICT:
-              name = 'EqualityExpression';
-              node = this.startNode<ParseNode.EqualityExpression>(left);
-              node.EqualityExpression = left as ParseNode.EqualityExpressionOrHigher; // NOTE: unsound cast
-              node.RelationalExpression = right as ParseNode.RelationalExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.EqualityExpression['operator']; // NOTE: unsound cast
-              break;
-            case Token.BIT_AND:
-              name = 'BitwiseANDExpression';
-              node = this.startNode<ParseNode.BitwiseANDExpression>(left);
-              node.A = left as ParseNode.BitwiseANDExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.BitwiseANDExpression['operator']; // NOTE: unsound cast
-              node.B = right as ParseNode.EqualityExpressionOrHigher; // NOTE: unsound cast
-              break;
-            case Token.BIT_XOR:
-              name = 'BitwiseXORExpression';
-              node = this.startNode<ParseNode.BitwiseXORExpression>(left);
-              node.A = left as ParseNode.BitwiseXORExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.BitwiseXORExpression['operator']; // NOTE: unsound cast
-              node.B = right as ParseNode.BitwiseANDExpressionOrHigher; // NOTE: unsound cast
-              break;
-            case Token.BIT_OR:
-              name = 'BitwiseORExpression';
-              node = this.startNode<ParseNode.BitwiseORExpression>(left);
-              node.A = left as ParseNode.BitwiseORExpressionOrHigher; // NOTE: unsound cast
-              node.operator = op.value as ParseNode.BitwiseORExpression['operator']; // NOTE: unsound cast
-              node.B = right as ParseNode.BitwiseXORExpressionOrHigher; // NOTE: unsound cast
-              break;
-            case Token.AND:
-              name = 'LogicalANDExpression';
-              node = this.startNode<ParseNode.LogicalANDExpression>(left);
-              node.LogicalANDExpression = left as ParseNode.LogicalANDExpressionOrHigher; // NOTE: unsound cast
-              node.BitwiseORExpression = right as ParseNode.BitwiseORExpressionOrHigher; // NOTE: unsound cast
-              break;
-            case Token.OR:
-              name = 'LogicalORExpression';
-              node = this.startNode<ParseNode.LogicalORExpression>(left);
-              node.LogicalORExpression = left as ParseNode.LogicalORExpressionOrHigher; // NOTE: unsound cast
-              node.LogicalANDExpression = right as ParseNode.LogicalANDExpressionOrHigher; // NOTE: unsound cast
-              break;
-            default:
-              this.unexpected(op);
-          }
-          x = this.finishNode(node, name);
-        }
-        p -= 1;
-      } while (p >= precedence);
+  parseLogicalANDExpression(): ParseNode.LogicalANDExpressionOrHigher {
+    let result: ParseNode.LogicalANDExpressionOrHigher = this.parseBitwiseORExpression();
+    while (this.eat(Token.AND)) {
+      const node: ParseNode.Unfinished<ParseNode.LogicalANDExpression> = this.startNode(result);
+      node.LogicalANDExpression = result;
+      node.BitwiseORExpression = this.parseBitwiseORExpression();
+      result = this.finishNode(node, 'LogicalANDExpression');
     }
-    return x;
+    return result;
+  }
+
+  parseBitwiseORExpression(): ParseNode.BitwiseORExpressionOrHigher {
+    let result: ParseNode.BitwiseORExpressionOrHigher = this.parseBitwiseXORExpression();
+    while (this.eat(Token.BIT_OR)) {
+      const node: ParseNode.Unfinished<ParseNode.BitwiseORExpression> = this.startNode(result);
+      node.A = result;
+      node.operator = '|';
+      node.B = this.parseBitwiseXORExpression();
+      result = this.finishNode(node, 'BitwiseORExpression');
+    }
+    return result;
+  }
+
+  parseBitwiseXORExpression(): ParseNode.BitwiseXORExpressionOrHigher {
+    let result: ParseNode.BitwiseXORExpressionOrHigher = this.parseBitwiseANDExpression();
+    while (this.eat(Token.BIT_XOR)) {
+      const node: ParseNode.Unfinished<ParseNode.BitwiseXORExpression> = this.startNode(result);
+      node.A = result;
+      node.operator = '^';
+      node.B = this.parseBitwiseANDExpression();
+      result = this.finishNode(node, 'BitwiseXORExpression');
+    }
+    return result;
+  }
+
+  parseBitwiseANDExpression(): ParseNode.BitwiseANDExpressionOrHigher {
+    let result: ParseNode.BitwiseANDExpressionOrHigher = this.parseEqualityExpression();
+    while (this.eat(Token.BIT_AND)) {
+      const node: ParseNode.Unfinished<ParseNode.BitwiseANDExpression> = this.startNode(result);
+      node.A = result;
+      node.operator = '&';
+      node.B = this.parseEqualityExpression();
+      result = this.finishNode(node, 'BitwiseANDExpression');
+    }
+    return result;
+  }
+
+  parseEqualityExpression(): ParseNode.EqualityExpressionOrHigher {
+    let result: ParseNode.EqualityExpressionOrHigher = this.parseRelationalExpression();
+    const operators: readonly Token[] = [Token.EQ, Token.NE, Token.EQ_STRICT, Token.NE_STRICT];
+    while (operators.includes(this.peek().type)) {
+      const node: ParseNode.Unfinished<ParseNode.EqualityExpression> = this.startNode(result);
+      node.EqualityExpression = result;
+      node.operator = this.next().value as ParseNode.EqualityExpression['operator'];
+      node.RelationalExpression = this.parseRelationalExpression();
+      result = this.finishNode(node, 'EqualityExpression');
+    }
+    return result;
+  }
+
+  parseRelationalExpression(): ParseNode.RelationalExpressionOrHigher {
+    if (this.scope.hasIn() && this.test(Token.PRIVATE_IDENTIFIER)) {
+      const PrivateIdentifier = this.parsePrivateIdentifier();
+      this.scope.checkUndefinedPrivate(PrivateIdentifier);
+      const node = this.startNode<ParseNode.RelationalExpression>(PrivateIdentifier);
+      node.PrivateIdentifier = PrivateIdentifier;
+      this.expect(Token.IN);
+      node.operator = 'in';
+      node.ShiftExpression = this.parseShiftExpression();
+      return this.finishNode(node, 'RelationalExpression');
+    }
+    let result: ParseNode.RelationalExpressionOrHigher = this.parseShiftExpression();
+    const operators: Token[] = [Token.LT, Token.GT, Token.LTE, Token.GTE, Token.INSTANCEOF];
+    if (this.scope.hasIn()) operators.push(Token.IN);
+    while (operators.includes(this.peek().type)) {
+      const node: ParseNode.Unfinished<ParseNode.RelationalExpression> = this.startNode(result);
+      node.RelationalExpression = result;
+      node.operator = this.next().value as ParseNode.RelationalExpression['operator'];
+      node.ShiftExpression = this.parseShiftExpression();
+      result = this.finishNode(node, 'RelationalExpression');
+    }
+    return result;
+  }
+
+  parseShiftExpression(): ParseNode.ShiftExpressionOrHigher {
+    let result: ParseNode.ShiftExpressionOrHigher = this.parseAdditiveExpression();
+    const operators: readonly Token[] = [Token.SHL, Token.SAR, Token.SHR];
+    while (operators.includes(this.peek().type)) {
+      const node: ParseNode.Unfinished<ParseNode.ShiftExpression> = this.startNode(result);
+      node.ShiftExpression = result;
+      node.operator = this.next().value as ParseNode.ShiftExpression['operator'];
+      node.AdditiveExpression = this.parseAdditiveExpression();
+      result = this.finishNode(node, 'ShiftExpression');
+    }
+    return result;
+  }
+
+  parseAdditiveExpression(): ParseNode.AdditiveExpressionOrHigher {
+    let result: ParseNode.AdditiveExpressionOrHigher = this.parseMultiplicativeExpression();
+    const operators: readonly Token[] = [Token.ADD, Token.SUB];
+    while (operators.includes(this.peek().type)) {
+      const node: ParseNode.Unfinished<ParseNode.AdditiveExpression> = this.startNode(result);
+      node.AdditiveExpression = result;
+      node.operator = this.next().value as ParseNode.AdditiveExpression['operator'];
+      node.MultiplicativeExpression = this.parseMultiplicativeExpression();
+      result = this.finishNode(node, 'AdditiveExpression');
+    }
+    return result;
+  }
+
+  parseMultiplicativeExpression(): ParseNode.MultiplicativeExpressionOrHigher {
+    let result: ParseNode.MultiplicativeExpressionOrHigher = this.parseExponentiationExpression();
+    const operators: readonly Token[] = [Token.MUL, Token.DIV, Token.MOD];
+    while (operators.includes(this.peek().type)) {
+      const node: ParseNode.Unfinished<ParseNode.MultiplicativeExpression> = this.startNode(result);
+      node.MultiplicativeExpression = result;
+      node.MultiplicativeOperator = this.next().value as ParseNode.MultiplicativeOperator;
+      node.ExponentiationExpression = this.parseExponentiationExpression();
+      result = this.finishNode(node, 'MultiplicativeExpression');
+    }
+    return result;
+  }
+
+  parseExponentiationExpression(): ParseNode.ExponentiationExpressionOrHigher {
+    const left = this.parseUnaryExpression();
+    if (!this.test(Token.EXP) || left.type === 'UnaryExpression' || left.type === 'AwaitExpression') return left;
+    this.next();
+    const node = this.startNode<ParseNode.ExponentiationExpression>(left);
+    node.UpdateExpression = left;
+    node.ExponentiationExpression = this.parseExponentiationExpression();
+    return this.finishNode(node, 'ExponentiationExpression');
   }
 
   // UnaryExpression :
