@@ -694,37 +694,36 @@ function* IteratorPrototype_toStringTag_setter([v = Value.undefined]: Arguments,
 
 /** https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join */
 function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
-  let sep;
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
+  let sep: string;
   if (separator === Value.undefined) {
     sep = ',';
   } else {
-    const completion = yield* ToString(separator);
-    IfAbruptCloseIterator(completion, iterated);
-    sep = X(completion).stringValue();
+    const sepCompletion = yield* ToString(separator);
+    IfAbruptCloseIterator(sepCompletion, iterated);
+    sep = X(sepCompletion).stringValue();
   }
-  iterated = Q(yield* GetIteratorDirect(O));
-  let R = '';
+  iterated = Q(yield* GetIteratorDirect(obj));
+  let result = '';
   let first = true;
   while (true) {
-    const value = Q(yield* IteratorStepValue(iterated));
+    const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
     if (value === 'done') {
-      return Value(R);
+      return Value(result);
     }
     if (first) {
       first = false;
     } else {
-      R += sep;
+      result += sep;
     }
     if (value !== Value.undefined && value !== Value.null) {
-      const S_completion = yield* ToString(value);
-      IfAbruptCloseIterator(S_completion, iterated);
-      const S = X(S_completion).stringValue();
-      R += S;
+      const valueString = yield* ToString(value);
+      IfAbruptCloseIterator(valueString, iterated);
+      result += X(valueString).stringValue();
     }
   }
 }
@@ -738,6 +737,7 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['find', IteratorProto_find, 1],
     ['flatMap', IteratorProto_flatMap, 1],
     ['forEach', IteratorProto_forEach, 1],
+    ['join', IteratorProto_join, 1],
     ['map', IteratorProto_map, 1],
     ['reduce', IteratorProto_reduce, 1],
     ['some', IteratorProto_some, 1],
@@ -745,7 +745,6 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['toArray', IteratorProto_toArray, 0],
     [wellKnownSymbols.iterator, IteratorProto_iterator, 0],
     [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]],
-    surroundingAgent.feature('iterator.join') ? ['join', IteratorProto_join, 1] : undefined,
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Iterator.prototype%'] = proto;

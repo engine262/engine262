@@ -67,13 +67,6 @@ export const FEATURES = ([
     url: 'https://github.com/tc39/proposal-temporal',
     enableInPlayground: true,
   },
-  // stage 2.7
-  {
-    name: 'Iterator#join',
-    flag: 'iterator.join',
-    url: 'https://github.com/tc39/proposal-iterator-join',
-    enableInPlayground: true,
-  },
   // stage 2
   {
     name: 'FinalizationRegistry#cleanupSome',
