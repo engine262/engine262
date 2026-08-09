@@ -10,6 +10,8 @@ export-defer = export-defer
 # To be implemented
 -explicit-resource-management
 -immutable-arraybuffer
+-iterator-chunking
+-iterator-includes
 
 # Hard to implement
 -Atomics

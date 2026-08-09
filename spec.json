@@ -84,6 +84,14 @@
       "diff": ["spec.html"]
     },
     {
+      "name": "pr3776-iterator-counters",
+      "description": "Normative: use Numbers instead of reals as counters in Iterator builtins",
+      "source": "https://github.com/tc39/ecma262/pull/3776",
+      "commit": "a5e3a693eb55d657874a788acc80dfb891fc40b7",
+      "path": [],
+      "diff": ["spec.html"]
+    },
+    {
       "name": "defer-import-eval",
       "description": "Defer import eval proposal",
       "source": "https://github.com/tc39/proposal-defer-import-eval",
