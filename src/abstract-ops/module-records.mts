@@ -583,8 +583,8 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
       }
     }
   }
-  // 14. If module.[[PendingAsyncDependencies]] > 0 or module.[[HasTLA]] is true, then
-  if (module.PendingAsyncDependencies > 0 || module.HasTLA === Value.true) {
+  // 14. If module.[[HasTLA]] is true or module.[[PendingAsyncDependencies]] > 0, then
+  if (module.HasTLA === Value.true || module.PendingAsyncDependencies > 0) {
     // a. Assert: module.[[AsyncEvaluationOrder]] is unset.
     Assert(module.AsyncEvaluationOrder === 'unset');
     // b. Set module.[[AsyncEvaluationOrder]] to IncrementModuleAsyncEvaluationCount().
