@@ -140,6 +140,7 @@ test('get local lexical names', async () => {
         "String",
         "Symbol",
         "SyntaxError",
+        "Temporal",
         "TypeError",
         "Uint8Array",
         "Uint8ClampedArray",

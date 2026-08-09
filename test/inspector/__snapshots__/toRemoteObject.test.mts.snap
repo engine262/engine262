@@ -762,7 +762,7 @@ exports[`date > new Date(-1) 1`] = `
 {
   "className": "Date",
   "description": "1969-12-31T23:59:59.999Z",
-  "objectId": "default:63",
+  "objectId": "default:64",
   "preview": {
     "description": "1969-12-31T23:59:59.999Z",
     "overflow": false,
@@ -783,7 +783,7 @@ exports[`date > new Date(-1) non-indexed owned properties (private) 1`] = `""`;
 
 exports[`date > new Date(-1) non-indexed owned properties 1`] = `[]`;
 
-exports[`date > new Date(-1) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`date > new Date(-1) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toTemporalInstant, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`date > new Date(-1) properties 1`] = `
 {
@@ -818,7 +818,7 @@ exports[`date > new Date(0) non-indexed owned properties (private) 1`] = `""`;
 
 exports[`date > new Date(0) non-indexed owned properties 1`] = `[]`;
 
-exports[`date > new Date(0) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`date > new Date(0) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toTemporalInstant, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`date > new Date(0) properties 1`] = `
 {
@@ -832,7 +832,7 @@ exports[`date > new Date(9999999999999) 1`] = `
 {
   "className": "Date",
   "description": "2286-11-20T17:46:39.999Z",
-  "objectId": "default:64",
+  "objectId": "default:65",
   "preview": {
     "description": "2286-11-20T17:46:39.999Z",
     "overflow": false,
@@ -853,7 +853,7 @@ exports[`date > new Date(9999999999999) non-indexed owned properties (private) 1
 
 exports[`date > new Date(9999999999999) non-indexed owned properties 1`] = `[]`;
 
-exports[`date > new Date(9999999999999) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`date > new Date(9999999999999) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toTemporalInstant, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`date > new Date(9999999999999) properties 1`] = `
 {
@@ -867,7 +867,7 @@ exports[`date > new Date(NaN) 1`] = `
 {
   "className": "Date",
   "description": "Invalid Date",
-  "objectId": "default:62",
+  "objectId": "default:63",
   "preview": {
     "description": "Invalid Date",
     "overflow": false,
@@ -888,7 +888,7 @@ exports[`date > new Date(NaN) non-indexed owned properties (private) 1`] = `""`;
 
 exports[`date > new Date(NaN) non-indexed owned properties 1`] = `[]`;
 
-exports[`date > new Date(NaN) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`date > new Date(NaN) non-indexed properties (prototype) 1`] = `"getDate, getDay, getFullYear, getHours, getMilliseconds, getMinutes, getMonth, getSeconds, getTime, getTimezoneOffset, getUTCDate, getUTCDay, getUTCFullYear, getUTCHours, getUTCMilliseconds, getUTCMinutes, getUTCMonth, getUTCSeconds, setDate, setFullYear, setHours, setMilliseconds, setMinutes, setMonth, setSeconds, setTime, setUTCDate, setUTCFullYear, setUTCHours, setUTCMilliseconds, setUTCMinutes, setUTCMonth, setUTCSeconds, toDateString, toISOString, toJSON, toLocaleDateString, toLocaleString, toLocaleTimeString, toString, toTimeString, toTemporalInstant, toUTCString, valueOf, Symbol(Symbol.toPrimitive), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`date > new Date(NaN) properties 1`] = `
 {

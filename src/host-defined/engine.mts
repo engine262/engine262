@@ -49,7 +49,7 @@ export interface Engine262Feature {
 
 // unflag a feature when it reaches stage 3.
 export const FEATURES = ([
-  // stage 3, but too big
+  // stage 2.7
   {
     name: 'Decorators',
     flag: 'decorators',
@@ -60,12 +60,6 @@ export const FEATURES = ([
     name: 'Skip bugfix for field initializers in decorator',
     flag: 'decorators.no-bugfix.1',
     url: '',
-  },
-  {
-    name: 'Temporal',
-    flag: 'temporal',
-    url: 'https://github.com/tc39/proposal-temporal',
-    enableInPlayground: true,
   },
   // stage 2
   {

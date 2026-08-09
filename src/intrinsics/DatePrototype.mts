@@ -668,6 +668,7 @@ function DateProto_toTimeString(_args: Arguments, { thisValue }: FunctionCallCon
   return Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
 }
 
+/** https://tc39.es/proposal-temporal/#sec-date.prototype.totemporalinstant */
 function DateProto_toTemporalInstant(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const dateObject = thisValue;
   const t = Q(thisTimeValue(dateObject));
@@ -760,7 +761,7 @@ export function bootstrapDatePrototype(realmRec: Realm) {
     ['toLocaleTimeString', DateProto_toLocaleTimeString, 0],
     ['toString', DateProto_toString, 0],
     ['toTimeString', DateProto_toTimeString, 0],
-    surroundingAgent.feature('temporal') ? ['toTemporalInstant', DateProto_toTemporalInstant, 0] : undefined,
+    ['toTemporalInstant', DateProto_toTemporalInstant, 0],
     ['toUTCString', DateProto_toUTCString, 0],
     ['valueOf', DateProto_valueOf, 0],
     [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, { Writable: Value.false, Enumerable: Value.false, Configurable: Value.true }],
