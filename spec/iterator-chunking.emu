@@ -1,0 +1,81 @@
+<!doctype html>
+<meta charset="utf8">
+<pre class="metadata">
+title: Iterator Chunking
+status: proposal
+stage: 3
+contributors: Michael Ficarra
+location: https://tc39.es/proposal-iterator-chunking/
+copyright: false
+</pre>
+
+<emu-clause id="sec-iterator.prototype.chunks">
+  <h1>Iterator.prototype.chunks ( _chunkSize_ )</h1>
+  <p>This method performs the following steps when called:</p>
+  <emu-alg>
+    1. Let _O_ be the *this* value.
+    1. If _O_ is not an Object, throw a *TypeError* exception.
+    1. Let _iterated_ be the Iterator Record { [[Iterator]]: _O_, [[NextMethod]]: *undefined*, [[Done]]: *false* }.
+    1. If _chunkSize_ is not an integral Number, then
+      1. Let _error_ be ThrowCompletion(a newly created *TypeError* object).
+      1. Return ? IteratorClose(_iterated_, _error_).
+    1. If _chunkSize_ is not in the inclusive interval from *1*<sub>𝔽</sub> to 𝔽(2<sup>32</sup> - 1), then
+      1. Let _error_ be ThrowCompletion(a newly created *RangeError* object).
+      1. Return ? IteratorClose(_iterated_, _error_).
+    1. Set _iterated_ to ? GetIteratorDirect(_O_).
+    1. Let _closure_ be a new Abstract Closure with no parameters that captures _iterated_ and _chunkSize_ and performs the following steps when called:
+      1. Let _buffer_ be a new empty List.
+      1. Repeat,
+        1. Let _value_ be ? IteratorStepValue(_iterated_).
+        1. If _value_ is ~done~, then
+          1. If _buffer_ is not empty, then
+            1. Perform Completion(Yield(CreateArrayFromList(_buffer_))).
+          1. Return ReturnCompletion(*undefined*).
+        1. Append _value_ to _buffer_.
+        1. If the number of elements in _buffer_ is ℝ(_chunkSize_), then
+          1. Let _completion_ be Completion(Yield(CreateArrayFromList(_buffer_))).
+          1. IfAbruptCloseIterator(_completion_, _iterated_).
+          1. Set _buffer_ to a new empty List.
+    1. Let _result_ be CreateIteratorFromClosure(_closure_, *"Iterator Helper"*, %IteratorHelperPrototype%, « [[UnderlyingIterators]] »).
+    1. Set _result_.[[UnderlyingIterators]] to « _iterated_ ».
+    1. Return _result_.
+  </emu-alg>
+</emu-clause>
+
+<emu-clause id="sec-iterator.prototype.windows">
+  <h1>Iterator.prototype.windows ( _windowSize_ [ , _undersized_ ] )</h1>
+  <p>This method performs the following steps when called:</p>
+  <emu-alg>
+    1. Let _O_ be the *this* value.
+    1. If _O_ is not an Object, throw a *TypeError* exception.
+    1. Let _iterated_ be the Iterator Record { [[Iterator]]: _O_, [[NextMethod]]: *undefined*, [[Done]]: *false* }.
+    1. If _windowSize_ is not an integral Number, then
+      1. Let _error_ be ThrowCompletion(a newly created *TypeError* object).
+      1. Return ? IteratorClose(_iterated_, _error_).
+    1. If _windowSize_ is not in the inclusive interval from *1*<sub>𝔽</sub> to 𝔽(2<sup>32</sup> - 1), then
+      1. Let _error_ be ThrowCompletion(a newly created *RangeError* object).
+      1. Return ? IteratorClose(_iterated_, _error_).
+    1. If _undersized_ is *undefined*, set _undersized_ to *"only-full"*.
+    1. If _undersized_ is neither *"only-full"* nor *"allow-partial"*, then
+      1. Let _error_ be ThrowCompletion(a newly created *TypeError* object).
+      1. Return ? IteratorClose(_iterated_, _error_).
+    1. Set _iterated_ to ? GetIteratorDirect(_O_).
+    1. Let _closure_ be a new Abstract Closure with no parameters that captures _iterated_, _windowSize_, and _undersized_ and performs the following steps when called:
+      1. Let _buffer_ be a new empty List.
+      1. Repeat,
+        1. Let _value_ be ? IteratorStepValue(_iterated_).
+        1. If _value_ is ~done~, then
+          1. If _undersized_ is *"allow-partial"*, _buffer_ is not empty, and the number of elements in _buffer_ &lt; ℝ(_windowSize_), then
+            1. Perform Completion(Yield(CreateArrayFromList(_buffer_))).
+          1. Return ReturnCompletion(*undefined*).
+        1. If the number of elements in _buffer_ is ℝ(_windowSize_), then
+          1. Remove the first element from _buffer_.
+        1. Append _value_ to _buffer_.
+        1. If the number of elements in _buffer_ is ℝ(_windowSize_), then
+          1. Let _completion_ be Completion(Yield(CreateArrayFromList(_buffer_))).
+          1. IfAbruptCloseIterator(_completion_, _iterated_).
+    1. Let _result_ be CreateIteratorFromClosure(_closure_, *"Iterator Helper"*, %IteratorHelperPrototype%, « [[UnderlyingIterators]] »).
+    1. Set _result_.[[UnderlyingIterators]] to « _iterated_ ».
+    1. Return _result_.
+  </emu-alg>
+</emu-clause>

@@ -25,6 +25,13 @@
       "path": ["spec.html"]
     },
     {
+      "name": "iterator-chunking",
+      "description": "Iterator Chunking proposal",
+      "source": "https://github.com/tc39/proposal-iterator-chunking",
+      "commit": "0fbb09fbf5b8afa47bf2397d6a0f37e6302fc623",
+      "path": ["spec.emu"]
+    },
+    {
       "name": "await-dictionary",
       "description": "Promise.allKeyed proposal",
       "source": "https://github.com/tc39/proposal-await-dictionary",

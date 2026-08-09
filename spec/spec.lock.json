@@ -2,6 +2,7 @@
   "temporal": "856008468a794c020658bc4a6678f70345c356ea9afbf786e39a818798b7df42",
   "decorators": "0d399cc408e463e5715da4fa197759bd89ddef404338d0ecea82e51fdf9ec204",
   "iterator-join": "cee4497ce2c23441d308354a7a243264e666d7ac1fa10fb8346c3e2d2ddce578",
+  "iterator-chunking": "fa51ffe58d70c98cd7fc52de0f3954894bd31ef9ebbd7de7b50ac86db65b8300",
   "await-dictionary": "c375c7a482ff4612cfabd3a04c19077cd6b1214491e1ff5b60170f9c806e1aab",
   "cleanup-some": "1fd7b2a2b6f40237e47e193b97880761a97ea851e9f7d91fa7233ff3215a2671",
   "regexp-buffer-boundaries": "791fa99aa74c4ba0b97028c8d2be6e4654e1fd373b9bd0959741d629d8b6a3ea",

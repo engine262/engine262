@@ -13,6 +13,7 @@ import {
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import {
   BooleanValue,
+  JSStringValue,
   NumberValue,
   ObjectValue,
   UndefinedValue,
@@ -56,6 +57,51 @@ function* IteratorProto_constructor_setter([v = Value.undefined]: Arguments, { t
     v,
   ));
   return Value.undefined;
+}
+
+/** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks */
+function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = thisValue;
+  if (!(O instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', O);
+  }
+  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  if (!(chunkSize instanceof NumberValue) || !chunkSize.isIntegralNumber()) {
+    const error = Throw.TypeError('$1 is not an integral Number', chunkSize);
+    return Q(yield* IteratorClose(iterated, error));
+  }
+  if (chunkSize.value < 1 || chunkSize.value > (2 ** 32) - 1) {
+    const error = Throw.RangeError('$1 is out of range', chunkSize);
+    return Q(yield* IteratorClose(iterated, error));
+  }
+  iterated = Q(yield* GetIteratorDirect(O));
+  const closure = function* closure(): ValueEvaluator {
+    let buffer: Value[] = [];
+    while (true) {
+      const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
+      if (value === 'done') {
+        if (buffer.length !== 0) {
+          EnsureCompletion(yield* Yield(CreateArrayFromList(buffer)));
+        }
+        return ReturnCompletion(Value.undefined);
+      }
+      buffer.push(value);
+      // If the number of elements in buffer is ℝ(chunkSize), then
+      if (buffer.length === chunkSize.value) {
+        const completion = EnsureCompletion(yield* Yield(CreateArrayFromList(buffer)));
+        IfAbruptCloseIterator(completion, iterated);
+        buffer = [];
+      }
+    }
+  };
+  const result = CreateIteratorFromClosure(
+    closure,
+    Value('Iterator Helper'),
+    surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
+    ['UnderlyingIterators'],
+  );
+  result.UnderlyingIterators = [iterated];
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.drop */
@@ -442,6 +488,62 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
   return result;
 }
 
+/** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.windows */
+function* IteratorProto_windows([windowSize = Value.undefined, undersized = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = thisValue;
+  if (!(O instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', O);
+  }
+  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  if (!(windowSize instanceof NumberValue) || !windowSize.isIntegralNumber()) {
+    const error = Throw.TypeError('$1 is not an integral Number', windowSize);
+    return Q(yield* IteratorClose(iterated, error));
+  }
+  if (windowSize.value < 1 || windowSize.value > (2 ** 32) - 1) {
+    const error = Throw.RangeError('$1 is out of range', windowSize);
+    return Q(yield* IteratorClose(iterated, error));
+  }
+  if (undersized === Value.undefined) {
+    undersized = Value('only-full');
+  }
+  if (!(undersized instanceof JSStringValue)
+      || (undersized.stringValue() !== 'only-full' && undersized.stringValue() !== 'allow-partial')) {
+    const error = Throw.TypeError('$1 is not a valid undersized mode', undersized);
+    return Q(yield* IteratorClose(iterated, error));
+  }
+  iterated = Q(yield* GetIteratorDirect(O));
+  const closure = function* closure(): ValueEvaluator {
+    const buffer: Value[] = [];
+    while (true) {
+      const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
+      if (value === 'done') {
+        if (undersized.stringValue() === 'allow-partial'
+            && buffer.length !== 0
+            && buffer.length < windowSize.value) {
+          EnsureCompletion(yield* Yield(X(CreateArrayFromList(buffer))));
+        }
+        return ReturnCompletion(Value.undefined);
+      }
+      if (buffer.length === windowSize.value) {
+        buffer.shift();
+      }
+      buffer.push(value);
+      if (buffer.length === windowSize.value) {
+        const completion = EnsureCompletion(yield* Yield(X(CreateArrayFromList(buffer))));
+        IfAbruptCloseIterator(completion, iterated);
+      }
+    }
+  };
+  const result = CreateIteratorFromClosure(
+    closure,
+    Value('Iterator Helper'),
+    surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
+    ['UnderlyingIterators'],
+  );
+  result.UnderlyingIterators = [iterated];
+  return result;
+}
+
 /** https://tc39.es/ecma262/#sec-iterator.prototype.toarray */
 function* IteratorProto_toArray(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
@@ -514,6 +616,7 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
 export function bootstrapIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['constructor', [IteratorProto_constructor_getter, IteratorProto_constructor_setter]],
+    ['chunks', IteratorProto_chunks, 1],
     ['drop', IteratorProto_drop, 1],
     ['every', IteratorProto_every, 1],
     ['filter', IteratorProto_filter, 1],
@@ -526,6 +629,7 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['some', IteratorProto_some, 1],
     ['take', IteratorProto_take, 1],
     ['toArray', IteratorProto_toArray, 0],
+    ['windows', IteratorProto_windows, 1],
     [wellKnownSymbols.iterator, IteratorProto_iterator, 0],
     [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]],
   ], realmRec.Intrinsics['%Object.prototype%']);
