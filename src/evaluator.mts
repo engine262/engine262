@@ -304,7 +304,7 @@ export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T 
 
 export type EvaluatorYieldType_Debugger = { suspend: 'debugger' } | { suspend: 'potential-debugger' }
 export type EvaluatorYieldType_Await = { suspend: 'await' }
-export type EvaluatorYieldType_Yield = { suspend: 'yield', value: ObjectValue }
+export type EvaluatorYieldType_Yield = { suspend: 'yield', value: ObjectValue | ThrowCompletion }
 export type EvaluatorYieldType_AsyncYield = { suspend: 'async-yield' }
 export type EvaluatorYieldType =
   | EvaluatorYieldType_Debugger

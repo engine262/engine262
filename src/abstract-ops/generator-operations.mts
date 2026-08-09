@@ -75,24 +75,32 @@ export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseN
     acGenerator.GeneratorState = 'completed';
     // h. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed. Any execution state associated with acGenerator can be discarded at this point.
 
-    let resultValue: Value;
-    if (result instanceof NormalCompletion) {
-      // i. If result is a normal completion, then
-      //   i. Let resultValue be undefined.
-      resultValue = Value.undefined;
-    } else if (result instanceof ReturnCompletion) {
-      // j. Else if result is a return completion, then
-      //   i. Let resultValue be result.[[Value]].
-      resultValue = result.Value;
+    let resumption: ObjectValue | ThrowCompletion;
+    if (result instanceof ThrowCompletion) {
+      // i. If result is a throw completion, then
+      //   i. Let resumption be result.
+      resumption = result;
     } else {
-      // k. Else,
-      //   i. Assert: result is a throw completion.
-      //   ii. Return ? result.
-      Assert(result instanceof ThrowCompletion);
-      return Q(result);
+      // j. Else,
+      let resultValue: Value;
+      if (result instanceof NormalCompletion) {
+        // i. If result is a normal completion, then
+        //   i. Let resultValue be undefined.
+        resultValue = Value.undefined;
+      } else {
+        // ii. Else if result is a return completion, then
+        //   1. Let resultValue be result.[[Value]].
+        Assert(result instanceof ReturnCompletion);
+        resultValue = result.Value;
+      }
+      // k. Let resumption be NormalCompletion(CreateIteratorResultObject(resultValue, true)).
+      resumption = CreateIteratorResultObject(resultValue, Value.true);
     }
-    // l. Return CreateIteratorResultObject(resultValue, true).
-    return CreateIteratorResultObject(resultValue, Value.true);
+    // l. Let callerContext be the running execution context.
+    // m. Resume callerContext, passing resumption.
+    yield { suspend: 'yield', value: resumption };
+    // n. Assert: This step is never reached.
+    Assert(false);
   };
 
   // 5. Set the code evaluation state of genContext such that when evaluation is resumed

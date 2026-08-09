@@ -28,7 +28,10 @@ export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asy
       Assert(result.Type === 'throw');
       X(Call(promiseCapability.Reject, Value.undefined, [result.Value]));
     }
-    return undefined;
+    // Resume the caller context, passing NormalCompletion(~unused~).
+    yield { suspend: 'async-yield' };
+    // Assert: This step is never reached.
+    Assert(false);
   }());
   const result = X(yield* RunSuspendedContext(asyncContext, { resume: 'async-yield', value: undefined }));
   Assert(result === undefined);

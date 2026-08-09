@@ -99,8 +99,11 @@ export function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBo
     AsyncGeneratorCompleteStep(acGenerator, result, Value.true);
     // i. Perform AsyncGeneratorDrainQueue(generator).
     yield* AsyncGeneratorDrainQueue(acGenerator);
-    // j. Return undefined.
-    return Value.undefined;
+    // j. Let callerContext be the running execution context.
+    // k. Resume callerContext, passing NormalCompletion(undefined).
+    yield { suspend: 'async-yield' };
+    // l. Assert: This step is never reached.
+    Assert(false);
   };
   // 4. Set the code evaluation state of genContext such that when evaluation
   //    is resumed for that execution context the following steps will be performed:
