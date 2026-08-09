@@ -131,9 +131,10 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
 
 export interface ExportEntry {
   readonly ModuleRequest: ModuleRequestRecord | NullValue;
-  readonly ImportName: JSStringValue | NullValue | 'namespace' | 'source' | 'all-but-default';
+  readonly ImportName: JSStringValue | NullValue | 'namespace' | 'filtered-namespace' | 'source' | 'all-but-default';
   readonly LocalName: JSStringValue | NullValue;
   readonly ExportName: JSStringValue | NullValue;
+  readonly NamespaceNamesFilter?: readonly string[];
 }
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-static-semantics-optionalindirectexportentries */

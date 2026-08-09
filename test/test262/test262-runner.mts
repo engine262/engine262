@@ -296,6 +296,8 @@ reporter.onExit.promise.then(() => {
 });
 
 const engineFeatures = [...args.values['engine-features'] || []];
+const excludedFeatures = new Set(args.values['no-features']);
+const excludedKeywords = args.values.exclude?.map((keyword) => keyword.toLowerCase()) ?? [];
 
 const promises = [];
 for await (const file of parsePositionals(args.positionals, true, abort.signal)) {
@@ -308,9 +310,16 @@ for await (const file of parsePositionals(args.positionals, true, abort.signal))
   promises.push(readFile(file, 'utf8').then((contents) => {
     const frontmatterYaml = contents.match(/\/\*---(.*?)---\*\//s)?.[1];
     const attrs: any = frontmatterYaml ? YAML.load(frontmatterYaml) : {};
+    const relativePath = relative(inputs.Test262TestsPath, file);
 
     if (args.values.features && (!attrs.features || !attrs.features.includes(args.values.features))) {
       // feature not match
+      return;
+    }
+    if (excludedFeatures.size > 0 && attrs.features?.some((feature: string) => excludedFeatures.has(feature))) {
+      return;
+    }
+    if (excludedKeywords.some((keyword) => relativePath.toLowerCase().includes(keyword))) {
       return;
     }
 
@@ -320,7 +329,7 @@ for await (const file of parsePositionals(args.positionals, true, abort.signal))
     }, {});
     attrs.includes = attrs.includes || [];
 
-    const test = new Test(relative(inputs.Test262TestsPath, file), file, engineFeatures, attrs, '', contents);
+    const test = new Test(relativePath, file, engineFeatures, attrs, '', contents);
 
     const useModuleLoader = test.attrs.features?.some((feature) => feature.includes('import') || feature.includes('export'));
     if (test.attrs.flags.module) {

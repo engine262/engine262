@@ -43,8 +43,7 @@ export function ContinueDynamicImport(
   }
 
   // 3. Let loadPromise be module.LoadRequestedModules(all).
-  //    (default for LoadRequestedModules' importedNames is 'all'.)
-  const loadPromise = module.LoadRequestedModules();
+  const loadPromise = module.LoadRequestedModules('all');
 
   // 4. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures promiseCapability and performs the following steps when called:
   const rejectedClosure = ([reason = Value.undefined]: Arguments): void => {
@@ -58,8 +57,7 @@ export function ContinueDynamicImport(
   // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
   function* linkAndEvaluateClosure() {
     // a. Let link be Completion(module.Link(all)).
-    //    (default for Link's importedNames is 'all'.)
-    const link = module.Link();
+    const link = module.Link('all');
     // b. If link is an abrupt completion, then
     if (link instanceof AbruptCompletion) {
       // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « link.[[Value]] »).
@@ -73,8 +71,8 @@ export function ContinueDynamicImport(
     // c. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {
       Assert(phase !== 'source');
-      // i. Let namespace be GetModuleNamespace(module).
-      const namespace = GetModuleNamespace(module, phase);
+      // i. Let namespace be GetModuleNamespace(module, phase, all).
+      const namespace = GetModuleNamespace(module, phase, 'all');
       // ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace »).
       X(Call(promiseCapability.Resolve, Value.undefined, [namespace]));
       // iii. Return unused.

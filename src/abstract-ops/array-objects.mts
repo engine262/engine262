@@ -1,3 +1,4 @@
+import { ValidateTypedArrayBounds } from '../intrinsics/TypedArray.mts';
 import {
   surroundingAgent, Descriptor, ObjectValue, JSStringValue, Value, wellKnownSymbols, type ObjectInternalMethods,
   NumberValue, UndefinedValue,
@@ -37,7 +38,6 @@ import {
   Throw,
 } from '#self';
 import { isTypedArrayObject } from '#self';
-import { ValidateTypedArrayBounds } from '../intrinsics/TypedArray.mts';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */

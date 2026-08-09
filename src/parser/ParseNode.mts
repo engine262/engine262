@@ -2090,6 +2090,8 @@ export namespace ParseNode {
   //   `*` `as` ImportedBinding
   export interface NameSpaceImport extends BaseParseNode {
     readonly type: 'NameSpaceImport';
+    /** Present for `import { x, y } as ns from "mod"`. */
+    readonly NamedImports?: NamedImports;
     readonly ImportedBinding: ImportedBinding;
   }
 
@@ -2308,6 +2310,8 @@ export namespace ParseNode {
   export interface NamedExports extends BaseParseNode {
     readonly type: 'NamedExports';
     readonly ExportsList: ExportsList;
+    /** Present for `export { x, y } as ns from "mod"`. */
+    readonly NamespaceExportName?: ModuleExportName;
   }
 
   // ExportsList :

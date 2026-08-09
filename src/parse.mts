@@ -11,6 +11,7 @@ import {
   ExportEntries,
   OptionalIndirectExportEntries,
   ImportedLocalNames,
+  type ExportEntry,
 } from './static-semantics/all.mts';
 import { kInternal } from './utils/internal.mts';
 import { type Mutable } from './utils/language.mts';
@@ -138,7 +139,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
   // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
   const importedBoundNames = new JSStringSet(ImportedLocalNames(importEntries));
   // 7. Let indirectExportEntries be a new empty List.
-  const indirectExportEntries = [];
+  const indirectExportEntries: ExportEntry[] = [];
   // 8. Let localExportEntries be a new empty List.
   const localExportEntries = [];
   // 9. Let starExportEntries be a new empty List.
@@ -156,14 +157,33 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
         const ie = importEntries.find((e) => e.LocalName.stringValue() === (ee.LocalName as JSStringValue).stringValue());
-        // a. NOTE: This is a re-export of a single name.
-        // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
-        indirectExportEntries.push({
-          ModuleRequest: ie!.ModuleRequest,
-          ImportName: ie!.ImportName,
-          LocalName: Value.null,
-          ExportName: ee.ExportName,
-        });
+        if (ie!.ImportName === 'namespace') {
+          indirectExportEntries.push({
+            ModuleRequest: ie!.ModuleRequest,
+            ImportName: 'namespace',
+            LocalName: Value.null,
+            ExportName: ee.ExportName,
+            NamespaceNamesFilter: [],
+          });
+        } else if (ie!.ImportName === 'filtered-namespace-object') {
+          indirectExportEntries.push({
+            ModuleRequest: ie!.ModuleRequest,
+            ImportName: 'filtered-namespace',
+            LocalName: Value.null,
+            ExportName: ee.ExportName,
+            NamespaceNamesFilter: ie!.NamespaceNamesFilter,
+          });
+        } else {
+          // This is a re-export of a single name.
+          // export { x as y } from 'mod';  // ee.ExportName = y, ie.ImportName = x
+          indirectExportEntries.push({
+            ModuleRequest: ie!.ModuleRequest,
+            ImportName: ie!.ImportName,
+            LocalName: Value.null,
+            ExportName: ee.ExportName,
+            NamespaceNamesFilter: [],
+          });
+        }
       }
     } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.

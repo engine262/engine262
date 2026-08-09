@@ -14,6 +14,8 @@ export const args = util.parseArgs({
   options: {
     'help': { type: 'boolean', short: 'h' },
     'features': { type: 'string' },
+    'no-features': { type: 'string', multiple: true },
+    'exclude': { type: 'string', multiple: true },
     'engine-features': { type: 'string', multiple: true, short: 'e' },
     'update-slow': { type: 'string' },
     'update-failed': { type: 'boolean', short: 'u' },
@@ -56,6 +58,10 @@ async function main() {
       ${styleText('greenBright', 'Options:')}
         ${styleText('green', '--features / -f')} ${styleText('gray', '[feature]')}
           Only run tests that has the specified feature.
+        ${styleText('green', '--no-features')} ${styleText('gray', '[feature]')}
+          Exclude tests with the specified Test262 feature. May be specified multiple times.
+        ${styleText('green', '--exclude')} ${styleText('gray', '[keyword]')}
+          Exclude tests whose paths contain the keyword. May be specified multiple times.
         ${styleText('green', '--engine-features / -e')} ${styleText('gray', '[feature]')}
           Enable specified engine features during test execution.
         ${styleText('green', '--update-slow')} ${styleText('gray', '[seconds]')}

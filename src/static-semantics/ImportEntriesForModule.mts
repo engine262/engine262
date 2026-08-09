@@ -2,7 +2,7 @@ import { Value } from '../value.mts';
 import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
-  BoundNames, StringValue, type ImportEntry, type ModuleRequestRecord,
+  BoundNames, ImportedNames, StringValue, type ImportEntry, type ModuleRequestRecord,
 } from './all.mts';
 
 export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRecord): ImportEntry[] {
@@ -49,11 +49,22 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
     case 'NameSpaceImport': {
       // 1. Let localName be the StringValue of ImportedBinding.
       const localName = StringValue(node.ImportedBinding);
-      // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace~, [[LocalName]]: localName }.
+      if (node.NamedImports) {
+        const importedNames = ImportedNames(node.NamedImports);
+        const entry: ImportEntry = {
+          ModuleRequest: module,
+          ImportName: 'filtered-namespace-object',
+          LocalName: localName,
+          NamespaceNamesFilter: importedNames,
+        };
+        return [entry];
+      }
+      // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace~, [[LocalName]]: localName, [[NamespaceNamesFilter]]: empty }.
       const entry: ImportEntry = {
         ModuleRequest: module,
         ImportName: 'namespace',
         LocalName: localName,
+        NamespaceNamesFilter: [],
       };
       // 3. Return a new List containing entry.
       return [entry];
@@ -76,6 +87,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
           ModuleRequest: module,
           ImportName: importName,
           LocalName: localName,
+          NamespaceNamesFilter: [],
         };
         // 4. Return a new List containing entry.
         return [entry];
@@ -87,6 +99,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
           ModuleRequest: module,
           ImportName: localName,
           LocalName: localName,
+          NamespaceNamesFilter: [],
         };
         // 3. Return a new List containing entry.
         return [entry];

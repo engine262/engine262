@@ -43,6 +43,7 @@ export function ImportEntries(node: ParseNode): ImportEntry[] {
 
 export interface ImportEntry {
   readonly ModuleRequest: ModuleRequestRecord;
-  readonly ImportName: JSStringValue | 'namespace' | 'source';
+  readonly ImportName: JSStringValue | 'namespace' | 'filtered-namespace-object' | 'source';
   readonly LocalName: JSStringValue;
+  readonly NamespaceNamesFilter?: readonly string[];
 }

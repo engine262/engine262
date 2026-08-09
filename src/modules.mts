@@ -101,21 +101,47 @@ interface ResolveSetItem {
   readonly ExportName: JSStringValue;
 }
 
+/** https://tc39.es/proposal-deferred-reexports/#sec-ResolveSetContains */
+function ResolveSetContains(
+  resolveSet: readonly (ResolveSetItem | AbstractModuleRecord)[],
+  module: AbstractModuleRecord,
+  exportName: JSStringValue,
+): boolean {
+  for (const r of resolveSet) {
+    if (r instanceof AbstractModuleRecord && r === module) {
+      return true;
+    }
+    if (!(r instanceof AbstractModuleRecord) && r.Module === module && SameValue(r.ExportName, exportName)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function importedNamesContains(
+  importedNames: Exclude<ImportedNamesValue, 'all'>,
+  exportName: JSStringValue | NullValue,
+): boolean {
+  if (importedNames === 'all-but-default') {
+    return exportName instanceof JSStringValue && exportName.stringValue() !== 'default';
+  }
+  return exportName instanceof JSStringValue && importedNames.includes(exportName.stringValue());
+}
+
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
 export abstract class AbstractModuleRecord {
-  abstract LoadRequestedModules(hostDefined?: ModuleRecordHostDefined, importedNames?: ImportedNamesValue): PromiseObject;
+  abstract LoadRequestedModules(importedNames?: ImportedNamesValue, hostDefined?: ModuleRecordHostDefined): PromiseObject;
 
   abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly JSStringValue[];
 
-  abstract ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[]): 'ambiguous' | ResolvedBindingRecord | null;
+  abstract ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[], deferNamespaceExportSet?: AbstractModuleRecord[]): 'ambiguous' | ResolvedBindingRecord | null;
 
   abstract Link(importedNames?: ImportedNamesValue): PlainCompletion<void>;
 
   abstract Evaluate(importedNames?: ImportedNamesValue): Evaluator<PromiseObject>;
 
   /** https://tc39.es/proposal-deferred-reexports/#abstract-getoptionalindirectexportsmodulerequests */
-  GetOptionalIndirectExportsModuleRequests(_importedNames: ImportedNamesValue): readonly ModuleRequestRecord[] {
-    // 1. Return a new empty List.
+  GetOptionalIndirectExportsModuleRequests(_importedNames: ImportedNamesValue = 'all'): readonly ModuleRequestRecord[] {
     return [];
   }
 
@@ -199,7 +225,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   abstract ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator;
 
   /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
-  LoadRequestedModules(hostDefined?: ModuleRecordHostDefined, importedNames: ImportedNamesValue = 'all') {
+  LoadRequestedModules(importedNames: ImportedNamesValue = 'all', hostDefined?: ModuleRecordHostDefined) {
     const module = this;
     // 1. If importedNames is not present, set importedNames to ~all~.
     // 2. If hostDefined is not present, set hostDefined to empty.
@@ -268,7 +294,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
 
   /** https://tc39.es/ecma262/#sec-moduleevaluation */
   * Evaluate(importedNames: ImportedNamesValue = []): Evaluator<PromiseObject> {
-    const module: CyclicModuleRecord = this;
+    let module: CyclicModuleRecord = this;
 
     // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
     Assert((function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {
@@ -284,14 +310,21 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     // 2. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
     // 3. If importedNames is not present, set importedNames to « ».
-    let topLevelPromise: PromiseObject;
     // 4. If module.[[Status]] is either evaluating-async or evaluated, then
-    if ((module.Status === 'evaluating-async' || module.Status === 'evaluated')
-        && module.CycleRoot !== undefined && module.CycleRoot.TopLevelCapability !== undefined) {
-      // a. Assert: module.[[CycleRoot]].[[TopLevelCapability]] is not empty.
-      // b. Let topLevelPromise be module.[[CycleRoot]].[[TopLevelCapability]].[[Promise]].
-      topLevelPromise = module.CycleRoot.TopLevelCapability.Promise;
-    } else { // 5. Else,
+    if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
+      // SPEC BUG: deferred-reexports deletes this CycleRoot redirection, even though
+      // a subsequent evaluation must observe the CycleRoot's EvaluationError.
+      // a. Assert: module.[[CycleRoot]] is not empty.
+      Assert(module.CycleRoot !== undefined);
+      // b. Set module to module.[[CycleRoot]].
+      module = module.CycleRoot;
+    }
+    let topLevelPromise: PromiseObject;
+    // 5. If module.[[TopLevelCapability]] is not empty, then
+    if (module.TopLevelCapability !== undefined) {
+      // a. Let topLevelPromise be module.[[TopLevelCapability]].[[Promise]].
+      topLevelPromise = module.TopLevelCapability.Promise;
+    } else { // 6. Else,
       // a. Assert: module.[[CycleRoot]] and module.[[TopLevelCapability]] are empty.
       // b. Let stack be a new empty List.
       const stack: CyclicModuleRecord[] = [];
@@ -483,7 +516,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-resolveexport */
-  ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[]) {
+  ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[], deferNamespaceExportSet?: AbstractModuleRecord[]) {
     const module = this;
     // 1. Assert: module.[[Status]] is not new.
     Assert(module.Status !== 'new');
@@ -491,14 +524,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     if (!resolveSet) {
       resolveSet = [];
     }
-    // 3. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
-    for (const r of resolveSet) {
-      // a. If module and r.[[Module]] are the same Module Record and SameValue(exportName, r.[[ExportName]]) is true, then
-      if (module === r.Module && SameValue(exportName, r.ExportName)) {
-        // i. Assert: This is a circular import request.
-        // ii. Return null.
-        return null;
-      }
+    if (!deferNamespaceExportSet) {
+      deferNamespaceExportSet = [];
+    }
+    if (ResolveSetContains(resolveSet, module, exportName)) {
+      return null;
     }
     // 4. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
     resolveSet.push({ Module: module, ExportName: exportName });
@@ -521,11 +551,25 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     for (const e of allIndirectEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName)) {
+        Assert(e.ModuleRequest !== Value.null);
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
         // ii. If e.[[ImportName]] is ~namespace~, then
         if (e.ImportName === 'namespace') {
           // 1. Assert: module does not provide the direct binding for this export
+          Assert(!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName)));
+          Assert(e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0);
+          if (module.OptionalIndirectExportEntries.includes(e)
+            && NamespaceMemberIsUnresolvableOptional(
+              deferNamespaceExportSet,
+              module,
+              exportName,
+              importedModule,
+              importedModule.GetExportedNames(),
+              'allow-ambiguous',
+            )) {
+            return null;
+          }
           if ((e.ModuleRequest as ModuleRequestRecord).Phase === 'defer') {
             // https://tc39.es/proposal-defer-import-eval/#sec-resolveexport
             return new ResolvedBindingRecord({
@@ -540,6 +584,24 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
               BindingName: 'namespace',
             });
           }
+        } else if (e.ImportName === 'filtered-namespace') {
+          Assert(Array.isArray(e.NamespaceNamesFilter));
+          if (module.OptionalIndirectExportEntries.includes(e)
+            && NamespaceMemberIsUnresolvableOptional(
+              deferNamespaceExportSet,
+              module,
+              exportName,
+              importedModule,
+              e.NamespaceNamesFilter,
+              'disallow-ambiguous',
+            )) {
+            return null;
+          }
+          const localName = `*${exportName.stringValue()}*`;
+          return new ResolvedBindingRecord({
+            Module: module,
+            BindingName: Value(localName),
+          });
         } else if (e.ImportName === 'source') {
           // Assert: _module_ does not provide the direct binding for this export.
           return new ResolvedBindingRecord({
@@ -550,13 +612,14 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Assert: module imports a specific binding for this export.
           Assert(e.ImportName instanceof JSStringValue);
           // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
-          return importedModule.ResolveExport(e.ImportName, resolveSet);
+          return importedModule.ResolveExport(e.ImportName, resolveSet, deferNamespaceExportSet);
         }
       }
     }
     // 7. If SameValue(exportName, "default") is true, then
     if (SameValue(exportName, Value('default'))) {
       // a. Assert: A default export was not explicitly defined by this module.
+      Assert(!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName)));
       // b. Return null.
       return null;
       // c. NOTE: A default export cannot be provided by an export * or export * from "mod" declaration.
@@ -565,10 +628,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     let starResolution = null;
     // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
+      Assert(e.ModuleRequest !== Value.null);
       // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
       const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
       // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
-      const resolution = importedModule.ResolveExport(exportName, resolveSet);
+      const resolution = importedModule.ResolveExport(exportName, resolveSet, deferNamespaceExportSet);
       // c. If resolution is "ambiguous", return "ambiguous".
       if (resolution === 'ambiguous') {
         return 'ambiguous';
@@ -608,64 +672,40 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 
   /** https://tc39.es/proposal-deferred-reexports/#sec-GetOptionalIndirectExportsModuleRequests */
-  override GetOptionalIndirectExportsModuleRequests(importedNames: ImportedNamesValue): readonly ModuleRequestRecord[] {
-    // 1. Let requests be a new empty List.
+  override GetOptionalIndirectExportsModuleRequests(importedNames: ImportedNamesValue = 'all'): readonly ModuleRequestRecord[] {
     const requests: ModuleRequestRecord[] = [];
-    // 2. For each ExportEntry Record oie of module.[[OptionalIndirectExportEntries]], do
     for (const oie of this.OptionalIndirectExportEntries) {
-      const exportName = oie.ExportName;
       // a. If importedNames is all or importedNames contains oie.[[ExportName]], then
-      let included: boolean;
-      if (importedNames === 'all') {
-        included = true;
-      } else if (importedNames === 'all-but-default') {
-        included = exportName instanceof JSStringValue && exportName.stringValue() !== 'default';
-      } else if (exportName instanceof JSStringValue) {
-        included = (importedNames as readonly JSStringValue[]).some((n) => n.stringValue() === exportName.stringValue());
-      } else {
-        included = false;
-      }
-      if (!included) {
-        continue;
-      }
-      // i. Let nextRequest be oie.[[ModuleRequest]].
-      const nextRequest = oie.ModuleRequest as ModuleRequestRecord;
-      // ii. Let existingRequest be empty.
-      let existingRequest: ModuleRequestRecord | undefined;
-      // iii. For each ModuleRequest Record r in requests, do
-      for (const r of requests) {
-        // 1. If existingRequest is empty and ModuleRequestsKeyEqual(r, nextRequest) is true and r.[[Phase]] is nextRequest.[[Phase]], then
-        if (existingRequest === undefined && ModuleRequestsKeyEqual(r, nextRequest) && r.Phase === nextRequest.Phase) {
-          // a. Set existingRequest to r.
-          existingRequest = r;
+      if (importedNames === 'all' || importedNamesContains(importedNames, oie.ExportName)) {
+        const nextRequest = oie.ModuleRequest as ModuleRequestRecord;
+        let existingRequest: ModuleRequestRecord | undefined;
+        for (const r of requests) {
+          if (existingRequest === undefined && ModuleRequestsKeyEqual(r, nextRequest) && r.Phase === nextRequest.Phase) {
+            existingRequest = r;
+          }
+        }
+        let newImportedNames: ImportedNamesValue = 'all';
+        Assert(oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace' || oie.ImportName === 'filtered-namespace');
+        if (oie.ImportName instanceof JSStringValue) {
+          newImportedNames = [oie.ImportName.stringValue()];
+        }
+        if (oie.ImportName === 'filtered-namespace') {
+          Assert(Array.isArray(oie.NamespaceNamesFilter));
+          newImportedNames = oie.NamespaceNamesFilter;
+        }
+        if (existingRequest === undefined) {
+          const request: ModuleRequestRecord = {
+            Specifier: nextRequest.Specifier,
+            Attributes: nextRequest.Attributes,
+            Phase: nextRequest.Phase,
+            ImportedNames: newImportedNames,
+          };
+          requests.push(request);
+        } else {
+          (existingRequest as Mutable<ModuleRequestRecord>).ImportedNames = MergeImportedNames(existingRequest.ImportedNames, newImportedNames);
         }
       }
-      // iv. Let newImportedNames be all.
-      let newImportedNames: ImportedNamesValue = 'all';
-      // v. Assert: oie.[[ImportName]] is a String or namespace.
-      // (this is deviating from spec because spec looks wrong)
-      Assert(oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace');
-      // vi. If oie.[[ImportName]] is a String, set newImportedNames to « oie.[[ImportName]] ».
-      if (oie.ImportName instanceof JSStringValue) {
-        newImportedNames = [oie.ImportName];
-      }
-      // vii. If existingRequest is empty, then
-      if (existingRequest === undefined) {
-        // 1. Let request be the ModuleRequest Record { [[Specifier]]: nextRequest.[[Specifier]], [[Attributes]]: nextRequest.[[Attributes]], [[Phase]]: nextRequest.[[Phase]], [[ImportedNames]]: newImportedNames }.
-        const request: ModuleRequestRecord = {
-          Specifier: nextRequest.Specifier,
-          Attributes: nextRequest.Attributes,
-          Phase: nextRequest.Phase,
-          ImportedNames: newImportedNames,
-        };
-        // 2. Append request to requests.
-        requests.push(request);
-      } else { // viii. Else,
-        // 1. Set existingRequest.[[ImportedNames]] to MergeImportedNames(existingRequest.[[ImportedNames]], newImportedNames).
-        (existingRequest as Mutable<ModuleRequestRecord>).ImportedNames = MergeImportedNames(existingRequest.ImportedNames, newImportedNames);
-      }
     }
-    // 3. Return requests.
     return requests;
   }
 
@@ -674,18 +714,15 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     const module = this as Mutable<SourceTextModuleRecord>;
     // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
     for (const e of module.IndirectExportEntries) {
-      // a. Let resolution be module.ResolveExport(e.[[ExportName]]).
-      const resolution = module.ResolveExport(e.ExportName as JSStringValue);
-      // b. If resolution is null or "ambiguous", throw a SyntaxError exception.
-      if (resolution === null || resolution === 'ambiguous') {
-        const moduleName = module.HostDefined?.specifier || '<anonymous module>';
-        if (resolution === null) {
-          return Throw.SyntaxError('Module "$1" does not have an export named $2', moduleName, e.ExportName);
+      Q(EnsureResolvableBinding(module, e.ExportName as JSStringValue, 'disallow-ambiguous'));
+    }
+    for (const e of module.StarExportEntries) {
+      const importedModule = GetImportedModule(module, e.ModuleRequest as ModuleRequestRecord);
+      for (const name of importedModule.GetExportedNames()) {
+        if (name.stringValue() !== 'default') {
+          Q(EnsureResolvableBinding(importedModule, name, 'disallow-ambiguous'));
         }
-        return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', e.ExportName, moduleName);
       }
-      // c. Assert: resolution is a ResolvedBinding Record.
-      Assert(resolution instanceof ResolvedBindingRecord);
     }
     // 2. Assert: All named exports from module are resolvable.
     // 3. Let realm be module.[[Realm]].
@@ -701,13 +738,24 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
       const importedModule = GetImportedModule(module, ie.ModuleRequest);
       if (ie.ImportName === 'namespace') {
-        // i. Let namespace be GetModuleNamespace(importedModule).
+        // i. Let namespace be GetModuleNamespace(importedModule, phase, all).
         Assert(ie.ModuleRequest.Phase !== 'source');
         const namespacePhase = ie.ModuleRequest.Phase === 'defer' ? 'defer' : 'evaluation';
-        const namespace = GetModuleNamespace(importedModule, namespacePhase);
+        for (const name of importedModule.GetExportedNames()) {
+          Q(EnsureResolvableBinding(importedModule, name, 'allow-ambiguous'));
+        }
+        const namespace = GetModuleNamespace(importedModule, namespacePhase, 'all');
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
+        X(env.InitializeBinding(ie.LocalName, namespace));
+      } else if (ie.ImportName === 'filtered-namespace-object') {
+        for (const name of ie.NamespaceNamesFilter!) {
+          Q(EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous'));
+        }
+        Assert(ie.ModuleRequest.Phase !== 'source');
+        const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase, ie.NamespaceNamesFilter);
+        X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         X(env.InitializeBinding(ie.LocalName, namespace));
       } else if (ie.ImportName === 'source') {
         const moduleSourceObject = importedModule.ModuleSource;
@@ -731,8 +779,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         if (resolution.BindingName === 'namespace' || resolution.BindingName === 'deferred-namespace') {
           // https://tc39.es/proposal-defer-import-eval/#sec-source-text-module-record-initialize-environment
           const phase = resolution.BindingName === 'namespace' ? 'evaluation' : 'defer';
-          // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
-          const namespace = GetModuleNamespace(resolution.Module, phase);
+          // 1. Let namespace be GetModuleNamespace(resolution.[[Module]], phase, all).
+          const namespace = GetModuleNamespace(resolution.Module, phase, 'all');
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
@@ -748,6 +796,34 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
           X(env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName));
         }
+      }
+    }
+    for (const ie of module.IndirectExportEntries) {
+      if (ie.ImportName === 'filtered-namespace') {
+        const localName = Value(`*${(ie.ExportName as JSStringValue).stringValue()}*`);
+        const importedModule = GetImportedModule(module, ie.ModuleRequest as ModuleRequestRecord);
+        for (const name of ie.NamespaceNamesFilter!) {
+          Q(EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous'));
+        }
+        const requestPhase = (ie.ModuleRequest as ModuleRequestRecord).Phase;
+        Assert(requestPhase !== 'source');
+        const filteredNamespace = GetModuleNamespace(importedModule, requestPhase === 'defer' ? 'defer' : 'evaluation', ie.NamespaceNamesFilter);
+        X(env.CreateImmutableBinding(localName, Value.true));
+        X(env.InitializeBinding(localName, filteredNamespace));
+      }
+    }
+    for (const oie of module.OptionalIndirectExportEntries) {
+      if (oie.ImportName === 'filtered-namespace') {
+        const localName = Value(`*${(oie.ExportName as JSStringValue).stringValue()}*`);
+        const initializationSteps = () => {
+          const importedModule = GetImportedModule(module, oie.ModuleRequest as ModuleRequestRecord);
+          return GetModuleNamespace(
+            importedModule,
+            (oie.ModuleRequest as ModuleRequestRecord).Phase as 'defer' | 'evaluation',
+            oie.NamespaceNamesFilter!,
+          );
+        };
+        X(env.CreateDeferredInitializationBinding(localName, initializationSteps));
       }
     }
     // 8. Let moduleContext be a new ECMAScript code execution context.
@@ -856,6 +932,44 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     m(this.ImportMeta);
     m(this.Context);
   }
+}
+
+function EnsureResolvableBinding(
+  module: AbstractModuleRecord,
+  name: JSStringValue,
+  onAmbiguous: 'allow-ambiguous' | 'disallow-ambiguous',
+): PlainCompletion<void> {
+  const resolution = module.ResolveExport(name);
+  if (resolution === null) {
+    return Throw.SyntaxError('Module "$1" does not have an export named $2', module.HostDefined?.specifier || '<anonymous module>', name);
+  }
+  if (onAmbiguous === 'disallow-ambiguous') {
+    if (resolution === 'ambiguous') {
+      return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', name, module.HostDefined?.specifier || '<anonymous module>');
+    }
+    Assert(resolution instanceof ResolvedBindingRecord);
+  }
+}
+
+function NamespaceMemberIsUnresolvableOptional(
+  deferNamespaceExportSet: AbstractModuleRecord[],
+  reexporterModule: AbstractModuleRecord,
+  exportName: JSStringValue,
+  namespaceModule: AbstractModuleRecord,
+  namespaceNames: readonly JSStringValue[] | readonly string[],
+  onAmbiguous: 'allow-ambiguous' | 'disallow-ambiguous',
+): boolean {
+  if (ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)) {
+    return false;
+  }
+  deferNamespaceExportSet.push(reexporterModule);
+  Assert(ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName));
+  for (const name of namespaceNames) {
+    const resolution = namespaceModule.ResolveExport(name instanceof JSStringValue ? name : Value(name), [], deferNamespaceExportSet);
+    if (resolution === null) return true;
+    if (resolution === 'ambiguous' && onAmbiguous === 'disallow-ambiguous') return true;
+  }
+  return false;
 }
 
 export type SyntheticModuleRecordInit = AbstractModuleInit & Pick<SyntheticModuleRecord, 'ExportNames' | 'EvaluationSteps'>;

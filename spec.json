@@ -49,7 +49,7 @@
       "name": "deferred-reexports",
       "description": "Deferred Re-exports proposal",
       "source": "https://github.com/tc39/proposal-deferred-reexports",
-      "commit": "077b1319aaf95f5da0b341d7300cee504d8c6e27",
+      "commit": "b00470e38392ba63311dbec7e16e7d4713df45ee",
       "path": ["spec.emu"]
     },
     {

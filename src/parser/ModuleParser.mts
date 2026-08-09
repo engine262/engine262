@@ -51,11 +51,16 @@ export abstract class ModuleParser extends StatementParser {
           node.ImportClause = this.parseImportClause(importClause);
           this.scope.declare(node.ImportClause, 'import');
         }
-      } else if (this.test('defer') && this.testAhead(Token.MUL)) {
+      } else if (this.test('defer') && (this.testAhead(Token.MUL) || this.testAhead(Token.LBRACE))) {
         this.next(); // defer
         node.Phase = 'defer';
         const importClause = this.startNode<ParseNode.ImportClause>();
-        importClause.NameSpaceImport = this.parseNameSpaceImport();
+        if (this.test(Token.MUL)) {
+          importClause.NameSpaceImport = this.parseNameSpaceImport();
+        } else {
+          this.expect(Token.LBRACE);
+          importClause.NameSpaceImport = this.parseFilteredNameSpaceImport(this.parseNamedImports());
+        }
         node.ImportClause = this.finishNode(importClause, 'ImportClause');
         this.scope.declare(node.ImportClause, 'import');
       } else {
@@ -91,7 +96,12 @@ export abstract class ModuleParser extends StatementParser {
     if (this.test(Token.MUL)) {
       node.NameSpaceImport = this.parseNameSpaceImport();
     } else if (this.eat(Token.LBRACE)) {
-      node.NamedImports = this.parseNamedImports();
+      const namedImports = this.parseNamedImports();
+      if (this.eat('as')) {
+        node.NameSpaceImport = this.parseFilteredNameSpaceImport(namedImports);
+      } else {
+        node.NamedImports = namedImports;
+      }
     } else {
       this.unexpected();
     }
@@ -113,6 +123,25 @@ export abstract class ModuleParser extends StatementParser {
     this.expect(Token.MUL);
     this.expect('as');
     node.ImportedBinding = this.parseBindingIdentifier();
+    return this.finishNode(node, 'NameSpaceImport');
+  }
+
+  parseFilteredNameSpaceImport(namedImports: ParseNode.NamedImports): ParseNode.NameSpaceImport {
+    const node = this.startNode<ParseNode.NameSpaceImport>();
+    node.NamedImports = namedImports;
+    node.ImportedBinding = this.parseBindingIdentifier();
+
+    const names = new Set<string>();
+    for (const specifier of namedImports.ImportsList) {
+      if (specifier.ModuleExportName) {
+        this.addEarlyError(Throw.SyntaxError('Filtered namespace imports cannot contain aliased or string import specifiers'), specifier);
+      }
+      const name = StringValue(specifier.ImportedBinding).stringValue();
+      if (names.has(name)) {
+        this.addEarlyError(Throw.SyntaxError('Filtered namespace imports cannot contain duplicate names'), specifier);
+      }
+      names.add(name);
+    }
     return this.finishNode(node, 'NameSpaceImport');
   }
 
@@ -233,7 +262,23 @@ export abstract class ModuleParser extends StatementParser {
           break;
         case Token.LBRACE: {
           const NamedExports = this.parseNamedExports();
+          if (this.eat('as')) {
+            const namespaceExportName = this.parseModuleExportName();
+            (NamedExports as Mutable<ParseNode.NamedExports>).NamespaceExportName = namespaceExportName;
+            this.scope.declare(namespaceExportName, 'export');
+            if (!this.test('from')) {
+              this.raise(Throw.SyntaxError('Filtered namespace exports must be followed by `from`'));
+            }
+            for (const specifier of NamedExports.ExportsList) {
+              if (specifier.localName !== specifier.exportName) {
+                this.addEarlyError(Throw.SyntaxError('Filtered namespace exports cannot contain aliased export specifiers'), specifier);
+              }
+            }
+          }
           if (this.test('from')) {
+            if (!NamedExports.NamespaceExportName) {
+              this.scope.declare(NamedExports.ExportsList, 'export');
+            }
             node.ExportFromClause = NamedExports;
             node.FromClause = this.parseFromClause();
             node.Phase = isDefer ? 'defer' : 'evaluation';
@@ -250,6 +295,7 @@ export abstract class ModuleParser extends StatementParser {
               }
             });
             node.NamedExports = NamedExports;
+            this.scope.declare(node.NamedExports.ExportsList, 'export');
             this.scope.checkUndefinedExports(node.NamedExports);
           }
           this.semicolon();
@@ -318,7 +364,6 @@ export abstract class ModuleParser extends StatementParser {
     } else {
       node.exportName = node.localName;
     }
-    this.scope.declare(node.exportName, 'export');
     return this.finishNode(node, 'ExportSpecifier');
   }
 

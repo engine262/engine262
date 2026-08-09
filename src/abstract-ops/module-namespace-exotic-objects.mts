@@ -135,7 +135,7 @@ const InternalMethods = {
     const m = O.Module;
     // 5. If m is a Cyclic Module Record and m.GetOptionalIndirectExportsModuleRequests(« P ») is not empty, then
     if (m instanceof CyclicModuleRecord) {
-      const importedNames: ImportedNamesValue = [P as JSStringValue];
+      const importedNames: ImportedNamesValue = [P.stringValue()];
       if (m.GetOptionalIndirectExportsModuleRequests(importedNames).length > 0) {
         // a. Perform ? EvaluateModuleSync(m, « P »).
         Q(yield* EvaluateModuleSync(m, importedNames));
@@ -151,8 +151,7 @@ const InternalMethods = {
     Assert(!(targetModule instanceof UndefinedValue));
     // 10. If binding.[[BindingName]] is namespace, then
     if (binding.BindingName === 'namespace') {
-      // a. Return GetModuleNamespace(targetModule, evaluation).
-      return GetModuleNamespace(targetModule, 'evaluation');
+      return GetModuleNamespace(targetModule, 'evaluation', 'all');
     }
     if (binding.BindingName === 'source') {
       Assert(!!targetModule.ModuleSource);
@@ -160,8 +159,7 @@ const InternalMethods = {
     }
     // 11. If binding.[[BindingName]] is deferred-namespace, then
     if (binding.BindingName === 'deferred-namespace') {
-      // a. Return GetModuleNamespace(targetModule, defer).
-      return GetModuleNamespace(targetModule, 'defer');
+      return GetModuleNamespace(targetModule, 'defer', 'all');
     }
     // 12. Let targetEnv be targetModule.[[Environment]].
     const targetEnv = targetModule.Environment;
@@ -237,22 +235,10 @@ export function ModuleNamespaceCreate(
   let toStringTag: JSStringValue;
   // 9. If phase is defer, then
   if (phase === 'defer') {
-    // a. Assert: module.[[DeferredNamespace]] is empty.
-    Assert(module.DeferredNamespace === undefined);
-    // b. Set module.[[DeferredNamespace]] to M.
-    (module as Mutable<AbstractModuleRecord>).DeferredNamespace = M;
-    // c. Set M.[[Deferred]] to true.
     M.Deferred = true;
-    // d. Let toStringTag be "Deferred Module".
     toStringTag = Value('Deferred Module');
   } else { // 10. Else,
-    // a. Assert: module.[[Namespace]] is empty.
-    Assert(module.Namespace === undefined);
-    // b. Set module.[[Namespace]] to M.
-    (module as Mutable<AbstractModuleRecord>).Namespace = M;
-    // c. Set M.[[Deferred]] to false.
     M.Deferred = false;
-    // d. Let toStringTag be "Module".
     toStringTag = Value('Module');
   }
   // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.

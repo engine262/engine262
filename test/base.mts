@@ -3,7 +3,8 @@ import { fileSystemModuleLoader, fileSystemModuleLoaderSync } from '../lib-src/n
 import { supportColor, type SkipReason } from './tui.mts';
 import {
   Agent, ManagedRealm, type OrdinaryObject, OrdinaryObjectCreate, createTest262Intrinsics,
-  ModuleCache,
+  ModuleCache, SyntheticModuleRecord,
+  createBuiltinModuleLoader,
   composeModuleLoaders,
 } from '#self';
 
@@ -142,7 +143,27 @@ export function createAgent({ features = [], asyncModuleLoader = false }: Create
     features,
     supportedImportAttributes: ['type'],
     hostHooks: {
-      HostLoadImportedModule: composeModuleLoaders([asyncModuleLoader ? fileSystemModuleLoader : fileSystemModuleLoaderSync]),
+      HostLoadImportedModule: composeModuleLoaders([
+        createBuiltinModuleLoader({
+          isBuiltinModule: (specifier) => specifier === '<module source>',
+          builtinModules: new Map([[{ Specifier: '<module source>', Attributes: [] }, (realm) => {
+            const sourcePrototype = OrdinaryObjectCreate(realm.Intrinsics['%AbstractModuleSource.prototype%']);
+            const moduleSource = OrdinaryObjectCreate(sourcePrototype);
+            return new SyntheticModuleRecord({
+              Realm: realm,
+              Environment: undefined,
+              ExportNames: [],
+              EvaluationSteps() {
+                return undefined;
+              },
+              HostDefined: {},
+              ModuleSource: moduleSource,
+              Namespace: undefined,
+            });
+          }]]),
+        }),
+        asyncModuleLoader ? fileSystemModuleLoader : fileSystemModuleLoaderSync,
+      ]),
     },
     onDebugger() {
       // attach an empty debugger to make sure our debugger infrastructure does not break the engine

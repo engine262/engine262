@@ -1,4 +1,5 @@
 import { IncrementModuleAsyncEvaluationCount } from '../execution-context/Agent.mts';
+import type { Mutable } from '../utils/language.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
@@ -41,7 +42,7 @@ import {
   type HostLoadImportedModulePayloadOpaque,
 } from '#self';
 
-const DEFAULT_NAME = Value('default');
+const DEFAULT_NAME = 'default';
 
 function isAllNames(v: ImportedNamesValue): v is 'all' {
   return v === 'all';
@@ -49,13 +50,6 @@ function isAllNames(v: ImportedNamesValue): v is 'all' {
 function isAllButDefault(v: ImportedNamesValue): v is 'all-but-default' {
   return v === 'all-but-default';
 }
-function jsStringEquals(a: JSStringValue, b: JSStringValue): boolean {
-  return a === b || a.stringValue() === b.stringValue();
-}
-function listIncludesString(list: readonly JSStringValue[], name: JSStringValue): boolean {
-  return list.some((n) => jsStringEquals(n, name));
-}
-
 /** https://tc39.es/proposal-deferred-reexports/#sec-MergeImportedNames */
 export function MergeImportedNames(a: ImportedNamesValue, b: ImportedNamesValue): ImportedNamesValue {
   // 1. If a is all or b is all, return all.
@@ -63,11 +57,11 @@ export function MergeImportedNames(a: ImportedNamesValue, b: ImportedNamesValue)
     return 'all';
   }
   // 2. If a is all-but-default and b is a List of Strings that contains "default", return all.
-  if (isAllButDefault(a) && !isAllButDefault(b) && listIncludesString(b as readonly JSStringValue[], DEFAULT_NAME)) {
+  if (isAllButDefault(a) && !isAllButDefault(b) && b.includes(DEFAULT_NAME)) {
     return 'all';
   }
   // 3. If b is all-but-default and a is a List of Strings that contains "default", return all.
-  if (isAllButDefault(b) && !isAllButDefault(a) && listIncludesString(a as readonly JSStringValue[], DEFAULT_NAME)) {
+  if (isAllButDefault(b) && !isAllButDefault(a) && a.includes(DEFAULT_NAME)) {
     return 'all';
   }
   // 4. If a is all-but-default or b is all-but-default, return all-but-default.
@@ -76,12 +70,12 @@ export function MergeImportedNames(a: ImportedNamesValue, b: ImportedNamesValue)
   }
   // 5. Assert: a and b are a List of Strings.
   // 6. Let merged be a copy of the List a.
-  const result: JSStringValue[] = [...(a as readonly JSStringValue[])];
+  const result: string[] = [...a];
   // 7. For each String name of b, do
-  for (const name of b as readonly JSStringValue[]) {
+  for (const name of b) {
     // a. If merged does not contain name, then
     //    i. Append name to merged.
-    if (!listIncludesString(result, name)) {
+    if (!result.includes(name)) {
       result.push(name);
     }
   }
@@ -109,22 +103,22 @@ export function ExcludeImportedNames(a: ImportedNamesValue, b: ImportedNamesValu
     return 'all-but-default';
   }
   // 4. Assert: a is a List of Strings.
-  const aList = a as readonly JSStringValue[];
+  const aList = a;
   // 5. If b is all-but-default, then
   if (isAllButDefault(b)) {
     // a. If a contains "default", return « "default" ».
-    if (listIncludesString(aList, DEFAULT_NAME)) {
+    if (aList.includes(DEFAULT_NAME)) {
       return [DEFAULT_NAME];
     }
     // b. Return « ».
     return [];
   }
   // 6. Assert: b is a List of Strings.
-  const bList = b as readonly JSStringValue[];
+  const bList = b;
   // 7. Return a new List containing all the elements of a that are not also elements of b.
-  const result: JSStringValue[] = [];
+  const result: string[] = [];
   for (const name of aList) {
-    if (!listIncludesString(bList, name)) {
+    if (!bList.includes(name)) {
       result.push(name);
     }
   }
@@ -980,34 +974,41 @@ export function AllImportAttributesSupported(attributes: readonly ImportAttribut
 export function GetModuleNamespace(
   module: AbstractModuleRecord,
   phase: 'defer' | 'evaluation',
+  importedNames: 'all' | readonly string[] = 'all',
 ): ObjectValue {
-  // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
   if (module instanceof CyclicModuleRecord) {
     Assert(module.Status !== 'new' && module.Status !== 'unlinked');
   }
-  // 2. If phase is defer, let namespace be module.[[DeferredNamespace]]; otherwise let namespace be module.[[Namespace]].
-  let namespace = phase === 'defer' ? module.DeferredNamespace : module.Namespace;
-  // 3. If namespace is empty, then
+  let namespace;
+  if (importedNames === 'all') {
+    if (phase === 'defer') {
+      namespace = module.DeferredNamespace;
+    } else {
+      namespace = module.Namespace;
+    }
+  }
   if (namespace === undefined) {
-    // a. Let exportedNames be module.GetExportedNames().
     const exportedNames = module.GetExportedNames();
-    // b. Let unambiguousNames be a new empty List.
     const unambiguousNames = [];
-    // c. For each element name of exportedNames, do
     for (const name of exportedNames) {
-      if (phase !== 'defer' || name.stringValue() !== 'then') {
-        // i. Let resolution be module.ResolveExport(name).
-        const resolution = module.ResolveExport(name);
-        // ii. If resolution is a ResolvedBinding Record, append name to unambiguousNames.
-        if (resolution instanceof ResolvedBindingRecord) {
-          unambiguousNames.push(name);
+      if (importedNames === 'all' || importedNames.includes(name.stringValue())) {
+        if (phase !== 'defer' || name.stringValue() !== 'then') {
+          const resolution = module.ResolveExport(name);
+          if (resolution instanceof ResolvedBindingRecord) {
+            unambiguousNames.push(name);
+          }
         }
       }
     }
-    // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames, phase).
     namespace = ModuleNamespaceCreate(module, unambiguousNames, phase);
+    if (importedNames === 'all') {
+      if (phase === 'defer') {
+        (module as Mutable<AbstractModuleRecord>).DeferredNamespace = namespace;
+      } else {
+        (module as Mutable<AbstractModuleRecord>).Namespace = namespace;
+      }
+    }
   }
-  // 4. Return namespace.
   return namespace;
 }
 

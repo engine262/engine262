@@ -79,7 +79,19 @@ interface DeclarativeEnvironmentBinding {
 }
 
 interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
-  readonly target: [AbstractModuleRecord, JSStringValue];
+  readonly target?: [AbstractModuleRecord, JSStringValue];
+}
+
+/**
+ * The deferred-reexports proposal refers to a "deferred initialization binding"
+ * but does not define a record structure for one.
+ */
+interface DeferredInitializationBinding extends ModuleEnvironmentBinding {
+  readonly initializationSteps: () => Value;
+}
+
+function isDeferredInitializationBinding(binding: ModuleEnvironmentBinding): binding is DeferredInitializationBinding {
+  return 'initializationSteps' in binding;
 }
 
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
@@ -389,7 +401,7 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
     // 4. If the binding for N is an indirect binding, then
     if (binding.indirect === true) {
       // a. Let M and N2 be the indirection values provided when this binding for N was created.
-      const [M, N2] = binding.target;
+      const [M, N2] = binding.target!;
       // b.Let targetEnv be M.[[Environment]].
       const targetEnv = M.Environment;
       // c. If targetEnv is undefined, throw a ReferenceError exception.
@@ -399,9 +411,14 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       // d. Return ? targetEnv.GetBindingValue(N2, true).
       return yield* targetEnv.GetBindingValue(N2, Value.true);
     }
-    // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
+    // 5. If the binding for N is an uninitialized deferred initialization binding, initialize it.
     if (binding.initialized === false) {
-      return Throw.ReferenceError('$1 cannot be used before initialization', N);
+      if (isDeferredInitializationBinding(binding)) {
+        const value = binding.initializationSteps();
+        yield* envRec.InitializeBinding(N, value);
+      } else {
+        return Throw.ReferenceError('$1 cannot be used before initialization', N);
+      }
     }
     // 6. Return the value currently bound to N in envRec.
     return NormalCompletion(binding.value!);
@@ -439,12 +456,30 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       target: [M, N2],
       initialized: true,
       mark(m: GCMarker) {
-        m(this.target[0]);
-        m(this.target[1]);
+        m(this.target?.[0]);
+        m(this.target?.[1]);
       },
     });
     // 6. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
+  }
+
+  /** https://tc39.es/proposal-deferred-reexports/#sec-createdeferredinitializationbinding */
+  CreateDeferredInitializationBinding(N: JSStringValue, initializationSteps: () => Value) {
+    Assert(X(this.HasBinding(N)) === Value.false);
+    // 2. Create an immutable deferred initialization binding in envRec for name whose deferred initialization steps is initializationSteps, and record that the binding is uninitialized and that it is a strict binding.
+    const binding: DeferredInitializationBinding = {
+      indirect: false,
+      initialized: false,
+      mutable: false,
+      strict: true,
+      deletable: false,
+      initializationSteps,
+      mark(m) {
+        m(this.value);
+      },
+    };
+    this.bindings.set(N, binding);
   }
 }
 
