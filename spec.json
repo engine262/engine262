@@ -21,14 +21,14 @@
       "name": "iterator-join",
       "description": "Iterator.prototype.join proposal",
       "source": "https://github.com/tc39/proposal-iterator-join",
-      "commit": "68db99eea27ec8098e8ba521d69897a6da09d523",
+      "commit": "8056e788b091100524f0c1c2bf6fc1ca57486fc0",
       "path": ["spec.html"]
     },
     {
       "name": "await-dictionary",
       "description": "Promise.allKeyed proposal",
       "source": "https://github.com/tc39/proposal-await-dictionary",
-      "commit": "75e4432e7fab49ec7ada6463ec53f30216326ca4",
+      "commit": "15fd85c015ccc5a0e14f33ac7de909404e053fa0",
       "path": ["spec.emu"]
     },
     {
@@ -42,7 +42,7 @@
       "name": "regexp-buffer-boundaries",
       "description": "RegExp Buffer Boundaries proposal",
       "source": "https://github.com/tc39/proposal-regexp-buffer-boundaries",
-      "commit": "55f2b3f58db39de4370808144df4f6621355accf",
+      "commit": "23279d1d82df38972fe5fba6029910486b194591",
       "path": ["spec/index.html"]
     },
     {

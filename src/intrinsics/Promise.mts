@@ -265,10 +265,15 @@ function* Promise_allKeyed([promises = Value.undefined]: Arguments, { thisValue 
 }
 
 /** https://tc39.es/proposal-await-dictionary/#sec-performpromiseallkeyed */
+interface KeyedPromiseCombinatorEntry {
+  readonly Key: PropertyKeyValue;
+  Value: Value;
+}
+
+/** https://tc39.es/proposal-await-dictionary/#sec-performpromiseallkeyed */
 function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: ObjectValue, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   const allKeys: PropertyKeyValue[] = Q(yield* promises.OwnPropertyKeys());
-  const keys: PropertyKeyValue[] = [];
-  const values: Value[] = [];
+  const entries: KeyedPromiseCombinatorEntry[] = [];
   const remainingElementsCount = { Value: 1 };
   let index: number = 0;
 
@@ -280,17 +285,14 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
       // i. Let value be ? Get(promises, key).
       const value = Q(yield* Get(promises, key));
 
-      keys.push(key);
-      values.push(Value.undefined);
+      entries.push({ Key: key, Value: Value.undefined });
 
       // iv. Let nextPromise be ? Call(promiseResolve, constructor, « value »).
       const nextPromise = Q(yield* Call(promiseResolve, constructor, [value]));
       const alreadyCalled = { Value: false };
 
 
-      // vi. Let onFulfilledSteps be a new Abstract Closure with parameters (x) that captures variant, keys, values,
-      //     resultCapability, and remainingElementsCount and performs the following steps when called:
-      const onFulfilledSteps = function* onFulfilledSteps([x = Value.undefined]: Arguments): ValueEvaluator {
+      const onFulfilledSteps = function* onFulfilledSteps([value = Value.undefined]: Arguments): ValueEvaluator {
         const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
         if (F.AlreadyCalled.Value === true) {
           return Value.undefined;
@@ -299,20 +301,20 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
 
         const thisIndex: number = F.Index;
         if (variant === 'all') {
-          values[thisIndex] = x!;
+          entries[thisIndex].Value = value;
         } else {
           Assert(variant === 'all-settled');
           const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
           // c. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
           X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
           // d. Perform ! CreateDataPropertyOrThrow(obj, "value", x).
-          X(CreateDataProperty(obj, Value('value'), x));
-          values[thisIndex] = obj;
+          X(CreateDataProperty(obj, Value('value'), value));
+          entries[thisIndex].Value = obj;
         }
 
         remainingElementsCount.Value -= 1;
         if (remainingElementsCount.Value === 0) {
-          const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(keys, values);
+          const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(entries);
           // b. Return ? Call(resultCapability.[[Resolve]], undefined, « result »).
           return Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
         }
@@ -331,9 +333,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
         onRejected = resultCapability.Reject;
       } else {
         Assert(variant === 'all-settled');
-        // 2. Let onRejectedSteps be a new Abstract Closure with parameters (x) that captures keys, values,
-        //    resultCapability, and remainingElementsCount and performs the following steps when called:
-        const onRejectedSteps = function* onRejectedSteps([x = Value.undefined]: Arguments): ValueEvaluator {
+        const onRejectedSteps = function* onRejectedSteps([error = Value.undefined]: Arguments): ValueEvaluator {
           const F = surroundingAgent.activeFunctionObject as PromiseAllRejectElementFunctionObject;
 
           if (F.AlreadyCalled.Value === true) {
@@ -346,14 +346,14 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
           // d. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
           X(CreateDataProperty(obj, Value('status'), Value('rejected')));
           // e. Perform ! CreateDataPropertyOrThrow(obj, "reason", x).
-          X(CreateDataProperty(obj, Value('reason'), x));
+          X(CreateDataProperty(obj, Value('reason'), error));
 
-          values[thisIndex] = obj;
+          entries[thisIndex].Value = obj;
 
           remainingElementsCount.Value -= 1;
           if (remainingElementsCount.Value === 0) {
-            // i. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
-            const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(keys, values);
+            // i. Let result be CreateKeyedPromiseCombinatorResultObject(entries).
+            const result: ObjectValue = CreateKeyedPromiseCombinatorResultObject(entries);
             // ii. Return ? Call(resultCapability.[[Resolve]], undefined, « result »).
             return Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
           }
@@ -378,10 +378,10 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
 
   if (remainingElementsCount.Value === 0) {
     /*
-    a. NOTE: This can happen even if keys was non-empty if an ill-behaved thenable synchronously invoked the callback passed to its "then" method.
-    b. Let result be CreateKeyedPromiseCombinatorResultObject(keys, values).
+    a. NOTE: This can happen even if entries was non-empty if an ill-behaved thenable synchronously invoked the callback passed to its "then" method.
+    b. Let result be CreateKeyedPromiseCombinatorResultObject(entries).
     */
-    const result = CreateKeyedPromiseCombinatorResultObject(keys, values);
+    const result = CreateKeyedPromiseCombinatorResultObject(entries);
     // c. Perform ? Call(resultCapability.[[Resolve]], undefined, « result »).
     Q(yield* Call(resultCapability.Resolve, Value.undefined, [result]));
   }
@@ -390,11 +390,10 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
 }
 
 /** https://tc39.es/proposal-await-dictionary/#sec-createkeyedpromisecombinatorresultobject */
-function CreateKeyedPromiseCombinatorResultObject(keys: readonly PropertyKeyValue[], values: readonly Value[]): OrdinaryObject {
-  Assert(keys.length === values.length);
+function CreateKeyedPromiseCombinatorResultObject(entries: readonly KeyedPromiseCombinatorEntry[]): OrdinaryObject {
   const obj = OrdinaryObjectCreate(Value.null);
-  for (let i = 0; i < keys.length; i += 1) {
-    X(CreateDataPropertyOrThrow(obj, keys[i], values[i]));
+  for (const entry of entries) {
+    X(CreateDataPropertyOrThrow(obj, entry.Key, entry.Value));
   }
   return obj;
 }
@@ -793,8 +792,8 @@ export function bootstrapPromise(realmRec: Realm) {
     ['try', Promise_try, 1],
     ['withResolvers', Promise_withResolvers, 0],
     [wellKnownSymbols.species, [Promise_symbolSpecies]],
-    surroundingAgent.feature('promise.allkeyed') ? ['allKeyed', Promise_allKeyed, 1] : undefined,
-    surroundingAgent.feature('promise.allkeyed') ? ['allSettledKeyed', Promise_allSettledKeyed, 1] : undefined,
+    ['allKeyed', Promise_allKeyed, 1],
+    ['allSettledKeyed', Promise_allSettledKeyed, 1],
   ]);
 
   X(promiseConstructor.DefineOwnProperty(Value('prototype'), Descriptor({

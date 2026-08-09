@@ -9,7 +9,6 @@ Temporal = temporal
 export-defer = export-defer
 
 # To be implemented
--await-dictionary
 -explicit-resource-management
 -immutable-arraybuffer
 

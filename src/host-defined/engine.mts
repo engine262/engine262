@@ -74,12 +74,6 @@ export const FEATURES = ([
     url: 'https://github.com/tc39/proposal-iterator-join',
     enableInPlayground: true,
   },
-  {
-    name: 'Promise.allKeyed',
-    flag: 'promise.allkeyed',
-    url: 'https://github.com/tc39/proposal-await-dictionary',
-    enableInPlayground: true,
-  },
   // stage 2
   {
     name: 'FinalizationRegistry#cleanupSome',
