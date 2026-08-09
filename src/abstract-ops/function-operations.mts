@@ -51,7 +51,6 @@ import {
   NewPromiseCapability,
   AsyncFunctionStart,
   Get,
-  R,
   ToIntegerOrInfinity,
   InitializePrivateMethods,
   getActiveScriptId,
@@ -717,23 +716,22 @@ export function PrepareForTailCall() {
 
 /** https://tc39.es/proposal-shadowrealm/#sec-copynameandlength */
 export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, prefix?: string, argCount = 0): PlainEvaluator {
-  let L = 0;
+  let length = 0;
   const targetHasLength = Q(yield* HasOwnProperty(Target, Value('length')));
   if (targetHasLength === Value.true) {
-    const targetLen = Q(yield* Get(Target, Value('length')));
-    if (targetLen instanceof NumberValue) {
-      if (R(targetLen) === Infinity) {
-        L = Infinity;
-      } else if (R(targetLen) === -Infinity) {
-        L = 0;
+    const targetLength = Q(yield* Get(Target, Value('length')));
+    if (targetLength instanceof NumberValue) {
+      const targetLengthAsInt = X(ToIntegerOrInfinity(targetLength));
+      if (targetLengthAsInt === Infinity) {
+        length = Infinity;
+      } else if (targetLengthAsInt === -Infinity) {
+        length = 0;
       } else {
-        const targetLenAsInt = X(ToIntegerOrInfinity(targetLen));
-        Assert(Number.isFinite(targetLenAsInt));
-        L = Math.max(targetLenAsInt - argCount, 0);
+        length = Math.max(targetLengthAsInt - argCount, 0);
       }
     }
   }
-  SetFunctionLength(F, L);
+  SetFunctionLength(F, length);
   let targetName = Q(yield* Get(Target, Value('name')));
   if (!(targetName instanceof JSStringValue)) {
     targetName = Value('');

@@ -5,8 +5,8 @@ import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { surroundingAgent } from '#self';
 import {
-  RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
-  SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
+  RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer, ToClampedIndex,
+  SpeciesConstructor, Construct, SameValue, CopyDataBlockBytes,
   F,
   type ArrayBufferObject,
   type ResizableArrayBufferObject,
@@ -119,30 +119,10 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
-  const len = O.ArrayBufferByteLength;
+  const length = O.ArrayBufferByteLength;
   // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
-  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
-  let first;
-  // 7. If relativeStart < 0, let first be max((len + relativeStart), 0); else let first be min(relativeStart, len).
-  if (relativeStart < 0) {
-    first = Math.max(len + relativeStart, 0);
-  } else {
-    first = Math.min(relativeStart, len);
-  }
-  let relativeEnd;
-  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
-  if (end === Value.undefined) {
-    relativeEnd = len;
-  } else {
-    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
-  }
-  let final;
-  // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
-  if (relativeEnd < 0) {
-    final = Math.max(len + relativeEnd, 0);
-  } else {
-    final = Math.min(relativeEnd, len);
-  }
+  const first = Q(yield* ToClampedIndex(start, length));
+  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
   // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
@@ -175,8 +155,9 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   const fromBuf = O.ArrayBufferData!;
   const toBuf = newO.ArrayBufferData!;
   const currentLen = O.ArrayBufferByteLength;
-  if (first < currentLen) {
-    const count = Math.min(newLen, currentLen - first);
+  const maxCount = currentLen - first;
+  if (maxCount > 0) {
+    const count = Math.min(newLen, maxCount);
     CopyDataBlockBytes(toBuf, 0, fromBuf, first, count);
   }
   return newO;

@@ -33,7 +33,7 @@ import {
   Z,
   F, R,
 } from './all.mts';
-import { modulo, truncate } from './math.mts';
+import { clamp, modulo, truncate } from './math.mts';
 import {
   surroundingAgent,
   Throw,
@@ -205,6 +205,21 @@ export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<n
   // 4. If number is -∞𝔽, return -∞.
   if (!number.isFinite()) return number.value;
   return truncate(R(number));
+}
+
+/** https://tc39.es/ecma262/#sec-toabsoluteindex */
+export function* ToAbsoluteIndex(value: Value | number, length: number): PlainEvaluator<number> {
+  let int = Q(yield* ToIntegerOrInfinity(value));
+  if (Number.isFinite(int) && int < 0) {
+    int = length + int;
+  }
+  return int;
+}
+
+/** https://tc39.es/ecma262/#sec-toclampedindex */
+export function* ToClampedIndex(value: Value | number, length: number): PlainEvaluator<number> {
+  const index = Q(yield* ToAbsoluteIndex(value, length));
+  return clamp(0, index, length);
 }
 
 /** https://tc39.es/ecma262/#sec-tofixedsizeinteger */
@@ -444,15 +459,10 @@ export function* ToPropertyKey(argument: Value): ValueEvaluator<PropertyKeyValue
 }
 
 /** https://tc39.es/ecma262/#sec-tolength */
-export function* ToLength(argument: Value): ValueEvaluator<NumberValue> {
-  // 1. Let len be ? ToIntegerOrInfinity(argument).
-  const len = Q(yield* ToIntegerOrInfinity(argument));
-  // 2. If len ≤ 0, return +0𝔽.
-  if (len <= 0) {
-    return F(+0);
-  }
-  // 3. Return 𝔽(min(len, 253 - 1)).
-  return F(Math.min(len, (2 ** 53) - 1));
+export function* ToLength(arg: Value): ValueEvaluator<NumberValue> {
+  const length = Q(yield* ToIntegerOrInfinity(arg));
+  const clampedLen = clamp(0, length, (2 ** 53) - 1);
+  return F(clampedLen);
 }
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */

@@ -20,6 +20,7 @@ import {
 } from '../static-semantics/all.mts';
 import { Q, X } from '../completion.mts';
 import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
+import { clamp } from '../abstract-ops/math.mts';
 import { assignProps } from './bootstrap.mts';
 import {
   surroundingAgent,
@@ -36,6 +37,7 @@ import {
   RegExpCreate,
   RequireObjectCoercible,
   ToIntegerOrInfinity,
+  ToAbsoluteIndex,
   ToNumber,
   ToString,
   ToUint32,
@@ -45,6 +47,7 @@ import {
   F, R, R as MathematicalValue,
   Realm,
   Unicode,
+  ToClampedIndex,
 } from '#self';
 
 
@@ -119,27 +122,21 @@ function* StringProto_concat(args: Arguments, { thisValue }: FunctionCallContext
 function* StringProto_endsWith([searchString = Value.undefined, endPosition = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
+  const string = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
     return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.endsWith');
   }
   const searchStr = Q(yield* ToString(searchString)).stringValue();
-  const len = S.length;
-  let pos;
-  if (endPosition === Value.undefined) {
-    pos = len;
-  } else {
-    pos = Q(yield* ToIntegerOrInfinity(endPosition));
-  }
-  const end = Math.min(Math.max(pos, 0), len);
+  const length = string.length;
+  const end = endPosition === Value.undefined ? length : clamp(0, Q(yield* ToIntegerOrInfinity(endPosition)), length);
   const searchLength = searchStr.length;
   const start = end - searchLength;
   if (start < 0) {
     return Value.false;
   }
   for (let i = 0; i < searchLength; i += 1) {
-    if (S.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
+    if (string.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
       return Value.false;
     }
   }
@@ -150,22 +147,21 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
 function* StringProto_includes([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
+  const string = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
     return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.includes');
   }
   const searchStr = Q(yield* ToString(searchString)).stringValue();
-  const pos = Q(yield* ToIntegerOrInfinity(position));
-  Assert(!(position === Value.undefined) || pos === 0);
-  const len = S.length;
-  const start = Math.min(Math.max(pos, 0), len);
+  const length = string.length;
+  const start = clamp(0, Q(yield* ToIntegerOrInfinity(position)), length);
+  Assert(!(position === Value.undefined) || start === 0);
   const searchLen = searchStr.length;
   let k = start;
-  while (k + searchLen <= len) {
+  while (k + searchLen <= length) {
     let match = true;
     for (let j = 0; j < searchLen; j += 1) {
-      if (searchStr[j] !== S[k + j]) {
+      if (searchStr[j] !== string[k + j]) {
         match = false;
         break;
       }
@@ -183,19 +179,17 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   // 2. Let S be ? ToString(O).
-  const S = Q(yield* ToString(O));
+  const string = Q(yield* ToString(O));
   // 3. Let searchStr be ? ToString(searchString).
   const searchStr = Q(yield* ToString(searchString));
   // 4. Let pos be ? ToIntegerOrInfinity(position).
-  const pos = Q(yield* ToIntegerOrInfinity(position));
-  // 5. Assert: If position is undefined, then pos is 0.
-  Assert(!(position === Value.undefined) || pos === 0);
   // 6. Let len be the length of S.
-  const len = S.stringValue().length;
+  const length = string.stringValue().length;
   // 7. Let start be min(max(pos, 0), len).
-  const start = Math.min(Math.max(pos, 0), len);
+  const start = clamp(0, Q(yield* ToIntegerOrInfinity(position)), length);
+  Assert(!(position === Value.undefined) || start === 0);
   // 8. Return ! StringIndexOf(S, searchStr, start).
-  return X(StringIndexOf(S, searchStr, start));
+  return X(StringIndexOf(string, searchStr, start));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
@@ -212,28 +206,23 @@ function* StringProto_isWellFormed(_args: Arguments, { thisValue }: FunctionCall
 function* StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
+  const string = Q(yield* ToString(O)).stringValue();
   const searchStr = Q(yield* ToString(searchString)).stringValue();
-  const numPos = Q(yield* ToNumber(position));
-  Assert(!(position === Value.undefined) || numPos.isNaN());
-  let pos;
-  if (numPos.isNaN()) {
-    pos = Infinity;
-  } else {
-    pos = X(ToIntegerOrInfinity(numPos));
-  }
-  const len = S.length;
-  const start = Math.min(Math.max(pos, 0), len);
-  const searchLen = searchStr.length;
-  if (len < searchLen) {
+  const numberPosition = Q(yield* ToNumber(position));
+  const length = string.length;
+  const searchLength = searchStr.length;
+  const maxStart = length - searchLength;
+  if (maxStart < 0) {
     return F(-1);
   }
+  const start = numberPosition.isNaN() ? maxStart : clamp(0, X(ToIntegerOrInfinity(numberPosition)), maxStart);
+  Assert(!(position === Value.undefined) || start === maxStart);
   let k = start;
   while (k >= 0) {
-    if (k + searchLen <= len) {
+    if (k + searchLength <= length) {
       let match = true;
-      for (let j = 0; j < searchLen; j += 1) {
-        if (searchStr[j] !== S[k + j]) {
+      for (let j = 0; j < searchLength; j += 1) {
+        if (searchStr[j] !== string[k + j]) {
           match = false;
           break;
         }
@@ -511,29 +500,12 @@ function* StringProto_search([regexp = Value.undefined]: Arguments, { thisValue 
 function* StringProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
-  const len = S.length;
-  const intStart = Q(yield* ToIntegerOrInfinity(start));
-  let intEnd;
-  if (end === Value.undefined) {
-    intEnd = len;
-  } else {
-    intEnd = Q(yield* ToIntegerOrInfinity(end));
-  }
-  let from;
-  if (intStart < 0) {
-    from = Math.max(len + intStart, 0);
-  } else {
-    from = Math.min(intStart, len);
-  }
-  let to;
-  if (intEnd < 0) {
-    to = Math.max(len + intEnd, 0);
-  } else {
-    to = Math.min(intEnd, len);
-  }
-  const span = Math.max(to - from, 0);
-  return Value(S.slice(from, from + span));
+  const string = Q(yield* ToString(O)).stringValue();
+  const length = string.length;
+  const from = Q(yield* ToClampedIndex(start, length));
+  const to = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  if (from >= to) return Value('');
+  return Value(string.slice(from, to));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.split */
@@ -616,22 +588,21 @@ function* SplitMatch(S: JSStringValue, q: number, R: JSStringValue) {
 function* StringProto_startsWith([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
+  const string = Q(yield* ToString(O)).stringValue();
   const isRegExp = Q(yield* IsRegExp(searchString));
   if (isRegExp === Value.true) {
     return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.startsWith');
   }
   const searchStr = Q(yield* ToString(searchString)).stringValue();
-  const pos = Q(yield* ToIntegerOrInfinity(position));
-  Assert(!(position === Value.undefined) || pos === 0);
-  const len = S.length;
-  const start = Math.min(Math.max(pos, 0), len);
+  const length = string.length;
+  const start = clamp(0, Q(yield* ToIntegerOrInfinity(position)), length);
+  Assert(!(position === Value.undefined) || start === 0);
   const searchLength = searchStr.length;
-  if (searchLength + start > len) {
+  if (searchLength + start > length) {
     return Value.false;
   }
   for (let i = 0; i < searchLength; i += 1) {
-    if (S.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
+    if (string.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
       return Value.false;
     }
   }
@@ -642,20 +613,14 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
 function* StringProto_substring([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  const S = Q(yield* ToString(O)).stringValue();
-  const len = S.length;
-  const intStart = Q(yield* ToIntegerOrInfinity(start));
-  let intEnd;
-  if (end === Value.undefined) {
-    intEnd = len;
-  } else {
-    intEnd = Q(yield* ToIntegerOrInfinity(end));
-  }
-  const finalStart = Math.min(Math.max(intStart, 0), len);
-  const finalEnd = Math.min(Math.max(intEnd, 0), len);
+  const string = Q(yield* ToString(O)).stringValue();
+  const length = string.length;
+  const finalStart = clamp(0, Q(yield* ToIntegerOrInfinity(start)), length);
+  Assert(!(start === Value.undefined) || finalStart === 0);
+  const finalEnd = end === Value.undefined ? length : clamp(0, Q(yield* ToIntegerOrInfinity(end)), length);
   const from = Math.min(finalStart, finalEnd);
   const to = Math.max(finalStart, finalEnd);
-  return Value(S.slice(from, to));
+  return Value(string.slice(from, to));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
@@ -792,27 +757,15 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
 function* StringProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
-  // 2. Let S be ? ToString(O).
-  const S = Q(yield* ToString(O));
-  // 3. Let len be the length of S.
-  const len = S.stringValue().length;
-  // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
-  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
-  let k;
-  // 5. If relativeIndex ≥ 0, then
-  if (relativeIndex >= 0) {
-    // a. Let k be relativeIndex.
-    k = relativeIndex;
-  } else { // 6. Else,
-    // a. Let k be len + relativeIndex.
-    k = len + relativeIndex;
-  }
+  const string = Q(yield* ToString(O));
+  const length = string.stringValue().length;
+  const k = Q(yield* ToAbsoluteIndex(index, length));
   // 7. If k < 0 or k ≥ len, then return undefined.
-  if (k < 0 || k >= len) {
+  if (k < 0 || k >= length) {
     return Value.undefined;
   }
   // 8. Return the String value consisting of only the code unit at position k in S.
-  return Value(S.stringValue()[k]);
+  return Value(string.stringValue()[k]);
 }
 
 export function bootstrapStringPrototype(realmRec: Realm) {

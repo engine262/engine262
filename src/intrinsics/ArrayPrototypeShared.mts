@@ -22,7 +22,8 @@ import {
   Set,
   IsStrictlyEqual,
   ToBoolean,
-  ToIntegerOrInfinity,
+  ToAbsoluteIndex,
+  ToClampedIndex,
   ToObject,
   ToString,
   F, R,
@@ -252,27 +253,15 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
   function* ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
     Q(Validate?.(thisValue));
-    const O = Q(ToObject(thisValue));
-    const len = Q(yield* ToLength(O));
-    if (len === 0) {
+    const obj = Q(ToObject(thisValue));
+    const length = Q(yield* ToLength(obj));
+    if (length === 0) {
       return Value.false;
     }
-    const n = Q(yield* ToIntegerOrInfinity(fromIndex));
-    if (fromIndex === Value.undefined) {
-      Assert(n === 0);
-    }
-    let k;
-    if (n >= 0) {
-      k = n;
-    } else {
-      k = len + n;
-      if (k < 0) {
-        k = 0;
-      }
-    }
-    while (k < len) {
+    let k = Q(yield* ToClampedIndex(fromIndex, length));
+    while (k < length) {
       const kStr = X(ToString(F(k)));
-      const elementK = Q(yield* Get(O, kStr));
+      const elementK = Q(yield* Get(obj, kStr));
       if (SameValueZero(searchElement, elementK)) {
         return Value.true;
       }
@@ -286,27 +275,12 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   function* ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
     Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(yield* ToLength(O));
-    if (len === 0) {
+    const length = Q(yield* ToLength(O));
+    if (length === 0) {
       return F(-1);
     }
-    const n = Q(yield* ToIntegerOrInfinity(fromIndex));
-    if (fromIndex === Value.undefined) {
-      Assert(n === 0);
-    }
-    if (n >= len) {
-      return F(-1);
-    }
-    let k;
-    if (n >= 0) {
-      k = n;
-    } else {
-      k = len + n;
-      if (k < 0) {
-        k = 0;
-      }
-    }
-    while (k < len) {
+    let k = Q(yield* ToClampedIndex(fromIndex, length));
+    while (k < length) {
       const kStr = X(ToString(F(k)));
       const kPresent = Q(yield* HasProperty(O, kStr));
       if (kPresent === Value.true) {
@@ -358,21 +332,15 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
   function* ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
     Q(Validate?.(thisValue));
     const O = Q(ToObject(thisValue));
-    const len = Q(yield* ToLength(O));
-    if (len === 0) {
+    const length = Q(yield* ToLength(O));
+    if (length === 0) {
       return F(-1);
     }
-    let n;
-    if (fromIndex !== undefined) {
-      n = Q(yield* ToIntegerOrInfinity(fromIndex));
-    } else {
-      n = len - 1;
-    }
     let k;
-    if (n >= 0) {
-      k = Math.min(n, len - 1);
+    if (fromIndex === undefined) {
+      k = length - 1;
     } else {
-      k = len + n;
+      k = Math.min(Q(yield* ToAbsoluteIndex(fromIndex, length)), length - 1);
     }
     while (k >= 0) {
       const kStr = X(ToString(F(k)));

@@ -218,6 +218,7 @@ export interface Throw {
   | 'Cannot divide by zero'
   | 'Cannot make length of array-like object surpass the bounds of an integer index'
   | 'Cannot mix BigInt and other types, use explicit conversions'
+  | 'Cannot mix logical operator with ?? operator. Add parentheses to determine precedence.'
   | 'Cannot reduce an empty array with no initial value'
   | 'Cannot resize ArrayBuffer to bigger than maxByteLength'
   | 'Cannot serialize a BigInt to JSON'

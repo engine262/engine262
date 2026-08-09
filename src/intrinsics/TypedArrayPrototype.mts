@@ -33,6 +33,8 @@ import {
   SetValueInBuffer,
   LengthOfArrayLike,
   ToBoolean,
+  ToAbsoluteIndex,
+  ToClampedIndex,
   ToBigInt,
   ToIntegerOrInfinity,
   ToNumber,
@@ -98,52 +100,23 @@ function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCal
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
 function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue as TypedArrayObject;
-  let taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  let len = TypedArrayLength(taRecord);
-  const relativeTarget = Q(yield* ToIntegerOrInfinity(target));
-  let targetIndex;
-  if (relativeTarget === -Infinity) {
-    targetIndex = 0;
-  } else if (relativeTarget < 0) {
-    targetIndex = Math.max(len + relativeTarget, 0);
-  } else {
-    targetIndex = Math.min(relativeTarget, len);
-  }
-  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
-  let startIndex;
-  if (relativeStart === -Infinity) {
-    startIndex = 0;
-  } else if (relativeStart < 0) {
-    startIndex = Math.max(len + relativeStart, 0);
-  } else {
-    startIndex = Math.min(relativeStart, len);
-  }
-  let relativeEnd;
-  if (end === Value.undefined) {
-    relativeEnd = len;
-  } else {
-    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
-  }
-  let endIndex;
-  if (relativeEnd === -Infinity) {
-    endIndex = 0;
-  } else if (relativeEnd < 0) {
-    endIndex = Math.max(len + relativeEnd, 0);
-  } else {
-    endIndex = Math.min(relativeEnd, len);
-  }
-  let count = Math.min(endIndex - startIndex, len - targetIndex);
+  const obj = thisValue as TypedArrayObject;
+  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  let length = TypedArrayLength(taRecord);
+  const targetIndex = Q(yield* ToClampedIndex(target, length));
+  const startIndex = Q(yield* ToClampedIndex(start, length));
+  const endIndex = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  let count = Math.min(endIndex - startIndex, length - targetIndex);
   if (count > 0) {
-    const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
-    taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+    const buffer = obj.ViewedArrayBuffer as ArrayBufferObject;
+    taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
     if (IsTypedArrayOutOfBounds(taRecord)) {
       return Throw.TypeError('TypedArray index out of bounds');
     }
-    len = TypedArrayLength(taRecord);
-    count = Math.min(count, len - startIndex, len - targetIndex);
-    const elementSize = TypedArrayElementSize(O);
-    const byteOffset = O.ByteOffset;
+    length = TypedArrayLength(taRecord);
+    count = Math.min(count, length - startIndex, length - targetIndex);
+    const elementSize = TypedArrayElementSize(obj);
+    const byteOffset = obj.ByteOffset;
     let toByteIndex = (targetIndex * elementSize) + byteOffset;
     let fromByteIndex = (startIndex * elementSize) + byteOffset;
     let countBytes = count * elementSize;
@@ -156,6 +129,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
       direction = 1;
     }
     while (countBytes > 0) {
+      Assert(fromByteIndex >= 0 && toByteIndex >= 0);
       const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', true, 'unordered');
       Q(yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, true, 'unordered'));
       fromByteIndex += direction;
@@ -163,7 +137,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
       countBytes -= 1;
     }
   }
-  return O;
+  return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries */
@@ -178,50 +152,29 @@ function TypedArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallCo
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
 function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue as TypedArrayObject;
-  let taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  let len = TypedArrayLength(taRecord);
-  if (O.ContentType === 'BigInt') {
+  const obj = thisValue as TypedArrayObject;
+  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  let length = TypedArrayLength(taRecord);
+  if (obj.ContentType === 'BigInt') {
     value = Q(yield* ToBigInt(value));
   } else {
     value = Q(yield* ToNumber(value));
   }
-  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
-  let startIndex;
-  if (relativeStart === -Infinity) {
-    startIndex = 0;
-  } else if (relativeStart < 0) {
-    startIndex = Math.max(len + relativeStart, 0);
-  } else {
-    startIndex = Math.min(relativeStart, len);
-  }
-  let relativeEnd;
-  if (end === Value.undefined) {
-    relativeEnd = len;
-  } else {
-    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
-  }
-  let endIndex;
-  if (relativeEnd === -Infinity) {
-    endIndex = 0;
-  } else if (relativeEnd < 0) {
-    endIndex = Math.max(len + relativeEnd, 0);
-  } else {
-    endIndex = Math.min(relativeEnd, len);
-  }
-  taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  const startIndex = Q(yield* ToClampedIndex(start, length));
+  let endIndex = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
     return Throw.TypeError('TypedArray index out of bounds');
   }
-  len = TypedArrayLength(taRecord);
-  endIndex = Math.min(endIndex, len);
+  length = TypedArrayLength(taRecord);
+  endIndex = Math.min(endIndex, length);
   let k = startIndex;
   while (k < endIndex) {
     const Pk = X(ToString(F(k)));
-    X(Set(O, Pk, value, Value.true));
+    X(Set(obj, Pk, value, Value.true));
     k += 1;
   }
-  return O;
+  return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
@@ -414,48 +367,27 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice */
 function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue as TypedArrayObject;
-  let taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const srcArrayLength = TypedArrayLength(taRecord);
-  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
-  let startIndex;
-  if (relativeStart === -Infinity) {
-    startIndex = 0;
-  } else if (relativeStart < 0) {
-    startIndex = Math.max(srcArrayLength + relativeStart, 0);
-  } else {
-    startIndex = Math.min(relativeStart, srcArrayLength);
-  }
-  let relativeEnd;
-  if (end === Value.undefined) {
-    relativeEnd = srcArrayLength;
-  } else {
-    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
-  }
-  let endIndex;
-  if (relativeEnd === -Infinity) {
-    endIndex = 0;
-  } else if (relativeEnd < 0) {
-    endIndex = Math.max(srcArrayLength + relativeEnd, 0);
-  } else {
-    endIndex = Math.min(relativeEnd, srcArrayLength);
-  }
+  const obj = thisValue as TypedArrayObject;
+  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const sourceArrayLength = TypedArrayLength(taRecord);
+  const startIndex = Q(yield* ToClampedIndex(start, sourceArrayLength));
+  let endIndex = end === Value.undefined ? sourceArrayLength : Q(yield* ToClampedIndex(end, sourceArrayLength));
   let countBytes = Math.max(endIndex - startIndex, 0);
-  const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(countBytes)]));
+  const resultArray = Q(yield* TypedArraySpeciesCreate(obj, [F(countBytes)]));
   if (countBytes > 0) {
-    taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+    taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
     if (IsTypedArrayOutOfBounds(taRecord)) {
       return Throw.TypeError('TypedArray index out of bounds');
     }
     endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
     countBytes = Math.max(endIndex - startIndex, 0);
-    const srcType = TypedArrayElementType(O);
+    const srcType = TypedArrayElementType(obj);
     const targetType = TypedArrayElementType(resultArray);
     if (srcType === targetType) {
-      const srcBuffer = O.ViewedArrayBuffer as ArrayBufferObject;
+      const srcBuffer = obj.ViewedArrayBuffer as ArrayBufferObject;
       const targetBuffer = resultArray.ViewedArrayBuffer as ArrayBufferObject;
-      const elementSize = TypedArrayElementSize(O);
-      const srcByteOffset = O.ByteOffset;
+      const elementSize = TypedArrayElementSize(obj);
+      const srcByteOffset = obj.ByteOffset;
       let srcByteIndex = (startIndex * elementSize) + srcByteOffset;
       let targetByteIndex = resultArray.ByteOffset;
       const endByteIndex = targetByteIndex + (countBytes * elementSize);
@@ -470,7 +402,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
       let k = startIndex;
       while (k < endIndex) {
         const Pk = X(ToString(F(k)));
-        const kValue = X(Get(O, Pk));
+        const kValue = X(Get(obj, Pk));
         X(Set(resultArray, X(ToString(F(n))), kValue, Value.true));
         k += 1;
         n += 1;
@@ -526,52 +458,28 @@ function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { 
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
-function* TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue as TypedArrayObject;
-  Q(RequireInternalSlot(O, 'TypedArrayName'));
-  Assert('ViewedArrayBuffer' in O);
-  const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
-  const srcRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
-  let srcLength;
-  if (IsTypedArrayOutOfBounds(srcRecord)) {
-    srcLength = 0;
+function* TypedArrayProto_subarray([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  Q(RequireInternalSlot(obj, 'TypedArrayName'));
+  Assert('ViewedArrayBuffer' in obj);
+  const buffer = obj.ViewedArrayBuffer as ArrayBufferObject;
+  const sourceRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
+  let sourceLength;
+  if (IsTypedArrayOutOfBounds(sourceRecord)) {
+    sourceLength = 0;
   } else {
-    srcLength = TypedArrayLength(srcRecord);
+    sourceLength = TypedArrayLength(sourceRecord);
   }
-  const relativeStart = Q(yield* ToIntegerOrInfinity(begin));
-  let startIndex;
-  if (relativeStart === -Infinity) {
-    startIndex = 0;
-  } else if (relativeStart < 0) {
-    startIndex = Math.max(srcLength + relativeStart, 0);
-  } else {
-    startIndex = Math.min(relativeStart, srcLength);
-  }
-  const elementSize = TypedArrayElementSize(O);
-  const srcByteOffset = O.ByteOffset;
+  const startIndex = Q(yield* ToClampedIndex(start, sourceLength));
+  const elementSize = TypedArrayElementSize(obj);
+  const srcByteOffset = obj.ByteOffset;
   const beginByteOffset = srcByteOffset + (startIndex * elementSize);
-  let argumentsList;
-  if (O.ArrayLength === 'auto' && end === Value.undefined) {
-    argumentsList = [buffer, F(beginByteOffset)];
-  } else {
-    let relativeEnd;
-    if (end === Value.undefined) {
-      relativeEnd = srcLength;
-    } else {
-      relativeEnd = Q(yield* ToIntegerOrInfinity(end));
-    }
-    let endIndex;
-    if (relativeEnd === -Infinity) {
-      endIndex = 0;
-    } else if (relativeEnd < 0) {
-      endIndex = Math.max(srcLength + relativeEnd, 0);
-    } else {
-      endIndex = Math.min(relativeEnd, srcLength);
-    }
-    const newLength = Math.max(endIndex - startIndex, 0);
-    argumentsList = [buffer, F(beginByteOffset), F(newLength)];
+  if (obj.ArrayLength === 'auto' && end === Value.undefined) {
+    return Q(yield* TypedArraySpeciesCreate(obj, [buffer, F(beginByteOffset)]));
   }
-  return Q(yield* TypedArraySpeciesCreate(O, argumentsList));
+  const endIndex = end === Value.undefined ? sourceLength : Q(yield* ToClampedIndex(end, sourceLength));
+  const newLength = Math.max(endIndex - startIndex, 0);
+  return Q(yield* TypedArraySpeciesCreate(obj, [buffer, F(beginByteOffset), F(newLength)]));
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
@@ -606,53 +514,41 @@ function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCa
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
 function* TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const len = TypedArrayLength(taRecord);
-  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
-  let k;
-  if (relativeIndex >= 0) {
-    k = relativeIndex;
-  } else {
-    k = len + relativeIndex;
-  }
-  if (k < 0 || k >= len) {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const k = Q(yield* ToAbsoluteIndex(index, length));
+  if (k < 0 || k >= length) {
     return Value.undefined;
   }
-  return X(Get(O, X(ToString(F(k)))));
+  return X(Get(obj, X(ToString(F(k)))));
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.with */
 function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  __ts_cast__<TypedArrayObject>(O);
-  const len = TypedArrayLength(taRecord);
-  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
-  let actualIndex;
-  if (relativeIndex >= 0) {
-    actualIndex = relativeIndex;
-  } else {
-    actualIndex = len + relativeIndex;
-  }
+  const obj = thisValue;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  __ts_cast__<TypedArrayObject>(obj);
+  const length = TypedArrayLength(taRecord);
+  const actualIndex = Q(yield* ToAbsoluteIndex(index, length));
   let numericValue;
-  if (O.ContentType === 'BigInt') {
+  if (obj.ContentType === 'BigInt') {
     numericValue = Q(yield* ToBigInt(value));
   } else {
     numericValue = Q(yield* ToNumber(value));
   }
-  if (IsValidIntegerIndex(O, F(actualIndex)) === Value.false) {
+  if (IsValidIntegerIndex(obj, F(actualIndex)) === Value.false) {
     return Throw.RangeError('TypedArray index out of bounds');
   }
-  const resultArray = Q(yield* TypedArrayCreateSameType(O, len));
+  const resultArray = Q(yield* TypedArrayCreateSameType(obj, length));
   let k = 0;
-  while (k < len) {
+  while (k < length) {
     const Pk = X(ToString(F(k)));
     let fromValue;
     if (k === actualIndex) {
       fromValue = numericValue;
     } else {
-      fromValue = X(Get(O, Pk));
+      fromValue = X(Get(obj, Pk));
     }
     X(Set(resultArray, Pk, fromValue, Value.true));
     k += 1;
