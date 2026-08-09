@@ -53,7 +53,9 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
         Q(yield* DefineMethodProperty(object, methodDefinition, true));
         return undefined;
       } else {
-        return yield* MethodDefinitionEvaluation(PropertyDefinition, object, enumerable);
+        const result = Q(yield* MethodDefinitionEvaluation(PropertyDefinition, object, enumerable));
+        Assert(result === undefined);
+        return undefined;
       }
     }
     default:

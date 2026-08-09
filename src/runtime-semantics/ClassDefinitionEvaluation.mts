@@ -488,6 +488,9 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       } else if (field instanceof ClassStaticBlockDefinitionRecord) { // g. Else if element is a ClassStaticBlockDefinition Record, then
         // i. Append element to staticElements.
         staticElements.push(field);
+      } else {
+        // h. Else, assert: field is empty.
+        Assert(field === undefined);
       }
     }
     // 26. Set the running execution context's LexicalEnvironment to env.
