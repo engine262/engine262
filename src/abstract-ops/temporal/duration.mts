@@ -18,7 +18,7 @@ import {
 } from './temporal.mts';
 import { GetEpochNanosecondsFor } from './time-zone.mts';
 import {
-  X, type ValueEvaluator, Assert, type PlainCompletion, surroundingAgent, Value, ObjectValue, JSStringValue, type Mutable, Q, type PlainEvaluator, Get, type FunctionObject, OrdinaryCreateFromConstructor, HoursPerDay,
+  X, type ValueEvaluator, Assert, type PlainCompletion, surroundingAgent, Value, ObjectValue, JSStringValue, type Mutable, Q, type PlainEvaluator, Get, type FunctionObject, OrdinaryCreateFromConstructor, HoursPerDay, MinutesPerHour, SecondsPerMinute, nsPerSecond, nsPerMillisecond, nsPerMicrosecond,
   nsPerDay,
   AddDaysToISODate,
   CombineISODateAndTimeRecord,
@@ -457,13 +457,13 @@ export function TimeDurationFromComponents(
   microseconds: Integer,
   nanoseconds: Integer,
 ): TimeDuration {
-  minutes += hours * 60n;
-  seconds += minutes * 60n;
-  milliseconds += seconds * 1000n;
-  microseconds += milliseconds * 1000n;
-  nanoseconds += microseconds * 1000n;
-  Assert(abs(nanoseconds) <= maxTimeDuration);
-  return nanoseconds;
+  const secondsPart = (hours * BigInt(MinutesPerHour) + minutes) * BigInt(SecondsPerMinute) + seconds;
+  const result = secondsPart * BigInt(nsPerSecond)
+    + milliseconds * BigInt(nsPerMillisecond)
+    + microseconds * BigInt(nsPerMicrosecond)
+    + nanoseconds;
+  Assert(abs(result) <= maxTimeDuration);
+  return result;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-addtimeduration */

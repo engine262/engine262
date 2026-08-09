@@ -4,7 +4,7 @@
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { DateParser, ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
 import {
-  HourFromTime, MinFromTime, SecFromTime, type FiniteTimeValue,
+  HourFromTime, MinFromTime, SecFromTime, SecondsPerMinute, nsPerSecond, nsPerMillisecond, type FiniteTimeValue,
   type TimeValue,
 } from '../date-objects.mts';
 import {
@@ -144,11 +144,11 @@ export function LocalTime_TemporalEdited(t: FiniteTimeValue): IntegralNumber {
   const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
   let offsetNs: bigint;
   if (parseResult.OffsetMinutes !== undefined) {
-    offsetNs = parseResult.OffsetMinutes * BigInt(60 * 1e9);
+    offsetNs = parseResult.OffsetMinutes * BigInt(SecondsPerMinute * nsPerSecond);
   } else {
-    offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, Decimal(t).multiply(1e6).toBigInt());
+    offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, Decimal(t).multiply(nsPerMillisecond).toBigInt());
   }
-  const offsetMs = truncateDiv(offsetNs, BigInt(1e6));
+  const offsetMs = truncateDiv(offsetNs, BigInt(nsPerMillisecond));
   return t + Number(offsetMs);
 }
 
@@ -161,7 +161,7 @@ export function UTC_TemporalEdited(t: Num): TimeValue {
   const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
   let offsetNs: bigint;
   if (parseResult.OffsetMinutes !== undefined) {
-    offsetNs = parseResult.OffsetMinutes * (60n * BigInt(1e9));
+    offsetNs = parseResult.OffsetMinutes * (BigInt(SecondsPerMinute) * BigInt(nsPerSecond));
   } else {
     const isoDateTime = TimeValueToISODateTimeRecord(t);
     const possibleInstants = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, isoDateTime);
@@ -181,7 +181,7 @@ export function UTC_TemporalEdited(t: Num): TimeValue {
     }
     offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, disambiguatedInstant as EpochNanoseconds);
   }
-  const offsetMs = truncateDiv(offsetNs, BigInt(1e6));
+  const offsetMs = truncateDiv(offsetNs, BigInt(nsPerMillisecond));
   return t - Number(offsetMs) as TimeValue;
 }
 
