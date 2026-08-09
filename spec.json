@@ -87,7 +87,7 @@
       "name": "defer-import-eval",
       "description": "Defer import eval proposal",
       "source": "https://github.com/tc39/proposal-defer-import-eval",
-      "commit": "012cc74e4a8fa27ed017e7579e3087ac1278387b",
+      "commit": "d317e5bb5167269978ee5dca9845276db5e6d7ce",
       "path": ["spec.emu"]
     }
   ]

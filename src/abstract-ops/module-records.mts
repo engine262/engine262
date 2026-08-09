@@ -426,6 +426,20 @@ export function InnerModuleLinking(
   return index;
 }
 
+/** https://tc39.es/proposal-defer-import-eval/#sec-ismodulesccevaluated */
+export function IsModuleSCCEvaluated(module: CyclicModuleRecord): BooleanValue {
+  if (module.CycleRoot !== undefined) {
+    if (module.CycleRoot.Status === 'evaluated') {
+      return Value.true;
+    }
+    return Value.false;
+  }
+  if (module.Status === 'evaluated') {
+    return Value.true;
+  }
+  return Value.false;
+}
+
 /** https://tc39.es/proposal-deferred-reexports/#sec-ReadyForSyncExecution */
 export function ReadyForSyncExecution(
   module: ModuleRecord,
@@ -444,8 +458,8 @@ export function ReadyForSyncExecution(
   }
   // 4. Append module to seen.
   seen.add(module);
-  // 5. If module.[[Status]] is evaluated, return true.
-  if (module.Status === 'evaluated') {
+  // 5. If IsModuleSCCEvaluated(module), return true.
+  if (IsModuleSCCEvaluated(module) === Value.true) {
     return Value.true;
   }
   // 6. If module.[[Status]] is evaluating or evaluating-async, return false.
@@ -649,8 +663,8 @@ export function GatherAsynchronousTransitiveDependencies(module: ModuleRecord, s
   if (!(module instanceof CyclicModuleRecord)) {
     return result;
   }
-  // 6. If module.[[Status]] is either evaluating or evaluated, return result.
-  if (module.Status === 'evaluating' || module.Status === 'evaluated') {
+  // 6. If module.[[Status]] is evaluating or IsModuleSCCEvaluated(module), return result.
+  if (module.Status === 'evaluating' || IsModuleSCCEvaluated(module) === Value.true) {
     return result;
   }
   // 7. If module.[[HasTLA]] is true, then

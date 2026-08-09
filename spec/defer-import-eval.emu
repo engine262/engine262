@@ -896,6 +896,22 @@ contributors: Nicolò Ribaudo
             1. Return ~unused~.
           </emu-alg>
 
+          <emu-clause id="sec-IsModuleSCCEvaluated" type="abstract operation">
+            <h1>
+              <ins>IsModuleSCCEvaluated (
+                _module_: a Cyclic Module Record
+              ): a Boolean</ins>
+            </h1>
+            <dl class="header"></dl>
+            <emu-alg>
+              1. If _module_.[[CycleRoot]] is not ~empty~, then
+                1. If _module_.[[CycleRoot]].[[Status]] is ~evaluated~, return *true*.
+                1. Return *false*.
+              1. If _module_.[[Status]] is ~evaluated~, return *true*.
+              1. Return *false*.
+            </emu-alg>
+          </emu-clause>
+
           <emu-clause id="sec-ReadyForSyncExecution" type="abstract operation">
             <h1>
               <ins>ReadyForSyncExecution (
@@ -909,7 +925,7 @@ contributors: Nicolò Ribaudo
               1. If _seen_ is not present, set _seen_ to a new empty List.
               1. If _seen_ contains _module_, return *true*.
               1. Append _module_ to _seen_.
-              1. If _module_.[[Status]] is ~evaluated~, return *true*.
+              1. If IsModuleSCCEvaluated(_module_), return *true*.
               1. If _module_.[[Status]] is ~evaluating~ or ~evaluating-async~, return *false*.
               1. Assert: _module_.[[Status]] is ~linked~.
               1. If _module_.[[HasTLA]] is *true*, return *false*.
@@ -1164,7 +1180,7 @@ contributors: Nicolò Ribaudo
               1. If _seen_ contains _module_, return _result_.
               1. Append _module_ to _seen_.
               1. If _module_ is not a Cyclic Module Record, return _result_.
-              1. If _module_.[[Status]] is either ~evaluating~ or ~evaluated~, return _result_.
+              1. If _module_.[[Status]] is either ~evaluating~ or IsModuleSCCEvaluated(_module_), return _result_.
               1. If _module_.[[HasTLA]] is *true*, then
                 1. Append _module_ to _result_.
                 1. Return _result_.
