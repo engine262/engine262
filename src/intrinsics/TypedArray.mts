@@ -225,7 +225,12 @@ export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, length: nu
 export function ValidateTypedArray(O: Value, order: 'seq-cst' | 'unordered'): PlainCompletion<TypedArrayWithBufferWitnessRecord> {
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(O as TypedArrayObject, order);
+  return ValidateTypedArrayBounds(O as TypedArrayObject, order);
+}
+
+/** https://tc39.es/ecma262/#sec-validatetypedarraybounds */
+export function ValidateTypedArrayBounds(ta: TypedArrayObject, order: 'seq-cst' | 'unordered'): PlainCompletion<TypedArrayWithBufferWitnessRecord> {
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(ta, order);
   if (IsTypedArrayOutOfBounds(taRecord)) {
     return Throw.TypeError('TypedArray index out of bounds');
   }
@@ -328,10 +333,7 @@ export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>
   const srcType = TypedArrayElementType(srcArray);
   const srcElementSize = TypedArrayElementSize(srcArray);
   const srcByteOffset = srcArray.ByteOffset;
-  const srcRecord = MakeTypedArrayWithBufferWitnessRecord(srcArray, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(srcRecord)) {
-    return Throw.TypeError('TypedArray index out of bounds');
-  }
+  const srcRecord = Q(ValidateTypedArrayBounds(srcArray, 'seq-cst'));
   const elementLength = TypedArrayLength(srcRecord);
   const byteLength = elementSize * elementLength;
   let data;

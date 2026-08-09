@@ -31,14 +31,13 @@ import {
   type OrdinaryObject,
   type FunctionObject,
   type GeneratorObject,
-  MakeTypedArrayWithBufferWitnessRecord,
-  IsTypedArrayOutOfBounds,
   TypedArrayLength,
   CreateIteratorResultObject,
   GeneratorYield,
   Throw,
 } from '#self';
 import { isTypedArrayObject } from '#self';
+import { ValidateTypedArrayBounds } from '../intrinsics/TypedArray.mts';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
@@ -269,10 +268,7 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
       let result;
       // i. If array has a [[TypedArrayName]] internal slot, then
       if (isTypedArrayObject(array)) {
-        const taRecord = MakeTypedArrayWithBufferWitnessRecord(array, 'seq-cst');
-        if (IsTypedArrayOutOfBounds(taRecord)) {
-          return Throw.TypeError('TypedArray out of bounds');
-        }
+        const taRecord = Q(ValidateTypedArrayBounds(array, 'seq-cst'));
         // 2. Let len be array.[[ArrayLength]].
         len = TypedArrayLength(taRecord);
       } else { // ii. Else,

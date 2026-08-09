@@ -330,7 +330,6 @@ export interface Throw {
   | 'ShadowRealm cannot be invoked without new'
   | 'Spread element must be last element'
   | 'String is too long'
-  | 'Sum of start offset and byte length should be less than the size of the TypedArray'
   | 'Sum of start offset and byte length should be less than the size of underlying buffer'
   | "Super class's prototype must be an object or null"
   | 'Symbol is not a constructor'
@@ -357,7 +356,6 @@ export interface Throw {
   | 'Time zones are not equal'
   | 'Too many capturing groups'
   | 'TypedArray index out of bounds'
-  | 'TypedArray out of bounds'
   | 'URI malformed'
   | 'Unexpected - in modifiers'
   | 'Unexpected end of CharacterClass'

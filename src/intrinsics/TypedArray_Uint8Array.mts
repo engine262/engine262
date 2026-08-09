@@ -2,12 +2,12 @@ import { __ts_cast__ } from '../utils/language.mts';
 import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import { atob_polyfill, btoa_polyfill } from '../host-defined/base64.mts';
 import {
-  AllocateTypedArray, type TypedArrayObject,
+  AllocateTypedArray, ValidateTypedArrayBounds, type TypedArrayObject,
 } from './TypedArray.mts';
 import { assignProps } from './bootstrap.mts';
 import { F } from '#self';
 import {
-  Assert, CodePointsToString, CreateDataPropertyOrThrow, EnsureCompletion, Get, GetValueFromBuffer, IsTypedArrayOutOfBounds, JSStringValue, MakeTypedArrayWithBufferWitnessRecord, NumberValue, ObjectValue, OrdinaryObjectCreate, Q, R, Realm, RequireInternalSlot, SetValueInBuffer, StringPad, surroundingAgent, ThrowCompletion, ToBoolean, TypedArrayLength, UndefinedValue, X, type ArrayBufferObject, type PlainCompletion, type ValueCompletion,
+  Assert, CodePointsToString, CreateDataPropertyOrThrow, EnsureCompletion, Get, GetValueFromBuffer, JSStringValue, NumberValue, ObjectValue, OrdinaryObjectCreate, Q, R, Realm, RequireInternalSlot, SetValueInBuffer, StringPad, surroundingAgent, ThrowCompletion, ToBoolean, TypedArrayLength, UndefinedValue, X, type ArrayBufferObject, type PlainCompletion, type ValueCompletion,
   Throw,
 } from '#self';
 
@@ -135,10 +135,7 @@ function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Val
   if ((lastChunkHandlingStr !== 'loose' && lastChunkHandlingStr !== 'strict' && lastChunkHandlingStr !== 'stop-before-partial')) {
     return Throw.TypeError('Invalid lastChunkHandling');
   }
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(into, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(taRecord)) {
-    return Throw.TypeError('Sum of start offset and byte length should be less than the size of the TypedArray');
-  }
+  const taRecord = Q(ValidateTypedArrayBounds(into as TypedArrayObject, 'seq-cst'));
   const byteLength = TypedArrayLength(taRecord);
   const result = FromBase64(string.stringValue(), alphabetStr, lastChunkHandlingStr, byteLength);
   const bytes = result.Bytes;
@@ -183,10 +180,7 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { th
   if (!(string instanceof JSStringValue)) {
     return Throw.TypeError('$1 is not a string', string);
   }
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(into, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(taRecord)) {
-    return Throw.TypeError('Sum of start offset and byte length should be less than the size of the TypedArray');
-  }
+  const taRecord = Q(ValidateTypedArrayBounds(into as TypedArrayObject, 'seq-cst'));
   const byteLength = TypedArrayLength(taRecord);
   const result = FromHex(string.stringValue(), byteLength);
   const bytes = result.Bytes;
@@ -215,10 +209,7 @@ function ValidateUint8Array(ta: Value) {
 /** https://tc39.es/ecma262/#sec-getuint8arraybytes */
 function GetUint8ArrayBytes(ta: TypedArrayObject): PlainCompletion<number[]> {
   const buffer = ta.ViewedArrayBuffer;
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(ta, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(taRecord)) {
-    return Throw.TypeError('Sum of start offset and byte length should be less than the size of the TypedArray');
-  }
+  const taRecord = Q(ValidateTypedArrayBounds(ta, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
   const byteOffset = ta.ByteOffset;
   const bytes = [];

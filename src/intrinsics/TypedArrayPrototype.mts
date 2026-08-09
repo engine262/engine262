@@ -16,7 +16,7 @@ import {
   TypedArrayCreateSameType,
   TypedArrayElementSize,
   TypedArrayElementType,
-  TypedArraySpeciesCreate, ValidateTypedArray, type TypedArrayObject,
+  TypedArraySpeciesCreate, ValidateTypedArray, ValidateTypedArrayBounds, type TypedArrayObject,
 } from './TypedArray.mts';
 import {
   Assert,
@@ -109,10 +109,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   let count = Math.min(endIndex - startIndex, length - targetIndex);
   if (count > 0) {
     const buffer = obj.ViewedArrayBuffer as ArrayBufferObject;
-    taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
-    if (IsTypedArrayOutOfBounds(taRecord)) {
-      return Throw.TypeError('TypedArray index out of bounds');
-    }
+    taRecord = Q(ValidateTypedArrayBounds(obj, 'seq-cst'));
     length = TypedArrayLength(taRecord);
     count = Math.min(count, length - startIndex, length - targetIndex);
     const elementSize = TypedArrayElementSize(obj);
@@ -162,10 +159,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   }
   const startIndex = Q(yield* ToClampedIndex(start, length));
   let endIndex = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
-  taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(taRecord)) {
-    return Throw.TypeError('TypedArray index out of bounds');
-  }
+  taRecord = Q(ValidateTypedArrayBounds(obj, 'seq-cst'));
   length = TypedArrayLength(taRecord);
   endIndex = Math.min(endIndex, length);
   let k = startIndex;
@@ -253,16 +247,10 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
 /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
 function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: number, source: TypedArrayObject) {
   const targetBuffer = target.ViewedArrayBuffer as ArrayBufferObject;
-  const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(targetRecord)) {
-    return Throw.TypeError('TypedArray index out of bounds');
-  }
+  const targetRecord = Q(ValidateTypedArrayBounds(target, 'seq-cst'));
   const targetLength = TypedArrayLength(targetRecord);
   let srcBuffer = source.ViewedArrayBuffer as ArrayBufferObject;
-  const srcRecord = MakeTypedArrayWithBufferWitnessRecord(source, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(srcRecord)) {
-    return Throw.TypeError('TypedArray index out of bounds');
-  }
+  const srcRecord = Q(ValidateTypedArrayBounds(source, 'seq-cst'));
   const srcLength = TypedArrayLength(srcRecord);
   const targetType = TypedArrayElementType(target);
   const targetElementSize = TypedArrayElementSize(target);
@@ -315,10 +303,7 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromarraylike */
 function* SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: number, source: Value) {
-  const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(targetRecord)) {
-    return Throw.TypeError('TypedArray index out of bounds');
-  }
+  const targetRecord = Q(ValidateTypedArrayBounds(target, 'seq-cst'));
   const targetLength = TypedArrayLength(targetRecord);
   const src = Q(ToObject(source));
   const srcLength = Q(yield* LengthOfArrayLike(src));
@@ -375,10 +360,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   let countBytes = Math.max(endIndex - startIndex, 0);
   const resultArray = Q(yield* TypedArraySpeciesCreate(obj, [F(countBytes)]));
   if (countBytes > 0) {
-    taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
-    if (IsTypedArrayOutOfBounds(taRecord)) {
-      return Throw.TypeError('TypedArray index out of bounds');
-    }
+    taRecord = Q(ValidateTypedArrayBounds(obj, 'seq-cst'));
     endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
     countBytes = Math.max(endIndex - startIndex, 0);
     const srcType = TypedArrayElementType(obj);
