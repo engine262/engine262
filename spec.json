@@ -32,6 +32,13 @@
       "path": ["spec.emu"]
     },
     {
+      "name": "iterator-includes",
+      "description": "Iterator.prototype.includes proposal",
+      "source": "https://github.com/tc39/proposal-iterator-includes",
+      "commit": "63a7f4c95d84240f57a5cf79beca0eb2cd8911f3",
+      "path": ["spec.emu"]
+    },
+    {
       "name": "await-dictionary",
       "description": "Promise.allKeyed proposal",
       "source": "https://github.com/tc39/proposal-await-dictionary",

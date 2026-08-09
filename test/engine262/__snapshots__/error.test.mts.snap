@@ -204,6 +204,7 @@ exports[`native function names 1`] = `
   ".Iterator.prototype.flatMap()": "Iterator#flatMap",
   ".Iterator.prototype.forEach()": "Iterator#forEach",
   ".Iterator.prototype.get constructor()": "Iterator#constructor",
+  ".Iterator.prototype.includes()": "Iterator#includes",
   ".Iterator.prototype.join()": "Iterator#join",
   ".Iterator.prototype.map()": "Iterator#map",
   ".Iterator.prototype.reduce()": "Iterator#reduce",
