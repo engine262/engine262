@@ -220,8 +220,8 @@ export abstract class ExpressionParser extends FunctionParser {
       case 'ObjectLiteral':
         node.PropertyDefinitionList.forEach((p, i) => {
           if (p.type === 'PropertyDefinition' && !p.PropertyName
-              && i !== node.PropertyDefinitionList.length - 1) {
-            this.addEarlyError(Throw.SyntaxError('Invalid assignment target'), p);
+              && (i !== node.PropertyDefinitionList.length - 1 || node.hasTrailingComma)) {
+            this.addEarlyError(Throw.SyntaxError('Rest property must be last property'), p);
           }
           this.validateAssignmentTarget(p);
         });
@@ -928,6 +928,7 @@ export abstract class ExpressionParser extends FunctionParser {
     this.expect(Token.LBRACE);
     const PropertyDefinitionList: Mutable<ParseNode.PropertyDefinitionList> = [];
     node.PropertyDefinitionList = PropertyDefinitionList;
+    node.hasTrailingComma = false;
     let hasProto = false;
     while (true) {
       if (this.eat(Token.RBRACE)) {
@@ -948,8 +949,10 @@ export abstract class ExpressionParser extends FunctionParser {
       }
       PropertyDefinitionList.push(PropertyDefinition);
       if (this.eat(Token.RBRACE)) {
+        node.hasTrailingComma = false;
         break;
       }
+      node.hasTrailingComma = true;
       this.expect(Token.COMMA);
     }
     return this.finishNode(node, 'ObjectLiteral');

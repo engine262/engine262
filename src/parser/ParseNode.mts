@@ -242,6 +242,7 @@ export namespace ParseNode {
   export interface ObjectLiteral extends BaseParseNode {
     readonly type: 'ObjectLiteral';
     readonly PropertyDefinitionList: PropertyDefinitionList;
+    readonly hasTrailingComma: boolean;
   }
 
   // PropertyDefinitionList :
