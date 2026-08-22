@@ -908,32 +908,33 @@ function BackreferenceMatcher(rer: RegExpRecord, ns: readonly number[], directio
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch */
-export function Canonicalize(rer: RegExpRecord, ch: Character): Character {
+export function Canonicalize(rer: RegExpRecord, char: Character): Character {
   if (HasEitherUnicodeFlag(rer) && rer.IgnoreCase) {
     // If the file CaseFolding.txt of the Unicode Character Database provides a simple or common case folding mapping for ch, return the result of applying that mapping to ch.
-    const mapped = Unicode.SimpleOrCommonCaseFoldingMapping(ch);
+    const mapped = Unicode.SimpleOrCommonCaseFoldingMapping(char);
     if (mapped) {
       return mapped;
     } else {
-      return ch;
+      return char;
     }
   }
   if (!rer.IgnoreCase) {
-    return ch;
+    return char;
   }
-  Assert(ch.length === 1, 'ch is a UTF-16 code unit');
-  const cp = Unicode.toCodePoint(ch);
-  const u = Unicode.toUppercase(cp);
-  const uStr = CodePointsToString(Unicode.toCharacter(u));
-  if (uStr.length !== 1) {
-    return ch;
+  Assert(char.length === 1, 'ch is a UTF-16 code unit');
+  const codePoint = Unicode.toCodePoint(char);
+  const mappedCodePoints = Unicode.toUppercase(codePoint);
+  if (CodePointsToString(mappedCodePoints).length !== 1) {
+    return char;
   }
-  // Let cu be uStr's single code unit element.
-  const cu = uStr[0] as Character;
-  if (Unicode.toCodePoint(ch) >= 128 && Unicode.toCodePoint(cu) < 128) {
-    return ch;
+  // Assert: The number of elements in mappedCodePoints is 1.
+  Assert([...mappedCodePoints].length === 1);
+  const mappedCodePoint = mappedCodePoints.codePointAt(0)! as CodePoint;
+  if (codePoint >= 128 && mappedCodePoint < 128) {
+    return char;
   }
-  return cu;
+  // Return the code unit whose numeric value is the numeric value of mappedCodePoint.
+  return String.fromCharCode(mappedCodePoint) as Character;
 }
 
 /** https://tc39.es/ecma262/#sec-updatemodifiers */

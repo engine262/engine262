@@ -139,8 +139,8 @@ const canonicalizeUnicodePropertyCache: Record<string, [excludeSet: ReadonlySet<
 const stringPropertySetCache: Record<string, readonly ListOfCharacter[]> = {};
 // TODO(unicode): methods here should be implemented based on Unicode database so we can pin Unicode version.
 export const Unicode = {
-  toUppercase(ch: CodePoint): CodePoint {
-    return String.fromCodePoint(ch).toUpperCase().codePointAt(0)! as CodePoint;
+  toUppercase(ch: CodePoint): ListOfCharacter {
+    return String.fromCodePoint(ch).toUpperCase() as ListOfCharacter;
   },
   toCodePoint(ch: Character): CodePoint {
     return ch.codePointAt(0)! as CodePoint;
