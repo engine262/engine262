@@ -6,9 +6,10 @@ import { ParseTemporalDurationString } from '../../parser/TemporalParser.mts';
 import {
   abs, floorDiv, modulo, remainder, truncateDiv,
 } from '../math.mts';
+import { SnapToInteger } from '../type-conversion.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  type TimeZoneIdentifier, GetUTCEpochNanoseconds, RoundingMode, SnapToInteger,
+  type TimeZoneIdentifier, GetUTCEpochNanoseconds, RoundingMode,
 } from './addition.mts';
 import { CalendarDateAdd, type CalendarType, CalendarDateUntil } from './calendar.mts';
 import {

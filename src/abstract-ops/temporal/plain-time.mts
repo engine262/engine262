@@ -6,8 +6,9 @@ import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import {
   abs, floorDiv, max, min, modulo,
 } from '../math.mts';
+import { SnapToInteger } from '../type-conversion.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
-import { SnapToInteger, type RoundingMode } from './addition.mts';
+import { type RoundingMode } from './addition.mts';
 import {
   Assert, type TimeDuration, TimeDurationFromComponents, nsPerDay, Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetISODateTimeFor, JSStringValue, Throw, type PlainEvaluator, UndefinedValue, type PlainCompletion, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, Get, FormatTimeString, type TimeUnit, TemporalUnit, Table21_LengthInNanoSeconds, RoundNumberToIncrement, GetDifferenceSettings, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
   type Integer,

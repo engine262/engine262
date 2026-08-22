@@ -52,7 +52,7 @@ function Uint8ArrayProto_toHex(_args: Arguments, { thisValue }: FunctionCallCont
   const toEncode = Q(GetUint8ArrayBytes(O));
   let out = '';
   for (const byte of toEncode) {
-    let hex = NumberValue.toString(F(byte), 16);
+    let hex = NumberValue.toString(F(byte), 16n);
     hex = X(StringPad(hex, Value(2), Value('0'), 'start'));
     out += hex.stringValue();
   }

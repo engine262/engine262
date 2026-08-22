@@ -13,14 +13,16 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import type { NumberObject } from './Number.mts';
 import {
   Assert,
+  SnapToInteger,
   ToIntegerOrInfinity,
   ToString,
   F, R,
   Realm,
   Throw,
+  type Integer,
 } from '#self';
 
-function thisNumberValue(value: Value) {
+export function ThisNumberValue(value: Value) {
   if (value instanceof NumberValue) {
     return value;
   }
@@ -34,11 +36,11 @@ function thisNumberValue(value: Value) {
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
 function* NumberProto_toExponential([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const x = Q(thisNumberValue(thisValue));
+  const x = Q(ThisNumberValue(thisValue));
   const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (!x.isFinite()) {
-    return NumberValue.toString(x, 10);
+    return NumberValue.toString(x, 10n);
   }
   if (f < 0 || f > 100) {
     return Throw.RangeError('Invalid format range for $1', 'toExponential');
@@ -48,14 +50,14 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined]: Argument
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
 function* NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const x = Q(thisNumberValue(thisValue));
+  const x = Q(ThisNumberValue(thisValue));
   const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
     return Throw.RangeError('Invalid format range for $1', 'toFixed');
   }
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x, 10));
+    return X(NumberValue.toString(x, 10n));
   }
   return Value(R(x).toFixed(f));
 }
@@ -67,13 +69,13 @@ function NumberProto_toLocaleString(_args: Arguments, context: FunctionCallConte
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
 function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const x = Q(thisNumberValue(thisValue));
+  const x = Q(ThisNumberValue(thisValue));
   if (precision === Value.undefined) {
     return X(ToString(x));
   }
   const p = Q(yield* ToIntegerOrInfinity(precision));
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x, 10));
+    return X(NumberValue.toString(x, 10n));
   }
   if (p < 1 || p > 100) {
     return Throw.RangeError('Invalid format range for $1', 'toPrecision');
@@ -83,30 +85,19 @@ function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { th
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
 function* NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const x = Q(thisNumberValue(thisValue));
-  let radixNumber;
+  const x = Q(ThisNumberValue(thisValue));
+  let radixMV: Integer;
   if (radix === Value.undefined) {
-    radixNumber = 10;
+    radixMV = 10n;
   } else {
-    radixNumber = Q(yield* ToIntegerOrInfinity(radix));
+    radixMV = Q(yield* SnapToInteger(radix, 'truncate', 2n, 36n));
   }
-  if (radixNumber < 2 || radixNumber > 36) {
-    return Throw.RangeError('Invalid format range for $1', 'toString');
-  }
-  if (radixNumber === 10) {
-    return X(ToString(x));
-  }
-  // FIXME(devsnek): Return the String representation of this Number
-  // value using the radix specified by radixNumber. Letters a-z are
-  // used for digits with values 10 through 35. The precise algorithm
-  // is implementation-dependent, however the algorithm should be a
-  // generalization of that specified in 7.1.12.1.
-  return Value(R(x).toString(radixNumber));
+  return NumberValue.toString(x, radixMV);
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
 function NumberProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  return Q(thisNumberValue(thisValue));
+  return Q(ThisNumberValue(thisValue));
 }
 
 export function bootstrapNumberPrototype(realmRec: Realm) {

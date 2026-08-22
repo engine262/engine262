@@ -8,10 +8,11 @@ import {
   type TimeValue,
 } from '../date-objects.mts';
 import {
-  R, type Integer, type IntegralNumber, type NaN, type Num,
+  type Integer, type IntegralNumber, type NaN, type Num,
 } from '../spec-types.mjs';
 import { __ts_cast__ } from '../../utils/language.mts';
-import { truncate, truncateDiv } from '../math.mts';
+import { truncateDiv } from '../math.mts';
+import { SnapToInteger } from '../type-conversion.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import { FormatTimeString, type EpochNanoseconds } from './temporal.mts';
 import { FormatOffsetTimeZoneIdentifier, type TimeZoneIdentifierRecord } from './time-zone.mts';
@@ -22,27 +23,13 @@ import {
   MakeDate,
   MakeDay,
   MakeTime,
-  ObjectValue, Q, Throw, TimeValueToISODateTimeRecord, ToNumber, ToString, UndefinedValue, Value, X, type PlainEvaluator,
+  ObjectValue, Q, Throw, TimeValueToISODateTimeRecord, ToString, UndefinedValue, Value, X, type PlainEvaluator,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type */
 export interface YearWeekRecord {
   readonly Week: bigint | undefined;
   readonly Year: bigint | undefined;
-}
-
-/** https://tc39.es/proposal-temporal/#sec-snaptointeger */
-export function* SnapToInteger(argument: Value, mode: 'strict' | 'truncate-strict', minimum?: Integer, maximum?: Integer): PlainEvaluator<Integer> {
-  const number = Q(yield* ToNumber(argument));
-  if (number.isNaN() || number.isInfinity()) return Throw.RangeError('$1 is not a finite number', number);
-  let mv = R(number);
-  if (mode === 'truncate-strict') mv = truncate(mv);
-  else if (!Number.isInteger(mv)) {
-    return Throw.RangeError('$1 is not an integer', number);
-  }
-  if (minimum !== undefined && mv < minimum) return Throw.RangeError('$1 is too small', number);
-  if (maximum !== undefined && mv > maximum) return Throw.RangeError('$1 is too large', number);
-  return BigInt(mv);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-getroundingmodeoption */

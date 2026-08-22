@@ -1,6 +1,6 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
-import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
+import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalDurationPrototype } from './DurationPrototype.mts';
 import {
   ObjectValue, Q, Value, type OrdinaryObject, type ValueEvaluator,

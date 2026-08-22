@@ -31,7 +31,7 @@ import {
   SameValue,
   StringCreate,
   Z,
-  F, R,
+  F, R, type Integer,
 } from './all.mts';
 import { clamp, modulo, truncate } from './math.mts';
 import {
@@ -207,6 +207,34 @@ export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<n
   return truncate(R(number));
 }
 
+/** https://tc39.es/ecma262/#sec-snaptointeger */
+export function* SnapToInteger(
+  arg: Value,
+  nonIntHandling: 'reject' | 'strict' | 'truncate' | 'truncate-strict',
+  minimum?: Integer,
+  maximum?: Integer,
+): PlainEvaluator<Integer> {
+  const number = Q(yield* ToNumber(arg));
+  if (number.isNaN() || number.isInfinity()) {
+    return Throw.RangeError('$1 is not a finite number', number);
+  }
+  let mv = R(number);
+  // PR #3946 renamed "strict and truncate-strict" (Temporal PR) to "reject and truncate".
+  if (nonIntHandling === 'truncate' || nonIntHandling === 'truncate-strict') {
+    mv = truncate(mv);
+  }
+  if (!Number.isInteger(mv)) {
+    return Throw.RangeError('$1 is not an integer', number);
+  }
+  if (minimum !== undefined && mv < minimum) {
+    return Throw.RangeError('$1 is too small', number);
+  }
+  if (maximum !== undefined && mv > maximum) {
+    return Throw.RangeError('$1 is too large', number);
+  }
+  return BigInt(mv) as Integer;
+}
+
 /** https://tc39.es/ecma262/#sec-toabsoluteindex */
 export function* ToAbsoluteIndex(value: Value | number, length: number): PlainEvaluator<number> {
   let int = Q(yield* ToIntegerOrInfinity(value));
@@ -379,31 +407,21 @@ export function* ToBigUint64(argument: Value): ValueEvaluator<BigIntValue> {
 /** https://tc39.es/ecma262/#sec-tostring */
 export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
   if (argument instanceof UndefinedValue) {
-    // Return "undefined".
     return Value('undefined');
   } else if (argument instanceof NullValue) {
-    // Return "null".
     return Value('null');
   } else if (argument instanceof BooleanValue) {
-    // If argument is true, return "true".
-    // If argument is false, return "false".
     return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
-    // Return ! Number::toString(argument).
-    return X(NumberValue.toString(argument, 10));
+    return X(NumberValue.toString(argument, 10n));
   } else if (argument instanceof JSStringValue) {
-    // Return argument.
     return argument;
   } else if (argument instanceof SymbolValue) {
-    // Throw a TypeError exception.
     return Throw.TypeError('Cannot convert a Symbol value to a $1', 'string');
   } else if (argument instanceof BigIntValue) {
-    // Return ! BigInt::toString(argument).
-    return X(BigIntValue.toString(argument, 10));
+    return BigIntValue.toString(argument, 10n);
   } else if (argument instanceof ObjectValue) {
-    // 1. Let primValue be ? ToPrimitive(argument, string).
     const primValue = Q(yield* ToPrimitive(argument, 'string'));
-    // 2. Return ? ToString(primValue).
     return Q(yield* ToString(primValue));
   }
   throw OutOfRange.exhaustive(argument);

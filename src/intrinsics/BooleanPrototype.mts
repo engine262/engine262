@@ -13,7 +13,7 @@ import { Assert, Throw } from '#self';
 import type { Realm } from '#self';
 
 
-function thisBooleanValue(value: Value) {
+export function ThisBooleanValue(value: Value) {
   if (value instanceof BooleanValue) {
     return value;
   }
@@ -30,7 +30,7 @@ function thisBooleanValue(value: Value) {
 /** https://tc39.es/ecma262/#sec-boolean.prototype.tostring */
 function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let b be ? thisBooleanValue(this value).
-  const b = Q(thisBooleanValue(thisValue));
+  const b = Q(ThisBooleanValue(thisValue));
   // 2. If b is true, return "true"; else return "false".
   if (b === Value.true) {
     return Value('true');
@@ -41,7 +41,7 @@ function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallC
 /** https://tc39.es/ecma262/#sec-boolean.prototype.valueof */
 function BooleanProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisBooleanValue(this value).
-  return Q(thisBooleanValue(thisValue));
+  return Q(ThisBooleanValue(thisValue));
 }
 
 export function bootstrapBooleanPrototype(realmRec: Realm) {

@@ -33,6 +33,11 @@ export {
 } from './utils/module-loader.mts';
 export { createBuiltinModuleLoader, type BuiltinModuleSource, type BuiltinModuleLoaderOptions } from './utils/module-loaders/builtin-loader.mts';
 
+export { ThisBigIntValue } from './intrinsics/BigIntPrototype.mts';
+export { ThisBooleanValue } from './intrinsics/BooleanPrototype.mts';
+export { ThisNumberValue } from './intrinsics/NumberPrototype.mts';
+export { ThisStringValue } from './intrinsics/StringPrototype.mts';
+export { ThisSymbolValue } from './intrinsics/SymbolPrototype.mts';
 export { isBoundFunctionObject, type BoundFunctionObject } from './intrinsics/FunctionPrototype.mts';
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';
 export { isSetObject, type SetObject } from './intrinsics/Set.mts';

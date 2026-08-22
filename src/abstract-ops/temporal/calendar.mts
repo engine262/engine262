@@ -9,7 +9,8 @@ import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDa
 import { isTemporalPlainDateObject, type ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import { isTemporalPlainYearMonthObject } from '../../intrinsics/Temporal/PlainYearMonth.mts';
 import { floorDiv } from '../math.mts';
-import { SnapToInteger, ToZeroPaddedDecimalString } from './addition.mts';
+import { SnapToInteger } from '../type-conversion.mts';
+import { ToZeroPaddedDecimalString } from './addition.mts';
 import type { YearWeekRecord } from './addition.mts';
 import {
   EpochDaysToEpochMs,

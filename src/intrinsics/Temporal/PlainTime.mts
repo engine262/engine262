@@ -1,5 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
-import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
+import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalPlainTimePrototype } from './PlainTimePrototype.mts';
 import {
   Q, Throw, UndefinedValue, Value, type OrdinaryObject, type ValueEvaluator,

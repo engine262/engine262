@@ -16,7 +16,7 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-thissymbolvalue */
-function thisSymbolValue(value: Value) {
+export function ThisSymbolValue(value: Value) {
   // 1. If Type(value) is Symbol, return value.
   if (value instanceof SymbolValue) {
     return value;
@@ -39,7 +39,7 @@ function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: Funct
   // 1. Let s be the this value.
   const s = thisValue;
   // 2. Let sym be ? thisSymbolValue(s).
-  const sym = Q(thisSymbolValue(s));
+  const sym = Q(ThisSymbolValue(s));
   // 3. Return sym.[[Description]].
   return sym.Description;
 }
@@ -47,7 +47,7 @@ function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: Funct
 /** https://tc39.es/ecma262/#sec-symbol.prototype.tostring */
 function SymbolProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let sym be ? thisSymbolValue(this value).
-  const sym = Q(thisSymbolValue(thisValue));
+  const sym = Q(ThisSymbolValue(thisValue));
   // 2. Return SymbolDescriptiveString(sym).
   return SymbolDescriptiveString(sym);
 }
@@ -55,13 +55,13 @@ function SymbolProto_toString(_argList: Arguments, { thisValue }: FunctionCallCo
 /** https://tc39.es/ecma262/#sec-symbol.prototype.valueof */
 function SymbolProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisSymbolValue(this value).
-  return Q(thisSymbolValue(thisValue));
+  return Q(ThisSymbolValue(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
 function SymbolProto_toPrimitive(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisSymbolValue(this value).
-  return Q(thisSymbolValue(thisValue));
+  return Q(ThisSymbolValue(thisValue));
 }
 
 export function bootstrapSymbolPrototype(realmRec: Realm) {

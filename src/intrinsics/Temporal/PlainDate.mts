@@ -1,5 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
-import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
+import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalPlainDatePrototype } from './PlainDatePrototype.mts';
 import {
   type Realm, Value, UndefinedValue, Q, JSStringValue, type FunctionCallContext, type Arguments, F, type OrdinaryObject, type ValueEvaluator,

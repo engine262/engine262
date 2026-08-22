@@ -50,8 +50,8 @@ import {
   ToClampedIndex,
 } from '#self';
 
-
-function thisStringValue(value: Value) {
+/** https://tc39.es/ecma262/#sec-thisstringvalue */
+export function ThisStringValue(value: Value) {
   if (value instanceof JSStringValue) {
     return value;
   }
@@ -652,7 +652,7 @@ function* StringProto_toLowerCase(_args: Arguments, { thisValue }: FunctionCallC
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tostring */
 function* StringProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  return Q(thisStringValue(thisValue));
+  return Q(ThisStringValue(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.touppercase */
@@ -715,7 +715,7 @@ function* StringProto_trimStart(_args: Arguments, { thisValue }: FunctionCallCon
 
 /** https://tc39.es/ecma262/#sec-string.prototype.valueof */
 function* StringProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  return Q(thisStringValue(thisValue));
+  return Q(ThisStringValue(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype-@@iterator */

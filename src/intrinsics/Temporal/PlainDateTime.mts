@@ -3,7 +3,7 @@ import {
   CanonicalizeCalendar,
   type CalendarType,
 } from '../../abstract-ops/temporal/calendar.mts';
-import { SnapToInteger } from '../../abstract-ops/temporal/addition.mts';
+import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalPlainDateTimePrototype } from './PlainDateTimePrototype.mts';
 import type { ISODateRecord } from './PlainDate.mts';
 import {

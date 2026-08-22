@@ -3,7 +3,7 @@
 import type { TemporalDurationObject } from '../intrinsics/Temporal/Duration.mts';
 import { OutOfRange } from '../utils/language.mts';
 import { Decimal } from '../host-defined/decimal.mts';
-import { SnapToInteger } from '../abstract-ops/temporal/addition.mts';
+import { SnapToInteger } from '../abstract-ops/type-conversion.mts';
 import {
   Assert,
   CreateTemporalDuration,
