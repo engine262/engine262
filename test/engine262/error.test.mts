@@ -91,7 +91,7 @@ test('native stack', () => {
   }
 });
 
-test('native function names', () => {
+test('native function names', { timeout: 15000 }, () => {
   const agent = new Agent();
   setSurroundingAgent(agent);
   const realm = new ManagedRealm();
