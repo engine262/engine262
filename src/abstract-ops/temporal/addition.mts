@@ -131,11 +131,11 @@ export function LocalTime_TemporalEdited(t: FiniteTimeValue): IntegralNumber {
   const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
   let offsetNs: bigint;
   if (parseResult.OffsetMinutes !== undefined) {
-    offsetNs = parseResult.OffsetMinutes * BigInt(SecondsPerMinute * nsPerSecond);
+    offsetNs = parseResult.OffsetMinutes * SecondsPerMinute * nsPerSecond;
   } else {
     offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, Decimal(t).multiply(nsPerMillisecond).toBigInt());
   }
-  const offsetMs = truncateDiv(offsetNs, BigInt(nsPerMillisecond));
+  const offsetMs = truncateDiv(offsetNs, nsPerMillisecond);
   return t + Number(offsetMs);
 }
 
@@ -148,7 +148,7 @@ export function UTC_TemporalEdited(t: Num): TimeValue {
   const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
   let offsetNs: bigint;
   if (parseResult.OffsetMinutes !== undefined) {
-    offsetNs = parseResult.OffsetMinutes * (BigInt(SecondsPerMinute) * BigInt(nsPerSecond));
+    offsetNs = parseResult.OffsetMinutes * SecondsPerMinute * nsPerSecond;
   } else {
     const isoDateTime = TimeValueToISODateTimeRecord(t);
     const possibleInstants = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, isoDateTime);
@@ -156,7 +156,7 @@ export function UTC_TemporalEdited(t: Num): TimeValue {
     if (possibleInstants.length > 0) {
       disambiguatedInstant = possibleInstants[0];
     } else {
-      // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, ℝ(YearFromTime(tBefore)), ℝ(MonthFromTime(tBefore)) + 1, ℝ(DateFromTime(tBefore)), ℝ(HourFromTime(tBefore)), ℝ(MinFromTime(tBefore)), ℝ(SecFromTime(tBefore)), ℝ(msFromTime(tBefore)), 0, 0TimeValueToISODateTimeRecord(tBefore)), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
+      // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, TimeValueToISODateTimeRecord(tBefore)), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
       let tBefore = Math.floor(t) - 1;
       let possibleInstantsBefore: bigint[] = [];
       while (possibleInstantsBefore.length === 0) {
@@ -168,7 +168,7 @@ export function UTC_TemporalEdited(t: Num): TimeValue {
     }
     offsetNs = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, disambiguatedInstant as EpochNanoseconds);
   }
-  const offsetMs = truncateDiv(offsetNs, BigInt(nsPerMillisecond));
+  const offsetMs = truncateDiv(offsetNs, nsPerMillisecond);
   return t - Number(offsetMs) as TimeValue;
 }
 
@@ -177,9 +177,9 @@ export function TimeString(tv: Num): string {
   // https://github.com/tc39/ecma262/pull/3759/changes#r3045475449
   // unsafe cast of tv from Number to IntegralNumber
   const timeString = FormatTimeString(
-    BigInt(HourFromTime(tv)),
-    BigInt(MinFromTime(tv)),
-    BigInt(SecFromTime(tv)),
+    HourFromTime(tv),
+    MinFromTime(tv),
+    SecFromTime(tv),
     0n,
     0n,
   );

@@ -39,7 +39,7 @@ export function ISODateToEpochDays(year: Integer, month: Integer, date: Integer)
         Days: 0n, Hour: 0n, Microsecond: 0n, Millisecond: 0n, Minute: 0n, Nanosecond: 0n, Second: 0n,
       },
     }) / BigInt(1e6)
-    - (date - 1n) * BigInt(msPerDay)
+    - (date - 1n) * msPerDay
   );
 
   Assert(EpochTimeToEpochYear(t) === resolvedYear && EpochTimeToMonthInYear(t) === resolvedMonth && EpochTimeToDate(t) === 1n);
@@ -48,12 +48,12 @@ export function ISODateToEpochDays(year: Integer, month: Integer, date: Integer)
 
 /** https://tc39.es/proposal-temporal/#sec-epochdaystoepochms */
 export function EpochDaysToEpochMs(day: Integer, time: Integer): Integer {
-  return day * BigInt(msPerDay) + time;
+  return day * msPerDay + time;
 }
 
 /** https://tc39.es/proposal-temporal/#eqn-EpochTimeToDayNumber */
 export function EpochTimeToDayNumber(t: Integer): Integer {
-  return floorDiv(t, BigInt(msPerDay));
+  return floorDiv(t, msPerDay);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-mathematicaldaysinyear */
@@ -74,7 +74,7 @@ export function EpochDayNumberForYear(y: Integer): Integer {
 
 /** https://tc39.es/proposal-temporal/#sec-epochtimeforyear */
 export function EpochTimeForYear(y: Integer): Integer {
-  return BigInt(msPerDay) * EpochDayNumberForYear(y);
+  return msPerDay * EpochDayNumberForYear(y);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-epochtimetoepochyear */

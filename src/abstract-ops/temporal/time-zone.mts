@@ -2,7 +2,7 @@ import type { ISODateRecord } from '../../intrinsics/Temporal/PlainDate.mts';
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
 import { ParseTemporalTimeZoneString, ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
 import {
-  HourFromTime, MinFromTime, SecFromTime, msFromTime,
+  HourFromTime, MinFromTime, SecFromTime, MillisecFromTime,
 } from '../date-objects.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import { abs, floorDiv, modulo } from '../math.mts';
@@ -136,7 +136,7 @@ export function GetISODateTimeFor(timeZone: TimeZoneIdentifier, epochNs: EpochNa
   const hour = HourFromTime(Number(epochMilliseconds));
   const minute = MinFromTime(Number(epochMilliseconds));
   const second = SecFromTime(Number(epochMilliseconds));
-  const millisecond = msFromTime(Number(epochMilliseconds));
+  const millisecond = MillisecFromTime(Number(epochMilliseconds));
   const microsecond = floorDiv(remainderNs, 1000n);
   Assert(microsecond < 1000);
   const nanosecond = modulo(remainderNs, 1000n);

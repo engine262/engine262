@@ -115,15 +115,15 @@ function* InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
   let maximum: Integer;
   if (smallestUnit === TemporalUnit.Hour) {
-    maximum = BigInt(HoursPerDay);
+    maximum = HoursPerDay;
   } else if (smallestUnit === TemporalUnit.Minute) {
-    maximum = BigInt(MinutesPerHour * HoursPerDay);
+    maximum = MinutesPerHour * HoursPerDay;
   } else if (smallestUnit === TemporalUnit.Second) {
-    maximum = BigInt(SecondsPerMinute * MinutesPerHour * HoursPerDay);
+    maximum = SecondsPerMinute * MinutesPerHour * HoursPerDay;
   } else if (smallestUnit === TemporalUnit.Millisecond) {
-    maximum = BigInt(msPerDay);
+    maximum = msPerDay;
   } else if (smallestUnit === TemporalUnit.Microsecond) {
-    maximum = BigInt(1e3) * BigInt(msPerDay);
+    maximum = 1_000n * msPerDay;
   } else {
     Assert(smallestUnit === TemporalUnit.Nanosecond);
     maximum = BigInt(nsPerDay);

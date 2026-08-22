@@ -6,128 +6,117 @@ import {
   ToIntegerOrInfinity,
   F, R,
   Assert,
+  type Integer,
   type IntegralNumber,
   type NaN,
   type Num,
 } from './all.mts';
-import { modulo } from './math.mts';
+import { floorDiv, modulo } from './math.mts';
 import { mark_OtherCalendarNotImplemented } from './temporal/not-implemented.mts';
 import { NumberValue } from '#self';
 
 /** https://tc39.es/ecma262/pr/3759/#sec-time-values-and-time-range */
 export type FiniteTimeValue = IntegralNumber;
 export type TimeValue = FiniteTimeValue | NaN;
-export const HoursPerDay = 24;
-export const MinutesPerHour = 60;
-export const SecondsPerMinute = 60;
-export const msPerSecond = 1000;
-export const nsPerSecond = 10 ** 9;
-export const nsPerMillisecond = 10 ** 6;
-export const nsPerMicrosecond = 10 ** 3;
-export const msPerMinute: F = msPerSecond * SecondsPerMinute;
-export const msPerHour: F = msPerMinute * MinutesPerHour;
-export const msPerDay: F = msPerHour * HoursPerDay;
-export const msPerAverageYear = 12 * 30.436875 * msPerDay;
+export const HoursPerDay = 24n;
+export const MinutesPerHour = 60n;
+export const SecondsPerMinute = 60n;
+export const msPerSecond = 1000n;
+export const nsPerSecond = 10n ** 9n;
+export const nsPerMillisecond = 10n ** 6n;
+export const nsPerMicrosecond = 10n ** 3n;
+export const msPerMinute = msPerSecond * SecondsPerMinute;
+export const msPerHour = msPerMinute * MinutesPerHour;
+export const msPerDay = msPerHour * HoursPerDay;
+export const msPerAverageYear = 12 * 30.436875 * Number(msPerDay);
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
-export function Day(t: FiniteTimeValue): IntegralNumber {
-  // 𝔽(floor(ℝ(t / msPerDay)))
-  return Math.floor(t / msPerDay);
+export function Day(t: FiniteTimeValue): Integer {
+  return floorDiv(BigInt(t), msPerDay);
 }
 
-export function TimeWithinDay(t: FiniteTimeValue): IntegralNumber {
-  // 𝔽(ℝ(t) modulo ℝ(msPerDay))
-  return modulo(t, msPerDay);
+export function TimeWithinDay(t: FiniteTimeValue): Integer {
+  return modulo(BigInt(t), msPerDay);
 }
 
-/** https://tc39.es/ecma262/#sec-year-number */
-export function DaysInYear(y: IntegralNumber): 365 | 366 {
-  const ry = y;
-  if (modulo(ry, 400) === 0) return 366;
-  if (modulo(ry, 100) === 0) return 365;
-  if (modulo(ry, 4) === 0) return 366;
-  return 365;
+/** https://tc39.es/ecma262/#sec-dayfromyear */
+export function DayFromYear(y: Integer): Integer {
+  const numYears1 = y - 1970n;
+  const numYears4 = floorDiv(y - 1969n, 4n);
+  const numYears100 = floorDiv(y - 1901n, 100n);
+  const numYears400 = floorDiv(y - 1601n, 400n);
+  return 365n * numYears1 + numYears4 - numYears100 + numYears400;
 }
 
-export function DayFromYear(y: IntegralNumber): IntegralNumber {
-  const ry = y;
-  const numYears1 = ry - 1970;
-  const numYears4 = Math.floor((ry - 1969) / 4);
-  const numYears100 = Math.floor((ry - 1901) / 100);
-  const numYears400 = Math.floor((ry - 1601) / 400);
-  return (numYears1 * 365 + numYears4 - numYears100 + numYears400);
+export function TimeFromYear(y: Integer): TimeValue {
+  return Number(msPerDay * DayFromYear(y)) as TimeValue;
 }
 
-export function TimeFromYear(y: IntegralNumber): TimeValue {
-  return (msPerDay * DayFromYear(y)) as TimeValue;
-}
-
-export function YearFromTime(t: FiniteTimeValue): IntegralNumber {
-  // 1. Return the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t.
-  let year = Math.floor(((t + msPerAverageYear / 2) / msPerAverageYear) + 1970);
+export function YearFromTime(t: FiniteTimeValue): Integer {
+  let year = BigInt(Math.floor(((t + msPerAverageYear / 2) / msPerAverageYear) + 1970));
   if (TimeFromYear(year) > t) {
-    year -= 1;
+    year -= 1n;
   }
   return year;
 }
 
-export function DayWithinYear(t: FiniteTimeValue): IntegralNumber {
+export function DayWithinYear(t: FiniteTimeValue): Integer {
   return Day(t) - DayFromYear(YearFromTime(t));
 }
 
-export function InLeapYear(t: FiniteTimeValue): 0 | 1 {
-  // 1. If DaysInYear(YearFromTime(t)) is 366𝔽, return 1𝔽; else return +0𝔽.
-  if (DaysInYear(YearFromTime(t)) === 366) {
-    return 1;
-  }
-  return 0;
+export function InLeapYear(t: FiniteTimeValue): 0n | 1n {
+  const y = YearFromTime(t);
+  if (modulo(y, 400n) === 0n) return 1n;
+  if (modulo(y, 100n) === 0n) return 0n;
+  if (modulo(y, 4n) === 0n) return 1n;
+  return 0n;
 }
 
 /** https://tc39.es/ecma262/#sec-month-number */
-export function MonthFromTime(t: FiniteTimeValue): IntegralNumber {
+export function MonthFromTime(t: FiniteTimeValue): Integer {
   const inLeapYear = InLeapYear(t);
   const dayWithinYear = DayWithinYear(t);
-  if (dayWithinYear < 31) return 0;
-  if (dayWithinYear < 59 + inLeapYear) return 1;
-  if (dayWithinYear < 90 + inLeapYear) return 2;
-  if (dayWithinYear < 120 + inLeapYear) return 3;
-  if (dayWithinYear < 151 + inLeapYear) return 4;
-  if (dayWithinYear < 181 + inLeapYear) return 5;
-  if (dayWithinYear < 212 + inLeapYear) return 6;
-  if (dayWithinYear < 243 + inLeapYear) return 7;
-  if (dayWithinYear < 273 + inLeapYear) return 8;
-  if (dayWithinYear < 304 + inLeapYear) return 9;
-  if (dayWithinYear < 334 + inLeapYear) return 10;
-  Assert(dayWithinYear < 365 + inLeapYear);
-  return 11;
+  if (dayWithinYear < 31n) return 0n;
+  if (dayWithinYear < 59n + inLeapYear) return 1n;
+  if (dayWithinYear < 90n + inLeapYear) return 2n;
+  if (dayWithinYear < 120n + inLeapYear) return 3n;
+  if (dayWithinYear < 151n + inLeapYear) return 4n;
+  if (dayWithinYear < 181n + inLeapYear) return 5n;
+  if (dayWithinYear < 212n + inLeapYear) return 6n;
+  if (dayWithinYear < 243n + inLeapYear) return 7n;
+  if (dayWithinYear < 273n + inLeapYear) return 8n;
+  if (dayWithinYear < 304n + inLeapYear) return 9n;
+  if (dayWithinYear < 334n + inLeapYear) return 10n;
+  Assert(dayWithinYear < 365n + inLeapYear);
+  return 11n;
 }
 
 /** https://tc39.es/ecma262/#sec-date-number */
-export function DateFromTime(t: FiniteTimeValue): IntegralNumber {
+export function DateFromTime(t: FiniteTimeValue): Integer {
   const inLeapYear = InLeapYear(t);
   const dayWithinYear = DayWithinYear(t);
   const month = MonthFromTime(t);
   switch (month) {
-    case 0: return dayWithinYear + 1;
-    case 1: return dayWithinYear - 30;
-    case 2: return dayWithinYear - 58 - inLeapYear;
-    case 3: return dayWithinYear - 89 - inLeapYear;
-    case 4: return dayWithinYear - 119 - inLeapYear;
-    case 5: return dayWithinYear - 150 - inLeapYear;
-    case 6: return dayWithinYear - 180 - inLeapYear;
-    case 7: return dayWithinYear - 211 - inLeapYear;
-    case 8: return dayWithinYear - 242 - inLeapYear;
-    case 9: return dayWithinYear - 272 - inLeapYear;
-    case 10: return dayWithinYear - 303 - inLeapYear;
+    case 0n: return dayWithinYear + 1n;
+    case 1n: return dayWithinYear - 30n;
+    case 2n: return dayWithinYear - 58n - inLeapYear;
+    case 3n: return dayWithinYear - 89n - inLeapYear;
+    case 4n: return dayWithinYear - 119n - inLeapYear;
+    case 5n: return dayWithinYear - 150n - inLeapYear;
+    case 6n: return dayWithinYear - 180n - inLeapYear;
+    case 7n: return dayWithinYear - 211n - inLeapYear;
+    case 8n: return dayWithinYear - 242n - inLeapYear;
+    case 9n: return dayWithinYear - 272n - inLeapYear;
+    case 10n: return dayWithinYear - 303n - inLeapYear;
     default:
   }
-  Assert(month === 11);
-  return dayWithinYear - 333 - inLeapYear;
+  Assert(month === 11n);
+  return dayWithinYear - 333n - inLeapYear;
 }
 
 /** https://tc39.es/ecma262/#sec-week-day */
-export function WeekDay(t: FiniteTimeValue): IntegralNumber {
-  return modulo(Day(t) + 4, 7);
+export function WeekDay(t: FiniteTimeValue): Integer {
+  return modulo(Day(t) + 4n, 7n);
 }
 
 /** https://tc39.es/ecma262/#sec-local-time-zone-adjustment */
@@ -148,20 +137,20 @@ export function UTC(t: NumberValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
-export function HourFromTime(t: FiniteTimeValue): IntegralNumber {
-  return modulo(Math.floor(t / msPerHour), HoursPerDay);
+export function HourFromTime(t: FiniteTimeValue): Integer {
+  return modulo(floorDiv(BigInt(t), msPerHour), HoursPerDay);
 }
 
-export function MinFromTime(t: FiniteTimeValue): IntegralNumber {
-  return modulo(Math.floor(t / msPerMinute), MinutesPerHour);
+export function MinFromTime(t: FiniteTimeValue): Integer {
+  return modulo(floorDiv(BigInt(t), msPerMinute), MinutesPerHour);
 }
 
-export function SecFromTime(t: FiniteTimeValue): IntegralNumber {
-  return modulo(Math.floor(t / msPerSecond), SecondsPerMinute);
+export function SecFromTime(t: FiniteTimeValue): Integer {
+  return modulo(floorDiv(BigInt(t), msPerSecond), SecondsPerMinute);
 }
 
-export function msFromTime(t: FiniteTimeValue): IntegralNumber {
-  return modulo(t, msPerSecond);
+export function MillisecFromTime(t: FiniteTimeValue): Integer {
+  return modulo(BigInt(t), msPerSecond);
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
@@ -173,7 +162,7 @@ export function MakeTime(hour: Num, min: Num, sec: Num, ms: Num): Num {
   const m = X(ToIntegerOrInfinity(min));
   const s = X(ToIntegerOrInfinity(sec));
   const milli = X(ToIntegerOrInfinity(ms));
-  return ((h * msPerHour + m * msPerMinute) + s * msPerSecond) + milli;
+  return ((h * Number(msPerHour) + m * Number(msPerMinute)) + s * Number(msPerSecond)) + milli;
 }
 
 const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
@@ -189,9 +178,10 @@ export function MakeDay(year: Num, month: Num, date: Num): Num | NaN {
   const ym = y + Math.floor(m / 12);
   if (!Number.isFinite(ym)) return NaN;
   const mn = modulo(m, 12);
-  // Find a finite time value t such that YearFromTime(t) is ym, MonthFromTime(t) is mn, and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
-  const ymday = Number(DayFromYear(ym + (mn > 1 ? 1 : 0))) - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
-  const t = Math.floor(ymday * msPerDay);
+  // Find a finite time value t such that YearFromTime(t) = ℝ(ym), MonthFromTime(t) = mn, and DateFromTime(t) = 1; but if this is not possible (because some argument is out of range), return NaN.
+  const ymday = Number(DayFromYear(BigInt(ym + (mn > 1 ? 1 : 0)))) - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
+  const t = Math.floor(ymday * Number(msPerDay));
+  if (!Number.isFinite(t)) return NaN;
   return Number(Day(t)) + dt - 1;
 }
 
@@ -200,7 +190,7 @@ export function MakeDate(day: Num, time: Num): Num | NaN {
   if (!Number.isFinite(day) || !Number.isFinite(time)) {
     return NaN;
   }
-  const tv = day * msPerDay + time;
+  const tv = day * Number(msPerDay) + time;
   if (!Number.isFinite(tv)) {
     return NaN;
   }

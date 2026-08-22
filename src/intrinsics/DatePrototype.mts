@@ -29,7 +29,7 @@ import {
   MakeTime,
   MinFromTime,
   MonthFromTime,
-  msFromTime,
+  MillisecFromTime,
   msPerMinute,
   OrdinaryToPrimitive,
   SecFromTime,
@@ -96,7 +96,7 @@ function DateProto_getMilliseconds(_args: Arguments, { thisValue }: FunctionCall
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(Number(msFromTime(LocalTime_TemporalEdited(R(t)))));
+  return Value(Number(MillisecFromTime(LocalTime_TemporalEdited(R(t)))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getminutes */
@@ -146,7 +146,7 @@ function DateProto_getUTCDate(_args: Arguments, { thisValue }: FunctionCallConte
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(DateFromTime(R(t)));
+  return Value(Number(DateFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcday */
@@ -155,7 +155,7 @@ function DateProto_getUTCDay(_args: Arguments, { thisValue }: FunctionCallContex
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(WeekDay(R(t)));
+  return Value(Number(WeekDay(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear */
@@ -164,7 +164,7 @@ function DateProto_getUTCFullYear(_args: Arguments, { thisValue }: FunctionCallC
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(YearFromTime(R(t)));
+  return Value(Number(YearFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutchours */
@@ -173,7 +173,7 @@ function DateProto_getUTCHours(_args: Arguments, { thisValue }: FunctionCallCont
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(HourFromTime(R(t)));
+  return Value(Number(HourFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds */
@@ -182,7 +182,7 @@ function DateProto_getUTCMilliseconds(_args: Arguments, { thisValue }: FunctionC
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(msFromTime(R(t)));
+  return Value(Number(MillisecFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcminutes */
@@ -191,7 +191,7 @@ function DateProto_getUTCMinutes(_args: Arguments, { thisValue }: FunctionCallCo
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(MinFromTime(R(t)));
+  return Value(Number(MinFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcmonth */
@@ -200,7 +200,7 @@ function DateProto_getUTCMonth(_args: Arguments, { thisValue }: FunctionCallCont
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(MonthFromTime(R(t)));
+  return Value(Number(MonthFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcseconds */
@@ -209,7 +209,7 @@ function DateProto_getUTCSeconds(_args: Arguments, { thisValue }: FunctionCallCo
   if (t.isNaN()) {
     return F(NaN);
   }
-  return Value(SecFromTime(R(t)));
+  return Value(Number(SecFromTime(R(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setdate */
@@ -221,7 +221,7 @@ function* DateProto_setDate([date = Value.undefined]: Arguments, { thisValue }: 
   }
   t = LocalTime(t);
   const _t = R(t);
-  const newDate = MakeDate(MakeDay(YearFromTime(_t), MonthFromTime(_t), R(dt)), TimeWithinDay(_t));
+  const newDate = MakeDate(MakeDay(Number(YearFromTime(_t)), Number(MonthFromTime(_t)), R(dt)), Number(TimeWithinDay(_t)));
   const u = TimeClip(UTC_TemporalEdited(newDate));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
@@ -237,15 +237,15 @@ function* DateProto_setFullYear([year = Value.undefined, month, date]: Arguments
   if (month !== undefined) {
     m = R(Q(yield* ToNumber(month)));
   } else {
-    m = MonthFromTime(R(t));
+    m = Number(MonthFromTime(R(t)));
   }
   let dt: number;
   if (date !== undefined) {
     dt = R(Q(yield* ToNumber(date)));
   } else {
-    dt = DateFromTime(R(t));
+    dt = Number(DateFromTime(R(t)));
   }
-  const newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(R(t)));
+  const newDate = MakeDate(MakeDay(y, m, dt), Number(TimeWithinDay(R(t))));
   const u = TimeClip(UTC_TemporalEdited(newDate));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
@@ -272,10 +272,10 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, 
     return t;
   }
   t = LocalTime(t);
-  m ??= MinFromTime(R(t));
-  s ??= SecFromTime(R(t));
-  milli ??= msFromTime(R(t));
-  const date = MakeDate(Day(R(t)), MakeTime(h, m, s, milli));
+  m ??= Number(MinFromTime(R(t)));
+  s ??= Number(SecFromTime(R(t)));
+  milli ??= Number(MillisecFromTime(R(t)));
+  const date = MakeDate(Number(Day(R(t))), MakeTime(h, m, s, milli));
   const u = TimeClip(UTC_TemporalEdited(date));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
@@ -291,8 +291,8 @@ function* DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisVal
   }
   t = LocalTime(t);
   const _t = R(t);
-  const time = MakeTime(HourFromTime(_t), MinFromTime(_t), SecFromTime(_t), R(ms));
-  const u = TimeClip(UTC_TemporalEdited(MakeDate(Day(_t), time)));
+  const time = MakeTime(Number(HourFromTime(_t)), Number(MinFromTime(_t)), Number(SecFromTime(_t)), R(ms));
+  const u = TimeClip(UTC_TemporalEdited(MakeDate(Number(Day(_t)), time)));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
   return Value(u);
@@ -315,10 +315,10 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { th
   if (t.isNaN()) {
     return t;
   }
-  s ??= SecFromTime(R(t));
-  milli ??= msFromTime(R(t));
+  s ??= Number(SecFromTime(R(t)));
+  milli ??= Number(MillisecFromTime(R(t)));
   // 5. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
-  const date = MakeDate(Day(R(t)), MakeTime(HourFromTime(R(t)), m, s, milli));
+  const date = MakeDate(Number(Day(R(t))), MakeTime(Number(HourFromTime(R(t))), m, s, milli));
   // 6. Let u be TimeClip(UTC(date)).
   const u = TimeClip(UTC_TemporalEdited(date));
   // 7. Set the [[DateValue]] internal slot of this Date object to u.
@@ -340,8 +340,8 @@ function* DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisV
     return t;
   }
   t = LocalTime(t);
-  dt ??= DateFromTime(R(t));
-  const newDate = MakeDate(MakeDay(YearFromTime(R(t)), m, dt), TimeWithinDay(R(t)));
+  dt ??= Number(DateFromTime(R(t)));
+  const newDate = MakeDate(MakeDay(Number(YearFromTime(R(t))), m, dt), Number(TimeWithinDay(R(t))));
   const u = TimeClip(UTC_TemporalEdited(newDate));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
@@ -360,8 +360,8 @@ function* DateProto_setSeconds([sec = Value.undefined, ms]: Arguments, { thisVal
     return t;
   }
   t = LocalTime(t);
-  milli ??= msFromTime(R(t));
-  const date = MakeDate(Day(R(t)), MakeTime(HourFromTime(R(t)), MinFromTime(R(t)), s, milli));
+  milli ??= Number(MillisecFromTime(R(t)));
+  const date = MakeDate(Number(Day(R(t))), MakeTime(Number(HourFromTime(R(t))), Number(MinFromTime(R(t))), s, milli));
   const u = TimeClip(UTC_TemporalEdited(date));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = u;
@@ -385,7 +385,7 @@ function* DateProto_setUTCDate([date = Value.undefined]: Arguments, { thisValue 
   if (t.isNaN()) {
     return t;
   }
-  const newDate = MakeDate(MakeDay(YearFromTime(R(t)), MonthFromTime(R(t)), R(dt)), TimeWithinDay(R(t)));
+  const newDate = MakeDate(MakeDay(Number(YearFromTime(R(t))), Number(MonthFromTime(R(t))), R(dt)), Number(TimeWithinDay(R(t))));
   const v = TimeClip(newDate);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -403,15 +403,15 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date]: Argume
   if (month !== undefined) {
     m = R(Q(yield* ToNumber(month)));
   } else {
-    m = MonthFromTime(R(t));
+    m = Number(MonthFromTime(R(t)));
   }
   let dt: number;
   if (date !== undefined) {
     dt = R(Q(yield* ToNumber(date)));
   } else {
-    dt = DateFromTime(R(t));
+    dt = Number(DateFromTime(R(t)));
   }
-  const newDate = MakeDate(MakeDay(R(y), m, dt), TimeWithinDay(R(t)));
+  const newDate = MakeDate(MakeDay(R(y), m, dt), Number(TimeWithinDay(R(t))));
   const v = TimeClip(newDate);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -437,10 +437,10 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Argument
   if (t.isNaN()) {
     return t;
   }
-  m ??= MinFromTime(R(t));
-  s ??= SecFromTime(R(t));
-  milli ??= msFromTime(R(t));
-  const date = MakeDate(Day(R(t)), MakeTime(R(h), m, s, milli));
+  m ??= Number(MinFromTime(R(t)));
+  s ??= Number(SecFromTime(R(t)));
+  milli ??= Number(MillisecFromTime(R(t)));
+  const date = MakeDate(Number(Day(R(t))), MakeTime(R(h), m, s, milli));
   const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -455,8 +455,8 @@ function* DateProto_setUTCMilliseconds([ms = Value.undefined]: Arguments, { this
     return t;
   }
   const _t = R(t);
-  const time = MakeTime(HourFromTime(_t), MinFromTime(_t), SecFromTime(_t), R(ms));
-  const v = TimeClip(MakeDate(Day(_t), time));
+  const time = MakeTime(Number(HourFromTime(_t)), Number(MinFromTime(_t)), Number(SecFromTime(_t)), R(ms));
+  const v = TimeClip(MakeDate(Number(Day(_t)), time));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
   return Value(v);
@@ -478,9 +478,9 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms]: Arguments, {
     return t;
   }
   const _t = R(t);
-  s ??= SecFromTime(_t);
-  milli ??= msFromTime(_t);
-  const date = MakeDate(Day(_t), MakeTime(HourFromTime(_t), R(m), s, milli));
+  s ??= Number(SecFromTime(_t));
+  milli ??= Number(MillisecFromTime(_t));
+  const date = MakeDate(Number(Day(_t)), MakeTime(Number(HourFromTime(_t)), R(m), s, milli));
   const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -499,8 +499,8 @@ function* DateProto_setUTCMonth([month = Value.undefined, date]: Arguments, { th
     return t;
   }
   const _t = R(t);
-  dt ??= DateFromTime(_t);
-  const newDate = MakeDate(MakeDay(YearFromTime(_t), R(m), dt), TimeWithinDay(_t));
+  dt ??= Number(DateFromTime(_t));
+  const newDate = MakeDate(MakeDay(Number(YearFromTime(_t)), R(m), dt), Number(TimeWithinDay(_t)));
   const v = TimeClip(newDate);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -519,8 +519,8 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { this
     return t;
   }
   const _t = R(t);
-  milli ??= msFromTime(_t);
-  const date = MakeDate(Day(_t), MakeTime(HourFromTime(_t), MinFromTime(_t), R(s), milli));
+  milli ??= Number(MillisecFromTime(_t));
+  const date = MakeDate(Number(Day(_t)), MakeTime(Number(HourFromTime(_t)), Number(MinFromTime(_t)), R(s), milli));
   const v = TimeClip(date);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -554,7 +554,7 @@ export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionC
   const hour = Number(HourFromTime(_t));
   const min = Number(MinFromTime(_t));
   const sec = Number(SecFromTime(_t));
-  const ms = Number(msFromTime(_t));
+  const ms = Number(MillisecFromTime(_t));
 
   let YYYY = String(year).padStart(4, '0');
   if (year < 0 || year > 9999) {
@@ -686,8 +686,8 @@ function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallCont
   if (tv.isNaN()) {
     return Value('Invalid Date');
   }
-  const weekday = daysOfTheWeek[WeekDay(R(tv))];
-  const month = monthsOfTheYear[MonthFromTime(R(tv))];
+  const weekday = daysOfTheWeek[Number(WeekDay(R(tv)))];
+  const month = monthsOfTheYear[Number(MonthFromTime(R(tv)))];
   const day = String(DateFromTime(R(tv))).padStart(2, '0');
   const yv = YearFromTime(R(tv));
   const yearSign = yv >= 0 ? '' : '-';

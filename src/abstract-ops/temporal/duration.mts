@@ -458,10 +458,10 @@ export function TimeDurationFromComponents(
   microseconds: Integer,
   nanoseconds: Integer,
 ): TimeDuration {
-  const secondsPart = (hours * BigInt(MinutesPerHour) + minutes) * BigInt(SecondsPerMinute) + seconds;
-  const result = secondsPart * BigInt(nsPerSecond)
-    + milliseconds * BigInt(nsPerMillisecond)
-    + microseconds * BigInt(nsPerMicrosecond)
+  const secondsPart = (hours * MinutesPerHour + minutes) * SecondsPerMinute + seconds;
+  const result = secondsPart * nsPerSecond
+    + milliseconds * nsPerMillisecond
+    + microseconds * nsPerMicrosecond
     + nanoseconds;
   Assert(abs(result) <= maxTimeDuration);
   return result;
@@ -801,7 +801,7 @@ export function NudgeToDayOrTime(
   let remainder = roundedTime;
   if (isDateUnit(largestUnit)) {
     days = roundedWholeDays;
-    remainder = X(AddTimeDuration(roundedTime, TimeDurationFromComponents(-roundedWholeDays * BigInt(HoursPerDay), 0n, 0n, 0n, 0n, 0n)));
+    remainder = X(AddTimeDuration(roundedTime, TimeDurationFromComponents(-roundedWholeDays * HoursPerDay, 0n, 0n, 0n, 0n, 0n)));
   }
   const dateDuration = X(AdjustDateDurationRecord(duration.Date, days));
   const resultDuration = CombineDateAndTimeDuration(dateDuration, remainder);
