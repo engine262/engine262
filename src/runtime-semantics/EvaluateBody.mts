@@ -35,13 +35,14 @@ export function Evaluate_AnyFunctionBody({ FunctionStatementList }: ParseNode.Fu
   return Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
-/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluatefunctionbody */
 // FunctionBody : FunctionStatementList
-export function* EvaluateBody_FunctionBody({ FunctionStatementList }: ParseNode.FunctionBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
-  // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
+export function* EvaluateFunctionBody({ FunctionStatementList }: ParseNode.FunctionBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Return the result of evaluating FunctionStatementList.
-  return yield* Evaluate_FunctionStatementList(FunctionStatementList);
+  // NOTE: If the previous step resulted in a normal completion, then evaluation finished by proceeding past the end of the FunctionStatementList.
+  // Note: Q can propagate return completion
+  Q(yield* Evaluate_FunctionStatementList(FunctionStatementList));
+  return ReturnCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
@@ -55,18 +56,18 @@ export function* Evaluate_ExpressionBody({ AssignmentExpression }: ParseNode.Exp
   return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
 }
 
-/** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateconcisebody */
 // ConciseBody : ExpressionBody
-export function* EvaluateBody_ConciseBody({ ExpressionBody }: ParseNode.ConciseBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
+export function* EvaluateConciseBody({ ExpressionBody }: ParseNode.ConciseBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Return the result of evaluating ExpressionBody.
   return yield* Evaluate(ExpressionBody);
 }
 
-/** https://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateasyncconcisebody */
 // AsyncConciseBody : ExpressionBody
-function* EvaluateBody_AsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConciseBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
+function* EvaluateAsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConciseBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -83,9 +84,9 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConci
   return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
-/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluategeneratorbody */
 // GeneratorBody : FunctionBody
-export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
+export function* EvaluateGeneratorBody(GeneratorBody: ParseNode.GeneratorBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorPrototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
@@ -100,9 +101,9 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBo
   return ReturnCompletion(G);
 }
 
-/** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateasyncgeneratorbody */
 // AsyncGeneratorBody : FunctionBody
-export function* EvaluateBody_AsyncGeneratorBody(FunctionBody: ParseNode.AsyncGeneratorBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
+export function* EvaluateAsyncGeneratorBody(FunctionBody: ParseNode.AsyncGeneratorBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] »).
@@ -121,9 +122,9 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody: ParseNode.AsyncGe
   return new Completion({ Type: 'return', Value: generator, Target: undefined });
 }
 
-/** https://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateasyncfunctionbody */
 // AsyncBody : FunctionBody
-export function* EvaluateBody_AsyncFunctionBody(FunctionBody: ParseNode.AsyncBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
+export function* EvaluateAsyncFunctionBody(FunctionBody: ParseNode.AsyncBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -171,11 +172,10 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNo
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
 //    ClassStaticBlockBody : ClassStaticBlockStatementList
-function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }: ParseNode.ClassStaticBlockBody, functionObject: ECMAScriptFunctionObject) {
-  // 1. Perform ? FunctionDeclarationInstantiation(functionObject, « »).
+function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }: ParseNode.ClassStaticBlockBody, functionObject: ECMAScriptFunctionObject): StatementEvaluator {
   Q(yield* FunctionDeclarationInstantiation(functionObject, []));
-  // 2. Return the result of evaluating ClassStaticBlockStatementList.
-  return yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList);
+  Q(yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList));
+  return ReturnCompletion(Value.undefined);
 }
 
 // FunctionBody : FunctionStatementList
@@ -188,18 +188,19 @@ function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }: ParseN
 export function EvaluateBody(Body: Body, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments) {
   switch (Body.type) {
     case 'FunctionBody':
-      return EvaluateBody_FunctionBody(Body, functionObject, argumentsList);
+      return EvaluateFunctionBody(Body, functionObject, argumentsList);
     case 'ConciseBody':
-      return EvaluateBody_ConciseBody(Body, functionObject, argumentsList);
+      return EvaluateConciseBody(Body, functionObject, argumentsList);
     case 'GeneratorBody':
-      return EvaluateBody_GeneratorBody(Body, functionObject, argumentsList);
+      return EvaluateGeneratorBody(Body, functionObject, argumentsList);
     case 'AsyncGeneratorBody':
-      return EvaluateBody_AsyncGeneratorBody(Body, functionObject, argumentsList);
+      return EvaluateAsyncGeneratorBody(Body, functionObject, argumentsList);
     case 'AsyncBody':
-      return EvaluateBody_AsyncFunctionBody(Body, functionObject, argumentsList);
+      return EvaluateAsyncFunctionBody(Body, functionObject, argumentsList);
     case 'AsyncConciseBody':
-      return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);
+      return EvaluateAsyncConciseBody(Body, functionObject, argumentsList);
     case 'ClassStaticBlockBody':
+      Assert(argumentsList.length === 0);
       return EvaluateClassStaticBlockBody(Body, functionObject);
     default:
       return EvaluateBody_AssignmentExpression(Body, functionObject, argumentsList);

@@ -324,13 +324,11 @@ function* FunctionCallSlot(this: FunctionObject, thisArgument: Value, argumentsL
   const result = yield* OrdinaryCallEvaluateBody(F, argumentsList);
   // 8. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
-  // 9. If result.[[Type]] is return, return NormalCompletion(result.[[Value]]).
-  if (result.Type === 'return') {
-    return NormalCompletion(result.Value);
+  if (result instanceof ThrowCompletion) {
+    return Q(result);
   }
-  Q(result);
-  // 11. Return NormalCompletion(undefined).
-  return NormalCompletion(Value.undefined);
+  Assert(result instanceof ReturnCompletion);
+  return result.Value;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
@@ -344,11 +342,11 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
   // 3. Let callerContext be the running execution context.
   // 4. Let kind be F.[[ConstructorKind]].
   const kind = F.ConstructorKind;
-  let thisArgument;
+  let thisArg;
   // 5. If kind is base, then
   if (kind === 'base') {
     // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
-    thisArgument = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%'));
+    thisArg = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%'));
   }
   // 6. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
@@ -358,9 +356,9 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
   // 8. If kind is base, then
   if (kind === 'base') {
     // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-    OrdinaryCallBindThis(F, calleeContext, thisArgument!);
+    OrdinaryCallBindThis(F, calleeContext, thisArg!);
     // b. Let initializeResult be InitializeInstanceElements(thisArgument, F).
-    const initializeResult = yield* InitializeInstanceElements(thisArgument!, F);
+    const initializeResult = yield* InitializeInstanceElements(thisArg!, F);
     // c. If initializeResult is an abrupt completion, then
     if (initializeResult instanceof AbruptCompletion) {
       // i. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
@@ -370,30 +368,23 @@ function* FunctionConstructSlot(this: FunctionObject, argumentsList: Arguments, 
     }
   }
   // 9. Let constructorEnv be the LexicalEnvironment of calleeContext.
-  const constructorEnv = calleeContext.LexicalEnvironment;
+  const ctorEnv = calleeContext.LexicalEnvironment;
   // 10. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
   const result = yield* OrdinaryCallEvaluateBody(F, argumentsList);
   // 11. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
-  // 12. If result.[[Type]] is return, then
-  if (result.Type === 'return') {
-    // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
-    if (result.Value instanceof ObjectValue) {
-      return NormalCompletion(result.Value);
-    }
-    // b. If kind is base, return NormalCompletion(thisArgument).
-    if (kind === 'base') {
-      return NormalCompletion(thisArgument!);
-    }
-    // c. If result.[[Value]] is not undefined, throw a TypeError exception.
-    if (result.Value !== Value.undefined) {
-      return Throw.TypeError('Return value $1 of a derived constructor is not an object or undefined', result.Value);
-    }
-  } else {
-    Q(result);
+  if (result instanceof ThrowCompletion) {
+    return Q(result);
   }
-  // 14. Return ? constructorEnv.GetThisBinding().
-  return Q((constructorEnv as FunctionEnvironmentRecord).GetThisBinding() as ObjectValue);
+  Assert(result instanceof ReturnCompletion);
+  if (result.Value instanceof ObjectValue) return result.Value;
+  if (kind === 'base') return thisArg!;
+  if (result.Value !== Value.undefined) {
+    return Throw.TypeError('Return value $1 of a derived constructor is not an object or undefined', result.Value);
+  }
+  const thisBinding = Q((ctorEnv as FunctionEnvironmentRecord).GetThisBinding());
+  Assert(thisBinding instanceof ObjectValue);
+  return thisBinding;
 }
 
 /** https://tc39.es/ecma262/#sec-functionallocate */
