@@ -461,8 +461,8 @@ export function* ToPropertyKey(argument: Value): ValueEvaluator<PropertyKeyValue
 /** https://tc39.es/ecma262/#sec-tolength */
 export function* ToLength(arg: Value): ValueEvaluator<NumberValue> {
   const length = Q(yield* ToIntegerOrInfinity(arg));
-  const clampedLen = clamp(0, length, (2 ** 53) - 1);
-  return F(clampedLen);
+  const clampedLength = clamp(0, length, (2 ** 53) - 1);
+  return F(clampedLength);
 }
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
