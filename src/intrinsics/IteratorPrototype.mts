@@ -62,11 +62,11 @@ function* IteratorProto_constructor_setter([v = Value.undefined]: Arguments, { t
 
 /** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks */
 function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (!(chunkSize instanceof NumberValue) || !chunkSize.isIntegralNumber()) {
     const error = Throw.TypeError('$1 is not an integral Number', chunkSize);
     return Q(yield* IteratorClose(iterated, error));
@@ -75,7 +75,7 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
     const error = Throw.RangeError('$1 is out of range', chunkSize);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
     let buffer: Value[] = [];
     while (true) {
@@ -107,30 +107,30 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.drop */
 function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
-  const numLimit: ValueCompletion<NumberValue> = EnsureCompletion(yield* ToNumber(limit));
-  IfAbruptCloseIterator(numLimit, iterated);
-  __ts_cast__<NumberValue>(numLimit);
-  if (numLimit.isNaN()) {
-    const error = Throw.RangeError('$1 is out of range', numLimit);
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
+  const numberLimit: ValueCompletion<NumberValue> = EnsureCompletion(yield* ToNumber(limit));
+  IfAbruptCloseIterator(numberLimit, iterated);
+  __ts_cast__<NumberValue>(numberLimit);
+  if (numberLimit.isNaN()) {
+    const error = Throw.RangeError('$1 is out of range', numberLimit);
     return Q(yield* IteratorClose(iterated, error));
   }
-  if (numLimit.isFinite() && numLimit.value > (2 ** 53) - 1) {
-    const error = Throw.RangeError('$1 is out of range', numLimit);
+  if (numberLimit.isFinite() && numberLimit.value > (2 ** 53) - 1) {
+    const error = Throw.RangeError('$1 is out of range', numberLimit);
     return Q(yield* IteratorClose(iterated, error));
   }
-  const integerLimit: number = X(yield* ToIntegerOrInfinity(numLimit instanceof NormalCompletion ? numLimit.Value : numLimit));
-  if (integerLimit < 0) {
-    const error = Throw.RangeError('$1 is out of range', numLimit);
+  const intLimit: number = X(yield* ToIntegerOrInfinity(numberLimit instanceof NormalCompletion ? numberLimit.Value : numberLimit));
+  if (intLimit < 0) {
+    const error = Throw.RangeError('$1 is out of range', numberLimit);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
-    let remaining: number = integerLimit;
+    let remaining: number = intLimit;
     while (remaining > 0) {
       remaining -= 1;
       const next = Q(yield* IteratorStep(iterated));
@@ -159,16 +159,16 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.every */
 function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   let counter = 0;
   while (true) {
     const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
@@ -181,22 +181,23 @@ function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisVa
     if (ToBoolean(result) === Value.false) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.false)));
     }
+    // NOTE: The following step will not change counter once it reaches 2 ** 53.
     counter += 1;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.filter */
 function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
     let counter = 0;
     while (true) {
@@ -211,6 +212,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
         const completion = EnsureCompletion(yield* Yield(value));
         IfAbruptCloseIterator(completion, iterated);
       }
+      // NOTE: The following step will not change counter once it reaches 2 ** 53.
       counter += 1;
     }
   };
@@ -226,16 +228,16 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.find */
 function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   let counter = 0;
   while (true) {
     const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
@@ -248,22 +250,23 @@ function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisVal
     if (ToBoolean(result) === Value.true) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(value)));
     }
+    // NOTE: The following step will not change counter once it reaches 2 ** 53.
     counter += 1;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.flatmap */
 function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(mapper) === false) {
     const error = Throw.TypeError('$1 is not a function', mapper);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
     let counter = 0;
     while (true) {
@@ -293,6 +296,7 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
           }
         }
       }
+      // NOTE: The following step will not change counter once it reaches 2 ** 53.
       counter += 1;
     }
   };
@@ -309,16 +313,16 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.foreach */
 function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(procedure) === false) {
     const error = Throw.TypeError('$1 is not a function', procedure);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   let counter = 0;
   while (true) {
     const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
@@ -327,6 +331,7 @@ function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { this
     }
     const result: ValueCompletion = yield* Call(procedure, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
+    // NOTE: The following step will not change counter once it reaches 2 ** 53.
     counter += 1;
   }
 }
@@ -379,16 +384,16 @@ function IteratorProto_iterator(_args: Arguments, { thisValue }: FunctionCallCon
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.map */
 function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(mapper) === false) {
     const error = Throw.TypeError('$1 is not a function', mapper);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
     let counter = 0;
     while (true) {
@@ -401,6 +406,7 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
       __ts_cast__<Value>(mapped);
       const completion = EnsureCompletion(yield* Yield(mapped));
       IfAbruptCloseIterator(completion, iterated);
+      // NOTE: The following step will not change counter once it reaches 2 ** 53.
       counter += 1;
     }
   };
@@ -416,17 +422,17 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.reduce */
 function* IteratorProto_reduce(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   const reducer = args[0] ?? Value.undefined;
   if (IsCallable(reducer) === false) {
     const error = Throw.TypeError('$1 is not a function', reducer);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   let accumulator: Value | 'done';
   let counter: number;
   if (args.length < 2) {
@@ -448,22 +454,23 @@ function* IteratorProto_reduce(args: Arguments, { thisValue }: FunctionCallConte
     IfAbruptCloseIterator(result, iterated);
     __ts_cast__<Value>(result);
     accumulator = result;
+    // NOTE: The following step will not change counter once it reaches 2 ** 53.
     counter += 1;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.some */
 function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   let counter = 0;
   while (true) {
     const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
@@ -476,37 +483,37 @@ function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisVal
     if (ToBoolean(result) === Value.true) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.true)));
     }
+    // NOTE: The following step will not change counter once it reaches 2 ** 53.
     counter += 1;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.take */
 function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
-  const numLimit: ValueCompletion<NumberValue> = yield* ToNumber(limit);
-  IfAbruptCloseIterator(numLimit, iterated);
-  __ts_cast__<Value>(numLimit);
-  if (numLimit.isNaN()) {
-    const error = Throw.RangeError('$1 is out of range', numLimit);
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
+  const numberLimit: ValueCompletion<NumberValue> = yield* ToNumber(limit);
+  IfAbruptCloseIterator(numberLimit, iterated);
+  __ts_cast__<Value>(numberLimit);
+  if (numberLimit.isNaN()) {
+    const error = Throw.RangeError('$1 is out of range', numberLimit);
     return Q(yield* IteratorClose(iterated, error));
   }
-  if (numLimit.isFinite() && numLimit.value > (2 ** 53) - 1) {
-    const error = Throw.RangeError('$1 is out of range', numLimit);
+  if (numberLimit.isFinite() && numberLimit.value > (2 ** 53) - 1) {
+    const error = Throw.RangeError('$1 is out of range', numberLimit);
     return Q(yield* IteratorClose(iterated, error));
   }
-  const integerLimit: number = X(yield* ToIntegerOrInfinity(numLimit instanceof NormalCompletion ? numLimit.Value : numLimit));
-  if (integerLimit < 0) {
-    const error = Throw.RangeError('$1 is out of range', numLimit);
+  const intLimit: number = X(yield* ToIntegerOrInfinity(numberLimit instanceof NormalCompletion ? numberLimit.Value : numberLimit));
+  if (intLimit < 0) {
+    const error = Throw.RangeError('$1 is out of range', numberLimit);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
-    // a. Let remaining be 𝔽(integerLimit).
-    let remaining: number = integerLimit;
+    let remaining: number = intLimit;
     while (true) {
       if (remaining === 0) {
         return Q(yield* IteratorClose(iterated, ReturnCompletion(Value.undefined)));
@@ -532,11 +539,11 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
 
 /** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.windows */
 function* IteratorProto_windows([windowSize = Value.undefined, undersized = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: Value.false };
   if (!(windowSize instanceof NumberValue) || !windowSize.isIntegralNumber()) {
     const error = Throw.TypeError('$1 is not an integral Number', windowSize);
     return Q(yield* IteratorClose(iterated, error));
@@ -553,7 +560,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
     const error = Throw.TypeError('$1 is not a valid undersized mode', undersized);
     return Q(yield* IteratorClose(iterated, error));
   }
-  iterated = Q(yield* GetIteratorDirect(O));
+  iterated = Q(yield* GetIteratorDirect(obj));
   const closure = function* closure(): ValueEvaluator {
     const buffer: Value[] = [];
     while (true) {
@@ -588,11 +595,11 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.toarray */
 function* IteratorProto_toArray(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  if (!(O instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', O);
+  const obj = thisValue;
+  if (!(obj instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', obj);
   }
-  const iterated: IteratorRecord = Q(yield* GetIteratorDirect(O));
+  const iterated: IteratorRecord = Q(yield* GetIteratorDirect(obj));
   const items: Value[] = [];
   while (true) {
     const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
