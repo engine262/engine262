@@ -20,7 +20,7 @@ import {
 import { GetEpochNanosecondsFor } from './time-zone.mts';
 import {
   X, type ValueEvaluator, Assert, type PlainCompletion, surroundingAgent, Value, ObjectValue, JSStringValue, type Mutable, Q, type PlainEvaluator, Get, type FunctionObject, OrdinaryCreateFromConstructor, HoursPerDay, MinutesPerHour, SecondsPerMinute, nsPerSecond, nsPerMillisecond, nsPerMicrosecond,
-  nsPerDay,
+  NanosecondsPerDay,
   AddDaysToISODate,
   CombineISODateAndTimeRecord,
   Throw,
@@ -478,7 +478,7 @@ export function AddTimeDuration(one: TimeDuration, two: TimeDuration): PlainComp
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-add24hourdaystotimeduration */
 export function Add24HourDaysToTimeDuration(d: TimeDuration, days: Integer): PlainCompletion<TimeDuration> {
-  const result = BigInt(d) + BigInt(days) * BigInt(nsPerDay);
+  const result = BigInt(d) + BigInt(days) * NanosecondsPerDay;
   if (abs(result) > maxTimeDuration) {
     return Throw.RangeError('Invalid duration');
   }

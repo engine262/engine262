@@ -18,11 +18,11 @@ import {
   AddDurationToInstant,
   CreateTemporalInstant,
   DifferenceTemporalInstant,
-  nsPerDay,
   RoundEpochNanoseconds,
   TemporalInstantToString,
   ToTemporalInstant,
 } from '../../abstract-ops/temporal/instant.mts';
+import { NanosecondsPerDay } from '../../abstract-ops/date-objects.mts';
 import { CreateTemporalZonedDateTime } from '../../abstract-ops/temporal/zoned-datetime.mts';
 import { ToTemporalTimeZoneIdentifier } from '../../abstract-ops/temporal/time-zone.mts';
 import { floorDiv } from '../../abstract-ops/math.mts';
@@ -126,7 +126,7 @@ function* InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue
     maximum = 1_000n * msPerDay;
   } else {
     Assert(smallestUnit === TemporalUnit.Nanosecond);
-    maximum = BigInt(nsPerDay);
+    maximum = NanosecondsPerDay;
   }
   Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, true));
   const roundedNs = RoundEpochNanoseconds(instant.EpochNanoseconds, roundingIncrement, smallestUnit, roundingMode);

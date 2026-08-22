@@ -323,7 +323,6 @@ export interface Throw {
   | 'Promise reject function already set'
   | 'Promise resolve function already set'
   | 'Proxy cannot be invoked without new'
-  | 'Radix must be between 2 and 36, inclusive'
   | 'RegExp flags "v" and "u" cannot be used together'
   | 'Repeated modifiers in modifier group'
   | 'Rest element must be last element'

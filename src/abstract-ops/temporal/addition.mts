@@ -102,7 +102,7 @@ export type TimeZoneIdentifier = string & { specName: 'TimeZoneIdentifier'; };
 export function GetNamedTimeZoneEpochNanoseconds(
   timeZoneIdentifier: TimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
-): bigint[] {
+): EpochNanoseconds[] {
   mark_TimeZoneAwareNotImplemented();
   Assert(timeZoneIdentifier === 'UTC');
   const epochNanoseconds = GetUTCEpochNanoseconds(isoDateTime);
@@ -152,13 +152,13 @@ export function UTC_TemporalEdited(t: Num): TimeValue {
   } else {
     const isoDateTime = TimeValueToISODateTimeRecord(t);
     const possibleInstants = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, isoDateTime);
-    let disambiguatedInstant: bigint;
+    let disambiguatedInstant: EpochNanoseconds;
     if (possibleInstants.length > 0) {
       disambiguatedInstant = possibleInstants[0];
     } else {
       // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, TimeValueToISODateTimeRecord(tBefore)), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
       let tBefore = Math.floor(t) - 1;
-      let possibleInstantsBefore: bigint[] = [];
+      let possibleInstantsBefore: EpochNanoseconds[] = [];
       while (possibleInstantsBefore.length === 0) {
         possibleInstantsBefore = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, TimeValueToISODateTimeRecord(tBefore));
         tBefore -= 1;

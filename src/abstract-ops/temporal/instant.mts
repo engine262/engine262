@@ -7,7 +7,7 @@ import {
   GetUTCEpochNanoseconds, RoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
 import {
-  type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, CheckISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, Table21_LengthInNanoSeconds, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalUnit, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays,
+  type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, CheckISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, Table21_LengthInNanoSeconds, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalUnit, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays, MinEpochNanoseconds, MaxEpochNanoseconds,
   BalanceISODateTime,
   FormatISODateTime,
   type EpochNanoseconds,
@@ -15,16 +15,9 @@ import {
   GetOptionsObject,
 } from '#self';
 
-/** https://tc39.es/proposal-temporal/#eqn-nsPerDay */
-export const nsPerDay = BigInt(8.64e13) as EpochNanoseconds;
-/** https://tc39.es/proposal-temporal/#eqn-nsMaxInstant */
-export const maxEpochNanoseconds = BigInt(8.64e21) as EpochNanoseconds;
-/** https://tc39.es/proposal-temporal/#eqn-nsMinInstant */
-export const minEpochNanoseconds = BigInt(-8.64e21) as EpochNanoseconds;
-
 /** https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds */
 export function IsValidEpochNanoseconds(epochNanoseconds: EpochNanoseconds): boolean {
-  if (epochNanoseconds < minEpochNanoseconds || epochNanoseconds > maxEpochNanoseconds) {
+  if (epochNanoseconds < MinEpochNanoseconds || epochNanoseconds > MaxEpochNanoseconds) {
     return false;
   }
   return true;

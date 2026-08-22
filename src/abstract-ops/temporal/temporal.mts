@@ -17,7 +17,7 @@ import {
 } from './calendar.mts';
 import { ToTemporalTimeZoneIdentifier } from './time-zone.mts';
 import {
-  ToPrimitive, Throw, CreateISODateRecord, CreateTemporalDate, CreateTemporalZonedDateTime, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, nsPerDay, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour,
+  ToPrimitive, Throw, CreateISODateRecord, CreateTemporalDate, CreateTemporalZonedDateTime, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, NanosecondsPerDay, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour,
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
   msPerDay,
 } from '#self';
@@ -188,7 +188,7 @@ export function isDateUnit(unit: TemporalUnit): unit is DateUnit {
 
 /** https://tc39.es/proposal-temporal/#table-temporal-units */
 export const Table21_LengthInNanoSeconds = {
-  [TemporalUnit.Day]: BigInt(8.64e13) satisfies typeof nsPerDay,
+  [TemporalUnit.Day]: BigInt(8.64e13) satisfies typeof NanosecondsPerDay,
   [TemporalUnit.Hour]: BigInt(3.6e12),
   [TemporalUnit.Minute]: BigInt(6e10),
   [TemporalUnit.Second]: BigInt(1e9),

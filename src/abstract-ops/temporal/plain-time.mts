@@ -10,7 +10,7 @@ import { SnapToInteger } from '../type-conversion.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import { type RoundingMode } from './addition.mts';
 import {
-  Assert, type TimeDuration, TimeDurationFromComponents, nsPerDay, Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetISODateTimeFor, JSStringValue, Throw, type PlainEvaluator, UndefinedValue, type PlainCompletion, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, Get, FormatTimeString, type TimeUnit, TemporalUnit, Table21_LengthInNanoSeconds, RoundNumberToIncrement, GetDifferenceSettings, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
+  Assert, type TimeDuration, TimeDurationFromComponents, NanosecondsPerDay, Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetISODateTimeFor, JSStringValue, Throw, type PlainEvaluator, UndefinedValue, type PlainCompletion, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, Get, FormatTimeString, type TimeUnit, TemporalUnit, Table21_LengthInNanoSeconds, RoundNumberToIncrement, GetDifferenceSettings, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
   type Integer,
   GetOptionsObject,
 } from '#self';
@@ -75,7 +75,7 @@ export function DifferenceTime(time1: TimeRecord, time2: TimeRecord): TimeDurati
   const microseconds = time2.Microsecond - time1.Microsecond;
   const nanoseconds = time2.Nanosecond - time1.Nanosecond;
   const timeDuration = TimeDurationFromComponents(hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
-  Assert(abs(timeDuration) < nsPerDay);
+  Assert(abs(timeDuration) < NanosecondsPerDay);
   return timeDuration;
 }
 

@@ -28,6 +28,9 @@ export const nsPerMicrosecond = 10n ** 3n;
 export const msPerMinute = msPerSecond * SecondsPerMinute;
 export const msPerHour = msPerMinute * MinutesPerHour;
 export const msPerDay = msPerHour * HoursPerDay;
+export const NanosecondsPerDay = 10n ** 6n * msPerDay;
+export const MaxEpochNanoseconds = 10n ** 8n * NanosecondsPerDay;
+export const MinEpochNanoseconds = -MaxEpochNanoseconds;
 export const msPerAverageYear = 12 * 30.436875 * Number(msPerDay);
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */

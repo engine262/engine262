@@ -15,7 +15,7 @@ import {
   CombineISODateAndTimeRecord,
   ISODateTimeWithinLimits,
   ToInternalDurationRecordWith24HourDays,
-  nsPerDay,
+  NanosecondsPerDay,
   CreateDateDurationRecord,
   type CalendarDateRecord,
   type Integer,
@@ -240,7 +240,7 @@ export function* AddDurationToDate(operation: 'add' | 'subtract', temporalDate: 
   let duration = Q(yield* ToTemporalDuration(temporalDurationLike));
   if (operation === 'subtract') duration = CreateNegatedTemporalDuration(duration);
   const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
-  const days = truncateDiv(internalDuration.Time, nsPerDay);
+  const days = truncateDiv(internalDuration.Time, NanosecondsPerDay);
   const dateDuration = X(CreateDateDurationRecord(BigInt(internalDuration.Date.Years), BigInt(internalDuration.Date.Months), BigInt(internalDuration.Date.Weeks), days));
   const resolvedOptions = Q(GetOptionsObject(options));
   const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));

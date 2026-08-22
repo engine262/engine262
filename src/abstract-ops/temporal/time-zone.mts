@@ -29,7 +29,7 @@ import {
   CombineISODateAndTimeRecord,
   IsValidEpochNanoseconds,
   MidnightTimeRecord,
-  nsPerDay,
+  NanosecondsPerDay,
   TimeDurationFromComponents,
   type Integer,
   CompareISODateTime,
@@ -155,7 +155,7 @@ export function GetEpochNanosecondsFor(
 
 // https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleepochnanoseconds
 export function DisambiguatePossibleEpochNanoseconds(
-  possibleEpochNs: readonly bigint[],
+  possibleEpochNs: readonly EpochNanoseconds[],
   timeZone: TimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
   disambiguation: 'compatible' | 'earlier' | 'later' | 'reject',
@@ -183,7 +183,7 @@ export function DisambiguatePossibleEpochNanoseconds(
   // 6. Let before be the latest possible ISO Date-Time Record for which CompareISODateTime(before, isoDateTime) = -1 and !GetPossibleEpochNanoseconds(timeZone, before) is not empty.
   let before: ISODateTimeRecord;
   {
-    const dayBeforeNs = _ns - nsPerDay;
+    const dayBeforeNs = _ns - NanosecondsPerDay;
     Assert(IsValidEpochNanoseconds(dayBeforeNs));
     before = GetISODateTimeFor(timeZone, dayBeforeNs);
   }
@@ -192,7 +192,7 @@ export function DisambiguatePossibleEpochNanoseconds(
   // 7. Let after be the earliest possible ISO Date-Time Record for which CompareISODateTime(after, isoDateTime) = 1 and !GetPossibleEpochNanoseconds(timeZone, after) is not empty.
   let after: ISODateTimeRecord;
   {
-    const dayAfterNs = _ns + nsPerDay;
+    const dayAfterNs = _ns + NanosecondsPerDay;
     Assert(IsValidEpochNanoseconds(dayAfterNs));
     after = GetISODateTimeFor(timeZone, dayAfterNs);
   }
@@ -205,7 +205,7 @@ export function DisambiguatePossibleEpochNanoseconds(
   const offsetBefore = GetOffsetNanosecondsFor(timeZone, beforePossible[0]);
   const offsetAfter = GetOffsetNanosecondsFor(timeZone, afterPossible[0]);
   const nanoseconds = offsetAfter - offsetBefore;
-  Assert(abs(nanoseconds) <= nsPerDay);
+  Assert(abs(nanoseconds) <= NanosecondsPerDay);
   if (disambiguation === 'earlier') {
     const timeDuration = TimeDurationFromComponents(0n, 0n, 0n, 0n, 0n, -nanoseconds);
     const earlierTime = AddTime(isoDateTime.Time, timeDuration);
@@ -232,7 +232,7 @@ export function GetPossibleEpochNanoseconds(
   isoDateTime: ISODateTimeRecord,
 ): PlainCompletion<EpochNanoseconds[]> {
   const parseResult = X(ParseTimeZoneIdentifier(timeZone));
-  let possibleEpochNanoseconds: bigint[];
+  let possibleEpochNanoseconds: EpochNanoseconds[];
   if (parseResult.OffsetMinutes !== undefined) {
     const balanced = BalanceISODateTime(
       isoDateTime.ISODate.Year,
@@ -275,7 +275,7 @@ export function GetStartOfDay(
   // 5. Let possibleEpochNsAfter be GetNamedTimeZoneEpochNanoseconds(timeZone, isoDateTimeAfter), where isoDateTimeAfter is the ISO Date-Time Record for which DifferenceISODateTime(isoDateTime, isoDateTimeAfter, "iso8601", hour).[[Time]] is the smallest possible value > 0 for which possibleEpochNsAfter is not empty (i.e., isoDateTimeAfter represents the first local time after the transition).
   // 6. Assert: The number of elements in possibleEpochNsAfter = 1.
   // 7. Return the sole element of possibleEpochNsAfter.
-  const dayBefore = GetUTCEpochNanoseconds(isoDateTime) - nsPerDay;
+  const dayBefore = GetUTCEpochNanoseconds(isoDateTime) - NanosecondsPerDay;
   Assert(IsValidEpochNanoseconds(dayBefore));
   return GetNamedTimeZoneNextTransition(timeZone, dayBefore) ?? 0n;
 }
