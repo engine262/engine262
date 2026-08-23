@@ -9,7 +9,7 @@ export function IsDestructuring(node: ParseNode): boolean {
     case 'ArrayLiteral':
       return true;
     case 'ForDeclaration':
-      return IsDestructuring(node.ForBinding);
+      return node.production === 'LetOrConst' && IsDestructuring(node.ForBinding);
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return false;

@@ -1,4 +1,5 @@
 import type { Mutable } from '../utils/language.mts';
+import { ContainsUsing } from '../static-semantics/ContainsUsing.mts';
 import { ModuleParser } from './ModuleParser.mts';
 import type { ParseNode } from './ParseNode.mts';
 import { Token } from './tokens.mts';
@@ -13,6 +14,9 @@ export abstract class LanguageParser extends ModuleParser {
       node.ScriptBody = null;
     } else {
       node.ScriptBody = this.parseScriptBody();
+      if (ContainsUsing(node.ScriptBody.StatementList)) {
+        this.addEarlyError(Throw.SyntaxError('Using declarations are not allowed at the top level of a Script'), node.ScriptBody);
+      }
     }
     Object.defineProperty(node, 'sourceText', {
       configurable: true,

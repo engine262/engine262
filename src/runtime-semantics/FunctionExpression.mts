@@ -6,6 +6,5 @@ import { InstantiateOrdinaryFunctionExpression } from './all.mts';
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 export function Evaluate_FunctionExpression(FunctionExpression: ParseNode.FunctionExpression) {
-  // 1. Return InstantiateOrdinaryFunctionExpression of FunctionExpression.
   return InstantiateOrdinaryFunctionExpression(FunctionExpression);
 }

@@ -172,6 +172,8 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'ClassDeclaration':
       return yield* Evaluate_ClassDeclaration(node);
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return yield* Evaluate_LexicalDeclaration(node);
     case 'FunctionDeclaration':
       return Evaluate_FunctionDeclaration(node);

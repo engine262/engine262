@@ -4,7 +4,8 @@ import {
   IsConstantDeclaration,
   BoundNames,
 } from '../static-semantics/all.mts';
-import { X, NormalCompletion } from '../completion.mts';
+import { EnsureCompletion, X, NormalCompletion } from '../completion.mts';
+import { DisposeResources } from '../abstract-ops/disposable-operations.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mts';
 import { surroundingAgent, Assert, DeclarativeEnvironmentRecord } from '#self';
@@ -63,7 +64,8 @@ export function* Evaluate_Block({ StatementList }: ParseNode.Block) {
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 5. Let blockValue be the result of evaluating StatementList.
-  const blockValue = yield* Evaluate_StatementList(StatementList);
+  let blockValue = EnsureCompletion(yield* Evaluate_StatementList(StatementList));
+  blockValue = yield* DisposeResources(blockEnv.DisposableResourceStack, blockValue);
   // 6. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 7. Return blockValue.

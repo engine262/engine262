@@ -15,7 +15,7 @@ import {
   FunctionDeclarationInstantiation,
   NamedEvaluation,
 } from './all.mts';
-import { surroundingAgent } from '#self';
+import { DeclarativeEnvironmentRecord, DisposeResources, surroundingAgent } from '#self';
 import {
   Assert,
   AsyncFunctionStart,
@@ -172,9 +172,12 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNo
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
 //    ClassStaticBlockBody : ClassStaticBlockStatementList
-function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }: ParseNode.ClassStaticBlockBody, functionObject: ECMAScriptFunctionObject): StatementEvaluator {
-  Q(yield* FunctionDeclarationInstantiation(functionObject, []));
-  Q(yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList));
+export function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }: ParseNode.ClassStaticBlockBody, funcObject: ECMAScriptFunctionObject): StatementEvaluator {
+  X(FunctionDeclarationInstantiation(funcObject, []));
+  const result = EnsureCompletion(yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList));
+  const envRecord = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  Assert(envRecord instanceof DeclarativeEnvironmentRecord);
+  Q(yield* DisposeResources(envRecord.DisposableResourceStack, result));
   return ReturnCompletion(Value.undefined);
 }
 

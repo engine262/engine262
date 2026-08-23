@@ -38,6 +38,8 @@ export function LexicallyScopedDeclarations(node: ParseNode | readonly ParseNode
       return [];
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':

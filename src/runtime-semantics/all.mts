@@ -52,6 +52,7 @@ export * from './ShiftExpression.mts';
 export * from './SuperCall.mts';
 export * from './SuperProperty.mts';
 export * from './BindingInitialization.mts';
+export * from './ForDeclarationBindingInitialization.mts';
 export * from './AsyncFunctionExpression.mts';
 export * from './RelationalExpression.mts';
 export * from './BreakableStatement.mts';

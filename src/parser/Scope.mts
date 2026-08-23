@@ -107,6 +107,8 @@ export function getDeclarations(node: ParseNode | readonly ParseNode[]): Declara
       Assert(!!node.BindingIdentifier);
       return getDeclarations(node.BindingIdentifier);
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return getDeclarations(node.BindingList);
     case 'VariableStatement':
       return getDeclarations(node.VariableDeclarationList);
