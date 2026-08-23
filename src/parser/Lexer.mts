@@ -208,7 +208,7 @@ export abstract class Lexer {
 
   protected peekToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
 
-  protected peekAheadToken: TokenData | undefined;
+  protected peekAheadTokens: TokenData[] = [];
 
   protected position = 0;
 
@@ -371,9 +371,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   next() {
     this.currentToken = this.peekToken;
-    if (this.peekAheadToken !== undefined) {
-      this.peekToken = this.peekAheadToken;
-      this.peekAheadToken = undefined;
+    if (this.peekAheadTokens.length > 0) {
+      this.peekToken = this.peekAheadTokens.shift()!;
     } else {
       this.peekToken = this.advance();
     }
@@ -387,12 +386,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return this.peekToken;
   }
 
-  peekAhead() {
-    if (this.peekAheadToken === undefined) {
-      this.peek();
-      this.peekAheadToken = this.advance();
+  peekAhead(distance = 1) {
+    this.peek();
+    while (this.peekAheadTokens.length < distance) {
+      this.peekAheadTokens.push(this.advance());
     }
-    return this.peekAheadToken;
+    return this.peekAheadTokens[distance - 1]!;
   }
 
   matches(token: string | Token, peek: TokenData) {

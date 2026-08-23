@@ -196,6 +196,8 @@ const isInRange = (t: number, l: number, h: number) => t >= l && t <= h;
 export const isAutomaticSemicolon = (t: number) => isInRange(t, Token.SEMICOLON, Token.EOS);
 export const isMember = (t: number) => isInRange(t, Token.TEMPLATE, Token.LBRACK);
 export const isPropertyOrCall = (t: number) => isInRange(t, Token.TEMPLATE, Token.LPAREN);
+export const isAnyIdentifier = (t: number) => isInRange(t, Token.IDENTIFIER, Token.YIELD)
+  || t === Token.ESCAPED_KEYWORD;
 export const isKeyword = (t: number): t is typeof KeywordLookup[keyof typeof KeywordLookup] => KeywordTokens.has(t);
 export const isKeywordRaw = (s: string): s is keyof typeof KeywordLookup => KeywordRaw.has(s);
 

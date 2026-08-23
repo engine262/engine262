@@ -17,6 +17,7 @@ import {
 interface Intrinsics_Table6 {
   '%AbstractModuleSource%': FunctionObject;
   '%AggregateError%': FunctionObject;
+  '%AsyncDisposableStack%': FunctionObject;
   '%Array%': FunctionObject;
   '%ArrayBuffer%': FunctionObject;
   '%ArrayIteratorPrototype%': ObjectValue;
@@ -32,6 +33,7 @@ interface Intrinsics_Table6 {
   '%Boolean%': FunctionObject;
   '%DataView%': FunctionObject;
   '%Date%': FunctionObject;
+  '%DisposableStack%': FunctionObject;
   '%decodeURI%': FunctionObject;
   '%decodeURIComponent%': FunctionObject;
   '%encodeURI%': FunctionObject;
@@ -75,6 +77,7 @@ interface Intrinsics_Table6 {
   '%String%': FunctionObject;
   '%StringIteratorPrototype%': ObjectValue;
   '%Symbol%': FunctionObject;
+  '%SuppressedError%': FunctionObject;
   '%SyntaxError%': FunctionObject;
   '%ThrowTypeError%': FunctionObject;
   '%TypedArray%': FunctionObject;
@@ -95,6 +98,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%Array.prototype.values%': FunctionObject;
   '%Array.prototype%': ObjectValue;
   '%ArrayBuffer.prototype%': ObjectValue;
+  '%AsyncDisposableStack.prototype%': ObjectValue;
   '%AsyncFunction.prototype%': ObjectValue;
   '%AsyncGeneratorFunction.prototype.prototype%': ObjectValue;
   '%AsyncGeneratorFunction.prototype%': ObjectValue;
@@ -106,6 +110,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%Boolean.prototype%': ObjectValue;
   '%DataView.prototype%': ObjectValue;
   '%Date.prototype%': ObjectValue;
+  '%DisposableStack.prototype%': ObjectValue;
   '%Error.prototype%': ObjectValue;
   '%Error.prototype.toString%': BuiltinFunctionObject;
   '%EvalError.prototype%': ObjectValue;
@@ -148,6 +153,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%String.prototype%': ObjectValue;
   // Note: do not add any well known symbols here, use wellKnownSymbols.*
   '%Symbol.prototype%': ObjectValue;
+  '%SuppressedError.prototype%': ObjectValue;
   '%SyntaxError.prototype%': ObjectValue;
   '%SyntaxError%': FunctionObject;
   '%Temporal%': ObjectValue;

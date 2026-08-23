@@ -6,77 +6,85 @@ import { Value } from '../value.mts';
 import { IsAnonymousFunctionDefinition, StringValue, type FunctionDeclaration } from '../static-semantics/all.mts';
 import { OutOfRange } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import {
+  AddDisposableResource,
+  type DisposableResourceKind,
+} from '../abstract-ops/disposable-operations.mts';
+import { DeclarativeEnvironmentRecord } from '../execution-context/Environment.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
   surroundingAgent,
+  Assert,
   GetValue,
   InitializeReferencedBinding,
   ResolveBinding,
+  IsUnresolvableReference,
+  type StatementEvaluator,
 } from '#self';
 
-/** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
-//   LexicalBinding :
-//     BindingIdentifier
-//     BindingIdentifier Initializer
-function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }: ParseNode.LexicalBinding): PlainEvaluator {
-  if (Initializer) {
-    // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue(BindingIdentifier!);
-    // 2. Let lhs be ResolveBinding(bindingId).
-    const lhs = X(ResolveBinding(bindingId, undefined, strict));
-    let value: Value;
-    // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
-    if (IsAnonymousFunctionDefinition(Initializer)) {
-      // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-      value = Q(yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId));
-    } else { // 4. Else,
-      // a. Let rhs be the result of evaluating Initializer.
-      const rhs = Q(yield* Evaluate(Initializer));
-      // b. Let value be ? GetValue(rhs).
-      value = Q(yield* GetValue(rhs));
-    }
-    // 5. Return InitializeReferencedBinding(lhs, value).
-    return yield* InitializeReferencedBinding(lhs, value);
-  } else {
-    // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
-    const lhs = yield* ResolveBinding(StringValue(BindingIdentifier!), undefined, strict);
-    // 2. Return InitializeReferencedBinding(lhs, undefined).
-    return yield* InitializeReferencedBinding(lhs, Value.undefined);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
-//   LexicalBinding : BindingPattern Initializer
-function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding: ParseNode.LexicalBinding) {
-  const { BindingPattern, Initializer } = LexicalBinding;
-  const rhs = Q(yield* Evaluate(Initializer!));
-  const value = Q(yield* GetValue(rhs));
-  const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  return yield* BindingInitialization(BindingPattern!, value, env);
-}
-
-export function* Evaluate_LexicalBinding(LexicalBinding: ParseNode.LexicalBinding) {
+/** https://tc39.es/ecma262/#sec-bindingevaluation */
+function* BindingEvaluation_LexicalBinding(
+  LexicalBinding: ParseNode.LexicalBinding,
+  kind: 'normal' | DisposableResourceKind,
+): StatementEvaluator {
   switch (true) {
-    case !!LexicalBinding.BindingIdentifier:
-      return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
-    case !!LexicalBinding.BindingPattern:
-      return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
+    case !!LexicalBinding.BindingIdentifier: {
+      // LexicalBinding : BindingIdentifier Initializer
+      if (LexicalBinding.Initializer) {
+        const { Initializer, BindingIdentifier } = LexicalBinding;
+        const bindingId = StringValue(BindingIdentifier);
+        const lhs = X(ResolveBinding(bindingId));
+        let value: Value;
+        if (IsAnonymousFunctionDefinition(Initializer)) {
+          value = Q(yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId));
+        } else {
+          const rhs = Q(yield* Evaluate(Initializer));
+          value = Q(yield* GetValue(rhs));
+        }
+        if (kind !== 'normal') {
+          Assert(IsUnresolvableReference(lhs) === Value.false);
+          const base = lhs.Base;
+          Assert(base instanceof DeclarativeEnvironmentRecord);
+          Q(yield* AddDisposableResource(base.DisposableResourceStack, value, kind));
+        }
+        Q(yield* InitializeReferencedBinding(lhs, value));
+        return undefined;
+      } else {
+        // LexicalBinding : BindingIdentifier
+        const { BindingIdentifier } = LexicalBinding;
+        Assert(kind === 'normal');
+        const lhs = X(ResolveBinding(StringValue(BindingIdentifier)));
+        X(InitializeReferencedBinding(lhs, Value.undefined));
+        return undefined;
+      }
+    }
+    case !!LexicalBinding.BindingPattern: {
+      const { Initializer, BindingPattern } = LexicalBinding;
+      Assert(kind === 'normal');
+      const rhs = Q(yield* Evaluate(Initializer!));
+      const value = Q(yield* GetValue(rhs));
+      const envRecord = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+      return Q(yield* BindingInitialization(BindingPattern, value, envRecord));
+    }
     default:
       throw OutOfRange.nonExhaustive(LexicalBinding);
   }
 }
 
-/** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-bindingevaluation */
 //   BindingList : BindingList `,` LexicalBinding
 //
 // (implicit)
 //   BindingList : LexicalBinding
-export function* Evaluate_BindingList(BindingList: ParseNode.BindingList) {
+export function* BindingEvaluation(
+  BindingList: ParseNode.BindingList,
+  kind: 'normal' | DisposableResourceKind,
+) {
   // 1. Let next be the result of evaluating BindingList.
   // 3. Return the result of evaluating LexicalBinding.
   let next;
   for (const LexicalBinding of BindingList) {
-    next = yield* Evaluate_LexicalBinding(LexicalBinding);
+    next = yield* BindingEvaluation_LexicalBinding(LexicalBinding, kind);
     Q(next);
   }
   return next;
@@ -84,9 +92,23 @@ export function* Evaluate_BindingList(BindingList: ParseNode.BindingList) {
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalDeclaration : LetOrConst BindingList `;`
-export function* Evaluate_LexicalDeclaration({ BindingList }: ParseNode.LexicalDeclaration): PlainEvaluator {
-  // 1. Let next be the result of evaluating BindingList.
-  Q(yield* Evaluate_BindingList(BindingList));
-  // 3. Return NormalCompletion(empty).
-  return undefined;
+export function* Evaluate_LexicalDeclaration(
+  declaration: ParseNode.LexicalDeclaration | ParseNode.UsingDeclaration | ParseNode.AwaitUsingDeclaration,
+): PlainEvaluator {
+  switch (declaration.type) {
+    case 'LexicalDeclaration': {
+      Q(yield* BindingEvaluation(declaration.BindingList, 'normal'));
+      return undefined;
+    }
+    case 'UsingDeclaration': {
+      Q(yield* BindingEvaluation(declaration.BindingList, 'sync-dispose'));
+      return undefined;
+    }
+    case 'AwaitUsingDeclaration': {
+      Q(yield* BindingEvaluation(declaration.BindingList, 'async-dispose'));
+      return undefined;
+    }
+    default:
+      throw OutOfRange.exhaustive(declaration);
+  }
 }

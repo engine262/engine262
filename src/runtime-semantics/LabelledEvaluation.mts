@@ -7,6 +7,8 @@ import {
 import {
   BoundNames,
   IsConstantDeclaration,
+  IsUsingDeclaration,
+  IsAwaitUsingDeclaration,
   IsDestructuring,
   StringValue,
   type DestructuringParseNode,
@@ -27,13 +29,19 @@ import { OutOfRange } from '../utils/language.mts';
 import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  AddDisposableResource,
+  DisposeResources,
+  type DisposableResourceKind,
+} from '../abstract-ops/disposable-operations.mts';
+import {
   Evaluate_SwitchStatement,
   Evaluate_VariableDeclarationList,
   BindingInitialization,
+  ForDeclarationBindingInitialization,
   DestructuringAssignmentEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
-import { surroundingAgent, DeclarativeEnvironmentRecord } from '#self';
+import { surroundingAgent, DeclarativeEnvironmentRecord, IsUnresolvableReference } from '#self';
 import {
   Assert,
   Call,
@@ -102,7 +110,7 @@ function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }
   // 2. Append label as an element of labelSet.
   labelSet.add(label);
   // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
-  let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet)) as Completion<Value | void>;
+  let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet));
   // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
   if (stmtResult.Type === 'break' && SameValue(stmtResult.Target!, label)) {
     // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
@@ -214,7 +222,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
   // 2. Repeat,
   while (true) {
     // a. Let stmtResult be the result of evaluating Statement.
-    const stmtResult = EnsureCompletion(yield* Evaluate(Statement)) as Completion<Value | void>;
+    const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
     // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
     if (LoopContinues(stmtResult, labelSet) === Value.false) {
       return Completion(UpdateEmpty(stmtResult, iterationResult));
@@ -299,9 +307,11 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
       // 6. Set the running execution context's LexicalEnvironment to loopEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv;
       // 7. Let forDcl be the result of evaluating LexicalDeclaration.
-      const forDcl = yield* Evaluate(LexicalDeclaration);
+      let forDcl = yield* Evaluate(LexicalDeclaration);
       // 8. If forDcl is an abrupt completion, then
       if (forDcl instanceof AbruptCompletion) {
+        forDcl = yield* DisposeResources(loopEnv.DisposableResourceStack, forDcl);
+        Assert(forDcl instanceof AbruptCompletion);
         // a. Set the running execution context's LexicalEnvironment to oldEnv.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
         // b. Return Completion(forDcl).
@@ -315,7 +325,10 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
         perIterationLets = [];
       }
       // 10. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
-      const bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+      let bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+      bodyResult = yield* DisposeResources(loopEnv.DisposableResourceStack, bodyResult);
+      // Assert: If bodyResult is a normal completion, then bodyResult.[[Value]] is not ~empty~.
+      Assert(!(bodyResult instanceof NormalCompletion) || bodyResult.Value !== undefined);
       // 11. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       // 12. Return Completion(bodyResult).
@@ -583,6 +596,15 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
   if (iteratorKind === undefined) iteratorKind = 'sync';
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let iterationResult: Value = Value.undefined;
+  let declarationKind: 'normal' | DisposableResourceKind;
+  if (lhsKind === 'lexicalBinding') {
+    Assert(lhs.type === 'ForDeclaration');
+    if (IsAwaitUsingDeclaration(lhs)) declarationKind = 'async-dispose';
+    else if (IsUsingDeclaration(lhs)) declarationKind = 'sync-dispose';
+    else declarationKind = 'normal';
+  } else {
+    declarationKind = 'normal';
+  }
   const destructuring = IsDestructuring(lhs);
   let assignmentPattern;
   if (destructuring && lhsKind === 'assignment') {
@@ -599,7 +621,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
     if (done === Value.true) return iterationResult;
     const nextValue = Q(yield* IteratorValue(nextResult));
     let lhsRef;
-    let iterationEnv;
+    let iterationEnv: DeclarativeEnvironmentRecord | undefined;
     let status: NormalCompletion<Value | void> | AbruptCompletion;
     if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
       if (destructuring) {
@@ -621,6 +643,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
           status = EnsureCompletion(yield* PutValue(lhsRef, nextValue));
         }
       }
+      iterationEnv = undefined;
     } else {
       Assert(lhsKind === 'lexicalBinding');
       Assert(lhs.type === 'ForDeclaration');
@@ -628,19 +651,37 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
       ForDeclarationBindingInstantiation(lhs, iterationEnv);
       surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv;
       if (destructuring) {
-        status = EnsureCompletion(yield* BindingInitialization(lhs, nextValue, iterationEnv));
+        status = EnsureCompletion(yield* ForDeclarationBindingInitialization(lhs, nextValue, iterationEnv));
       } else {
         // 1. Assert: lhs binds a single name.
         const boundNames = BoundNames(lhs);
         Assert(boundNames.length === 1);
-
+        // 2. Let lhsName be the sole element of the BoundNames of lhs.
         const lhsName = boundNames[0];
         lhsRef = X(ResolveBinding(lhsName));
-        status = EnsureCompletion(yield* InitializeReferencedBinding(lhsRef, nextValue));
+        if (declarationKind !== 'normal') {
+          Assert(IsUnresolvableReference(lhsRef) === Value.false);
+          const base = lhsRef.Base;
+          Assert(base instanceof DeclarativeEnvironmentRecord);
+          status = EnsureCompletion(yield* AddDisposableResource(
+            base.DisposableResourceStack,
+            nextValue,
+            declarationKind,
+          ));
+        } else {
+          status = NormalCompletion(undefined);
+        }
+        if (!(status instanceof AbruptCompletion)) {
+          status = EnsureCompletion(yield* InitializeReferencedBinding(lhsRef, nextValue));
+        }
       }
     }
     Assert(typeof status! !== 'undefined');
     if (status instanceof AbruptCompletion) {
+      if (iterationEnv !== undefined) {
+        status = yield* DisposeResources(iterationEnv.DisposableResourceStack, status);
+        Assert(status instanceof AbruptCompletion);
+      }
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       if (iterationKind === 'enumerate') return status;
       Assert(iterationKind === 'iterate');
@@ -649,7 +690,10 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
       }
       return Q(yield* IteratorClose(iteratorRecord, status));
     }
-    const result = EnsureCompletion(yield* Evaluate(stmt));
+    let result = EnsureCompletion(yield* Evaluate(stmt));
+    if (iterationEnv !== undefined) {
+      result = yield* DisposeResources(iterationEnv.DisposableResourceStack, result);
+    }
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     if (LoopContinues(result, labelSet) === Value.false) {
       status = UpdateEmpty(result, iterationResult);
@@ -668,19 +712,30 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
-function ForDeclarationBindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment: DeclarativeEnvironmentRecord) {
-  // 1. Assert: environment is a declarative Environment Record.
-  Assert(environment instanceof DeclarativeEnvironmentRecord);
-  // 2. For each element name of the BoundNames of ForBinding, do
-  for (const name of BoundNames(ForBinding)) {
-    // a. If IsConstantDeclaration of LetOrConst is true, then
-    if (IsConstantDeclaration(LetOrConst)) {
-      // i. Perform ! environment.CreateImmutableBinding(name, true).
-      X(environment.CreateImmutableBinding(name, Value.true));
-    } else { // b. Else,
-      // i. Perform ! environment.CreateMutableBinding(name, false).
-      X(environment.CreateMutableBinding(name, Value.false));
+function ForDeclarationBindingInstantiation(
+  declaration: ParseNode.ForDeclaration,
+  envRecord: DeclarativeEnvironmentRecord,
+) {
+  switch (declaration.production) {
+    case 'AwaitUsing':
+    case 'Using': {
+      for (const name of BoundNames(declaration.ForBinding)) {
+        X(envRecord.CreateImmutableBinding(name, Value.true));
+      }
+      return;
     }
+    case 'LetOrConst': {
+      for (const name of BoundNames(declaration.ForBinding)) {
+        if (IsConstantDeclaration(declaration)) {
+          X(envRecord.CreateImmutableBinding(name, Value.true));
+        } else {
+          X(envRecord.CreateMutableBinding(name, Value.false));
+        }
+      }
+      return;
+    }
+    default:
+      throw OutOfRange.exhaustive(declaration);
   }
 }
 

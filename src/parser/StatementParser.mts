@@ -1,5 +1,6 @@
 import type { Mutable } from '../utils/language.mts';
-import { Token, isAutomaticSemicolon } from './tokens.mts';
+import { ContainsUsing } from '../static-semantics/ContainsUsing.mts';
+import { Token, isAnyIdentifier, isAutomaticSemicolon } from './tokens.mts';
 import { ExpressionParser } from './ExpressionParser.mts';
 import { FunctionKind } from './FunctionParser.mts';
 import { getDeclarations, type LabelType } from './Scope.mts';
@@ -7,6 +8,16 @@ import type { ParseNode } from './ParseNode.mts';
 import { Throw } from '#self';
 
 export abstract class StatementParser extends ExpressionParser {
+  private canParseAwaitUsingDeclaration() {
+    if (!this.test(Token.AWAIT) || !this.scope.hasAwait() || !this.testAhead('using')) {
+      return false;
+    }
+    const usingToken = this.peekAhead();
+    const bindingToken = this.peekAhead(2);
+    if (usingToken.hadLineTerminatorBefore || bindingToken.hadLineTerminatorBefore) return false;
+    return isAnyIdentifier(bindingToken.type);
+  }
+
   eatSemicolonWithASI() {
     if (this.eat(Token.SEMICOLON)) {
       return true;
@@ -83,16 +94,22 @@ export abstract class StatementParser extends ExpressionParser {
           switch (this.peekAhead().type) {
             case Token.LBRACE:
             case Token.LBRACK:
-            case Token.IDENTIFIER:
-            case Token.YIELD:
-            case Token.AWAIT:
               return this.parseLexicalDeclaration();
             default:
+              if (isAnyIdentifier(this.peekAhead().type)) return this.parseLexicalDeclaration();
               break;
           }
         }
+        if (this.test('using')
+            && !this.peekAhead().hadLineTerminatorBefore
+            && isAnyIdentifier(this.peekAhead().type)) {
+          return this.parseLexicalDeclaration();
+        }
         if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
           return this.parseHoistableDeclaration();
+        }
+        if (this.canParseAwaitUsingDeclaration()) {
+          return this.parseLexicalDeclaration();
         }
         return this.parseStatement();
     }
@@ -122,12 +139,22 @@ export abstract class StatementParser extends ExpressionParser {
     return this.parseClass(decoratorsAttachedToClassDeclaration, false) as ParseNode.ClassDeclaration;
   }
 
-  // LexicalDeclaration : LetOrConst BindingList `;`
+  // LexicalDeclaration :
+  //   LetOrConst BindingList `;`
+  //   UsingDeclaration
+  //   [+Await] AwaitUsingDeclaration
   parseLexicalDeclaration(): ParseNode.LexicalDeclarationLike {
+    if (this.test('using')) {
+      return this.parseUsingDeclaration();
+    }
+    if (this.test(Token.AWAIT)) {
+      return this.parseAwaitUsingDeclaration();
+    }
+
     const node = this.startNode<ParseNode.LexicalDeclaration>();
     const letOrConst = this.eat('let') ? 'let' : this.expect(Token.CONST) && 'const';
     node.LetOrConst = letOrConst;
-    node.BindingList = this.parseBindingList();
+    node.BindingList = this.parseBindingList(true);
     this.semicolon();
 
     this.scope.declare(node.BindingList, 'lexical');
@@ -140,18 +167,60 @@ export abstract class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'LexicalDeclaration');
   }
 
+  // UsingDeclaration :
+  //   `using` [no LineTerminator here] BindingList `;`
+  parseUsingDeclaration(): ParseNode.UsingDeclaration {
+    const node = this.startNode<ParseNode.UsingDeclaration>();
+    this.expect('using');
+    node.BindingList = this.parseBindingList(false);
+    this.semicolon();
+    this.scope.declare(node.BindingList, 'lexical');
+    node.BindingList.forEach((binding) => {
+      if (!binding.Initializer) {
+        this.addEarlyError(Throw.SyntaxError('Missing initializer in using declaration'), binding);
+      }
+    });
+    return this.finishNode(node, 'UsingDeclaration');
+  }
+
+  // AwaitUsingDeclaration :
+  //   `await` [no LineTerminator here] `using` [no LineTerminator here] BindingList `;`
+  parseAwaitUsingDeclaration(): ParseNode.AwaitUsingDeclaration {
+    const node = this.startNode<ParseNode.AwaitUsingDeclaration>();
+    this.expect(Token.AWAIT);
+    if (this.peek().hadLineTerminatorBefore) this.unexpected();
+    this.expect('using');
+    if (this.peek().hadLineTerminatorBefore) this.unexpected();
+    node.BindingList = this.parseBindingList(false);
+    this.semicolon();
+    this.scope.declare(node.BindingList, 'lexical');
+    node.BindingList.forEach((binding) => {
+      if (!binding.Initializer) {
+        this.addEarlyError(Throw.SyntaxError('Missing initializer in await using declaration'), binding);
+      }
+    });
+    if (!this.scope.hasReturn()) this.state.hasTopLevelAwait = true;
+    return this.finishNode(node, 'AwaitUsingDeclaration');
+  }
+
   // BindingList :
   //   LexicalBinding
   //   BindingList `,` LexicalBinding
   //
   // LexicalBinding :
   //   BindingIdentifier Initializer?
-  //   BindingPattern Initializer
-  parseBindingList(): ParseNode.BindingList {
+  //   [+Pattern] BindingPattern Initializer
+  parseBindingList(allowPattern = true): ParseNode.BindingList {
     const bindingList: Mutable<ParseNode.BindingList> = [];
     do {
-      const node = this.parseBindingElement();
-      bindingList.push(this.repurpose(node, 'LexicalBinding'));
+      const node = this.startNode<ParseNode.LexicalBinding>();
+      if (allowPattern && (this.test(Token.LBRACE) || this.test(Token.LBRACK))) {
+        node.BindingPattern = this.parseBindingPattern();
+      } else {
+        node.BindingIdentifier = this.parseBindingIdentifier();
+      }
+      node.Initializer = this.parseInitializerOpt();
+      bindingList.push(this.finishNode(node, 'LexicalBinding'));
     } while (this.eat(Token.COMMA));
     return bindingList;
   }
@@ -449,20 +518,83 @@ export abstract class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'DoWhileStatement');
   }
 
-  // `for` `(` [lookahead != `let` `[`] Expression? `;` Expression? `;` Expression? `)` Statement
-  // `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
-  // `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-  // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
-  // `for` `(` `var` ForBinding `in` Expression `)` Statement
-  // `for` `(` ForDeclaration `in` Expression `)` Statement
-  // `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  // ForStatement :
+  //   `for` `(` [lookahead != `let` `[`] Expression? `;` Expression? `;` Expression? `)` Statement
+  //   `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
+  //   `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
   //
-  // ForDeclaration : LetOrConst ForBinding
+  // ForInOfStatement :
+  //   `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
+  //   `for` `(` `var` ForBinding `in` Expression `)` Statement
+  //   `for` `(` ForDeclaration `in` Expression `)` Statement
+  //   `for` `(` [lookahead not in { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   `for` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
+  //
+  // ForDeclaration :
+  //   LetOrConst ForBinding
+  //   [+Using] `using` [no LineTerminator here] ForBinding
+  //   [+Using, +Await] `await` [no LineTerminator here] `using`
+  //     [no LineTerminator here] ForBinding
+  protected finishForDeclaration(
+    node: ParseNode.Unfinished<ParseNode.LexicalDeclarationLike | ParseNode.ForDeclaration>,
+    binding: ParseNode.LexicalBinding,
+    production: ParseNode.ForDeclaration['production'],
+  ): ParseNode.ForDeclaration {
+    if (production !== 'LetOrConst' && !this.test('of')) {
+      // example:
+      // for (using resource in object) {}
+      this.raise(Throw.SyntaxError('Using declarations are only allowed in for-of loop heads'), node);
+    }
+    node.ForBinding = this.repurpose(binding, 'ForBinding', (_, oldNode) => {
+      if (oldNode.Initializer) {
+        this.raise(Throw.SyntaxError('Initializers are not allowed in for-in/of loop declarations'), oldNode.Initializer);
+      }
+    });
+    node.production = production;
+    const declaration = this.finishNode(node, 'ForDeclaration');
+    getDeclarations(declaration).forEach(({ name, node: bindingNode }) => {
+      if (name === 'let') {
+        // example:
+        // for (using let of resources) {}
+        this.addEarlyError(Throw.SyntaxError('For-in/of loop declarations cannot bind "let"'), bindingNode);
+      }
+    });
+    return declaration;
+  }
+
+  // Parses `Expression? ; Expression? ) Statement` after the first `;` of a ForStatement.
+  private parseForStatementTail() {
+    const test = this.test(Token.SEMICOLON) ? undefined : this.parseExpression();
+    this.expect(Token.SEMICOLON);
+    const update = this.test(Token.RPAREN) ? undefined : this.parseExpression();
+    this.expect(Token.RPAREN);
+    const statement = this.parseStatement();
+    return { test, update, statement };
+  }
+
+  private parseForInStatementTail(
+    node: ParseNode.Unfinished<ParseNode.ForStatement | ParseNode.ForInOfStatement>,
+  ): ParseNode.ForInStatement {
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    node.Statement = this.parseStatement();
+    return this.finishNode(node, 'ForInStatement');
+  }
+
+  private parseForOfStatementTail(
+    node: ParseNode.Unfinished<ParseNode.ForStatement | ParseNode.ForInOfStatement>,
+    isAwait: boolean,
+  ): ParseNode.ForOfStatement | ParseNode.ForAwaitStatement {
+    node.AssignmentExpression = this.parseAssignmentExpression();
+    this.expect(Token.RPAREN);
+    node.Statement = this.parseStatement();
+    return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+  }
+
   parseForStatement(): ParseNode.ForStatement | ParseNode.ForInOfStatement {
     return this.scope.with({
       lexical: true,
@@ -476,34 +608,122 @@ export abstract class StatementParser extends ExpressionParser {
       }
       this.expect(Token.LPAREN);
       if (isAwait && this.test(Token.SEMICOLON)) {
-        this.unexpected();
+        // for await ( ; ...; ...)
+        this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
       }
+      // for ( ; ... ; ... )
       if (this.eat(Token.SEMICOLON)) {
-        if (!this.test(Token.SEMICOLON)) {
-          node.Expression_b = this.parseExpression();
-        }
-        this.expect(Token.SEMICOLON);
-        if (!this.test(Token.RPAREN)) {
-          node.Expression_c = this.parseExpression();
-        }
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
+        const tail = this.parseForStatementTail();
+        if (tail.test) node.Expression_b = tail.test;
+        if (tail.update) node.Expression_c = tail.update;
+        node.Statement = tail.statement;
         return this.finishNode(node, 'ForStatement');
       }
-      const isLexicalStart = () => {
+      const isLexicalBindingStart = () => {
         switch (this.peekAhead().type) {
           case Token.LBRACE:
           case Token.LBRACK:
-          case Token.IDENTIFIER:
-          case Token.YIELD:
-          case Token.AWAIT:
             return true;
           default:
-            return false;
+            return isAnyIdentifier(this.peekAhead().type);
         }
       };
-      if ((this.test('let') || this.test(Token.CONST)) && isLexicalStart()) {
-        const inner = this.startNode<ParseNode.LexicalDeclaration | ParseNode.ForDeclaration>();
+      let isUsingDeclaration = false;
+      // for (using ...
+      if (this.test('using')) {
+        // for (using [no LineTerminator here] ...
+        if (!this.peekAhead().hadLineTerminatorBefore) {
+          // for (using of ...
+          if (this.testAhead('of')) {
+            switch (this.peekAhead(2).type) {
+              // for (using of = ...
+              case Token.ASSIGN:
+              // for (using of,
+              // for (using of;
+              // this branch is for better error message
+              // for code:
+              // for (using of, ident2 = expr; condition; update)
+              // for (using of; condition; update)
+              case Token.COMMA:
+              case Token.SEMICOLON:
+                isUsingDeclaration = true;
+                break;
+              default:
+                // example: (using is a variable here)
+                // let using;
+                // for (using of resources) {}
+                // for (using of [resource1, resource2]) {}
+                // for (using of "abc") {}
+                isUsingDeclaration = false;
+                break;
+            }
+          } else {
+            // for (using ident ...
+            isUsingDeclaration = isAnyIdentifier(this.peekAhead().type);
+          }
+        }
+      }
+      const isAwaitUsingDeclaration = this.canParseAwaitUsingDeclaration();
+      if (isUsingDeclaration || isAwaitUsingDeclaration) {
+        const inner = this.startNode<
+          ParseNode.UsingDeclaration
+          | ParseNode.AwaitUsingDeclaration
+          | ParseNode.ForDeclaration_Using
+          | ParseNode.ForDeclaration_AwaitUsing
+        >();
+        if (isAwaitUsingDeclaration) {
+          this.expect(Token.AWAIT);
+          if (this.peek().hadLineTerminatorBefore) this.unexpected();
+          this.expect('using');
+          if (this.peek().hadLineTerminatorBefore) this.unexpected();
+          if (!this.scope.hasReturn()) this.state.hasTopLevelAwait = true;
+        } else {
+          this.expect('using');
+        }
+        // here we parsed at `for (using = expr()`
+        //                              ^ here
+        const list = this.parseBindingList(false);
+        this.scope.declare(list, 'lexical');
+
+        // for (using ident1 = expr; condition; update) {}
+        const isTraditionalFor = list.length > 1 || this.test(Token.SEMICOLON) || !!list[0]!.Initializer;
+        if (isTraditionalFor) {
+          if (isAwait) this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
+          list.forEach((binding) => {
+            if (!binding.Initializer) {
+              const error = isAwaitUsingDeclaration
+                ? Throw.SyntaxError('Missing initializer in await using declaration')
+                : Throw.SyntaxError('Missing initializer in using declaration');
+              this.addEarlyError(error, binding);
+            }
+          });
+          inner.BindingList = list;
+          node.LexicalDeclaration = this.finishNode(
+            inner,
+            isAwaitUsingDeclaration ? 'AwaitUsingDeclaration' : 'UsingDeclaration',
+          );
+          this.expect(Token.SEMICOLON);
+          const tail = this.parseForStatementTail();
+          if (tail.test) node.Expression_a = tail.test;
+          if (tail.update) node.Expression_b = tail.update;
+          node.Statement = tail.statement;
+          return this.finishNode(node, 'ForStatement');
+        }
+        // for (using ident in expr) {}
+        //                  ^ invalid!
+        node.ForDeclaration = this.finishForDeclaration(
+          inner,
+          list[0]!,
+          isAwaitUsingDeclaration ? 'AwaitUsing' : 'Using',
+        );
+        this.expect('of');
+        return this.parseForOfStatementTail(node, isAwait);
+      }
+      // for (let/const [
+      // for (let/const {
+      // for (let/const ident
+      if ((this.test('let') || this.test(Token.CONST)) && isLexicalBindingStart()) {
+        const inner = this.startNode<ParseNode.LexicalDeclaration | ParseNode.ForDeclaration_LetOrConst>();
         if (this.eat('let')) {
           inner.LetOrConst = 'let';
         } else {
@@ -514,7 +734,7 @@ export abstract class StatementParser extends ExpressionParser {
         this.scope.declare(list, 'lexical');
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           if (isAwait) {
-            this.unexpected();
+            this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
           }
           if (inner.LetOrConst === 'const') {
             list.forEach((b) => {
@@ -526,81 +746,53 @@ export abstract class StatementParser extends ExpressionParser {
           inner.BindingList = list;
           node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
           this.expect(Token.SEMICOLON);
-          if (!this.test(Token.SEMICOLON)) {
-            node.Expression_a = this.parseExpression();
-          }
-          this.expect(Token.SEMICOLON);
-          if (!this.test(Token.RPAREN)) {
-            node.Expression_b = this.parseExpression();
-          }
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
+          const tail = this.parseForStatementTail();
+          if (tail.test) node.Expression_a = tail.test;
+          if (tail.update) node.Expression_b = tail.update;
+          node.Statement = tail.statement;
           return this.finishNode(node, 'ForStatement');
         }
-        inner.ForBinding = this.repurpose(list[0], 'ForBinding', (_, oldNode) => {
-          if (oldNode.Initializer) {
-            this.unexpected(oldNode.Initializer);
-          }
-        });
-        node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
-        getDeclarations(node.ForDeclaration)
-          .forEach((d) => {
-            if (d.name === 'let') {
-              this.addEarlyError(Throw.SyntaxError('Unexpected token let'), d.node);
-            }
-          });
+        node.ForDeclaration = this.finishForDeclaration(inner, list[0], 'LetOrConst');
+        // for (const x in ...
         if (!isAwait && this.eat(Token.IN)) {
-          node.Expression = this.parseExpression();
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForInStatement');
+          return this.parseForInStatementTail(node);
         }
+        // for (const x of ...
         this.expect('of');
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+        return this.parseForOfStatementTail(node, isAwait);
       }
+
+      // for (var ...
       if (this.eat(Token.VAR)) {
         if (isAwait) {
           node.ForBinding = this.parseForBinding();
           this.expect('of');
-          node.AssignmentExpression = this.parseAssignmentExpression();
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForAwaitStatement');
+          return this.parseForOfStatementTail(node, true);
         }
         const list = this.parseVariableDeclarationList(false);
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           node.VariableDeclarationList = list;
           this.expect(Token.SEMICOLON);
-          if (!this.test(Token.SEMICOLON)) {
-            node.Expression_a = this.parseExpression();
-          }
-          this.expect(Token.SEMICOLON);
-          if (!this.test(Token.RPAREN)) {
-            node.Expression_b = this.parseExpression();
-          }
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
+          const tail = this.parseForStatementTail();
+          if (tail.test) node.Expression_a = tail.test;
+          if (tail.update) node.Expression_b = tail.update;
+          node.Statement = tail.statement;
           return this.finishNode(node, 'ForStatement');
         }
         node.ForBinding = this.repurpose(list[0], 'ForBinding', (_, oldNode) => {
           if (oldNode.Initializer) {
-            this.unexpected(oldNode.Initializer);
+            this.raise(Throw.SyntaxError('Initializers are not allowed in for-in/of loop declarations'), oldNode.Initializer);
           }
         });
         if (this.eat('of')) {
-          node.AssignmentExpression = this.parseAssignmentExpression();
+          return this.parseForOfStatementTail(node, false);
         } else {
           this.expect(Token.IN);
-          node.Expression = this.parseExpression();
+          return this.parseForInStatementTail(node);
         }
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, node.AssignmentExpression ? 'ForOfStatement' : 'ForInStatement');
       }
 
+      // for (some_lhs_to_update ...
       this.scope.pushAssignmentInfo('for');
       const expression = this.scope.with({ in: false }, () => this.parseExpression());
       const validateLHS = (n: ParseNode) => {
@@ -615,49 +807,39 @@ export abstract class StatementParser extends ExpressionParser {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression as ParseNode.LeftHandSideExpression; // NOTE: unsound cast
-        node.Expression = this.parseExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, 'ForInStatement');
+        return this.parseForInStatementTail(node);
       }
       const isExactlyAsync = expression.type === 'IdentifierReference'
         && !expression.escaped
         && expression.name === 'async';
+      // `for (value of values) {}`
+      // `for (\u0061sync of values) {}`
+      // `for await (async of values) {}`
+      // but not `for (async of values) {}`, which is excluded by the lookahead restriction.
       if ((!isExactlyAsync || isAwait) && this.eat('of')) {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression as ParseNode.LeftHandSideExpression; // NOTE: unsound cast
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+        return this.parseForOfStatementTail(node, isAwait);
       }
 
       if (isAwait) {
-        this.unexpected();
+        this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
       }
 
       node.Expression_a = expression;
       this.expect(Token.SEMICOLON);
-
-      if (!this.test(Token.SEMICOLON)) {
-        node.Expression_b = this.parseExpression();
-      }
-      this.expect(Token.SEMICOLON);
-
-      if (!this.test(Token.RPAREN)) {
-        node.Expression_c = this.parseExpression();
-      }
-      this.expect(Token.RPAREN);
-
-      node.Statement = this.parseStatement();
+      const tail = this.parseForStatementTail();
+      if (tail.test) node.Expression_b = tail.test;
+      if (tail.update) node.Expression_c = tail.update;
+      node.Statement = tail.statement;
       return this.finishNode(node, 'ForStatement');
     });
   }
 
   // ForBinding :
   //   BindingIdentifier
-  //   BindingPattern
+  //   [+Pattern] BindingPattern
   parseForBinding(): ParseNode.ForBinding {
     const node = this.startNode<ParseNode.ForBinding>();
     switch (this.peek().type) {
@@ -724,7 +906,11 @@ export abstract class StatementParser extends ExpressionParser {
               StatementList = [];
               inner.StatementList = StatementList;
             }
-            StatementList.push(this.parseStatementListItem());
+            const statement = this.parseStatementListItem();
+            StatementList.push(statement);
+          }
+          if (StatementList && ContainsUsing(StatementList)) {
+            this.addEarlyError(Throw.SyntaxError('Using declarations are not allowed directly in switch clauses'), inner);
           }
           if (t === Token.DEFAULT) {
             node.DefaultClause = this.finishNode(inner, 'DefaultClause');

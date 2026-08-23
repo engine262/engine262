@@ -32,6 +32,7 @@ import {
   type ImportedNamesValue,
   type ModuleRequestRecord,
   type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
+  DisposeResources,
 } from '#self';
 import {
   Assert,
@@ -906,12 +907,14 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 2. Assert: module has been linked and declarations in its module environment have been instantiated.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context!;
+    const env = module.Environment!;
     if (module.HasTLA === Value.false) {
       Assert(capability === undefined);
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
       // 5. Let result be the result of evaluating module.[[ECMAScriptCode]].
-      const result = EnsureCompletion(yield* (Evaluate(module.ECMAScriptCode)));
+      let result = EnsureCompletion(yield* Evaluate(module.ECMAScriptCode));
+      result = yield* DisposeResources(env.DisposableResourceStack, result);
       // 6. Suspend moduleContext and remove it from the execution context stack.
       // 7. Resume the context that is now on the top of the execution context stack as the running execution context.
       surroundingAgent.executionContextStack.pop(moduleContext);
@@ -921,7 +924,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // a. Assert: capability is a PromiseCapability Record.
       Assert(capability instanceof PromiseCapabilityRecord);
       // b. Perform ! AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleCxt).
-      X(yield* AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext));
+      X(yield* AsyncBlockStart(capability, function* evaluateModule(): ValueEvaluator {
+        let result = EnsureCompletion(yield* Evaluate(module.ECMAScriptCode));
+        result = yield* DisposeResources(env.DisposableResourceStack, result);
+        return result;
+      }, moduleContext));
       // c. Return.
       return Value.undefined;
     }

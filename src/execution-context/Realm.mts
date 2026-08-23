@@ -14,6 +14,8 @@ import { bootstrapAsyncGeneratorFunction } from '../intrinsics/AsyncGeneratorFun
 import { bootstrapAsyncGeneratorFunctionPrototype } from '../intrinsics/AsyncGeneratorFunctionPrototype.mts';
 import { bootstrapAsyncGeneratorFunctionPrototypePrototype } from '../intrinsics/AsyncGeneratorFunctionPrototypePrototype.mts';
 import { bootstrapAsyncIteratorPrototype } from '../intrinsics/AsyncIteratorPrototype.mts';
+import { bootstrapAsyncDisposableStack } from '../intrinsics/AsyncDisposableStack.mts';
+import { bootstrapAsyncDisposableStackPrototype } from '../intrinsics/AsyncDisposableStackPrototype.mts';
 import { bootstrapBigInt } from '../intrinsics/BigInt.mts';
 import { bootstrapBigIntPrototype } from '../intrinsics/BigIntPrototype.mts';
 import { bootstrapBoolean } from '../intrinsics/Boolean.mts';
@@ -22,6 +24,8 @@ import { bootstrapDataView } from '../intrinsics/DataView.mts';
 import { bootstrapDataViewPrototype } from '../intrinsics/DataViewPrototype.mts';
 import { bootstrapDate } from '../intrinsics/Date.mts';
 import { bootstrapDatePrototype } from '../intrinsics/DatePrototype.mts';
+import { bootstrapDisposableStack } from '../intrinsics/DisposableStack.mts';
+import { bootstrapDisposableStackPrototype } from '../intrinsics/DisposableStackPrototype.mts';
 import { bootstrapError } from '../intrinsics/Error.mts';
 import { bootstrapErrorPrototype } from '../intrinsics/ErrorPrototype.mts';
 import { bootstrapEval } from '../intrinsics/eval.mts';
@@ -67,6 +71,8 @@ import { bootstrapStringIteratorPrototype } from '../intrinsics/StringIteratorPr
 import { bootstrapStringPrototype } from '../intrinsics/StringPrototype.mts';
 import { bootstrapSymbol } from '../intrinsics/Symbol.mts';
 import { bootstrapSymbolPrototype } from '../intrinsics/SymbolPrototype.mts';
+import { bootstrapSuppressedError } from '../intrinsics/SuppressedError.mts';
+import { bootstrapSuppressedErrorPrototype } from '../intrinsics/SuppressedErrorPrototype.mts';
 import { bootstrapThrowTypeError } from '../intrinsics/ThrowTypeError.mts';
 import { bootstrapTypedArray } from '../intrinsics/TypedArray.mts';
 import { bootstrapUint8Array } from '../intrinsics/TypedArray_Uint8Array.mts';
@@ -156,6 +162,8 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapNativeError(realmRec);
   bootstrapAggregateErrorPrototype(realmRec);
   bootstrapAggregateError(realmRec);
+  bootstrapSuppressedErrorPrototype(realmRec);
+  bootstrapSuppressedError(realmRec);
 
   bootstrapFunction(realmRec);
   bootstrapAbstractModuleSource(realmRec);
@@ -166,6 +174,10 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapWrapForValidIteratorPrototype(realmRec);
 
   bootstrapAsyncIteratorPrototype(realmRec);
+  bootstrapDisposableStackPrototype(realmRec);
+  bootstrapDisposableStack(realmRec);
+  bootstrapAsyncDisposableStackPrototype(realmRec);
+  bootstrapAsyncDisposableStack(realmRec);
   bootstrapArrayIteratorPrototype(realmRec);
   bootstrapMapIteratorPrototype(realmRec);
   bootstrapSetIteratorPrototype(realmRec);
@@ -299,6 +311,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
 
     // Constructor Properties of the Global Object
     'AggregateError',
+    'AsyncDisposableStack',
     'Array',
     'ArrayBuffer',
     'Boolean',
@@ -307,6 +320,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
     'BigUint64Array',
     'DataView',
     'Date',
+    'DisposableStack',
     'Error',
     'EvalError',
     'FinalizationRegistry',
@@ -331,6 +345,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
     // 'SharedArrayBuffer',
     'String',
     'Symbol',
+    'SuppressedError',
     'SyntaxError',
     'Temporal',
     'TypeError',

@@ -19,6 +19,7 @@ import {
 import {
   surroundingAgent,
   Assert, GetValue, IsStrictlyEqual, DeclarativeEnvironmentRecord,
+  X,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
@@ -186,24 +187,16 @@ function* CaseBlockEvaluation(node: ParseNode.CaseBlock, input: Value): Statemen
 //   SwitchStatement :
 //     `switch` `(` Expression `)` CaseBlock
 export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.SwitchStatement): StatementEvaluator {
-  // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = Q(yield* Evaluate(Expression));
-  // 2. Let switchValue be ? GetValue(exprRef).
   const switchValue = Q(yield* GetValue(exprRef));
-  // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
   const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
-  // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-  yield* BlockDeclarationInstantiation(CaseBlock, blockEnv);
-  // 6. Set the running execution context's LexicalEnvironment to blockEnv.
+  X(BlockDeclarationInstantiation(CaseBlock, blockEnv));
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
-  // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.
-  const result = yield* CaseBlockEvaluation(CaseBlock, switchValue);
-  // 8. Set the running execution context's LexicalEnvironment to oldEnv.
+  const blockResult = yield* CaseBlockEvaluation(CaseBlock, switchValue);
+  Assert(blockEnv.DisposableResourceStack.length === 0);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-  // 9. return R.
-  return result;
+  return blockResult;
 }
 
 /** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
@@ -215,9 +208,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.S
 //     `case` `default` `:` StatementList
 export function* Evaluate_CaseClause({ StatementList }: ParseNode.CaseClause | ParseNode.DefaultClause) {
   if (!StatementList) {
-    // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
-  // 1. Return the result of evaluating StatementList.
   return yield* Evaluate_StatementList(StatementList);
 }

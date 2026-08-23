@@ -10,6 +10,7 @@ import {
   JSStringValue,
 } from '../value.mts';
 import { type GCMarker } from '../host-defined/engine.mts';
+import type { DisposableResourceRecord } from '../abstract-ops/disposable-operations.mts';
 import {
   NormalCompletion, Q, X,
   type ValueEvaluator,
@@ -97,6 +98,9 @@ function isDeferredInitializationBinding(binding: ModuleEnvironmentBinding): bin
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   readonly bindings = new JSStringMap<DeclarativeEnvironmentBinding>();
+
+  /** https://tc39.es/ecma262/#table-additional-fields-of-declarative-environment-records */
+  readonly DisposableResourceStack: DisposableResourceRecord[] = [];
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
   * HasBinding(N: JSStringValue) {
@@ -265,8 +269,12 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
   // NON-SPEC
   override mark(m: GCMarker) {
-    // TODO(ts): this function does not call super.mark(). is it a mistake?
+    super.mark(m);
     m(this.bindings);
+    for (const resource of this.DisposableResourceStack) {
+      m(resource.ResourceValue);
+      m(resource.DisposeMethod);
+    }
   }
 }
 

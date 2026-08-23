@@ -27,6 +27,7 @@ import {
   CreateIteratorFromClosure,
   GetIteratorDirect,
   GetIteratorFlattenable,
+  GetMethod,
   IsCallable,
   IteratorClose,
   IteratorStep,
@@ -43,6 +44,16 @@ import {
   type IteratorRecord,
   type Realm,
 } from '#self';
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype-%symbol.dispose% */
+function* IteratorProto_dispose(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue;
+  const returnMethod = Q(yield* GetMethod(obj, Value('return')));
+  if (!(returnMethod instanceof UndefinedValue)) {
+    Q(yield* Call(returnMethod, obj));
+  }
+  return Value.undefined;
+}
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
 function IteratorProto_constructor_getter() {
@@ -667,6 +678,7 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['constructor', [IteratorProto_constructor_getter, IteratorProto_constructor_setter]],
     ['chunks', IteratorProto_chunks, 1],
     ['drop', IteratorProto_drop, 1],
+    [wellKnownSymbols.dispose, IteratorProto_dispose, 0],
     ['every', IteratorProto_every, 1],
     ['filter', IteratorProto_filter, 1],
     ['find', IteratorProto_find, 1],

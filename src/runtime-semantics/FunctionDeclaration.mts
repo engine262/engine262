@@ -6,6 +6,5 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
 //   function ( FormalParameters ) { FunctionBody }
 export function Evaluate_FunctionDeclaration(_FunctionDeclaration: ParseNode.FunctionDeclaration) {
-  // 1. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

@@ -54,15 +54,13 @@ function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, Bind
   return NormalCompletion(undefined);
 }
 
-export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.ForDeclaration | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
+export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
   switch (node.type) {
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return yield* BindingInitialization(node.BindingIdentifier, value, environment);
       }
       return yield* BindingInitialization(node.BindingPattern!, value, environment);
-    case 'ForDeclaration':
-      return yield* BindingInitialization(node.ForBinding, value, environment);
     case 'BindingIdentifier': {
       // 1. Let name be StringValue of Identifier.
       const name = StringValue(node);

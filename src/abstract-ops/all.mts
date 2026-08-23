@@ -6,6 +6,7 @@ export * from './async-generator-objects.mts';
 export * from './data-types-and-values.mts';
 export * from './dataview-objects.mts';
 export * from './date-objects.mts';
+export * from './disposable-operations.mts';
 export * from './error-objects.mts';
 export * from './execution-contexts.mts';
 export * from './function-operations.mts';

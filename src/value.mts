@@ -234,7 +234,9 @@ export class SymbolValue extends PrimitiveValue {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export const wellKnownSymbols = {
+  asyncDispose: new SymbolValue(Value('Symbol.asyncDispose')),
   asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
+  dispose: new SymbolValue(Value('Symbol.dispose')),
   hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
   isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
   iterator: new SymbolValue(Value('Symbol.iterator')),

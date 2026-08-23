@@ -1039,8 +1039,12 @@ export namespace ParseNode {
 
   // LexicalDeclaration :
   //   LetOrConst BindingList `;`
+  //   UsingDeclaration
+  //   [+Await] AwaitUsingDeclaration
   export type LexicalDeclarationLike =
-    | LexicalDeclaration;
+    | LexicalDeclaration
+    | UsingDeclaration
+    | AwaitUsingDeclaration;
 
   // LexicalDeclaration :
   //   LetOrConst BindingList `;`
@@ -1048,6 +1052,20 @@ export namespace ParseNode {
     readonly type: 'LexicalDeclaration';
     readonly LetOrConst: LetOrConst;
     readonly BindingList: BindingList;
+  }
+
+  // UsingDeclaration :
+  //   `using` [no LineTerminator here] BindingList `;`
+  export interface UsingDeclaration extends BaseParseNode {
+      readonly type: 'UsingDeclaration';
+      readonly BindingList: BindingList;
+  }
+
+  // AwaitUsingDeclaration :
+  //   `await` [no LineTerminator here] `using` [no LineTerminator here] BindingList `;`
+  export interface AwaitUsingDeclaration extends BaseParseNode {
+      readonly type: 'AwaitUsingDeclaration';
+      readonly BindingList: BindingList;
   }
 
   // LetOrConst :
@@ -1064,7 +1082,7 @@ export namespace ParseNode {
 
   // LexicalBinding :
   //   BindingIdentifier Initializer?
-  //   BindingPattern Initializer
+  //   [+Pattern] BindingPattern Initializer
   export interface LexicalBinding extends BaseParseNode {
     readonly type: 'LexicalBinding';
 
@@ -1281,15 +1299,15 @@ export namespace ParseNode {
   }
 
   // ForInOfStatement :
-  //   `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
-  //   `for` `(` `var` ForBinding `in` Expression `)` Statement
-  //   `for` `(` ForDeclaration `in` Expression `)` Statement
-  //   `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  //   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  //            `for`         `(` [lookahead != `let` `[`] LeftHandSideExpression               `in`           Expression `)` Statement
+  //            `for`         `(` `var` ForBinding                                              `in`           Expression `)` Statement
+  //            `for`         `(` ForDeclaration                                                `in`           Expression `)` Statement
+  //            `for`         `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //            `for`         `(` `var` ForBinding                                              `of` AssignmentExpression `)` Statement
+  //            `for`         `(` [lookahead != `using` `of`] ForDeclaration                    `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `let`] LeftHandSideExpression                   `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` `var` ForBinding                                              `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `using` `of`] ForDeclaration                    `of` AssignmentExpression `)` Statement
   export type ForInOfStatement =
     | ForInStatement
     | ForOfStatement
@@ -1313,13 +1331,13 @@ export namespace ParseNode {
     // Statement: Statement;
 
     /// ForInStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
-    // ForDeclaration?: ForDeclarationLike;
+    // ForDeclaration?: ForDeclaration;
     // Expression: Expression;
     // Statement: Statement;
 
     readonly LeftHandSideExpression?: LeftHandSideExpression;
     readonly ForBinding?: ForBinding;
-    readonly ForDeclaration?: ForDeclarationLike;
+    readonly ForDeclaration?: ForDeclaration;
     readonly Expression: Expression;
     readonly Statement: Statement;
   }
@@ -1327,7 +1345,7 @@ export namespace ParseNode {
   // ForInOfStatement (partial) :
   //   `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
   //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  //   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  //   `for` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
   export interface ForOfStatement extends BaseParseNode {
     readonly type: 'ForOfStatement';
 
@@ -1341,22 +1359,22 @@ export namespace ParseNode {
     // AssignmentExpression: AssignmentExpressionOrHigher;
     // Statement: Statement;
 
-    /// ForOfStatement : `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-    // ForDeclaration?: ForDeclarationLike;
+    /// ForOfStatement : `for` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
+    // ForDeclaration?: ForDeclaration;
     // AssignmentExpression: AssignmentExpressionOrHigher;
     // Statement: Statement;
 
     readonly LeftHandSideExpression?: LeftHandSideExpression;
-    readonly ForDeclaration?: ForDeclarationLike;
+    readonly ForDeclaration?: ForDeclaration;
     readonly ForBinding?: ForBinding;
     readonly AssignmentExpression: AssignmentExpressionOrHigher;
     readonly Statement: Statement;
   }
 
   // ForInOfStatement (partial) :
-  //   `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
   export interface ForAwaitStatement extends BaseParseNode {
     readonly type: 'ForAwaitStatement';
 
@@ -1370,13 +1388,13 @@ export namespace ParseNode {
     // AssignmentExpression: AssignmentExpressionOrHigher;
     // Statement: Statement;
 
-    /// ForOfStatement : `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-    // ForDeclaration?: ForDeclarationLike;
+    /// ForOfStatement : `for` `await` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
+    // ForDeclaration?: ForDeclaration;
     // AssignmentExpression: AssignmentExpressionOrHigher;
     // Statement: Statement;
 
     readonly LeftHandSideExpression?: LeftHandSideExpression;
-    readonly ForDeclaration?: ForDeclarationLike;
+    readonly ForDeclaration?: ForDeclaration;
     readonly ForBinding?: ForBinding;
     readonly AssignmentExpression: AssignmentExpressionOrHigher;
     readonly Statement: Statement;
@@ -1384,20 +1402,42 @@ export namespace ParseNode {
 
   // ForDeclaration :
   //   LetOrConst ForBinding
-  export type ForDeclarationLike =
-    | ForDeclaration;
+  //   [+Using] `using` [no LineTerminator here] ForBinding
+  //   [+Using, +Await] `await` [no LineTerminator here] `using` [no LineTerminator here] ForBinding
+  export type ForDeclaration =
+    | ForDeclaration_LetOrConst
+    | ForDeclaration_Using
+    | ForDeclaration_AwaitUsing;
 
-  // ForDeclaration :
+  // ForDeclaration (partial) :
   //   LetOrConst ForBinding
-  export interface ForDeclaration extends BaseParseNode {
+  export interface ForDeclaration_LetOrConst extends BaseParseNode {
     readonly type: 'ForDeclaration';
+    readonly production: 'LetOrConst';
     readonly LetOrConst: LetOrConst;
     readonly ForBinding: ForBinding;
   }
 
+  // ForDeclaration (partial) :
+  //   [+Using] `using` [no LineTerminator here] ForBinding
+  export interface ForDeclaration_Using extends BaseParseNode {
+      readonly type: 'ForDeclaration';
+      readonly production: 'Using';
+      readonly ForBinding: ForBinding;
+  }
+
+  // ForDeclaration (partial) :
+  //   [+Using, +Await] `await` [no LineTerminator here] `using`
+  //     [no LineTerminator here] ForBinding
+  export interface ForDeclaration_AwaitUsing extends BaseParseNode {
+      readonly type: 'ForDeclaration';
+      readonly production: 'AwaitUsing';
+      readonly ForBinding: ForBinding;
+  }
+
   // ForBinding :
-  //   BindingPattern
   //   BindingIdentifier
+  //   [+Pattern] BindingPattern
   export interface ForBinding extends BaseParseNode {
     readonly type: 'ForBinding';
     readonly BindingIdentifier?: BindingIdentifier;
@@ -2818,6 +2858,8 @@ export type ParseNode =
   | ParseNode.AssignmentExpression
   | ParseNode.CommaOperator
   | ParseNode.LexicalDeclaration
+  | ParseNode.UsingDeclaration
+  | ParseNode.AwaitUsingDeclaration
   | ParseNode.LexicalBinding
   | ParseNode.ObjectBindingPattern
   | ParseNode.ArrayBindingPattern

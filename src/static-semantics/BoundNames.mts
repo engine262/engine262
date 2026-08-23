@@ -15,6 +15,8 @@ export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValu
     case 'BindingIdentifier':
       return [StringValue(node)];
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return BoundNames(node.BindingList);
     case 'LexicalBinding':
       if (node.BindingIdentifier) {

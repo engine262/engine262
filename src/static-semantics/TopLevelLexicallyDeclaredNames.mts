@@ -14,6 +14,8 @@ export function TopLevelLexicallyDeclaredNames(node: ParseNode | readonly ParseN
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return BoundNames(node);
     default:
       return [];

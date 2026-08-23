@@ -12,6 +12,8 @@ export function TopLevelLexicallyScopedDeclarations(node: ParseNode | readonly P
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return [node];
     default:
       return [];
@@ -20,4 +22,6 @@ export function TopLevelLexicallyScopedDeclarations(node: ParseNode | readonly P
 
 export type LexicallyScopedDeclaration =
   | ParseNode.ClassDeclaration
-  | ParseNode.LexicalDeclaration;
+  | ParseNode.LexicalDeclaration
+  | ParseNode.UsingDeclaration
+  | ParseNode.AwaitUsingDeclaration;
