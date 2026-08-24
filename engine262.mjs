@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 73b91f84d998523a950bcd79c82f7078bce5f09e
+ * engine262 0.0.1 01e9fa95a4e8a1c042efd00492309a2de4998fd0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -583,6 +583,8 @@ function TopLevelLexicallyDeclaredNames(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return BoundNames(node);
     default:
       return [];
@@ -601,6 +603,8 @@ function BoundNames(node) {
     case 'BindingIdentifier':
       return [StringValue(node)];
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return BoundNames(node.BindingList);
     case 'LexicalBinding':
       if (node.BindingIdentifier) {
@@ -815,6 +819,8 @@ function TopLevelVarDeclaredNames(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return [];
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
@@ -954,6 +960,8 @@ function TopLevelVarScopedDeclarations(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return [];
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
@@ -1005,6 +1013,8 @@ function LexicallyScopedDeclarations(node) {
       return [];
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':
@@ -1060,6 +1070,8 @@ function TopLevelLexicallyScopedDeclarations(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return [node];
     default:
       return [];
@@ -1067,8 +1079,43 @@ function TopLevelLexicallyScopedDeclarations(node) {
 }
 
 function IsConstantDeclaration(node) {
-  return node === 'const' || typeof node === 'object' && 'LetOrConst' in node && node.LetOrConst === 'const';
+  return node === 'const' || typeof node === 'object' && ('LetOrConst' in node && node.LetOrConst === 'const' || node.type === 'UsingDeclaration' || node.type === 'AwaitUsingDeclaration' || node.type === 'ForDeclaration' && node.production !== 'LetOrConst');
 }
+
+function IsUsingDeclaration(node) {
+  switch (node.type) {
+    case 'UsingDeclaration':
+      return true;
+    case 'ForDeclaration':
+      return node.production === 'Using';
+    default:
+      return false;
+  }
+}
+
+function IsAwaitUsingDeclaration(node) {
+  switch (node.type) {
+    case 'AwaitUsingDeclaration':
+      return true;
+    case 'ForDeclaration':
+      return node.production === 'AwaitUsing';
+    default:
+      return false;
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-static-semantics-containsusing */
+function ContainsUsing(node) {
+  // StatementList : StatementList StatementListItem
+  if (!('type' in node)) {
+    return node.some(ContainsUsing);
+  }
+
+  // StatementListItem : Statement
+  // StatementListItem : Declaration
+  return IsUsingDeclaration(node) || IsAwaitUsingDeclaration(node);
+}
+ContainsUsing.section = 'https://tc39.es/ecma262/#sec-static-semantics-containsusing';
 
 function IsInTailPosition(_node) {
   return false;
@@ -1620,7 +1667,7 @@ function IsDestructuring(node) {
     case 'ArrayLiteral':
       return true;
     case 'ForDeclaration':
-      return IsDestructuring(node.ForBinding);
+      return node.production === 'LetOrConst' && IsDestructuring(node.ForBinding);
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return false;
@@ -2029,6 +2076,7 @@ const isInRange = (t, l, h) => t >= l && t <= h;
 const isAutomaticSemicolon = t => isInRange(t, Token.SEMICOLON, Token.EOS);
 const isMember = t => isInRange(t, Token.TEMPLATE, Token.LBRACK);
 const isPropertyOrCall = t => isInRange(t, Token.TEMPLATE, Token.LPAREN);
+const isAnyIdentifier = t => isInRange(t, Token.IDENTIFIER, Token.YIELD) || t === Token.ESCAPED_KEYWORD;
 const isKeyword = t => KeywordTokens.has(t);
 const isKeywordRaw = s => KeywordRaw.has(s);
 const ReservedWordsStrict = new Set(['implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield']);
@@ -2198,7 +2246,7 @@ class Lexer {
 
   peekToken; // NOTE: unsound definite assignment operator (`!`)
 
-  peekAheadToken;
+  peekAheadTokens = [];
   position = 0;
   get debug() {
     const e = {
@@ -2345,9 +2393,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   next() {
     this.currentToken = this.peekToken;
-    if (this.peekAheadToken !== undefined) {
-      this.peekToken = this.peekAheadToken;
-      this.peekAheadToken = undefined;
+    if (this.peekAheadTokens.length > 0) {
+      this.peekToken = this.peekAheadTokens.shift();
     } else {
       this.peekToken = this.advance();
     }
@@ -2359,12 +2406,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return this.peekToken;
   }
-  peekAhead() {
-    if (this.peekAheadToken === undefined) {
-      this.peek();
-      this.peekAheadToken = this.advance();
+  peekAhead(distance = 1) {
+    this.peek();
+    while (this.peekAheadTokens.length < distance) {
+      this.peekAheadTokens.push(this.advance());
     }
-    return this.peekAheadToken;
+    return this.peekAheadTokens[distance - 1];
   }
   matches(token, peek) {
     if (typeof token === 'string') {
@@ -4095,6 +4142,8 @@ function* Evaluate(node) {
     case 'ClassDeclaration':
       return yield* Evaluate_ClassDeclaration(node);
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return yield* Evaluate_LexicalDeclaration(node);
     case 'FunctionDeclaration':
       return Evaluate_FunctionDeclaration();
@@ -7174,7 +7223,6 @@ Evaluate_VariableStatement.section = 'https://tc39.es/ecma262/#sec-variable-stat
 //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
 //   function ( FormalParameters ) { FunctionBody }
 function Evaluate_FunctionDeclaration(_FunctionDeclaration) {
-  // 1. Return NormalCompletion(empty).
   return {
     __proto__: NormalCompletion.prototype,
     Value: undefined
@@ -7836,13 +7884,19 @@ function* EvaluateBody_AssignmentExpression(AssignmentExpression, functionObject
 //    ClassStaticBlockBody : ClassStaticBlockStatementList
 function* EvaluateClassStaticBlockBody({
   ClassStaticBlockStatementList
-}, functionObject) {
-  /* ReturnIfAbrupt */let _temp10 = yield* FunctionDeclarationInstantiation(functionObject, []);
-  /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
-    if (_temp10 instanceof AbruptCompletion) return _temp10;
+}, funcObject) {
+  /* X */let _temp10 = FunctionDeclarationInstantiation(funcObject, []);
+  /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+  /* node:coverage ignore next */if (_temp10 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! FunctionDeclarationInstantiation(funcObject, []) returned an abrupt completion", {
+      cause: _temp10
+    });
     _temp10 = _temp10.Value;
   }
-  /* ReturnIfAbrupt */let _temp11 = yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList);
+  const result = EnsureCompletion(yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList));
+  const envRecord = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  /* Assert */ /* node:coverage ignore next */if (!(envRecord instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("envRecord instanceof DeclarativeEnvironmentRecord");
+  /* ReturnIfAbrupt */let _temp11 = yield* DisposeResources(envRecord.DisposableResourceStack, result);
   /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     _temp11 = _temp11.Value;
@@ -8197,13 +8251,207 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
 }
 FunctionDeclarationInstantiation.section = 'https://tc39.es/ecma262/#sec-functiondeclarationinstantiation';
 
+/** https://tc39.es/ecma262/#sec-adddisposableresource */
+function* AddDisposableResource(disposableResourceStack, value, kind, method) {
+  let resource;
+  if (method !== undefined) {
+    /* Assert */ /* node:coverage ignore next */if (!(value === Value.undefined)) throw new Assert.Error("value === Value.undefined");
+    /* ReturnIfAbrupt */let _temp = yield* CreateDisposableResource(Value.undefined, kind, method);
+    /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+      if (_temp instanceof AbruptCompletion) return _temp;
+      _temp = _temp.Value;
+    }
+    resource = _temp;
+  } else {
+    if ((value === Value.null || value === Value.undefined) && kind === 'sync-dispose') {
+      return;
+    }
+    /* ReturnIfAbrupt */let _temp2 = yield* CreateDisposableResource(value, kind);
+    /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+      if (_temp2 instanceof AbruptCompletion) return _temp2;
+      _temp2 = _temp2.Value;
+    }
+    resource = _temp2;
+  }
+  disposableResourceStack.push(resource);
+  return undefined;
+}
+AddDisposableResource.section = 'https://tc39.es/ecma262/#sec-adddisposableresource';
+
+/** https://tc39.es/ecma262/#sec-createdisposableresource */
+function* CreateDisposableResource(_value, kind, _method) {
+  let value;
+  let method;
+  if (_method === undefined) {
+    if (_value === Value.null || _value === Value.undefined) {
+      value = Value.undefined;
+      method = Value.undefined;
+    } else {
+      /* ReturnIfAbrupt */let _temp3 = yield* GetDisposeMethod(_value, kind);
+      /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+        if (_temp3 instanceof AbruptCompletion) return _temp3;
+        _temp3 = _temp3.Value;
+      }
+      method = _temp3;
+      if (method === Value.undefined) {
+        return Throw.TypeError('$1 is not a function', method);
+      }
+      value = _value;
+    }
+  } else {
+    /* Assert */ /* node:coverage ignore next */if (!(_value === Value.undefined)) throw new Assert.Error("_value === Value.undefined");
+    value = Value.undefined;
+    method = _method;
+  }
+  return {
+    ResourceValue: value,
+    Kind: kind,
+    DisposeMethod: method
+  };
+}
+CreateDisposableResource.section = 'https://tc39.es/ecma262/#sec-createdisposableresource';
+
+/** https://tc39.es/ecma262/#sec-getdisposemethod */
+function* GetDisposeMethod(value, kind) {
+  if (!(value instanceof ObjectValue)) {
+    return Throw.TypeError('$1 is not an object', value);
+  }
+  if (kind === 'sync-dispose') {
+    return yield* GetMethod(value, wellKnownSymbols.dispose);
+  }
+  /* Assert */ /* node:coverage ignore next */if (!(kind === 'async-dispose')) throw new Assert.Error("kind === 'async-dispose'");
+  /* ReturnIfAbrupt */let _asyncMethod = yield* GetMethod(value, wellKnownSymbols.asyncDispose);
+  /* ReturnIfAbrupt */if (_asyncMethod instanceof Completion) {
+    if (_asyncMethod instanceof AbruptCompletion) return _asyncMethod;
+    _asyncMethod = _asyncMethod.Value;
+  }
+  const asyncMethod = _asyncMethod;
+  if (asyncMethod !== Value.undefined) {
+    return asyncMethod;
+  }
+  /* ReturnIfAbrupt */let _syncMethod = yield* GetMethod(value, wellKnownSymbols.dispose);
+  /* ReturnIfAbrupt */if (_syncMethod instanceof Completion) {
+    if (_syncMethod instanceof AbruptCompletion) return _syncMethod;
+    _syncMethod = _syncMethod.Value;
+  }
+  const syncMethod = _syncMethod;
+  if (syncMethod === Value.undefined) {
+    return Value.undefined;
+  }
+  const closure = function* closure(_args, {
+    thisValue
+  }) {
+    const obj = thisValue;
+    /* X */let _promiseCapability = NewPromiseCapability(intrinsics()['%Promise%']);
+    /* node:coverage ignore next */if (_promiseCapability && typeof _promiseCapability === 'object' && 'next' in _promiseCapability) _promiseCapability = skipDebugger(_promiseCapability);
+    /* node:coverage ignore next */if (_promiseCapability instanceof Completion) {
+      /* node:coverage ignore next */if (_promiseCapability instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(intrinsics()['%Promise%']) returned an abrupt completion", {
+        cause: _promiseCapability
+      });
+      _promiseCapability = _promiseCapability.Value;
+    }
+    const promiseCapability = _promiseCapability;
+    let result = yield* Call(syncMethod, obj);
+    /* IfAbruptRejectPromise */ /* node:coverage disable */if (result instanceof AbruptCompletion) {
+      const callRejectCompletion = skipDebugger(Call(promiseCapability.Reject, Value.undefined, [result.Value]));
+      if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+      return promiseCapability.Promise;
+    }
+    if (result instanceof Completion) result = result.Value; /* node:coverage enable */
+
+    /* X */let _closure = Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]);
+    /* node:coverage ignore next */if (_closure && typeof _closure === 'object' && 'next' in _closure) _closure = skipDebugger(_closure);
+    /* node:coverage ignore next */if (_closure instanceof Completion) {
+      /* node:coverage ignore next */if (_closure instanceof AbruptCompletion) throw new Assert.Error("! Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+        cause: _closure
+      });
+      _closure = _closure.Value;
+    }
+    return promiseCapability.Promise;
+  };
+  return CreateBuiltinFunction(closure, 0, Value(''), []);
+}
+GetDisposeMethod.section = 'https://tc39.es/ecma262/#sec-getdisposemethod';
+
+/** https://tc39.es/ecma262/#sec-disposeresources */
+function* DisposeResources(disposableResourceStack, completion) {
+  let needsAwait = false;
+  let hasAwaited = false;
+  let outputCompletion = completion;
+  for (const resource of disposableResourceStack.toReversed()) {
+    const value = resource.ResourceValue;
+    const kind = resource.Kind;
+    const method = resource.DisposeMethod;
+    if (kind === 'sync-dispose' && needsAwait && !hasAwaited) {
+      /* X */let _temp4 = yield* Await(Value.undefined);
+      /* node:coverage ignore next */if (_temp4 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! yield* Await(Value.undefined) returned an abrupt completion", {
+          cause: _temp4
+        });
+        _temp4 = _temp4.Value;
+      } // note: do not remove yield* here, because X will skip async control flow
+
+      needsAwait = false;
+    }
+    if (method !== Value.undefined) {
+      let result = EnsureCompletion(yield* Call(method, value));
+      if (result instanceof NormalCompletion && kind === 'async-dispose') {
+        result = EnsureCompletion(yield* Await(result.Value));
+        hasAwaited = true;
+      }
+      if (result instanceof ThrowCompletion) {
+        if (outputCompletion instanceof ThrowCompletion) {
+          const result_ = result.Value;
+          const suppressed = outputCompletion.Value;
+          /* X */let _error = Construct(intrinsics()['%SuppressedError%'], []);
+          /* node:coverage ignore next */if (_error && typeof _error === 'object' && 'next' in _error) _error = skipDebugger(_error);
+          /* node:coverage ignore next */if (_error instanceof Completion) {
+            /* node:coverage ignore next */if (_error instanceof AbruptCompletion) throw new Assert.Error("! Construct(intrinsics()['%SuppressedError%'], []) returned an abrupt completion", {
+              cause: _error
+            });
+            _error = _error.Value;
+          }
+          const error = _error;
+          CreateNonEnumerableDataPropertyOrThrow(error, Value('error'), result_);
+          CreateNonEnumerableDataPropertyOrThrow(error, Value('suppressed'), suppressed);
+          outputCompletion = {
+            __proto__: ThrowCompletion.prototype,
+            Value: error
+          };
+        } else {
+          outputCompletion = result;
+        }
+      }
+    } else {
+      /* Assert */ /* node:coverage ignore next */if (!(kind === 'async-dispose')) throw new Assert.Error("kind === 'async-dispose'");
+      needsAwait = true;
+    }
+  }
+  if (needsAwait && !hasAwaited) {
+    /* X */let _temp5 = yield* Await(Value.undefined);
+    /* node:coverage ignore next */if (_temp5 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! yield* Await(Value.undefined) returned an abrupt completion", {
+        cause: _temp5
+      });
+      _temp5 = _temp5.Value;
+    } // note: do not remove yield* here, because X will skip async control flow
+  }
+  // Note: NOTE: At this point disposableResourceStack will never be used again. The contents of disposableResourceStack can be discarded in implementations, such as by garbage collection.
+  disposableResourceStack.length = 0;
+  return outputCompletion;
+}
+DisposeResources.section = 'https://tc39.es/ecma262/#sec-disposeresources';
+
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
 //   FunctionStatementList : [empty]
 //
 // (implicit)
 //   FunctionStatementList : StatementList
-function Evaluate_FunctionStatementList(FunctionStatementList) {
-  return Evaluate_StatementList(FunctionStatementList);
+function* Evaluate_FunctionStatementList(FunctionStatementList) {
+  const result = EnsureCompletion(yield* Evaluate_StatementList(FunctionStatementList));
+  const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  /* Assert */ /* node:coverage ignore next */if (!(env instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("env instanceof DeclarativeEnvironmentRecord");
+  return yield* DisposeResources(env.DisposableResourceStack, result);
 }
 Evaluate_FunctionStatementList.section = 'https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation';
 
@@ -8761,112 +9009,2597 @@ function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, stri
 }
 EvaluatePropertyAccessWithIdentifierKey.section = 'https://tc39.es/ecma262/#sec-evaluate-identifier-key-property-access';
 
-/** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
-//   LexicalBinding :
-//     BindingIdentifier
-//     BindingIdentifier Initializer
-function* Evaluate_LexicalBinding_BindingIdentifier({
-  BindingIdentifier,
-  Initializer,
-  strict
-}) {
-  if (Initializer) {
-    // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue(BindingIdentifier);
-    // 2. Let lhs be ResolveBinding(bindingId).
-    /* X */let _lhs = ResolveBinding(bindingId, undefined, strict);
-    /* node:coverage ignore next */if (_lhs && typeof _lhs === 'object' && 'next' in _lhs) _lhs = skipDebugger(_lhs);
-    /* node:coverage ignore next */if (_lhs instanceof Completion) {
-      /* node:coverage ignore next */if (_lhs instanceof AbruptCompletion) throw new Assert.Error("! ResolveBinding(bindingId, undefined, strict) returned an abrupt completion", {
-        cause: _lhs
-      });
-      _lhs = _lhs.Value;
-    }
-    const lhs = _lhs;
-    let value;
-    // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
-    if (IsAnonymousFunctionDefinition(Initializer)) {
-      /* ReturnIfAbrupt */let _temp = yield* NamedEvaluation(Initializer, bindingId);
-      /* ReturnIfAbrupt */if (_temp instanceof Completion) {
-        if (_temp instanceof AbruptCompletion) return _temp;
-        _temp = _temp.Value;
-      }
-      // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-      value = _temp;
-    } else {
-      /* ReturnIfAbrupt */let _rhs = yield* Evaluate(Initializer);
-      /* ReturnIfAbrupt */if (_rhs instanceof Completion) {
-        if (_rhs instanceof AbruptCompletion) return _rhs;
-        _rhs = _rhs.Value;
-      }
-      // 4. Else,
-      // a. Let rhs be the result of evaluating Initializer.
-      const rhs = _rhs;
-      // b. Let value be ? GetValue(rhs).
-      /* ReturnIfAbrupt */let _temp2 = yield* GetValue(rhs);
-      /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
-        if (_temp2 instanceof AbruptCompletion) return _temp2;
-        _temp2 = _temp2.Value;
-      }
-      value = _temp2;
-    }
-    // 5. Return InitializeReferencedBinding(lhs, value).
-    return yield* InitializeReferencedBinding(lhs, value);
-  } else {
-    // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
-    const lhs = yield* ResolveBinding(StringValue(BindingIdentifier), undefined, strict);
-    // 2. Return InitializeReferencedBinding(lhs, undefined).
-    return yield* InitializeReferencedBinding(lhs, Value.undefined);
-  }
+/** https://tc39.es/ecma262/#running-execution-context */
+function runningExecutionContext() {
+  return surroundingAgent.executionContextStack.at(-1);
 }
-Evaluate_LexicalBinding_BindingIdentifier.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
 
-/** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
-//   LexicalBinding : BindingPattern Initializer
-function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
-  const {
-    BindingPattern,
-    Initializer
-  } = LexicalBinding;
-  /* ReturnIfAbrupt */let _rhs2 = yield* Evaluate(Initializer);
-  /* ReturnIfAbrupt */if (_rhs2 instanceof Completion) {
-    if (_rhs2 instanceof AbruptCompletion) return _rhs2;
-    _rhs2 = _rhs2.Value;
-  }
-  const rhs = _rhs2;
-  /* ReturnIfAbrupt */let _value = yield* GetValue(rhs);
-  /* ReturnIfAbrupt */if (_value instanceof Completion) {
-    if (_value instanceof AbruptCompletion) return _value;
-    _value = _value.Value;
-  }
-  const value = _value;
-  const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  return yield* BindingInitialization(BindingPattern, value, env);
+/** https://tc39.es/ecma262/#current-realm */
+function currentRealmRecord() {
+  return surroundingAgent.executionContextStack.at(-1).Realm;
 }
-Evaluate_LexicalBinding_BindingPattern.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
-function* Evaluate_LexicalBinding(LexicalBinding) {
+
+/** https://tc39.es/ecma262/#active-function-object */
+function activeFunctionObject() {
+  return surroundingAgent.executionContextStack.at(-1).Function;
+}
+
+/** https://tc39.es/ecma262/#sec-execution-contexts */
+class ExecutionContext {
+  // Table 20: State Components for All Execution Contexts
+  // https://tc39.es/ecma262/#table-state-components-for-all-execution-contexts
+  CodeEvaluationState;
+  Function = Value.null;
+  ScriptOrModule = Value.null;
+  Realm;
+
+  // Table 21: Additional State Components for ECMAScript Code Execution Contexts
+  // https://tc39.es/ecma262/#table-additional-state-components-for-ecmascript-code-execution-contexts
+  LexicalEnvironment;
+  VariableEnvironment;
+  PrivateEnvironment = null;
+
+  // Table 22: Additional State Components for Generator Execution Contexts
+  // https://tc39.es/ecma262/#table-additional-state-components-for-generator-execution-contexts
+  Generator;
+
+  // NON-SPEC
+  HostDefined;
+  callSite = new CallSite(this);
+  promiseCapability;
+  poppedForTailCall = false;
+  copy() {
+    const e = new ExecutionContext();
+    e.CodeEvaluationState = this.CodeEvaluationState;
+    e.Function = this.Function;
+    e.Realm = this.Realm;
+    e.ScriptOrModule = this.ScriptOrModule;
+    e.VariableEnvironment = this.VariableEnvironment;
+    e.LexicalEnvironment = this.LexicalEnvironment;
+    e.PrivateEnvironment = this.PrivateEnvironment;
+    e.HostDefined = this.HostDefined;
+    e.callSite = this.callSite.clone(e);
+    e.promiseCapability = this.promiseCapability;
+    return e;
+  }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.Function);
+    m(this.Realm);
+    m(this.ScriptOrModule);
+    m(this.VariableEnvironment);
+    m(this.LexicalEnvironment);
+    m(this.PrivateEnvironment);
+    m(this.promiseCapability);
+  }
+}
+class ExecutionContextStack extends Array {
+  // This ensures that only the length taking overload is supported.
+  // This is necessary to support `ArraySpeciesCreate`, which invokes
+  // the constructor with argument `length`:
+  constructor(length = 0) {
+    super(+length);
+  }
+
+  // @ts-expect-error
+  pop(ctx) {
+    if (!ctx.poppedForTailCall) {
+      const popped = super.pop();
+      /* Assert */ /* node:coverage ignore next */if (!(popped === ctx)) throw new Assert.Error("popped === ctx");
+    }
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-getactivescriptormodule */
+function GetActiveScriptOrModule() {
+  for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
+    const e = surroundingAgent.executionContextStack[i];
+    if (e.ScriptOrModule !== Value.null) {
+      return e.ScriptOrModule;
+    }
+  }
+  return Value.null;
+}
+GetActiveScriptOrModule.section = 'https://tc39.es/ecma262/#sec-getactivescriptormodule';
+
+/** https://tc39.es/ecma262/#sec-resolvebinding */
+function ResolveBinding(name, env, strict) {
+  // 1. If env is not present or if env is undefined, then
+  if (env === undefined || env === Value.undefined) {
+    // a. Set env to the running execution context's LexicalEnvironment.
+    env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  }
+  // 2. Assert: env is an Environment Record.
+  /* Assert */ /* node:coverage ignore next */if (!(env instanceof EnvironmentRecord)) throw new Assert.Error("env instanceof EnvironmentRecord");
+  // 3. If the code matching the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
+  // 4. Return ? GetIdentifierReference(env, name, strict).
+  return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
+}
+ResolveBinding.section = 'https://tc39.es/ecma262/#sec-resolvebinding';
+
+/** https://tc39.es/ecma262/#sec-getthisenvironment */
+function GetThisEnvironment() {
+  // 1. Let env be the running execution context's LexicalEnvironment.
+  let env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // 2. Repeat,
+  while (true) {
+    // a. Let exists be env.HasThisBinding().
+    const exists = env.HasThisBinding();
+    // b. If exists is true, return envRec.
+    if (exists === Value.true) {
+      return env;
+    }
+    // c. Let outer be env.[[OuterEnv]].
+    const outer = env.OuterEnv;
+    // d. Assert: outer is not null.
+    /* Assert */ /* node:coverage ignore next */if (!(outer !== null)) throw new Assert.Error("outer !== null");
+    // e. Set env to outer.
+    env = outer;
+  }
+}
+GetThisEnvironment.section = 'https://tc39.es/ecma262/#sec-getthisenvironment';
+
+/** https://tc39.es/ecma262/#sec-resolvethisbinding */
+function ResolveThisBinding() {
+  const envRec = GetThisEnvironment();
+  return envRec.GetThisBinding();
+}
+ResolveThisBinding.section = 'https://tc39.es/ecma262/#sec-resolvethisbinding';
+
+/** https://tc39.es/ecma262/#sec-getnewtarget */
+function GetNewTarget() {
+  const envRec = GetThisEnvironment();
+  /* Assert */ /* node:coverage ignore next */if (!('NewTarget' in envRec)) throw new Assert.Error("'NewTarget' in envRec");
+  return envRec.NewTarget;
+}
+GetNewTarget.section = 'https://tc39.es/ecma262/#sec-getnewtarget';
+
+/** https://tc39.es/ecma262/#sec-getglobalobject */
+function GetGlobalObject() {
+  const currentRealm = surroundingAgent.currentRealmRecord;
+  return currentRealm.GlobalObject;
+}
+GetGlobalObject.section = 'https://tc39.es/ecma262/#sec-getglobalobject';
+
+/** https://tc39.es/ecma262/#sec-runsuspendedcontext */
+
+function* RunSuspendedContext(context, completionRecord) {
+  const callerContext = surroundingAgent.runningExecutionContext;
+
+  // Suspend callerContext.
+  // Push context onto the execution context stack; context is now the running execution context.
+  surroundingAgent.executionContextStack.push(context);
+
+  // Resume the suspended evaluation of context using completionRecord as the result of the operation that suspended it.
+  // Let result be the Completion Record returned by the resumed computation.
+  let iter_result;
+  let result;
+  let completion = completionRecord;
+  while (true) {
+    // run the evaluator
+    iter_result = context.CodeEvaluationState.next(completion);
+    if (iter_result.done) {
+      result = iter_result.value;
+      break;
+    }
+    const {
+      value
+    } = iter_result;
+    // if it is a debugger break, pop it to the evaluator runner
+    if (value.suspend === 'debugger' || value.suspend === 'potential-debugger') {
+      completion = yield value;
+    } else if (value.suspend === 'await' || value.suspend === 'async-yield') {
+      return undefined;
+    } else if (value.suspend === 'yield') {
+      return value.value;
+    } else {
+      /* node:coverage ignore next */
+      throw OutOfRange.exhaustive(value);
+    }
+  }
+
+  // Assert: When we reach this step, context has already been removed from the execution context stack and callerContext is the running execution context again.
+  /* Assert */ /* node:coverage ignore next */if (!(runningExecutionContext() === callerContext)) throw new Assert.Error("runningExecutionContext() === callerContext");
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-runcallercontext */
+
+function* RunCallerContext(passingValue) {
+  const genContext = runningExecutionContext();
+
+  // Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+  surroundingAgent.executionContextStack.pop(genContext);
+
+  // Let callerContext be the running execution context.
+  // Resume callerContext, passing NormalCompletion(value).
+  const result = yield passingValue;
+  /* Assert */ /* node:coverage ignore next */if (!(result.resume === passingValue.suspend)) throw new Assert.Error("result.resume === passingValue.suspend");
+  // NOTE: The above step transfers control to callerContext and pauses. The only way for it to un-pause and have control proceed to the subsequent steps in this algorithm is for genContext to be resumed again, which might never happen.
+
+  /* Assert */ /* node:coverage ignore next */if (!(genContext === runningExecutionContext())) throw new Assert.Error("genContext === runningExecutionContext()");
+
+  // Let result be the Completion Record with which genContext was just resumed.
+  return result.value;
+}
+
+// https://tc39.es/ecma262/#loadedmodulerequest-record
+
+// #resolvedbinding-record
+class ResolvedBindingRecord {
+  Module;
+  BindingName;
+  constructor({
+    Module,
+    BindingName
+  }) {
+    /* Assert */ /* node:coverage ignore next */if (!(Module instanceof AbstractModuleRecord)) throw new Assert.Error("Module instanceof AbstractModuleRecord");
+    /* Assert */ /* node:coverage ignore next */if (!(BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName === 'source' || BindingName instanceof JSStringValue)) throw new Assert.Error("BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName === 'source' || BindingName instanceof JSStringValue");
+    this.Module = Module;
+    this.BindingName = BindingName;
+  }
+  mark(m) {
+    m(this.Module);
+  }
+}
+/** https://tc39.es/proposal-deferred-reexports/#sec-ResolveSetContains */
+function ResolveSetContains(resolveSet, module, exportName) {
+  for (const r of resolveSet) {
+    if (r instanceof AbstractModuleRecord && r === module) {
+      return true;
+    }
+    if (!(r instanceof AbstractModuleRecord) && r.Module === module && SameValue(r.ExportName, exportName)) {
+      return true;
+    }
+  }
+  return false;
+}
+ResolveSetContains.section = 'https://tc39.es/proposal-deferred-reexports/#sec-ResolveSetContains';
+function importedNamesContains(importedNames, exportName) {
+  if (importedNames === 'all-but-default') {
+    return exportName instanceof JSStringValue && exportName.stringValue() !== 'default';
+  }
+  return exportName instanceof JSStringValue && importedNames.includes(exportName.stringValue());
+}
+
+/** https://tc39.es/ecma262/#sec-abstract-module-records */
+class AbstractModuleRecord {
+  /** https://tc39.es/proposal-deferred-reexports/#abstract-getoptionalindirectexportsmodulerequests */
+  GetOptionalIndirectExportsModuleRequests(_importedNames = 'all') {
+    return [];
+  }
+
+  // https://github.com/tc39/ecma262/pull/3492/#abstract-get-module-source-kind
+  GetModuleSourceKind() {
+    // For Module Records that do not have a source representation (currently all ECMA-262-defined Module Records), GetModuleSourceKind() is never called.
+    throw new Error('GetModuleSourceKind must be implemented by module records that have a ModuleSource');
+  }
+  Realm;
+  Environment;
+  Namespace = undefined;
+  DeferredNamespace = undefined;
+  ModuleSource = undefined;
+  HostDefined;
+  constructor(init) {
+    this.Realm = init.Realm;
+    this.Environment = init.Environment;
+    this.ModuleSource = init.ModuleSource;
+    this.HostDefined = init.HostDefined;
+  }
+  mark(m) {
+    m(this.Realm);
+    m(this.Environment);
+    m(this.Namespace);
+    m(this.DeferredNamespace);
+    m(this.ModuleSource);
+  }
+}
+/** https://tc39.es/ecma262/#sec-cyclic-module-records */
+class CyclicModuleRecord extends AbstractModuleRecord {
+  Status;
+  EvaluationError;
+  DFSAncestorIndex;
+  RequestedModules;
+  LoadedModules;
+  HasTLA;
+  AsyncEvaluationOrder;
+  AsyncParentModules;
+  CycleRoot;
+  TopLevelCapability;
+  PendingAsyncDependencies;
+  constructor(init) {
+    super(init);
+    this.Status = init.Status;
+    this.EvaluationError = init.EvaluationError;
+    this.DFSAncestorIndex = init.DFSAncestorIndex;
+    this.RequestedModules = init.RequestedModules;
+    this.LoadedModules = init.LoadedModules;
+    this.CycleRoot = init.CycleRoot;
+    this.HasTLA = init.HasTLA;
+    this.AsyncEvaluationOrder = init.AsyncEvaluationOrder;
+    this.TopLevelCapability = init.TopLevelCapability;
+    this.AsyncParentModules = init.AsyncParentModules;
+    this.PendingAsyncDependencies = init.PendingAsyncDependencies;
+  }
+  /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
+  LoadRequestedModules(importedNames = 'all', hostDefined) {
+    const module = this;
+    // 1. If importedNames is not present, set importedNames to ~all~.
+    // 2. If hostDefined is not present, set hostDefined to empty.
+    // 3. Let pc be ! NewPromiseCapability(%Promise%).
+    /* X */let _pc = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+    /* node:coverage ignore next */if (_pc && typeof _pc === 'object' && 'next' in _pc) _pc = skipDebugger(_pc);
+    /* node:coverage ignore next */if (_pc instanceof Completion) {
+      /* node:coverage ignore next */if (_pc instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+        cause: _pc
+      });
+      _pc = _pc.Value;
+    }
+    const pc = _pc;
+    // 4. Let state be the GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
+    const state = new GraphLoadingState({
+      PromiseCapability: pc,
+      HostDefined: hostDefined
+    });
+    // 5. Perform InnerModuleLoading(state, module, importedNames).
+    InnerModuleLoading(state, module, importedNames, 'recursive-load');
+    // 6. Return pc.[[Promise]].
+    return pc.Promise;
+  }
+
+  /** https://tc39.es/ecma262/#sec-moduledeclarationlinking */
+  Link(importedNames = 'all') {
+    const module = this;
+    // 1. Assert: module.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
+    /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated')) throw new Assert.Error("module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
+    // 2. If importedNames is not present, set importedNames to ~all~.
+    //    (handled via the default parameter above)
+    // 3. Let stack be a new empty List.
+    const stack = [];
+    // 4. Let result be Completion(InnerModuleLinking(module, stack, 0)).
+    const result = InnerModuleLinking(module, stack, 0);
+    // 5. If result is an abrupt completion, then
+    if (result instanceof AbruptCompletion) {
+      // a. For each Cyclic Module Record m of stack, do
+      for (const m of stack) {
+        /* Assert */ /* node:coverage ignore next */ // i. Assert: m.[[Status]] is linking.
+        if (!(m.Status === 'linking')) throw new Assert.Error("m.Status === 'linking'");
+        // ii. Set m.[[Status]] to unlinked.
+        m.Status = 'unlinked';
+      }
+      // b. Assert: module.[[Status]] is unlinked.
+      /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'unlinked')) throw new Assert.Error("module.Status === 'unlinked'");
+      // c. Return ? result.
+      return result;
+    }
+    // 6. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
+    /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated')) throw new Assert.Error("module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
+    // 7. Assert: stack is empty.
+    /* Assert */ /* node:coverage ignore next */if (!(stack.length === 0)) throw new Assert.Error("stack.length === 0");
+    // 8. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(importedNames).
+    const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests(importedNames);
+    // 9. For each ModuleRequest Record request of optionalIndirectRequests, do
+    for (const request of optionalIndirectRequests) {
+      // a. Let requiredModule be GetImportedModule(module, request).
+      const requiredModule = GetImportedModule(module, request);
+      // b. Assert: requiredModule.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
+      /* Assert */ /* node:coverage ignore next */if (!(!(requiredModule instanceof CyclicModuleRecord) || requiredModule.Status === 'unlinked' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated')) throw new Assert.Error("!(requiredModule instanceof CyclicModuleRecord)\n        || requiredModule.Status === 'unlinked' || requiredModule.Status === 'linked'\n        || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
+
+      // c. If requiredModule.[[Status]] is unlinked, perform ? requiredModule.Link(request.[[ImportedNames]]).
+      if (requiredModule instanceof CyclicModuleRecord && requiredModule.Status === 'unlinked') {
+        /* ReturnIfAbrupt */let _temp = requiredModule.Link(request.ImportedNames);
+        /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+          if (_temp instanceof AbruptCompletion) return _temp;
+          _temp = _temp.Value;
+        }
+      }
+    }
+    // 10. Return unused.
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-moduleevaluation */
+  *Evaluate(importedNames = []) {
+    let module = this;
+
+    // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
+    /* Assert */ /* node:coverage ignore next */if (!function getModules(module, list) {
+      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
+        return list;
+      }
+      list.push(module);
+      for (const r of module.RequestedModules) {
+        getModules(GetImportedModule(module, r), list);
+      }
+      return list;
+    }(this, []).every(m => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new')) throw new Assert.Error("(function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {\n      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {\n        return list;\n      }\n      list.push(module);\n      for (const r of module.RequestedModules) {\n        getModules(GetImportedModule(module, r), list);\n      }\n      return list;\n    }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new')");
+
+    // 2. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
+    /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated')) throw new Assert.Error("module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
+    // 3. If importedNames is not present, set importedNames to « ».
+    // 4. If module.[[Status]] is either evaluating-async or evaluated, then
+    if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
+      /* Assert */ /* node:coverage ignore next */ // SPEC BUG: deferred-reexports deletes this CycleRoot redirection, even though
+      // a subsequent evaluation must observe the CycleRoot's EvaluationError.
+      // a. Assert: module.[[CycleRoot]] is not empty.
+      if (!(module.CycleRoot !== undefined)) throw new Assert.Error("module.CycleRoot !== undefined");
+      // b. Set module to module.[[CycleRoot]].
+      module = module.CycleRoot;
+    }
+    let topLevelPromise;
+    // 5. If module.[[TopLevelCapability]] is not empty, then
+    if (module.TopLevelCapability !== undefined) {
+      // a. Let topLevelPromise be module.[[TopLevelCapability]].[[Promise]].
+      topLevelPromise = module.TopLevelCapability.Promise;
+    } else {
+      // 6. Else,
+      // a. Assert: module.[[CycleRoot]] and module.[[TopLevelCapability]] are empty.
+      // b. Let stack be a new empty List.
+      const stack = [];
+      // c. Let capability be ! NewPromiseCapability(%Promise%).
+      /* X */let _capability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+      /* node:coverage ignore next */if (_capability && typeof _capability === 'object' && 'next' in _capability) _capability = skipDebugger(_capability);
+      /* node:coverage ignore next */if (_capability instanceof Completion) {
+        /* node:coverage ignore next */if (_capability instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+          cause: _capability
+        });
+        _capability = _capability.Value;
+      }
+      const capability = _capability;
+      // d. Set module.[[TopLevelCapability]] to capability.
+      module.TopLevelCapability = capability;
+      // e. Let result be Completion(InnerModuleEvaluation(module, stack, 0)).
+      const result = yield* InnerModuleEvaluation(module, stack, 0);
+      // f. If result is an abrupt completion, then
+      if (result instanceof AbruptCompletion) {
+        // i. For each Cyclic Module Record m of stack, do
+        for (const m of stack) {
+          /* Assert */ /* node:coverage ignore next */ // 1. Assert: m.[[Status]] is evaluating.
+          if (!(m.Status === 'evaluating')) throw new Assert.Error("m.Status === 'evaluating'");
+          // 2. Set m.[[Status]] to evaluated.
+          m.Status = 'evaluated';
+          // 3. Set m.[[EvaluationError]] to result.
+          m.EvaluationError = result;
+          m.CycleRoot = m;
+        }
+        // ii. Assert: module.[[Status]] is evaluated.
+        // iii. Assert: module.[[EvaluationError]] is result.
+        /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'evaluated' && module.EvaluationError === result)) throw new Assert.Error("(module.Status as CyclicModuleRecordStatus) === 'evaluated' && module.EvaluationError === result");
+        // iv. Perform ! Call(capability.[[Reject]], undefined, « result.[[Value]] »).
+        /* X */let _temp2 = Call(capability.Reject, Value.undefined, [result.Value]);
+        /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+        /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! Call(capability.Reject, Value.undefined, [result.Value]) returned an abrupt completion", {
+            cause: _temp2
+          });
+          _temp2 = _temp2.Value;
+        }
+      } else {
+        // g. Else,
+        const postStatus = module.Status;
+        // i. Assert: module.[[Status]] is either evaluating-async or evaluated.
+        /* Assert */ /* node:coverage ignore next */if (!(postStatus === 'evaluating-async' || postStatus === 'evaluated')) throw new Assert.Error("postStatus === 'evaluating-async' || postStatus === 'evaluated'");
+        // ii. Assert: module.[[EvaluationError]] is empty.
+        /* Assert */ /* node:coverage ignore next */if (!(module.EvaluationError === undefined)) throw new Assert.Error("module.EvaluationError === undefined");
+        // iii. If module.[[Status]] is evaluated, then
+        if (postStatus === 'evaluated') {
+          /* Assert */ /* node:coverage ignore next */ //    1. NOTE: This implies that evaluation of module completed synchronously.
+          //    2. Assert: module.[[AsyncEvaluationOrder]] is unset.
+          if (!(typeof module.AsyncEvaluationOrder !== 'number')) throw new Assert.Error("typeof module.AsyncEvaluationOrder !== 'number'");
+          //    3. Perform ! Call(capability.[[Resolve]], undefined, « undefined »).
+          /* X */let _temp3 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
+          /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+          /* node:coverage ignore next */if (_temp3 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! Call(capability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+              cause: _temp3
+            });
+            _temp3 = _temp3.Value;
+          }
+        }
+        // iv. Assert: stack is empty.
+        /* Assert */ /* node:coverage ignore next */if (!(stack.length === 0)) throw new Assert.Error("stack.length === 0");
+      }
+      // h. Let topLevelPromise be capability.[[Promise]].
+      topLevelPromise = capability.Promise;
+    }
+
+    // 6. If topLevelPromise.[[PromiseState]] is rejected, return topLevelPromise.
+    if (topLevelPromise.PromiseState === 'rejected') {
+      return topLevelPromise;
+    }
+
+    // 7. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(importedNames).
+    const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests(importedNames);
+    // 8. Let promises be « topLevelPromise ».
+    const promises = [topLevelPromise];
+    // 9. For each ModuleRequest Record request of optionalIndirectRequests, do
+    for (const request of optionalIndirectRequests) {
+      // a. Let requiredModule be GetImportedModule(module, request).
+      const requiredModule = GetImportedModule(module, request);
+      // b. Assert: requiredModule.[[Status]] is one of linked, evaluating-async, or evaluated.
+      /* Assert */ /* node:coverage ignore next */if (!(!(requiredModule instanceof CyclicModuleRecord) || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated')) throw new Assert.Error("!(requiredModule instanceof CyclicModuleRecord)\n        || requiredModule.Status === 'linked'\n        || requiredModule.Status === 'evaluating-async'\n        || requiredModule.Status === 'evaluated'");
+
+      // c. Let innerPromise be requiredModule.Evaluate(request.[[ImportedNames]]).
+      const innerPromise = yield* requiredModule.Evaluate(request.ImportedNames);
+      // d. If innerPromise.[[PromiseState]] is rejected, return innerPromise.
+      if (innerPromise.PromiseState === 'rejected') {
+        return innerPromise;
+      }
+      // e. Append innerPromise to promises.
+      promises.push(innerPromise);
+    }
+
+    // 10. If promises contains a Promise P such that P.[[PromiseState]] is pending, then
+    if (promises.some(p => p.PromiseState === 'pending')) {
+      // a. NOTE: If all modules in the graph are synchronous, the usage of promises is an internal specification detail.
+      //    In that case, we do not use SafePerformPromiseAll to keep returning an already settled promise.
+      // b. Return SafePerformPromiseAll(CreateListIteratorRecord(promises)).
+      return SafePerformPromiseAll(promises);
+    }
+    // 11. Return topLevelPromise.
+    return topLevelPromise;
+  }
+  mark(m) {
+    super.mark(m);
+    m(this.EvaluationError);
+    for (const v of this.LoadedModules) {
+      m(v.Module);
+    }
+  }
+}
+/** https://tc39.es/ecma262/#sec-source-text-module-records */
+class SourceTextModuleRecord extends CyclicModuleRecord {
+  ImportMeta;
+  ECMAScriptCode;
+  Context;
+  ImportEntries;
+  LocalExportEntries;
+  IndirectExportEntries;
+  StarExportEntries;
+
+  /** https://tc39.es/proposal-deferred-reexports/ — deferred re-export entries (`export defer ... from`). */
+  OptionalIndirectExportEntries;
+  constructor(init) {
+    super(init);
+    this.ImportMeta = init.ImportMeta;
+    this.ECMAScriptCode = init.ECMAScriptCode;
+    this.Context = init.Context;
+    this.ImportEntries = init.ImportEntries;
+    this.LocalExportEntries = init.LocalExportEntries;
+    this.IndirectExportEntries = init.IndirectExportEntries;
+    this.StarExportEntries = init.StarExportEntries;
+    this.OptionalIndirectExportEntries = init.OptionalIndirectExportEntries ?? [];
+  }
+
+  /** https://tc39.es/ecma262/#sec-getexportednames */
+  GetExportedNames(exportStarSet) {
+    const module = this;
+    // 1. Assert: module.[[Status]] is not new.
+    /* Assert */ /* node:coverage ignore next */if (!(module.Status !== 'new')) throw new Assert.Error("module.Status !== 'new'");
+    // 2. If exportStarSet is not present, set exportStarSet to a new empty List.
+    if (!exportStarSet) {
+      exportStarSet = [];
+    }
+    // 3. If exportStarSet contains module, then
+    if (exportStarSet.includes(module)) {
+      // a. Assert: We've reached the starting point of an import * circularity.
+      // b. Return a new empty List.
+      return [];
+    }
+    // 4. Append module to exportStarSet.
+    exportStarSet.push(module);
+    // 5. Let exportedNames be a new empty List.
+    const exportedNames = [];
+    // 6. For each ExportEntry Record e in module.[[LocalExportEntries]], do
+    for (const e of module.LocalExportEntries) {
+      /* Assert */ /* node:coverage ignore next */ // a. Assert: module provides the direct binding for this export.
+      // b. Assert: e.[[ExportName]] is not null.
+      if (!!(e.ExportName instanceof NullValue)) throw new Assert.Error("!(e.ExportName instanceof NullValue)");
+      // c. Append e.[[ExportName]] to exportedNames.
+      exportedNames.push(e.ExportName);
+    }
+    // 6. Let allNamedExportEntries be the list-concatenation of module.[[LocalExportEntries]], module.[[IndirectExportEntries]], and module.[[OptionalIndirectExportEntries]].
+    const allNamedExportEntries = [...module.IndirectExportEntries, ...module.OptionalIndirectExportEntries];
+    // 7. For each ExportEntry Record e of allNamedExportEntries, do
+    //    https://tc39.es/proposal-deferred-reexports/#sec-getexportednames
+    for (const e of allNamedExportEntries) {
+      /* Assert */ /* node:coverage ignore next */ // a. Assert: module imports a specific binding for this export.
+      // b. Assert: e.[[ExportName]] is not null.
+      if (!!(e.ExportName instanceof NullValue)) throw new Assert.Error("!(e.ExportName instanceof NullValue)");
+      // c. Append e.[[ExportName]] to exportedNames.
+      exportedNames.push(e.ExportName);
+    }
+    // 8. For each ExportEntry Record e in module.[[StarExportEntries]], do
+    for (const e of module.StarExportEntries) {
+      // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+      const requestedModule = GetImportedModule(module, e.ModuleRequest);
+      // b. Let starNames be requestedModule.GetExportedNames(exportStarSet).
+      const starNames = requestedModule.GetExportedNames(exportStarSet);
+      // c. For each element n of starNames, do
+      for (const n of starNames) {
+        // i. If SameValue(n, "default") is false, then
+        if (!SameValue(n, Value('default'))) {
+          // 1. If n is not an element of exportedNames, then
+          if (!exportedNames.includes(n)) {
+            // a. Append n to exportedNames.
+            exportedNames.push(n);
+          }
+        }
+      }
+    }
+    // 9. Return exportedNames.
+    return exportedNames;
+  }
+
+  /** https://tc39.es/ecma262/#sec-resolveexport */
+  ResolveExport(exportName, resolveSet, deferNamespaceExportSet) {
+    const module = this;
+    // 1. Assert: module.[[Status]] is not new.
+    /* Assert */ /* node:coverage ignore next */if (!(module.Status !== 'new')) throw new Assert.Error("module.Status !== 'new'");
+    // 2. If resolveSet is not present, set resolveSet to a new empty List.
+    if (!resolveSet) {
+      resolveSet = [];
+    }
+    if (!deferNamespaceExportSet) {
+      deferNamespaceExportSet = [];
+    }
+    if (ResolveSetContains(resolveSet, module, exportName)) {
+      return null;
+    }
+    // 4. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
+    resolveSet.push({
+      Module: module,
+      ExportName: exportName
+    });
+    // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
+    for (const e of module.LocalExportEntries) {
+      // a. If SameValue(exportName, e.[[ExportName]]) is true, then
+      if (SameValue(exportName, e.ExportName)) {
+        // i. Assert: module provides the direct binding for this export.
+        // ii. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: e.[[LocalName]] }.
+        return new ResolvedBindingRecord({
+          Module: module,
+          BindingName: e.LocalName
+        });
+      }
+    }
+    // 6. Let allIndirectEntries be the list-concatenation of module.[[IndirectExportEntries]] and module.[[OptionalIndirectExportEntries]].
+    const allIndirectEntries = [...module.IndirectExportEntries, ...module.OptionalIndirectExportEntries];
+    // 7. For each ExportEntry Record e in allIndirectEntries, do
+    //    https://tc39.es/proposal-deferred-reexports/#sec-resolveexport
+    for (const e of allIndirectEntries) {
+      // a. If SameValue(exportName, e.[[ExportName]]) is true, then
+      if (SameValue(exportName, e.ExportName)) {
+        /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest !== Value.null)) throw new Assert.Error("e.ModuleRequest !== Value.null");
+        // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+        const importedModule = GetImportedModule(module, e.ModuleRequest);
+        // ii. If e.[[ImportName]] is ~namespace~, then
+        if (e.ImportName === 'namespace') {
+          /* Assert */ /* node:coverage ignore next */ // 1. Assert: module does not provide the direct binding for this export
+          if (!!module.LocalExportEntries.some(entry => SameValue(entry.ExportName, exportName))) throw new Assert.Error("!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName))");
+          /* Assert */ /* node:coverage ignore next */if (!(e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0)) throw new Assert.Error("e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0");
+          if (module.OptionalIndirectExportEntries.includes(e) && NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, module, exportName, importedModule, importedModule.GetExportedNames(), 'allow-ambiguous')) {
+            return null;
+          }
+          if (e.ModuleRequest.Phase === 'defer') {
+            // https://tc39.es/proposal-defer-import-eval/#sec-resolveexport
+            return new ResolvedBindingRecord({
+              Module: importedModule,
+              BindingName: 'deferred-namespace'
+            });
+          } else {
+            /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest.Phase === 'evaluation')) throw new Assert.Error("(e.ModuleRequest as ModuleRequestRecord).Phase === 'evaluation'");
+            // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
+            return new ResolvedBindingRecord({
+              Module: importedModule,
+              BindingName: 'namespace'
+            });
+          }
+        } else if (e.ImportName === 'filtered-namespace') {
+          /* Assert */ /* node:coverage ignore next */if (!Array.isArray(e.NamespaceNamesFilter)) throw new Assert.Error("Array.isArray(e.NamespaceNamesFilter)");
+          if (module.OptionalIndirectExportEntries.includes(e) && NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, module, exportName, importedModule, e.NamespaceNamesFilter, 'disallow-ambiguous')) {
+            return null;
+          }
+          const localName = `*${exportName.stringValue()}*`;
+          return new ResolvedBindingRecord({
+            Module: module,
+            BindingName: Value(localName)
+          });
+        } else if (e.ImportName === 'source') {
+          // Assert: _module_ does not provide the direct binding for this export.
+          return new ResolvedBindingRecord({
+            Module: importedModule,
+            BindingName: 'source'
+          });
+        } else {
+          /* Assert */ /* node:coverage ignore next */ // iv. Else,
+          // 1. Assert: module imports a specific binding for this export.
+          if (!(e.ImportName instanceof JSStringValue)) throw new Assert.Error("e.ImportName instanceof JSStringValue");
+          // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
+          return importedModule.ResolveExport(e.ImportName, resolveSet, deferNamespaceExportSet);
+        }
+      }
+    }
+    // 7. If SameValue(exportName, "default") is true, then
+    if (SameValue(exportName, Value('default'))) {
+      /* Assert */ /* node:coverage ignore next */ // a. Assert: A default export was not explicitly defined by this module.
+      if (!!module.LocalExportEntries.some(entry => SameValue(entry.ExportName, exportName))) throw new Assert.Error("!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName))");
+      // b. Return null.
+      return null;
+      // c. NOTE: A default export cannot be provided by an export * or export * from "mod" declaration.
+    }
+    // 8. Let starResolution be null.
+    let starResolution = null;
+    // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
+    for (const e of module.StarExportEntries) {
+      /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest !== Value.null)) throw new Assert.Error("e.ModuleRequest !== Value.null");
+      // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+      const importedModule = GetImportedModule(module, e.ModuleRequest);
+      // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
+      const resolution = importedModule.ResolveExport(exportName, resolveSet, deferNamespaceExportSet);
+      // c. If resolution is "ambiguous", return "ambiguous".
+      if (resolution === 'ambiguous') {
+        return 'ambiguous';
+      }
+      // d. If resolution is not null, then
+      if (resolution !== null) {
+        /* Assert */ /* node:coverage ignore next */ // a. Assert: resolution is a ResolvedBinding Record.
+        if (!(resolution instanceof ResolvedBindingRecord)) throw new Assert.Error("resolution instanceof ResolvedBindingRecord");
+        // b. If starResolution is null, set starResolution to resolution.
+        if (starResolution === null) {
+          starResolution = resolution;
+        } else {
+          // c. Else,
+          // 1. Assert: There is more than one * export that includes the requested name.
+          // 2. If _resolution_.[[Module]] and _starResolution_.[[Module]] are not the same Module Record, return ~ambiguous~.
+          if (resolution.Module !== starResolution.Module) {
+            return 'ambiguous';
+          }
+          // 3. If _resolution_.[[BindingName]] is not _starResolution_.[[BindingName]], return ~ambiguous~.
+          const l = resolution.BindingName;
+          const r = starResolution.BindingName;
+          if (l === r) ; else if (l instanceof JSStringValue && !(r instanceof JSStringValue)) {
+            return 'ambiguous';
+          } else if (!(l instanceof JSStringValue) && r instanceof JSStringValue) {
+            return 'ambiguous';
+          } else if (l instanceof JSStringValue && r instanceof JSStringValue) {
+            if (l.value !== r.value) return 'ambiguous';
+          } else if (l !== r) {
+            return 'ambiguous';
+          } else
+            /* node:coverage ignore next */
+            throw OutOfRange.nonExhaustive(l);
+        }
+      }
+    }
+    // 11. Return starResolution.
+    return starResolution;
+  }
+
+  /** https://tc39.es/proposal-deferred-reexports/#sec-GetOptionalIndirectExportsModuleRequests */
+  GetOptionalIndirectExportsModuleRequests(importedNames = 'all') {
+    const requests = [];
+    for (const oie of this.OptionalIndirectExportEntries) {
+      // a. If importedNames is all or importedNames contains oie.[[ExportName]], then
+      if (importedNames === 'all' || importedNamesContains(importedNames, oie.ExportName)) {
+        const nextRequest = oie.ModuleRequest;
+        let existingRequest;
+        for (const r of requests) {
+          if (existingRequest === undefined && ModuleRequestsKeyEqual(r, nextRequest) && r.Phase === nextRequest.Phase) {
+            existingRequest = r;
+          }
+        }
+        let newImportedNames = 'all';
+        /* Assert */ /* node:coverage ignore next */if (!(oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace' || oie.ImportName === 'filtered-namespace')) throw new Assert.Error("oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace' || oie.ImportName === 'filtered-namespace'");
+        if (oie.ImportName instanceof JSStringValue) {
+          newImportedNames = [oie.ImportName.stringValue()];
+        }
+        if (oie.ImportName === 'filtered-namespace') {
+          /* Assert */ /* node:coverage ignore next */if (!Array.isArray(oie.NamespaceNamesFilter)) throw new Assert.Error("Array.isArray(oie.NamespaceNamesFilter)");
+          newImportedNames = oie.NamespaceNamesFilter;
+        }
+        if (existingRequest === undefined) {
+          const request = {
+            Specifier: nextRequest.Specifier,
+            Attributes: nextRequest.Attributes,
+            Phase: nextRequest.Phase,
+            ImportedNames: newImportedNames
+          };
+          requests.push(request);
+        } else {
+          existingRequest.ImportedNames = MergeImportedNames(existingRequest.ImportedNames, newImportedNames);
+        }
+      }
+    }
+    return requests;
+  }
+
+  /** https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
+  InitializeEnvironment() {
+    const module = this;
+    // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+    for (const e of module.IndirectExportEntries) {
+      /* ReturnIfAbrupt */let _temp4 = EnsureResolvableBinding(module, e.ExportName, 'disallow-ambiguous');
+      /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+        if (_temp4 instanceof AbruptCompletion) return _temp4;
+        _temp4 = _temp4.Value;
+      }
+    }
+    for (const e of module.StarExportEntries) {
+      const importedModule = GetImportedModule(module, e.ModuleRequest);
+      for (const name of importedModule.GetExportedNames()) {
+        if (name.stringValue() !== 'default') {
+          /* ReturnIfAbrupt */let _temp5 = EnsureResolvableBinding(importedModule, name, 'disallow-ambiguous');
+          /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+            if (_temp5 instanceof AbruptCompletion) return _temp5;
+            _temp5 = _temp5.Value;
+          }
+        }
+      }
+    }
+    // 2. Assert: All named exports from module are resolvable.
+    // 3. Let realm be module.[[Realm]].
+    const realm = module.Realm;
+    // 4. Assert: realm is not undefined.
+    /* Assert */ /* node:coverage ignore next */if (!!(realm instanceof UndefinedValue)) throw new Assert.Error("!(realm instanceof UndefinedValue)");
+    // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+    const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
+    // 6. Set module.[[Environment]] to env.
+    module.Environment = env;
+    // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
+    for (const ie of module.ImportEntries) {
+      // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
+      const importedModule = GetImportedModule(module, ie.ModuleRequest);
+      if (ie.ImportName === 'namespace') {
+        /* Assert */ /* node:coverage ignore next */ // i. Let namespace be GetModuleNamespace(importedModule, phase, all).
+        if (!(ie.ModuleRequest.Phase !== 'source')) throw new Assert.Error("ie.ModuleRequest.Phase !== 'source'");
+        const namespacePhase = ie.ModuleRequest.Phase === 'defer' ? 'defer' : 'evaluation';
+        for (const name of importedModule.GetExportedNames()) {
+          /* ReturnIfAbrupt */let _temp6 = EnsureResolvableBinding(importedModule, name, 'allow-ambiguous');
+          /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+            if (_temp6 instanceof AbruptCompletion) return _temp6;
+            _temp6 = _temp6.Value;
+          }
+        }
+        const namespace = GetModuleNamespace(importedModule, namespacePhase, 'all');
+        // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
+        /* X */let _temp7 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+        /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+        /* node:coverage ignore next */if (_temp7 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+            cause: _temp7
+          });
+          _temp7 = _temp7.Value;
+        }
+        /* X */let _temp8 = env.InitializeBinding(ie.LocalName, namespace);
+        /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+        /* node:coverage ignore next */if (_temp8 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, namespace) returned an abrupt completion", {
+            cause: _temp8
+          });
+          _temp8 = _temp8.Value;
+        } // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
+      } else if (ie.ImportName === 'filtered-namespace-object') {
+        for (const name of ie.NamespaceNamesFilter) {
+          /* ReturnIfAbrupt */let _temp9 = EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous');
+          /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+            if (_temp9 instanceof AbruptCompletion) return _temp9;
+            _temp9 = _temp9.Value;
+          }
+        }
+        /* Assert */ /* node:coverage ignore next */if (!(ie.ModuleRequest.Phase !== 'source')) throw new Assert.Error("ie.ModuleRequest.Phase !== 'source'");
+        const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase, ie.NamespaceNamesFilter);
+        /* X */let _temp0 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+        /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+        /* node:coverage ignore next */if (_temp0 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+            cause: _temp0
+          });
+          _temp0 = _temp0.Value;
+        }
+        /* X */let _temp1 = env.InitializeBinding(ie.LocalName, namespace);
+        /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+        /* node:coverage ignore next */if (_temp1 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, namespace) returned an abrupt completion", {
+            cause: _temp1
+          });
+          _temp1 = _temp1.Value;
+        }
+      } else if (ie.ImportName === 'source') {
+        const moduleSourceObject = importedModule.ModuleSource;
+        if (moduleSourceObject === undefined) {
+          return Throw.SyntaxError('Module source is not available');
+        }
+        /* X */let _temp10 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+        /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+        /* node:coverage ignore next */if (_temp10 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+            cause: _temp10
+          });
+          _temp10 = _temp10.Value;
+        }
+        /* X */let _temp11 = env.InitializeBinding(ie.LocalName, moduleSourceObject);
+        /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
+        /* node:coverage ignore next */if (_temp11 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, moduleSourceObject) returned an abrupt completion", {
+            cause: _temp11
+          });
+          _temp11 = _temp11.Value;
+        }
+      } else {
+        // c. Else,
+        // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
+        const resolution = importedModule.ResolveExport(ie.ImportName);
+        // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.
+        if (resolution === null || resolution === 'ambiguous') {
+          const moduleName = importedModule.HostDefined?.specifier || '<anonymous module>';
+          if (resolution === null) {
+            return Throw.SyntaxError('Module "$1" does not have an export named $2', moduleName, ie.ImportName);
+          }
+          return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', ie.ImportName, moduleName);
+        }
+        // iii. If resolution.[[BindingName]] is ~namespace~, then
+        if (resolution.BindingName === 'namespace' || resolution.BindingName === 'deferred-namespace') {
+          // https://tc39.es/proposal-defer-import-eval/#sec-source-text-module-record-initialize-environment
+          const phase = resolution.BindingName === 'namespace' ? 'evaluation' : 'defer';
+          // 1. Let namespace be GetModuleNamespace(resolution.[[Module]], phase, all).
+          const namespace = GetModuleNamespace(resolution.Module, phase, 'all');
+          // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
+          /* X */let _temp12 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+          /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+          /* node:coverage ignore next */if (_temp12 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+              cause: _temp12
+            });
+            _temp12 = _temp12.Value;
+          }
+          /* X */let _temp13 = env.InitializeBinding(ie.LocalName, namespace);
+          /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+          /* node:coverage ignore next */if (_temp13 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, namespace) returned an abrupt completion", {
+              cause: _temp13
+            });
+            _temp13 = _temp13.Value;
+          } // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
+        } else if (resolution.BindingName === 'source') {
+          const moduleSourceObject = resolution.Module.ModuleSource;
+          if (moduleSourceObject === undefined) {
+            return Throw.SyntaxError('Module source is not available');
+          }
+          /* X */let _temp14 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+          /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+          /* node:coverage ignore next */if (_temp14 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+              cause: _temp14
+            });
+            _temp14 = _temp14.Value;
+          }
+          /* X */let _temp15 = env.InitializeBinding(ie.LocalName, moduleSourceObject);
+          /* node:coverage ignore next */if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
+          /* node:coverage ignore next */if (_temp15 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, moduleSourceObject) returned an abrupt completion", {
+              cause: _temp15
+            });
+            _temp15 = _temp15.Value;
+          }
+        } else {
+          /* X */let _temp16 = env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
+          /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
+          /* node:coverage ignore next */if (_temp16 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName) returned an abrupt completion", {
+              cause: _temp16
+            });
+            _temp16 = _temp16.Value;
+          } // iv. Else,
+          // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
+        }
+      }
+    }
+    for (const ie of module.IndirectExportEntries) {
+      if (ie.ImportName === 'filtered-namespace') {
+        const localName = Value(`*${ie.ExportName.stringValue()}*`);
+        const importedModule = GetImportedModule(module, ie.ModuleRequest);
+        for (const name of ie.NamespaceNamesFilter) {
+          /* ReturnIfAbrupt */let _temp17 = EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous');
+          /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
+            if (_temp17 instanceof AbruptCompletion) return _temp17;
+            _temp17 = _temp17.Value;
+          }
+        }
+        const requestPhase = ie.ModuleRequest.Phase;
+        /* Assert */ /* node:coverage ignore next */if (!(requestPhase !== 'source')) throw new Assert.Error("requestPhase !== 'source'");
+        const filteredNamespace = GetModuleNamespace(importedModule, requestPhase === 'defer' ? 'defer' : 'evaluation', ie.NamespaceNamesFilter);
+        /* X */let _temp18 = env.CreateImmutableBinding(localName, Value.true);
+        /* node:coverage ignore next */if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+        /* node:coverage ignore next */if (_temp18 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(localName, Value.true) returned an abrupt completion", {
+            cause: _temp18
+          });
+          _temp18 = _temp18.Value;
+        }
+        /* X */let _temp19 = env.InitializeBinding(localName, filteredNamespace);
+        /* node:coverage ignore next */if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
+        /* node:coverage ignore next */if (_temp19 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(localName, filteredNamespace) returned an abrupt completion", {
+            cause: _temp19
+          });
+          _temp19 = _temp19.Value;
+        }
+      }
+    }
+    for (const oie of module.OptionalIndirectExportEntries) {
+      if (oie.ImportName === 'filtered-namespace') {
+        const localName = Value(`*${oie.ExportName.stringValue()}*`);
+        const initializationSteps = () => {
+          const importedModule = GetImportedModule(module, oie.ModuleRequest);
+          return GetModuleNamespace(importedModule, oie.ModuleRequest.Phase, oie.NamespaceNamesFilter);
+        };
+        /* X */let _temp20 = env.CreateDeferredInitializationBinding(localName, initializationSteps);
+        /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
+        /* node:coverage ignore next */if (_temp20 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateDeferredInitializationBinding(localName, initializationSteps) returned an abrupt completion", {
+            cause: _temp20
+          });
+          _temp20 = _temp20.Value;
+        }
+      }
+    }
+    // 8. Let moduleContext be a new ECMAScript code execution context.
+    const moduleContext = new ExecutionContext();
+    // 9. Set the Function of moduleContext to null.
+    moduleContext.Function = Value.null;
+    // 10. Assert: module.[[Realm]] is not undefined.
+    /* Assert */ /* node:coverage ignore next */if (!!(module.Realm instanceof UndefinedValue)) throw new Assert.Error("!(module.Realm instanceof UndefinedValue)");
+    // 11. Set the Realm of moduleContext to module.[[Realm]].
+    moduleContext.Realm = module.Realm;
+    // 12. Set the ScriptOrModule of moduleContext to module.
+    moduleContext.ScriptOrModule = module;
+    // 13. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+    moduleContext.VariableEnvironment = module.Environment;
+    // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+    moduleContext.LexicalEnvironment = module.Environment;
+    // 15. Set the PrivateEnvironment of moduleContext to null.
+    moduleContext.PrivateEnvironment = null;
+    // 16. Set module.[[Context]] to moduleContext.
+    module.Context = moduleContext;
+    // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
+    surroundingAgent.executionContextStack.push(moduleContext);
+    // 18. Let code be module.[[ECMAScriptCode]].
+    const code = module.ECMAScriptCode;
+    // 19. Let varDeclarations be the VarScopedDeclarations of code.
+    const varDeclarations = VarScopedDeclarations(code);
+    // 20. Let declaredVarNames be a new empty List.
+    const declaredVarNames = new JSStringSet();
+    // 21. For each element d in varDeclarations, do
+    for (const d of varDeclarations) {
+      // a. For each element dn of the BoundNames of d, do
+      for (const dn of BoundNames(d)) {
+        // i. If dn is not an element of declaredVarNames, then
+        if (!declaredVarNames.has(dn)) {
+          /* X */let _temp21 = env.CreateMutableBinding(dn, Value.false);
+          /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+          /* node:coverage ignore next */if (_temp21 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
+              cause: _temp21
+            });
+            _temp21 = _temp21.Value;
+          } // 1. Perform ! env.CreateMutableBinding(dn, false).
+
+          /* X */let _temp22 = env.InitializeBinding(dn, Value.undefined);
+          /* node:coverage ignore next */if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) _temp22 = skipDebugger(_temp22);
+          /* node:coverage ignore next */if (_temp22 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(dn, Value.undefined) returned an abrupt completion", {
+              cause: _temp22
+            });
+            _temp22 = _temp22.Value;
+          } // 2. Call env.InitializeBinding(dn, undefined).
+
+          // 3. Append dn to declaredVarNames.
+          declaredVarNames.add(dn);
+        }
+      }
+    }
+    // 22. Let lexDeclarations be the LexicallyScopedDeclarations of code.
+    const lexDeclarations = LexicallyScopedDeclarations(code);
+    // 24. For each element d in lexDeclarations, do
+    for (const d of lexDeclarations) {
+      // a. For each element dn of the BoundNames of d, do
+      for (const dn of BoundNames(d)) {
+        // i. If IsConstantDeclaration of d is true, then
+        if (IsConstantDeclaration(d)) {
+          /* X */let _temp23 = env.CreateImmutableBinding(dn, Value.true);
+          /* node:coverage ignore next */if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
+          /* node:coverage ignore next */if (_temp23 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(dn, Value.true) returned an abrupt completion", {
+              cause: _temp23
+            });
+            _temp23 = _temp23.Value;
+          } // 1. Perform ! env.CreateImmutableBinding(dn, true).
+        } else {
+          /* X */let _temp24 = env.CreateMutableBinding(dn, Value.false);
+          /* node:coverage ignore next */if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
+          /* node:coverage ignore next */if (_temp24 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
+              cause: _temp24
+            });
+            _temp24 = _temp24.Value;
+          } // ii. Else,
+          // 1. Perform ! env.CreateMutableBinding(dn, false).
+        }
+        // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
+        if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
+          // 1. Let fo be InstantiateFunctionObject of d with argument env.
+          const fo = InstantiateFunctionObject(d, env, null);
+          // 2. Call env.InitializeBinding(dn, fo).
+          /* X */let _temp25 = env.InitializeBinding(dn, fo);
+          /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
+          /* node:coverage ignore next */if (_temp25 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(dn, fo) returned an abrupt completion", {
+              cause: _temp25
+            });
+            _temp25 = _temp25.Value;
+          }
+        }
+      }
+    }
+    // 25. Remove moduleContext from the execution context stack.
+    surroundingAgent.executionContextStack.pop(moduleContext);
+    // 26. Return unused.
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
+  *ExecuteModule(capability) {
+    // 1. Let module be this Source Text Module Record.
+    const module = this;
+    // 2. Assert: module has been linked and declarations in its module environment have been instantiated.
+    // 3. Let moduleContext be module.[[Context]].
+    const moduleContext = module.Context;
+    const env = module.Environment;
+    if (module.HasTLA === Value.false) {
+      /* Assert */ /* node:coverage ignore next */if (!(capability === undefined)) throw new Assert.Error("capability === undefined");
+      // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
+      surroundingAgent.executionContextStack.push(moduleContext);
+      // 5. Let result be the result of evaluating module.[[ECMAScriptCode]].
+      let result = EnsureCompletion(yield* Evaluate(module.ECMAScriptCode));
+      result = yield* DisposeResources(env.DisposableResourceStack, result);
+      // 6. Suspend moduleContext and remove it from the execution context stack.
+      // 7. Resume the context that is now on the top of the execution context stack as the running execution context.
+      surroundingAgent.executionContextStack.pop(moduleContext);
+      // 8. Return Completion(result).
+      return result;
+    } else {
+      /* Assert */ /* node:coverage ignore next */ // (*TopLevelAwait)
+      // a. Assert: capability is a PromiseCapability Record.
+      if (!(capability instanceof PromiseCapabilityRecord)) throw new Assert.Error("capability instanceof PromiseCapabilityRecord");
+      // b. Perform ! AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleCxt).
+      /* X */let _temp26 = yield* AsyncBlockStart(capability, function* evaluateModule() {
+        let result = EnsureCompletion(yield* Evaluate(module.ECMAScriptCode));
+        result = yield* DisposeResources(env.DisposableResourceStack, result);
+        return result;
+      }, moduleContext);
+      /* node:coverage ignore next */if (_temp26 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! yield* AsyncBlockStart(capability, function* evaluateModule(): ValueEvaluator {\n        let result = EnsureCompletion(yield* Evaluate(module.ECMAScriptCode));\n        result = yield* DisposeResources(env.DisposableResourceStack, result);\n        return result;\n      }, moduleContext) returned an abrupt completion", {
+          cause: _temp26
+        });
+        _temp26 = _temp26.Value;
+      }
+      // c. Return.
+      return Value.undefined;
+    }
+  }
+  mark(m) {
+    super.mark(m);
+    m(this.ImportMeta);
+    m(this.Context);
+  }
+}
+function EnsureResolvableBinding(module, name, onAmbiguous) {
+  const resolution = module.ResolveExport(name);
+  if (resolution === null) {
+    return Throw.SyntaxError('Module "$1" does not have an export named $2', module.HostDefined?.specifier || '<anonymous module>', name);
+  }
+  if (onAmbiguous === 'disallow-ambiguous') {
+    if (resolution === 'ambiguous') {
+      return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', name, module.HostDefined?.specifier || '<anonymous module>');
+    }
+    /* Assert */ /* node:coverage ignore next */if (!(resolution instanceof ResolvedBindingRecord)) throw new Assert.Error("resolution instanceof ResolvedBindingRecord");
+  }
+}
+function NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, reexporterModule, exportName, namespaceModule, namespaceNames, onAmbiguous) {
+  if (ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)) {
+    return false;
+  }
+  deferNamespaceExportSet.push(reexporterModule);
+  /* Assert */ /* node:coverage ignore next */if (!ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)) throw new Assert.Error("ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)");
+  for (const name of namespaceNames) {
+    const resolution = namespaceModule.ResolveExport(name instanceof JSStringValue ? name : Value(name), [], deferNamespaceExportSet);
+    if (resolution === null) return true;
+    if (resolution === 'ambiguous' && onAmbiguous === 'disallow-ambiguous') return true;
+  }
+  return false;
+}
+/** https://tc39.es/ecma262/#sec-synthetic-module-records */
+class SyntheticModuleRecord extends AbstractModuleRecord {
+  LoadRequestedModules() {
+    /* X */let _promise = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+    /* node:coverage ignore next */if (_promise && typeof _promise === 'object' && 'next' in _promise) _promise = skipDebugger(_promise);
+    /* node:coverage ignore next */if (_promise instanceof Completion) {
+      /* node:coverage ignore next */if (_promise instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+        cause: _promise
+      });
+      _promise = _promise.Value;
+    }
+    const promise = _promise;
+    /* X */let _temp27 = Call(promise.Resolve, Value.undefined, [Value.undefined]);
+    /* node:coverage ignore next */if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) _temp27 = skipDebugger(_temp27);
+    /* node:coverage ignore next */if (_temp27 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) throw new Assert.Error("! Call(promise.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+        cause: _temp27
+      });
+      _temp27 = _temp27.Value;
+    }
+    return promise.Promise;
+  }
+  ExportNames;
+  EvaluationSteps;
+  constructor(init) {
+    super(init);
+    this.ExportNames = init.ExportNames;
+    this.EvaluationSteps = init.EvaluationSteps;
+  }
+
+  /** https://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
+  GetExportedNames() {
+    const module = this;
+    // 1. Return module.[[ExportNames]].
+    return module.ExportNames;
+  }
+
+  /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
+  ResolveExport(exportName) {
+    const module = this;
+    // 1. If module.[[ExportNames]] does not contain exportName, return null.
+    // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
+    for (const e of module.ExportNames) {
+      if (SameValue(e, exportName)) {
+        return new ResolvedBindingRecord({
+          Module: module,
+          BindingName: exportName
+        });
+      }
+    }
+    return null;
+  }
+
+  /** https://tc39.es/ecma262/#sec-synthetic-module-record-link */
+  Link() {
+    const module = this;
+    // 1. Let realm be module.[[Realm]].
+    const realm = module.Realm;
+    // 2. Assert: realm is not undefined.
+    /* Assert */ /* node:coverage ignore next */if (!!(realm instanceof UndefinedValue)) throw new Assert.Error("!(realm instanceof UndefinedValue)");
+    // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+    const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
+    // 4. Set module.[[Environment]] to env.
+    module.Environment = env;
+    // 5. For each exportName in module.[[ExportNames]],
+    for (const exportName of module.ExportNames) {
+      /* X */let _temp28 = env.CreateMutableBinding(exportName, Value.false);
+      /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
+      /* node:coverage ignore next */if (_temp28 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(exportName, Value.false) returned an abrupt completion", {
+          cause: _temp28
+        });
+        _temp28 = _temp28.Value;
+      } // a. Perform ! env.CreateMutableBinding(exportName, false).
+
+      /* X */let _temp29 = env.InitializeBinding(exportName, Value.undefined);
+      /* node:coverage ignore next */if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) _temp29 = skipDebugger(_temp29);
+      /* node:coverage ignore next */if (_temp29 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(exportName, Value.undefined) returned an abrupt completion", {
+          cause: _temp29
+        });
+        _temp29 = _temp29.Value;
+      } // b. Perform ! env.InitializeBinding(exportName, undefined).
+    }
+    // 8. Return undefined.
+    return undefined;
+  }
+
+  /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
+  *Evaluate() {
+    const module = this;
+    // 1. Suspend the currently running execution context.
+    // 2. Let moduleContext be a new ECMAScript code execution context.
+    const moduleContext = new ExecutionContext();
+    // 3. Set the Function of moduleContext to null.
+    moduleContext.Function = Value.null;
+    // 4. Set the Realm of moduleContext to module.[[Realm]].
+    moduleContext.Realm = module.Realm;
+    // 5. Set the ScriptOrModule of moduleContext to module.
+    moduleContext.ScriptOrModule = module;
+    // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+    moduleContext.VariableEnvironment = module.Environment;
+    // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+    moduleContext.LexicalEnvironment = module.Environment;
+    moduleContext.PrivateEnvironment = null;
+    // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
+    surroundingAgent.executionContextStack.push(moduleContext);
+    // 9. Let steps be module.[[EvaluationSteps]].
+    const steps = module.EvaluationSteps;
+    // 10. Let result be Completion(steps(module)).
+    let result = steps(module);
+    if (isEvaluator(result)) {
+      result = yield* result;
+    }
+    // 11. Suspend moduleContext and remove it from the execution context stack.
+    // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
+    surroundingAgent.executionContextStack.pop(moduleContext);
+    // 13. Let pc be ! NewPromiseCapability(%Promise%).
+    /* X */let _pc2 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+    /* node:coverage ignore next */if (_pc2 && typeof _pc2 === 'object' && 'next' in _pc2) _pc2 = skipDebugger(_pc2);
+    /* node:coverage ignore next */if (_pc2 instanceof Completion) {
+      /* node:coverage ignore next */if (_pc2 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
+        cause: _pc2
+      });
+      _pc2 = _pc2.Value;
+    }
+    const pc = _pc2;
+    // 14. IfAbruptRejectPromise(result, pc).
+    /* IfAbruptRejectPromise */ /* node:coverage disable */if (result instanceof AbruptCompletion) {
+      const callRejectCompletion = skipDebugger(Call(pc.Reject, Value.undefined, [result.Value]));
+      if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+      return pc.Promise;
+    }
+    if (result instanceof Completion) result = result.Value; /* node:coverage enable */
+    /* X */let _temp30 = Call(pc.Resolve, Value.undefined, [Value.undefined]);
+    /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+    /* node:coverage ignore next */if (_temp30 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! Call(pc.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+        cause: _temp30
+      });
+      _temp30 = _temp30.Value;
+    } // 15. Perform ! Call(pc.[[Resolve]], undefined, « undefined »).
+
+    // 16. Return pc.[[Promise]].
+    return pc.Promise;
+  }
+  *SetSyntheticExport(name, value) {
+    const module = this;
+    // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
+    return yield* module.Environment.SetMutableBinding(name, value, Value.true);
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-environment-records */
+class EnvironmentRecord {
+  OuterEnv;
+  constructor(outerEnv) {
+    this.OuterEnv = outerEnv;
+  }
+  // NON-SPEC
+  mark(m) {
+    m(this.OuterEnv);
+  }
+}
+
+/**
+ * The deferred-reexports proposal refers to a "deferred initialization binding"
+ * but does not define a record structure for one.
+ */
+
+function isDeferredInitializationBinding(binding) {
+  return 'initializationSteps' in binding;
+}
+
+/** https://tc39.es/ecma262/#sec-declarative-environment-records */
+class DeclarativeEnvironmentRecord extends EnvironmentRecord {
+  bindings = new JSStringMap();
+
+  /** https://tc39.es/ecma262/#table-additional-fields-of-declarative-environment-records */
+  DisposableResourceStack = [];
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
+  *HasBinding(N) {
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. If envRec has a binding for the name that is the value of N, return true.
+    if (envRec.bindings.has(N)) {
+      return Value.true;
+    }
+    // 3. Return false.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
+  *CreateMutableBinding(N, D) {
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec does not already have a binding for N.
+    /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(N)) throw new Assert.Error("!envRec.bindings.has(N)");
+    // 3. Create a mutable binding in envRec for N and record that it is uninitialized. If D
+    //    is true, record that the newly created binding may be deleted by a subsequent
+    //    DeleteBinding call.
+    this.bindings.set(N, {
+      indirect: false,
+      initialized: false,
+      mutable: true,
+      strict: undefined,
+      deletable: D === Value.true,
+      value: undefined,
+      mark(m) {
+        m(this.value);
+      }
+    });
+    //  4. Return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s */
+  CreateImmutableBinding(N, S) {
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec does not already have a binding for N.
+    /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(N)) throw new Assert.Error("!envRec.bindings.has(N)");
+    // 3. Create an immutable binding in envRec for N and record that it is uninitialized. If
+    //    S is true, record that the newly created binding is a strict binding.
+    this.bindings.set(N, {
+      indirect: false,
+      initialized: false,
+      mutable: false,
+      strict: S === Value.true,
+      deletable: false,
+      value: undefined,
+      mark(m) {
+        m(this.value);
+      }
+    });
+    // 4. Return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
+  *InitializeBinding(N, V) {
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec must have an uninitialized binding for N.
+    const binding = envRec.bindings.get(N);
+    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined && binding.initialized === false)) throw new Assert.Error("binding !== undefined && binding.initialized === false");
+    // 3. Set the bound value for N in envRec to V.
+    binding.value = V;
+    // 4. Record that the binding for N in envRec has been initialized.
+    binding.initialized = true;
+    // 5. Return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
+  *SetMutableBinding(N, V, S) {
+    /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(N)) throw new Assert.Error("IsPropertyKey(N)");
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. If envRec does not have a binding for N, then
+    if (!envRec.bindings.has(N)) {
+      // a. If S is true, throw a ReferenceError exception.
+      if (S === Value.true) {
+        return Throw.ReferenceError('$1 is not defined', N);
+      }
+      // b. Perform envRec.CreateMutableBinding(N, true).
+      yield* envRec.CreateMutableBinding(N, Value.true);
+      // c. Perform envRec.InitializeBinding(N, V).
+      yield* envRec.InitializeBinding(N, V);
+      // d. Return NormalCompletion(empty).
+      return {
+        __proto__: NormalCompletion.prototype,
+        Value: undefined
+      };
+    }
+    const binding = this.bindings.get(N);
+    // 3. If the binding for N in envRec is a strict binding, set S to true.
+    if (binding.strict === true) {
+      S = Value.true;
+    }
+    // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
+    if (binding.initialized === false) {
+      return Throw.ReferenceError('$1 cannot be used before initialization', N);
+    }
+    // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
+    if (binding.mutable === true) {
+      binding.value = V;
+    } else {
+      // a. Assert: This is an attempt to change the value of an immutable binding.
+      // b. If S is true, throw a TypeError exception.
+      if (S === Value.true) {
+        return Throw.TypeError('Assignment to constant variable $1', N);
+      }
+    }
+    // 7. Return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
+  *GetBindingValue(N, _S) {
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec has a binding for N.
+    const binding = envRec.bindings.get(N);
+    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
+    // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
+    if (binding.initialized === false) {
+      return Throw.ReferenceError('$1 cannot be used before initialization', N);
+    }
+    // 4. Return the value currently bound to N in envRec.
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: binding.value
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
+  *DeleteBinding(N) {
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec has a binding for the name that is the value of N.
+    const binding = envRec.bindings.get(N);
+    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
+    // 3. If the binding for N in envRec cannot be deleted, return false.
+    if (binding.deletable === false) {
+      return Value.false;
+    }
+    // 4. Remove the binding for N from envRec.
+    envRec.bindings.delete(N);
+    // 5. Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
+  HasThisBinding() {
+    // 1. Return false.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
+  HasSuperBinding() {
+    // 1. Return false.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
+  WithBaseObject() {
+    // 1. Return undefined.
+    return Value.undefined;
+  }
+
+  // NON-SPEC
+  mark(m) {
+    super.mark(m);
+    m(this.bindings);
+    for (const resource of this.DisposableResourceStack) {
+      m(resource.ResourceValue);
+      m(resource.DisposeMethod);
+    }
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-function-environment-records */
+class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
+  constructor(F, newTarget) {
+    /* Assert */ /* node:coverage ignore next */ // 1. Assert: F is an ECMAScript function.
+    if (!isECMAScriptFunctionObject(F)) throw new Assert.Error("isECMAScriptFunctionObject(F)");
+    // 2. Assert: Type(newTarget) is Undefined or Object.
+    /* Assert */ /* node:coverage ignore next */if (!(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue)) throw new Assert.Error("newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
+    // 3. Let env be a new function Environment Record containing no bindings.
+    super(F.Environment);
+    // 4. Set env.[[FunctionObject]] to F.
+    this.FunctionObject = F;
+    // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
+
+    if (F.ThisMode === 'lexical') {
+      this.ThisBindingStatus = 'lexical';
+    } else {
+      // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
+      this.ThisBindingStatus = 'uninitialized';
+    }
+    // 7. Set env.[[NewTarget]] to newTarget.
+    this.NewTarget = newTarget;
+    // 8. Set env.[[OuterEnv]] to F.[[Environment]].
+    // 9. Return env.
+  }
+  ThisValue;
+  ThisBindingStatus;
+  FunctionObject;
+  NewTarget;
+
+  /** https://tc39.es/ecma262/#sec-bindthisvalue */
+  BindThisValue(V) {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+    /* Assert */ /* node:coverage ignore next */if (!(envRec.ThisBindingStatus !== 'lexical')) throw new Assert.Error("envRec.ThisBindingStatus !== 'lexical'");
+    // 3. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
+    if (envRec.ThisBindingStatus === 'initialized') {
+      return Throw.ReferenceError('this has already been initialized');
+    }
+    // 4. Set envRec.[[ThisValue]] to V.
+    envRec.ThisValue = V;
+    // 5. Set envRec.[[ThisBindingStatus]] to initialized.
+    envRec.ThisBindingStatus = 'initialized';
+    // 6. Return V.
+    return V;
+  }
+
+  /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
+  HasThisBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return Value.false;
+    } else {
+      return Value.true;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
+  HasSuperBinding() {
+    const envRec = this;
+    // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return Value.false;
+    }
+    // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
+    if (envRec.FunctionObject.HomeObject === Value.undefined) {
+      return Value.false;
+    } else {
+      return Value.true;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
+  GetThisBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+    /* Assert */ /* node:coverage ignore next */if (!(envRec.ThisBindingStatus !== 'lexical')) throw new Assert.Error("envRec.ThisBindingStatus !== 'lexical'");
+    // 3. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
+    if (envRec.ThisBindingStatus === 'uninitialized') {
+      return Throw.ReferenceError('this has not been initialized');
+    }
+    // 4. Return envRec.[[ThisValue]].
+    return envRec.ThisValue;
+  }
+
+  /** https://tc39.es/ecma262/#sec-getsuperbase */
+  GetSuperBase() {
+    const envRec = this;
+    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
+    const home = envRec.FunctionObject.HomeObject;
+    // 2. If home has the value undefined, return undefined.
+    if (home === Value.undefined) {
+      return Value.undefined;
+    }
+    // 3. Assert: Type(home) is Object.
+    /* Assert */ /* node:coverage ignore next */if (!(home instanceof ObjectValue)) throw new Assert.Error("home instanceof ObjectValue");
+    // 4. Return ! home.[[GetPrototypeOf]]().
+    /* X */let _temp = home.GetPrototypeOf();
+    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */if (_temp instanceof Completion) {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! home.GetPrototypeOf() returned an abrupt completion", {
+        cause: _temp
+      });
+      _temp = _temp.Value;
+    }
+    return _temp;
+  }
+  mark(m) {
+    super.mark(m);
+    m(this.ThisValue);
+    m(this.FunctionObject);
+    m(this.NewTarget);
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-module-environment-records */
+class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
+  *GetBindingValue(N, S) {
+    /* Assert */ /* node:coverage ignore next */ // 1. Assert: S is true.
+    if (!(S === Value.true)) throw new Assert.Error("S === Value.true");
+    // 2. Let envRec be the module Environment Record for which the method was invoked.
+    const envRec = this;
+    // 3. Assert: envRec has a binding for N.
+    const binding = envRec.bindings.get(N);
+    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
+    // 4. If the binding for N is an indirect binding, then
+    if (binding.indirect === true) {
+      // a. Let M and N2 be the indirection values provided when this binding for N was created.
+      const [M, N2] = binding.target;
+      // b.Let targetEnv be M.[[Environment]].
+      const targetEnv = M.Environment;
+      // c. If targetEnv is undefined, throw a ReferenceError exception.
+      if (!targetEnv) {
+        return Throw.ReferenceError('$1 is not defined', N);
+      }
+      // d. Return ? targetEnv.GetBindingValue(N2, true).
+      return yield* targetEnv.GetBindingValue(N2, Value.true);
+    }
+    // 5. If the binding for N is an uninitialized deferred initialization binding, initialize it.
+    if (binding.initialized === false) {
+      if (isDeferredInitializationBinding(binding)) {
+        const value = binding.initializationSteps();
+        yield* envRec.InitializeBinding(N, value);
+      } else {
+        return Throw.ReferenceError('$1 cannot be used before initialization', N);
+      }
+    }
+    // 6. Return the value currently bound to N in envRec.
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: binding.value
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
+  DeleteBinding() {
+    /* Assert */ /* node:coverage ignore next */throw new Assert.Error('This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
+  }
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
+  HasThisBinding() {
+    // Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
+  GetThisBinding() {
+    // Return undefined.
+    return Value.undefined;
+  }
+
+  /** https://tc39.es/ecma262/#sec-createimportbinding */
+  CreateImportBinding(N, M, N2) {
+    // 1. Let envRec be the module Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec does not already have a binding for N.
+    /* X */let _temp2 = envRec.HasBinding(N);
+    /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+    /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! envRec.HasBinding(N) returned an abrupt completion", {
+        cause: _temp2
+      });
+      _temp2 = _temp2.Value;
+    }
+    /* Assert */ /* node:coverage ignore next */if (!(_temp2 === Value.false)) throw new Assert.Error("X(envRec.HasBinding(N)) === Value.false");
+    // 3. Assert: M is a Module Record.
+    /* Assert */ /* node:coverage ignore next */if (!(M instanceof AbstractModuleRecord)) throw new Assert.Error("M instanceof AbstractModuleRecord");
+    // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
+    // 5. Create an immutable indirect binding in envRec for N that references M and N2 as its target binding and record that the binding is initialized.
+    envRec.bindings.set(N, {
+      indirect: true,
+      target: [M, N2],
+      initialized: true,
+      mark(m) {
+        m(this.target?.[0]);
+        m(this.target?.[1]);
+      }
+    });
+    // 6. Return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/proposal-deferred-reexports/#sec-createdeferredinitializationbinding */
+  CreateDeferredInitializationBinding(N, initializationSteps) {
+    /* X */let _temp3 = this.HasBinding(N);
+    /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+    /* node:coverage ignore next */if (_temp3 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! this.HasBinding(N) returned an abrupt completion", {
+        cause: _temp3
+      });
+      _temp3 = _temp3.Value;
+    }
+    /* Assert */ /* node:coverage ignore next */if (!(_temp3 === Value.false)) throw new Assert.Error("X(this.HasBinding(N)) === Value.false");
+    // 2. Create an immutable deferred initialization binding in envRec for name whose deferred initialization steps is initializationSteps, and record that the binding is uninitialized and that it is a strict binding.
+    const binding = {
+      indirect: false,
+      initialized: false,
+      mutable: false,
+      strict: true,
+      deletable: false,
+      initializationSteps,
+      mark(m) {
+        m(this.value);
+      }
+    };
+    this.bindings.set(N, binding);
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-object-environment-records */
+class ObjectEnvironmentRecord extends EnvironmentRecord {
+  BindingObject;
+  IsWithEnvironment;
+
+  /** https://tc39.es/ecma262/#sec-newobjectenvironment */
+  constructor(O, W, E) {
+    super(E);
+    this.BindingObject = O;
+    this.IsWithEnvironment = W;
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
+  *HasBinding(N) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let bindings be the binding object for envRec.
+    const bindings = envRec.BindingObject;
+    // 3. Let foundBinding be ? HasProperty(bindings, N).
+    /* ReturnIfAbrupt */let _foundBinding = yield* HasProperty(bindings, N);
+    /* ReturnIfAbrupt */if (_foundBinding instanceof Completion) {
+      if (_foundBinding instanceof AbruptCompletion) return _foundBinding;
+      _foundBinding = _foundBinding.Value;
+    }
+    const foundBinding = _foundBinding;
+    // 4. If foundBinding is false, return false.
+    if (foundBinding === Value.false) {
+      return Value.false;
+    }
+    // 5. If the IsWithEnvironment flag of envRec i s false, return true.
+    if (envRec.IsWithEnvironment === Value.false) {
+      return Value.true;
+    }
+    // 6. Let unscopables be ? Get(bindings, @@unscopables).
+    /* ReturnIfAbrupt */let _unscopables = yield* Get(bindings, wellKnownSymbols.unscopables);
+    /* ReturnIfAbrupt */if (_unscopables instanceof Completion) {
+      if (_unscopables instanceof AbruptCompletion) return _unscopables;
+      _unscopables = _unscopables.Value;
+    }
+    const unscopables = _unscopables;
+    // 7. If Type(unscopables) is Object, then
+    if (unscopables instanceof ObjectValue) {
+      /* ReturnIfAbrupt */let _blocked2 = yield* Get(unscopables, N);
+      /* ReturnIfAbrupt */if (_blocked2 instanceof Completion) {
+        if (_blocked2 instanceof AbruptCompletion) return _blocked2;
+        _blocked2 = _blocked2.Value;
+      }
+      /* X */let _blocked = ToBoolean(_blocked2);
+      /* node:coverage ignore next */if (_blocked && typeof _blocked === 'object' && 'next' in _blocked) _blocked = skipDebugger(_blocked);
+      /* node:coverage ignore next */if (_blocked instanceof Completion) {
+        /* node:coverage ignore next */if (_blocked instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(Q(yield* Get(unscopables, N))) returned an abrupt completion", {
+          cause: _blocked
+        });
+        _blocked = _blocked.Value;
+      }
+      // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
+      const blocked = _blocked;
+      // b. If blocked is true, return false.
+      if (blocked === Value.true) {
+        return Value.false;
+      }
+    }
+    // 8. Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
+  *CreateMutableBinding(N, D) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let envRec be the object Environment Record for which the method was invoked.
+    const bindings = envRec.BindingObject;
+    // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
+    /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(bindings, N, _Descriptor({
+      Value: Value.undefined,
+      Writable: Value.true,
+      Enumerable: Value.true,
+      Configurable: D
+    }));
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s */
+  CreateImmutableBinding(_N, _S) {
+    /* Assert */ /* node:coverage ignore next */throw new Assert.Error('CreateImmutableBinding called on an Object Environment Record');
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
+  *InitializeBinding(N, V) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Assert: envRec must have an uninitialized binding for N.
+    // 3. Record that the binding for N in envRec has been initialized.
+    // 4. Return ? envRec.SetMutableBinding(N, V, false).
+    /* ReturnIfAbrupt */let _temp5 = yield* envRec.SetMutableBinding(N, V, Value.false);
+    /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+      if (_temp5 instanceof AbruptCompletion) return _temp5;
+      _temp5 = _temp5.Value;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
+  *SetMutableBinding(N, V, S) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let bindings be the binding object for envRec.
+    const bindings = envRec.BindingObject;
+    // 3. Let stillExists be ? HasProperty(bindings, N).
+    /* ReturnIfAbrupt */let _stillExists = yield* HasProperty(bindings, N);
+    /* ReturnIfAbrupt */if (_stillExists instanceof Completion) {
+      if (_stillExists instanceof AbruptCompletion) return _stillExists;
+      _stillExists = _stillExists.Value;
+    }
+    const stillExists = _stillExists;
+    // 4. If stillExists is false and S is true, throw a ReferenceError exception.
+    if (stillExists === Value.false && S === Value.true) {
+      return Throw.ReferenceError('$1 is not defined', N);
+    }
+    // 5. Return ? Set(bindings, N, V, S).
+    /* ReturnIfAbrupt */let _temp6 = yield* Set$1(bindings, N, V, S);
+    /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+      if (_temp6 instanceof AbruptCompletion) return _temp6;
+      _temp6 = _temp6.Value;
+    }
+    return undefined;
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s */
+  *GetBindingValue(N, S) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let bindings be the binding object for envRec.
+    const bindings = envRec.BindingObject;
+    // 3. Let value be ? HasProperty(bindings, N).
+    /* ReturnIfAbrupt */let _value = yield* HasProperty(bindings, N);
+    /* ReturnIfAbrupt */if (_value instanceof Completion) {
+      if (_value instanceof AbruptCompletion) return _value;
+      _value = _value.Value;
+    }
+    const value = _value;
+    // 4. If value is false, then
+    if (value === Value.false) {
+      // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
+      if (S === Value.false) {
+        return {
+          __proto__: NormalCompletion.prototype,
+          Value: Value.undefined
+        };
+      } else {
+        return Throw.ReferenceError('$1 is not defined', N);
+      }
+    }
+    // 5. Return Get(bindings, N).
+    return yield* Get(bindings, N);
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
+  *DeleteBinding(N) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let bindings be the binding object for envRec.
+    const bindings = envRec.BindingObject;
+    // 3. Return ? bindings.[[Delete]](N).
+    return yield* bindings.Delete(N);
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
+  HasThisBinding() {
+    // 1. Return false.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
+  HasSuperBinding() {
+    // 1. Return falase.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
+  WithBaseObject() {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. If the IsWithEnvironment flag of envRec is true, return the binding object for envRec.
+    if (envRec.IsWithEnvironment === Value.true) {
+      return envRec.BindingObject;
+    }
+    // 3. Otherwise, return undefined.
+    return Value.undefined;
+  }
+
+  // NON-SPEC
+  mark(m) {
+    // TODO(ts): this function does not call super.mark(). is it a mistake?
+    m(this.BindingObject);
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-global-environment-records */
+class GlobalEnvironmentRecord extends EnvironmentRecord {
+  ObjectRecord;
+  GlobalThisValue;
+  DeclarativeRecord;
+
+  /** https://tc39.es/ecma262/#sec-newglobalenvironment */
+  constructor(G, thisValue) {
+    // 1. Let objRec be NewObjectEnvironment(G, false, null).
+    const objRec = new ObjectEnvironmentRecord(G, Value.false, null);
+    // 2. Let dclRec be a new declarative Environment Record containing no bindings.
+    const dclRec = new DeclarativeEnvironmentRecord(null);
+    // 3. Let env be a new global Environment Record.
+    super(null);
+    // 4. Set env.[[ObjectRecord]] to objRec.
+    this.ObjectRecord = objRec;
+    // 5. Set env.[[GlobalThisValue]] to thisValue.
+    this.GlobalThisValue = thisValue;
+    // 6. Set env.[[DeclarativeRecord]] to dclRec.
+    this.DeclarativeRecord = dclRec;
+    // 8. Set env.[[OuterEnv]] to null.
+    // 9. Return env.
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
+  *HasBinding(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+    const DclRec = envRec.DeclarativeRecord;
+    // 3. If DclRec.HasBinding(N) is true, return true.
+    if ((yield* DclRec.HasBinding(N)) === Value.true) {
+      return Value.true;
+    }
+    // 4. If DclRec.HasBinding(N) is true, return true.
+    const ObjRec = envRec.ObjectRecord;
+    // 5. Let ObjRec be envRec.[[ObjectRecord]].
+    return yield* ObjRec.HasBinding(N);
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d */
+  *CreateMutableBinding(N, D) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+    const DclRec = envRec.DeclarativeRecord;
+    // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+    if ((yield* DclRec.HasBinding(N)) === Value.true) {
+      return Throw.TypeError('$1 is already declared', N);
+    }
+    // 4. Return DclRec.CreateMutableBinding(N, D).
+    return yield* DclRec.CreateMutableBinding(N, D);
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s */
+  CreateImmutableBinding(N, S) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+    const DclRec = envRec.DeclarativeRecord;
+    // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+    /* X */let _temp7 = DclRec.HasBinding(N);
+    /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+    /* node:coverage ignore next */if (_temp7 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(N) returned an abrupt completion", {
+        cause: _temp7
+      });
+      _temp7 = _temp7.Value;
+    }
+    if (_temp7 === Value.true) {
+      return Throw.TypeError('$1 is already declared', N);
+    }
+    // Return DclRec.CreateImmutableBinding(N, S).
+    return DclRec.CreateImmutableBinding(N, S);
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
+  *InitializeBinding(N, V) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    /* X */let _temp8 = DclRec.HasBinding(N);
+    /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+    /* node:coverage ignore next */if (_temp8 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(N) returned an abrupt completion", {
+        cause: _temp8
+      });
+      _temp8 = _temp8.Value;
+    }
+    if (_temp8 === Value.true) {
+      /* X */let _temp9 = DclRec.InitializeBinding(N, V);
+      /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+      /* node:coverage ignore next */if (_temp9 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.InitializeBinding(N, V) returned an abrupt completion", {
+          cause: _temp9
+        });
+        _temp9 = _temp9.Value;
+      }
+      return _temp9;
+    }
+    // 4. Assert: If the binding exists, it must be in the object Environment Record.
+    // 5. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 6. Return ? ObjRec.InitializeBinding(N, V).
+    return yield* ObjRec.InitializeBinding(N, V);
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
+  *SetMutableBinding(N, V, S) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+    const DclRec = envRec.DeclarativeRecord;
+    // 3. If DclRec.HasBinding(N) is true, then
+    if ((yield* DclRec.HasBinding(N)) === Value.true) {
+      // a. Return DclRec.SetMutableBinding(N, V, S).
+      return yield* DclRec.SetMutableBinding(N, V, S);
+    }
+    // 4. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 5. Return ? ObjRec.SetMutableBinding(N, V, S).
+    /* ReturnIfAbrupt */let _temp0 = yield* ObjRec.SetMutableBinding(N, V, S);
+    /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+      if (_temp0 instanceof AbruptCompletion) return _temp0;
+      _temp0 = _temp0.Value;
+    }
+    return undefined;
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s */
+  *GetBindingValue(N, S) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+    const DclRec = envRec.DeclarativeRecord;
+    // 3. If DclRec.HasBinding(N) is true, then
+    if ((yield* DclRec.HasBinding(N)) === Value.true) {
+      // a. Return DclRec.GetBindingValue(N, S).
+      return yield* DclRec.GetBindingValue(N, S);
+    }
+    // 4. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 5. Return ObjRec.GetBindingValue(N, S).
+    return yield* ObjRec.GetBindingValue(N, S);
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
+  *DeleteBinding(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+    const DclRec = this.DeclarativeRecord;
+    // 3. Let DclRec be envRec.[[DeclarativeRecord]].
+    if ((yield* DclRec.HasBinding(N)) === Value.true) {
+      // a. Return DclRec.DeleteBinding(N).
+      return yield* DclRec.DeleteBinding(N);
+    }
+    // 4. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 5. Let globalObject be the binding object for ObjRec.
+    const globalObject = ObjRec.BindingObject;
+    // 6. Let existingProp be ? HasOwnProperty(globalObject, N).
+    /* ReturnIfAbrupt */let _existingProp = yield* HasOwnProperty(globalObject, N);
+    /* ReturnIfAbrupt */if (_existingProp instanceof Completion) {
+      if (_existingProp instanceof AbruptCompletion) return _existingProp;
+      _existingProp = _existingProp.Value;
+    }
+    const existingProp = _existingProp;
+    // 7. If existingProp is true, then
+    if (existingProp === Value.true) {
+      // a. Return ? ObjRec.DeleteBinding(N).
+      return yield* ObjRec.DeleteBinding(N);
+    }
+    // 8. Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
+  HasThisBinding() {
+    // Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
+  HasSuperBinding() {
+    // 1. Return false.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
+  WithBaseObject() {
+    // 1. Return undefined.
+    return Value.undefined;
+  }
+
+  /** https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding */
+  GetThisBinding() {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Return envRec.[[GlobalThisValue]].
+    return envRec.GlobalThisValue;
+  }
+
+  /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
+  *HasLexicalDeclaration(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let envRec be the global Environment Record for which the method was invoked.
+    const DclRec = envRec.DeclarativeRecord;
+    // 3. Let DclRec be envRec.[[DeclarativeRecord]].
+    return yield* DclRec.HasBinding(N);
+  }
+
+  /** https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
+  *HasRestrictedGlobalProperty(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 3. Let globalObject be the binding object for ObjRec.
+    const globalObject = ObjRec.BindingObject;
+    // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
+    /* ReturnIfAbrupt */let _existingProp2 = yield* globalObject.GetOwnProperty(N);
+    /* ReturnIfAbrupt */if (_existingProp2 instanceof Completion) {
+      if (_existingProp2 instanceof AbruptCompletion) return _existingProp2;
+      _existingProp2 = _existingProp2.Value;
+    }
+    const existingProp = _existingProp2;
+    // 5. If existingProp is undefined, return false.
+    if (existingProp instanceof UndefinedValue) {
+      return Value.false;
+    }
+    // 6. If existingProp.[[Configurable]] is true, return false.
+    if (existingProp.Configurable === Value.true) {
+      return Value.false;
+    }
+    // Return true.
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
+  *CanDeclareGlobalVar(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 3. Let globalObject be the binding object for ObjRec.
+    const globalObject = ObjRec.BindingObject;
+    // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
+    /* ReturnIfAbrupt */let _hasProperty = yield* HasOwnProperty(globalObject, N);
+    /* ReturnIfAbrupt */if (_hasProperty instanceof Completion) {
+      if (_hasProperty instanceof AbruptCompletion) return _hasProperty;
+      _hasProperty = _hasProperty.Value;
+    }
+    const hasProperty = _hasProperty;
+    // 5. If hasProperty is true, return true.
+    if (hasProperty === Value.true) {
+      return Value.true;
+    }
+    // 6. Return ? IsExtensible(globalObject).
+    return yield* IsExtensible(globalObject);
+  }
+
+  /** https://tc39.es/ecma262/#sec-candeclareglobalfunction */
+  *CanDeclareGlobalFunction(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 3. Let globalObject be the binding object for ObjRec.
+    const globalObject = ObjRec.BindingObject;
+    // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
+    /* ReturnIfAbrupt */let _existingProp3 = yield* globalObject.GetOwnProperty(N);
+    /* ReturnIfAbrupt */if (_existingProp3 instanceof Completion) {
+      if (_existingProp3 instanceof AbruptCompletion) return _existingProp3;
+      _existingProp3 = _existingProp3.Value;
+    }
+    const existingProp = _existingProp3;
+    // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
+    if (existingProp instanceof UndefinedValue) {
+      return yield* IsExtensible(globalObject);
+    }
+    // 6. If existingProp.[[Configurable]] is true, return true.
+    if (existingProp.Configurable === Value.true) {
+      return Value.true;
+    }
+    // 7. If IsDataDescriptor(existingProp) is true and existingProp has attribute values
+    //    { [[Writable]]: true, [[Enumerable]]: true }, return true.
+    if (IsDataDescriptor(existingProp) === true && existingProp.Writable === Value.true && existingProp.Enumerable === Value.true) {
+      return Value.true;
+    }
+    // 8. Return false.
+    return Value.false;
+  }
+
+  /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
+  *CreateGlobalVarBinding(N, D) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 3. Let globalObject be the binding object for ObjRec.
+    const globalObject = ObjRec.BindingObject;
+    // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
+    /* ReturnIfAbrupt */let _hasProperty2 = yield* HasOwnProperty(globalObject, N);
+    /* ReturnIfAbrupt */if (_hasProperty2 instanceof Completion) {
+      if (_hasProperty2 instanceof AbruptCompletion) return _hasProperty2;
+      _hasProperty2 = _hasProperty2.Value;
+    }
+    const hasProperty = _hasProperty2;
+    // 5. Let extensible be ? IsExtensible(globalObject).
+    /* ReturnIfAbrupt */let _extensible = yield* IsExtensible(globalObject);
+    /* ReturnIfAbrupt */if (_extensible instanceof Completion) {
+      if (_extensible instanceof AbruptCompletion) return _extensible;
+      _extensible = _extensible.Value;
+    }
+    const extensible = _extensible;
+    // 6. If hasProperty is false and extensible is true, then
+    if (hasProperty === Value.false && extensible === Value.true) {
+      /* ReturnIfAbrupt */let _temp1 = yield* ObjRec.CreateMutableBinding(N, D);
+      /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
+        if (_temp1 instanceof AbruptCompletion) return _temp1;
+        _temp1 = _temp1.Value;
+      } // a. Perform ? ObjRec.CreateMutableBinding(N, D).
+
+      /* ReturnIfAbrupt */let _temp10 = yield* ObjRec.InitializeBinding(N, Value.undefined);
+      /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
+        if (_temp10 instanceof AbruptCompletion) return _temp10;
+        _temp10 = _temp10.Value;
+      } // b. Perform ? ObjRec.InitializeBinding(N, undefined).
+    }
+    // return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
+  *CreateGlobalFunctionBinding(N, V, D) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this;
+    // 2. Let ObjRec be envRec.[[ObjectRecord]].
+    const ObjRec = envRec.ObjectRecord;
+    // 3. Let globalObject be the binding object for ObjRec.
+    const globalObject = ObjRec.BindingObject;
+    // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
+    /* ReturnIfAbrupt */let _existingProp4 = yield* globalObject.GetOwnProperty(N);
+    /* ReturnIfAbrupt */if (_existingProp4 instanceof Completion) {
+      if (_existingProp4 instanceof AbruptCompletion) return _existingProp4;
+      _existingProp4 = _existingProp4.Value;
+    }
+    const existingProp = _existingProp4;
+    // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
+    let desc;
+    if (existingProp instanceof UndefinedValue || existingProp.Configurable === Value.true) {
+      // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
+      desc = _Descriptor({
+        Value: V,
+        Writable: Value.true,
+        Enumerable: Value.true,
+        Configurable: D
+      });
+    } else {
+      // a. Let desc be the PropertyDescriptor { [[Value]]: V }.
+      desc = _Descriptor({
+        Value: V
+      });
+    }
+    // 7. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
+    /* ReturnIfAbrupt */let _temp11 = yield* DefinePropertyOrThrow(globalObject, N, desc);
+    /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
+      if (_temp11 instanceof AbruptCompletion) return _temp11;
+      _temp11 = _temp11.Value;
+    }
+    /* ReturnIfAbrupt */let _temp12 = yield* Set$1(globalObject, N, V, Value.false);
+    /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
+      if (_temp12 instanceof AbruptCompletion) return _temp12;
+      _temp12 = _temp12.Value;
+    } // 8. Record that the binding for N in ObjRec has been initialized.
+    // 9. Perform ? Set(globalObject, N, V, false).
+
+    // 1. Return NormalCompletion(empty).
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: undefined
+    };
+  }
+  mark(m) {
+    // TODO(ts): this function does not call super.mark(). is it a mistake?
+    m(this.ObjectRecord);
+    m(this.GlobalThisValue);
+    m(this.DeclarativeRecord);
+  }
+}
+/** https://tc39.es/ecma262/#sec-getidentifierreference */
+function* GetIdentifierReference(env, name, strict) {
+  // 1. If lex is the value null, then
+  if (env === null) {
+    // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: new ReferenceRecord({
+        Base: 'unresolvable',
+        ReferencedName: name,
+        Strict: strict,
+        ThisValue: undefined
+      })
+    };
+  }
+  // 2. Let exists be ? envRec.HasBinding(name).
+  /* ReturnIfAbrupt */let _exists = yield* env.HasBinding(name);
+  /* ReturnIfAbrupt */if (_exists instanceof Completion) {
+    if (_exists instanceof AbruptCompletion) return _exists;
+    _exists = _exists.Value;
+  }
+  const exists = _exists;
+  // 3. If exists is true, then
+  if (exists === Value.true) {
+    // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return {
+      __proto__: NormalCompletion.prototype,
+      Value: new ReferenceRecord({
+        Base: env,
+        ReferencedName: name,
+        Strict: strict,
+        ThisValue: undefined
+      })
+    };
+  } else {
+    // a. Let outer be env.[[OuterEnv]].
+    const outer = env.OuterEnv;
+    // b. Return ? GetIdentifierReference(outer, name, strict).
+    return yield* GetIdentifierReference(outer, name, strict);
+  }
+}
+GetIdentifierReference.section = 'https://tc39.es/ecma262/#sec-getidentifierreference';
+
+/** https://tc39.es/ecma262/#sec-bindingevaluation */
+function* BindingEvaluation_LexicalBinding(LexicalBinding, kind) {
   switch (true) {
     case !!LexicalBinding.BindingIdentifier:
-      return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
+      {
+        // LexicalBinding : BindingIdentifier Initializer
+        if (LexicalBinding.Initializer) {
+          const {
+            Initializer,
+            BindingIdentifier
+          } = LexicalBinding;
+          const bindingId = StringValue(BindingIdentifier);
+          /* X */let _lhs = ResolveBinding(bindingId);
+          /* node:coverage ignore next */if (_lhs && typeof _lhs === 'object' && 'next' in _lhs) _lhs = skipDebugger(_lhs);
+          /* node:coverage ignore next */if (_lhs instanceof Completion) {
+            /* node:coverage ignore next */if (_lhs instanceof AbruptCompletion) throw new Assert.Error("! ResolveBinding(bindingId) returned an abrupt completion", {
+              cause: _lhs
+            });
+            _lhs = _lhs.Value;
+          }
+          const lhs = _lhs;
+          let value;
+          if (IsAnonymousFunctionDefinition(Initializer)) {
+            /* ReturnIfAbrupt */let _temp = yield* NamedEvaluation(Initializer, bindingId);
+            /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+              if (_temp instanceof AbruptCompletion) return _temp;
+              _temp = _temp.Value;
+            }
+            value = _temp;
+          } else {
+            /* ReturnIfAbrupt */let _rhs = yield* Evaluate(Initializer);
+            /* ReturnIfAbrupt */if (_rhs instanceof Completion) {
+              if (_rhs instanceof AbruptCompletion) return _rhs;
+              _rhs = _rhs.Value;
+            }
+            const rhs = _rhs;
+            /* ReturnIfAbrupt */let _temp2 = yield* GetValue(rhs);
+            /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+              if (_temp2 instanceof AbruptCompletion) return _temp2;
+              _temp2 = _temp2.Value;
+            }
+            value = _temp2;
+          }
+          if (kind !== 'normal') {
+            /* Assert */ /* node:coverage ignore next */if (!(IsUnresolvableReference(lhs) === Value.false)) throw new Assert.Error("IsUnresolvableReference(lhs) === Value.false");
+            const base = lhs.Base;
+            /* Assert */ /* node:coverage ignore next */if (!(base instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("base instanceof DeclarativeEnvironmentRecord");
+            /* ReturnIfAbrupt */let _temp3 = yield* AddDisposableResource(base.DisposableResourceStack, value, kind);
+            /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+              if (_temp3 instanceof AbruptCompletion) return _temp3;
+              _temp3 = _temp3.Value;
+            }
+          }
+          /* ReturnIfAbrupt */let _temp4 = yield* InitializeReferencedBinding(lhs, value);
+          /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+            if (_temp4 instanceof AbruptCompletion) return _temp4;
+            _temp4 = _temp4.Value;
+          }
+          return undefined;
+        } else {
+          // LexicalBinding : BindingIdentifier
+          const {
+            BindingIdentifier
+          } = LexicalBinding;
+          /* Assert */ /* node:coverage ignore next */if (!(kind === 'normal')) throw new Assert.Error("kind === 'normal'");
+          /* X */let _lhs2 = ResolveBinding(StringValue(BindingIdentifier));
+          /* node:coverage ignore next */if (_lhs2 && typeof _lhs2 === 'object' && 'next' in _lhs2) _lhs2 = skipDebugger(_lhs2);
+          /* node:coverage ignore next */if (_lhs2 instanceof Completion) {
+            /* node:coverage ignore next */if (_lhs2 instanceof AbruptCompletion) throw new Assert.Error("! ResolveBinding(StringValue(BindingIdentifier)) returned an abrupt completion", {
+              cause: _lhs2
+            });
+            _lhs2 = _lhs2.Value;
+          }
+          const lhs = _lhs2;
+          /* X */let _temp5 = InitializeReferencedBinding(lhs, Value.undefined);
+          /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+          /* node:coverage ignore next */if (_temp5 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! InitializeReferencedBinding(lhs, Value.undefined) returned an abrupt completion", {
+              cause: _temp5
+            });
+            _temp5 = _temp5.Value;
+          }
+          return undefined;
+        }
+      }
     case !!LexicalBinding.BindingPattern:
-      return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
+      {
+        const {
+          Initializer,
+          BindingPattern
+        } = LexicalBinding;
+        /* Assert */ /* node:coverage ignore next */if (!(kind === 'normal')) throw new Assert.Error("kind === 'normal'");
+        /* ReturnIfAbrupt */let _rhs2 = yield* Evaluate(Initializer);
+        /* ReturnIfAbrupt */if (_rhs2 instanceof Completion) {
+          if (_rhs2 instanceof AbruptCompletion) return _rhs2;
+          _rhs2 = _rhs2.Value;
+        }
+        const rhs = _rhs2;
+        /* ReturnIfAbrupt */let _value = yield* GetValue(rhs);
+        /* ReturnIfAbrupt */if (_value instanceof Completion) {
+          if (_value instanceof AbruptCompletion) return _value;
+          _value = _value.Value;
+        }
+        const value = _value;
+        const envRecord = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+        return yield* BindingInitialization(BindingPattern, value, envRecord);
+      }
     /* node:coverage ignore next */default:
       /* node:coverage ignore next */
       throw OutOfRange.nonExhaustive(LexicalBinding);
   }
 }
+BindingEvaluation_LexicalBinding.section = 'https://tc39.es/ecma262/#sec-bindingevaluation';
 
-/** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-bindingevaluation */
 //   BindingList : BindingList `,` LexicalBinding
 //
 // (implicit)
 //   BindingList : LexicalBinding
-function* Evaluate_BindingList(BindingList) {
+function* BindingEvaluation(BindingList, kind) {
   // 1. Let next be the result of evaluating BindingList.
   // 3. Return the result of evaluating LexicalBinding.
   let next;
   for (const LexicalBinding of BindingList) {
-    next = yield* Evaluate_LexicalBinding(LexicalBinding);
+    next = yield* BindingEvaluation_LexicalBinding(LexicalBinding, kind);
     /* ReturnIfAbrupt */if (next instanceof Completion) {
       if (next instanceof AbruptCompletion) return next;
       next = next.Value;
@@ -8874,21 +11607,43 @@ function* Evaluate_BindingList(BindingList) {
   }
   return next;
 }
-Evaluate_BindingList.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
+BindingEvaluation.section = 'https://tc39.es/ecma262/#sec-bindingevaluation';
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalDeclaration : LetOrConst BindingList `;`
-function* Evaluate_LexicalDeclaration({
-  BindingList
-}) {
-  /* ReturnIfAbrupt */let _temp3 = yield* Evaluate_BindingList(BindingList);
-  /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
-    if (_temp3 instanceof AbruptCompletion) return _temp3;
-    _temp3 = _temp3.Value;
-  } // 1. Let next be the result of evaluating BindingList.
-
-  // 3. Return NormalCompletion(empty).
-  return undefined;
+function* Evaluate_LexicalDeclaration(declaration) {
+  switch (declaration.type) {
+    case 'LexicalDeclaration':
+      {
+        /* ReturnIfAbrupt */let _temp6 = yield* BindingEvaluation(declaration.BindingList, 'normal');
+        /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+          if (_temp6 instanceof AbruptCompletion) return _temp6;
+          _temp6 = _temp6.Value;
+        }
+        return undefined;
+      }
+    case 'UsingDeclaration':
+      {
+        /* ReturnIfAbrupt */let _temp7 = yield* BindingEvaluation(declaration.BindingList, 'sync-dispose');
+        /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+          if (_temp7 instanceof AbruptCompletion) return _temp7;
+          _temp7 = _temp7.Value;
+        }
+        return undefined;
+      }
+    case 'AwaitUsingDeclaration':
+      {
+        /* ReturnIfAbrupt */let _temp8 = yield* BindingEvaluation(declaration.BindingList, 'async-dispose');
+        /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
+          if (_temp8 instanceof AbruptCompletion) return _temp8;
+          _temp8 = _temp8.Value;
+        }
+        return undefined;
+      }
+    /* node:coverage ignore next */default:
+      /* node:coverage ignore next */
+      throw OutOfRange.exhaustive(declaration);
+  }
 }
 Evaluate_LexicalDeclaration.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
 
@@ -9112,7 +11867,6 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 function Evaluate_FunctionExpression(FunctionExpression) {
-  // 1. Return InstantiateOrdinaryFunctionExpression of FunctionExpression.
   return InstantiateOrdinaryFunctionExpression(FunctionExpression);
 }
 Evaluate_FunctionExpression.section = 'https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation';
@@ -9417,7 +12171,8 @@ function* Evaluate_Block({
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 5. Let blockValue be the result of evaluating StatementList.
-  const blockValue = yield* Evaluate_StatementList(StatementList);
+  let blockValue = EnsureCompletion(yield* Evaluate_StatementList(StatementList));
+  blockValue = yield* DisposeResources(blockEnv.DisposableResourceStack, blockValue);
   // 6. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 7. Return blockValue.
@@ -10392,8 +13147,6 @@ function* BindingInitialization(node, value, environment) {
         return yield* BindingInitialization(node.BindingIdentifier, value, environment);
       }
       return yield* BindingInitialization(node.BindingPattern, value, environment);
-    case 'ForDeclaration':
-      return yield* BindingInitialization(node.ForBinding, value, environment);
     case 'BindingIdentifier':
       {
         // 1. Let name be StringValue of Identifier.
@@ -10435,6 +13188,18 @@ function* BindingInitialization(node, value, environment) {
       throw OutOfRange.exhaustive(node);
   }
 }
+
+/** https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginitialization */
+function* ForDeclarationBindingInitialization(declaration, value, envRecord) {
+  switch (declaration.production) {
+    case 'LetOrConst':
+      return yield* BindingInitialization(declaration.ForBinding, value, envRecord);
+    case 'Using':
+    case 'AwaitUsing':
+      return Throw.SyntaxError('Invalid ForDeclaration binding initialization');
+  }
+}
+ForDeclarationBindingInitialization.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginitialization';
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
 //   AsyncFunctionExpression :
@@ -11234,9 +13999,11 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
         // 6. Set the running execution context's LexicalEnvironment to loopEnv.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv;
         // 7. Let forDcl be the result of evaluating LexicalDeclaration.
-        const forDcl = yield* Evaluate(LexicalDeclaration);
+        let forDcl = yield* Evaluate(LexicalDeclaration);
         // 8. If forDcl is an abrupt completion, then
         if (forDcl instanceof AbruptCompletion) {
+          forDcl = yield* DisposeResources(loopEnv.DisposableResourceStack, forDcl);
+          /* Assert */ /* node:coverage ignore next */if (!(forDcl instanceof AbruptCompletion)) throw new Assert.Error("forDcl instanceof AbruptCompletion");
           // a. Set the running execution context's LexicalEnvironment to oldEnv.
           surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
           // b. Return Completion(forDcl).
@@ -11250,7 +14017,10 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
           perIterationLets = [];
         }
         // 10. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
-        const bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+        let bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+        bodyResult = yield* DisposeResources(loopEnv.DisposableResourceStack, bodyResult);
+        // Assert: If bodyResult is a normal completion, then bodyResult.[[Value]] is not ~empty~.
+        /* Assert */ /* node:coverage ignore next */if (!(!(bodyResult instanceof NormalCompletion) || bodyResult.Value !== undefined)) throw new Assert.Error("!(bodyResult instanceof NormalCompletion) || bodyResult.Value !== undefined");
         // 11. Set the running execution context's LexicalEnvironment to oldEnv.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
         // 12. Return Completion(bodyResult).
@@ -11684,6 +14454,13 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   if (iteratorKind === undefined) iteratorKind = 'sync';
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let iterationResult = Value.undefined;
+  let declarationKind;
+  if (lhsKind === 'lexicalBinding') {
+    /* Assert */ /* node:coverage ignore next */if (!(lhs.type === 'ForDeclaration')) throw new Assert.Error("lhs.type === 'ForDeclaration'");
+    if (IsAwaitUsingDeclaration(lhs)) declarationKind = 'async-dispose';else if (IsUsingDeclaration(lhs)) declarationKind = 'sync-dispose';else declarationKind = 'normal';
+  } else {
+    declarationKind = 'normal';
+  }
   const destructuring = IsDestructuring(lhs);
   let assignmentPattern;
   if (destructuring && lhsKind === 'assignment') {
@@ -11744,6 +14521,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
           status = EnsureCompletion(yield* PutValue(lhsRef, nextValue));
         }
       }
+      iterationEnv = undefined;
     } else {
       /* Assert */ /* node:coverage ignore next */if (!(lhsKind === 'lexicalBinding')) throw new Assert.Error("lhsKind === 'lexicalBinding'");
       /* Assert */ /* node:coverage ignore next */if (!(lhs.type === 'ForDeclaration')) throw new Assert.Error("lhs.type === 'ForDeclaration'");
@@ -11751,11 +14529,12 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       ForDeclarationBindingInstantiation(lhs, iterationEnv);
       surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv;
       if (destructuring) {
-        status = EnsureCompletion(yield* BindingInitialization(lhs, nextValue, iterationEnv));
+        status = EnsureCompletion(yield* ForDeclarationBindingInitialization(lhs, nextValue, iterationEnv));
       } else {
         // 1. Assert: lhs binds a single name.
         const boundNames = BoundNames(lhs);
         /* Assert */ /* node:coverage ignore next */if (!(boundNames.length === 1)) throw new Assert.Error("boundNames.length === 1");
+        // 2. Let lhsName be the sole element of the BoundNames of lhs.
         const lhsName = boundNames[0];
         /* X */let _temp11 = ResolveBinding(lhsName);
         /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
@@ -11766,11 +14545,28 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
           _temp11 = _temp11.Value;
         }
         lhsRef = _temp11;
-        status = EnsureCompletion(yield* InitializeReferencedBinding(lhsRef, nextValue));
+        if (declarationKind !== 'normal') {
+          /* Assert */ /* node:coverage ignore next */if (!(IsUnresolvableReference(lhsRef) === Value.false)) throw new Assert.Error("IsUnresolvableReference(lhsRef) === Value.false");
+          const base = lhsRef.Base;
+          /* Assert */ /* node:coverage ignore next */if (!(base instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("base instanceof DeclarativeEnvironmentRecord");
+          status = EnsureCompletion(yield* AddDisposableResource(base.DisposableResourceStack, nextValue, declarationKind));
+        } else {
+          status = {
+            __proto__: NormalCompletion.prototype,
+            Value: undefined
+          };
+        }
+        if (!(status instanceof AbruptCompletion)) {
+          status = EnsureCompletion(yield* InitializeReferencedBinding(lhsRef, nextValue));
+        }
       }
     }
     /* Assert */ /* node:coverage ignore next */if (!(typeof status !== 'undefined')) throw new Assert.Error("typeof status! !== 'undefined'");
     if (status instanceof AbruptCompletion) {
+      if (iterationEnv !== undefined) {
+        status = yield* DisposeResources(iterationEnv.DisposableResourceStack, status);
+        /* Assert */ /* node:coverage ignore next */if (!(status instanceof AbruptCompletion)) throw new Assert.Error("status instanceof AbruptCompletion");
+      }
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       if (iterationKind === 'enumerate') return status;
       /* Assert */ /* node:coverage ignore next */if (!(iterationKind === 'iterate')) throw new Assert.Error("iterationKind === 'iterate'");
@@ -11779,7 +14575,10 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       }
       return yield* IteratorClose(iteratorRecord, status);
     }
-    const result = EnsureCompletion(yield* Evaluate(stmt));
+    let result = EnsureCompletion(yield* Evaluate(stmt));
+    if (iterationEnv !== undefined) {
+      result = yield* DisposeResources(iterationEnv.DisposableResourceStack, result);
+    }
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     if (LoopContinues(result, labelSet) === Value.false) {
       status = UpdateEmpty(result, iterationResult);
@@ -11799,35 +14598,51 @@ ForInOfBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
-function ForDeclarationBindingInstantiation({
-  LetOrConst,
-  ForBinding
-}, environment) {
-  /* Assert */ /* node:coverage ignore next */ // 1. Assert: environment is a declarative Environment Record.
-  if (!(environment instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("environment instanceof DeclarativeEnvironmentRecord");
-  // 2. For each element name of the BoundNames of ForBinding, do
-  for (const name of BoundNames(ForBinding)) {
-    // a. If IsConstantDeclaration of LetOrConst is true, then
-    if (IsConstantDeclaration(LetOrConst)) {
-      /* X */let _temp12 = environment.CreateImmutableBinding(name, Value.true);
-      /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
-      /* node:coverage ignore next */if (_temp12 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! environment.CreateImmutableBinding(name, Value.true) returned an abrupt completion", {
-          cause: _temp12
-        });
-        _temp12 = _temp12.Value;
-      } // i. Perform ! environment.CreateImmutableBinding(name, true).
-    } else {
-      /* X */let _temp13 = environment.CreateMutableBinding(name, Value.false);
-      /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
-      /* node:coverage ignore next */if (_temp13 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! environment.CreateMutableBinding(name, Value.false) returned an abrupt completion", {
-          cause: _temp13
-        });
-        _temp13 = _temp13.Value;
-      } // b. Else,
-      // i. Perform ! environment.CreateMutableBinding(name, false).
-    }
+function ForDeclarationBindingInstantiation(declaration, envRecord) {
+  switch (declaration.production) {
+    case 'AwaitUsing':
+    case 'Using':
+      {
+        for (const name of BoundNames(declaration.ForBinding)) {
+          /* X */let _temp12 = envRecord.CreateImmutableBinding(name, Value.true);
+          /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+          /* node:coverage ignore next */if (_temp12 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateImmutableBinding(name, Value.true) returned an abrupt completion", {
+              cause: _temp12
+            });
+            _temp12 = _temp12.Value;
+          }
+        }
+        return;
+      }
+    case 'LetOrConst':
+      {
+        for (const name of BoundNames(declaration.ForBinding)) {
+          if (IsConstantDeclaration(declaration)) {
+            /* X */let _temp13 = envRecord.CreateImmutableBinding(name, Value.true);
+            /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+            /* node:coverage ignore next */if (_temp13 instanceof Completion) {
+              /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateImmutableBinding(name, Value.true) returned an abrupt completion", {
+                cause: _temp13
+              });
+              _temp13 = _temp13.Value;
+            }
+          } else {
+            /* X */let _temp14 = envRecord.CreateMutableBinding(name, Value.false);
+            /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
+            /* node:coverage ignore next */if (_temp14 instanceof Completion) {
+              /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateMutableBinding(name, Value.false) returned an abrupt completion", {
+                cause: _temp14
+              });
+              _temp14 = _temp14.Value;
+            }
+          }
+        }
+        return;
+      }
+    /* node:coverage ignore next */default:
+      /* node:coverage ignore next */
+      throw OutOfRange.exhaustive(declaration);
   }
 }
 ForDeclarationBindingInstantiation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation';
@@ -12114,29 +14929,28 @@ function* Evaluate_SwitchStatement({
     if (_exprRef2 instanceof AbruptCompletion) return _exprRef2;
     _exprRef2 = _exprRef2.Value;
   }
-  // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = _exprRef2;
-  // 2. Let switchValue be ? GetValue(exprRef).
   /* ReturnIfAbrupt */let _switchValue = yield* GetValue(exprRef);
   /* ReturnIfAbrupt */if (_switchValue instanceof Completion) {
     if (_switchValue instanceof AbruptCompletion) return _switchValue;
     _switchValue = _switchValue.Value;
   }
   const switchValue = _switchValue;
-  // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
   const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
-  // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-  yield* BlockDeclarationInstantiation(CaseBlock, blockEnv);
-  // 6. Set the running execution context's LexicalEnvironment to blockEnv.
+  /* X */let _temp4 = BlockDeclarationInstantiation(CaseBlock, blockEnv);
+  /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+  /* node:coverage ignore next */if (_temp4 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! BlockDeclarationInstantiation(CaseBlock, blockEnv) returned an abrupt completion", {
+      cause: _temp4
+    });
+    _temp4 = _temp4.Value;
+  }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
-  // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.
-  const result = yield* CaseBlockEvaluation(CaseBlock, switchValue);
-  // 8. Set the running execution context's LexicalEnvironment to oldEnv.
+  const blockResult = yield* CaseBlockEvaluation(CaseBlock, switchValue);
+  /* Assert */ /* node:coverage ignore next */if (!(blockEnv.DisposableResourceStack.length === 0)) throw new Assert.Error("blockEnv.DisposableResourceStack.length === 0");
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-  // 9. return R.
-  return result;
+  return blockResult;
 }
 Evaluate_SwitchStatement.section = 'https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation';
 
@@ -12151,13 +14965,11 @@ function* Evaluate_CaseClause({
   StatementList
 }) {
   if (!StatementList) {
-    // 1. Return NormalCompletion(empty).
     return {
       __proto__: NormalCompletion.prototype,
       Value: undefined
     };
   }
-  // 1. Return the result of evaluating StatementList.
   return yield* Evaluate_StatementList(StatementList);
 }
 Evaluate_CaseClause.section = 'https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation';
@@ -13001,6 +15813,8 @@ function getDeclarations(node) {
       /* Assert */ /* node:coverage ignore next */if (!!!node.BindingIdentifier) throw new Assert.Error("!!node.BindingIdentifier");
       return getDeclarations(node.BindingIdentifier);
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return getDeclarations(node.BindingList);
     case 'VariableStatement':
       return getDeclarations(node.VariableDeclarationList);
@@ -16934,6 +19748,15 @@ class ExpressionParser extends FunctionParser {
 }
 
 class StatementParser extends ExpressionParser {
+  canParseAwaitUsingDeclaration() {
+    if (!this.test(Token.AWAIT) || !this.scope.hasAwait() || !this.testAhead('using')) {
+      return false;
+    }
+    const usingToken = this.peekAhead();
+    const bindingToken = this.peekAhead(2);
+    if (usingToken.hadLineTerminatorBefore || bindingToken.hadLineTerminatorBefore) return false;
+    return isAnyIdentifier(bindingToken.type);
+  }
   eatSemicolonWithASI() {
     if (this.eat(Token.SEMICOLON)) {
       return true;
@@ -17009,14 +19832,20 @@ class StatementParser extends ExpressionParser {
           switch (this.peekAhead().type) {
             case Token.LBRACE:
             case Token.LBRACK:
-            case Token.IDENTIFIER:
-            case Token.YIELD:
-            case Token.AWAIT:
               return this.parseLexicalDeclaration();
+            default:
+              if (isAnyIdentifier(this.peekAhead().type)) return this.parseLexicalDeclaration();
+              break;
           }
+        }
+        if (this.test('using') && !this.peekAhead().hadLineTerminatorBefore && isAnyIdentifier(this.peekAhead().type)) {
+          return this.parseLexicalDeclaration();
         }
         if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
           return this.parseHoistableDeclaration();
+        }
+        if (this.canParseAwaitUsingDeclaration()) {
+          return this.parseLexicalDeclaration();
         }
         return this.parseStatement();
     }
@@ -17046,12 +19875,21 @@ class StatementParser extends ExpressionParser {
     return this.parseClass(decoratorsAttachedToClassDeclaration, false);
   }
 
-  // LexicalDeclaration : LetOrConst BindingList `;`
+  // LexicalDeclaration :
+  //   LetOrConst BindingList `;`
+  //   UsingDeclaration
+  //   [+Await] AwaitUsingDeclaration
   parseLexicalDeclaration() {
+    if (this.test('using')) {
+      return this.parseUsingDeclaration();
+    }
+    if (this.test(Token.AWAIT)) {
+      return this.parseAwaitUsingDeclaration();
+    }
     const node = this.startNode();
     const letOrConst = this.eat('let') ? 'let' : this.expect(Token.CONST) && 'const';
     node.LetOrConst = letOrConst;
-    node.BindingList = this.parseBindingList();
+    node.BindingList = this.parseBindingList(true);
     this.semicolon();
     this.scope.declare(node.BindingList, 'lexical');
     node.BindingList.forEach(b => {
@@ -17062,18 +19900,60 @@ class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'LexicalDeclaration');
   }
 
+  // UsingDeclaration :
+  //   `using` [no LineTerminator here] BindingList `;`
+  parseUsingDeclaration() {
+    const node = this.startNode();
+    this.expect('using');
+    node.BindingList = this.parseBindingList(false);
+    this.semicolon();
+    this.scope.declare(node.BindingList, 'lexical');
+    node.BindingList.forEach(binding => {
+      if (!binding.Initializer) {
+        this.addEarlyError(Throw.SyntaxError('Missing initializer in using declaration'), binding);
+      }
+    });
+    return this.finishNode(node, 'UsingDeclaration');
+  }
+
+  // AwaitUsingDeclaration :
+  //   `await` [no LineTerminator here] `using` [no LineTerminator here] BindingList `;`
+  parseAwaitUsingDeclaration() {
+    const node = this.startNode();
+    this.expect(Token.AWAIT);
+    if (this.peek().hadLineTerminatorBefore) this.unexpected();
+    this.expect('using');
+    if (this.peek().hadLineTerminatorBefore) this.unexpected();
+    node.BindingList = this.parseBindingList(false);
+    this.semicolon();
+    this.scope.declare(node.BindingList, 'lexical');
+    node.BindingList.forEach(binding => {
+      if (!binding.Initializer) {
+        this.addEarlyError(Throw.SyntaxError('Missing initializer in await using declaration'), binding);
+      }
+    });
+    if (!this.scope.hasReturn()) this.state.hasTopLevelAwait = true;
+    return this.finishNode(node, 'AwaitUsingDeclaration');
+  }
+
   // BindingList :
   //   LexicalBinding
   //   BindingList `,` LexicalBinding
   //
   // LexicalBinding :
   //   BindingIdentifier Initializer?
-  //   BindingPattern Initializer
-  parseBindingList() {
+  //   [+Pattern] BindingPattern Initializer
+  parseBindingList(allowPattern = true) {
     const bindingList = [];
     do {
-      const node = this.parseBindingElement();
-      bindingList.push(this.repurpose(node, 'LexicalBinding'));
+      const node = this.startNode();
+      if (allowPattern && (this.test(Token.LBRACE) || this.test(Token.LBRACK))) {
+        node.BindingPattern = this.parseBindingPattern();
+      } else {
+        node.BindingIdentifier = this.parseBindingIdentifier();
+      }
+      node.Initializer = this.parseInitializerOpt();
+      bindingList.push(this.finishNode(node, 'LexicalBinding'));
     } while (this.eat(Token.COMMA));
     return bindingList;
   }
@@ -17378,20 +20258,78 @@ class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'DoWhileStatement');
   }
 
-  // `for` `(` [lookahead != `let` `[`] Expression? `;` Expression? `;` Expression? `)` Statement
-  // `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
-  // `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-  // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
-  // `for` `(` `var` ForBinding `in` Expression `)` Statement
-  // `for` `(` ForDeclaration `in` Expression `)` Statement
-  // `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  // ForStatement :
+  //   `for` `(` [lookahead != `let` `[`] Expression? `;` Expression? `;` Expression? `)` Statement
+  //   `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
+  //   `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
   //
-  // ForDeclaration : LetOrConst ForBinding
+  // ForInOfStatement :
+  //   `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
+  //   `for` `(` `var` ForBinding `in` Expression `)` Statement
+  //   `for` `(` ForDeclaration `in` Expression `)` Statement
+  //   `for` `(` [lookahead not in { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   `for` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   [+Await] `for` `await` `(` [lookahead != `using` `of`] ForDeclaration `of` AssignmentExpression `)` Statement
+  //
+  // ForDeclaration :
+  //   LetOrConst ForBinding
+  //   [+Using] `using` [no LineTerminator here] ForBinding
+  //   [+Using, +Await] `await` [no LineTerminator here] `using`
+  //     [no LineTerminator here] ForBinding
+  finishForDeclaration(node, binding, production) {
+    if (production !== 'LetOrConst' && !this.test('of')) {
+      // example:
+      // for (using resource in object) {}
+      this.raise(Throw.SyntaxError('Using declarations are only allowed in for-of loop heads'), node);
+    }
+    node.ForBinding = this.repurpose(binding, 'ForBinding', (_, oldNode) => {
+      if (oldNode.Initializer) {
+        this.raise(Throw.SyntaxError('Initializers are not allowed in for-in/of loop declarations'), oldNode.Initializer);
+      }
+    });
+    node.production = production;
+    const declaration = this.finishNode(node, 'ForDeclaration');
+    getDeclarations(declaration).forEach(({
+      name,
+      node: bindingNode
+    }) => {
+      if (name === 'let') {
+        // example:
+        // for (using let of resources) {}
+        this.addEarlyError(Throw.SyntaxError('For-in/of loop declarations cannot bind "let"'), bindingNode);
+      }
+    });
+    return declaration;
+  }
+
+  // Parses `Expression? ; Expression? ) Statement` after the first `;` of a ForStatement.
+  parseForStatementTail() {
+    const test = this.test(Token.SEMICOLON) ? undefined : this.parseExpression();
+    this.expect(Token.SEMICOLON);
+    const update = this.test(Token.RPAREN) ? undefined : this.parseExpression();
+    this.expect(Token.RPAREN);
+    const statement = this.parseStatement();
+    return {
+      test,
+      update,
+      statement
+    };
+  }
+  parseForInStatementTail(node) {
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    node.Statement = this.parseStatement();
+    return this.finishNode(node, 'ForInStatement');
+  }
+  parseForOfStatementTail(node, isAwait) {
+    node.AssignmentExpression = this.parseAssignmentExpression();
+    this.expect(Token.RPAREN);
+    node.Statement = this.parseStatement();
+    return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+  }
   parseForStatement() {
     return this.scope.with({
       lexical: true,
@@ -17405,33 +20343,107 @@ class StatementParser extends ExpressionParser {
       }
       this.expect(Token.LPAREN);
       if (isAwait && this.test(Token.SEMICOLON)) {
-        this.unexpected();
+        // for await ( ; ...; ...)
+        this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
       }
+      // for ( ; ... ; ... )
       if (this.eat(Token.SEMICOLON)) {
-        if (!this.test(Token.SEMICOLON)) {
-          node.Expression_b = this.parseExpression();
-        }
-        this.expect(Token.SEMICOLON);
-        if (!this.test(Token.RPAREN)) {
-          node.Expression_c = this.parseExpression();
-        }
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
+        const tail = this.parseForStatementTail();
+        if (tail.test) node.Expression_b = tail.test;
+        if (tail.update) node.Expression_c = tail.update;
+        node.Statement = tail.statement;
         return this.finishNode(node, 'ForStatement');
       }
-      const isLexicalStart = () => {
+      const isLexicalBindingStart = () => {
         switch (this.peekAhead().type) {
           case Token.LBRACE:
           case Token.LBRACK:
-          case Token.IDENTIFIER:
-          case Token.YIELD:
-          case Token.AWAIT:
             return true;
           default:
-            return false;
+            return isAnyIdentifier(this.peekAhead().type);
         }
       };
-      if ((this.test('let') || this.test(Token.CONST)) && isLexicalStart()) {
+      let isUsingDeclaration = false;
+      // for (using ...
+      if (this.test('using')) {
+        // for (using [no LineTerminator here] ...
+        if (!this.peekAhead().hadLineTerminatorBefore) {
+          // for (using of ...
+          if (this.testAhead('of')) {
+            switch (this.peekAhead(2).type) {
+              // for (using of = ...
+              case Token.ASSIGN:
+              // for (using of,
+              // for (using of;
+              // this branch is for better error message
+              // for code:
+              // for (using of, ident2 = expr; condition; update)
+              // for (using of; condition; update)
+              case Token.COMMA:
+              case Token.SEMICOLON:
+                isUsingDeclaration = true;
+                break;
+              default:
+                // example: (using is a variable here)
+                // let using;
+                // for (using of resources) {}
+                // for (using of [resource1, resource2]) {}
+                // for (using of "abc") {}
+                isUsingDeclaration = false;
+                break;
+            }
+          } else {
+            // for (using ident ...
+            isUsingDeclaration = isAnyIdentifier(this.peekAhead().type);
+          }
+        }
+      }
+      const isAwaitUsingDeclaration = this.canParseAwaitUsingDeclaration();
+      if (isUsingDeclaration || isAwaitUsingDeclaration) {
+        const inner = this.startNode();
+        if (isAwaitUsingDeclaration) {
+          this.expect(Token.AWAIT);
+          if (this.peek().hadLineTerminatorBefore) this.unexpected();
+          this.expect('using');
+          if (this.peek().hadLineTerminatorBefore) this.unexpected();
+          if (!this.scope.hasReturn()) this.state.hasTopLevelAwait = true;
+        } else {
+          this.expect('using');
+        }
+        // here we parsed at `for (using = expr()`
+        //                              ^ here
+        const list = this.parseBindingList(false);
+        this.scope.declare(list, 'lexical');
+
+        // for (using ident1 = expr; condition; update) {}
+        const isTraditionalFor = list.length > 1 || this.test(Token.SEMICOLON) || !!list[0].Initializer;
+        if (isTraditionalFor) {
+          if (isAwait) this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
+          list.forEach(binding => {
+            if (!binding.Initializer) {
+              const error = isAwaitUsingDeclaration ? Throw.SyntaxError('Missing initializer in await using declaration') : Throw.SyntaxError('Missing initializer in using declaration');
+              this.addEarlyError(error, binding);
+            }
+          });
+          inner.BindingList = list;
+          node.LexicalDeclaration = this.finishNode(inner, isAwaitUsingDeclaration ? 'AwaitUsingDeclaration' : 'UsingDeclaration');
+          this.expect(Token.SEMICOLON);
+          const tail = this.parseForStatementTail();
+          if (tail.test) node.Expression_a = tail.test;
+          if (tail.update) node.Expression_b = tail.update;
+          node.Statement = tail.statement;
+          return this.finishNode(node, 'ForStatement');
+        }
+        // for (using ident in expr) {}
+        //                  ^ invalid!
+        node.ForDeclaration = this.finishForDeclaration(inner, list[0], isAwaitUsingDeclaration ? 'AwaitUsing' : 'Using');
+        this.expect('of');
+        return this.parseForOfStatementTail(node, isAwait);
+      }
+      // for (let/const [
+      // for (let/const {
+      // for (let/const ident
+      if ((this.test('let') || this.test(Token.CONST)) && isLexicalBindingStart()) {
         const inner = this.startNode();
         if (this.eat('let')) {
           inner.LetOrConst = 'let';
@@ -17443,7 +20455,7 @@ class StatementParser extends ExpressionParser {
         this.scope.declare(list, 'lexical');
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           if (isAwait) {
-            this.unexpected();
+            this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
           }
           if (inner.LetOrConst === 'const') {
             list.forEach(b => {
@@ -17455,79 +20467,53 @@ class StatementParser extends ExpressionParser {
           inner.BindingList = list;
           node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
           this.expect(Token.SEMICOLON);
-          if (!this.test(Token.SEMICOLON)) {
-            node.Expression_a = this.parseExpression();
-          }
-          this.expect(Token.SEMICOLON);
-          if (!this.test(Token.RPAREN)) {
-            node.Expression_b = this.parseExpression();
-          }
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
+          const tail = this.parseForStatementTail();
+          if (tail.test) node.Expression_a = tail.test;
+          if (tail.update) node.Expression_b = tail.update;
+          node.Statement = tail.statement;
           return this.finishNode(node, 'ForStatement');
         }
-        inner.ForBinding = this.repurpose(list[0], 'ForBinding', (_, oldNode) => {
-          if (oldNode.Initializer) {
-            this.unexpected(oldNode.Initializer);
-          }
-        });
-        node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
-        getDeclarations(node.ForDeclaration).forEach(d => {
-          if (d.name === 'let') {
-            this.addEarlyError(Throw.SyntaxError('Unexpected token let'), d.node);
-          }
-        });
+        node.ForDeclaration = this.finishForDeclaration(inner, list[0], 'LetOrConst');
+        // for (const x in ...
         if (!isAwait && this.eat(Token.IN)) {
-          node.Expression = this.parseExpression();
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForInStatement');
+          return this.parseForInStatementTail(node);
         }
+        // for (const x of ...
         this.expect('of');
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+        return this.parseForOfStatementTail(node, isAwait);
       }
+
+      // for (var ...
       if (this.eat(Token.VAR)) {
         if (isAwait) {
           node.ForBinding = this.parseForBinding();
           this.expect('of');
-          node.AssignmentExpression = this.parseAssignmentExpression();
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForAwaitStatement');
+          return this.parseForOfStatementTail(node, true);
         }
         const list = this.parseVariableDeclarationList(false);
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           node.VariableDeclarationList = list;
           this.expect(Token.SEMICOLON);
-          if (!this.test(Token.SEMICOLON)) {
-            node.Expression_a = this.parseExpression();
-          }
-          this.expect(Token.SEMICOLON);
-          if (!this.test(Token.RPAREN)) {
-            node.Expression_b = this.parseExpression();
-          }
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
+          const tail = this.parseForStatementTail();
+          if (tail.test) node.Expression_a = tail.test;
+          if (tail.update) node.Expression_b = tail.update;
+          node.Statement = tail.statement;
           return this.finishNode(node, 'ForStatement');
         }
         node.ForBinding = this.repurpose(list[0], 'ForBinding', (_, oldNode) => {
           if (oldNode.Initializer) {
-            this.unexpected(oldNode.Initializer);
+            this.raise(Throw.SyntaxError('Initializers are not allowed in for-in/of loop declarations'), oldNode.Initializer);
           }
         });
         if (this.eat('of')) {
-          node.AssignmentExpression = this.parseAssignmentExpression();
+          return this.parseForOfStatementTail(node, false);
         } else {
           this.expect(Token.IN);
-          node.Expression = this.parseExpression();
+          return this.parseForInStatementTail(node);
         }
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, node.AssignmentExpression ? 'ForOfStatement' : 'ForInStatement');
       }
+
+      // for (some_lhs_to_update ...
       this.scope.pushAssignmentInfo('for');
       const expression = this.scope.with({
         in: false
@@ -17544,42 +20530,35 @@ class StatementParser extends ExpressionParser {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression; // NOTE: unsound cast
-        node.Expression = this.parseExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, 'ForInStatement');
+        return this.parseForInStatementTail(node);
       }
       const isExactlyAsync = expression.type === 'IdentifierReference' && !expression.escaped && expression.name === 'async';
+      // `for (value of values) {}`
+      // `for (\u0061sync of values) {}`
+      // `for await (async of values) {}`
+      // but not `for (async of values) {}`, which is excluded by the lookahead restriction.
       if ((!isExactlyAsync || isAwait) && this.eat('of')) {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression; // NOTE: unsound cast
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+        return this.parseForOfStatementTail(node, isAwait);
       }
       if (isAwait) {
-        this.unexpected();
+        this.raise(Throw.SyntaxError('For-await syntax is only valid with for-of loops'));
       }
       node.Expression_a = expression;
       this.expect(Token.SEMICOLON);
-      if (!this.test(Token.SEMICOLON)) {
-        node.Expression_b = this.parseExpression();
-      }
-      this.expect(Token.SEMICOLON);
-      if (!this.test(Token.RPAREN)) {
-        node.Expression_c = this.parseExpression();
-      }
-      this.expect(Token.RPAREN);
-      node.Statement = this.parseStatement();
+      const tail = this.parseForStatementTail();
+      if (tail.test) node.Expression_b = tail.test;
+      if (tail.update) node.Expression_c = tail.update;
+      node.Statement = tail.statement;
       return this.finishNode(node, 'ForStatement');
     });
   }
 
   // ForBinding :
   //   BindingIdentifier
-  //   BindingPattern
+  //   [+Pattern] BindingPattern
   parseForBinding() {
     const node = this.startNode();
     switch (this.peek().type) {
@@ -17646,7 +20625,11 @@ class StatementParser extends ExpressionParser {
                 StatementList = [];
                 inner.StatementList = StatementList;
               }
-              StatementList.push(this.parseStatementListItem());
+              const statement = this.parseStatementListItem();
+              StatementList.push(statement);
+            }
+            if (StatementList && ContainsUsing(StatementList)) {
+              this.addEarlyError(Throw.SyntaxError('Using declarations are not allowed directly in switch clauses'), inner);
             }
             if (t === Token.DEFAULT) {
               node.DefaultClause = this.finishNode(inner, 'DefaultClause');
@@ -18316,6 +21299,9 @@ class LanguageParser extends ModuleParser {
       node.ScriptBody = null;
     } else {
       node.ScriptBody = this.parseScriptBody();
+      if (ContainsUsing(node.ScriptBody.StatementList)) {
+        this.addEarlyError(Throw.SyntaxError('Using declarations are not allowed at the top level of a Script'), node.ScriptBody);
+      }
     }
     Object.defineProperty(node, 'sourceText', {
       configurable: true,
@@ -18494,1370 +21480,6 @@ class Parser extends LanguageParser {
     node.type = type;
     this.markLocationEnd(node);
     return node;
-  }
-}
-
-/** https://tc39.es/ecma262/#running-execution-context */
-function runningExecutionContext() {
-  return surroundingAgent.executionContextStack.at(-1);
-}
-
-/** https://tc39.es/ecma262/#current-realm */
-function currentRealmRecord() {
-  return surroundingAgent.executionContextStack.at(-1).Realm;
-}
-
-/** https://tc39.es/ecma262/#active-function-object */
-function activeFunctionObject() {
-  return surroundingAgent.executionContextStack.at(-1).Function;
-}
-
-/** https://tc39.es/ecma262/#sec-execution-contexts */
-class ExecutionContext {
-  // Table 20: State Components for All Execution Contexts
-  // https://tc39.es/ecma262/#table-state-components-for-all-execution-contexts
-  CodeEvaluationState;
-  Function = Value.null;
-  ScriptOrModule = Value.null;
-  Realm;
-
-  // Table 21: Additional State Components for ECMAScript Code Execution Contexts
-  // https://tc39.es/ecma262/#table-additional-state-components-for-ecmascript-code-execution-contexts
-  LexicalEnvironment;
-  VariableEnvironment;
-  PrivateEnvironment = null;
-
-  // Table 22: Additional State Components for Generator Execution Contexts
-  // https://tc39.es/ecma262/#table-additional-state-components-for-generator-execution-contexts
-  Generator;
-
-  // NON-SPEC
-  HostDefined;
-  callSite = new CallSite(this);
-  promiseCapability;
-  poppedForTailCall = false;
-  copy() {
-    const e = new ExecutionContext();
-    e.CodeEvaluationState = this.CodeEvaluationState;
-    e.Function = this.Function;
-    e.Realm = this.Realm;
-    e.ScriptOrModule = this.ScriptOrModule;
-    e.VariableEnvironment = this.VariableEnvironment;
-    e.LexicalEnvironment = this.LexicalEnvironment;
-    e.PrivateEnvironment = this.PrivateEnvironment;
-    e.HostDefined = this.HostDefined;
-    e.callSite = this.callSite.clone(e);
-    e.promiseCapability = this.promiseCapability;
-    return e;
-  }
-
-  // NON-SPEC
-  mark(m) {
-    m(this.Function);
-    m(this.Realm);
-    m(this.ScriptOrModule);
-    m(this.VariableEnvironment);
-    m(this.LexicalEnvironment);
-    m(this.PrivateEnvironment);
-    m(this.promiseCapability);
-  }
-}
-class ExecutionContextStack extends Array {
-  // This ensures that only the length taking overload is supported.
-  // This is necessary to support `ArraySpeciesCreate`, which invokes
-  // the constructor with argument `length`:
-  constructor(length = 0) {
-    super(+length);
-  }
-
-  // @ts-expect-error
-  pop(ctx) {
-    if (!ctx.poppedForTailCall) {
-      const popped = super.pop();
-      /* Assert */ /* node:coverage ignore next */if (!(popped === ctx)) throw new Assert.Error("popped === ctx");
-    }
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-getactivescriptormodule */
-function GetActiveScriptOrModule() {
-  for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
-    const e = surroundingAgent.executionContextStack[i];
-    if (e.ScriptOrModule !== Value.null) {
-      return e.ScriptOrModule;
-    }
-  }
-  return Value.null;
-}
-GetActiveScriptOrModule.section = 'https://tc39.es/ecma262/#sec-getactivescriptormodule';
-
-/** https://tc39.es/ecma262/#sec-resolvebinding */
-function ResolveBinding(name, env, strict) {
-  // 1. If env is not present or if env is undefined, then
-  if (env === undefined || env === Value.undefined) {
-    // a. Set env to the running execution context's LexicalEnvironment.
-    env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  }
-  // 2. Assert: env is an Environment Record.
-  /* Assert */ /* node:coverage ignore next */if (!(env instanceof EnvironmentRecord)) throw new Assert.Error("env instanceof EnvironmentRecord");
-  // 3. If the code matching the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
-  // 4. Return ? GetIdentifierReference(env, name, strict).
-  return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
-}
-ResolveBinding.section = 'https://tc39.es/ecma262/#sec-resolvebinding';
-
-/** https://tc39.es/ecma262/#sec-getthisenvironment */
-function GetThisEnvironment() {
-  // 1. Let env be the running execution context's LexicalEnvironment.
-  let env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Repeat,
-  while (true) {
-    // a. Let exists be env.HasThisBinding().
-    const exists = env.HasThisBinding();
-    // b. If exists is true, return envRec.
-    if (exists === Value.true) {
-      return env;
-    }
-    // c. Let outer be env.[[OuterEnv]].
-    const outer = env.OuterEnv;
-    // d. Assert: outer is not null.
-    /* Assert */ /* node:coverage ignore next */if (!(outer !== null)) throw new Assert.Error("outer !== null");
-    // e. Set env to outer.
-    env = outer;
-  }
-}
-GetThisEnvironment.section = 'https://tc39.es/ecma262/#sec-getthisenvironment';
-
-/** https://tc39.es/ecma262/#sec-resolvethisbinding */
-function ResolveThisBinding() {
-  const envRec = GetThisEnvironment();
-  return envRec.GetThisBinding();
-}
-ResolveThisBinding.section = 'https://tc39.es/ecma262/#sec-resolvethisbinding';
-
-/** https://tc39.es/ecma262/#sec-getnewtarget */
-function GetNewTarget() {
-  const envRec = GetThisEnvironment();
-  /* Assert */ /* node:coverage ignore next */if (!('NewTarget' in envRec)) throw new Assert.Error("'NewTarget' in envRec");
-  return envRec.NewTarget;
-}
-GetNewTarget.section = 'https://tc39.es/ecma262/#sec-getnewtarget';
-
-/** https://tc39.es/ecma262/#sec-getglobalobject */
-function GetGlobalObject() {
-  const currentRealm = surroundingAgent.currentRealmRecord;
-  return currentRealm.GlobalObject;
-}
-GetGlobalObject.section = 'https://tc39.es/ecma262/#sec-getglobalobject';
-
-/** https://tc39.es/ecma262/#sec-runsuspendedcontext */
-
-function* RunSuspendedContext(context, completionRecord) {
-  const callerContext = surroundingAgent.runningExecutionContext;
-
-  // Suspend callerContext.
-  // Push context onto the execution context stack; context is now the running execution context.
-  surroundingAgent.executionContextStack.push(context);
-
-  // Resume the suspended evaluation of context using completionRecord as the result of the operation that suspended it.
-  // Let result be the Completion Record returned by the resumed computation.
-  let iter_result;
-  let result;
-  let completion = completionRecord;
-  while (true) {
-    // run the evaluator
-    iter_result = context.CodeEvaluationState.next(completion);
-    if (iter_result.done) {
-      result = iter_result.value;
-      break;
-    }
-    const {
-      value
-    } = iter_result;
-    // if it is a debugger break, pop it to the evaluator runner
-    if (value.suspend === 'debugger' || value.suspend === 'potential-debugger') {
-      completion = yield value;
-    } else if (value.suspend === 'await' || value.suspend === 'async-yield') {
-      return undefined;
-    } else if (value.suspend === 'yield') {
-      return value.value;
-    } else {
-      /* node:coverage ignore next */
-      throw OutOfRange.exhaustive(value);
-    }
-  }
-
-  // Assert: When we reach this step, context has already been removed from the execution context stack and callerContext is the running execution context again.
-  /* Assert */ /* node:coverage ignore next */if (!(runningExecutionContext() === callerContext)) throw new Assert.Error("runningExecutionContext() === callerContext");
-  return result;
-}
-
-/** https://tc39.es/ecma262/#sec-runcallercontext */
-
-function* RunCallerContext(passingValue) {
-  const genContext = runningExecutionContext();
-
-  // Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
-  surroundingAgent.executionContextStack.pop(genContext);
-
-  // Let callerContext be the running execution context.
-  // Resume callerContext, passing NormalCompletion(value).
-  const result = yield passingValue;
-  /* Assert */ /* node:coverage ignore next */if (!(result.resume === passingValue.suspend)) throw new Assert.Error("result.resume === passingValue.suspend");
-  // NOTE: The above step transfers control to callerContext and pauses. The only way for it to un-pause and have control proceed to the subsequent steps in this algorithm is for genContext to be resumed again, which might never happen.
-
-  /* Assert */ /* node:coverage ignore next */if (!(genContext === runningExecutionContext())) throw new Assert.Error("genContext === runningExecutionContext()");
-
-  // Let result be the Completion Record with which genContext was just resumed.
-  return result.value;
-}
-
-// https://tc39.es/ecma262/#loadedmodulerequest-record
-
-// #resolvedbinding-record
-class ResolvedBindingRecord {
-  Module;
-  BindingName;
-  constructor({
-    Module,
-    BindingName
-  }) {
-    /* Assert */ /* node:coverage ignore next */if (!(Module instanceof AbstractModuleRecord)) throw new Assert.Error("Module instanceof AbstractModuleRecord");
-    /* Assert */ /* node:coverage ignore next */if (!(BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName === 'source' || BindingName instanceof JSStringValue)) throw new Assert.Error("BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName === 'source' || BindingName instanceof JSStringValue");
-    this.Module = Module;
-    this.BindingName = BindingName;
-  }
-  mark(m) {
-    m(this.Module);
-  }
-}
-/** https://tc39.es/proposal-deferred-reexports/#sec-ResolveSetContains */
-function ResolveSetContains(resolveSet, module, exportName) {
-  for (const r of resolveSet) {
-    if (r instanceof AbstractModuleRecord && r === module) {
-      return true;
-    }
-    if (!(r instanceof AbstractModuleRecord) && r.Module === module && SameValue(r.ExportName, exportName)) {
-      return true;
-    }
-  }
-  return false;
-}
-ResolveSetContains.section = 'https://tc39.es/proposal-deferred-reexports/#sec-ResolveSetContains';
-function importedNamesContains(importedNames, exportName) {
-  if (importedNames === 'all-but-default') {
-    return exportName instanceof JSStringValue && exportName.stringValue() !== 'default';
-  }
-  return exportName instanceof JSStringValue && importedNames.includes(exportName.stringValue());
-}
-
-/** https://tc39.es/ecma262/#sec-abstract-module-records */
-class AbstractModuleRecord {
-  /** https://tc39.es/proposal-deferred-reexports/#abstract-getoptionalindirectexportsmodulerequests */
-  GetOptionalIndirectExportsModuleRequests(_importedNames = 'all') {
-    return [];
-  }
-
-  // https://github.com/tc39/ecma262/pull/3492/#abstract-get-module-source-kind
-  GetModuleSourceKind() {
-    // For Module Records that do not have a source representation (currently all ECMA-262-defined Module Records), GetModuleSourceKind() is never called.
-    throw new Error('GetModuleSourceKind must be implemented by module records that have a ModuleSource');
-  }
-  Realm;
-  Environment;
-  Namespace = undefined;
-  DeferredNamespace = undefined;
-  ModuleSource = undefined;
-  HostDefined;
-  constructor(init) {
-    this.Realm = init.Realm;
-    this.Environment = init.Environment;
-    this.ModuleSource = init.ModuleSource;
-    this.HostDefined = init.HostDefined;
-  }
-  mark(m) {
-    m(this.Realm);
-    m(this.Environment);
-    m(this.Namespace);
-    m(this.DeferredNamespace);
-    m(this.ModuleSource);
-  }
-}
-/** https://tc39.es/ecma262/#sec-cyclic-module-records */
-class CyclicModuleRecord extends AbstractModuleRecord {
-  Status;
-  EvaluationError;
-  DFSAncestorIndex;
-  RequestedModules;
-  LoadedModules;
-  HasTLA;
-  AsyncEvaluationOrder;
-  AsyncParentModules;
-  CycleRoot;
-  TopLevelCapability;
-  PendingAsyncDependencies;
-  constructor(init) {
-    super(init);
-    this.Status = init.Status;
-    this.EvaluationError = init.EvaluationError;
-    this.DFSAncestorIndex = init.DFSAncestorIndex;
-    this.RequestedModules = init.RequestedModules;
-    this.LoadedModules = init.LoadedModules;
-    this.CycleRoot = init.CycleRoot;
-    this.HasTLA = init.HasTLA;
-    this.AsyncEvaluationOrder = init.AsyncEvaluationOrder;
-    this.TopLevelCapability = init.TopLevelCapability;
-    this.AsyncParentModules = init.AsyncParentModules;
-    this.PendingAsyncDependencies = init.PendingAsyncDependencies;
-  }
-  /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
-  LoadRequestedModules(importedNames = 'all', hostDefined) {
-    const module = this;
-    // 1. If importedNames is not present, set importedNames to ~all~.
-    // 2. If hostDefined is not present, set hostDefined to empty.
-    // 3. Let pc be ! NewPromiseCapability(%Promise%).
-    /* X */let _pc = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-    /* node:coverage ignore next */if (_pc && typeof _pc === 'object' && 'next' in _pc) _pc = skipDebugger(_pc);
-    /* node:coverage ignore next */if (_pc instanceof Completion) {
-      /* node:coverage ignore next */if (_pc instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
-        cause: _pc
-      });
-      _pc = _pc.Value;
-    }
-    const pc = _pc;
-    // 4. Let state be the GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
-    const state = new GraphLoadingState({
-      PromiseCapability: pc,
-      HostDefined: hostDefined
-    });
-    // 5. Perform InnerModuleLoading(state, module, importedNames).
-    InnerModuleLoading(state, module, importedNames, 'recursive-load');
-    // 6. Return pc.[[Promise]].
-    return pc.Promise;
-  }
-
-  /** https://tc39.es/ecma262/#sec-moduledeclarationlinking */
-  Link(importedNames = 'all') {
-    const module = this;
-    // 1. Assert: module.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
-    /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated')) throw new Assert.Error("module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
-    // 2. If importedNames is not present, set importedNames to ~all~.
-    //    (handled via the default parameter above)
-    // 3. Let stack be a new empty List.
-    const stack = [];
-    // 4. Let result be Completion(InnerModuleLinking(module, stack, 0)).
-    const result = InnerModuleLinking(module, stack, 0);
-    // 5. If result is an abrupt completion, then
-    if (result instanceof AbruptCompletion) {
-      // a. For each Cyclic Module Record m of stack, do
-      for (const m of stack) {
-        /* Assert */ /* node:coverage ignore next */ // i. Assert: m.[[Status]] is linking.
-        if (!(m.Status === 'linking')) throw new Assert.Error("m.Status === 'linking'");
-        // ii. Set m.[[Status]] to unlinked.
-        m.Status = 'unlinked';
-      }
-      // b. Assert: module.[[Status]] is unlinked.
-      /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'unlinked')) throw new Assert.Error("module.Status === 'unlinked'");
-      // c. Return ? result.
-      return result;
-    }
-    // 6. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
-    /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated')) throw new Assert.Error("module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
-    // 7. Assert: stack is empty.
-    /* Assert */ /* node:coverage ignore next */if (!(stack.length === 0)) throw new Assert.Error("stack.length === 0");
-    // 8. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(importedNames).
-    const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests(importedNames);
-    // 9. For each ModuleRequest Record request of optionalIndirectRequests, do
-    for (const request of optionalIndirectRequests) {
-      // a. Let requiredModule be GetImportedModule(module, request).
-      const requiredModule = GetImportedModule(module, request);
-      // b. Assert: requiredModule.[[Status]] is one of unlinked, linked, evaluating-async, or evaluated.
-      /* Assert */ /* node:coverage ignore next */if (!(!(requiredModule instanceof CyclicModuleRecord) || requiredModule.Status === 'unlinked' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated')) throw new Assert.Error("!(requiredModule instanceof CyclicModuleRecord)\n        || requiredModule.Status === 'unlinked' || requiredModule.Status === 'linked'\n        || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
-
-      // c. If requiredModule.[[Status]] is unlinked, perform ? requiredModule.Link(request.[[ImportedNames]]).
-      if (requiredModule instanceof CyclicModuleRecord && requiredModule.Status === 'unlinked') {
-        /* ReturnIfAbrupt */let _temp = requiredModule.Link(request.ImportedNames);
-        /* ReturnIfAbrupt */if (_temp instanceof Completion) {
-          if (_temp instanceof AbruptCompletion) return _temp;
-          _temp = _temp.Value;
-        }
-      }
-    }
-    // 10. Return unused.
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-moduleevaluation */
-  *Evaluate(importedNames = []) {
-    let module = this;
-
-    // 1. Assert: None of module or any of its recursive dependencies have [[Status]] set to evaluating, linking, unlinked, or new.
-    /* Assert */ /* node:coverage ignore next */if (!function getModules(module, list) {
-      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {
-        return list;
-      }
-      list.push(module);
-      for (const r of module.RequestedModules) {
-        getModules(GetImportedModule(module, r), list);
-      }
-      return list;
-    }(this, []).every(m => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new')) throw new Assert.Error("(function getModules(module: AbstractModuleRecord, list: CyclicModuleRecord[]) {\n      if (!(module instanceof CyclicModuleRecord) || list.includes(module)) {\n        return list;\n      }\n      list.push(module);\n      for (const r of module.RequestedModules) {\n        getModules(GetImportedModule(module, r), list);\n      }\n      return list;\n    }(this, [])).every((m) => m.Status !== 'evaluating' && m.Status !== 'linking' && m.Status !== 'unlinked' && m.Status !== 'new')");
-
-    // 2. Assert: module.[[Status]] is one of linked, evaluating-async, or evaluated.
-    /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated')) throw new Assert.Error("module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
-    // 3. If importedNames is not present, set importedNames to « ».
-    // 4. If module.[[Status]] is either evaluating-async or evaluated, then
-    if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      /* Assert */ /* node:coverage ignore next */ // SPEC BUG: deferred-reexports deletes this CycleRoot redirection, even though
-      // a subsequent evaluation must observe the CycleRoot's EvaluationError.
-      // a. Assert: module.[[CycleRoot]] is not empty.
-      if (!(module.CycleRoot !== undefined)) throw new Assert.Error("module.CycleRoot !== undefined");
-      // b. Set module to module.[[CycleRoot]].
-      module = module.CycleRoot;
-    }
-    let topLevelPromise;
-    // 5. If module.[[TopLevelCapability]] is not empty, then
-    if (module.TopLevelCapability !== undefined) {
-      // a. Let topLevelPromise be module.[[TopLevelCapability]].[[Promise]].
-      topLevelPromise = module.TopLevelCapability.Promise;
-    } else {
-      // 6. Else,
-      // a. Assert: module.[[CycleRoot]] and module.[[TopLevelCapability]] are empty.
-      // b. Let stack be a new empty List.
-      const stack = [];
-      // c. Let capability be ! NewPromiseCapability(%Promise%).
-      /* X */let _capability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-      /* node:coverage ignore next */if (_capability && typeof _capability === 'object' && 'next' in _capability) _capability = skipDebugger(_capability);
-      /* node:coverage ignore next */if (_capability instanceof Completion) {
-        /* node:coverage ignore next */if (_capability instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
-          cause: _capability
-        });
-        _capability = _capability.Value;
-      }
-      const capability = _capability;
-      // d. Set module.[[TopLevelCapability]] to capability.
-      module.TopLevelCapability = capability;
-      // e. Let result be Completion(InnerModuleEvaluation(module, stack, 0)).
-      const result = yield* InnerModuleEvaluation(module, stack, 0);
-      // f. If result is an abrupt completion, then
-      if (result instanceof AbruptCompletion) {
-        // i. For each Cyclic Module Record m of stack, do
-        for (const m of stack) {
-          /* Assert */ /* node:coverage ignore next */ // 1. Assert: m.[[Status]] is evaluating.
-          if (!(m.Status === 'evaluating')) throw new Assert.Error("m.Status === 'evaluating'");
-          // 2. Set m.[[Status]] to evaluated.
-          m.Status = 'evaluated';
-          // 3. Set m.[[EvaluationError]] to result.
-          m.EvaluationError = result;
-          m.CycleRoot = m;
-        }
-        // ii. Assert: module.[[Status]] is evaluated.
-        // iii. Assert: module.[[EvaluationError]] is result.
-        /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'evaluated' && module.EvaluationError === result)) throw new Assert.Error("(module.Status as CyclicModuleRecordStatus) === 'evaluated' && module.EvaluationError === result");
-        // iv. Perform ! Call(capability.[[Reject]], undefined, « result.[[Value]] »).
-        /* X */let _temp2 = Call(capability.Reject, Value.undefined, [result.Value]);
-        /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
-        /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! Call(capability.Reject, Value.undefined, [result.Value]) returned an abrupt completion", {
-            cause: _temp2
-          });
-          _temp2 = _temp2.Value;
-        }
-      } else {
-        // g. Else,
-        const postStatus = module.Status;
-        // i. Assert: module.[[Status]] is either evaluating-async or evaluated.
-        /* Assert */ /* node:coverage ignore next */if (!(postStatus === 'evaluating-async' || postStatus === 'evaluated')) throw new Assert.Error("postStatus === 'evaluating-async' || postStatus === 'evaluated'");
-        // ii. Assert: module.[[EvaluationError]] is empty.
-        /* Assert */ /* node:coverage ignore next */if (!(module.EvaluationError === undefined)) throw new Assert.Error("module.EvaluationError === undefined");
-        // iii. If module.[[Status]] is evaluated, then
-        if (postStatus === 'evaluated') {
-          /* Assert */ /* node:coverage ignore next */ //    1. NOTE: This implies that evaluation of module completed synchronously.
-          //    2. Assert: module.[[AsyncEvaluationOrder]] is unset.
-          if (!(typeof module.AsyncEvaluationOrder !== 'number')) throw new Assert.Error("typeof module.AsyncEvaluationOrder !== 'number'");
-          //    3. Perform ! Call(capability.[[Resolve]], undefined, « undefined »).
-          /* X */let _temp3 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
-          /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-          /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! Call(capability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
-              cause: _temp3
-            });
-            _temp3 = _temp3.Value;
-          }
-        }
-        // iv. Assert: stack is empty.
-        /* Assert */ /* node:coverage ignore next */if (!(stack.length === 0)) throw new Assert.Error("stack.length === 0");
-      }
-      // h. Let topLevelPromise be capability.[[Promise]].
-      topLevelPromise = capability.Promise;
-    }
-
-    // 6. If topLevelPromise.[[PromiseState]] is rejected, return topLevelPromise.
-    if (topLevelPromise.PromiseState === 'rejected') {
-      return topLevelPromise;
-    }
-
-    // 7. Let optionalIndirectRequests be module.GetOptionalIndirectExportsModuleRequests(importedNames).
-    const optionalIndirectRequests = module.GetOptionalIndirectExportsModuleRequests(importedNames);
-    // 8. Let promises be « topLevelPromise ».
-    const promises = [topLevelPromise];
-    // 9. For each ModuleRequest Record request of optionalIndirectRequests, do
-    for (const request of optionalIndirectRequests) {
-      // a. Let requiredModule be GetImportedModule(module, request).
-      const requiredModule = GetImportedModule(module, request);
-      // b. Assert: requiredModule.[[Status]] is one of linked, evaluating-async, or evaluated.
-      /* Assert */ /* node:coverage ignore next */if (!(!(requiredModule instanceof CyclicModuleRecord) || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated')) throw new Assert.Error("!(requiredModule instanceof CyclicModuleRecord)\n        || requiredModule.Status === 'linked'\n        || requiredModule.Status === 'evaluating-async'\n        || requiredModule.Status === 'evaluated'");
-
-      // c. Let innerPromise be requiredModule.Evaluate(request.[[ImportedNames]]).
-      const innerPromise = yield* requiredModule.Evaluate(request.ImportedNames);
-      // d. If innerPromise.[[PromiseState]] is rejected, return innerPromise.
-      if (innerPromise.PromiseState === 'rejected') {
-        return innerPromise;
-      }
-      // e. Append innerPromise to promises.
-      promises.push(innerPromise);
-    }
-
-    // 10. If promises contains a Promise P such that P.[[PromiseState]] is pending, then
-    if (promises.some(p => p.PromiseState === 'pending')) {
-      // a. NOTE: If all modules in the graph are synchronous, the usage of promises is an internal specification detail.
-      //    In that case, we do not use SafePerformPromiseAll to keep returning an already settled promise.
-      // b. Return SafePerformPromiseAll(CreateListIteratorRecord(promises)).
-      return SafePerformPromiseAll(promises);
-    }
-    // 11. Return topLevelPromise.
-    return topLevelPromise;
-  }
-  mark(m) {
-    super.mark(m);
-    m(this.EvaluationError);
-    for (const v of this.LoadedModules) {
-      m(v.Module);
-    }
-  }
-}
-/** https://tc39.es/ecma262/#sec-source-text-module-records */
-class SourceTextModuleRecord extends CyclicModuleRecord {
-  ImportMeta;
-  ECMAScriptCode;
-  Context;
-  ImportEntries;
-  LocalExportEntries;
-  IndirectExportEntries;
-  StarExportEntries;
-
-  /** https://tc39.es/proposal-deferred-reexports/ — deferred re-export entries (`export defer ... from`). */
-  OptionalIndirectExportEntries;
-  constructor(init) {
-    super(init);
-    this.ImportMeta = init.ImportMeta;
-    this.ECMAScriptCode = init.ECMAScriptCode;
-    this.Context = init.Context;
-    this.ImportEntries = init.ImportEntries;
-    this.LocalExportEntries = init.LocalExportEntries;
-    this.IndirectExportEntries = init.IndirectExportEntries;
-    this.StarExportEntries = init.StarExportEntries;
-    this.OptionalIndirectExportEntries = init.OptionalIndirectExportEntries ?? [];
-  }
-
-  /** https://tc39.es/ecma262/#sec-getexportednames */
-  GetExportedNames(exportStarSet) {
-    const module = this;
-    // 1. Assert: module.[[Status]] is not new.
-    /* Assert */ /* node:coverage ignore next */if (!(module.Status !== 'new')) throw new Assert.Error("module.Status !== 'new'");
-    // 2. If exportStarSet is not present, set exportStarSet to a new empty List.
-    if (!exportStarSet) {
-      exportStarSet = [];
-    }
-    // 3. If exportStarSet contains module, then
-    if (exportStarSet.includes(module)) {
-      // a. Assert: We've reached the starting point of an import * circularity.
-      // b. Return a new empty List.
-      return [];
-    }
-    // 4. Append module to exportStarSet.
-    exportStarSet.push(module);
-    // 5. Let exportedNames be a new empty List.
-    const exportedNames = [];
-    // 6. For each ExportEntry Record e in module.[[LocalExportEntries]], do
-    for (const e of module.LocalExportEntries) {
-      /* Assert */ /* node:coverage ignore next */ // a. Assert: module provides the direct binding for this export.
-      // b. Assert: e.[[ExportName]] is not null.
-      if (!!(e.ExportName instanceof NullValue)) throw new Assert.Error("!(e.ExportName instanceof NullValue)");
-      // c. Append e.[[ExportName]] to exportedNames.
-      exportedNames.push(e.ExportName);
-    }
-    // 6. Let allNamedExportEntries be the list-concatenation of module.[[LocalExportEntries]], module.[[IndirectExportEntries]], and module.[[OptionalIndirectExportEntries]].
-    const allNamedExportEntries = [...module.IndirectExportEntries, ...module.OptionalIndirectExportEntries];
-    // 7. For each ExportEntry Record e of allNamedExportEntries, do
-    //    https://tc39.es/proposal-deferred-reexports/#sec-getexportednames
-    for (const e of allNamedExportEntries) {
-      /* Assert */ /* node:coverage ignore next */ // a. Assert: module imports a specific binding for this export.
-      // b. Assert: e.[[ExportName]] is not null.
-      if (!!(e.ExportName instanceof NullValue)) throw new Assert.Error("!(e.ExportName instanceof NullValue)");
-      // c. Append e.[[ExportName]] to exportedNames.
-      exportedNames.push(e.ExportName);
-    }
-    // 8. For each ExportEntry Record e in module.[[StarExportEntries]], do
-    for (const e of module.StarExportEntries) {
-      // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-      const requestedModule = GetImportedModule(module, e.ModuleRequest);
-      // b. Let starNames be requestedModule.GetExportedNames(exportStarSet).
-      const starNames = requestedModule.GetExportedNames(exportStarSet);
-      // c. For each element n of starNames, do
-      for (const n of starNames) {
-        // i. If SameValue(n, "default") is false, then
-        if (!SameValue(n, Value('default'))) {
-          // 1. If n is not an element of exportedNames, then
-          if (!exportedNames.includes(n)) {
-            // a. Append n to exportedNames.
-            exportedNames.push(n);
-          }
-        }
-      }
-    }
-    // 9. Return exportedNames.
-    return exportedNames;
-  }
-
-  /** https://tc39.es/ecma262/#sec-resolveexport */
-  ResolveExport(exportName, resolveSet, deferNamespaceExportSet) {
-    const module = this;
-    // 1. Assert: module.[[Status]] is not new.
-    /* Assert */ /* node:coverage ignore next */if (!(module.Status !== 'new')) throw new Assert.Error("module.Status !== 'new'");
-    // 2. If resolveSet is not present, set resolveSet to a new empty List.
-    if (!resolveSet) {
-      resolveSet = [];
-    }
-    if (!deferNamespaceExportSet) {
-      deferNamespaceExportSet = [];
-    }
-    if (ResolveSetContains(resolveSet, module, exportName)) {
-      return null;
-    }
-    // 4. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
-    resolveSet.push({
-      Module: module,
-      ExportName: exportName
-    });
-    // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
-    for (const e of module.LocalExportEntries) {
-      // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-      if (SameValue(exportName, e.ExportName)) {
-        // i. Assert: module provides the direct binding for this export.
-        // ii. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: e.[[LocalName]] }.
-        return new ResolvedBindingRecord({
-          Module: module,
-          BindingName: e.LocalName
-        });
-      }
-    }
-    // 6. Let allIndirectEntries be the list-concatenation of module.[[IndirectExportEntries]] and module.[[OptionalIndirectExportEntries]].
-    const allIndirectEntries = [...module.IndirectExportEntries, ...module.OptionalIndirectExportEntries];
-    // 7. For each ExportEntry Record e in allIndirectEntries, do
-    //    https://tc39.es/proposal-deferred-reexports/#sec-resolveexport
-    for (const e of allIndirectEntries) {
-      // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-      if (SameValue(exportName, e.ExportName)) {
-        /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest !== Value.null)) throw new Assert.Error("e.ModuleRequest !== Value.null");
-        // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-        const importedModule = GetImportedModule(module, e.ModuleRequest);
-        // ii. If e.[[ImportName]] is ~namespace~, then
-        if (e.ImportName === 'namespace') {
-          /* Assert */ /* node:coverage ignore next */ // 1. Assert: module does not provide the direct binding for this export
-          if (!!module.LocalExportEntries.some(entry => SameValue(entry.ExportName, exportName))) throw new Assert.Error("!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName))");
-          /* Assert */ /* node:coverage ignore next */if (!(e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0)) throw new Assert.Error("e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0");
-          if (module.OptionalIndirectExportEntries.includes(e) && NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, module, exportName, importedModule, importedModule.GetExportedNames(), 'allow-ambiguous')) {
-            return null;
-          }
-          if (e.ModuleRequest.Phase === 'defer') {
-            // https://tc39.es/proposal-defer-import-eval/#sec-resolveexport
-            return new ResolvedBindingRecord({
-              Module: importedModule,
-              BindingName: 'deferred-namespace'
-            });
-          } else {
-            /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest.Phase === 'evaluation')) throw new Assert.Error("(e.ModuleRequest as ModuleRequestRecord).Phase === 'evaluation'");
-            // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
-            return new ResolvedBindingRecord({
-              Module: importedModule,
-              BindingName: 'namespace'
-            });
-          }
-        } else if (e.ImportName === 'filtered-namespace') {
-          /* Assert */ /* node:coverage ignore next */if (!Array.isArray(e.NamespaceNamesFilter)) throw new Assert.Error("Array.isArray(e.NamespaceNamesFilter)");
-          if (module.OptionalIndirectExportEntries.includes(e) && NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, module, exportName, importedModule, e.NamespaceNamesFilter, 'disallow-ambiguous')) {
-            return null;
-          }
-          const localName = `*${exportName.stringValue()}*`;
-          return new ResolvedBindingRecord({
-            Module: module,
-            BindingName: Value(localName)
-          });
-        } else if (e.ImportName === 'source') {
-          // Assert: _module_ does not provide the direct binding for this export.
-          return new ResolvedBindingRecord({
-            Module: importedModule,
-            BindingName: 'source'
-          });
-        } else {
-          /* Assert */ /* node:coverage ignore next */ // iv. Else,
-          // 1. Assert: module imports a specific binding for this export.
-          if (!(e.ImportName instanceof JSStringValue)) throw new Assert.Error("e.ImportName instanceof JSStringValue");
-          // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
-          return importedModule.ResolveExport(e.ImportName, resolveSet, deferNamespaceExportSet);
-        }
-      }
-    }
-    // 7. If SameValue(exportName, "default") is true, then
-    if (SameValue(exportName, Value('default'))) {
-      /* Assert */ /* node:coverage ignore next */ // a. Assert: A default export was not explicitly defined by this module.
-      if (!!module.LocalExportEntries.some(entry => SameValue(entry.ExportName, exportName))) throw new Assert.Error("!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName))");
-      // b. Return null.
-      return null;
-      // c. NOTE: A default export cannot be provided by an export * or export * from "mod" declaration.
-    }
-    // 8. Let starResolution be null.
-    let starResolution = null;
-    // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
-    for (const e of module.StarExportEntries) {
-      /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest !== Value.null)) throw new Assert.Error("e.ModuleRequest !== Value.null");
-      // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
-      const importedModule = GetImportedModule(module, e.ModuleRequest);
-      // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
-      const resolution = importedModule.ResolveExport(exportName, resolveSet, deferNamespaceExportSet);
-      // c. If resolution is "ambiguous", return "ambiguous".
-      if (resolution === 'ambiguous') {
-        return 'ambiguous';
-      }
-      // d. If resolution is not null, then
-      if (resolution !== null) {
-        /* Assert */ /* node:coverage ignore next */ // a. Assert: resolution is a ResolvedBinding Record.
-        if (!(resolution instanceof ResolvedBindingRecord)) throw new Assert.Error("resolution instanceof ResolvedBindingRecord");
-        // b. If starResolution is null, set starResolution to resolution.
-        if (starResolution === null) {
-          starResolution = resolution;
-        } else {
-          // c. Else,
-          // 1. Assert: There is more than one * export that includes the requested name.
-          // 2. If _resolution_.[[Module]] and _starResolution_.[[Module]] are not the same Module Record, return ~ambiguous~.
-          if (resolution.Module !== starResolution.Module) {
-            return 'ambiguous';
-          }
-          // 3. If _resolution_.[[BindingName]] is not _starResolution_.[[BindingName]], return ~ambiguous~.
-          const l = resolution.BindingName;
-          const r = starResolution.BindingName;
-          if (l === r) ; else if (l instanceof JSStringValue && !(r instanceof JSStringValue)) {
-            return 'ambiguous';
-          } else if (!(l instanceof JSStringValue) && r instanceof JSStringValue) {
-            return 'ambiguous';
-          } else if (l instanceof JSStringValue && r instanceof JSStringValue) {
-            if (l.value !== r.value) return 'ambiguous';
-          } else if (l !== r) {
-            return 'ambiguous';
-          } else
-            /* node:coverage ignore next */
-            throw OutOfRange.nonExhaustive(l);
-        }
-      }
-    }
-    // 11. Return starResolution.
-    return starResolution;
-  }
-
-  /** https://tc39.es/proposal-deferred-reexports/#sec-GetOptionalIndirectExportsModuleRequests */
-  GetOptionalIndirectExportsModuleRequests(importedNames = 'all') {
-    const requests = [];
-    for (const oie of this.OptionalIndirectExportEntries) {
-      // a. If importedNames is all or importedNames contains oie.[[ExportName]], then
-      if (importedNames === 'all' || importedNamesContains(importedNames, oie.ExportName)) {
-        const nextRequest = oie.ModuleRequest;
-        let existingRequest;
-        for (const r of requests) {
-          if (existingRequest === undefined && ModuleRequestsKeyEqual(r, nextRequest) && r.Phase === nextRequest.Phase) {
-            existingRequest = r;
-          }
-        }
-        let newImportedNames = 'all';
-        /* Assert */ /* node:coverage ignore next */if (!(oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace' || oie.ImportName === 'filtered-namespace')) throw new Assert.Error("oie.ImportName instanceof JSStringValue || oie.ImportName === 'namespace' || oie.ImportName === 'filtered-namespace'");
-        if (oie.ImportName instanceof JSStringValue) {
-          newImportedNames = [oie.ImportName.stringValue()];
-        }
-        if (oie.ImportName === 'filtered-namespace') {
-          /* Assert */ /* node:coverage ignore next */if (!Array.isArray(oie.NamespaceNamesFilter)) throw new Assert.Error("Array.isArray(oie.NamespaceNamesFilter)");
-          newImportedNames = oie.NamespaceNamesFilter;
-        }
-        if (existingRequest === undefined) {
-          const request = {
-            Specifier: nextRequest.Specifier,
-            Attributes: nextRequest.Attributes,
-            Phase: nextRequest.Phase,
-            ImportedNames: newImportedNames
-          };
-          requests.push(request);
-        } else {
-          existingRequest.ImportedNames = MergeImportedNames(existingRequest.ImportedNames, newImportedNames);
-        }
-      }
-    }
-    return requests;
-  }
-
-  /** https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
-  InitializeEnvironment() {
-    const module = this;
-    // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
-    for (const e of module.IndirectExportEntries) {
-      /* ReturnIfAbrupt */let _temp4 = EnsureResolvableBinding(module, e.ExportName, 'disallow-ambiguous');
-      /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-        if (_temp4 instanceof AbruptCompletion) return _temp4;
-        _temp4 = _temp4.Value;
-      }
-    }
-    for (const e of module.StarExportEntries) {
-      const importedModule = GetImportedModule(module, e.ModuleRequest);
-      for (const name of importedModule.GetExportedNames()) {
-        if (name.stringValue() !== 'default') {
-          /* ReturnIfAbrupt */let _temp5 = EnsureResolvableBinding(importedModule, name, 'disallow-ambiguous');
-          /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-            if (_temp5 instanceof AbruptCompletion) return _temp5;
-            _temp5 = _temp5.Value;
-          }
-        }
-      }
-    }
-    // 2. Assert: All named exports from module are resolvable.
-    // 3. Let realm be module.[[Realm]].
-    const realm = module.Realm;
-    // 4. Assert: realm is not undefined.
-    /* Assert */ /* node:coverage ignore next */if (!!(realm instanceof UndefinedValue)) throw new Assert.Error("!(realm instanceof UndefinedValue)");
-    // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-    const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
-    // 6. Set module.[[Environment]] to env.
-    module.Environment = env;
-    // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
-    for (const ie of module.ImportEntries) {
-      // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
-      const importedModule = GetImportedModule(module, ie.ModuleRequest);
-      if (ie.ImportName === 'namespace') {
-        /* Assert */ /* node:coverage ignore next */ // i. Let namespace be GetModuleNamespace(importedModule, phase, all).
-        if (!(ie.ModuleRequest.Phase !== 'source')) throw new Assert.Error("ie.ModuleRequest.Phase !== 'source'");
-        const namespacePhase = ie.ModuleRequest.Phase === 'defer' ? 'defer' : 'evaluation';
-        for (const name of importedModule.GetExportedNames()) {
-          /* ReturnIfAbrupt */let _temp6 = EnsureResolvableBinding(importedModule, name, 'allow-ambiguous');
-          /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
-            if (_temp6 instanceof AbruptCompletion) return _temp6;
-            _temp6 = _temp6.Value;
-          }
-        }
-        const namespace = GetModuleNamespace(importedModule, namespacePhase, 'all');
-        // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-        /* X */let _temp7 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-        /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
-        /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
-            cause: _temp7
-          });
-          _temp7 = _temp7.Value;
-        }
-        /* X */let _temp8 = env.InitializeBinding(ie.LocalName, namespace);
-        /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
-        /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, namespace) returned an abrupt completion", {
-            cause: _temp8
-          });
-          _temp8 = _temp8.Value;
-        } // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
-      } else if (ie.ImportName === 'filtered-namespace-object') {
-        for (const name of ie.NamespaceNamesFilter) {
-          /* ReturnIfAbrupt */let _temp9 = EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous');
-          /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
-            if (_temp9 instanceof AbruptCompletion) return _temp9;
-            _temp9 = _temp9.Value;
-          }
-        }
-        /* Assert */ /* node:coverage ignore next */if (!(ie.ModuleRequest.Phase !== 'source')) throw new Assert.Error("ie.ModuleRequest.Phase !== 'source'");
-        const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase, ie.NamespaceNamesFilter);
-        /* X */let _temp0 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-        /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
-        /* node:coverage ignore next */if (_temp0 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
-            cause: _temp0
-          });
-          _temp0 = _temp0.Value;
-        }
-        /* X */let _temp1 = env.InitializeBinding(ie.LocalName, namespace);
-        /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
-        /* node:coverage ignore next */if (_temp1 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, namespace) returned an abrupt completion", {
-            cause: _temp1
-          });
-          _temp1 = _temp1.Value;
-        }
-      } else if (ie.ImportName === 'source') {
-        const moduleSourceObject = importedModule.ModuleSource;
-        if (moduleSourceObject === undefined) {
-          return Throw.SyntaxError('Module source is not available');
-        }
-        /* X */let _temp10 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-        /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
-        /* node:coverage ignore next */if (_temp10 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
-            cause: _temp10
-          });
-          _temp10 = _temp10.Value;
-        }
-        /* X */let _temp11 = env.InitializeBinding(ie.LocalName, moduleSourceObject);
-        /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
-        /* node:coverage ignore next */if (_temp11 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, moduleSourceObject) returned an abrupt completion", {
-            cause: _temp11
-          });
-          _temp11 = _temp11.Value;
-        }
-      } else {
-        // c. Else,
-        // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
-        const resolution = importedModule.ResolveExport(ie.ImportName);
-        // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.
-        if (resolution === null || resolution === 'ambiguous') {
-          const moduleName = importedModule.HostDefined?.specifier || '<anonymous module>';
-          if (resolution === null) {
-            return Throw.SyntaxError('Module "$1" does not have an export named $2', moduleName, ie.ImportName);
-          }
-          return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', ie.ImportName, moduleName);
-        }
-        // iii. If resolution.[[BindingName]] is ~namespace~, then
-        if (resolution.BindingName === 'namespace' || resolution.BindingName === 'deferred-namespace') {
-          // https://tc39.es/proposal-defer-import-eval/#sec-source-text-module-record-initialize-environment
-          const phase = resolution.BindingName === 'namespace' ? 'evaluation' : 'defer';
-          // 1. Let namespace be GetModuleNamespace(resolution.[[Module]], phase, all).
-          const namespace = GetModuleNamespace(resolution.Module, phase, 'all');
-          // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-          /* X */let _temp12 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-          /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
-          /* node:coverage ignore next */if (_temp12 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
-              cause: _temp12
-            });
-            _temp12 = _temp12.Value;
-          }
-          /* X */let _temp13 = env.InitializeBinding(ie.LocalName, namespace);
-          /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
-          /* node:coverage ignore next */if (_temp13 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, namespace) returned an abrupt completion", {
-              cause: _temp13
-            });
-            _temp13 = _temp13.Value;
-          } // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
-        } else if (resolution.BindingName === 'source') {
-          const moduleSourceObject = resolution.Module.ModuleSource;
-          if (moduleSourceObject === undefined) {
-            return Throw.SyntaxError('Module source is not available');
-          }
-          /* X */let _temp14 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-          /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
-          /* node:coverage ignore next */if (_temp14 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
-              cause: _temp14
-            });
-            _temp14 = _temp14.Value;
-          }
-          /* X */let _temp15 = env.InitializeBinding(ie.LocalName, moduleSourceObject);
-          /* node:coverage ignore next */if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
-          /* node:coverage ignore next */if (_temp15 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(ie.LocalName, moduleSourceObject) returned an abrupt completion", {
-              cause: _temp15
-            });
-            _temp15 = _temp15.Value;
-          }
-        } else {
-          /* X */let _temp16 = env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
-          /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
-          /* node:coverage ignore next */if (_temp16 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName) returned an abrupt completion", {
-              cause: _temp16
-            });
-            _temp16 = _temp16.Value;
-          } // iv. Else,
-          // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
-        }
-      }
-    }
-    for (const ie of module.IndirectExportEntries) {
-      if (ie.ImportName === 'filtered-namespace') {
-        const localName = Value(`*${ie.ExportName.stringValue()}*`);
-        const importedModule = GetImportedModule(module, ie.ModuleRequest);
-        for (const name of ie.NamespaceNamesFilter) {
-          /* ReturnIfAbrupt */let _temp17 = EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous');
-          /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
-            if (_temp17 instanceof AbruptCompletion) return _temp17;
-            _temp17 = _temp17.Value;
-          }
-        }
-        const requestPhase = ie.ModuleRequest.Phase;
-        /* Assert */ /* node:coverage ignore next */if (!(requestPhase !== 'source')) throw new Assert.Error("requestPhase !== 'source'");
-        const filteredNamespace = GetModuleNamespace(importedModule, requestPhase === 'defer' ? 'defer' : 'evaluation', ie.NamespaceNamesFilter);
-        /* X */let _temp18 = env.CreateImmutableBinding(localName, Value.true);
-        /* node:coverage ignore next */if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
-        /* node:coverage ignore next */if (_temp18 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(localName, Value.true) returned an abrupt completion", {
-            cause: _temp18
-          });
-          _temp18 = _temp18.Value;
-        }
-        /* X */let _temp19 = env.InitializeBinding(localName, filteredNamespace);
-        /* node:coverage ignore next */if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
-        /* node:coverage ignore next */if (_temp19 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(localName, filteredNamespace) returned an abrupt completion", {
-            cause: _temp19
-          });
-          _temp19 = _temp19.Value;
-        }
-      }
-    }
-    for (const oie of module.OptionalIndirectExportEntries) {
-      if (oie.ImportName === 'filtered-namespace') {
-        const localName = Value(`*${oie.ExportName.stringValue()}*`);
-        const initializationSteps = () => {
-          const importedModule = GetImportedModule(module, oie.ModuleRequest);
-          return GetModuleNamespace(importedModule, oie.ModuleRequest.Phase, oie.NamespaceNamesFilter);
-        };
-        /* X */let _temp20 = env.CreateDeferredInitializationBinding(localName, initializationSteps);
-        /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
-        /* node:coverage ignore next */if (_temp20 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateDeferredInitializationBinding(localName, initializationSteps) returned an abrupt completion", {
-            cause: _temp20
-          });
-          _temp20 = _temp20.Value;
-        }
-      }
-    }
-    // 8. Let moduleContext be a new ECMAScript code execution context.
-    const moduleContext = new ExecutionContext();
-    // 9. Set the Function of moduleContext to null.
-    moduleContext.Function = Value.null;
-    // 10. Assert: module.[[Realm]] is not undefined.
-    /* Assert */ /* node:coverage ignore next */if (!!(module.Realm instanceof UndefinedValue)) throw new Assert.Error("!(module.Realm instanceof UndefinedValue)");
-    // 11. Set the Realm of moduleContext to module.[[Realm]].
-    moduleContext.Realm = module.Realm;
-    // 12. Set the ScriptOrModule of moduleContext to module.
-    moduleContext.ScriptOrModule = module;
-    // 13. Set the VariableEnvironment of moduleContext to module.[[Environment]].
-    moduleContext.VariableEnvironment = module.Environment;
-    // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
-    moduleContext.LexicalEnvironment = module.Environment;
-    // 15. Set the PrivateEnvironment of moduleContext to null.
-    moduleContext.PrivateEnvironment = null;
-    // 16. Set module.[[Context]] to moduleContext.
-    module.Context = moduleContext;
-    // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
-    surroundingAgent.executionContextStack.push(moduleContext);
-    // 18. Let code be module.[[ECMAScriptCode]].
-    const code = module.ECMAScriptCode;
-    // 19. Let varDeclarations be the VarScopedDeclarations of code.
-    const varDeclarations = VarScopedDeclarations(code);
-    // 20. Let declaredVarNames be a new empty List.
-    const declaredVarNames = new JSStringSet();
-    // 21. For each element d in varDeclarations, do
-    for (const d of varDeclarations) {
-      // a. For each element dn of the BoundNames of d, do
-      for (const dn of BoundNames(d)) {
-        // i. If dn is not an element of declaredVarNames, then
-        if (!declaredVarNames.has(dn)) {
-          /* X */let _temp21 = env.CreateMutableBinding(dn, Value.false);
-          /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
-          /* node:coverage ignore next */if (_temp21 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
-              cause: _temp21
-            });
-            _temp21 = _temp21.Value;
-          } // 1. Perform ! env.CreateMutableBinding(dn, false).
-
-          /* X */let _temp22 = env.InitializeBinding(dn, Value.undefined);
-          /* node:coverage ignore next */if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) _temp22 = skipDebugger(_temp22);
-          /* node:coverage ignore next */if (_temp22 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp22 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(dn, Value.undefined) returned an abrupt completion", {
-              cause: _temp22
-            });
-            _temp22 = _temp22.Value;
-          } // 2. Call env.InitializeBinding(dn, undefined).
-
-          // 3. Append dn to declaredVarNames.
-          declaredVarNames.add(dn);
-        }
-      }
-    }
-    // 22. Let lexDeclarations be the LexicallyScopedDeclarations of code.
-    const lexDeclarations = LexicallyScopedDeclarations(code);
-    // 24. For each element d in lexDeclarations, do
-    for (const d of lexDeclarations) {
-      // a. For each element dn of the BoundNames of d, do
-      for (const dn of BoundNames(d)) {
-        // i. If IsConstantDeclaration of d is true, then
-        if (IsConstantDeclaration(d)) {
-          /* X */let _temp23 = env.CreateImmutableBinding(dn, Value.true);
-          /* node:coverage ignore next */if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
-          /* node:coverage ignore next */if (_temp23 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(dn, Value.true) returned an abrupt completion", {
-              cause: _temp23
-            });
-            _temp23 = _temp23.Value;
-          } // 1. Perform ! env.CreateImmutableBinding(dn, true).
-        } else {
-          /* X */let _temp24 = env.CreateMutableBinding(dn, Value.false);
-          /* node:coverage ignore next */if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
-          /* node:coverage ignore next */if (_temp24 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
-              cause: _temp24
-            });
-            _temp24 = _temp24.Value;
-          } // ii. Else,
-          // 1. Perform ! env.CreateMutableBinding(dn, false).
-        }
-        // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
-        if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
-          // 1. Let fo be InstantiateFunctionObject of d with argument env.
-          const fo = InstantiateFunctionObject(d, env, null);
-          // 2. Call env.InitializeBinding(dn, fo).
-          /* X */let _temp25 = env.InitializeBinding(dn, fo);
-          /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
-          /* node:coverage ignore next */if (_temp25 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(dn, fo) returned an abrupt completion", {
-              cause: _temp25
-            });
-            _temp25 = _temp25.Value;
-          }
-        }
-      }
-    }
-    // 25. Remove moduleContext from the execution context stack.
-    surroundingAgent.executionContextStack.pop(moduleContext);
-    // 26. Return unused.
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
-  *ExecuteModule(capability) {
-    // 1. Let module be this Source Text Module Record.
-    const module = this;
-    // 2. Assert: module has been linked and declarations in its module environment have been instantiated.
-    // 3. Let moduleContext be module.[[Context]].
-    const moduleContext = module.Context;
-    if (module.HasTLA === Value.false) {
-      /* Assert */ /* node:coverage ignore next */if (!(capability === undefined)) throw new Assert.Error("capability === undefined");
-      // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
-      surroundingAgent.executionContextStack.push(moduleContext);
-      // 5. Let result be the result of evaluating module.[[ECMAScriptCode]].
-      const result = EnsureCompletion(yield* Evaluate(module.ECMAScriptCode));
-      // 6. Suspend moduleContext and remove it from the execution context stack.
-      // 7. Resume the context that is now on the top of the execution context stack as the running execution context.
-      surroundingAgent.executionContextStack.pop(moduleContext);
-      // 8. Return Completion(result).
-      return result;
-    } else {
-      /* Assert */ /* node:coverage ignore next */ // (*TopLevelAwait)
-      // a. Assert: capability is a PromiseCapability Record.
-      if (!(capability instanceof PromiseCapabilityRecord)) throw new Assert.Error("capability instanceof PromiseCapabilityRecord");
-      // b. Perform ! AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleCxt).
-      /* X */let _temp26 = yield* AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext);
-      /* node:coverage ignore next */if (_temp26 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! yield* AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext) returned an abrupt completion", {
-          cause: _temp26
-        });
-        _temp26 = _temp26.Value;
-      }
-      // c. Return.
-      return Value.undefined;
-    }
-  }
-  mark(m) {
-    super.mark(m);
-    m(this.ImportMeta);
-    m(this.Context);
-  }
-}
-function EnsureResolvableBinding(module, name, onAmbiguous) {
-  const resolution = module.ResolveExport(name);
-  if (resolution === null) {
-    return Throw.SyntaxError('Module "$1" does not have an export named $2', module.HostDefined?.specifier || '<anonymous module>', name);
-  }
-  if (onAmbiguous === 'disallow-ambiguous') {
-    if (resolution === 'ambiguous') {
-      return Throw.SyntaxError('Export $1 from module "$2" is ambiguous', name, module.HostDefined?.specifier || '<anonymous module>');
-    }
-    /* Assert */ /* node:coverage ignore next */if (!(resolution instanceof ResolvedBindingRecord)) throw new Assert.Error("resolution instanceof ResolvedBindingRecord");
-  }
-}
-function NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, reexporterModule, exportName, namespaceModule, namespaceNames, onAmbiguous) {
-  if (ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)) {
-    return false;
-  }
-  deferNamespaceExportSet.push(reexporterModule);
-  /* Assert */ /* node:coverage ignore next */if (!ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)) throw new Assert.Error("ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)");
-  for (const name of namespaceNames) {
-    const resolution = namespaceModule.ResolveExport(name instanceof JSStringValue ? name : Value(name), [], deferNamespaceExportSet);
-    if (resolution === null) return true;
-    if (resolution === 'ambiguous' && onAmbiguous === 'disallow-ambiguous') return true;
-  }
-  return false;
-}
-/** https://tc39.es/ecma262/#sec-synthetic-module-records */
-class SyntheticModuleRecord extends AbstractModuleRecord {
-  LoadRequestedModules() {
-    /* X */let _promise = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-    /* node:coverage ignore next */if (_promise && typeof _promise === 'object' && 'next' in _promise) _promise = skipDebugger(_promise);
-    /* node:coverage ignore next */if (_promise instanceof Completion) {
-      /* node:coverage ignore next */if (_promise instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
-        cause: _promise
-      });
-      _promise = _promise.Value;
-    }
-    const promise = _promise;
-    /* X */let _temp27 = Call(promise.Resolve, Value.undefined, [Value.undefined]);
-    /* node:coverage ignore next */if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) _temp27 = skipDebugger(_temp27);
-    /* node:coverage ignore next */if (_temp27 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) throw new Assert.Error("! Call(promise.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
-        cause: _temp27
-      });
-      _temp27 = _temp27.Value;
-    }
-    return promise.Promise;
-  }
-  ExportNames;
-  EvaluationSteps;
-  constructor(init) {
-    super(init);
-    this.ExportNames = init.ExportNames;
-    this.EvaluationSteps = init.EvaluationSteps;
-  }
-
-  /** https://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
-  GetExportedNames() {
-    const module = this;
-    // 1. Return module.[[ExportNames]].
-    return module.ExportNames;
-  }
-
-  /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
-  ResolveExport(exportName) {
-    const module = this;
-    // 1. If module.[[ExportNames]] does not contain exportName, return null.
-    // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
-    for (const e of module.ExportNames) {
-      if (SameValue(e, exportName)) {
-        return new ResolvedBindingRecord({
-          Module: module,
-          BindingName: exportName
-        });
-      }
-    }
-    return null;
-  }
-
-  /** https://tc39.es/ecma262/#sec-synthetic-module-record-link */
-  Link() {
-    const module = this;
-    // 1. Let realm be module.[[Realm]].
-    const realm = module.Realm;
-    // 2. Assert: realm is not undefined.
-    /* Assert */ /* node:coverage ignore next */if (!!(realm instanceof UndefinedValue)) throw new Assert.Error("!(realm instanceof UndefinedValue)");
-    // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-    const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
-    // 4. Set module.[[Environment]] to env.
-    module.Environment = env;
-    // 5. For each exportName in module.[[ExportNames]],
-    for (const exportName of module.ExportNames) {
-      /* X */let _temp28 = env.CreateMutableBinding(exportName, Value.false);
-      /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
-      /* node:coverage ignore next */if (_temp28 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(exportName, Value.false) returned an abrupt completion", {
-          cause: _temp28
-        });
-        _temp28 = _temp28.Value;
-      } // a. Perform ! env.CreateMutableBinding(exportName, false).
-
-      /* X */let _temp29 = env.InitializeBinding(exportName, Value.undefined);
-      /* node:coverage ignore next */if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) _temp29 = skipDebugger(_temp29);
-      /* node:coverage ignore next */if (_temp29 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp29 instanceof AbruptCompletion) throw new Assert.Error("! env.InitializeBinding(exportName, Value.undefined) returned an abrupt completion", {
-          cause: _temp29
-        });
-        _temp29 = _temp29.Value;
-      } // b. Perform ! env.InitializeBinding(exportName, undefined).
-    }
-    // 8. Return undefined.
-    return undefined;
-  }
-
-  /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
-  *Evaluate() {
-    const module = this;
-    // 1. Suspend the currently running execution context.
-    // 2. Let moduleContext be a new ECMAScript code execution context.
-    const moduleContext = new ExecutionContext();
-    // 3. Set the Function of moduleContext to null.
-    moduleContext.Function = Value.null;
-    // 4. Set the Realm of moduleContext to module.[[Realm]].
-    moduleContext.Realm = module.Realm;
-    // 5. Set the ScriptOrModule of moduleContext to module.
-    moduleContext.ScriptOrModule = module;
-    // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
-    moduleContext.VariableEnvironment = module.Environment;
-    // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
-    moduleContext.LexicalEnvironment = module.Environment;
-    moduleContext.PrivateEnvironment = null;
-    // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
-    surroundingAgent.executionContextStack.push(moduleContext);
-    // 9. Let steps be module.[[EvaluationSteps]].
-    const steps = module.EvaluationSteps;
-    // 10. Let result be Completion(steps(module)).
-    let result = steps(module);
-    if (isEvaluator(result)) {
-      result = yield* result;
-    }
-    // 11. Suspend moduleContext and remove it from the execution context stack.
-    // 12. Resume the context that is now on the top of the execution context stack as the running execution context.
-    surroundingAgent.executionContextStack.pop(moduleContext);
-    // 13. Let pc be ! NewPromiseCapability(%Promise%).
-    /* X */let _pc2 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-    /* node:coverage ignore next */if (_pc2 && typeof _pc2 === 'object' && 'next' in _pc2) _pc2 = skipDebugger(_pc2);
-    /* node:coverage ignore next */if (_pc2 instanceof Completion) {
-      /* node:coverage ignore next */if (_pc2 instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')) returned an abrupt completion", {
-        cause: _pc2
-      });
-      _pc2 = _pc2.Value;
-    }
-    const pc = _pc2;
-    // 14. IfAbruptRejectPromise(result, pc).
-    /* IfAbruptRejectPromise */ /* node:coverage disable */if (result instanceof AbruptCompletion) {
-      const callRejectCompletion = skipDebugger(Call(pc.Reject, Value.undefined, [result.Value]));
-      if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
-      return pc.Promise;
-    }
-    if (result instanceof Completion) result = result.Value; /* node:coverage enable */
-    /* X */let _temp30 = Call(pc.Resolve, Value.undefined, [Value.undefined]);
-    /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
-    /* node:coverage ignore next */if (_temp30 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! Call(pc.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
-        cause: _temp30
-      });
-      _temp30 = _temp30.Value;
-    } // 15. Perform ! Call(pc.[[Resolve]], undefined, « undefined »).
-
-    // 16. Return pc.[[Promise]].
-    return pc.Promise;
-  }
-  *SetSyntheticExport(name, value) {
-    const module = this;
-    // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
-    return yield* module.Environment.SetMutableBinding(name, value, Value.true);
   }
 }
 
@@ -26736,7 +28358,9 @@ class SymbolValue extends PrimitiveValue {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 const wellKnownSymbols = {
+  asyncDispose: new SymbolValue(Value('Symbol.asyncDispose')),
   asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
+  dispose: new SymbolValue(Value('Symbol.dispose')),
   hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
   isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
   iterator: new SymbolValue(Value('Symbol.iterator')),
@@ -55835,1095 +57459,6 @@ function WeakRefDeref(weakRef) {
 }
 WeakRefDeref.section = 'https://tc39.es/ecma262/#sec-weakrefderef';
 
-/** https://tc39.es/ecma262/#sec-environment-records */
-class EnvironmentRecord {
-  OuterEnv;
-  constructor(outerEnv) {
-    this.OuterEnv = outerEnv;
-  }
-  // NON-SPEC
-  mark(m) {
-    m(this.OuterEnv);
-  }
-}
-
-/**
- * The deferred-reexports proposal refers to a "deferred initialization binding"
- * but does not define a record structure for one.
- */
-
-function isDeferredInitializationBinding(binding) {
-  return 'initializationSteps' in binding;
-}
-
-/** https://tc39.es/ecma262/#sec-declarative-environment-records */
-class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  bindings = new JSStringMap();
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
-  *HasBinding(N) {
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. If envRec has a binding for the name that is the value of N, return true.
-    if (envRec.bindings.has(N)) {
-      return Value.true;
-    }
-    // 3. Return false.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
-  *CreateMutableBinding(N, D) {
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec does not already have a binding for N.
-    /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(N)) throw new Assert.Error("!envRec.bindings.has(N)");
-    // 3. Create a mutable binding in envRec for N and record that it is uninitialized. If D
-    //    is true, record that the newly created binding may be deleted by a subsequent
-    //    DeleteBinding call.
-    this.bindings.set(N, {
-      indirect: false,
-      initialized: false,
-      mutable: true,
-      strict: undefined,
-      deletable: D === Value.true,
-      value: undefined,
-      mark(m) {
-        m(this.value);
-      }
-    });
-    //  4. Return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s */
-  CreateImmutableBinding(N, S) {
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec does not already have a binding for N.
-    /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(N)) throw new Assert.Error("!envRec.bindings.has(N)");
-    // 3. Create an immutable binding in envRec for N and record that it is uninitialized. If
-    //    S is true, record that the newly created binding is a strict binding.
-    this.bindings.set(N, {
-      indirect: false,
-      initialized: false,
-      mutable: false,
-      strict: S === Value.true,
-      deletable: false,
-      value: undefined,
-      mark(m) {
-        m(this.value);
-      }
-    });
-    // 4. Return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
-  *InitializeBinding(N, V) {
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec must have an uninitialized binding for N.
-    const binding = envRec.bindings.get(N);
-    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined && binding.initialized === false)) throw new Assert.Error("binding !== undefined && binding.initialized === false");
-    // 3. Set the bound value for N in envRec to V.
-    binding.value = V;
-    // 4. Record that the binding for N in envRec has been initialized.
-    binding.initialized = true;
-    // 5. Return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
-  *SetMutableBinding(N, V, S) {
-    /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(N)) throw new Assert.Error("IsPropertyKey(N)");
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. If envRec does not have a binding for N, then
-    if (!envRec.bindings.has(N)) {
-      // a. If S is true, throw a ReferenceError exception.
-      if (S === Value.true) {
-        return Throw.ReferenceError('$1 is not defined', N);
-      }
-      // b. Perform envRec.CreateMutableBinding(N, true).
-      yield* envRec.CreateMutableBinding(N, Value.true);
-      // c. Perform envRec.InitializeBinding(N, V).
-      yield* envRec.InitializeBinding(N, V);
-      // d. Return NormalCompletion(empty).
-      return {
-        __proto__: NormalCompletion.prototype,
-        Value: undefined
-      };
-    }
-    const binding = this.bindings.get(N);
-    // 3. If the binding for N in envRec is a strict binding, set S to true.
-    if (binding.strict === true) {
-      S = Value.true;
-    }
-    // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
-    if (binding.initialized === false) {
-      return Throw.ReferenceError('$1 cannot be used before initialization', N);
-    }
-    // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
-    if (binding.mutable === true) {
-      binding.value = V;
-    } else {
-      // a. Assert: This is an attempt to change the value of an immutable binding.
-      // b. If S is true, throw a TypeError exception.
-      if (S === Value.true) {
-        return Throw.TypeError('Assignment to constant variable $1', N);
-      }
-    }
-    // 7. Return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
-  *GetBindingValue(N, _S) {
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec has a binding for N.
-    const binding = envRec.bindings.get(N);
-    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
-    // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
-    if (binding.initialized === false) {
-      return Throw.ReferenceError('$1 cannot be used before initialization', N);
-    }
-    // 4. Return the value currently bound to N in envRec.
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: binding.value
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
-  *DeleteBinding(N) {
-    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec has a binding for the name that is the value of N.
-    const binding = envRec.bindings.get(N);
-    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
-    // 3. If the binding for N in envRec cannot be deleted, return false.
-    if (binding.deletable === false) {
-      return Value.false;
-    }
-    // 4. Remove the binding for N from envRec.
-    envRec.bindings.delete(N);
-    // 5. Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
-  HasThisBinding() {
-    // 1. Return false.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
-  HasSuperBinding() {
-    // 1. Return false.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
-  WithBaseObject() {
-    // 1. Return undefined.
-    return Value.undefined;
-  }
-
-  // NON-SPEC
-  mark(m) {
-    // TODO(ts): this function does not call super.mark(). is it a mistake?
-    m(this.bindings);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-function-environment-records */
-class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
-  constructor(F, newTarget) {
-    /* Assert */ /* node:coverage ignore next */ // 1. Assert: F is an ECMAScript function.
-    if (!isECMAScriptFunctionObject(F)) throw new Assert.Error("isECMAScriptFunctionObject(F)");
-    // 2. Assert: Type(newTarget) is Undefined or Object.
-    /* Assert */ /* node:coverage ignore next */if (!(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue)) throw new Assert.Error("newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
-    // 3. Let env be a new function Environment Record containing no bindings.
-    super(F.Environment);
-    // 4. Set env.[[FunctionObject]] to F.
-    this.FunctionObject = F;
-    // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
-
-    if (F.ThisMode === 'lexical') {
-      this.ThisBindingStatus = 'lexical';
-    } else {
-      // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
-      this.ThisBindingStatus = 'uninitialized';
-    }
-    // 7. Set env.[[NewTarget]] to newTarget.
-    this.NewTarget = newTarget;
-    // 8. Set env.[[OuterEnv]] to F.[[Environment]].
-    // 9. Return env.
-  }
-  ThisValue;
-  ThisBindingStatus;
-  FunctionObject;
-  NewTarget;
-
-  /** https://tc39.es/ecma262/#sec-bindthisvalue */
-  BindThisValue(V) {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
-    /* Assert */ /* node:coverage ignore next */if (!(envRec.ThisBindingStatus !== 'lexical')) throw new Assert.Error("envRec.ThisBindingStatus !== 'lexical'");
-    // 3. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
-    if (envRec.ThisBindingStatus === 'initialized') {
-      return Throw.ReferenceError('this has already been initialized');
-    }
-    // 4. Set envRec.[[ThisValue]] to V.
-    envRec.ThisValue = V;
-    // 5. Set envRec.[[ThisBindingStatus]] to initialized.
-    envRec.ThisBindingStatus = 'initialized';
-    // 6. Return V.
-    return V;
-  }
-
-  /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
-  HasThisBinding() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
-    if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
-    } else {
-      return Value.true;
-    }
-  }
-
-  /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
-  HasSuperBinding() {
-    const envRec = this;
-    // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
-    if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
-    }
-    // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
-    if (envRec.FunctionObject.HomeObject === Value.undefined) {
-      return Value.false;
-    } else {
-      return Value.true;
-    }
-  }
-
-  /** https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
-  GetThisBinding() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
-    /* Assert */ /* node:coverage ignore next */if (!(envRec.ThisBindingStatus !== 'lexical')) throw new Assert.Error("envRec.ThisBindingStatus !== 'lexical'");
-    // 3. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
-    if (envRec.ThisBindingStatus === 'uninitialized') {
-      return Throw.ReferenceError('this has not been initialized');
-    }
-    // 4. Return envRec.[[ThisValue]].
-    return envRec.ThisValue;
-  }
-
-  /** https://tc39.es/ecma262/#sec-getsuperbase */
-  GetSuperBase() {
-    const envRec = this;
-    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
-    const home = envRec.FunctionObject.HomeObject;
-    // 2. If home has the value undefined, return undefined.
-    if (home === Value.undefined) {
-      return Value.undefined;
-    }
-    // 3. Assert: Type(home) is Object.
-    /* Assert */ /* node:coverage ignore next */if (!(home instanceof ObjectValue)) throw new Assert.Error("home instanceof ObjectValue");
-    // 4. Return ! home.[[GetPrototypeOf]]().
-    /* X */let _temp = home.GetPrototypeOf();
-    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-    /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! home.GetPrototypeOf() returned an abrupt completion", {
-        cause: _temp
-      });
-      _temp = _temp.Value;
-    }
-    return _temp;
-  }
-  mark(m) {
-    super.mark(m);
-    m(this.ThisValue);
-    m(this.FunctionObject);
-    m(this.NewTarget);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-module-environment-records */
-class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
-  *GetBindingValue(N, S) {
-    /* Assert */ /* node:coverage ignore next */ // 1. Assert: S is true.
-    if (!(S === Value.true)) throw new Assert.Error("S === Value.true");
-    // 2. Let envRec be the module Environment Record for which the method was invoked.
-    const envRec = this;
-    // 3. Assert: envRec has a binding for N.
-    const binding = envRec.bindings.get(N);
-    /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
-    // 4. If the binding for N is an indirect binding, then
-    if (binding.indirect === true) {
-      // a. Let M and N2 be the indirection values provided when this binding for N was created.
-      const [M, N2] = binding.target;
-      // b.Let targetEnv be M.[[Environment]].
-      const targetEnv = M.Environment;
-      // c. If targetEnv is undefined, throw a ReferenceError exception.
-      if (!targetEnv) {
-        return Throw.ReferenceError('$1 is not defined', N);
-      }
-      // d. Return ? targetEnv.GetBindingValue(N2, true).
-      return yield* targetEnv.GetBindingValue(N2, Value.true);
-    }
-    // 5. If the binding for N is an uninitialized deferred initialization binding, initialize it.
-    if (binding.initialized === false) {
-      if (isDeferredInitializationBinding(binding)) {
-        const value = binding.initializationSteps();
-        yield* envRec.InitializeBinding(N, value);
-      } else {
-        return Throw.ReferenceError('$1 cannot be used before initialization', N);
-      }
-    }
-    // 6. Return the value currently bound to N in envRec.
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: binding.value
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
-  DeleteBinding() {
-    /* Assert */ /* node:coverage ignore next */throw new Assert.Error('This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
-  }
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
-  HasThisBinding() {
-    // Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
-  GetThisBinding() {
-    // Return undefined.
-    return Value.undefined;
-  }
-
-  /** https://tc39.es/ecma262/#sec-createimportbinding */
-  CreateImportBinding(N, M, N2) {
-    // 1. Let envRec be the module Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec does not already have a binding for N.
-    /* X */let _temp2 = envRec.HasBinding(N);
-    /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
-    /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! envRec.HasBinding(N) returned an abrupt completion", {
-        cause: _temp2
-      });
-      _temp2 = _temp2.Value;
-    }
-    /* Assert */ /* node:coverage ignore next */if (!(_temp2 === Value.false)) throw new Assert.Error("X(envRec.HasBinding(N)) === Value.false");
-    // 3. Assert: M is a Module Record.
-    /* Assert */ /* node:coverage ignore next */if (!(M instanceof AbstractModuleRecord)) throw new Assert.Error("M instanceof AbstractModuleRecord");
-    // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
-    // 5. Create an immutable indirect binding in envRec for N that references M and N2 as its target binding and record that the binding is initialized.
-    envRec.bindings.set(N, {
-      indirect: true,
-      target: [M, N2],
-      initialized: true,
-      mark(m) {
-        m(this.target?.[0]);
-        m(this.target?.[1]);
-      }
-    });
-    // 6. Return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/proposal-deferred-reexports/#sec-createdeferredinitializationbinding */
-  CreateDeferredInitializationBinding(N, initializationSteps) {
-    /* X */let _temp3 = this.HasBinding(N);
-    /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-    /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! this.HasBinding(N) returned an abrupt completion", {
-        cause: _temp3
-      });
-      _temp3 = _temp3.Value;
-    }
-    /* Assert */ /* node:coverage ignore next */if (!(_temp3 === Value.false)) throw new Assert.Error("X(this.HasBinding(N)) === Value.false");
-    // 2. Create an immutable deferred initialization binding in envRec for name whose deferred initialization steps is initializationSteps, and record that the binding is uninitialized and that it is a strict binding.
-    const binding = {
-      indirect: false,
-      initialized: false,
-      mutable: false,
-      strict: true,
-      deletable: false,
-      initializationSteps,
-      mark(m) {
-        m(this.value);
-      }
-    };
-    this.bindings.set(N, binding);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-object-environment-records */
-class ObjectEnvironmentRecord extends EnvironmentRecord {
-  BindingObject;
-  IsWithEnvironment;
-
-  /** https://tc39.es/ecma262/#sec-newobjectenvironment */
-  constructor(O, W, E) {
-    super(E);
-    this.BindingObject = O;
-    this.IsWithEnvironment = W;
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
-  *HasBinding(N) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.BindingObject;
-    // 3. Let foundBinding be ? HasProperty(bindings, N).
-    /* ReturnIfAbrupt */let _foundBinding = yield* HasProperty(bindings, N);
-    /* ReturnIfAbrupt */if (_foundBinding instanceof Completion) {
-      if (_foundBinding instanceof AbruptCompletion) return _foundBinding;
-      _foundBinding = _foundBinding.Value;
-    }
-    const foundBinding = _foundBinding;
-    // 4. If foundBinding is false, return false.
-    if (foundBinding === Value.false) {
-      return Value.false;
-    }
-    // 5. If the IsWithEnvironment flag of envRec i s false, return true.
-    if (envRec.IsWithEnvironment === Value.false) {
-      return Value.true;
-    }
-    // 6. Let unscopables be ? Get(bindings, @@unscopables).
-    /* ReturnIfAbrupt */let _unscopables = yield* Get(bindings, wellKnownSymbols.unscopables);
-    /* ReturnIfAbrupt */if (_unscopables instanceof Completion) {
-      if (_unscopables instanceof AbruptCompletion) return _unscopables;
-      _unscopables = _unscopables.Value;
-    }
-    const unscopables = _unscopables;
-    // 7. If Type(unscopables) is Object, then
-    if (unscopables instanceof ObjectValue) {
-      /* ReturnIfAbrupt */let _blocked2 = yield* Get(unscopables, N);
-      /* ReturnIfAbrupt */if (_blocked2 instanceof Completion) {
-        if (_blocked2 instanceof AbruptCompletion) return _blocked2;
-        _blocked2 = _blocked2.Value;
-      }
-      /* X */let _blocked = ToBoolean(_blocked2);
-      /* node:coverage ignore next */if (_blocked && typeof _blocked === 'object' && 'next' in _blocked) _blocked = skipDebugger(_blocked);
-      /* node:coverage ignore next */if (_blocked instanceof Completion) {
-        /* node:coverage ignore next */if (_blocked instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(Q(yield* Get(unscopables, N))) returned an abrupt completion", {
-          cause: _blocked
-        });
-        _blocked = _blocked.Value;
-      }
-      // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
-      const blocked = _blocked;
-      // b. If blocked is true, return false.
-      if (blocked === Value.true) {
-        return Value.false;
-      }
-    }
-    // 8. Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
-  *CreateMutableBinding(N, D) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let envRec be the object Environment Record for which the method was invoked.
-    const bindings = envRec.BindingObject;
-    // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
-    /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(bindings, N, _Descriptor({
-      Value: Value.undefined,
-      Writable: Value.true,
-      Enumerable: Value.true,
-      Configurable: D
-    }));
-    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-      if (_temp4 instanceof AbruptCompletion) return _temp4;
-      _temp4 = _temp4.Value;
-    }
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s */
-  CreateImmutableBinding(_N, _S) {
-    /* Assert */ /* node:coverage ignore next */throw new Assert.Error('CreateImmutableBinding called on an Object Environment Record');
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
-  *InitializeBinding(N, V) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Assert: envRec must have an uninitialized binding for N.
-    // 3. Record that the binding for N in envRec has been initialized.
-    // 4. Return ? envRec.SetMutableBinding(N, V, false).
-    /* ReturnIfAbrupt */let _temp5 = yield* envRec.SetMutableBinding(N, V, Value.false);
-    /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-      if (_temp5 instanceof AbruptCompletion) return _temp5;
-      _temp5 = _temp5.Value;
-    }
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
-  *SetMutableBinding(N, V, S) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.BindingObject;
-    // 3. Let stillExists be ? HasProperty(bindings, N).
-    /* ReturnIfAbrupt */let _stillExists = yield* HasProperty(bindings, N);
-    /* ReturnIfAbrupt */if (_stillExists instanceof Completion) {
-      if (_stillExists instanceof AbruptCompletion) return _stillExists;
-      _stillExists = _stillExists.Value;
-    }
-    const stillExists = _stillExists;
-    // 4. If stillExists is false and S is true, throw a ReferenceError exception.
-    if (stillExists === Value.false && S === Value.true) {
-      return Throw.ReferenceError('$1 is not defined', N);
-    }
-    // 5. Return ? Set(bindings, N, V, S).
-    /* ReturnIfAbrupt */let _temp6 = yield* Set$1(bindings, N, V, S);
-    /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
-      if (_temp6 instanceof AbruptCompletion) return _temp6;
-      _temp6 = _temp6.Value;
-    }
-    return undefined;
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s */
-  *GetBindingValue(N, S) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.BindingObject;
-    // 3. Let value be ? HasProperty(bindings, N).
-    /* ReturnIfAbrupt */let _value = yield* HasProperty(bindings, N);
-    /* ReturnIfAbrupt */if (_value instanceof Completion) {
-      if (_value instanceof AbruptCompletion) return _value;
-      _value = _value.Value;
-    }
-    const value = _value;
-    // 4. If value is false, then
-    if (value === Value.false) {
-      // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
-      if (S === Value.false) {
-        return {
-          __proto__: NormalCompletion.prototype,
-          Value: Value.undefined
-        };
-      } else {
-        return Throw.ReferenceError('$1 is not defined', N);
-      }
-    }
-    // 5. Return Get(bindings, N).
-    return yield* Get(bindings, N);
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
-  *DeleteBinding(N) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.BindingObject;
-    // 3. Return ? bindings.[[Delete]](N).
-    return yield* bindings.Delete(N);
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
-  HasThisBinding() {
-    // 1. Return false.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
-  HasSuperBinding() {
-    // 1. Return falase.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
-  WithBaseObject() {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. If the IsWithEnvironment flag of envRec is true, return the binding object for envRec.
-    if (envRec.IsWithEnvironment === Value.true) {
-      return envRec.BindingObject;
-    }
-    // 3. Otherwise, return undefined.
-    return Value.undefined;
-  }
-
-  // NON-SPEC
-  mark(m) {
-    // TODO(ts): this function does not call super.mark(). is it a mistake?
-    m(this.BindingObject);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-global-environment-records */
-class GlobalEnvironmentRecord extends EnvironmentRecord {
-  ObjectRecord;
-  GlobalThisValue;
-  DeclarativeRecord;
-
-  /** https://tc39.es/ecma262/#sec-newglobalenvironment */
-  constructor(G, thisValue) {
-    // 1. Let objRec be NewObjectEnvironment(G, false, null).
-    const objRec = new ObjectEnvironmentRecord(G, Value.false, null);
-    // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-    const dclRec = new DeclarativeEnvironmentRecord(null);
-    // 3. Let env be a new global Environment Record.
-    super(null);
-    // 4. Set env.[[ObjectRecord]] to objRec.
-    this.ObjectRecord = objRec;
-    // 5. Set env.[[GlobalThisValue]] to thisValue.
-    this.GlobalThisValue = thisValue;
-    // 6. Set env.[[DeclarativeRecord]] to dclRec.
-    this.DeclarativeRecord = dclRec;
-    // 8. Set env.[[OuterEnv]] to null.
-    // 9. Return env.
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
-  *HasBinding(N) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
-    const DclRec = envRec.DeclarativeRecord;
-    // 3. If DclRec.HasBinding(N) is true, return true.
-    if ((yield* DclRec.HasBinding(N)) === Value.true) {
-      return Value.true;
-    }
-    // 4. If DclRec.HasBinding(N) is true, return true.
-    const ObjRec = envRec.ObjectRecord;
-    // 5. Let ObjRec be envRec.[[ObjectRecord]].
-    return yield* ObjRec.HasBinding(N);
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d */
-  *CreateMutableBinding(N, D) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
-    const DclRec = envRec.DeclarativeRecord;
-    // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-    if ((yield* DclRec.HasBinding(N)) === Value.true) {
-      return Throw.TypeError('$1 is already declared', N);
-    }
-    // 4. Return DclRec.CreateMutableBinding(N, D).
-    return yield* DclRec.CreateMutableBinding(N, D);
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s */
-  CreateImmutableBinding(N, S) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
-    const DclRec = envRec.DeclarativeRecord;
-    // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-    /* X */let _temp7 = DclRec.HasBinding(N);
-    /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
-    /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(N) returned an abrupt completion", {
-        cause: _temp7
-      });
-      _temp7 = _temp7.Value;
-    }
-    if (_temp7 === Value.true) {
-      return Throw.TypeError('$1 is already declared', N);
-    }
-    // Return DclRec.CreateImmutableBinding(N, S).
-    return DclRec.CreateImmutableBinding(N, S);
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
-  *InitializeBinding(N, V) {
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-    /* X */let _temp8 = DclRec.HasBinding(N);
-    /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
-    /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(N) returned an abrupt completion", {
-        cause: _temp8
-      });
-      _temp8 = _temp8.Value;
-    }
-    if (_temp8 === Value.true) {
-      /* X */let _temp9 = DclRec.InitializeBinding(N, V);
-      /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
-      /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.InitializeBinding(N, V) returned an abrupt completion", {
-          cause: _temp9
-        });
-        _temp9 = _temp9.Value;
-      }
-      return _temp9;
-    }
-    // 4. Assert: If the binding exists, it must be in the object Environment Record.
-    // 5. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 6. Return ? ObjRec.InitializeBinding(N, V).
-    return yield* ObjRec.InitializeBinding(N, V);
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
-  *SetMutableBinding(N, V, S) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
-    const DclRec = envRec.DeclarativeRecord;
-    // 3. If DclRec.HasBinding(N) is true, then
-    if ((yield* DclRec.HasBinding(N)) === Value.true) {
-      // a. Return DclRec.SetMutableBinding(N, V, S).
-      return yield* DclRec.SetMutableBinding(N, V, S);
-    }
-    // 4. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 5. Return ? ObjRec.SetMutableBinding(N, V, S).
-    /* ReturnIfAbrupt */let _temp0 = yield* ObjRec.SetMutableBinding(N, V, S);
-    /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
-      if (_temp0 instanceof AbruptCompletion) return _temp0;
-      _temp0 = _temp0.Value;
-    }
-    return undefined;
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s */
-  *GetBindingValue(N, S) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
-    const DclRec = envRec.DeclarativeRecord;
-    // 3. If DclRec.HasBinding(N) is true, then
-    if ((yield* DclRec.HasBinding(N)) === Value.true) {
-      // a. Return DclRec.GetBindingValue(N, S).
-      return yield* DclRec.GetBindingValue(N, S);
-    }
-    // 4. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 5. Return ObjRec.GetBindingValue(N, S).
-    return yield* ObjRec.GetBindingValue(N, S);
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
-  *DeleteBinding(N) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let DclRec be envRec.[[DeclarativeRecord]].
-    const DclRec = this.DeclarativeRecord;
-    // 3. Let DclRec be envRec.[[DeclarativeRecord]].
-    if ((yield* DclRec.HasBinding(N)) === Value.true) {
-      // a. Return DclRec.DeleteBinding(N).
-      return yield* DclRec.DeleteBinding(N);
-    }
-    // 4. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 5. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.BindingObject;
-    // 6. Let existingProp be ? HasOwnProperty(globalObject, N).
-    /* ReturnIfAbrupt */let _existingProp = yield* HasOwnProperty(globalObject, N);
-    /* ReturnIfAbrupt */if (_existingProp instanceof Completion) {
-      if (_existingProp instanceof AbruptCompletion) return _existingProp;
-      _existingProp = _existingProp.Value;
-    }
-    const existingProp = _existingProp;
-    // 7. If existingProp is true, then
-    if (existingProp === Value.true) {
-      // a. Return ? ObjRec.DeleteBinding(N).
-      return yield* ObjRec.DeleteBinding(N);
-    }
-    // 8. Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
-  HasThisBinding() {
-    // Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
-  HasSuperBinding() {
-    // 1. Return false.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
-  WithBaseObject() {
-    // 1. Return undefined.
-    return Value.undefined;
-  }
-
-  /** https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding */
-  GetThisBinding() {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Return envRec.[[GlobalThisValue]].
-    return envRec.GlobalThisValue;
-  }
-
-  /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
-  *HasLexicalDeclaration(N) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let envRec be the global Environment Record for which the method was invoked.
-    const DclRec = envRec.DeclarativeRecord;
-    // 3. Let DclRec be envRec.[[DeclarativeRecord]].
-    return yield* DclRec.HasBinding(N);
-  }
-
-  /** https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
-  *HasRestrictedGlobalProperty(N) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.BindingObject;
-    // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-    /* ReturnIfAbrupt */let _existingProp2 = yield* globalObject.GetOwnProperty(N);
-    /* ReturnIfAbrupt */if (_existingProp2 instanceof Completion) {
-      if (_existingProp2 instanceof AbruptCompletion) return _existingProp2;
-      _existingProp2 = _existingProp2.Value;
-    }
-    const existingProp = _existingProp2;
-    // 5. If existingProp is undefined, return false.
-    if (existingProp instanceof UndefinedValue) {
-      return Value.false;
-    }
-    // 6. If existingProp.[[Configurable]] is true, return false.
-    if (existingProp.Configurable === Value.true) {
-      return Value.false;
-    }
-    // Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
-  *CanDeclareGlobalVar(N) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.BindingObject;
-    // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
-    /* ReturnIfAbrupt */let _hasProperty = yield* HasOwnProperty(globalObject, N);
-    /* ReturnIfAbrupt */if (_hasProperty instanceof Completion) {
-      if (_hasProperty instanceof AbruptCompletion) return _hasProperty;
-      _hasProperty = _hasProperty.Value;
-    }
-    const hasProperty = _hasProperty;
-    // 5. If hasProperty is true, return true.
-    if (hasProperty === Value.true) {
-      return Value.true;
-    }
-    // 6. Return ? IsExtensible(globalObject).
-    return yield* IsExtensible(globalObject);
-  }
-
-  /** https://tc39.es/ecma262/#sec-candeclareglobalfunction */
-  *CanDeclareGlobalFunction(N) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.BindingObject;
-    // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-    /* ReturnIfAbrupt */let _existingProp3 = yield* globalObject.GetOwnProperty(N);
-    /* ReturnIfAbrupt */if (_existingProp3 instanceof Completion) {
-      if (_existingProp3 instanceof AbruptCompletion) return _existingProp3;
-      _existingProp3 = _existingProp3.Value;
-    }
-    const existingProp = _existingProp3;
-    // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
-    if (existingProp instanceof UndefinedValue) {
-      return yield* IsExtensible(globalObject);
-    }
-    // 6. If existingProp.[[Configurable]] is true, return true.
-    if (existingProp.Configurable === Value.true) {
-      return Value.true;
-    }
-    // 7. If IsDataDescriptor(existingProp) is true and existingProp has attribute values
-    //    { [[Writable]]: true, [[Enumerable]]: true }, return true.
-    if (IsDataDescriptor(existingProp) === true && existingProp.Writable === Value.true && existingProp.Enumerable === Value.true) {
-      return Value.true;
-    }
-    // 8. Return false.
-    return Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
-  *CreateGlobalVarBinding(N, D) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.BindingObject;
-    // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
-    /* ReturnIfAbrupt */let _hasProperty2 = yield* HasOwnProperty(globalObject, N);
-    /* ReturnIfAbrupt */if (_hasProperty2 instanceof Completion) {
-      if (_hasProperty2 instanceof AbruptCompletion) return _hasProperty2;
-      _hasProperty2 = _hasProperty2.Value;
-    }
-    const hasProperty = _hasProperty2;
-    // 5. Let extensible be ? IsExtensible(globalObject).
-    /* ReturnIfAbrupt */let _extensible = yield* IsExtensible(globalObject);
-    /* ReturnIfAbrupt */if (_extensible instanceof Completion) {
-      if (_extensible instanceof AbruptCompletion) return _extensible;
-      _extensible = _extensible.Value;
-    }
-    const extensible = _extensible;
-    // 6. If hasProperty is false and extensible is true, then
-    if (hasProperty === Value.false && extensible === Value.true) {
-      /* ReturnIfAbrupt */let _temp1 = yield* ObjRec.CreateMutableBinding(N, D);
-      /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
-        if (_temp1 instanceof AbruptCompletion) return _temp1;
-        _temp1 = _temp1.Value;
-      } // a. Perform ? ObjRec.CreateMutableBinding(N, D).
-
-      /* ReturnIfAbrupt */let _temp10 = yield* ObjRec.InitializeBinding(N, Value.undefined);
-      /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
-        if (_temp10 instanceof AbruptCompletion) return _temp10;
-        _temp10 = _temp10.Value;
-      } // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-    }
-    // return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-
-  /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
-  *CreateGlobalFunctionBinding(N, V, D) {
-    // 1. Let envRec be the global Environment Record for which the method was invoked.
-    const envRec = this;
-    // 2. Let ObjRec be envRec.[[ObjectRecord]].
-    const ObjRec = envRec.ObjectRecord;
-    // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.BindingObject;
-    // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-    /* ReturnIfAbrupt */let _existingProp4 = yield* globalObject.GetOwnProperty(N);
-    /* ReturnIfAbrupt */if (_existingProp4 instanceof Completion) {
-      if (_existingProp4 instanceof AbruptCompletion) return _existingProp4;
-      _existingProp4 = _existingProp4.Value;
-    }
-    const existingProp = _existingProp4;
-    // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
-    let desc;
-    if (existingProp instanceof UndefinedValue || existingProp.Configurable === Value.true) {
-      // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
-      desc = _Descriptor({
-        Value: V,
-        Writable: Value.true,
-        Enumerable: Value.true,
-        Configurable: D
-      });
-    } else {
-      // a. Let desc be the PropertyDescriptor { [[Value]]: V }.
-      desc = _Descriptor({
-        Value: V
-      });
-    }
-    // 7. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
-    /* ReturnIfAbrupt */let _temp11 = yield* DefinePropertyOrThrow(globalObject, N, desc);
-    /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
-      if (_temp11 instanceof AbruptCompletion) return _temp11;
-      _temp11 = _temp11.Value;
-    }
-    /* ReturnIfAbrupt */let _temp12 = yield* Set$1(globalObject, N, V, Value.false);
-    /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
-      if (_temp12 instanceof AbruptCompletion) return _temp12;
-      _temp12 = _temp12.Value;
-    } // 8. Record that the binding for N in ObjRec has been initialized.
-    // 9. Perform ? Set(globalObject, N, V, false).
-
-    // 1. Return NormalCompletion(empty).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: undefined
-    };
-  }
-  mark(m) {
-    // TODO(ts): this function does not call super.mark(). is it a mistake?
-    m(this.ObjectRecord);
-    m(this.GlobalThisValue);
-    m(this.DeclarativeRecord);
-  }
-}
-/** https://tc39.es/ecma262/#sec-getidentifierreference */
-function* GetIdentifierReference(env, name, strict) {
-  // 1. If lex is the value null, then
-  if (env === null) {
-    // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: new ReferenceRecord({
-        Base: 'unresolvable',
-        ReferencedName: name,
-        Strict: strict,
-        ThisValue: undefined
-      })
-    };
-  }
-  // 2. Let exists be ? envRec.HasBinding(name).
-  /* ReturnIfAbrupt */let _exists = yield* env.HasBinding(name);
-  /* ReturnIfAbrupt */if (_exists instanceof Completion) {
-    if (_exists instanceof AbruptCompletion) return _exists;
-    _exists = _exists.Value;
-  }
-  const exists = _exists;
-  // 3. If exists is true, then
-  if (exists === Value.true) {
-    // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: new ReferenceRecord({
-        Base: env,
-        ReferencedName: name,
-        Strict: strict,
-        ThisValue: undefined
-      })
-    };
-  } else {
-    // a. Let outer be env.[[OuterEnv]].
-    const outer = env.OuterEnv;
-    // b. Return ? GetIdentifierReference(outer, name, strict).
-    return yield* GetIdentifierReference(outer, name, strict);
-  }
-}
-GetIdentifierReference.section = 'https://tc39.es/ecma262/#sec-getidentifierreference';
-
 /** https://tc39.es/ecma262/#sec-aggregate-error-constructor */
 function* AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined], {
   NewTarget
@@ -62391,6 +62926,59 @@ function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
   realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'] = proto;
 }
 
+/** https://tc39.es/ecma262/#sec-%asynciteratorprototype%-%symbol.asyncdispose% */
+function* AsyncIteratorPrototype_asyncDispose(_args, {
+  thisValue
+}) {
+  const obj = thisValue;
+  /* X */let _promiseCapability = NewPromiseCapability(intrinsics()['%Promise%']);
+  /* node:coverage ignore next */if (_promiseCapability && typeof _promiseCapability === 'object' && 'next' in _promiseCapability) _promiseCapability = skipDebugger(_promiseCapability);
+  /* node:coverage ignore next */if (_promiseCapability instanceof Completion) {
+    /* node:coverage ignore next */if (_promiseCapability instanceof AbruptCompletion) throw new Assert.Error("! NewPromiseCapability(intrinsics()['%Promise%']) returned an abrupt completion", {
+      cause: _promiseCapability
+    });
+    _promiseCapability = _promiseCapability.Value;
+  }
+  const promiseCapability = _promiseCapability;
+  let returnMethod = yield* GetMethod(obj, Value('return'));
+  /* IfAbruptRejectPromise */ /* node:coverage disable */if (returnMethod instanceof AbruptCompletion) {
+    const callRejectCompletion = skipDebugger(Call(promiseCapability.Reject, Value.undefined, [returnMethod.Value]));
+    if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+    return promiseCapability.Promise;
+  }
+  if (returnMethod instanceof Completion) returnMethod = returnMethod.Value; /* node:coverage enable */
+  if (returnMethod instanceof UndefinedValue) {
+    /* X */let _temp = Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]);
+    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */if (_temp instanceof Completion) {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+        cause: _temp
+      });
+      _temp = _temp.Value;
+    }
+  } else {
+    let result = yield* Call(returnMethod, thisValue, []);
+    /* IfAbruptRejectPromise */ /* node:coverage disable */if (result instanceof AbruptCompletion) {
+      const callRejectCompletion = skipDebugger(Call(promiseCapability.Reject, Value.undefined, [result.Value]));
+      if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+      return promiseCapability.Promise;
+    }
+    if (result instanceof Completion) result = result.Value; /* node:coverage enable */
+    let resultWrapper = yield* PromiseResolve(intrinsics()['%Promise%'], result);
+    /* IfAbruptRejectPromise */ /* node:coverage disable */if (resultWrapper instanceof AbruptCompletion) {
+      const callRejectCompletion = skipDebugger(Call(promiseCapability.Reject, Value.undefined, [resultWrapper.Value]));
+      if (callRejectCompletion instanceof AbruptCompletion) return callRejectCompletion;
+      return promiseCapability.Promise;
+    }
+    if (resultWrapper instanceof Completion) resultWrapper = resultWrapper.Value; /* node:coverage enable */
+    const unwrap = () => Value.undefined;
+    const onFulfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
+    PerformPromiseThen(resultWrapper, onFulfilled, Value.undefined, promiseCapability);
+  }
+  return promiseCapability.Promise;
+}
+AsyncIteratorPrototype_asyncDispose.section = 'https://tc39.es/ecma262/#sec-%asynciteratorprototype%-%symbol.asyncdispose%';
+
 /** https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator */
 function AsyncIteratorPrototype_asyncIterator(_args, {
   thisValue
@@ -62400,8 +62988,175 @@ function AsyncIteratorPrototype_asyncIterator(_args, {
 }
 AsyncIteratorPrototype_asyncIterator.section = 'https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator';
 function bootstrapAsyncIteratorPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
+  const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.asyncDispose, AsyncIteratorPrototype_asyncDispose, 0], [wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
+}
+
+/** https://tc39.es/ecma262/#sec-asyncdisposablestack */
+function* AsyncDisposableStackConstructor(_args, {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('AsyncDisposableStack cannot be invoked without new');
+  }
+  /* ReturnIfAbrupt */let _asyncDisposableStack = yield* OrdinaryCreateFromConstructor(NewTarget, '%AsyncDisposableStack.prototype%', ['AsyncDisposableState', 'DisposableResourceStack']);
+  /* ReturnIfAbrupt */if (_asyncDisposableStack instanceof Completion) {
+    if (_asyncDisposableStack instanceof AbruptCompletion) return _asyncDisposableStack;
+    _asyncDisposableStack = _asyncDisposableStack.Value;
+  }
+  const asyncDisposableStack = _asyncDisposableStack;
+  asyncDisposableStack.AsyncDisposableState = 'pending';
+  asyncDisposableStack.DisposableResourceStack = [];
+  return asyncDisposableStack;
+}
+AsyncDisposableStackConstructor.section = 'https://tc39.es/ecma262/#sec-asyncdisposablestack';
+function bootstrapAsyncDisposableStack(realmRec) {
+  realmRec.Intrinsics['%AsyncDisposableStack%'] = bootstrapConstructor(realmRec, AsyncDisposableStackConstructor, 'AsyncDisposableStack', 0, realmRec.Intrinsics['%AsyncDisposableStack.prototype%']);
+}
+
+/** https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.adopt */
+function* AsyncDisposableStackProto_adopt([value = Value.undefined, onDisposeAsync = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(thisValue, 'AsyncDisposableState');
+  /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+    if (_temp instanceof AbruptCompletion) return _temp;
+    _temp = _temp.Value;
+  }
+  const asyncDisposableStack = thisValue;
+  if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  if (!IsCallable(onDisposeAsync)) return Throw.TypeError('$1 is not a function', onDisposeAsync);
+  const closure = function* closure() {
+    return yield* Call(onDisposeAsync, Value.undefined, [value]);
+  };
+  const func = CreateBuiltinFunction(closure, 0, Value(''), []);
+  /* ReturnIfAbrupt */let _temp2 = yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', func);
+  /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    _temp2 = _temp2.Value;
+  }
+  return value;
+}
+AsyncDisposableStackProto_adopt.section = 'https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.adopt';
+
+/** https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.defer */
+function* AsyncDisposableStackProto_defer([onDisposeAsync = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = RequireInternalSlot(thisValue, 'AsyncDisposableState');
+  /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    _temp3 = _temp3.Value;
+  }
+  const asyncDisposableStack = thisValue;
+  if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  if (!IsCallable(onDisposeAsync)) return Throw.TypeError('$1 is not a function', onDisposeAsync);
+  /* ReturnIfAbrupt */let _temp4 = yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', onDisposeAsync);
+  /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    _temp4 = _temp4.Value;
+  }
+  return Value.undefined;
+}
+AsyncDisposableStackProto_defer.section = 'https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.defer';
+
+/** https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.disposeAsync */
+function* AsyncDisposableStackProto_disposeAsync(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = RequireInternalSlot(thisValue, 'AsyncDisposableState');
+  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    _temp5 = _temp5.Value;
+  }
+  const asyncDisposableStack = thisValue;
+  if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Value.undefined;
+  asyncDisposableStack.AsyncDisposableState = 'disposed';
+  return yield* DisposeResources(asyncDisposableStack.DisposableResourceStack, {
+    __proto__: NormalCompletion.prototype,
+    Value: Value.undefined
+  });
+}
+AsyncDisposableStackProto_disposeAsync.section = 'https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.disposeAsync';
+
+/** https://tc39.es/ecma262/#sec-get-asyncdisposablestack.prototype.disposed */
+function AsyncDisposableStackProto_disposed(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = RequireInternalSlot(thisValue, 'AsyncDisposableState');
+  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    _temp6 = _temp6.Value;
+  }
+  const asyncDisposableStack = thisValue;
+  if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Value.true;
+  return Value.false;
+}
+AsyncDisposableStackProto_disposed.section = 'https://tc39.es/ecma262/#sec-get-asyncdisposablestack.prototype.disposed';
+
+/** https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.move */
+function* AsyncDisposableStackProto_move(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = RequireInternalSlot(thisValue, 'AsyncDisposableState');
+  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    _temp7 = _temp7.Value;
+  }
+  const asyncDisposableStack = thisValue;
+  if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  /* ReturnIfAbrupt */let _newStack = yield* OrdinaryCreateFromConstructor(surroundingAgent.intrinsic('%AsyncDisposableStack%'), '%AsyncDisposableStack.prototype%', ['AsyncDisposableState', 'DisposableResourceStack']);
+  /* ReturnIfAbrupt */if (_newStack instanceof Completion) {
+    if (_newStack instanceof AbruptCompletion) return _newStack;
+    _newStack = _newStack.Value;
+  }
+  const newStack = _newStack;
+  newStack.AsyncDisposableState = 'pending';
+  newStack.DisposableResourceStack = asyncDisposableStack.DisposableResourceStack;
+  asyncDisposableStack.DisposableResourceStack = [];
+  asyncDisposableStack.AsyncDisposableState = 'disposed';
+  return newStack;
+}
+AsyncDisposableStackProto_move.section = 'https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.move';
+
+/** https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.use */
+function* AsyncDisposableStackProto_use([value = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = RequireInternalSlot(thisValue, 'AsyncDisposableState');
+  /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    _temp8 = _temp8.Value;
+  }
+  const asyncDisposableStack = thisValue;
+  if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  /* ReturnIfAbrupt */let _temp9 = yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, value, 'async-dispose');
+  /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    _temp9 = _temp9.Value;
+  }
+  return value;
+}
+AsyncDisposableStackProto_use.section = 'https://tc39.es/ecma262/#sec-asyncdisposablestack.prototype.use';
+function bootstrapAsyncDisposableStackPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['adopt', AsyncDisposableStackProto_adopt, 2], ['defer', AsyncDisposableStackProto_defer, 1], ['disposeAsync', AsyncDisposableStackProto_disposeAsync, 0, undefined, true], ['disposed', [AsyncDisposableStackProto_disposed]], ['move', AsyncDisposableStackProto_move, 0], ['use', AsyncDisposableStackProto_use, 1]], realmRec.Intrinsics['%Object.prototype%'], 'AsyncDisposableStack');
+  /* X */let _temp1 = prototype.GetOwnProperty(Value('disposeAsync'));
+  /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+  /* node:coverage ignore next */if (_temp1 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! prototype.GetOwnProperty(Value('disposeAsync')) returned an abrupt completion", {
+      cause: _temp1
+    });
+    _temp1 = _temp1.Value;
+  }
+  /* X */let _temp0 = prototype.DefineOwnProperty(wellKnownSymbols.asyncDispose, _temp1);
+  /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+  /* node:coverage ignore next */if (_temp0 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! prototype.DefineOwnProperty(wellKnownSymbols.asyncDispose, X(prototype.GetOwnProperty(Value('disposeAsync'))) as Descriptor) returned an abrupt completion", {
+      cause: _temp0
+    });
+    _temp0 = _temp0.Value;
+  }
+  realmRec.Intrinsics['%AsyncDisposableStack.prototype%'] = prototype;
 }
 
 /** https://tc39.es/ecma262/#sec-thisbigintvalue */
@@ -64408,6 +65163,173 @@ function bootstrapDate(realmRec) {
   realmRec.Intrinsics['%Date%'] = cons;
 }
 
+/** https://tc39.es/ecma262/#sec-disposablestack */
+function* DisposableStackConstructor(_args, {
+  NewTarget
+}) {
+  if (NewTarget instanceof UndefinedValue) {
+    return Throw.TypeError('$1 cannot be invoked without new', Value('DisposableStack'));
+  }
+  /* ReturnIfAbrupt */let _disposableStack = yield* OrdinaryCreateFromConstructor(NewTarget, '%DisposableStack.prototype%', ['DisposableState', 'DisposableResourceStack']);
+  /* ReturnIfAbrupt */if (_disposableStack instanceof Completion) {
+    if (_disposableStack instanceof AbruptCompletion) return _disposableStack;
+    _disposableStack = _disposableStack.Value;
+  }
+  const disposableStack = _disposableStack;
+  disposableStack.DisposableState = 'pending';
+  disposableStack.DisposableResourceStack = [];
+  return disposableStack;
+}
+DisposableStackConstructor.section = 'https://tc39.es/ecma262/#sec-disposablestack';
+function bootstrapDisposableStack(realmRec) {
+  realmRec.Intrinsics['%DisposableStack%'] = bootstrapConstructor(realmRec, DisposableStackConstructor, 'DisposableStack', 0, realmRec.Intrinsics['%DisposableStack.prototype%']);
+}
+
+/** https://tc39.es/ecma262/#sec-disposablestack.prototype.adopt */
+function* DisposableStackProto_adopt([value = Value.undefined, onDispose = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp = RequireInternalSlot(thisValue, 'DisposableState');
+  /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+    if (_temp instanceof AbruptCompletion) return _temp;
+    _temp = _temp.Value;
+  }
+  const disposableStack = thisValue;
+  if (disposableStack.DisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  if (!IsCallable(onDispose)) return Throw.TypeError('$1 is not a function', onDispose);
+  const closure = function* closure() {
+    return yield* Call(onDispose, Value.undefined, [value]);
+  };
+  const func = CreateBuiltinFunction(closure, 0, Value(''), []);
+  /* ReturnIfAbrupt */let _temp2 = yield* AddDisposableResource(disposableStack.DisposableResourceStack, Value.undefined, 'sync-dispose', func);
+  /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    _temp2 = _temp2.Value;
+  }
+  return value;
+}
+DisposableStackProto_adopt.section = 'https://tc39.es/ecma262/#sec-disposablestack.prototype.adopt';
+
+/** https://tc39.es/ecma262/#sec-disposablestack.prototype.defer */
+function* DisposableStackProto_defer([onDispose = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp3 = RequireInternalSlot(thisValue, 'DisposableState');
+  /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    _temp3 = _temp3.Value;
+  }
+  const disposableStack = thisValue;
+  if (disposableStack.DisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  if (!IsCallable(onDispose)) return Throw.TypeError('$1 is not a function', onDispose);
+  /* ReturnIfAbrupt */let _temp4 = yield* AddDisposableResource(disposableStack.DisposableResourceStack, Value.undefined, 'sync-dispose', onDispose);
+  /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    _temp4 = _temp4.Value;
+  }
+  return Value.undefined;
+}
+DisposableStackProto_defer.section = 'https://tc39.es/ecma262/#sec-disposablestack.prototype.defer';
+
+/** https://tc39.es/ecma262/#sec-disposablestack.prototype.dispose */
+function* DisposableStackProto_dispose(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp5 = RequireInternalSlot(thisValue, 'DisposableState');
+  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    _temp5 = _temp5.Value;
+  }
+  const disposableStack = thisValue;
+  if (disposableStack.DisposableState === 'disposed') return Value.undefined;
+  disposableStack.DisposableState = 'disposed';
+  return yield* DisposeResources(disposableStack.DisposableResourceStack, {
+    __proto__: NormalCompletion.prototype,
+    Value: Value.undefined
+  });
+}
+DisposableStackProto_dispose.section = 'https://tc39.es/ecma262/#sec-disposablestack.prototype.dispose';
+
+/** https://tc39.es/ecma262/#sec-get-disposablestack.prototype.disposed */
+function DisposableStackProto_disposed(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp6 = RequireInternalSlot(thisValue, 'DisposableState');
+  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    _temp6 = _temp6.Value;
+  }
+  const disposableStack = thisValue;
+  if (disposableStack.DisposableState === 'disposed') return Value.true;
+  return Value.false;
+}
+DisposableStackProto_disposed.section = 'https://tc39.es/ecma262/#sec-get-disposablestack.prototype.disposed';
+
+/** https://tc39.es/ecma262/#sec-disposablestack.prototype.move */
+function* DisposableStackProto_move(_args, {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp7 = RequireInternalSlot(thisValue, 'DisposableState');
+  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    _temp7 = _temp7.Value;
+  }
+  const disposableStack = thisValue;
+  if (disposableStack.DisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  /* ReturnIfAbrupt */let _newDisposableStack = yield* OrdinaryCreateFromConstructor(surroundingAgent.intrinsic('%DisposableStack%'), '%DisposableStack.prototype%', ['DisposableState', 'DisposableResourceStack']);
+  /* ReturnIfAbrupt */if (_newDisposableStack instanceof Completion) {
+    if (_newDisposableStack instanceof AbruptCompletion) return _newDisposableStack;
+    _newDisposableStack = _newDisposableStack.Value;
+  }
+  const newDisposableStack = _newDisposableStack;
+  newDisposableStack.DisposableState = 'pending';
+  newDisposableStack.DisposableResourceStack = disposableStack.DisposableResourceStack;
+  disposableStack.DisposableResourceStack = [];
+  disposableStack.DisposableState = 'disposed';
+  return newDisposableStack;
+}
+DisposableStackProto_move.section = 'https://tc39.es/ecma262/#sec-disposablestack.prototype.move';
+
+/** https://tc39.es/ecma262/#sec-disposablestack.prototype.use */
+function* DisposableStackProto_use([value = Value.undefined], {
+  thisValue
+}) {
+  /* ReturnIfAbrupt */let _temp8 = RequireInternalSlot(thisValue, 'DisposableState');
+  /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    _temp8 = _temp8.Value;
+  }
+  const disposableStack = thisValue;
+  if (disposableStack.DisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
+  /* ReturnIfAbrupt */let _temp9 = yield* AddDisposableResource(disposableStack.DisposableResourceStack, value, 'sync-dispose');
+  /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    _temp9 = _temp9.Value;
+  }
+  return value;
+}
+DisposableStackProto_use.section = 'https://tc39.es/ecma262/#sec-disposablestack.prototype.use';
+function bootstrapDisposableStackPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['adopt', DisposableStackProto_adopt, 2], ['defer', DisposableStackProto_defer, 1], ['dispose', DisposableStackProto_dispose, 0], ['disposed', [DisposableStackProto_disposed]], ['move', DisposableStackProto_move, 0], ['use', DisposableStackProto_use, 1]], realmRec.Intrinsics['%Object.prototype%'], 'DisposableStack');
+  /* X */let _temp1 = prototype.GetOwnProperty(Value('dispose'));
+  /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+  /* node:coverage ignore next */if (_temp1 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! prototype.GetOwnProperty(Value('dispose')) returned an abrupt completion", {
+      cause: _temp1
+    });
+    _temp1 = _temp1.Value;
+  }
+  /* X */let _temp0 = prototype.DefineOwnProperty(wellKnownSymbols.dispose, _temp1);
+  /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
+  /* node:coverage ignore next */if (_temp0 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! prototype.DefineOwnProperty(wellKnownSymbols.dispose, X(prototype.GetOwnProperty(Value('dispose'))) as Descriptor) returned an abrupt completion", {
+      cause: _temp0
+    });
+    _temp0 = _temp0.Value;
+  }
+  realmRec.Intrinsics['%DisposableStack.prototype%'] = prototype;
+}
+
 /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
 function* ErrorProto_toString(_args, {
   thisValue
@@ -65274,6 +66196,28 @@ function bootstrapIteratorHelperPrototype(realmRec) {
   realmRec.Intrinsics['%IteratorHelperPrototype%'] = proto;
 }
 
+/** https://tc39.es/ecma262/#sec-iterator.prototype-%symbol.dispose% */
+function* IteratorProto_dispose(_args, {
+  thisValue
+}) {
+  const obj = thisValue;
+  /* ReturnIfAbrupt */let _returnMethod = yield* GetMethod(obj, Value('return'));
+  /* ReturnIfAbrupt */if (_returnMethod instanceof Completion) {
+    if (_returnMethod instanceof AbruptCompletion) return _returnMethod;
+    _returnMethod = _returnMethod.Value;
+  }
+  const returnMethod = _returnMethod;
+  if (!(returnMethod instanceof UndefinedValue)) {
+    /* ReturnIfAbrupt */let _temp = yield* Call(returnMethod, obj);
+    /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+      if (_temp instanceof AbruptCompletion) return _temp;
+      _temp = _temp.Value;
+    }
+  }
+  return Value.undefined;
+}
+IteratorProto_dispose.section = 'https://tc39.es/ecma262/#sec-iterator.prototype-%symbol.dispose%';
+
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
 function IteratorProto_constructor_getter() {
   return surroundingAgent.intrinsic('%Iterator%');
@@ -65284,10 +66228,10 @@ IteratorProto_constructor_getter.section = 'https://tc39.es/ecma262/multipage/co
 function* IteratorProto_constructor_setter([v = Value.undefined], {
   thisValue
 }) {
-  /* ReturnIfAbrupt */let _temp = yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Iterator.prototype%'), Value('constructor'), v);
-  /* ReturnIfAbrupt */if (_temp instanceof Completion) {
-    if (_temp instanceof AbruptCompletion) return _temp;
-    _temp = _temp.Value;
+  /* ReturnIfAbrupt */let _temp2 = yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Iterator.prototype%'), Value('constructor'), v);
+  /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    _temp2 = _temp2.Value;
   }
   return Value.undefined;
 }
@@ -65314,12 +66258,12 @@ function* IteratorProto_chunks([chunkSize = Value.undefined], {
     const error = Throw.RangeError('$1 is out of range', chunkSize);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp2 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
-    if (_temp2 instanceof AbruptCompletion) return _temp2;
-    _temp2 = _temp2.Value;
+  /* ReturnIfAbrupt */let _temp3 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    _temp3 = _temp3.Value;
   }
-  iterated = _temp2;
+  iterated = _temp3;
   const closure = function* closure() {
     let buffer = [];
     while (true) {
@@ -65387,12 +66331,12 @@ function* IteratorProto_drop([limit = Value.undefined], {
     const error = Throw.RangeError('$1 is out of range', numberLimit);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp3 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
-    if (_temp3 instanceof AbruptCompletion) return _temp3;
-    _temp3 = _temp3.Value;
+  /* ReturnIfAbrupt */let _temp4 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    _temp4 = _temp4.Value;
   }
-  iterated = _temp3;
+  iterated = _temp4;
   const closure = function* closure() {
     let remaining = intLimit;
     while (remaining > 0) {
@@ -65445,12 +66389,12 @@ function* IteratorProto_every([predicate = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp4 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-    if (_temp4 instanceof AbruptCompletion) return _temp4;
-    _temp4 = _temp4.Value;
+  /* ReturnIfAbrupt */let _temp5 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    _temp5 = _temp5.Value;
   }
-  iterated = _temp4;
+  iterated = _temp5;
   let counter = 0;
   while (true) {
     /* ReturnIfAbrupt */let _value3 = yield* IteratorStepValue(iterated);
@@ -65491,12 +66435,12 @@ function* IteratorProto_filter([predicate = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp5 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-    if (_temp5 instanceof AbruptCompletion) return _temp5;
-    _temp5 = _temp5.Value;
+  /* ReturnIfAbrupt */let _temp6 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    _temp6 = _temp6.Value;
   }
-  iterated = _temp5;
+  iterated = _temp6;
   const closure = function* closure() {
     let counter = 0;
     while (true) {
@@ -65544,12 +66488,12 @@ function* IteratorProto_find([predicate = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp6 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
-    if (_temp6 instanceof AbruptCompletion) return _temp6;
-    _temp6 = _temp6.Value;
+  /* ReturnIfAbrupt */let _temp7 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    _temp7 = _temp7.Value;
   }
-  iterated = _temp6;
+  iterated = _temp7;
   let counter = 0;
   while (true) {
     /* ReturnIfAbrupt */let _value5 = yield* IteratorStepValue(iterated);
@@ -65590,12 +66534,12 @@ function* IteratorProto_flatMap([mapper = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', mapper);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp7 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
-    if (_temp7 instanceof AbruptCompletion) return _temp7;
-    _temp7 = _temp7.Value;
+  /* ReturnIfAbrupt */let _temp8 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    _temp8 = _temp8.Value;
   }
-  iterated = _temp7;
+  iterated = _temp8;
   const closure = function* closure() {
     let counter = 0;
     while (true) {
@@ -65658,12 +66602,12 @@ function* IteratorProto_forEach([procedure = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', procedure);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp8 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
-    if (_temp8 instanceof AbruptCompletion) return _temp8;
-    _temp8 = _temp8.Value;
+  /* ReturnIfAbrupt */let _temp9 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    _temp9 = _temp9.Value;
   }
-  iterated = _temp8;
+  iterated = _temp9;
   let counter = 0;
   while (true) {
     /* ReturnIfAbrupt */let _value7 = yield* IteratorStepValue(iterated);
@@ -65716,12 +66660,12 @@ function* IteratorProto_includes([searchElement = Value.undefined, skippedElemen
     return yield* IteratorClose(iterated, error);
   }
   let skipped = 0;
-  /* ReturnIfAbrupt */let _temp9 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
-    if (_temp9 instanceof AbruptCompletion) return _temp9;
-    _temp9 = _temp9.Value;
+  /* ReturnIfAbrupt */let _temp0 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+    if (_temp0 instanceof AbruptCompletion) return _temp0;
+    _temp0 = _temp0.Value;
   }
-  iterated = _temp9;
+  iterated = _temp0;
   while (true) {
     /* ReturnIfAbrupt */let _value8 = yield* IteratorStepValue(iterated);
     /* ReturnIfAbrupt */if (_value8 instanceof Completion) {
@@ -65769,12 +66713,12 @@ function* IteratorProto_map([mapper = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', mapper);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp0 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
-    if (_temp0 instanceof AbruptCompletion) return _temp0;
-    _temp0 = _temp0.Value;
+  /* ReturnIfAbrupt */let _temp1 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
+    if (_temp1 instanceof AbruptCompletion) return _temp1;
+    _temp1 = _temp1.Value;
   }
-  iterated = _temp0;
+  iterated = _temp1;
   const closure = function* closure() {
     let counter = 0;
     while (true) {
@@ -65821,21 +66765,21 @@ function* IteratorProto_reduce(args, {
     const error = Throw.TypeError('$1 is not a function', reducer);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp1 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
-    if (_temp1 instanceof AbruptCompletion) return _temp1;
-    _temp1 = _temp1.Value;
+  /* ReturnIfAbrupt */let _temp10 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
+    if (_temp10 instanceof AbruptCompletion) return _temp10;
+    _temp10 = _temp10.Value;
   }
-  iterated = _temp1;
+  iterated = _temp10;
   let accumulator;
   let counter;
   if (args.length < 2) {
-    /* ReturnIfAbrupt */let _temp10 = yield* IteratorStepValue(iterated);
-    /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
-      if (_temp10 instanceof AbruptCompletion) return _temp10;
-      _temp10 = _temp10.Value;
+    /* ReturnIfAbrupt */let _temp11 = yield* IteratorStepValue(iterated);
+    /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
+      if (_temp11 instanceof AbruptCompletion) return _temp11;
+      _temp11 = _temp11.Value;
     }
-    accumulator = _temp10;
+    accumulator = _temp11;
     if (accumulator === 'done') {
       return Throw.TypeError('The iterator is already complete.');
     }
@@ -65881,12 +66825,12 @@ function* IteratorProto_some([predicate = Value.undefined], {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp11 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
-    if (_temp11 instanceof AbruptCompletion) return _temp11;
-    _temp11 = _temp11.Value;
+  /* ReturnIfAbrupt */let _temp12 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
+    if (_temp12 instanceof AbruptCompletion) return _temp12;
+    _temp12 = _temp12.Value;
   }
-  iterated = _temp11;
+  iterated = _temp12;
   let counter = 0;
   while (true) {
     /* ReturnIfAbrupt */let _value1 = yield* IteratorStepValue(iterated);
@@ -65946,12 +66890,12 @@ function* IteratorProto_take([limit = Value.undefined], {
     const error = Throw.RangeError('$1 is out of range', numberLimit);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp12 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
-    if (_temp12 instanceof AbruptCompletion) return _temp12;
-    _temp12 = _temp12.Value;
+  /* ReturnIfAbrupt */let _temp13 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
+    if (_temp13 instanceof AbruptCompletion) return _temp13;
+    _temp13 = _temp13.Value;
   }
-  iterated = _temp12;
+  iterated = _temp13;
   const closure = function* closure() {
     let remaining = intLimit;
     while (true) {
@@ -66007,12 +66951,12 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
     const error = Throw.TypeError('$1 is not a valid undersized mode', undersized);
     return yield* IteratorClose(iterated, error);
   }
-  /* ReturnIfAbrupt */let _temp13 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
-    if (_temp13 instanceof AbruptCompletion) return _temp13;
-    _temp13 = _temp13.Value;
+  /* ReturnIfAbrupt */let _temp14 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp14 instanceof Completion) {
+    if (_temp14 instanceof AbruptCompletion) return _temp14;
+    _temp14 = _temp14.Value;
   }
-  iterated = _temp13;
+  iterated = _temp14;
   const closure = function* closure() {
     const buffer = [];
     while (true) {
@@ -66101,10 +67045,10 @@ IteratorProto_toStringTagGetter.section = 'https://tc39.es/ecma262/multipage/con
 function* IteratorPrototype_toStringTag_setter([v = Value.undefined], {
   thisValue
 }) {
-  /* ReturnIfAbrupt */let _temp14 = yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Iterator.prototype%'), wellKnownSymbols.toStringTag, v);
-  /* ReturnIfAbrupt */if (_temp14 instanceof Completion) {
-    if (_temp14 instanceof AbruptCompletion) return _temp14;
-    _temp14 = _temp14.Value;
+  /* ReturnIfAbrupt */let _temp15 = yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Iterator.prototype%'), wellKnownSymbols.toStringTag, v);
+  /* ReturnIfAbrupt */if (_temp15 instanceof Completion) {
+    if (_temp15 instanceof AbruptCompletion) return _temp15;
+    _temp15 = _temp15.Value;
   }
   return Value.undefined;
 }
@@ -66136,12 +67080,12 @@ function* IteratorProto_join([separator = Value.undefined], {
     }
     sep = sepCompletion.stringValue();
   }
-  /* ReturnIfAbrupt */let _temp15 = yield* GetIteratorDirect(obj);
-  /* ReturnIfAbrupt */if (_temp15 instanceof Completion) {
-    if (_temp15 instanceof AbruptCompletion) return _temp15;
-    _temp15 = _temp15.Value;
+  /* ReturnIfAbrupt */let _temp16 = yield* GetIteratorDirect(obj);
+  /* ReturnIfAbrupt */if (_temp16 instanceof Completion) {
+    if (_temp16 instanceof AbruptCompletion) return _temp16;
+    _temp16 = _temp16.Value;
   }
-  iterated = _temp15;
+  iterated = _temp16;
   let result = '';
   let first = true;
   while (true) {
@@ -66173,7 +67117,7 @@ function* IteratorProto_join([separator = Value.undefined], {
 }
 IteratorProto_join.section = 'https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join';
 function bootstrapIteratorPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructor_getter, IteratorProto_constructor_setter]], ['chunks', IteratorProto_chunks, 1], ['drop', IteratorProto_drop, 1], ['every', IteratorProto_every, 1], ['filter', IteratorProto_filter, 1], ['find', IteratorProto_find, 1], ['flatMap', IteratorProto_flatMap, 1], ['forEach', IteratorProto_forEach, 1], ['includes', IteratorProto_includes, 1], ['join', IteratorProto_join, 1], ['map', IteratorProto_map, 1], ['reduce', IteratorProto_reduce, 1], ['some', IteratorProto_some, 1], ['take', IteratorProto_take, 1], ['toArray', IteratorProto_toArray, 0], ['windows', IteratorProto_windows, 1], [wellKnownSymbols.iterator, IteratorProto_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]]], realmRec.Intrinsics['%Object.prototype%']);
+  const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructor_getter, IteratorProto_constructor_setter]], ['chunks', IteratorProto_chunks, 1], ['drop', IteratorProto_drop, 1], [wellKnownSymbols.dispose, IteratorProto_dispose, 0], ['every', IteratorProto_every, 1], ['filter', IteratorProto_filter, 1], ['find', IteratorProto_find, 1], ['flatMap', IteratorProto_flatMap, 1], ['forEach', IteratorProto_forEach, 1], ['includes', IteratorProto_includes, 1], ['join', IteratorProto_join, 1], ['map', IteratorProto_map, 1], ['reduce', IteratorProto_reduce, 1], ['some', IteratorProto_some, 1], ['take', IteratorProto_take, 1], ['toArray', IteratorProto_toArray, 0], ['windows', IteratorProto_windows, 1], [wellKnownSymbols.iterator, IteratorProto_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]]], realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Iterator.prototype%'] = proto;
 }
 
@@ -73995,6 +74939,68 @@ function bootstrapSymbolPrototype(realmRec) {
   realmRec.Intrinsics['%Symbol.prototype%'] = proto;
 }
 
+/** https://tc39.es/ecma262/#sec-suppressederror */
+function* SuppressedErrorConstructor([error = Value.undefined, suppressed = Value.undefined, message = Value.undefined], {
+  NewTarget
+}) {
+  const newTarget = NewTarget instanceof UndefinedValue ? surroundingAgent.activeFunctionObject : NewTarget;
+  /* ReturnIfAbrupt */let _obj = yield* OrdinaryCreateFromConstructor(newTarget, '%SuppressedError.prototype%', ['ErrorData', ...ErrorHostInternalSlots]);
+  /* ReturnIfAbrupt */if (_obj instanceof Completion) {
+    if (_obj instanceof AbruptCompletion) return _obj;
+    _obj = _obj.Value;
+  }
+  const obj = _obj;
+  if (message !== Value.undefined) {
+    /* ReturnIfAbrupt */let _messageString = yield* ToString(message);
+    /* ReturnIfAbrupt */if (_messageString instanceof Completion) {
+      if (_messageString instanceof AbruptCompletion) return _messageString;
+      _messageString = _messageString.Value;
+    }
+    const messageString = _messageString;
+    /* X */let _temp = CreateNonEnumerableDataPropertyOrThrow(obj, Value('message'), messageString);
+    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */if (_temp instanceof Completion) {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateNonEnumerableDataPropertyOrThrow(obj, Value('message'), messageString) returned an abrupt completion", {
+        cause: _temp
+      });
+      _temp = _temp.Value;
+    }
+  }
+  /* X */let _temp2 = CreateNonEnumerableDataPropertyOrThrow(obj, Value('error'), error);
+  /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+  /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! CreateNonEnumerableDataPropertyOrThrow(obj, Value('error'), error) returned an abrupt completion", {
+      cause: _temp2
+    });
+    _temp2 = _temp2.Value;
+  }
+  /* X */let _temp3 = CreateNonEnumerableDataPropertyOrThrow(obj, Value('suppressed'), suppressed);
+  /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+  /* node:coverage ignore next */if (_temp3 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateNonEnumerableDataPropertyOrThrow(obj, Value('suppressed'), suppressed) returned an abrupt completion", {
+      cause: _temp3
+    });
+    _temp3 = _temp3.Value;
+  }
+  /* ReturnIfAbrupt */let _temp4 = yield* setErrorHostInternalSlot(obj, captureStack());
+  /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    _temp4 = _temp4.Value;
+  }
+  return obj;
+}
+SuppressedErrorConstructor.section = 'https://tc39.es/ecma262/#sec-suppressederror';
+function bootstrapSuppressedError(realmRec) {
+  const constructor = bootstrapConstructor(realmRec, SuppressedErrorConstructor, 'SuppressedError', 3, realmRec.Intrinsics['%SuppressedError.prototype%']);
+  constructor.Prototype = realmRec.Intrinsics['%Error%'];
+  realmRec.Intrinsics['%SuppressedError%'] = constructor;
+}
+
+function bootstrapSuppressedErrorPrototype(realmRec) {
+  const prototype = bootstrapPrototype(realmRec, [['name', Value('SuppressedError')], ['message', Value('')]], realmRec.Intrinsics['%Error.prototype%'], 'SuppressedError');
+  realmRec.Intrinsics['%SuppressedError.prototype%'] = prototype;
+}
+
 /** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {
   // 1. Throw a TypeError exception.
@@ -76997,6 +78003,8 @@ function CreateIntrinsics(realmRec) {
   bootstrapNativeError(realmRec);
   bootstrapAggregateErrorPrototype(realmRec);
   bootstrapAggregateError(realmRec);
+  bootstrapSuppressedErrorPrototype(realmRec);
+  bootstrapSuppressedError(realmRec);
   bootstrapFunction(realmRec);
   bootstrapAbstractModuleSource(realmRec);
   bootstrapIteratorPrototype(realmRec);
@@ -77004,6 +78012,10 @@ function CreateIntrinsics(realmRec) {
   bootstrapIteratorHelperPrototype(realmRec);
   bootstrapWrapForValidIteratorPrototype(realmRec);
   bootstrapAsyncIteratorPrototype(realmRec);
+  bootstrapDisposableStackPrototype(realmRec);
+  bootstrapDisposableStack(realmRec);
+  bootstrapAsyncDisposableStackPrototype(realmRec);
+  bootstrapAsyncDisposableStack(realmRec);
   bootstrapArrayIteratorPrototype(realmRec);
   bootstrapMapIteratorPrototype(realmRec);
   bootstrapSetIteratorPrototype(realmRec);
@@ -77107,9 +78119,9 @@ function SetDefaultGlobalBindings(realmRec) {
   // Function Properties of the Global Object
   'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
   // Constructor Properties of the Global Object
-  'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float16Array', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Iterator', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', 'ShadowRealm',
+  'AggregateError', 'AsyncDisposableStack', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'DisposableStack', 'Error', 'EvalError', 'FinalizationRegistry', 'Float16Array', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Iterator', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', 'ShadowRealm',
   // 'SharedArrayBuffer',
-  'String', 'Symbol', 'SyntaxError', 'Temporal', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet',
+  'String', 'Symbol', 'SuppressedError', 'SyntaxError', 'Temporal', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet',
   // Other Properties of the Global Object
   // 'Atomics',
   'JSON', 'Math', 'Reflect']) {
@@ -78554,5 +79566,5 @@ function createBuiltinModuleLoader(options = {}) {
   };
 }
 
-export { AbruptCompletion, AbstractEventLoop, AbstractModuleRecord, Add24HourDaysToTimeDuration, AddDaysToISODate, AddDurationToDate, AddDurationToDateTime, AddDurationToInstant, AddDurationToTime, AddDurationToYearMonth, AddDurationToZonedDateTime, AddDurations, AddEpochNanoseconds, AddRestrictedFunctionProperties, AddTime, AddTimeDuration, AddTimeDurationToEpochNanoseconds, AddToKeptObjects, AddValueToKeyedGroup, AddZonedDateTime, AdjustDateDurationRecord, Agent, AgentCanSuspend, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyDecoratorsAndDefineMethod, ApplyDecoratorsToClassDefinition, ApplyDecoratorsToElementDefinition, ApplyStringOrNumericBinaryOperator, ApplyUnsignedRoundingMode, ArgumentListEvaluation, ArrayBufferByteLength, ArrayBufferCopyAndDetach, ArrayCreate, InternalMethods$5 as ArrayExoticObjectInternalMethods, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorRequestRecord, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, AvailableCalendars, Await, BalanceISODateTime, BalanceISOYearMonth, BalanceTime, BasicJobQueue, BigIntValue, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, BubbleRelativeDuration, BuildEvaluationList, BuildLinkingList, CalendarDateAdd, CalendarDateFromFields, CalendarDateToISO, CalendarDateUntil, CalendarEquals, CalendarExtraFields, CalendarFieldKeysPresent, CalendarFieldKeysToIgnore, CalendarISOToDate, CalendarMergeFields, CalendarMonthDayFromFields, CalendarMonthDayToISOReferenceDate, CalendarResolveFields, CalendarYearMonthFromFields, Call, CallFrame, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeCalendar, CanonicalizeKeyedCollectionKey, CharacterValue, CheckISODaysRange, ClassDefinitionEvaluation, ClassElementDefinitionRecord, ClassFieldDefinitionEvaluation, ClassFieldDefinitionEvaluation_decorator, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CombineDateAndTimeDuration, CombineISODateAndTimeRecord, CompareArrayElements, CompareEpochNanoseconds, CompareISODate, CompareISODateTime, CompareSurpasses, CompareTimeDuration, CompareTimeRecord, CompilePattern, CompletePropertyDescriptor, Completion, ComputeNudgeWindow, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CopyNameAndLength, CountLeftCapturingParensWithin, CreateAddInitializerFunction, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateBytesModule, CreateDataProperty, CreateDataPropertyOrThrow, CreateDateDurationRecord, CreateDecoratorAccessObject, CreateDecoratorContextObject, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateFieldInitializerFunction, CreateISODateRecord, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateMonthCode, CreateNegatedTemporalDuration, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateTemporalDate, CreateTemporalDateTime, CreateTemporalDuration, CreateTemporalInstant, CreateTemporalMonthDay, CreateTemporalTime, CreateTemporalYearMonth, CreateTemporalZonedDateTime, CreateTextModule, CreateTimeRecord, CreateTypeErrorCopy, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateDurationDays, DateDurationSign, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DeclarationPart, DeclarativeEnvironmentRecord, DecoratorEvaluation, DecoratorListEvaluation, DefaultTemporalLargestUnit, DefineField, DefineMethod, DefineMethodProperty, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, DifferenceEpochNanoseconds, DifferenceISODateTime, DifferencePlainDateTimeWithRounding, DifferencePlainDateTimeWithTotal, DifferenceTemporalInstant, DifferenceTemporalPlainDate, DifferenceTemporalPlainDateTime, DifferenceTemporalPlainTime, DifferenceTemporalPlainYearMonth, DifferenceTemporalZonedDateTime, DifferenceTime, DifferenceZonedDateTime, DifferenceZonedDateTimeWithRounding, DifferenceZonedDateTimeWithTotal, DisambiguatePossibleEpochNanoseconds, DurationSign, DynamicParsedCodeRecord, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EpochDayNumberForYear, EpochDaysToEpochMs, EpochTimeForYear, EpochTimeToDate, EpochTimeToDayInYear, EpochTimeToDayNumber, EpochTimeToEpochYear, EpochTimeToMonthInYear, EpochTimeToWeekDay, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateAsyncFunctionBody, EvaluateAsyncGeneratorBody, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateCall, EvaluateConciseBody, EvaluateFunctionBody, EvaluateGeneratorBody, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExcludeImportedNames, ExecutionContext, ExecutionContextStack, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, ExportFromDeclarationModuleRequest, F, FEATURES, FinishLoadingImportedModule, FlagText, FormatCalendarAnnotation, FormatDateTimeUTCOffsetRounded, FormatFractionalSeconds, FormatISODateTime, FormatOffsetTimeZoneIdentifier, FormatTimeString, FormatUTCOffsetNanoseconds, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GatherAsynchronousTransitiveDependencies, GatherAsynchronousTransitiveDependenciesForRequests, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetArrayBufferMaxByteLengthOption, GetAvailableNamedTimeZoneIdentifier, GetDifferenceSettings, GetDirectionOption, GetEpochNanosecondsFor, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetISODateTimeFor, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNamedTimeZoneNextTransition, GetNamedTimeZonePreviousTransition, GetNewOptionalIndirectExportsModuleRequests, GetNewTarget, GetOffsetNanosecondsFor, GetOptionsObject$1 as GetOptionsObject, GetPossibleEpochNanoseconds, GetPrototypeFromConstructor, GetShadowRealmContext, GetStartOfDay, GetStringIndex, GetSubstitution, GetTemporalCalendarIdentifierWithISODefault, GetTemporalDisambiguationOption, GetTemporalFractionalSecondDigitsOption, GetTemporalOffsetOption, GetTemporalOverflowOption, GetTemporalRelativeToOption, GetTemporalShowCalendarNameOption, GetTemporalShowOffsetOption, GetTemporalShowTimeZoneNameOption, GetTemporalUnitValuedOption, GetThisEnvironment, GetThisValue, GetUnsignedRoundingMode, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GetWrappedValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetModuleSourceModuleRecord, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HostResizeArrayBuffer, HostSystemUTCEpochNanoseconds, HourFromTime, HoursPerDay, ISODateSurpasses, ISODateTimeWithinLimits, ISODateToEpochDays, ISODateToFields, ISODateWithinLimits, ISODayOfWeek, ISODayOfYear, ISODaysInMonth, ISOWeekOfYear, ISOYearMonthWithinLimits, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptCloseIterators, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, ImportedNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeFieldOrAccessor, InitializeInstanceElements, InitializePrivateMethods, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, InternalDurationSign, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCalendarUnit, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLessThan, IsLooselyEqual, IsModuleSCCEvaluated, IsPartialTemporalObject, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsUnsignedElementType, IsValidDuration, IsValidEpochNanoseconds, IsValidISODate, IsValidIntegerIndex, IsValidTime, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorCloseAll, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, IteratorZip, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LargerOfTwoTemporalUnits, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, ListAppendUnique, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeAutoAccessorGetter, MakeAutoAccessorSetter, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeFullYear, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeRealm, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MathematicalDaysInYear, MathematicalInLeapYear, MaxEpochNanoseconds, MaximumTemporalDurationRoundingIncrement, MergeImportedNames, MethodDefinitionEvaluation, MicroTaskEventLoop, MidnightTimeRecord, MillisecFromTime, MinEpochNanoseconds, MinFromTime, MinutesPerHour, ModuleCache, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsKeyEqual, MonthFromTime, NamedEvaluation, NanosecondsPerDay, NegateRoundingMode, NewPromiseCapability, NodeJSLikeEventLoop, NonConstructorElements, NonISOCalendarDateToISO, NonISOCalendarISOToDate, NonISODateAdd, NonISODateUntil, NonISOFieldKeysToIgnore, NonISOMonthDayToISOReferenceDate, NonISOResolveFields, NoonTimeRecord, NormalCompletion, NudgeToCalendarUnit, NudgeToDayOrTime, NudgeToZonedTime, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OptionalIndirectExportEntries, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, OrdinaryWrappedFunctionCall, OutOfRange, PadISOYear, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PerformShadowRealmEval, PrepareCalendarFields, PrepareForOrdinaryCall, PrepareForTailCall, PrepareForWrappedFunctionCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RegulateISODate, RegulateTime, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, RoundEpochNanoseconds, RoundISODateTime, RoundNumberToIncrement, RoundNumberToIncrementAsIfPositive, RoundRelativeDuration, RoundTime, RoundTimeDuration, RoundTimeDurationToIncrement, RunCallerContext, RunSuspendedContext, SafePerformPromiseAll, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, ShadowRealmImportValue, SnapToInteger, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringToNumber, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, SystemDateTime, SystemUTCEpochMilliseconds, SystemUTCEpochNanoseconds, TV, Table19_Conversion, Table21_CategoryByValue, Table21_LengthInNanoSeconds, Table63_CalendarFieldsRecordFields, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TemporalDateToString, TemporalDurationFromInternal, TemporalDurationToString, TemporalInstantToString, TemporalMonthDayToString, TemporalUnit, TemporalYearMonthToString, TemporalZonedDateTimeToString, TestIntegrityLevel, ThisBigIntValue, ThisBooleanValue, ThisNumberValue, ThisStringValue, ThisSymbolValue, Throw, ThrowCompletion, TimeClip, TimeDurationFromComponents, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, TimeFromYear, TimeRecordToString, TimeValueToISODateTimeRecord, TimeWithinDay, TimeZoneEquals, ToAbsoluteIndex, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToClampedIndex, ToFixedSizeInteger, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToInternalDurationRecord, ToInternalDurationRecordWith24HourDays, ToLength, ToNumber, ToNumeric, ToObject, ToOffsetString, ToPartialDurationRecord, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToSecondsStringPrecisionRecord, ToString, ToTemporalCalendarIdentifier, ToTemporalDate, ToTemporalDateTime, ToTemporalDuration, ToTemporalInstant, ToTemporalMonthDay, ToTemporalTime, ToTemporalTimeRecord, ToTemporalTimeZoneIdentifier, ToTemporalYearMonth, ToTemporalZonedDateTime, ToTimeRecordOrMidnight, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TotalRelativeDuration, TotalTimeDuration, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateShadowRealmObject, ValidateTemporalRoundingIncrement, ValidateTemporalUnitValue, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WebLikeEventLoop, WeekDay, WrappedFunctionCreate, X, YearFromTime, Yield, Z, ZeroDateDuration, activeFunctionObject, boostTest262Harness, captureStack, composeModuleLoaders, createBuiltinModuleLoader, createTest262Intrinsics, currentRealmRecord, evalQ, gc, generatorBrandToErrorMessageType, getActiveScriptId, getBreakpointCandidateNodes, getCurrentStack, getHostDefinedErrorDetails, hasSourceTextInternalSlot, hostSupportResizableArrayBuffer, importBundledTest262Harness, inspect, intrinsics, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBoundFunctionObject, isBuiltinFunctionObject, isDataViewObject, isDateObject, isDateUnit, isECMAScriptFunctionObject, IsError as isErrorObject, isEvaluator, isFinalizationRegistryObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isOrdinaryObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isShadowRealmObject, isStrictModeCode, isTemporalDurationObject, isTemporalInstantObject, isTemporalPlainDateObject, isTemporalPlainDateTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainTimeObject, isTemporalPlainYearMonthObject, isTemporalZonedDateTimeObject, isTimeUnit, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, isWrappedFunctionExoticObject, kInternal, markBuiltinFunctionAsConstructor, maxTimeDuration, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, nsPerMicrosecond, nsPerMillisecond, nsPerSecond, parseNodeToBreakpointLocation, performDevtoolsEval, refineLeftHandSideExpression, runSingleJobInQueue, runningExecutionContext, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, X as unwrapCompletion, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEventLoop, AbstractModuleRecord, Add24HourDaysToTimeDuration, AddDaysToISODate, AddDisposableResource, AddDurationToDate, AddDurationToDateTime, AddDurationToInstant, AddDurationToTime, AddDurationToYearMonth, AddDurationToZonedDateTime, AddDurations, AddEpochNanoseconds, AddRestrictedFunctionProperties, AddTime, AddTimeDuration, AddTimeDurationToEpochNanoseconds, AddToKeptObjects, AddValueToKeyedGroup, AddZonedDateTime, AdjustDateDurationRecord, Agent, AgentCanSuspend, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyDecoratorsAndDefineMethod, ApplyDecoratorsToClassDefinition, ApplyDecoratorsToElementDefinition, ApplyStringOrNumericBinaryOperator, ApplyUnsignedRoundingMode, ArgumentListEvaluation, ArrayBufferByteLength, ArrayBufferCopyAndDetach, ArrayCreate, InternalMethods$5 as ArrayExoticObjectInternalMethods, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorRequestRecord, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, AvailableCalendars, Await, BalanceISODateTime, BalanceISOYearMonth, BalanceTime, BasicJobQueue, BigIntValue, BindingClassDeclarationEvaluation, BindingEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, BubbleRelativeDuration, BuildEvaluationList, BuildLinkingList, CalendarDateAdd, CalendarDateFromFields, CalendarDateToISO, CalendarDateUntil, CalendarEquals, CalendarExtraFields, CalendarFieldKeysPresent, CalendarFieldKeysToIgnore, CalendarISOToDate, CalendarMergeFields, CalendarMonthDayFromFields, CalendarMonthDayToISOReferenceDate, CalendarResolveFields, CalendarYearMonthFromFields, Call, CallFrame, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeCalendar, CanonicalizeKeyedCollectionKey, CharacterValue, CheckISODaysRange, ClassDefinitionEvaluation, ClassElementDefinitionRecord, ClassFieldDefinitionEvaluation, ClassFieldDefinitionEvaluation_decorator, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CombineDateAndTimeDuration, CombineISODateAndTimeRecord, CompareArrayElements, CompareEpochNanoseconds, CompareISODate, CompareISODateTime, CompareSurpasses, CompareTimeDuration, CompareTimeRecord, CompilePattern, CompletePropertyDescriptor, Completion, ComputeNudgeWindow, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContainsUsing, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CopyNameAndLength, CountLeftCapturingParensWithin, CreateAddInitializerFunction, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateBytesModule, CreateDataProperty, CreateDataPropertyOrThrow, CreateDateDurationRecord, CreateDecoratorAccessObject, CreateDecoratorContextObject, CreateDefaultExportSyntheticModule, CreateDisposableResource, CreateDynamicFunction, CreateFieldInitializerFunction, CreateISODateRecord, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateMonthCode, CreateNegatedTemporalDuration, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateTemporalDate, CreateTemporalDateTime, CreateTemporalDuration, CreateTemporalInstant, CreateTemporalMonthDay, CreateTemporalTime, CreateTemporalYearMonth, CreateTemporalZonedDateTime, CreateTextModule, CreateTimeRecord, CreateTypeErrorCopy, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateDurationDays, DateDurationSign, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DeclarationPart, DeclarativeEnvironmentRecord, DecoratorEvaluation, DecoratorListEvaluation, DefaultTemporalLargestUnit, DefineField, DefineMethod, DefineMethodProperty, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, DifferenceEpochNanoseconds, DifferenceISODateTime, DifferencePlainDateTimeWithRounding, DifferencePlainDateTimeWithTotal, DifferenceTemporalInstant, DifferenceTemporalPlainDate, DifferenceTemporalPlainDateTime, DifferenceTemporalPlainTime, DifferenceTemporalPlainYearMonth, DifferenceTemporalZonedDateTime, DifferenceTime, DifferenceZonedDateTime, DifferenceZonedDateTimeWithRounding, DifferenceZonedDateTimeWithTotal, DisambiguatePossibleEpochNanoseconds, DisposeResources, DurationSign, DynamicParsedCodeRecord, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EpochDayNumberForYear, EpochDaysToEpochMs, EpochTimeForYear, EpochTimeToDate, EpochTimeToDayInYear, EpochTimeToDayNumber, EpochTimeToEpochYear, EpochTimeToMonthInYear, EpochTimeToWeekDay, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateAsyncFunctionBody, EvaluateAsyncGeneratorBody, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateCall, EvaluateClassStaticBlockBody, EvaluateConciseBody, EvaluateFunctionBody, EvaluateGeneratorBody, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExcludeImportedNames, ExecutionContext, ExecutionContextStack, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, ExportFromDeclarationModuleRequest, F, FEATURES, FinishLoadingImportedModule, FlagText, ForDeclarationBindingInitialization, FormatCalendarAnnotation, FormatDateTimeUTCOffsetRounded, FormatFractionalSeconds, FormatISODateTime, FormatOffsetTimeZoneIdentifier, FormatTimeString, FormatUTCOffsetNanoseconds, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GatherAsynchronousTransitiveDependencies, GatherAsynchronousTransitiveDependenciesForRequests, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetArrayBufferMaxByteLengthOption, GetAvailableNamedTimeZoneIdentifier, GetDifferenceSettings, GetDirectionOption, GetDisposeMethod, GetEpochNanosecondsFor, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetISODateTimeFor, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNamedTimeZoneNextTransition, GetNamedTimeZonePreviousTransition, GetNewOptionalIndirectExportsModuleRequests, GetNewTarget, GetOffsetNanosecondsFor, GetOptionsObject$1 as GetOptionsObject, GetPossibleEpochNanoseconds, GetPrototypeFromConstructor, GetShadowRealmContext, GetStartOfDay, GetStringIndex, GetSubstitution, GetTemporalCalendarIdentifierWithISODefault, GetTemporalDisambiguationOption, GetTemporalFractionalSecondDigitsOption, GetTemporalOffsetOption, GetTemporalOverflowOption, GetTemporalRelativeToOption, GetTemporalShowCalendarNameOption, GetTemporalShowOffsetOption, GetTemporalShowTimeZoneNameOption, GetTemporalUnitValuedOption, GetThisEnvironment, GetThisValue, GetUnsignedRoundingMode, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GetWrappedValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetModuleSourceModuleRecord, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HostResizeArrayBuffer, HostSystemUTCEpochNanoseconds, HourFromTime, HoursPerDay, ISODateSurpasses, ISODateTimeWithinLimits, ISODateToEpochDays, ISODateToFields, ISODateWithinLimits, ISODayOfWeek, ISODayOfYear, ISODaysInMonth, ISOWeekOfYear, ISOYearMonthWithinLimits, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptCloseIterators, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, ImportedNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeFieldOrAccessor, InitializeInstanceElements, InitializePrivateMethods, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, InternalDurationSign, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsAwaitUsingDeclaration, IsBigIntElementType, IsCalendarUnit, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLessThan, IsLooselyEqual, IsModuleSCCEvaluated, IsPartialTemporalObject, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsUnsignedElementType, IsUsingDeclaration, IsValidDuration, IsValidEpochNanoseconds, IsValidISODate, IsValidIntegerIndex, IsValidTime, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorCloseAll, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, IteratorZip, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LargerOfTwoTemporalUnits, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, ListAppendUnique, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeAutoAccessorGetter, MakeAutoAccessorSetter, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeFullYear, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeRealm, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MathematicalDaysInYear, MathematicalInLeapYear, MaxEpochNanoseconds, MaximumTemporalDurationRoundingIncrement, MergeImportedNames, MethodDefinitionEvaluation, MicroTaskEventLoop, MidnightTimeRecord, MillisecFromTime, MinEpochNanoseconds, MinFromTime, MinutesPerHour, ModuleCache, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsKeyEqual, MonthFromTime, NamedEvaluation, NanosecondsPerDay, NegateRoundingMode, NewPromiseCapability, NodeJSLikeEventLoop, NonConstructorElements, NonISOCalendarDateToISO, NonISOCalendarISOToDate, NonISODateAdd, NonISODateUntil, NonISOFieldKeysToIgnore, NonISOMonthDayToISOReferenceDate, NonISOResolveFields, NoonTimeRecord, NormalCompletion, NudgeToCalendarUnit, NudgeToDayOrTime, NudgeToZonedTime, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OptionalIndirectExportEntries, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, OrdinaryWrappedFunctionCall, OutOfRange, PadISOYear, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PerformShadowRealmEval, PrepareCalendarFields, PrepareForOrdinaryCall, PrepareForTailCall, PrepareForWrappedFunctionCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RegulateISODate, RegulateTime, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, RoundEpochNanoseconds, RoundISODateTime, RoundNumberToIncrement, RoundNumberToIncrementAsIfPositive, RoundRelativeDuration, RoundTime, RoundTimeDuration, RoundTimeDurationToIncrement, RunCallerContext, RunSuspendedContext, SafePerformPromiseAll, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, ShadowRealmImportValue, SnapToInteger, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringToNumber, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, SystemDateTime, SystemUTCEpochMilliseconds, SystemUTCEpochNanoseconds, TV, Table19_Conversion, Table21_CategoryByValue, Table21_LengthInNanoSeconds, Table63_CalendarFieldsRecordFields, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TemporalDateToString, TemporalDurationFromInternal, TemporalDurationToString, TemporalInstantToString, TemporalMonthDayToString, TemporalUnit, TemporalYearMonthToString, TemporalZonedDateTimeToString, TestIntegrityLevel, ThisBigIntValue, ThisBooleanValue, ThisNumberValue, ThisStringValue, ThisSymbolValue, Throw, ThrowCompletion, TimeClip, TimeDurationFromComponents, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, TimeFromYear, TimeRecordToString, TimeValueToISODateTimeRecord, TimeWithinDay, TimeZoneEquals, ToAbsoluteIndex, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToClampedIndex, ToFixedSizeInteger, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToInternalDurationRecord, ToInternalDurationRecordWith24HourDays, ToLength, ToNumber, ToNumeric, ToObject, ToOffsetString, ToPartialDurationRecord, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToSecondsStringPrecisionRecord, ToString, ToTemporalCalendarIdentifier, ToTemporalDate, ToTemporalDateTime, ToTemporalDuration, ToTemporalInstant, ToTemporalMonthDay, ToTemporalTime, ToTemporalTimeRecord, ToTemporalTimeZoneIdentifier, ToTemporalYearMonth, ToTemporalZonedDateTime, ToTimeRecordOrMidnight, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TotalRelativeDuration, TotalTimeDuration, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateShadowRealmObject, ValidateTemporalRoundingIncrement, ValidateTemporalUnitValue, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WebLikeEventLoop, WeekDay, WrappedFunctionCreate, X, YearFromTime, Yield, Z, ZeroDateDuration, activeFunctionObject, boostTest262Harness, captureStack, composeModuleLoaders, createBuiltinModuleLoader, createTest262Intrinsics, currentRealmRecord, evalQ, gc, generatorBrandToErrorMessageType, getActiveScriptId, getBreakpointCandidateNodes, getCurrentStack, getHostDefinedErrorDetails, hasSourceTextInternalSlot, hostSupportResizableArrayBuffer, importBundledTest262Harness, inspect, intrinsics, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBoundFunctionObject, isBuiltinFunctionObject, isDataViewObject, isDateObject, isDateUnit, isECMAScriptFunctionObject, IsError as isErrorObject, isEvaluator, isFinalizationRegistryObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isOrdinaryObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isShadowRealmObject, isStrictModeCode, isTemporalDurationObject, isTemporalInstantObject, isTemporalPlainDateObject, isTemporalPlainDateTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainTimeObject, isTemporalPlainYearMonthObject, isTemporalZonedDateTimeObject, isTimeUnit, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, isWrappedFunctionExoticObject, kInternal, markBuiltinFunctionAsConstructor, maxTimeDuration, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, nsPerMicrosecond, nsPerMillisecond, nsPerSecond, parseNodeToBreakpointLocation, performDevtoolsEval, refineLeftHandSideExpression, runSingleJobInQueue, runningExecutionContext, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, X as unwrapCompletion, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
