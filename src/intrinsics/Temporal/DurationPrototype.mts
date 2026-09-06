@@ -205,7 +205,7 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
   if (roundTo instanceof JSStringValue) {
     const paramString = roundTo;
     roundTo = OrdinaryObjectCreate(Value.null);
-    X(CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString));
+    X(CreateDataPropertyOrThrow(roundTo, 'smallestUnit', paramString));
   } else {
     roundTo = Q(GetOptionsObject(roundTo));
   }
@@ -307,7 +307,7 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
   if (totalOf instanceof JSStringValue) {
     const paramString = totalOf;
     totalOf = OrdinaryObjectCreate(Value.null);
-    X(CreateDataPropertyOrThrow(totalOf, Value('unit'), paramString));
+    X(CreateDataPropertyOrThrow(totalOf, 'unit', paramString));
   } else {
     totalOf = Q(GetOptionsObject(totalOf));
   }

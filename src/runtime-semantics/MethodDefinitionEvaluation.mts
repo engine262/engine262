@@ -266,7 +266,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
   // 9. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(closure, 'prototype', Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -310,7 +310,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
   // 9. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(closure, 'prototype', Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,

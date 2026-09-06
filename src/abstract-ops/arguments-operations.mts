@@ -132,7 +132,7 @@ export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
   const len = argumentsList.length;
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']) as Mutable<UnmappedArgumentsObject>;
   obj.ParameterMap = Value.undefined;
-  X(DefinePropertyOrThrow(obj, Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(obj, 'length', Descriptor({
     Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
@@ -150,7 +150,7 @@ export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(obj, Value('callee'), Descriptor({
+  X(DefinePropertyOrThrow(obj, 'callee', Descriptor({
     Getter: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Setter: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Enumerable: Value.false,
@@ -205,7 +205,7 @@ export function CreateMappedArgumentsObject(func: ECMAScriptFunctionObject, form
     X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }
-  X(DefinePropertyOrThrow(obj, Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(obj, 'length', Descriptor({
     Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
@@ -236,7 +236,7 @@ export function CreateMappedArgumentsObject(func: ECMAScriptFunctionObject, form
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(obj, Value('callee'), Descriptor({
+  X(DefinePropertyOrThrow(obj, 'callee', Descriptor({
     Value: func,
     Writable: Value.true,
     Enumerable: Value.false,

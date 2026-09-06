@@ -65,7 +65,7 @@ export interface IteratorObject extends OrdinaryObject {
 
 /** https://tc39.es/ecma262/#sec-getiteratordirect */
 export function* GetIteratorDirect(obj: ObjectValue): PlainEvaluator<IteratorRecord> {
-  const nextMethod = Q(yield* Get(obj, Value('next')));
+  const nextMethod = Q(yield* Get(obj, 'next'));
   const iteratorRecord: IteratorRecord = {
     Iterator: obj,
     NextMethod: nextMethod,
@@ -151,12 +151,12 @@ export function* IteratorNext(iteratorRecord: IteratorRecord, value?: Value): Va
 
 /** https://tc39.es/ecma262/#sec-iteratorcomplete */
 export function* IteratorComplete(iteratorResult: ObjectValue): ValueEvaluator<BooleanValue> {
-  return ToBoolean(Q(yield* Get(iteratorResult, Value('done'))));
+  return ToBoolean(Q(yield* Get(iteratorResult, 'done')));
 }
 
 /** https://tc39.es/ecma262/#sec-iteratorvalue */
 export function IteratorValue(iterResult: ObjectValue): ValueEvaluator {
-  return Get(iterResult, Value('value'));
+  return Get(iterResult, 'value');
 }
 
 /** https://tc39.es/ecma262/#sec-iteratorstep */
@@ -192,7 +192,7 @@ export function* IteratorStepValue(iteratorRecord: IteratorRecord): PlainEvaluat
 export function* IteratorClose<T, C extends Completion<T>>(iteratorRecord: IteratorRecord, completion: C): Evaluator<C | ThrowCompletion> {
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
   const iterator = iteratorRecord.Iterator;
-  let innerResult: ValueCompletion = EnsureCompletion(yield* GetMethod(iterator, Value('return')));
+  let innerResult: ValueCompletion = EnsureCompletion(yield* GetMethod(iterator, 'return'));
   if (innerResult instanceof NormalCompletion) {
     const ret = innerResult.Value;
     if (ret === Value.undefined) {
@@ -224,7 +224,7 @@ export function* IteratorCloseAll<C>(iters: Iterable<IteratorRecord>, completion
 export function* AsyncIteratorClose<T, C extends Completion<T>>(iteratorRecord: IteratorRecord, completion: C | T) {
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
   const iterator = iteratorRecord.Iterator;
-  let innerResult: NormalCompletion<Value> | ThrowCompletion = EnsureCompletion(yield* GetMethod(iterator, Value('return')));
+  let innerResult: NormalCompletion<Value> | ThrowCompletion = EnsureCompletion(yield* GetMethod(iterator, 'return'));
   if (innerResult instanceof NormalCompletion) {
     const ret = innerResult.Value;
     if (ret instanceof UndefinedValue) {
@@ -250,8 +250,8 @@ export function* AsyncIteratorClose<T, C extends Completion<T>>(iteratorRecord: 
 /** https://tc39.es/ecma262/#sec-createiterresultobject */
 export function CreateIteratorResultObject(value: Value, done: BooleanValue) {
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataPropertyOrThrow(obj, Value('value'), value));
-  X(CreateDataPropertyOrThrow(obj, Value('done'), done));
+  X(CreateDataPropertyOrThrow(obj, 'value', value));
+  X(CreateDataPropertyOrThrow(obj, 'done', done));
   return obj;
 }
 
@@ -289,7 +289,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord):
     'SyncIteratorRecord',
   ]) as Mutable<AsyncFromSyncIteratorObject>;
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-  const nextMethod = X(Get(asyncIterator, Value('next')));
+  const nextMethod = X(Get(asyncIterator, 'next'));
   return {
     Iterator: asyncIterator,
     NextMethod: nextMethod,

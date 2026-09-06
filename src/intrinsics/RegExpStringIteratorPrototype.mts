@@ -40,15 +40,15 @@ export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, glo
         return Value.undefined;
       }
       // iv. Let matchStr be ? ToString(? Get(match, "0")).
-      const matchStr = Q(yield* ToString(Q(yield* Get(match, Value('0')))));
+      const matchStr = Q(yield* ToString(Q(yield* Get(match, '0'))));
       // v. If matchStr is the empty String, then
       if (matchStr.stringValue() === '') {
         // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
-        const thisIndex = MathematicalValue(Q(yield* ToLength(Q(yield* Get(R, Value('lastIndex'))))));
+        const thisIndex = MathematicalValue(Q(yield* ToLength(Q(yield* Get(R, 'lastIndex')))));
         // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
         const nextIndex = X(AdvanceStringIndex(S, thisIndex, fullUnicode));
         // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-        Q(yield* Set(R, Value('lastIndex'), F(nextIndex), Value.true));
+        Q(yield* Set(R, 'lastIndex', F(nextIndex), Value.true));
       }
       // vi. Perform ? Yield(match).
       Q(yield* Yield(match));

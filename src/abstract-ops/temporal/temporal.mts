@@ -116,7 +116,7 @@ export function TemporalUnitLength(unit: TimeUnit | 'day'): Integer {
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporaloverflowoption */
 export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator<'constrain' | 'reject'> {
-  const value = Q(yield* Get(options, Value('overflow')));
+  const value = Q(yield* Get(options, 'overflow'));
   if (value instanceof UndefinedValue) return 'constrain';
   const stringValue = Q(yield* ToString(value)).stringValue();
   if (stringValue !== 'constrain' && stringValue !== 'reject') {
@@ -127,7 +127,7 @@ export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporaldisambiguationoption */
 export function* GetTemporalDisambiguationOption(options: ObjectValue): PlainEvaluator<'compatible' | 'earlier' | 'later' | 'reject'> {
-  const value = Q(yield* Get(options, Value('disambiguation')));
+  const value = Q(yield* Get(options, 'disambiguation'));
   if (value instanceof UndefinedValue) return 'compatible';
   const stringValue = Q(yield* ToString(value)).stringValue();
   const acceptedValues = ['compatible', 'earlier', 'later', 'reject'] as const;
@@ -151,7 +151,7 @@ export function NegateRoundingMode(roundingMode: RoundingMode): RoundingMode {
 export type TemporalOffsetOption = 'prefer' | 'use' | 'ignore' | 'reject';
 /** https://tc39.es/proposal-temporal/#sec-gettemporaloffsetoption */
 export function* GetTemporalOffsetOption(options: ObjectValue, fallback: TemporalOffsetOption): PlainEvaluator<TemporalOffsetOption> {
-  const value = Q(yield* Get(options, Value('offset')));
+  const value = Q(yield* Get(options, 'offset'));
   if (value instanceof UndefinedValue) return fallback;
   const stringValue = Q(yield* ToString(value)).stringValue();
   const acceptedValues = ['prefer', 'use', 'ignore', 'reject'] as const;
@@ -164,7 +164,7 @@ export function* GetTemporalOffsetOption(options: ObjectValue, fallback: Tempora
 export type ShowCalendarNameOption = 'auto' | 'always' | 'never' | 'critical';
 /** https://tc39.es/proposal-temporal/#sec-gettemporalshowcalendarnameoption */
 export function* GetTemporalShowCalendarNameOption(options: ObjectValue): PlainEvaluator<ShowCalendarNameOption> {
-  const value = Q(yield* Get(options, Value('calendarName')));
+  const value = Q(yield* Get(options, 'calendarName'));
   if (value instanceof UndefinedValue) return 'auto';
   const stringValue = Q(yield* ToString(value)).stringValue();
   const acceptedValues = ['auto', 'always', 'never', 'critical'] as const;
@@ -177,7 +177,7 @@ export function* GetTemporalShowCalendarNameOption(options: ObjectValue): PlainE
 export type ShowTimeZoneNameOption = 'auto' | 'never' | 'critical';
 /** https://tc39.es/proposal-temporal/#sec-gettemporalshowtimezonenameoption */
 export function* GetTemporalShowTimeZoneNameOption(options: ObjectValue): PlainEvaluator<ShowTimeZoneNameOption> {
-  const value = Q(yield* Get(options, Value('timeZoneName')));
+  const value = Q(yield* Get(options, 'timeZoneName'));
   if (value instanceof UndefinedValue) return 'auto';
   const stringValue = Q(yield* ToString(value)).stringValue();
   const acceptedValues = ['auto', 'never', 'critical'] as const;
@@ -189,7 +189,7 @@ export function* GetTemporalShowTimeZoneNameOption(options: ObjectValue): PlainE
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporalshowoffsetoption */
 export function* GetTemporalShowOffsetOption(options: ObjectValue): PlainEvaluator<'auto' | 'never'> {
-  const value = Q(yield* Get(options, Value('offset')));
+  const value = Q(yield* Get(options, 'offset'));
   if (value instanceof UndefinedValue) return 'auto';
   const stringValue = Q(yield* ToString(value)).stringValue();
   if (stringValue !== 'never' && stringValue !== 'auto') return Throw.RangeError('offset option is invalid ($1), only "auto" and "never" are accepted', stringValue);
@@ -199,7 +199,7 @@ export function* GetTemporalShowOffsetOption(options: ObjectValue): PlainEvaluat
 export type DirectionOption = 'next' | 'previous';
 /** https://tc39.es/proposal-temporal/#sec-getdirectionoption */
 export function* GetDirectionOption(options: ObjectValue): PlainEvaluator<DirectionOption> {
-  const value = Q(yield* Get(options, Value('direction')));
+  const value = Q(yield* Get(options, 'direction'));
   if (value instanceof UndefinedValue) return Throw.RangeError('direction option is required');
   const stringValue = Q(yield* ToString(value)).stringValue();
   if (stringValue !== 'next' && stringValue !== 'previous') return Throw.RangeError('direction option is not valid ($1), only "next" and "previous" are accepted', stringValue);
@@ -226,7 +226,7 @@ export function ValidateTemporalRoundingIncrement(increment: Integer, dividend: 
 
 /** https://tc39.es/proposal-temporal/#sec-gettemporalfractionalseconddigitsoption */
 export function* GetTemporalFractionalSecondDigitsOption(options: ObjectValue): PlainEvaluator<'auto' | Integer> {
-  const digitsValue = Q(yield* Get(options, Value('fractionalSecondDigits')));
+  const digitsValue = Q(yield* Get(options, 'fractionalSecondDigits'));
   if (digitsValue instanceof UndefinedValue) {
     return 'auto';
   }
@@ -346,7 +346,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   PlainRelativeTo?: TemporalPlainDateObject,
   ZonedRelativeTo?: TemporalZonedDateTimeObject,
 }> {
-  const value = Q(yield* Get(options, Value('relativeTo')));
+  const value = Q(yield* Get(options, 'relativeTo'));
   if (value instanceof UndefinedValue) {
     return { PlainRelativeTo: undefined, ZonedRelativeTo: undefined };
   }
@@ -478,11 +478,11 @@ export function* IsPartialTemporalObject(value: Value): PlainEvaluator<boolean> 
   ) {
     return false;
   }
-  const calendarProperty = Q(yield* Get(value, Value('calendar')));
+  const calendarProperty = Q(yield* Get(value, 'calendar'));
   if (!(calendarProperty instanceof UndefinedValue)) {
     return false;
   }
-  const timeZoneProperty = Q(yield* Get(value, Value('timeZone')));
+  const timeZoneProperty = Q(yield* Get(value, 'timeZone'));
   if (!(timeZoneProperty instanceof UndefinedValue)) {
     return false;
   }

@@ -17,14 +17,14 @@ function* Uint8ArrayProto_toBase64([options = Value.undefined]: Arguments, { thi
   Q(ValidateUint8Array(O));
   __ts_cast__<TypedArrayObject>(O);
   const opts = Q(GetOptionsObject(options));
-  let alphabet = Q(yield* Get(opts, Value('alphabet')));
+  let alphabet = Q(yield* Get(opts, 'alphabet'));
   if (alphabet instanceof UndefinedValue) {
     alphabet = Value('base64');
   }
   if (!(alphabet instanceof JSStringValue) || (alphabet.stringValue() !== 'base64' && alphabet.stringValue() !== 'base64url')) {
     return Throw.TypeError('Invalid alphabet');
   }
-  const omitPadding = ToBoolean(Q(yield* Get(opts, Value('omitPadding'))));
+  const omitPadding = ToBoolean(Q(yield* Get(opts, 'omitPadding')));
   const toEncode = Q(GetUint8ArrayBytes(O));
   let outAscii: string;
   if (alphabet.stringValue() === 'base64') {
@@ -65,7 +65,7 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
     return Throw.TypeError('$1 is not a string', string);
   }
   const opts = Q(GetOptionsObject(options));
-  let alphabet = Q(yield* Get(opts, Value('alphabet')));
+  let alphabet = Q(yield* Get(opts, 'alphabet'));
   if (alphabet instanceof UndefinedValue) {
     alphabet = Value('base64');
   }
@@ -76,7 +76,7 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
   if (alphabetStr !== 'base64' && alphabetStr !== 'base64url') {
     return Throw.TypeError('Invalid alphabet');
   }
-  let lastChunkHandling = Q(yield* Get(opts, Value('lastChunkHandling')));
+  let lastChunkHandling = Q(yield* Get(opts, 'lastChunkHandling'));
   if (lastChunkHandling instanceof UndefinedValue) {
     lastChunkHandling = Value('loose');
   }
@@ -113,7 +113,7 @@ function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Val
     return Throw.TypeError('$1 is not a string', string);
   }
   const opts = Q(GetOptionsObject(options));
-  let alphabet = Q(yield* Get(opts, Value('alphabet')));
+  let alphabet = Q(yield* Get(opts, 'alphabet'));
   if (alphabet instanceof UndefinedValue) {
     alphabet = Value('base64');
   }
@@ -124,7 +124,7 @@ function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Val
   if (alphabetStr !== 'base64' && alphabetStr !== 'base64url') {
     return Throw.TypeError('Invalid alphabet');
   }
-  let lastChunkHandling = Q(yield* Get(opts, Value('lastChunkHandling')));
+  let lastChunkHandling = Q(yield* Get(opts, 'lastChunkHandling'));
   if (lastChunkHandling instanceof UndefinedValue) {
     lastChunkHandling = Value('loose');
   }
@@ -146,8 +146,8 @@ function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Val
     Throw(result.Error);
   }
   const resultObject = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read)));
-  X(CreateDataPropertyOrThrow(resultObject, Value('written'), F(written)));
+  X(CreateDataPropertyOrThrow(resultObject, 'read', F(result.Read)));
+  X(CreateDataPropertyOrThrow(resultObject, 'written', F(written)));
   return resultObject;
 }
 
@@ -191,8 +191,8 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { th
     Throw(result.Error);
   }
   const resultObject = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read)));
-  X(CreateDataPropertyOrThrow(resultObject, Value('written'), F(written)));
+  X(CreateDataPropertyOrThrow(resultObject, 'read', F(result.Read)));
+  X(CreateDataPropertyOrThrow(resultObject, 'written', F(written)));
   return resultObject;
 }
 

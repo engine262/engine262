@@ -139,7 +139,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   SetFunctionName(F, Value('anonymous'));
   if (kind === 'generator') {
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
-    X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+    X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
@@ -147,7 +147,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
     })));
   } else if (kind === 'asyncGenerator') {
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
-    X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+    X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,

@@ -136,7 +136,7 @@ function* Iterator_zip([iterables = Value.undefined, _options = Value.undefined]
   }
   const options = Q(GetOptionsObject(_options));
 
-  const modeOption = Q(yield* Get(options, Value('mode')));
+  const modeOption = Q(yield* Get(options, 'mode'));
   let mode: IteratorZipMode;
   if (modeOption === Value.undefined) mode = 'shortest';
   else if (!(modeOption instanceof JSStringValue)) {
@@ -151,7 +151,7 @@ function* Iterator_zip([iterables = Value.undefined, _options = Value.undefined]
 
   let paddingOption: Value = Value.undefined;
   if (mode === 'longest') {
-    paddingOption = Q(yield* Get(options, Value('padding')));
+    paddingOption = Q(yield* Get(options, 'padding'));
     if (paddingOption !== Value.undefined && !(paddingOption instanceof ObjectValue)) {
       return Throw.TypeError('options.padding $1 is not an object', paddingOption);
     }
@@ -219,7 +219,7 @@ function* Iterator_zipKeyed([iterables = Value.undefined, _options = Value.undef
   }
   const options = Q(GetOptionsObject(_options));
 
-  const modeOption = Q(yield* Get(options, Value('mode')));
+  const modeOption = Q(yield* Get(options, 'mode'));
   let mode: IteratorZipMode;
   if (modeOption === Value.undefined) mode = 'shortest';
   else if (!(modeOption instanceof JSStringValue)) {
@@ -234,7 +234,7 @@ function* Iterator_zipKeyed([iterables = Value.undefined, _options = Value.undef
 
   let paddingOption: Value = Value.undefined;
   if (mode === 'longest') {
-    paddingOption = Q(yield* Get(options, Value('padding')));
+    paddingOption = Q(yield* Get(options, 'padding'));
     if (paddingOption !== Value.undefined && !(paddingOption instanceof ObjectValue)) {
       return Throw.TypeError('option.padding $1 is not an object', paddingOption);
     }

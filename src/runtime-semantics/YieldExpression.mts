@@ -77,7 +77,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         }
       } else if (received instanceof ThrowCompletion) { // b. Else if received is a throw completion, then
         // i. Let throw be ? GetMethod(iterator, "throw").
-        const thr = Q(yield* GetMethod(iterator, Value('throw')));
+        const thr = Q(yield* GetMethod(iterator, 'throw'));
         // ii. If throw is not undefined, then
         if (thr !== Value.undefined) {
           // 1. Let innerResult be ? Call(throw, iterator, « received.[[Value]] »).
@@ -123,7 +123,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         // i. Assert: received is a return completion.
         Assert(received instanceof ReturnCompletion);
         // ii. Let return be ? GetMethod(iterator, "return").
-        const ret = Q(yield* GetMethod(iterator, Value('return')));
+        const ret = Q(yield* GetMethod(iterator, 'return'));
         // iii. If return is undefined, then
         if (ret === Value.undefined) {
           let receivedValue = received.Value;

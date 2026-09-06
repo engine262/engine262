@@ -215,32 +215,32 @@ export function* ToPartialTimeRecord(temporalTimeLike: ObjectValue, completeness
     };
   }
   let anyPresent = false;
-  const hour = Q(yield* Get(temporalTimeLike, Value('hour')));
+  const hour = Q(yield* Get(temporalTimeLike, 'hour'));
   if (!(hour instanceof UndefinedValue)) {
     result.Hour = Q(yield* SnapToInteger(hour, 'truncate'));
     anyPresent = true;
   }
-  const microsecond = Q(yield* Get(temporalTimeLike, Value('microsecond')));
+  const microsecond = Q(yield* Get(temporalTimeLike, 'microsecond'));
   if (!(microsecond instanceof UndefinedValue)) {
     result.Microsecond = Q(yield* SnapToInteger(microsecond, 'truncate'));
     anyPresent = true;
   }
-  const millisecond = Q(yield* Get(temporalTimeLike, Value('millisecond')));
+  const millisecond = Q(yield* Get(temporalTimeLike, 'millisecond'));
   if (!(millisecond instanceof UndefinedValue)) {
     result.Millisecond = Q(yield* SnapToInteger(millisecond, 'truncate'));
     anyPresent = true;
   }
-  const minute = Q(yield* Get(temporalTimeLike, Value('minute')));
+  const minute = Q(yield* Get(temporalTimeLike, 'minute'));
   if (!(minute instanceof UndefinedValue)) {
     result.Minute = Q(yield* SnapToInteger(minute, 'truncate'));
     anyPresent = true;
   }
-  const nanosecond = Q(yield* Get(temporalTimeLike, Value('nanosecond')));
+  const nanosecond = Q(yield* Get(temporalTimeLike, 'nanosecond'));
   if (!(nanosecond instanceof UndefinedValue)) {
     result.Nanosecond = Q(yield* SnapToInteger(nanosecond, 'truncate'));
     anyPresent = true;
   }
-  const second = Q(yield* Get(temporalTimeLike, Value('second')));
+  const second = Q(yield* Get(temporalTimeLike, 'second'));
   if (!(second instanceof UndefinedValue)) {
     result.Second = Q(yield* SnapToInteger(second, 'truncate'));
     anyPresent = true;

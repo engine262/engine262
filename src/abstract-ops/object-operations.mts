@@ -75,23 +75,23 @@ export function MakeBasicObject<const T extends string>(internalSlotsList: reado
 }
 
 /** https://tc39.es/ecma262/#sec-get-o-p */
-export function* Get(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator {
+export function* Get(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator {
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
+  P = typeof P === 'string' ? Value(P) : P;
   return Q(yield* O.Get(P, O));
 }
 
 /** https://tc39.es/ecma262/#sec-getv */
-export function* GetV(V: Value, P: PropertyKeyValue): ValueEvaluator {
-  Assert(IsPropertyKey(P));
+export function* GetV(V: Value, P: PropertyKeyValue | string): ValueEvaluator {
+  P = typeof P === 'string' ? Value(P) : P;
   const O = Q(ToObject(V));
   return Q(yield* O.Get(P, V));
 }
 
 /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
-export function* Set(O: ObjectValue, P: PropertyKeyValue, V: Value, throws: BooleanValue) {
+export function* Set(O: ObjectValue, P: PropertyKeyValue | string, V: Value, throws: BooleanValue) {
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(throws instanceof BooleanValue);
   const success = Q(yield* O.Set(P, V, O));
   if (success === Value.false && throws === Value.true) {
@@ -101,9 +101,9 @@ export function* Set(O: ObjectValue, P: PropertyKeyValue, V: Value, throws: Bool
 }
 
 /** https://tc39.es/ecma262/#sec-createdataproperty */
-export function* CreateDataProperty(O: ObjectValue, P: PropertyKeyValue, V: Value): ValueEvaluator<BooleanValue> {
+export function* CreateDataProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
+  P = typeof P === 'string' ? Value(P) : P;
 
   const newDesc = Descriptor({
     Value: V,
@@ -115,9 +115,9 @@ export function* CreateDataProperty(O: ObjectValue, P: PropertyKeyValue, V: Valu
 }
 
 /** https://tc39.es/ecma262/#sec-createmethodproperty */
-export function* CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue, V: Value): ValueEvaluator<BooleanValue> {
+export function* CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
+  P = typeof P === 'string' ? Value(P) : P;
 
   const newDesc = Descriptor({
     Value: V,
@@ -129,9 +129,9 @@ export function* CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue, V: Va
 }
 
 /** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
-export function* CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V: Value) {
+export function* CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, V: Value) {
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
   const success = Q(yield* CreateDataProperty(O, P, V));
   if (success === Value.false) {
     return Throw.TypeError('Cannot define property $1', P);
@@ -139,7 +139,8 @@ export function* CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, 
   return success;
 }
 
-export function CreateNonEnumerableDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V: Value) {
+export function CreateNonEnumerableDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, V: Value) {
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(O instanceof ObjectValue);
   const newDesc = Descriptor({
     Value: V,
@@ -151,9 +152,9 @@ export function CreateNonEnumerableDataPropertyOrThrow(O: ObjectValue, P: Proper
 }
 
 /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
-export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc: Descriptor) {
+export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, desc: Descriptor) {
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
   const success = Q(yield* O.DefineOwnProperty(P, desc));
   if (success === Value.false) {
     return Throw.TypeError('Cannot define property $1', P);
@@ -162,9 +163,9 @@ export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc
 }
 
 /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
-export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
+export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string) {
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
   const success = Q(yield* O.Delete(P));
   if (success === Value.false) {
     return Throw.TypeError('Cannot delete property $1', P);
@@ -173,8 +174,8 @@ export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-getmethod */
-export function* GetMethod(V: Value, P: PropertyKeyValue): ValueEvaluator<UndefinedValue | FunctionObject> {
-  Assert(IsPropertyKey(P));
+export function* GetMethod(V: Value, P: PropertyKeyValue | string): ValueEvaluator<UndefinedValue | FunctionObject> {
+  P = typeof P === 'string' ? Value(P) : P;
   const func = Q(yield* GetV(V, P));
   if (func === Value.null || func === Value.undefined) {
     return Value.undefined;
@@ -186,16 +187,16 @@ export function* GetMethod(V: Value, P: PropertyKeyValue): ValueEvaluator<Undefi
 }
 
 /** https://tc39.es/ecma262/#sec-hasproperty */
-export function* HasProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
+export function* HasProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
   return Q(yield* O.HasProperty(P));
 }
 
 /** https://tc39.es/ecma262/#sec-hasownproperty */
-export function* HasOwnProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
+export function* HasOwnProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
+  P = typeof P === 'string' ? Value(P) : P;
   Assert(O instanceof ObjectValue);
-  Assert(IsPropertyKey(P));
   const desc = Q(yield* O.GetOwnProperty(P));
   if (desc === Value.undefined) {
     return Value.false;
@@ -308,7 +309,7 @@ export function* LengthOfArrayLike(obj: ObjectValue): PlainEvaluator<number> {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  return R(Q(yield* ToLength(Q(yield* Get(obj, Value('length'))))));
+  return R(Q(yield* ToLength(Q(yield* Get(obj, 'length')))));
 }
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
@@ -345,8 +346,8 @@ export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'all' | 
 }
 
 /** https://tc39.es/ecma262/#sec-invoke */
-export function* Invoke(V: Value, P: PropertyKeyValue, argumentsList: Arguments = []): ValueEvaluator {
-  Assert(IsPropertyKey(P));
+export function* Invoke(V: Value, P: PropertyKeyValue | string, argumentsList: Arguments = []): ValueEvaluator {
+  P = typeof P === 'string' ? Value(P) : P;
   const func = Q(yield* GetV(V, P));
   return Q(yield* Call(func, V, argumentsList));
 }
@@ -363,7 +364,7 @@ export function* OrdinaryHasInstance(constructor: Value, O: Value): ValueEvaluat
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const P = Q(yield* Get(constructor, Value('prototype')));
+  const P = Q(yield* Get(constructor, 'prototype'));
   if (!(P instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', P);
   }
@@ -381,7 +382,7 @@ export function* OrdinaryHasInstance(constructor: Value, O: Value): ValueEvaluat
 /** https://tc39.es/ecma262/#sec-speciesconstructor */
 export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: FunctionObject): ValueEvaluator<FunctionObject> {
   Assert(O instanceof ObjectValue);
-  const constructor = Q(yield* Get(O, Value('constructor')));
+  const constructor = Q(yield* Get(O, 'constructor'));
   if (constructor === Value.undefined) {
     return defaultConstructor;
   }

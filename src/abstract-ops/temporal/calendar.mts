@@ -386,7 +386,7 @@ export function* GetTemporalCalendarIdentifierWithISODefault(temporalObjectLike:
   if ('Calendar' in temporalObjectLike) {
     return (temporalObjectLike as TemporalPlainDateObject | TemporalPlainDateTimeObject | TemporalPlainMonthDayObject | TemporalPlainYearMonthObject | TemporalZonedDateTimeObject).Calendar;
   }
-  const calendarLike = Q(yield* Get(temporalObjectLike, Value('calendar')));
+  const calendarLike = Q(yield* Get(temporalObjectLike, 'calendar'));
   if (calendarLike === Value.undefined) {
     return 'iso8601';
   }

@@ -47,12 +47,12 @@ export function* AddEntriesFromIterable(target: ObjectValue, iterable: Value, ad
       return Q(yield* IteratorClose(iteratorRecord, error));
     }
     // e. Let k be Get(nextItem, "0").
-    const k = yield* Get(next, Value('0'));
+  const k = yield* Get(next, '0');
     // f. IfAbruptCloseIterator(k, iteratorRecord).
     IfAbruptCloseIterator(k, iteratorRecord);
     __ts_cast__<Value>(k);
     // g. Let v be Get(nextItem, "1").
-    const v = yield* Get(next, Value('1'));
+  const v = yield* Get(next, '1');
     // h. IfAbruptCloseIterator(v, iteratorRecord).
     IfAbruptCloseIterator(v, iteratorRecord);
     __ts_cast__<Value>(v);
@@ -84,7 +84,7 @@ function* MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
     return map;
   }
   // 5. Let adder be ? Get(map, "set").
-  const adder = Q(yield* Get(map, Value('set')));
+  const adder = Q(yield* Get(map, 'set'));
   if (!IsCallable(adder)) {
     return Throw.TypeError('$1 is not a function', adder);
   }

@@ -10,11 +10,11 @@ export function* InstallErrorCause(O: ObjectValue, options: Value): ValueEvaluat
   // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
   if (options instanceof ObjectValue) {
     // nested if statement due to macro expansion
-    if (Q(yield* HasProperty(options, Value('cause'))) === Value.true) {
+    if (Q(yield* HasProperty(options, 'cause')) === Value.true) {
       // a. Let cause be ? Get(options, "cause").
-      const cause = Q(yield* Get(options, Value('cause')));
+      const cause = Q(yield* Get(options, 'cause'));
       // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
-      X(DefinePropertyOrThrow(O, Value('cause'), Descriptor({
+      X(DefinePropertyOrThrow(O, 'cause', Descriptor({
         Value: cause,
         Writable: Value.true,
         Enumerable: Value.false,

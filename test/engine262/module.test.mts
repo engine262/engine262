@@ -217,7 +217,7 @@ test('Custom host module sources resolve through import.source and toStringTag',
   expect(promise.PromiseState).toBe('fulfilled');
   expect(promise.PromiseResult).toBe(sourceObject);
 
-  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('sourceObject'), sourceObject);
+  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, 'sourceObject', sourceObject);
   const tagResult = realm.evaluateScriptSkipDebugger('Object.prototype.toString.call(sourceObject)') as NormalCompletion<JSStringValue>;
   expect(tagResult.Value.stringValue()).toBe('[object Custom Module Source]');
 });

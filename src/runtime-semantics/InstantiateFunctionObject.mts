@@ -51,7 +51,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -96,7 +96,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')));
   // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,

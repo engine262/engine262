@@ -41,7 +41,7 @@ function* WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]:
     return map;
   }
   // 5. Let adder be ? Get(map, "set").
-  const adder = Q(yield* Get(map, Value('set')));
+  const adder = Q(yield* Get(map, 'set'));
   if (!IsCallable(adder)) {
     return Throw.TypeError('"set" property ($1) of object $2 is not a function', adder, map);
   }

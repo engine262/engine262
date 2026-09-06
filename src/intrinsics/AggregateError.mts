@@ -40,13 +40,13 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
     // a. Let msg be ? ToString(message).
     const msg = Q(yield* ToString(message));
     // b. Perform ! CreateMethodProperty(O, "message", msg).
-    X(CreateNonEnumerableDataPropertyOrThrow(O, Value('message'), msg));
+    X(CreateNonEnumerableDataPropertyOrThrow(O, 'message', msg));
   }
   Q(yield* InstallErrorCause(O, options));
   // 4. Let errorsList be ? IterableToList(errors).
   const errorsList = Q(yield* IteratorToList(Q(yield* GetIterator(errors, 'sync'))));
   // 5. Perform ! DefinePropertyOrThrow(O, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errorsList) }).
-  X(DefinePropertyOrThrow(O, Value('errors'), Descriptor({
+  X(DefinePropertyOrThrow(O, 'errors', Descriptor({
     Configurable: Value.true,
     Enumerable: Value.false,
     Writable: Value.true,

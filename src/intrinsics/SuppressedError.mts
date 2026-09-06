@@ -32,10 +32,10 @@ function* SuppressedErrorConstructor(
   ])) as ErrorObject;
   if (message !== Value.undefined) {
     const messageString = Q(yield* ToString(message));
-    X(CreateNonEnumerableDataPropertyOrThrow(obj, Value('message'), messageString));
+    X(CreateNonEnumerableDataPropertyOrThrow(obj, 'message', messageString));
   }
-  X(CreateNonEnumerableDataPropertyOrThrow(obj, Value('error'), error));
-  X(CreateNonEnumerableDataPropertyOrThrow(obj, Value('suppressed'), suppressed));
+  X(CreateNonEnumerableDataPropertyOrThrow(obj, 'error', error));
+  X(CreateNonEnumerableDataPropertyOrThrow(obj, 'suppressed', suppressed));
   Q(yield* setErrorHostInternalSlot(obj, captureStack()));
   return obj;
 }

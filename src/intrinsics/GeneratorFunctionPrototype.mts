@@ -11,7 +11,7 @@ export function bootstrapGeneratorFunctionPrototype(realmRec: Realm) {
     ['prototype', generatorPrototype, undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
 
-  X(DefinePropertyOrThrow(generatorPrototype, Value('constructor'), Descriptor({
+  X(DefinePropertyOrThrow(generatorPrototype, 'constructor', Descriptor({
     Value: generator,
     Writable: Value.false,
     Enumerable: Value.false,

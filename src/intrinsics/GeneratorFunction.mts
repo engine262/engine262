@@ -23,12 +23,12 @@ export function bootstrapGeneratorFunction(realmRec: Realm) {
 
   const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
 
-  X(DefinePropertyOrThrow(cons, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(cons, 'prototype', Descriptor({
     Writable: Value.false,
     Configurable: Value.false,
   })));
 
-  X(DefinePropertyOrThrow(generator, Value('constructor'), Descriptor({
+  X(DefinePropertyOrThrow(generator, 'constructor', Descriptor({
     Writable: Value.false,
   })));
 

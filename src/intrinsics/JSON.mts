@@ -18,7 +18,6 @@ import {
 } from '../completion.mts';
 import { kInternal } from '../utils/internal.mts';
 import { isArray } from '../utils/language.mts';
-import { JSStringSet } from '../utils/container.mts';
 import {
   BigIntValue, F, ParseScript, Realm, ScriptEvaluation, ThrowCompletion, type Arguments,
   type CodePoint,
@@ -274,7 +273,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
       const parseNode = parseRecord.ParseNode;
       Assert(parseNode.type !== 'ArrayLiteral' && parseNode.type !== 'ObjectLiteral');
       const sourceText = parseNode.sourceText;
-      X(CreateDataPropertyOrThrow(context, Value('source'), Value(CodePointsToString(sourceText))));
+      X(CreateDataPropertyOrThrow(context, 'source', Value(CodePointsToString(sourceText))));
     }
     elementRecords = parseRecord.Elements;
     entryRecords = parseRecord.Entries;
@@ -406,27 +405,27 @@ const codeUnitTable = new Map([
 ]);
 
 interface State {
-  ReplacerFunction: ObjectValue | UndefinedValue;
+  ReplacerFunction: ObjectValue | undefined;
   Stack: ObjectValue[];
   Indent: string;
   Gap: string;
-  PropertyList: JSStringSet | UndefinedValue;
+  PropertyList: Set<string> | undefined;
 }
 /** https://tc39.es/ecma262/#sec-serializejsonproperty */
 function* SerializeJSONProperty(state: State, key: JSStringValue, holder: ObjectValue): ValueEvaluator<JSStringValue | UndefinedValue> {
   let value = Q(yield* Get(holder, key)); // eslint-disable-line no-shadow
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
-    const toJSON = Q(yield* GetV(value, Value('toJSON')));
+      const toJSON = Q(yield* GetV(value, 'toJSON'));
     if (IsCallable(toJSON)) {
       value = Q(yield* Call(toJSON, value, [key]));
     }
   }
-  if (state.ReplacerFunction !== Value.undefined) {
+  if (state.ReplacerFunction !== undefined) {
     value = Q(yield* Call(state.ReplacerFunction, holder, [key, value]));
   }
   if (value instanceof ObjectValue) {
     if ('IsRawJSON' in value) {
-      return X(Get(value, Value('rawJSON'))) as JSStringValue;
+      return X(Get(value, 'rawJSON')) as JSStringValue;
     }
     if ('NumberData' in value) {
       value = Q(yield* ToNumber(value));
@@ -448,7 +447,7 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
     return Value('false');
   }
   if (value instanceof JSStringValue) {
-    return QuoteJSONString(value);
+    return Value(QuoteJSONString(value.stringValue()));
   }
   if (value instanceof NumberValue) {
     if (value.isFinite()) {
@@ -476,9 +475,9 @@ export function UnicodeEscape(codeUnit: string) {
 }
 
 /** https://tc39.es/ecma262/#sec-quotejsonstring */
-function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shadow
+function QuoteJSONString(value: string) { // eslint-disable-line no-shadow
   let product = '\u0022';
-  const cpList = [...value.stringValue()].map((c) => c.codePointAt(0)!);
+  const cpList = [...value].map((c) => c.codePointAt(0)!);
   for (const C of cpList) {
     if (codeUnitTable.has(C)) {
       product = `${product}${codeUnitTable.get(C)}`;
@@ -490,7 +489,7 @@ function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shado
     }
   }
   product = `${product}\u0022`;
-  return Value(product);
+  return product;
 }
 
 /** https://tc39.es/ecma262/#sec-serializejsonobject */
@@ -501,17 +500,18 @@ function* SerializeJSONObject(state: State, value: ObjectValue): ValueEvaluator<
   state.Stack.push(value);
   const stepback = state.Indent;
   state.Indent = `${state.Indent}${state.Gap}`;
-  let K: IterableIterator<JSStringValue>;
-  if (!(state.PropertyList instanceof UndefinedValue)) {
+  let K: IterableIterator<string | JSStringValue>;
+  if (state.PropertyList !== undefined) {
     K = state.PropertyList.keys();
   } else {
     K = Q(yield* EnumerableOwnProperties(value, 'key')).values();
   }
   const partial = [];
-  for (const P of K) {
+  for (const propertyKey of K) {
+    const P = typeof propertyKey === 'string' ? Value(propertyKey) : propertyKey;
     const strP = Q(yield* SerializeJSONProperty(state, P, value));
     if (!(strP instanceof UndefinedValue)) {
-      let member = QuoteJSONString(P).stringValue();
+      let member = QuoteJSONString(P.stringValue());
       member = `${member}:`;
       if (state.Gap !== '') {
         member = `${member} `;
@@ -581,15 +581,15 @@ function* SerializeJSONArray(state: State, value: ObjectValue): PlainEvaluator<J
 function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _space = Value.undefined]: Arguments): ValueEvaluator {
   const stack: ObjectValue[] = [];
   const indent = '';
-  let PropertyList: JSStringSet | UndefinedValue = Value.undefined;
-  let ReplacerFunction: ObjectValue | UndefinedValue = Value.undefined;
+  let PropertyList: Set<string> | undefined;
+  let ReplacerFunction: ObjectValue | undefined;
   if (replacer instanceof ObjectValue) {
     if (IsCallable(replacer)) {
       ReplacerFunction = replacer;
     } else {
       const isArray = Q(IsArray(replacer));
       if (isArray === Value.true) {
-        PropertyList = new JSStringSet();
+        PropertyList = new Set();
         const len = Q(yield* LengthOfArrayLike(replacer));
         let k = 0;
         while (k < len) {
@@ -605,8 +605,8 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
               item = Q(yield* ToString(v));
             }
           }
-          if (!(item instanceof UndefinedValue) && !PropertyList.has(item)) {
-            PropertyList.add(item);
+          if (!(item instanceof UndefinedValue) && !PropertyList.has(item.stringValue())) {
+            PropertyList.add(item.stringValue());
           }
           k += 1;
         }
@@ -639,7 +639,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
     gap = '';
   }
   const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataPropertyOrThrow(wrapper, Value(''), value));
+  X(CreateDataPropertyOrThrow(wrapper, '', value));
   const state: State = {
     ReplacerFunction, Stack: stack, Indent: indent, Gap: gap, PropertyList,
   };
@@ -678,7 +678,7 @@ function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
     );
   }
   const obj = OrdinaryObjectCreate(Value.null, ['IsRawJSON']);
-  X(CreateDataPropertyOrThrow(obj, Value('rawJSON'), jsonString));
+  X(CreateDataPropertyOrThrow(obj, 'rawJSON', jsonString));
   X(SetIntegrityLevel(obj, 'frozen'));
   return obj;
 }
@@ -735,6 +735,6 @@ export function bootstrapJSON(realmRec: Realm) {
   ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;
-  realmRec.Intrinsics['%JSON.parse%'] = X(Get(json, Value('parse'))) as FunctionObject;
-  realmRec.Intrinsics['%JSON.stringify%'] = X(Get(json, Value('stringify'))) as FunctionObject;
+  realmRec.Intrinsics['%JSON.parse%'] = X(Get(json, 'parse')) as FunctionObject;
+  realmRec.Intrinsics['%JSON.stringify%'] = X(Get(json, 'stringify')) as FunctionObject;
 }

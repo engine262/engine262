@@ -103,8 +103,8 @@ export function OrdinaryPreventExtensions(O: OrdinaryObject) {
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
-export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue) {
-  Assert(IsPropertyKey(P));
+export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue | string) {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
     return Value.undefined;
@@ -128,7 +128,8 @@ export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue) {
 }
 
 // 9.1.6.1 OrdinaryDefineOwnProperty
-export function* OrdinaryDefineOwnProperty(O: ObjectValue, P: PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue> {
+export function* OrdinaryDefineOwnProperty(O: ObjectValue, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue> {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
   const current = Q(yield* O.GetOwnProperty(P));
   const extensible = Q(yield* IsExtensible(O));
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
@@ -140,8 +141,8 @@ export function IsCompatiblePropertyDescriptor(Extensible: BooleanValue, Desc: D
 }
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
-export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedValue, P: PropertyKeyValue | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
-  Assert(O === Value.undefined || IsPropertyKey(P));
+export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedValue, P: PropertyKeyValue | string | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
+  Assert(O === Value.undefined || typeof P === 'string' || IsPropertyKey(P));
 
   if (current instanceof UndefinedValue) {
     if (extensible === Value.false) {
@@ -152,7 +153,7 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
 
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
       if (!(O instanceof UndefinedValue)) {
-        O.properties.set(P as PropertyKeyValue, Descriptor({
+        O.properties.set(P as PropertyKeyValue | string, Descriptor({
           Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
           Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
           Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
@@ -162,7 +163,7 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
     } else {
       Assert(IsAccessorDescriptor(Desc));
       if (!(O instanceof UndefinedValue)) {
-        O.properties.set(P as PropertyKeyValue, Descriptor({
+        O.properties.set(P as PropertyKeyValue | string, Descriptor({
           Getter: Desc.Getter === undefined ? Value.undefined : Desc.Getter,
           Setter: Desc.Setter === undefined ? Value.undefined : Desc.Setter,
           Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
@@ -263,8 +264,8 @@ export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedVal
 }
 
 // 9.1.7.1 OrdinaryHasProperty
-export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
-  Assert(IsPropertyKey(P));
+export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
 
   const hasOwn = Q(yield* O.GetOwnProperty(P));
   if (!(hasOwn instanceof UndefinedValue)) {
@@ -278,8 +279,8 @@ export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue): Value
 }
 
 // 9.1.8.1
-export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue, Receiver: Value): ValueEvaluator {
-  Assert(IsPropertyKey(P));
+export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue | string, Receiver: Value): ValueEvaluator {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
 
   const desc = Q(yield* O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
@@ -301,15 +302,15 @@ export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue, Receiver: Valu
 }
 
 // 9.1.9.1 OrdinarySet
-export function* OrdinarySet(O: ObjectValue, P: PropertyKeyValue, V: Value, Receiver: Value) {
-  Assert(IsPropertyKey(P));
+export function* OrdinarySet(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value) {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
   const ownDesc = Q(yield* O.GetOwnProperty(P));
   return yield* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
 }
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
-export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue> {
-  Assert(IsPropertyKey(P));
+export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue> {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
 
   if (ownDesc instanceof UndefinedValue) {
     const parent = Q(yield* O.GetPrototypeOf());
@@ -356,8 +357,8 @@ export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValu
 }
 
 // 9.1.10.1 OrdinaryDelete
-export function* OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
-  Assert(IsPropertyKey(P));
+export function* OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
+  Assert(typeof P === 'string' || IsPropertyKey(P));
   const desc = Q(yield* O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
     return Value.true;
@@ -444,7 +445,7 @@ export function* GetPrototypeFromConstructor(constructor: FunctionObject, intrin
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor));
-  let proto = Q(yield* Get(constructor, Value('prototype')));
+  let proto = Q(yield* Get(constructor, 'prototype'));
   if (!(proto instanceof ObjectValue)) {
     const realm = Q(GetFunctionRealm(constructor));
     proto = realm.Intrinsics[intrinsicDefaultProto];

@@ -48,7 +48,7 @@ import {
 /** https://tc39.es/ecma262/#sec-iterator.prototype-%symbol.dispose% */
 function* IteratorProto_dispose(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue;
-  const returnMethod = Q(yield* GetMethod(obj, Value('return')));
+  const returnMethod = Q(yield* GetMethod(obj, 'return'));
   if (!(returnMethod instanceof UndefinedValue)) {
     Q(yield* Call(returnMethod, obj));
   }

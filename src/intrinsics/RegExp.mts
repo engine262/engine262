@@ -54,7 +54,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
     // b. If patternIsRegExp is true and flags is undefined, then
     if (patternIsRegExp === Value.true && flags === Value.undefined) {
       // i. Let patternConstructor be ? Get(pattern, "constructor").
-      const patternConstructor = Q(yield* Get(pattern as ObjectValue, Value('constructor')));
+      const patternConstructor = Q(yield* Get(pattern as ObjectValue, 'constructor'));
       // ii. If SameValue(newTarget, patternConstructor) is true, return pattern.
       if (SameValue(newTarget, patternConstructor)) {
         return pattern;
@@ -77,11 +77,11 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
     }
   } else if (patternIsRegExp === Value.true) { // 5. Else if patternIsRegExp is true, then
     // a. Else if patternIsRegExp is true, then
-    P = Q(yield* Get(pattern as ObjectValue, Value('source')));
+    P = Q(yield* Get(pattern as ObjectValue, 'source'));
     // b. If flags is undefined, then
     if (flags === Value.undefined) {
       // i. Let F be ? Get(pattern, "flags").
-      F = Q(yield* Get(pattern as ObjectValue, Value('flags')));
+    F = Q(yield* Get(pattern as ObjectValue, 'flags'));
     } else { // c. Else, let F be flags.
       F = flags;
     }

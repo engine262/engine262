@@ -272,7 +272,7 @@ function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
   if (roundTo instanceof JSStringValue) {
     const paramString = roundTo;
     roundTo = OrdinaryObjectCreate(Value.null);
-    X(CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString));
+    X(CreateDataPropertyOrThrow(roundTo, 'smallestUnit', paramString));
   } else {
     roundTo = Q(GetOptionsObject(roundTo));
   }

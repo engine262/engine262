@@ -180,7 +180,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       return Throw.TypeError('Super class $1 is not a constructor', superclass);
     } else { // g. Else,
       // i. Let protoParent be ? Get(superclass, "prototype").
-      protoParent = Q(yield* Get(superclass as ObjectValue, Value('prototype')));
+      protoParent = Q(yield* Get(superclass as ObjectValue, 'prototype'));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
       if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
         return Throw.TypeError('Super class\'s prototype must be an object or null');
@@ -260,7 +260,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     F.ConstructorKind = 'derived';
   }
   // 19. Perform CreateMethodProperty(proto, "constructor", F).
-  X(CreateMethodProperty(proto, Value('constructor'), F));
+  X(CreateMethodProperty(proto, 'constructor', F));
   // 20. If ClassBody is not present, let elements be a new empty List.
   let elements: ParseNode.ClassElement[];
   if (!ClassBody) {
@@ -570,7 +570,7 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
       }
     };
     const getter = CreateBuiltinFunction(getterClosure, 1, Value(''), []);
-    X(CreateDataPropertyOrThrow(accessObj, Value('get'), getter));
+    X(CreateDataPropertyOrThrow(accessObj, 'get', getter));
   }
   if (kind === 'field' || kind === 'accessor' || kind === 'setter') {
     const setterClosure = function* setter([obj = Value.undefined, value = Value.undefined]: Arguments) {
@@ -584,7 +584,7 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
       }
     };
     const setter = CreateBuiltinFunction(setterClosure, 2, Value(''), []);
-    X(CreateDataPropertyOrThrow(accessObj, Value('set'), setter));
+    X(CreateDataPropertyOrThrow(accessObj, 'set', setter));
   }
   const hasClosure = function* has(this: Value, [obj = Value.undefined]: Arguments) {
     if (!(obj instanceof ObjectValue)) {
@@ -599,7 +599,7 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
     return Value.false;
   };
   const has = CreateBuiltinFunction(hasClosure, 1, Value('has'), []);
-  X(CreateDataPropertyOrThrow(accessObj, Value('has'), has));
+  X(CreateDataPropertyOrThrow(accessObj, 'has', has));
   return accessObj;
 }
 
@@ -623,25 +623,25 @@ export function CreateAddInitializerFunction(initializers: FunctionObject[], dec
 export function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinitionRecord['Kind'], name: PropertyKeyValue | PrivateName, initializers: FunctionObject[], decorationState: { Finished: boolean }, isStatic?: boolean): ObjectValue {
   const contextObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   const kindStr = Value(kind);
-  X(CreateDataPropertyOrThrow(contextObj, Value('kind'), kindStr));
+  X(CreateDataPropertyOrThrow(contextObj, 'kind', kindStr));
   if (kind !== 'class') {
-    X(CreateDataPropertyOrThrow(contextObj, Value('access'), CreateDecoratorAccessObject(kind, name)));
+    X(CreateDataPropertyOrThrow(contextObj, 'access', CreateDecoratorAccessObject(kind, name)));
     if (isStatic !== undefined) {
-      X(CreateDataPropertyOrThrow(contextObj, Value('static'), Value(isStatic)));
+      X(CreateDataPropertyOrThrow(contextObj, 'static', Value(isStatic)));
     }
     if (name instanceof PrivateName) {
-      X(CreateDataPropertyOrThrow(contextObj, Value('private'), Value.true));
-      X(CreateDataPropertyOrThrow(contextObj, Value('name'), Value(name.Description)));
+      X(CreateDataPropertyOrThrow(contextObj, 'private', Value.true));
+      X(CreateDataPropertyOrThrow(contextObj, 'name', Value(name.Description)));
     } else {
-      X(CreateDataPropertyOrThrow(contextObj, Value('private'), Value.false));
-      X(CreateDataPropertyOrThrow(contextObj, Value('name'), name));
+      X(CreateDataPropertyOrThrow(contextObj, 'private', Value.false));
+      X(CreateDataPropertyOrThrow(contextObj, 'name', name));
     }
   } else {
     // TODO(decorator): spec bug, no assert to the name
-    X(CreateDataPropertyOrThrow(contextObj, Value('name'), name as PropertyKeyValue));
+    X(CreateDataPropertyOrThrow(contextObj, 'name', name as PropertyKeyValue));
   }
   const addInitializer = CreateAddInitializerFunction(initializers, decorationState);
-  X(CreateDataPropertyOrThrow(contextObj, Value('addInitializer'), addInitializer));
+  X(CreateDataPropertyOrThrow(contextObj, 'addInitializer', addInitializer));
   return contextObj;
 }
 
@@ -668,8 +668,8 @@ export function* ApplyDecoratorsToElementDefinition(_homeObject: ObjectValue, el
       value = elementRecord.Set;
     } else if (kind === 'accessor') {
       value = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-      X(CreateDataPropertyOrThrow(value, Value('get'), elementRecord.Get));
-      X(CreateDataPropertyOrThrow(value, Value('set'), elementRecord.Set));
+      X(CreateDataPropertyOrThrow(value, 'get', elementRecord.Get));
+      X(CreateDataPropertyOrThrow(value, 'set', elementRecord.Set));
     }
     // TODO(decorator): spec bug, missing GetValue call
     // const newValue = Q(yield* Call(decorator, decoratorReceiver), [value, context]));
@@ -684,19 +684,19 @@ export function* ApplyDecoratorsToElementDefinition(_homeObject: ObjectValue, el
       }
     } else if (kind === 'accessor') {
       if (newValue instanceof ObjectValue) {
-        const newGetter = Q(yield* Get(newValue, Value('get')));
+      const newGetter = Q(yield* Get(newValue, 'get'));
         if (IsCallable(newGetter)) {
           elementRecord.Get = newGetter;
         } else if (newGetter !== Value.undefined) {
           return Throw.TypeError('The get property of the return value of an accessor decorator must be a function or undefined, but $1 was returned', newGetter);
         }
-        const newSetter = Q(yield* Get(newValue, Value('set')));
+      const newSetter = Q(yield* Get(newValue, 'set'));
         if (IsCallable(newSetter)) {
           elementRecord.Set = newSetter;
         } else if (newSetter !== Value.undefined) {
           return Throw.TypeError('The set property of the return value of an accessor decorator must be a function or undefined, but $1 was returned', newSetter);
         }
-        const initializer = Q(yield* Get(newValue, Value('init')));
+      const initializer = Q(yield* Get(newValue, 'init'));
         if (IsCallable(initializer)) {
           // TODO(decorator): spec bug. ApplyDecoratorsToElementDefinition unshift decorator initializers into this array, but read it in order, so the spec order is wrong (be like [decorator2, decorator1, syntaxInit], but the correct order should be [syntaxInit, decorator2, decorator1])
           elementRecord.Initializers.unshift(initializer);

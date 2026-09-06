@@ -21,7 +21,7 @@ import {
 function* AsyncIteratorPrototype_asyncDispose(_args: Arguments, { thisValue }: FunctionCallContext) {
   const obj = thisValue;
   const promiseCapability = X(NewPromiseCapability(intrinsics()['%Promise%']));
-  const returnMethod = yield* GetMethod(obj, Value('return'));
+  const returnMethod = yield* GetMethod(obj, 'return');
   IfAbruptRejectPromise(returnMethod, promiseCapability);
   __ts_cast__<UndefinedValue | FunctionObject>(returnMethod);
   if (returnMethod instanceof UndefinedValue) {

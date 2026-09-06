@@ -102,7 +102,7 @@ test('native function names', { timeout: 15000 }, () => {
     }
     return Value('<not a function object>');
   });
-  X(CreateDataPropertyOrThrow(realm.GlobalObject, Value('getName'), f));
+  X(CreateDataPropertyOrThrow(realm.GlobalObject, 'getName', f));
   pop?.();
   const result = realm.evaluateScriptSkipDebugger(`
   (${() => {

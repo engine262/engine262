@@ -26,7 +26,7 @@ export function* GetRoundingModeOption(
   options: ObjectValue,
   fallback: RoundingMode,
 ): PlainEvaluator<RoundingMode> {
-  const value = Q(yield* Get(options, Value('roundingMode')));
+  const value = Q(yield* Get(options, 'roundingMode'));
   if (value instanceof UndefinedValue) return fallback;
   const stringValue = Q(yield* ToString(value)).stringValue();
   const acceptedValues = ['ceil', 'floor', 'expand', 'trunc', 'halfCeil', 'halfFloor', 'halfExpand', 'halfTrunc', 'halfEven'] as readonly RoundingMode[];
@@ -46,7 +46,7 @@ export type UnsignedRoundingMode = 'infinity' | 'zero' | 'half-infinity' | 'half
 export function* GetRoundingIncrementOption(
   options: ObjectValue,
 ): PlainEvaluator<Integer> {
-  const value = Q(yield* Get(options, Value('roundingIncrement')));
+  const value = Q(yield* Get(options, 'roundingIncrement'));
   if (value === Value.undefined) {
     return 1n;
   }

@@ -115,7 +115,7 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
   if (isArray === Value.false) {
     return Q(ArrayCreate(length));
   }
-  let constructor = Q(yield* Get(originalArray, Value('constructor')));
+  let constructor = Q(yield* Get(originalArray, 'constructor'));
   if (IsConstructor(constructor)) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     const constructorRealm = Q(GetFunctionRealm(constructor));

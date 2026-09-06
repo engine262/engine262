@@ -544,7 +544,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       const kStr = X(ToString(F(k)));
       const nextElement = Q(yield* Get(array, kStr));
       if (nextElement !== Value.undefined && nextElement !== Value.null) {
-        const S = Q(yield* ToString(Q(yield* Invoke(nextElement, Value('toLocaleString'))))).stringValue();
+        const S = Q(yield* ToString(Q(yield* Invoke(nextElement, 'toLocaleString')))).stringValue();
         R = `${R}${S}`;
       }
       k += 1;

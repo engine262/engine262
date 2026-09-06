@@ -583,7 +583,7 @@ function* DateProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext)
   if (tv instanceof NumberValue && !Number.isFinite(R(tv))) {
     return Value.null;
   }
-  return Q(yield* Invoke(O, Value('toISOString')));
+  return Q(yield* Invoke(O, 'toISOString'));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */

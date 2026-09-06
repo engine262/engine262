@@ -329,43 +329,43 @@ export function* ToPartialDurationRecord(temporalDurationLike: Value): PlainEval
     Weeks: undefined,
     Years: undefined,
   };
-  const days = Q(yield* Get(temporalDurationLike, Value('days')));
+  const days = Q(yield* Get(temporalDurationLike, 'days'));
   if (days !== Value.undefined) {
     result.Days = Number(Q(yield* SnapToInteger(days, 'reject')));
   }
-  const hours = Q(yield* Get(temporalDurationLike, Value('hours')));
+  const hours = Q(yield* Get(temporalDurationLike, 'hours'));
   if (hours !== Value.undefined) {
     result.Hours = Number(Q(yield* SnapToInteger(hours, 'reject')));
   }
-  const microseconds = Q(yield* Get(temporalDurationLike, Value('microseconds')));
+  const microseconds = Q(yield* Get(temporalDurationLike, 'microseconds'));
   if (microseconds !== Value.undefined) {
     result.Microseconds = Number(Q(yield* SnapToInteger(microseconds, 'reject')));
   }
-  const milliseconds = Q(yield* Get(temporalDurationLike, Value('milliseconds')));
+  const milliseconds = Q(yield* Get(temporalDurationLike, 'milliseconds'));
   if (milliseconds !== Value.undefined) {
     result.Milliseconds = Number(Q(yield* SnapToInteger(milliseconds, 'reject')));
   }
-  const minutes = Q(yield* Get(temporalDurationLike, Value('minutes')));
+  const minutes = Q(yield* Get(temporalDurationLike, 'minutes'));
   if (minutes !== Value.undefined) {
     result.Minutes = Number(Q(yield* SnapToInteger(minutes, 'reject')));
   }
-  const months = Q(yield* Get(temporalDurationLike, Value('months')));
+  const months = Q(yield* Get(temporalDurationLike, 'months'));
   if (months !== Value.undefined) {
     result.Months = Number(Q(yield* SnapToInteger(months, 'reject')));
   }
-  const nanoseconds = Q(yield* Get(temporalDurationLike, Value('nanoseconds')));
+  const nanoseconds = Q(yield* Get(temporalDurationLike, 'nanoseconds'));
   if (nanoseconds !== Value.undefined) {
     result.Nanoseconds = Number(Q(yield* SnapToInteger(nanoseconds, 'reject')));
   }
-  const seconds = Q(yield* Get(temporalDurationLike, Value('seconds')));
+  const seconds = Q(yield* Get(temporalDurationLike, 'seconds'));
   if (seconds !== Value.undefined) {
     result.Seconds = Number(Q(yield* SnapToInteger(seconds, 'reject')));
   }
-  const weeks = Q(yield* Get(temporalDurationLike, Value('weeks')));
+  const weeks = Q(yield* Get(temporalDurationLike, 'weeks'));
   if (weeks !== Value.undefined) {
     result.Weeks = Number(Q(yield* SnapToInteger(weeks, 'reject')));
   }
-  const years = Q(yield* Get(temporalDurationLike, Value('years')));
+  const years = Q(yield* Get(temporalDurationLike, 'years'));
   if (years !== Value.undefined) {
     result.Years = Number(Q(yield* SnapToInteger(years, 'reject')));
   }

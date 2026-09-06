@@ -556,7 +556,7 @@ function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCa
 }
 
 export function bootstrapTypedArrayPrototype(realmRec: Realm) {
-  const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString')));
+  const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], 'toString'));
   Assert(ArrayProto_toString instanceof ObjectValue);
 
   const proto = bootstrapPrototype(realmRec, [
@@ -587,7 +587,7 @@ export function bootstrapTypedArrayPrototype(realmRec: Realm) {
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
   {
-    const fn = X(Get(proto, Value('values')));
+    const fn = X(Get(proto, 'values'));
     X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
       Value: fn,
       Writable: Value.true,

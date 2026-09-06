@@ -83,7 +83,7 @@ function* ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext)
       n += 1;
     }
   }
-  Q(yield* Set(A, Value('length'), F(n), Value.true));
+  Q(yield* Set(A, 'length', F(n), Value.true));
   return A;
 }
 
@@ -263,14 +263,14 @@ function* ArrayProto_pop(_args: Arguments, { thisValue }: FunctionCallContext): 
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
   if (len === 0) {
-    Q(yield* Set(O, Value('length'), F(+0), Value.true));
+  Q(yield* Set(O, 'length', F(+0), Value.true));
     return Value.undefined;
   } else {
     const newLen = len - 1;
     const index = Q(yield* ToString(F(newLen)));
     const element = Q(yield* Get(O, index));
     Q(yield* DeletePropertyOrThrow(O, index));
-    Q(yield* Set(O, Value('length'), F(newLen), Value.true));
+  Q(yield* Set(O, 'length', F(newLen), Value.true));
     return element;
   }
 }
@@ -289,7 +289,7 @@ function* ArrayProto_push(_items: Arguments, { thisValue }: FunctionCallContext)
     Q(yield* Set(O, X(ToString(F(len))), E, Value.true));
     len += 1;
   }
-  Q(yield* Set(O, Value('length'), F(len), Value.true));
+  Q(yield* Set(O, 'length', F(len), Value.true));
   return F(len);
 }
 
@@ -298,10 +298,10 @@ function* ArrayProto_shift(_args: Arguments, { thisValue }: FunctionCallContext)
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
   if (len === 0) {
-    Q(yield* Set(O, Value('length'), F(+0), Value.true));
+  Q(yield* Set(O, 'length', F(+0), Value.true));
     return Value.undefined;
   }
-  const first = Q(yield* Get(O, Value('0')));
+  const first = Q(yield* Get(O, '0'));
   let k = 1;
   while (k < len) {
     const from = X(ToString(F(k)));
@@ -316,7 +316,7 @@ function* ArrayProto_shift(_args: Arguments, { thisValue }: FunctionCallContext)
     k += 1;
   }
   Q(yield* DeletePropertyOrThrow(O, X(ToString(F(len - 1)))));
-  Q(yield* Set(O, Value('length'), F(len - 1), Value.true));
+  Q(yield* Set(O, 'length', F(len - 1), Value.true));
   return first;
 }
 
@@ -340,7 +340,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arg
     k += 1;
     n += 1;
   }
-  Q(yield* Set(A, Value('length'), F(n), Value.true));
+  Q(yield* Set(A, 'length', F(n), Value.true));
   return A;
 }
 
@@ -423,7 +423,7 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
     }
     k += 1;
   }
-  Q(yield* Set(A, Value('length'), F(actualDeleteCount), Value.true));
+  Q(yield* Set(A, 'length', F(actualDeleteCount), Value.true));
   const itemCount = items.length;
   if (itemCount < actualDeleteCount) {
     k = actualStart;
@@ -465,7 +465,7 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
     Q(yield* Set(obj, X(ToString(F(k))), E, Value.true));
     k += 1;
   }
-  Q(yield* Set(obj, Value('length'), F(length - actualDeleteCount + itemCount), Value.true));
+  Q(yield* Set(obj, 'length', F(length - actualDeleteCount + itemCount), Value.true));
   return A;
 }
 
@@ -542,7 +542,7 @@ function* ArrayProto_with([index = Value.undefined, value = Value.undefined]: Ar
 /** https://tc39.es/ecma262/#sec-array.prototype.tostring */
 function* ArrayProto_toString(_a: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const array = Q(ToObject(thisValue));
-  let func = Q(yield* Get(array, Value('join')));
+  let func = Q(yield* Get(array, 'join'));
   if (!IsCallable(func)) {
     func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
@@ -580,7 +580,7 @@ function* ArrayProto_unshift(args: Arguments, { thisValue }: FunctionCallContext
       j += 1;
     }
   }
-  Q(yield* Set(O, Value('length'), F(len + argCount), Value.true));
+  Q(yield* Set(O, 'length', F(len + argCount), Value.true));
   return F(len + argCount);
 }
 
@@ -657,22 +657,22 @@ export function bootstrapArrayPrototype(realmRec: Realm) {
 
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
-    Assert(X(CreateDataProperty(unscopableList, Value('at'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('toReversed'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('toSorted'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('toSpliced'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'at', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'copyWithin', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'entries', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'fill', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'find', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'findIndex', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'findLast', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'findLastIndex', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'flat', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'flatMap', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'includes', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'keys', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'toReversed', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'toSorted', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'toSpliced', Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, 'values', Value.true)) === Value.true);
     X(proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
       Value: unscopableList,
       Writable: Value.false,
@@ -682,7 +682,7 @@ export function bootstrapArrayPrototype(realmRec: Realm) {
   }
 
   // Used in `arguments` objects.
-  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, Value('values'))) as FunctionObject;
+  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, 'values')) as FunctionObject;
 
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }

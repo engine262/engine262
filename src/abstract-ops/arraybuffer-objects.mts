@@ -177,7 +177,7 @@ export function* GetArrayBufferMaxByteLengthOption(options: Value): PlainEvaluat
   if (!(options instanceof ObjectValue)) {
     return undefined;
   }
-  const maxByteLength = Q(yield* Get(options, Value('maxByteLength')));
+  const maxByteLength = Q(yield* Get(options, 'maxByteLength'));
   if (maxByteLength === Value.undefined) {
     return undefined;
   }

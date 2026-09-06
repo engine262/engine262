@@ -242,13 +242,13 @@ function* PlainDateProto_toZonedDateTime([item = Value.undefined]: Arguments, { 
   let timeZone: TimeZoneIdentifier;
   let temporalTime: Value;
   if (item instanceof ObjectValue) {
-    const timeZoneLike = Q(yield* Get(item, Value('timeZone')));
+    const timeZoneLike = Q(yield* Get(item, 'timeZone'));
     if (timeZoneLike === Value.undefined) {
       timeZone = Q(ToTemporalTimeZoneIdentifier(item));
       temporalTime = Value.undefined;
     } else {
       timeZone = Q(ToTemporalTimeZoneIdentifier(timeZoneLike));
-      temporalTime = Q(yield* Get(item, Value('plainTime')));
+      temporalTime = Q(yield* Get(item, 'plainTime'));
     }
   } else {
     timeZone = Q(ToTemporalTimeZoneIdentifier(item));

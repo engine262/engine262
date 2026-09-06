@@ -253,11 +253,11 @@ export function ModuleNamespaceCreate(
 }
 
 /** https://tc39.es/proposal-defer-import-eval/#sec-IsSymbolLikeNamespaceKey */
-function IsSymbolLikeNamespaceKey(P: PropertyKeyValue, ns: ModuleNamespaceObject): P is SymbolValue {
+function IsSymbolLikeNamespaceKey(P: PropertyKeyValue | string, ns: ModuleNamespaceObject): P is SymbolValue {
   if (P instanceof SymbolValue) {
     return true;
   }
-  if (ns.Deferred && P.stringValue() === 'then') {
+  if (ns.Deferred && (P === 'then' || (P instanceof JSStringValue && P.stringValue() === 'then'))) {
     return true;
   }
   return false;

@@ -43,7 +43,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('getPrototypeOf')));
+    const trap = Q(yield* GetMethod(handler, 'getPrototypeOf'));
     if (trap === Value.undefined) {
       return Q(yield* target.GetPrototypeOf());
     }
@@ -72,7 +72,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('setPrototypeOf')));
+    const trap = Q(yield* GetMethod(handler, 'setPrototypeOf'));
     if (trap === Value.undefined) {
       return Q(yield* target.SetPrototypeOf(V));
     }
@@ -100,7 +100,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
-    const trap = Q(yield* GetMethod(handler, Value('isExtensible')));
+    const trap = Q(yield* GetMethod(handler, 'isExtensible'));
     if (trap === Value.undefined) {
       return Q(yield* IsExtensible(target as ObjectValue));
     }
@@ -121,7 +121,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('preventExtensions')));
+    const trap = Q(yield* GetMethod(handler, 'preventExtensions'));
     if (trap === Value.undefined) {
       return Q(yield* target.PreventExtensions());
     }
@@ -151,7 +151,7 @@ const InternalMethods = {
     // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget as ObjectValue;
     // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
-    const trap = Q(yield* GetMethod(handler, Value('getOwnPropertyDescriptor')));
+    const trap = Q(yield* GetMethod(handler, 'getOwnPropertyDescriptor'));
     // 7. If trap is undefined, then
     if (trap === Value.undefined) {
       // a. Return ? target.[[GetOwnProperty]](P).
@@ -231,7 +231,7 @@ const InternalMethods = {
     // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget as ObjectValue;
     // 6. Let trap be ? GetMethod(handler, "defineProperty").
-    const trap = Q(yield* GetMethod(handler, Value('defineProperty')));
+    const trap = Q(yield* GetMethod(handler, 'defineProperty'));
     // 7. If trap is undefined, then
     if (trap === Value.undefined) {
       // a. Return ? target.[[DefineOwnProperty]](P, Desc).
@@ -300,7 +300,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('has')));
+    const trap = Q(yield* GetMethod(handler, 'has'));
     if (trap === Value.undefined) {
       return Q(yield* target.HasProperty(P));
     }
@@ -330,7 +330,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('get')));
+    const trap = Q(yield* GetMethod(handler, 'get'));
     if (trap === Value.undefined) {
       return Q(yield* target.Get(P, Receiver));
     }
@@ -361,7 +361,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('set')));
+    const trap = Q(yield* GetMethod(handler, 'set'));
     if (trap === Value.undefined) {
       return Q(yield* target.Set(P, V, Receiver));
     }
@@ -401,7 +401,7 @@ const InternalMethods = {
     // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget as ObjectValue;
     // 6. Let trap be ? GetMethod(handler, "deleteProperty").
-    const trap = Q(yield* GetMethod(handler, Value('deleteProperty')));
+    const trap = Q(yield* GetMethod(handler, 'deleteProperty'));
     // 7. If trap is undefined, then
     if (trap === Value.undefined) {
       // a. Return ? target.[[Delete]](P).
@@ -442,7 +442,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(yield* GetMethod(handler, Value('ownKeys')));
+    const trap = Q(yield* GetMethod(handler, 'ownKeys'));
     if (trap === Value.undefined) {
       return Q(yield* target.OwnPropertyKeys());
     }
@@ -506,7 +506,7 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
-    const trap = Q(yield* GetMethod(handler, Value('apply')));
+    const trap = Q(yield* GetMethod(handler, 'apply'));
     if (trap === Value.undefined) {
       return Q(yield* Call(target, thisArgument, argumentsList));
     }
@@ -524,7 +524,7 @@ const InternalMethods = {
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
     Assert(IsConstructor(target));
-    const trap = Q(yield* GetMethod(handler, Value('construct')));
+    const trap = Q(yield* GetMethod(handler, 'construct'));
     if (trap === Value.undefined) {
       return Q(yield* Construct(target, argumentsList, newTarget));
     }

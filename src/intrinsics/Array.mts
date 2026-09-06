@@ -62,7 +62,7 @@ function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext
     const array = X(ArrayCreate(0, proto));
     let intLen;
     if (!(len instanceof NumberValue)) {
-      X(CreateDataPropertyOrThrow(array, Value('0'), len));
+      X(CreateDataPropertyOrThrow(array, '0', len));
       intLen = F(1);
     } else {
       intLen = X(ToUint32(len));
@@ -70,7 +70,7 @@ function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext
         return Throw.RangeError('$1 is not a valid array length', len);
       }
     }
-    X(yield* Set(array, Value('length'), intLen, Value.true));
+    X(yield* Set(array, 'length', intLen, Value.true));
     return array;
   }
 
@@ -82,7 +82,7 @@ function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext
     X(CreateDataPropertyOrThrow(array, Pk, itemK));
     k += 1;
   }
-  Assert(R(X(Get(array, Value('length'))) as NumberValue) === numberOfArgs);
+  Assert(R(X(Get(array, 'length')) as NumberValue) === numberOfArgs);
   return array;
 }
 
@@ -116,7 +116,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       const Pk = X(ToString(F(k)));
       const next = Q(yield* IteratorStepValue(iteratorRecord));
       if (next === 'done') {
-        Q(yield* Set(array, Value('length'), F(k), Value.true));
+        Q(yield* Set(array, 'length', F(k), Value.true));
         return array;
       }
       let mappedValue;
@@ -152,7 +152,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     Q(yield* CreateDataPropertyOrThrow(array, Pk, mappedValue));
     k += 1;
   }
-  Q(yield* Set(array, Value('length'), F(len), Value.true));
+  Q(yield* Set(array, 'length', F(len), Value.true));
   return array;
 }
 
@@ -202,7 +202,7 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
       }
       const done = Q(yield* IteratorComplete(nextResult));
       if (done === Value.true) {
-        Q(yield* Set(array, Value('length'), F(k), Value.true));
+        Q(yield* Set(array, 'length', F(k), Value.true));
         return array;
       }
 
@@ -250,7 +250,7 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
       k += 1;
     }
 
-    Q(yield* Set(array, Value('length'), F(len), Value.true));
+    Q(yield* Set(array, 'length', F(len), Value.true));
     return array;
   }
 }
@@ -278,7 +278,7 @@ function* Array_of(items: Arguments, { thisValue }: FunctionCallContext): ValueE
     Q(yield* CreateDataPropertyOrThrow(array, Pk, kValue));
     k += 1;
   }
-  Q(yield* Set(array, Value('length'), F(len), Value.true));
+  Q(yield* Set(array, 'length', F(len), Value.true));
   return array;
 }
 

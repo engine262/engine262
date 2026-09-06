@@ -77,9 +77,9 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]: 
   // 6. Let result be OrdinaryObjectCreate(%Object.prototype%).
   const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 7. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
-  X(CreateDataProperty(result, Value('proxy'), p));
+  X(CreateDataProperty(result, 'proxy', p));
   // 8. Perform ! CreateDataPropertyOrThrow(result, "revoke", revoker).
-  X(CreateDataProperty(result, Value('revoke'), revoker));
+  X(CreateDataProperty(result, 'revoke', revoker));
   // 9. Return result.
   return result;
 }

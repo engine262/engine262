@@ -194,13 +194,13 @@ export interface Intrinsics extends Intrinsics_Table6 {
 export function AddRestrictedFunctionProperties(F: ObjectValue, realm: Realm) {
   Assert(!!realm.Intrinsics['%ThrowTypeError%']);
   const thrower = realm.Intrinsics['%ThrowTypeError%'];
-  X(DefinePropertyOrThrow(F, Value('caller'), Descriptor({
+  X(DefinePropertyOrThrow(F, 'caller', Descriptor({
     Getter: thrower,
     Setter: thrower,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(F, Value('arguments'), Descriptor({
+  X(DefinePropertyOrThrow(F, 'arguments', Descriptor({
     Getter: thrower,
     Setter: thrower,
     Enumerable: Value.false,

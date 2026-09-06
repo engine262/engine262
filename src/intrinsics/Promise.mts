@@ -113,7 +113,7 @@ function* GetPromiseResolve(promiseConstructor: FunctionObject) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
   Assert(IsConstructor(promiseConstructor));
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
-  const promiseResolve = Q(yield* Get(promiseConstructor, Value('resolve')));
+  const promiseResolve = Q(yield* Get(promiseConstructor, 'resolve'));
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
   if (!IsCallable(promiseResolve)) {
     return Throw.TypeError('$1 is not a function', promiseResolve);
@@ -181,7 +181,7 @@ export function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: 
     const onFulfilled = CreatePromiseAllResolveElement(index, values, resultCapability, remainingElementsCount);
     index += 1;
     remainingElementsCount.Value += 1;
-    Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]));
+    Q(yield* Invoke(nextPromise, 'then', [onFulfilled, resultCapability.Reject]));
   }
 }
 
@@ -305,9 +305,9 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
           Assert(variant === 'all-settled');
           const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
           // c. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
-          X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
+          X(CreateDataProperty(obj, 'status', Value('fulfilled')));
           // d. Perform ! CreateDataPropertyOrThrow(obj, "value", x).
-          X(CreateDataProperty(obj, Value('value'), value));
+          X(CreateDataProperty(obj, 'value', value));
           entries[thisIndex].Value = obj;
         }
 
@@ -343,9 +343,9 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
           const thisIndex: number = F.Index;
           const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
           // d. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
-          X(CreateDataProperty(obj, Value('status'), Value('rejected')));
+          X(CreateDataProperty(obj, 'status', Value('rejected')));
           // e. Perform ! CreateDataPropertyOrThrow(obj, "reason", x).
-          X(CreateDataProperty(obj, Value('reason'), error));
+          X(CreateDataProperty(obj, 'reason', error));
 
           entries[thisIndex].Value = obj;
 
@@ -368,7 +368,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
 
       remainingElementsCount.Value += 1;
       // xi. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-      Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
+      Q(yield* Invoke(nextPromise, 'then', [onFulfilled, onRejected]));
       index += 1;
     }
   }
@@ -465,8 +465,8 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       }
       alreadyCalled.Value = true;
       const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-      X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
-      X(CreateDataProperty(obj, Value('value'), value));
+      X(CreateDataProperty(obj, 'status', Value('fulfilled')));
+      X(CreateDataProperty(obj, 'value', value));
       const thisIndex = F.Index;
       values[thisIndex] = obj;
       remainingElementsCount.Value -= 1;
@@ -499,8 +499,8 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       }
       alreadyCalled.Value = true;
       const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-      X(CreateDataProperty(obj, Value('status'), Value('rejected')));
-      X(CreateDataProperty(obj, Value('reason'), error));
+      X(CreateDataProperty(obj, 'status', Value('rejected')));
+      X(CreateDataProperty(obj, 'reason', error));
       const thisIndex = F.Index;
       values[thisIndex] = obj;
       remainingElementsCount.Value -= 1;
@@ -517,7 +517,7 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
     onRejected.Index = index;
     index += 1;
     remainingElementsCount.Value += 1;
-    Q(yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
+    Q(yield* Invoke(nextPromise, 'then', [onFulfilled, onRejected]));
   }
 }
 
@@ -571,7 +571,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
         // 1. Let aggregateError be a newly created AggregateError object.
         const aggregateError = Throw.AggregateError('No promises passed to Promise.any were fulfilled').Value as ObjectValue;
         // 2. Perform ! DefinePropertyOrThrow(aggregateError, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-        X(DefinePropertyOrThrow(aggregateError, Value('errors'), Descriptor({
+        X(DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({
           Configurable: Value.true,
           Enumerable: Value.false,
           Writable: Value.true,
@@ -599,7 +599,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
         const aggregateError = Throw.AggregateError('No promises passed to Promise.any were fulfilled').Value as ObjectValue;
-        X(DefinePropertyOrThrow(aggregateError, Value('errors'), Descriptor({
+        X(DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({
           Configurable: Value.true,
           Enumerable: Value.false,
           Writable: Value.true,
@@ -615,7 +615,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
     onRejected.Index = index;
     index += 1;
     remainingElementsCount.Value += 1;
-    Q(yield* Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]));
+    Q(yield* Invoke(nextPromise, 'then', [resultCapability.Resolve, onRejected]));
   }
 }
 
@@ -670,7 +670,7 @@ function* PerformPromiseRace(iteratorRecord: IteratorRecord, constructor: Functi
     // h. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
     const nextPromise = Q(yield* Call(promiseResolve, constructor, [next]));
     // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-    Q(yield* Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
+    Q(yield* Invoke(nextPromise, 'then', [resultCapability.Resolve, resultCapability.Reject]));
   }
 }
 
@@ -767,11 +767,11 @@ function* Promise_withResolvers(_args: Arguments, { thisValue }: FunctionCallCon
   // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).
-  X(CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise));
+  X(CreateDataPropertyOrThrow(obj, 'promise', promiseCapability.Promise));
   // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve", promiseCapability.[[Resolve]]).
-  X(CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve));
+  X(CreateDataPropertyOrThrow(obj, 'resolve', promiseCapability.Resolve));
   // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject", promiseCapability.[[Reject]]).
-  X(CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject));
+  X(CreateDataPropertyOrThrow(obj, 'reject', promiseCapability.Reject));
   // 7. Return obj.
   return EnsureCompletion(obj);
 }
@@ -798,5 +798,5 @@ export function bootstrapPromise(realmRec: Realm) {
   })));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
-  realmRec.Intrinsics['%Promise.resolve%'] = X(Get(promiseConstructor, Value('resolve'))) as FunctionObject;
+  realmRec.Intrinsics['%Promise.resolve%'] = X(Get(promiseConstructor, 'resolve')) as FunctionObject;
 }

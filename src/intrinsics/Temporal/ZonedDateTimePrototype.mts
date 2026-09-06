@@ -382,7 +382,7 @@ function* ZonedDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
   if (roundTo instanceof JSStringValue) {
     const paramString = roundTo;
     roundTo = OrdinaryObjectCreate(Value.null);
-    X(CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString));
+    X(CreateDataPropertyOrThrow(roundTo, 'smallestUnit', paramString));
   } else {
     roundTo = Q(GetOptionsObject(roundTo));
   }
@@ -501,7 +501,7 @@ function* ZonedDateTimeProto_getTimeZoneTransition([directionParam = Value.undef
   if (directionParam instanceof JSStringValue) {
     const paramString = directionParam;
     directionParam = OrdinaryObjectCreate(Value.null);
-    X(CreateDataPropertyOrThrow(directionParam, Value('direction'), paramString));
+    X(CreateDataPropertyOrThrow(directionParam, 'direction', paramString));
   } else {
     directionParam = Q(GetOptionsObject(directionParam));
   }

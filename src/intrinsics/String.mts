@@ -100,7 +100,7 @@ function* String_fromCodePoint(codePoints: Arguments) {
 function* String_raw([template = Value.undefined, ...substitutions]: Arguments): ValueEvaluator {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
-  const raw = Q(ToObject(Q(yield* Get(cooked, Value('raw')))));
+  const raw = Q(ToObject(Q(yield* Get(cooked, 'raw'))));
   const literalSegments = Q(yield* LengthOfArrayLike(raw));
   if (literalSegments <= 0) {
     return Value('');

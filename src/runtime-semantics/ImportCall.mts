@@ -71,7 +71,7 @@ function* EvaluateImportCall(
       return promiseCapability.Promise;
     }
     // b. Let attributesObj be Completion(Get(options, "with")).
-    const attributesObj = yield* Get(options, Value('with'));
+    const attributesObj = yield* Get(options, 'with');
     // c. IfAbruptRejectPromise(attributesObj, promiseCapability).
     IfAbruptRejectPromise(attributesObj, promiseCapability);
     __ts_cast__<Value>(attributesObj);
@@ -94,9 +94,9 @@ function* EvaluateImportCall(
       // iv. For each element entry of entries, do
       for (const entry of entries) {
         // 1. Let key be ! Get(entry, "0").
-        const key = Q(yield* Get(entry, Value('0')));
+        const key = Q(yield* Get(entry, '0'));
         // 2. Let value be ! Get(entry, "1").
-        const value = Q(yield* Get(entry, Value('1')));
+        const value = Q(yield* Get(entry, '1'));
         // 3. If key is a String, then
         if (key instanceof JSStringValue) {
           // a. If value is not a String, then

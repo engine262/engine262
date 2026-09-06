@@ -750,12 +750,12 @@ export interface ObjectInternalMethods<Self> {
   SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ValueEvaluator<BooleanValue>;
   IsExtensible(this: Self): ValueEvaluator<BooleanValue>;
   PreventExtensions(this: Self): ValueEvaluator<BooleanValue>;
-  GetOwnProperty(this: Self, P: PropertyKeyValue): PlainEvaluator<Descriptor | UndefinedValue>;
-  DefineOwnProperty(this: Self, P: PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue>;
-  HasProperty(this: Self, P: PropertyKeyValue): ValueEvaluator<BooleanValue>;
-  Get(this: Self, P: PropertyKeyValue, Receiver: Value): ValueEvaluator;
-  Set(this: Self, P: PropertyKeyValue, V: Value, Receiver: Value): ValueEvaluator<BooleanValue>;
-  Delete(this: Self, P: PropertyKeyValue): ValueEvaluator<BooleanValue>;
+  GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<Descriptor | UndefinedValue>;
+  DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue>;
+  HasProperty(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+  Get(this: Self, P: PropertyKeyValue | string, Receiver: Value): ValueEvaluator;
+  Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): ValueEvaluator<BooleanValue>;
+  Delete(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
   OwnPropertyKeys(this: Self): PlainEvaluator<PropertyKeyValue[]>;
   Call?(this: Self, thisArg: Value, args: Arguments): ValueEvaluator;
   Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
@@ -812,30 +812,30 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
   }
 
   // eslint-disable-next-line require-yield
-  * GetOwnProperty(P: PropertyKeyValue): ObjectSlotReturn['GetOwnProperty'] {
+  * GetOwnProperty(P: PropertyKeyValue | string): ObjectSlotReturn['GetOwnProperty'] {
     return OrdinaryGetOwnProperty(this as unknown as OrdinaryObject, P);
   }
 
-  * DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor): ObjectSlotReturn['DefineOwnProperty'] {
+  * DefineOwnProperty(P: PropertyKeyValue | string, Desc: Descriptor): ObjectSlotReturn['DefineOwnProperty'] {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return yield* OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
   }
 
-  * HasProperty(P: PropertyKeyValue): ObjectSlotReturn['HasProperty'] {
+  * HasProperty(P: PropertyKeyValue | string): ObjectSlotReturn['HasProperty'] {
     return yield* OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
   }
 
-  * Get(P: PropertyKeyValue, Receiver: Value): ObjectSlotReturn['Get'] {
+  * Get(P: PropertyKeyValue | string, Receiver: Value): ObjectSlotReturn['Get'] {
     return yield* OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
   }
 
-  * Set(P: PropertyKeyValue, V: Value, Receiver: Value): ObjectSlotReturn['Set'] {
+  * Set(P: PropertyKeyValue | string, V: Value, Receiver: Value): ObjectSlotReturn['Set'] {
     // TODO:
     Q(surroundingAgent.debugger_tryTouchDuringPreview(Receiver as ObjectValue));
     return yield* OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
   }
 
-  * Delete(P: PropertyKeyValue): ObjectSlotReturn['Delete'] {
+  * Delete(P: PropertyKeyValue | string): ObjectSlotReturn['Delete'] {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return yield* OrdinaryDelete(this as unknown as OrdinaryObject, P);
   }

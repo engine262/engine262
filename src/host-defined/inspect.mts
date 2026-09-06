@@ -28,8 +28,8 @@ function getObjectTag(value: ObjectValue, wrap = false): string {
     s = (X(Get(value, wellKnownSymbols.toStringTag)) as JSStringValue).stringValue();
   } catch { }
   try {
-    const c = X(Get(value, Value('constructor')));
-    s = (X(Get(c as ObjectValue, Value('name'))) as JSStringValue).stringValue();
+    const c = X(Get(value, 'constructor'));
+    s = (X(Get(c as ObjectValue, 'name')) as JSStringValue).stringValue();
   } catch { }
   if (s) {
     if (wrap) {
@@ -42,15 +42,15 @@ function getObjectTag(value: ObjectValue, wrap = false): string {
 
 const compactObject = (realm: Realm, value: ObjectValue) => {
   try {
-    const toString = X(Get(value, Value('toString'))) as BuiltinFunctionObject;
+    const toString = X(Get(value, 'toString')) as BuiltinFunctionObject;
     const objectToString = realm.Intrinsics['%Object.prototype.toString%'];
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return (X(Call(toString, value)) as JSStringValue).stringValue();
     } else {
       const tag = getObjectTag(value, false) || 'Unknown';
-      const ctor = X(Get(value, Value('constructor')));
+      const ctor = X(Get(value, 'constructor'));
       if (ctor instanceof ObjectValue) {
-        const ctorName = (X(Get(ctor, Value('name'))) as JSStringValue).stringValue();
+        const ctorName = (X(Get(ctor, 'name')) as JSStringValue).stringValue();
         if (ctorName !== '') {
           return `#<${ctorName}>`;
         }
@@ -122,9 +122,9 @@ const INSPECTORS = {
     }
 
     if ('ErrorData' in v) {
-      let e = X(Get(v, Value('stack')));
+      let e = X(Get(v, 'stack'));
       if (!(e as JSStringValue).stringValue) {
-        const toString = X(Get(v, Value('toString')));
+        const toString = X(Get(v, 'toString'));
         e = X(Call(toString, v));
       }
       return (e as JSStringValue).stringValue();

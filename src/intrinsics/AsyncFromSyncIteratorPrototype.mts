@@ -64,7 +64,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
   const syncIteratorRecord = O.SyncIteratorRecord;
   const syncIterator = syncIteratorRecord.Iterator;
   // 5. Let return be GetMethod(syncIterator, "return").
-  const ret = yield* GetMethod(syncIterator, Value('return'));
+  const ret = yield* GetMethod(syncIterator, 'return');
   // 6. IfAbruptRejectPromise(return, promiseCapability).
   IfAbruptRejectPromise(ret, promiseCapability);
   __ts_cast__<UndefinedValue | FunctionObject>(ret);
@@ -114,7 +114,7 @@ function* AsyncFromSyncIteratorPrototype_throw([value = Value.undefined]: Argume
   const syncIteratorRecord = O.SyncIteratorRecord;
   const syncIterator = syncIteratorRecord.Iterator;
   // 5. Let throw be GetMethod(syncIterator, "throw").
-  const thr = yield* GetMethod(syncIterator, Value('throw'));
+  const thr = yield* GetMethod(syncIterator, 'throw');
   // 6. IfAbruptRejectPromise(throw, promiseCapability).
   IfAbruptRejectPromise(thr, promiseCapability);
   __ts_cast__<UndefinedValue | FunctionObject>(thr);

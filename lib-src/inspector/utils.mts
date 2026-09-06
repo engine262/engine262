@@ -37,7 +37,7 @@ export function createConsole(
   const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
   X(DefinePropertyOrThrow(
     realm.GlobalObject,
-    Value('console'),
+    'console',
     Descriptor({
       Configurable: Value.true,
       Enumerable: Value.false,

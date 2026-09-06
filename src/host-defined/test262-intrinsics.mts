@@ -49,7 +49,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
     }
     return Value.undefined;
   }, 0, Value('print'), []);
-  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('print'), print);
+  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, 'print', print);
 
   const $262 = OrdinaryObjectCreate.from({
     AbstractModuleSource: realm.Intrinsics['%AbstractModuleSource%'],
@@ -101,8 +101,8 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
     },
   });
   // engine262 only
-  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$262'), $262);
-  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $262);
+  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, '$262', $262);
+  CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, '$', $262);
   pop?.();
 
   return {

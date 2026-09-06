@@ -45,7 +45,7 @@ function* WrapForValidIteratorPrototype_return(_args: Arguments, { thisValue }: 
   // 4. Assert: iterator is an Object.
   Assert(iterator instanceof ObjectValue);
   // 5. Let returnMethod be ? GetMethod(iterator, "return").
-  const returnMethod = Q(yield* GetMethod(iterator, Value('return')));
+  const returnMethod = Q(yield* GetMethod(iterator, 'return'));
   // 6. If returnMethod is undefined, then
   if (returnMethod instanceof UndefinedValue) {
     // a. Return CreateIteratorResultObject(undefined, true).

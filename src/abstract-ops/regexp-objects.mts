@@ -29,7 +29,7 @@ import { surroundingAgent, Throw } from '#self';
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {
   const obj = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags'])) as Mutable<RegExpObject>;
-  X(DefinePropertyOrThrow(obj, Value('lastIndex'), Descriptor({
+  X(DefinePropertyOrThrow(obj, 'lastIndex', Descriptor({
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
@@ -90,7 +90,7 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
   obj.RegExpRecord = rer;
   obj.parsedPattern = parseResult;
   obj.RegExpMatcher = CompilePattern(parseResult, rer);
-  Q(yield* Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
+  Q(yield* Set(obj, 'lastIndex', toNumberValue(+0), Value.true));
   return obj;
 }
 
@@ -258,7 +258,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
     groups = Value.undefined;
   }
   // 11. Perform ! CreateDataProperty(A, "groups", groups).
-  X(CreateDataPropertyOrThrow(array, Value('groups'), groups));
+  X(CreateDataPropertyOrThrow(array, 'groups', groups));
   // 12. For each integer i such that i ≥ 0 and i < n, do
   for (let i = 0; i < n; i += 1) {
     // a. Let matchIndices be indices[i].

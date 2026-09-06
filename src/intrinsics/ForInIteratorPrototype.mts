@@ -10,7 +10,6 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { surroundingAgent } from '#self';
 import {
   Assert,
-  SameValue,
   OrdinaryObjectCreate,
   CreateIteratorResultObject,
   type OrdinaryObject,
@@ -20,8 +19,8 @@ import {
 export interface ForInIteratorInstance extends OrdinaryObject {
   Object: ObjectValue | NullValue;
   ObjectWasVisited: Value;
-  readonly VisitedKeys: JSStringValue[];
-  readonly RemainingKeys: JSStringValue[];
+  readonly VisitedKeys: string[];
+  readonly RemainingKeys: string[];
 }
 /** https://tc39.es/ecma262/#sec-createforiniterator */
 export function CreateForInIterator(object: ObjectValue) {
@@ -73,7 +72,7 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
         // 1. If Type(key) is String, then
         if (key instanceof JSStringValue) {
           // a. Append key to remaining.
-          remaining.push(key);
+          remaining.push(key.stringValue());
         }
       }
       // iii. Set O.ObjectWasVisited to true.
@@ -84,16 +83,16 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
       // i. Remove the first element from remaining and let r be the value of the element.
       const r = remaining.shift()!;
       // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
-      if (!visited.find((v) => SameValue(r, v))) {
+      if (!visited.includes(r)) {
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
-        const desc = Q(yield* object.GetOwnProperty(r));
+        const desc = Q(yield* object.GetOwnProperty(Value(r)));
         // 2. If desc is not undefined, then,
         if (!(desc instanceof UndefinedValue)) {
           // a. Append r to visited.
           visited.push(r);
           // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
           if (desc.Enumerable === Value.true) {
-            return CreateIteratorResultObject(r, Value.false);
+            return CreateIteratorResultObject(Value(r), Value.false);
           }
         }
       }

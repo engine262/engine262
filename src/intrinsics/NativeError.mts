@@ -64,7 +64,7 @@ export function bootstrapNativeError(realmRec: Realm) {
           Configurable: Value.true,
         });
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-        X(DefinePropertyOrThrow(O, Value('message'), msgDesc));
+        X(DefinePropertyOrThrow(O, 'message', msgDesc));
       }
       // 4. Perform ? InstallErrorCause(O, options).
       Q(yield* InstallErrorCause(O, options));

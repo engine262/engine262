@@ -80,7 +80,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
       Configurable: Value.true,
     });
     // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-    X(DefinePropertyOrThrow(O, Value('message'), msgDesc));
+    X(DefinePropertyOrThrow(O, 'message', msgDesc));
   }
 
   // 4. Perform ? InstallErrorCause(O, options).

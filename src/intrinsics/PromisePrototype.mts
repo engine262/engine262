@@ -31,7 +31,7 @@ function* PromiseProto_catch([onRejected = Value.undefined]: Arguments, { thisVa
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
-  return Q(yield* Invoke(promise, Value('then'), [Value.undefined, onRejected]));
+  return Q(yield* Invoke(promise, 'then', [Value.undefined, onRejected]));
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.finally */
@@ -67,7 +67,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       // iv. Let valueThunk be ! CreateBuiltinFunction(returnValue, 0, "", « »).
       const valueThunk = X(CreateBuiltinFunction(returnValue, 0, Value(''), []));
       // v. Return ? Invoke(promise, "then", « valueThunk »).
-      return Q(yield* Invoke(promiseInner, Value('then'), [valueThunk]));
+      return Q(yield* Invoke(promiseInner, 'then', [valueThunk]));
     };
     // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
     thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), ['HostCapturedValues']));
@@ -85,7 +85,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
       const thrower = X(CreateBuiltinFunction(throwReason, 0, Value(''), []));
       // v. Return ? Invoke(promise, "then", « thrower »).
-      return Q(yield* Invoke(promiseInner, Value('then'), [thrower]));
+      return Q(yield* Invoke(promiseInner, 'then', [thrower]));
     };
     // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
     catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), ['HostCapturedValues']));
@@ -93,7 +93,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
     catchFinally.HostCapturedValues = [onFinally];
   }
   // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
-  return Q(yield* Invoke(promise, Value('then'), [thenFinally, catchFinally]));
+  return Q(yield* Invoke(promise, 'then', [thenFinally, catchFinally]));
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.then */
@@ -120,7 +120,7 @@ export function bootstrapPromisePrototype(realmRec: Realm) {
     ['then', PromiseProto_then, 2],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
 
-  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, Value('then'))) as FunctionObject;
+  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, 'then')) as FunctionObject;
 
   realmRec.Intrinsics['%Promise.prototype%'] = proto;
 }

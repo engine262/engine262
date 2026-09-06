@@ -144,8 +144,8 @@ export function* DisposeResources<C extends Completion<unknown>>(
           const result_ = result.Value;
           const suppressed = outputCompletion.Value;
           const error = X(Construct(intrinsics()['%SuppressedError%'], []));
-          CreateNonEnumerableDataPropertyOrThrow(error, Value('error'), result_);
-          CreateNonEnumerableDataPropertyOrThrow(error, Value('suppressed'), suppressed);
+          CreateNonEnumerableDataPropertyOrThrow(error, 'error', result_);
+          CreateNonEnumerableDataPropertyOrThrow(error, 'suppressed', suppressed);
           outputCompletion = ThrowCompletion(error);
         } else {
           outputCompletion = result;

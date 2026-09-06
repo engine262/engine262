@@ -117,7 +117,7 @@ export function CreateResolvingFunctions(toResolve: PromiseObject) {
       return Value.undefined;
     }
     // 9. Let then be Get(resolution, "then").
-    const then = EnsureCompletion(yield* Get(resolution, Value('then')));
+    const then = EnsureCompletion(yield* Get(resolution, 'then'));
     // 10. If then is an abrupt completion, then
     if (then instanceof AbruptCompletion) {
       // a. Return RejectPromise(promise, then.[[Value]]).
@@ -283,7 +283,7 @@ function TriggerPromiseReactions(reactions: readonly PromiseReactionRecord[], ar
 export function* PromiseResolve(constructor: ObjectValue, resolution: Value): ValueEvaluator<PromiseObject> {
   Assert(constructor instanceof ObjectValue);
   if (IsPromise(resolution) === Value.true) {
-    const xConstructor = Q(yield* Get(resolution as PromiseObject, Value('constructor')));
+    const xConstructor = Q(yield* Get(resolution as PromiseObject, 'constructor'));
     if (SameValue(xConstructor, constructor)) {
       return resolution as PromiseObject;
     }

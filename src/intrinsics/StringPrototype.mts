@@ -279,7 +279,7 @@ function* StringProto_matchAll([regexp = Value.undefined]: Arguments, { thisValu
     // b. If isRegExp is true, then
     if (isRegExp === Value.true) {
       // i. Let flags be ? Get(regexp, "flags").
-      const flags = Q(yield* Get(regexp as ObjectValue, Value('flags')));
+      const flags = Q(yield* Get(regexp as ObjectValue, 'flags'));
       // ii. Perform ? RequireObjectCoercible(flags).
       Q(RequireObjectCoercible(flags));
       // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
@@ -402,7 +402,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
     // b. If isRegExp is true, then
     if (isRegExp === Value.true) {
       // i. Let flags be ? Get(searchValue, "flags").
-      const flags = Q(yield* Get(searchValue as ObjectValue, Value('flags')));
+      const flags = Q(yield* Get(searchValue as ObjectValue, 'flags'));
       // ii. Perform ? RequireObjectCoercible(flags).
       Q(RequireObjectCoercible(flags));
       // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
@@ -534,12 +534,12 @@ function* StringProto_split([separator = Value.undefined, limit = Value.undefine
     return A;
   }
   if (separator === Value.undefined) {
-    X(CreateDataPropertyOrThrow(A, Value('0'), S));
+    X(CreateDataPropertyOrThrow(A, '0', S));
     return A;
   }
   if (s === 0) {
     if (R.stringValue() !== '') {
-      X(CreateDataPropertyOrThrow(A, Value('0'), S));
+    X(CreateDataPropertyOrThrow(A, '0', S));
     }
     return A;
   }

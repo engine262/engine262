@@ -127,7 +127,7 @@ function printResult(value: ValueCompletion) {
     });
     return Value.undefined;
   }, 'sleep');
-  X(CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('sleep'), sleep));
+  X(CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, 'sleep', sleep));
   pop?.();
 
   const result2 = realm.evaluateScriptSkipDebugger(`

@@ -38,7 +38,7 @@ function* WeakSetConstructor(this: FunctionObject, [iterable = Value.undefined]:
     return set;
   }
   // 5. Let adder be ? Get(set, "add").
-  const adder = Q(yield* Get(set, Value('add')));
+  const adder = Q(yield* Get(set, 'add'));
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
   if (!IsCallable(adder)) {
     return Throw.TypeError('"add" property ($1) of object $2 is not a function', adder, set);

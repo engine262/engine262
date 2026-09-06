@@ -91,7 +91,7 @@ function* ObjectProto_toLocaleString(_argList: Arguments, { thisValue }: Functio
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Return ? Invoke(O, "toString").
-  return Q(yield* Invoke(O, Value('toString')));
+  return Q(yield* Invoke(O, 'toString'));
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tostring */
@@ -328,6 +328,6 @@ export function bootstrapObjectPrototype(realmRec: Realm) {
     ['__proto__', [ObjectProto___proto___getter, ObjectProto___proto___setter]],
   ]);
 
-  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, Value('toString'))) as BuiltinFunctionObject;
-  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, Value('valueOf'))) as FunctionObject;
+  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, 'toString')) as BuiltinFunctionObject;
+  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, 'valueOf')) as FunctionObject;
 }

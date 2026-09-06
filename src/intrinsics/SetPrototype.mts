@@ -595,7 +595,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   }
 
   // 2. Let rawSize be ? Get(obj, "size").
-  const rawSize = Q(yield* Get(obj, Value('size')));
+  const rawSize = Q(yield* Get(obj, 'size'));
 
   // 3. Let numSize be ? ToNumber(rawSize).
   // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
@@ -615,7 +615,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   }
 
   // 8. Let has be ? Get(obj, "has").
-  const has = Q(yield* Get(obj, Value('has')));
+  const has = Q(yield* Get(obj, 'has'));
 
   // 9. If IsCallable(has) is false, throw a TypeError exception.
   if (!IsCallable(has)) {
@@ -623,7 +623,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   }
 
   // 10. Let keys be ? Get(obj, "keys").
-  const keys = Q(yield* Get(obj, Value('keys')));
+  const keys = Q(yield* Get(obj, 'keys'));
 
   // 11. If IsCallable(keys) is false, throw a TypeError exception.
   if (!IsCallable(keys)) {

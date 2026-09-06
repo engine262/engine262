@@ -13,7 +13,7 @@ import {
 export const Error = new ObjectInspector<ObjectValue>('Error', 'error', (value, context) => {
   let text = '';
   nativeEvalInAnyRealm(true, context, () => {
-    const completion = EnsureCompletion(skipDebugger(Get(value, Value('stack'))));
+    const completion = EnsureCompletion(skipDebugger(Get(value, 'stack')));
     if (completion instanceof NormalCompletion && completion.Value instanceof JSStringValue) {
       text = completion.Value.stringValue();
       if (!text.includes('  at') && !text.includes('SyntaxError')) {
@@ -35,14 +35,14 @@ export const Error = new ObjectInspector<ObjectValue>('Error', 'error', (value, 
     const { message, stack, stackGetterValue } = getHostDefinedErrorDetails(error);
     if (!message || !stackGetterValue) return undefined;
 
-    const stackC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('stack')))));
+    const stackC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, 'stack'))));
     if (stackC instanceof NormalCompletion && stackC.Value instanceof JSStringValue) {
       const stackMaybeModified = stackC.Value.stringValue();
       if (stackMaybeModified !== stackGetterValue) return undefined;
     }
 
     let constructorName = 'Error';
-    const nameC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('name')))));
+    const nameC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, 'name'))));
     if (nameC instanceof NormalCompletion && nameC.Value instanceof JSStringValue) constructorName = nameC.Value.stringValue();
 
     const header = JSON.stringify(['span', null,

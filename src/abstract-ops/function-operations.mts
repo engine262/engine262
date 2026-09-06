@@ -468,7 +468,7 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
   if (isECMAScriptFunctionObject(F)) {
     // Assert(!IsConstructor(F)); but not applying type assertion
     Assert(![IsConstructor(F)][0]);
-    Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false);
+    Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, 'prototype')) === Value.false);
     F.Construct = FunctionConstructSlot;
   }
   (F as Mutable<ECMAScriptFunctionObject>).ConstructorKind = 'base';
@@ -477,14 +477,14 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
   }
   if (prototype === undefined) {
     prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    X(DefinePropertyOrThrow(prototype, Value('constructor'), Descriptor({
+    X(DefinePropertyOrThrow(prototype, 'constructor', Descriptor({
       Value: F,
       Writable: writablePrototype,
       Enumerable: Value.false,
       Configurable: Value.true,
     })));
   }
-  X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
     Value: prototype,
     Writable: writablePrototype,
     Enumerable: Value.false,
@@ -529,7 +529,7 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
 export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
-  Assert(X(IsExtensible(func)) === Value.true && X(HasOwnProperty(func, Value('name'))) === Value.false);
+  Assert(X(IsExtensible(func)) === Value.true && X(HasOwnProperty(func, 'name')) === Value.false);
   if (name instanceof SymbolValue) {
     const description = name.Description;
     if (description === Value.undefined) {
@@ -555,7 +555,7 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
   if ('InitialName' in func) {
     func.InitialName = initialName;
   }
-  X(DefinePropertyOrThrow(func, Value('name'), Descriptor({
+  X(DefinePropertyOrThrow(func, 'name', Descriptor({
     Value: name,
     Writable: Value.false,
     Enumerable: Value.false,
@@ -567,9 +567,9 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
 export function SetFunctionLength(F: FunctionObject, length: number): void {
   Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
-  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('length'))) === Value.false);
+  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, 'length')) === Value.false);
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-  X(DefinePropertyOrThrow(F, Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(F, 'length', Descriptor({
     Value: toNumberValue(length),
     Writable: Value.false,
     Enumerable: Value.false,
@@ -705,9 +705,9 @@ export function PrepareForTailCall() {
 /** https://tc39.es/proposal-shadowrealm/#sec-copynameandlength */
 export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, prefix?: string, argCount = 0): PlainEvaluator {
   let length = 0;
-  const targetHasLength = Q(yield* HasOwnProperty(Target, Value('length')));
+  const targetHasLength = Q(yield* HasOwnProperty(Target, 'length'));
   if (targetHasLength === Value.true) {
-    const targetLength = Q(yield* Get(Target, Value('length')));
+    const targetLength = Q(yield* Get(Target, 'length'));
     if (targetLength instanceof NumberValue) {
       const targetLengthAsInt = X(ToIntegerOrInfinity(targetLength));
       if (targetLengthAsInt === Infinity) {
@@ -720,7 +720,7 @@ export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, pr
     }
   }
   SetFunctionLength(F, length);
-  let targetName = Q(yield* Get(Target, Value('name')));
+  let targetName = Q(yield* Get(Target, 'name'));
   if (!(targetName instanceof JSStringValue)) {
     targetName = Value('');
   }

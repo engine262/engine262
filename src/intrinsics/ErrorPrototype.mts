@@ -31,7 +31,7 @@ function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallConte
     return Throw.TypeError('this value $1 is not an object', O);
   }
   // 3. Let name be ? Get(O, "name").
-  let name = Q(yield* Get(O, Value('name')));
+  let name = Q(yield* Get(O, 'name'));
   // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
   if (name === Value.undefined) {
     name = Value('Error');
@@ -39,7 +39,7 @@ function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallConte
     name = Q(yield* ToString(name));
   }
   // 5. Let msg be ? Get(O, "message").
-  let msg = Q(yield* Get(O, Value('message')));
+  let msg = Q(yield* Get(O, 'message'));
   // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
   if (msg === Value.undefined) {
     msg = Value('');
@@ -96,5 +96,5 @@ export function bootstrapErrorPrototype(realmRec: Realm) {
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Error.prototype%'] = proto;
-  realmRec.Intrinsics['%Error.prototype.toString%'] = X(Get(proto, Value('toString'))) as BuiltinFunctionObject;
+  realmRec.Intrinsics['%Error.prototype.toString%'] = X(Get(proto, 'toString')) as BuiltinFunctionObject;
 }

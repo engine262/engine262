@@ -113,7 +113,7 @@ export function StringCreate(value: JSStringValue, prototype: ObjectValue) {
   // 8. Let length be the number of code unit elements in value.
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(S, Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(S, 'length', Descriptor({
     Value: F(length),
     Writable: Value.false,
     Enumerable: Value.false,

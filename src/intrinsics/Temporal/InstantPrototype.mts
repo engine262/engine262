@@ -103,7 +103,7 @@ function* InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue
   if (roundTo instanceof JSStringValue) {
     const paramString = roundTo;
     roundTo = OrdinaryObjectCreate(Value.null);
-    X(CreateDataPropertyOrThrow(roundTo, Value('smallestUnit'), paramString));
+    X(CreateDataPropertyOrThrow(roundTo, 'smallestUnit', paramString));
   } else {
     roundTo = Q(GetOptionsObject(roundTo));
   }
@@ -145,7 +145,7 @@ function* InstantProto_toString([options = Value.undefined]: Arguments, { thisVa
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
   const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 'trunc'));
   const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'optional'));
-  const _timeZone = Q(yield* Get(resolvedOptions, Value('timeZone')));
+  const _timeZone = Q(yield* Get(resolvedOptions, 'timeZone'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
   if (smallestUnit === 'hour') {
     return Throw.RangeError('smallestUnit cannot be hour');

@@ -101,22 +101,22 @@ export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
   }
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   if (Desc.Value !== undefined) {
-    X(CreateDataProperty(obj, Value('value'), Desc.Value));
+    X(CreateDataProperty(obj, 'value', Desc.Value));
   }
   if (Desc.Writable !== undefined) {
-    X(CreateDataProperty(obj, Value('writable'), Desc.Writable));
+    X(CreateDataProperty(obj, 'writable', Desc.Writable));
   }
   if (Desc.Getter !== undefined) {
-    X(CreateDataProperty(obj, Value('get'), Desc.Getter));
+    X(CreateDataProperty(obj, 'get', Desc.Getter));
   }
   if (Desc.Setter !== undefined) {
-    X(CreateDataProperty(obj, Value('set'), Desc.Setter));
+    X(CreateDataProperty(obj, 'set', Desc.Setter));
   }
   if (Desc.Enumerable !== undefined) {
-    X(CreateDataProperty(obj, Value('enumerable'), Desc.Enumerable));
+    X(CreateDataProperty(obj, 'enumerable', Desc.Enumerable));
   }
   if (Desc.Configurable !== undefined) {
-    X(CreateDataProperty(obj, Value('configurable'), Desc.Configurable));
+    X(CreateDataProperty(obj, 'configurable', Desc.Configurable));
   }
   // Assert: All of the above CreateDataProperty operations return true.
   return obj;
@@ -129,37 +129,37 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   }
 
   let desc = Descriptor({});
-  const hasEnumerable = Q(yield* HasProperty(Obj, Value('enumerable')));
+  const hasEnumerable = Q(yield* HasProperty(Obj, 'enumerable'));
   if (hasEnumerable === Value.true) {
-    const enumerable = ToBoolean(Q(yield* Get(Obj, Value('enumerable'))));
+    const enumerable = ToBoolean(Q(yield* Get(Obj, 'enumerable')));
     desc = Descriptor({ ...desc, Enumerable: enumerable });
   }
-  const hasConfigurable = Q(yield* HasProperty(Obj, Value('configurable')));
+  const hasConfigurable = Q(yield* HasProperty(Obj, 'configurable'));
   if (hasConfigurable === Value.true) {
-    const conf = ToBoolean(Q(yield* Get(Obj, Value('configurable'))));
+    const conf = ToBoolean(Q(yield* Get(Obj, 'configurable')));
     desc = Descriptor({ ...desc, Configurable: conf });
   }
-  const hasValue = Q(yield* HasProperty(Obj, Value('value')));
+  const hasValue = Q(yield* HasProperty(Obj, 'value'));
   if (hasValue === Value.true) {
-    const value = Q(yield* Get(Obj, Value('value')));
+    const value = Q(yield* Get(Obj, 'value'));
     desc = Descriptor({ ...desc, Value: value });
   }
-  const hasWritable = Q(yield* HasProperty(Obj, Value('writable')));
+  const hasWritable = Q(yield* HasProperty(Obj, 'writable'));
   if (hasWritable === Value.true) {
-    const writable = ToBoolean(Q(yield* Get(Obj, Value('writable'))));
+    const writable = ToBoolean(Q(yield* Get(Obj, 'writable')));
     desc = Descriptor({ ...desc, Writable: writable });
   }
-  const hasGet = Q(yield* HasProperty(Obj, Value('get')));
+  const hasGet = Q(yield* HasProperty(Obj, 'get'));
   if (hasGet === Value.true) {
-    const getter = Q(yield* Get(Obj, Value('get')));
+    const getter = Q(yield* Get(Obj, 'get'));
     if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
       return Throw.TypeError('getter ($1) in a property descriptor $2 must be a function', getter, Obj);
     }
     desc = Descriptor({ ...desc, Getter: getter as FunctionObject });
   }
-  const hasSet = Q(yield* HasProperty(Obj, Value('set')));
+  const hasSet = Q(yield* HasProperty(Obj, 'set'));
   if (hasSet === Value.true) {
-    const setter = Q(yield* Get(Obj, Value('set')));
+    const setter = Q(yield* Get(Obj, 'set'));
     if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
       return Throw.TypeError('setter ($1) in a property descriptor $2 must be a function', setter, Obj);
     }
