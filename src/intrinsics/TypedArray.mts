@@ -414,11 +414,10 @@ export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, valu
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
-    const kValue = value.shift()!;
+    const kValue = value[k];
     Q(yield* Set(O, Pk, kValue, Value.true));
     k += 1;
   }
-  Assert(value.length === 0);
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike */
@@ -493,7 +492,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      const kValue = values.shift()!;
+      const kValue = values[k];
       let mappedValue;
       if (mapping) {
         mappedValue = Q(yield* Call(mapper, thisArg, [kValue, F(k)]));
@@ -503,7 +502,6 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
       k += 1;
     }
-    Assert(values.length === 0);
     return targetObj;
   }
   // 7. NOTE: source is not an Iterable so assume it is already an array-like object.
