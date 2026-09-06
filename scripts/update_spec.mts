@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
@@ -73,7 +74,7 @@ async function listFilesRecursive(root: string): Promise<string[]> {
   return nested.flat().sort();
 }
 
-async function calculateEntryHash(name: string, specDir: string): Promise<string> {
+export async function calculateEntryHash(name: string, specDir: string): Promise<string> {
   const files = await fs.readdir(specDir, { withFileTypes: true });
   const entryFiles = (
     await Promise.all(files.map(async (entry) => {
@@ -96,6 +97,13 @@ async function calculateEntryHash(name: string, specDir: string): Promise<string
     hash.update(fileHashes[i]);
   }
   return hash.digest('hex');
+}
+
+export function calculateLockHash(configHash: string, outputHash: string): string {
+  return createHash('sha256')
+    .update(configHash)
+    .update(outputHash)
+    .digest('hex');
 }
 
 async function readSpecLock(specDir: string): Promise<SpecLock> {
@@ -318,19 +326,22 @@ async function main() {
         .update(JSON.stringify(entry.diff ?? []))
         .digest('hex');
 
-      if (specLock[entry.name] === configHash) {
-        // eslint-disable-next-line no-await-in-loop
-        const currentHash = await calculateEntryHash(entry.name, resolvedSpecDir);
-        if (currentHash !== '') {
-          console.log(`Skipping: ${entry.name} (already up to date)`);
-          newSpecLock[entry.name] = configHash;
-          continue;
-        }
+      // eslint-disable-next-line no-await-in-loop
+      const currentOutputHash = await calculateEntryHash(entry.name, resolvedSpecDir);
+      if (
+        currentOutputHash !== ''
+        && specLock[entry.name] === calculateLockHash(configHash, currentOutputHash)
+      ) {
+        console.log(`Skipping: ${entry.name} (already up to date)`);
+        newSpecLock[entry.name] = calculateLockHash(configHash, currentOutputHash);
+        continue;
       }
 
       // eslint-disable-next-line no-await-in-loop
       await processEntry(entry, resolvedSpecDir, tempDir);
-      newSpecLock[entry.name] = configHash;
+      // eslint-disable-next-line no-await-in-loop
+      const updatedOutputHash = await calculateEntryHash(entry.name, resolvedSpecDir);
+      newSpecLock[entry.name] = calculateLockHash(configHash, updatedOutputHash);
     }
 
     await writeSpecLock(resolvedSpecDir, newSpecLock);
@@ -340,7 +351,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error('Error:', error.message);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch((error) => {
+    console.error('Error:', error.message);
+    process.exit(1);
+  });
+}

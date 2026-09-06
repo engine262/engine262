@@ -70,3 +70,14 @@ export function remainder(x: number | bigint, y: number | bigint): number | bigi
     throw new TypeError('Mismatched types for remainder operation');
   }
 }
+
+/** https://tc39.es/ecma262/#eqn-ceiling */
+export function ceiling(x: number): number
+export function ceiling(x: bigint): bigint
+export function ceiling(x: number | bigint): number | bigint {
+  if (typeof x === 'bigint') {
+    return x;
+  } else {
+    return Math.ceil(x);
+  }
+}

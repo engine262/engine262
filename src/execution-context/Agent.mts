@@ -26,6 +26,7 @@ import {
   WebLikeEventLoop,
   type EventLoop,
   type GlobalSymbolRegistryRecord,
+  type AvailableNamedTimeZoneIdentifierReturnRecord,
 } from '#self';
 
 let agentSignifier = 0;
@@ -49,6 +50,7 @@ export interface AgentRecord {
   KeptAlive: Set<ObjectValue | SymbolValue>;
   ModuleAsyncEvaluationCount: number;
   readonly GlobalSymbolRegistry: GlobalSymbolRegistryRecord[];
+  readonly GetAvailableNamedTimeZoneIdentifierReturns: AvailableNamedTimeZoneIdentifierReturnRecord[];
 }
 
 /** https://tc39.es/ecma262/#sec-agents */
@@ -90,6 +92,7 @@ export class Agent {
       KeptAlive: new Set(),
       ModuleAsyncEvaluationCount: 0,
       GlobalSymbolRegistry: [],
+      GetAvailableNamedTimeZoneIdentifierReturns: [],
     };
 
     this.hostDefinedOptions = options;

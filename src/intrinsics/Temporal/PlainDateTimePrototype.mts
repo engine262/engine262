@@ -1,6 +1,6 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import {
-  GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
+  GetRoundingIncrementOption, GetRoundingModeOption,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
@@ -11,18 +11,17 @@ import {
   IsPartialTemporalObject,
   ISODateToFields,
   MaximumTemporalDurationRoundingIncrement,
-  TemporalUnit,
+  type TemporalUnit,
   ToSecondsStringPrecisionRecord,
   ValidateTemporalRoundingIncrement,
   ValidateTemporalUnitValue,
   type TimeUnit,
 } from '../../abstract-ops/temporal/temporal.mts';
 import {
-  CalendarEquals, CalendarISOToDate, CalendarMergeFields, PrepareCalendarFields,
+  CalendarISOToDate, CalendarMergeFields, PrepareCalendarFields,
   ToTemporalCalendarIdentifier,
 } from '../../abstract-ops/temporal/calendar.mts';
 import {
-  CombineISODateAndTimeRecord,
   CompareISODateTime,
   CreateTemporalDateTime,
   DifferenceTemporalPlainDateTime,
@@ -38,7 +37,7 @@ import { CreateTemporalDate } from '../../abstract-ops/temporal/plain-date.mts';
 import { CreateTemporalZonedDateTime } from '../../abstract-ops/temporal/zoned-datetime.mts';
 import { GetEpochNanosecondsFor, ToTemporalTimeZoneIdentifier } from '../../abstract-ops/temporal/time-zone.mts';
 import type { TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
-import type { TemporalPlainDateTimeObject } from './PlainDateTime.mts';
+import type { ISODateTimeRecord, TemporalPlainDateTimeObject } from './PlainDateTime.mts';
 import {
   Assert,
   CreateDataPropertyOrThrow,
@@ -74,14 +73,17 @@ function PlainDateTimeProto_calendarIdGetter(_args: Arguments, { thisValue }: Fu
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.era */
 function PlainDateTimeProto_eraGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  return Value(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Era);
+  const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Era;
+  if (result === undefined) return Value.undefined;
+  return Value(result);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.erayear */
 function PlainDateTimeProto_eraYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).EraYear;
-  return result === undefined ? Value.undefined : F(Number(result));
+  if (result === undefined) return Value.undefined;
+  return Value(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year */
@@ -214,7 +216,7 @@ function* PlainDateTimeProto_with([temporalDateTimeLike = Value.undefined, optio
   fields.Millisecond = plainDateTime.ISODateTime.Time.Millisecond;
   fields.Microsecond = plainDateTime.ISODateTime.Time.Microsecond;
   fields.Nanosecond = plainDateTime.ISODateTime.Time.Nanosecond;
-  const partialDateTime = Q(yield* PrepareCalendarFields(calendar, temporalDateTimeLike as ObjectValue, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'], 'partial'));
+  const partialDateTime = Q(yield* PrepareCalendarFields(calendar, temporalDateTimeLike as ObjectValue, 'date-fields', 'time-fields', 'partial'));
   fields = CalendarMergeFields(calendar, fields, partialDateTime);
   const resolvedOptions = Q(GetOptionsObject(options));
   const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
@@ -226,7 +228,7 @@ function* PlainDateTimeProto_with([temporalDateTimeLike = Value.undefined, optio
 function* PlainDateTimeProto_withPlainTime([plainTimeLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const time = Q(yield* ToTimeRecordOrMidnight(plainTimeLike));
-  const isoDateTime = CombineISODateAndTimeRecord(plainDateTime.ISODateTime.ISODate, time);
+  const isoDateTime: ISODateTimeRecord = { ISODate: plainDateTime.ISODateTime.ISODate, Time: time };
   return Q(yield* CreateTemporalDateTime(isoDateTime, plainDateTime.Calendar));
 }
 
@@ -275,22 +277,22 @@ function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
     roundTo = Q(GetOptionsObject(roundTo));
   }
   const roundingIncrement = Q(yield* GetRoundingIncrementOption(roundTo));
-  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
+  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, 'halfExpand'));
   const smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required'));
-  Q(ValidateTemporalUnitValue(smallestUnit, 'time', [TemporalUnit.Day]));
+  Q(ValidateTemporalUnitValue(smallestUnit, 'time', ['day']));
   let maximum: bigint;
   let inclusive: boolean;
-  if (smallestUnit === TemporalUnit.Day) {
+  if (smallestUnit === 'day') {
     maximum = 1n;
     inclusive = true;
   } else {
     const maximum2 = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
-    Assert(maximum2 !== 'unset');
+    Assert(maximum2 !== 'no-maximum');
     maximum = maximum2;
     inclusive = false;
   }
   Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, inclusive));
-  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1n) {
+  if (smallestUnit === 'nanosecond' && roundingIncrement === 1n) {
     return X(CreateTemporalDateTime(plainDateTime.ISODateTime, plainDateTime.Calendar));
   }
   const result = RoundISODateTime(
@@ -309,7 +311,8 @@ function* PlainDateTimeProto_equals([_other = Value.undefined]: Arguments, { thi
   if (CompareISODateTime(plainDateTime.ISODateTime, other.ISODateTime) !== 0n) {
     return Value.false;
   }
-  return Value(CalendarEquals(plainDateTime.Calendar, other.Calendar));
+  if (plainDateTime.Calendar !== other.Calendar) return Value.false;
+  return Value.true;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tostring */
@@ -318,13 +321,13 @@ function* PlainDateTimeProto_toString([options = Value.undefined]: Arguments, { 
   const resolvedOptions = Q(GetOptionsObject(options));
   const showCalendar = Q(yield* GetTemporalShowCalendarNameOption(resolvedOptions));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
-  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 3));
-  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset'));
+  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 'trunc'));
+  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'optional'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
-  if (smallestUnit === TemporalUnit.Hour) {
+  if (smallestUnit === 'hour') {
     return Throw.RangeError('smallestUnit cannot be hour');
   }
-  const precision = ToSecondsStringPrecisionRecord(smallestUnit as Exclude<TimeUnit, TemporalUnit.Hour> | 'unset', digits);
+  const precision = ToSecondsStringPrecisionRecord(smallestUnit as Exclude<TimeUnit, 'hour'> | 'no-unit', digits);
   const result = RoundISODateTime(plainDateTime.ISODateTime, precision.Increment, precision.Unit, roundingMode);
   if (!ISODateTimeWithinLimits(result)) {
     return Throw.RangeError('DateTime outside of range');
@@ -356,8 +359,8 @@ function* PlainDateTimeProto_toZonedDateTime([temporalTimeZoneLike = Value.undef
   const timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike)) as TimeZoneIdentifier;
   const resolvedOptions = Q(GetOptionsObject(options));
   const disambiguation = Q(yield* GetTemporalDisambiguationOption(resolvedOptions));
-  const epochNs = Q(GetEpochNanosecondsFor(timeZone, plainDateTime.ISODateTime, disambiguation));
-  return X(CreateTemporalZonedDateTime(epochNs, timeZone, plainDateTime.Calendar));
+  const epochNanoseconds = Q(GetEpochNanosecondsFor(timeZone, plainDateTime.ISODateTime, disambiguation));
+  return X(CreateTemporalZonedDateTime(epochNanoseconds, timeZone, plainDateTime.Calendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate */

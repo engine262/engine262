@@ -10,7 +10,6 @@ import {
   CompareTimeRecord,
   CreateTemporalTime,
   CreateTimeRecord,
-  IsValidTime,
   ToTemporalTime,
   type TimeRecord,
 } from '#self';
@@ -37,16 +36,25 @@ function* PlainTimeConstructor([
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.PlainTime cannot be called without new');
   }
-  const hour = _hour instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_hour, 'truncate-strict'));
-  const minute = _minute instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_minute, 'truncate-strict'));
-  const second = _second instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_second, 'truncate-strict'));
-  const millisecond = _millisecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_millisecond, 'truncate-strict'));
-  const microsecond = _microsecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_microsecond, 'truncate-strict'));
-  const nanosecond = _nanosecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_nanosecond, 'truncate-strict'));
-  if (!IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)) {
-    return Throw.RangeError('Invalid time');
-  }
-  const time = CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond);
+  let hour;
+  if (_hour instanceof UndefinedValue) hour = 0n;
+  else hour = Q(yield* SnapToInteger(_hour, 'truncate'));
+  let minute;
+  if (_minute instanceof UndefinedValue) minute = 0n;
+  else minute = Q(yield* SnapToInteger(_minute, 'truncate'));
+  let second;
+  if (_second instanceof UndefinedValue) second = 0n;
+  else second = Q(yield* SnapToInteger(_second, 'truncate'));
+  let millisecond;
+  if (_millisecond instanceof UndefinedValue) millisecond = 0n;
+  else millisecond = Q(yield* SnapToInteger(_millisecond, 'truncate'));
+  let microsecond;
+  if (_microsecond instanceof UndefinedValue) microsecond = 0n;
+  else microsecond = Q(yield* SnapToInteger(_microsecond, 'truncate'));
+  let nanosecond;
+  if (_nanosecond instanceof UndefinedValue) nanosecond = 0n;
+  else nanosecond = Q(yield* SnapToInteger(_nanosecond, 'truncate'));
+  const time = Q(CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond));
   return Q(yield* CreateTemporalTime(time, NewTarget));
 }
 
@@ -56,10 +64,10 @@ function* PlainTime_from([item = Value.undefined, options = Value.undefined]: Ar
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare */
-function* PlainTime_compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalTime(_one));
-  const two = Q(yield* ToTemporalTime(_two));
-  return F(Number(CompareTimeRecord(one.Time, two.Time)));
+function* PlainTime_compare([_xPlainTime = Value.undefined, _yPlainTime = Value.undefined]: Arguments): ValueEvaluator {
+  const xPlainTime = Q(yield* ToTemporalTime(_xPlainTime));
+  const yPlainTime = Q(yield* ToTemporalTime(_yPlainTime));
+  return F(Number(CompareTimeRecord(xPlainTime.Time, yPlainTime.Time)));
 }
 
 export function bootstrapTemporalPlainTime(realmRec: Realm) {

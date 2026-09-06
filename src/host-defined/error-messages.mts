@@ -228,6 +228,7 @@ export interface Throw {
   | 'Could not set prototype of object'
   | 'Critical calendar annotation failed.'
   | 'DataView cannot be invoked without new'
+  | 'Date value is not an integral number'
   | 'DateTime outside of range'
   | 'Decorators can only be used to decorate classes'
   | 'Decorators cannot appear on both sides of the export keyword'
@@ -400,6 +401,7 @@ export interface Throw {
   | 'directionParam is required'
   | 'largestUnit must be larger than smallestUnit'
   | 'object.constructor[Symbol.species] is not a constructor'
+  | 'offset is not a string'
   | 'relativeTo is required for calendar units'
   | 'relativeTo option is required when comparing durations with calendar units'
   | 'roundTo is required'
@@ -412,6 +414,7 @@ export interface Throw {
   | 'smallestUnit cannot be hour or minute'
   | 'this has already been initialized'
   | 'this has not been initialized'
+  | 'time-zone is required'
   | 'timeZone is not a string'
   | 'totalOf is required'
   | 'u and v cannot be used together'
@@ -518,6 +521,7 @@ export interface Throw {
   | 'Invalid code point $1'
   | 'Invalid format range for $1'
   | 'Invalid hint: $1'
+  | 'Invalid temporal unit value $1'
   | 'Invalid time string $1'
   | 'Invalid time zone identifier: $1'
   | 'Label $1 not found'
@@ -593,7 +597,6 @@ export interface Throw {
   | '$1 called on invalid receiver: $2'
   | '$1 does not exist on $2'
   | '$1 does not match any of productions ($2)'
-  | '$1 is a required on object $2'
   | '$1 is not a $2'
   | '$1 is not a $2 object'
   | 'Cannot create a proxy with a $1 as $2'
@@ -618,9 +621,9 @@ export interface Throw {
   (m:
 '"roundingMode" on object $1 is not valid ($2), only $3 are accepted'
   | '$1 is not a function. (In "$2", it is $3)'
+  | '$1-$2-$3 is not a valid ISO date'
   | '$1-$2-$3 is not a valid date'
   | 'Duration($1, $2, $3, $4) is not a valid duration'
-  | 'option $1 does not accept value $2 (only $3 accepted)'
   , $1: Formattable, $2: Formattable, $3: Formattable): ThrowCompletion;
   // auto-generate end
   <const S extends string>(m: S, ...args: ParsePrintFormat<S>): ThrowCompletion;

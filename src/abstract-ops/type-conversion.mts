@@ -210,7 +210,7 @@ export function* ToIntegerOrInfinity(argument: Value | number): PlainEvaluator<n
 /** https://tc39.es/ecma262/#sec-snaptointeger */
 export function* SnapToInteger(
   arg: Value,
-  nonIntHandling: 'reject' | 'strict' | 'truncate' | 'truncate-strict',
+  nonIntHandling: 'reject' | 'strict' | 'truncate',
   minimum?: Integer,
   maximum?: Integer,
 ): PlainEvaluator<Integer> {
@@ -219,8 +219,7 @@ export function* SnapToInteger(
     return Throw.RangeError('$1 is not a finite number', number);
   }
   let mv = R(number);
-  // PR #3946 renamed "strict and truncate-strict" (Temporal PR) to "reject and truncate".
-  if (nonIntHandling === 'truncate' || nonIntHandling === 'truncate-strict') {
+  if (nonIntHandling === 'truncate') {
     mv = truncate(mv);
   }
   if (!Number.isInteger(mv)) {

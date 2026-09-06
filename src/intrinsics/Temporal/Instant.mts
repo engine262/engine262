@@ -1,5 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
-import { NumberToBigInt } from '../../runtime-semantics/all.mts';
+import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalInstantPrototype } from './InstantPrototype.mts';
 import {
   Q,
@@ -11,14 +11,16 @@ import {
   type FunctionCallContext,
   F,
   UndefinedValue,
-  ToNumber,
   ToBigInt,
   R,
   Value,
   type ValueEvaluator,
   CompareEpochNanoseconds,
   CreateTemporalInstant,
-  IsValidEpochNanoseconds,
+  IsWithinEpochNanosecondsInterval,
+  MinEpochNanoseconds,
+  MaxEpochNanoseconds,
+  NanosecondsPerMillisecond,
   ToTemporalInstant,
 } from '#self';
 
@@ -37,11 +39,11 @@ function* InstantConstructor([_epochNanoseconds = Value.undefined]: Arguments, {
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.Instant cannot be called without new');
   }
-  const epochNanoseconds = R(Q(yield* ToBigInt(_epochNanoseconds)));
-  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
-    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
+  const epochNanosecondsMV = R(Q(yield* ToBigInt(_epochNanoseconds)));
+  if (!IsWithinEpochNanosecondsInterval(epochNanosecondsMV)) {
+    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanosecondsMV);
   }
-  return Q(yield* CreateTemporalInstant(epochNanoseconds, NewTarget));
+  return Q(yield* CreateTemporalInstant(epochNanosecondsMV, NewTarget));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.from */
@@ -50,30 +52,30 @@ function* Instant_from([item = Value.undefined]: Arguments): ValueEvaluator {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds */
-function* Instant_fromEpochMilliseconds([___epochMilliseconds = Value.undefined]: Arguments): ValueEvaluator {
-  const __epochMilliseconds = Q(yield* ToNumber(___epochMilliseconds));
-  const _epochMilliseconds = R(Q(NumberToBigInt(__epochMilliseconds)));
-  const epochMilliseconds = _epochMilliseconds * BigInt(1e6);
-  if (!IsValidEpochNanoseconds(epochMilliseconds)) {
-    return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochMilliseconds);
-  }
-  return X(CreateTemporalInstant(epochMilliseconds));
+function* Instant_fromEpochMilliseconds([epochMilliseconds = Value.undefined]: Arguments): ValueEvaluator {
+  const epochMillisecondsMV = Q(yield* SnapToInteger(
+    epochMilliseconds,
+    'reject',
+    MinEpochNanoseconds / NanosecondsPerMillisecond,
+    MaxEpochNanoseconds / NanosecondsPerMillisecond,
+  ));
+  return X(CreateTemporalInstant(epochMillisecondsMV * NanosecondsPerMillisecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds */
 function* Instant_fromEpochNanoseconds([_epochNanoseconds = Value.undefined]: Arguments): ValueEvaluator {
   const epochNanoseconds = R(Q(yield* ToBigInt(_epochNanoseconds)));
-  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+  if (!IsWithinEpochNanosecondsInterval(epochNanoseconds)) {
     return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
   }
   return X(CreateTemporalInstant(epochNanoseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.compare */
-function* Instant_compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalInstant(_one));
-  const two = Q(yield* ToTemporalInstant(_two));
-  return F(CompareEpochNanoseconds(one.EpochNanoseconds, two.EpochNanoseconds));
+function* Instant_compare([_xInstant = Value.undefined, _yInstant = Value.undefined]: Arguments): ValueEvaluator {
+  const xInstant_ = Q(yield* ToTemporalInstant(_xInstant));
+  const yInstant_ = Q(yield* ToTemporalInstant(_yInstant));
+  return F(CompareEpochNanoseconds(xInstant_.EpochNanoseconds, yInstant_.EpochNanoseconds));
 }
 
 export function bootstrapTemporalInstant(realmRec: Realm) {

@@ -7,7 +7,6 @@ import {
 } from '../../abstract-ops/temporal/temporal.mts';
 import {
   CalendarDateFromFields,
-  CalendarEquals,
   CalendarISOToDate,
   CalendarMergeFields,
   CalendarMonthDayFromFields,
@@ -63,7 +62,7 @@ function* PlainMonthDayProto_with([temporalMonthDayLike = Value.undefined, optio
   }
   const calendar = plainMonthDay.Calendar;
   let fields = ISODateToFields(calendar, plainMonthDay.ISODate, 'month-day');
-  const partialMonthDay = Q(yield* PrepareCalendarFields(calendar, temporalMonthDayLike as ObjectValue, ['year', 'month', 'month-code', 'day'], [], 'partial'));
+  const partialMonthDay = Q(yield* PrepareCalendarFields(calendar, temporalMonthDayLike as ObjectValue, 'date-fields', 'no-non-calendar-fields', 'partial'));
   fields = CalendarMergeFields(calendar, fields, partialMonthDay);
   const resolvedOptions = Q(GetOptionsObject(options));
   const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
@@ -78,7 +77,8 @@ function* PlainMonthDayProto_equals([_other = Value.undefined]: Arguments, { thi
   if (CompareISODate(plainMonthDay.ISODate, other.ISODate) !== 0n) {
     return Value.false;
   }
-  return Value(CalendarEquals(plainMonthDay.Calendar, other.Calendar));
+  if (plainMonthDay.Calendar !== other.Calendar) return Value.false;
+  return Value.true;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tostring */
@@ -115,7 +115,7 @@ function* PlainMonthDayProto_toPlainDate([item = Value.undefined]: Arguments, { 
   }
   const calendar = plainMonthDay.Calendar;
   const fields = ISODateToFields(calendar, plainMonthDay.ISODate, 'month-day');
-  const inputFields = Q(yield* PrepareCalendarFields(calendar, item, ['year'], [], []));
+  const inputFields = Q(yield* PrepareCalendarFields(calendar, item, 'only-year', 'no-non-calendar-fields', 'no-required-fields'));
   const mergedFields = CalendarMergeFields(calendar, fields, inputFields);
   const isoDate = Q(yield* CalendarDateFromFields(calendar, mergedFields, 'constrain'));
   return X(CreateTemporalDate(isoDate, calendar));

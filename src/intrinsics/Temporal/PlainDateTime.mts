@@ -1,7 +1,7 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import {
   CanonicalizeCalendar,
-  type CalendarType,
+  type KnownCalendarType,
 } from '../../abstract-ops/temporal/calendar.mts';
 import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalPlainDateTimePrototype } from './PlainDateTimePrototype.mts';
@@ -18,13 +18,10 @@ import {
   type FunctionCallContext,
   UndefinedValue,
   F,
-  CombineISODateAndTimeRecord,
   CompareISODateTime,
   CreateISODateRecord,
   CreateTemporalDateTime,
   CreateTimeRecord,
-  IsValidISODate,
-  IsValidTime,
   ToTemporalDateTime,
   type TimeRecord,
 } from '#self';
@@ -33,7 +30,7 @@ import {
 export interface TemporalPlainDateTimeObject extends OrdinaryObject {
   readonly InitializedTemporalDateTime: never;
   readonly ISODateTime: ISODateTimeRecord;
-  readonly Calendar: CalendarType;
+  readonly Calendar: KnownCalendarType;
 }
 export function isTemporalPlainDateTimeObject(o: Value): o is TemporalPlainDateTimeObject {
   return 'InitializedTemporalDateTime' in o;
@@ -61,15 +58,15 @@ function* PlainDateTimeConstructor([
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.PlainDateTime cannot be called without new');
   }
-  const isoYear = Q(yield* SnapToInteger(_isoYear, 'truncate-strict'));
-  const isoMonth = Q(yield* SnapToInteger(_isoMonth, 'truncate-strict'));
-  const isoDay = Q(yield* SnapToInteger(_isoDay, 'truncate-strict'));
-  const hour = _hour instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_hour, 'truncate-strict'));
-  const minute = _minute instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_minute, 'truncate-strict'));
-  const second = _second instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_second, 'truncate-strict'));
-  const millisecond = _millisecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_millisecond, 'truncate-strict'));
-  const microsecond = _microsecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_microsecond, 'truncate-strict'));
-  const nanosecond = _nanosecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_nanosecond, 'truncate-strict'));
+  const isoYear = Q(yield* SnapToInteger(_isoYear, 'truncate'));
+  const isoMonth = Q(yield* SnapToInteger(_isoMonth, 'truncate'));
+  const isoDay = Q(yield* SnapToInteger(_isoDay, 'truncate'));
+  const hour = _hour instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_hour, 'truncate'));
+  const minute = _minute instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_minute, 'truncate'));
+  const second = _second instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_second, 'truncate'));
+  const millisecond = _millisecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_millisecond, 'truncate'));
+  const microsecond = _microsecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_microsecond, 'truncate'));
+  const nanosecond = _nanosecond instanceof UndefinedValue ? 0n : Q(yield* SnapToInteger(_nanosecond, 'truncate'));
   if (_calendar instanceof UndefinedValue) {
     _calendar = Value('iso8601');
   }
@@ -77,15 +74,9 @@ function* PlainDateTimeConstructor([
     return Throw.TypeError('calendar is not a string');
   }
   const calendar = Q(CanonicalizeCalendar(_calendar.stringValue()));
-  if (!IsValidISODate(isoYear, isoMonth, isoDay)) {
-    return Throw.RangeError('$1-$2-$3 is not a valid date', isoYear, isoMonth, isoDay);
-  }
-  const isoDate = CreateISODateRecord(isoYear, isoMonth, isoDay);
-  if (!IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond)) {
-    return Throw.RangeError('Invalid time');
-  }
-  const time = CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond);
-  const isoDateTime = CombineISODateAndTimeRecord(isoDate, time);
+  const isoDate = Q(CreateISODateRecord(isoYear, isoMonth, isoDay));
+  const time = Q(CreateTimeRecord(hour, minute, second, millisecond, microsecond, nanosecond));
+  const isoDateTime: ISODateTimeRecord = { ISODate: isoDate, Time: time };
   return Q(yield* CreateTemporalDateTime(isoDateTime, calendar, NewTarget));
 }
 
@@ -95,10 +86,10 @@ function* PlainDateTime_from([item = Value.undefined, options = Value.undefined]
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.compare */
-function* PlainDateTime_compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalDateTime(_one));
-  const two = Q(yield* ToTemporalDateTime(_two));
-  return F(Number(CompareISODateTime(one.ISODateTime, two.ISODateTime)));
+function* PlainDateTime_compare([_xPlainDateTime = Value.undefined, _yPlainDateTime = Value.undefined]: Arguments): ValueEvaluator {
+  const xPlainDateTime = Q(yield* ToTemporalDateTime(_xPlainDateTime));
+  const yPlainDateTime = Q(yield* ToTemporalDateTime(_yPlainDateTime));
+  return F(Number(CompareISODateTime(xPlainDateTime.ISODateTime, yPlainDateTime.ISODateTime)));
 }
 
 export function bootstrapTemporalPlainDateTime(realmRec: Realm) {

@@ -23,14 +23,14 @@
       </li>
     </ul>
 
-    <emu-clause id="sec-temporal.instant">
+    <emu-clause id="sec-temporal.instant" type="built-in function">
       <h1>Temporal.Instant ( _epochNanoseconds_ )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
         1. If NewTarget is *undefined*, throw a *TypeError* exception.
-        1. Let _epochNanoseconds_ be ? ToBigInt(_epochNanoseconds_).
-        1. If IsValidEpochNanoseconds(_epochNanoseconds_) is *false*, throw a *RangeError* exception.
-        1. Return ? CreateTemporalInstant(_epochNanoseconds_, NewTarget).
+        1. Let _epochNanosecondsMV_ be ℝ(? ToBigInt(_epochNanoseconds_)).
+        1. If IsWithinEpochNanosecondsInterval(_epochNanosecondsMV_) is *false*, throw a *RangeError* exception.
+        1. Return ? CreateTemporalInstant(_epochNanosecondsMV_, NewTarget).
       </emu-alg>
     </emu-clause>
   </emu-clause>
@@ -46,7 +46,7 @@
       <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.from">
+    <emu-clause id="sec-temporal.instant.from" type="built-in function">
       <h1>Temporal.Instant.from ( _item_ )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -54,35 +54,32 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.fromepochmilliseconds">
+    <emu-clause id="sec-temporal.instant.fromepochmilliseconds" type="built-in function">
       <h1>Temporal.Instant.fromEpochMilliseconds ( _epochMilliseconds_ )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
-        1. Set _epochMilliseconds_ to ? ToNumber(_epochMilliseconds_).
-        1. Set _epochMilliseconds_ to ? NumberToBigInt(_epochMilliseconds_).
-        1. Let _epochNanoseconds_ be _epochMilliseconds_ × nsPerMillisecond.
-        1. If IsValidEpochNanoseconds(_epochNanoseconds_) is *false*, throw a *RangeError* exception.
-        1. Return ! CreateTemporalInstant(_epochNanoseconds_).
+        1. Let _epochMillisecondsMV_ be ? SnapToInteger(_epochMilliseconds_, ~reject~, MinEpochNanoseconds / NanosecondsPerMillisecond, MaxEpochNanoseconds / NanosecondsPerMillisecond).
+        1. Return ! CreateTemporalInstant(_epochMillisecondsMV_ × NanosecondsPerMillisecond).
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.fromepochnanoseconds">
+    <emu-clause id="sec-temporal.instant.fromepochnanoseconds" type="built-in function">
       <h1>Temporal.Instant.fromEpochNanoseconds ( _epochNanoseconds_ )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
         1. Set _epochNanoseconds_ to ℝ(? ToBigInt(_epochNanoseconds_)).
-        1. If IsValidEpochNanoseconds(_epochNanoseconds_) is *false*, throw a *RangeError* exception.
+        1. If IsWithinEpochNanosecondsInterval(_epochNanoseconds_) is *false*, throw a *RangeError* exception.
         1. Return ! CreateTemporalInstant(_epochNanoseconds_).
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.compare">
-      <h1>Temporal.Instant.compare ( _one_, _two_ )</h1>
+    <emu-clause id="sec-temporal.instant.compare" type="built-in function">
+      <h1>Temporal.Instant.compare ( _xInstant_, _yInstant_ )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
-        1. Set _one_ to ? ToTemporalInstant(_one_).
-        1. Set _two_ to ? ToTemporalInstant(_two_).
-        1. Return 𝔽(CompareEpochNanoseconds(_one_.[[EpochNanoseconds]], _two_.[[EpochNanoseconds]])).
+        1. Set _xInstant_ to ? ToTemporalInstant(_xInstant_).
+        1. Set _yInstant_ to ? ToTemporalInstant(_yInstant_).
+        1. Return 𝔽(CompareEpochNanoseconds(_xInstant_.[[EpochNanoseconds]], _yInstant_.[[EpochNanoseconds]])).
       </emu-alg>
     </emu-clause>
   </emu-clause>
@@ -108,7 +105,7 @@
       <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
     </emu-clause>
 
-    <emu-clause id="sec-get-temporal.instant.prototype.epochmilliseconds">
+    <emu-clause id="sec-get-temporal.instant.prototype.epochmilliseconds" type="built-in function">
       <h1>get Temporal.Instant.prototype.epochMilliseconds</h1>
       <p>
         `Temporal.Instant.prototype.epochMilliseconds` is an accessor property whose set accessor function is *undefined*.
@@ -117,12 +114,12 @@
       <emu-alg>
         1. Let _instant_ be the *this* value.
         1. Perform ? RequireInternalSlot(_instant_, [[InitializedTemporalInstant]]).
-        1. Let _epochMilliseconds_ be floor(_instant_.[[EpochNanoseconds]] / nsPerMillisecond).
+        1. Let _epochMilliseconds_ be floor(_instant_.[[EpochNanoseconds]] / NanosecondsPerMillisecond).
         1. Return 𝔽(_epochMilliseconds_).
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-get-temporal.instant.prototype.epochnanoseconds">
+    <emu-clause id="sec-get-temporal.instant.prototype.epochnanoseconds" type="built-in function">
       <h1>get Temporal.Instant.prototype.epochNanoseconds</h1>
       <p>
         `Temporal.Instant.prototype.epochNanoseconds` is an accessor property whose set accessor function is *undefined*.
@@ -135,7 +132,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.add">
+    <emu-clause id="sec-temporal.instant.prototype.add" type="built-in function">
       <h1>Temporal.Instant.prototype.add ( _temporalDurationLike_ )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -145,7 +142,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.subtract">
+    <emu-clause id="sec-temporal.instant.prototype.subtract" type="built-in function">
       <h1>Temporal.Instant.prototype.subtract ( _temporalDurationLike_ )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -155,7 +152,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.until">
+    <emu-clause id="sec-temporal.instant.prototype.until" type="built-in function">
       <h1>Temporal.Instant.prototype.until ( _other_ [ , _options_ ] )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -165,7 +162,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.since">
+    <emu-clause id="sec-temporal.instant.prototype.since" type="built-in function">
       <h1>Temporal.Instant.prototype.since ( _other_ [ , _options_ ] )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -175,9 +172,10 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.round">
+    <emu-clause id="sec-temporal.instant.prototype.round" type="built-in function">
       <h1>Temporal.Instant.prototype.round ( _roundTo_ )</h1>
       <p>This method performs the following steps when called:</p>
+      <!-- NOTE: Some of the following steps read options and perform independent validation in alphabetical order (GetRoundingIncrementOption reads *"roundingIncrement"* and GetRoundingModeOption reads *"roundingMode"*). -->
       <emu-alg>
         1. Let _instant_ be the *this* value.
         1. Perform ? RequireInternalSlot(_instant_, [[InitializedTemporalInstant]]).
@@ -188,31 +186,30 @@
           1. Perform ! CreateDataPropertyOrThrow(_roundTo_, *"smallestUnit"*, _paramString_).
         1. Else,
           1. Set _roundTo_ to ? GetOptionsObject(_roundTo_).
-        1. NOTE: The following steps read options and perform independent validation in alphabetical order (GetRoundingIncrementOption reads *"roundingIncrement"* and GetRoundingModeOption reads *"roundingMode"*).
         1. Let _roundingIncrement_ be ? GetRoundingIncrementOption(_roundTo_).
-        1. Let _roundingMode_ be ? GetRoundingModeOption(_roundTo_, ~half-expand~).
+        1. Let _roundingMode_ be ? GetRoundingModeOption(_roundTo_, *"halfExpand"*).
         1. Let _smallestUnit_ be ? GetTemporalUnitValuedOption(_roundTo_, *"smallestUnit"*, ~required~).
         1. Perform ? ValidateTemporalUnitValue(_smallestUnit_, ~time~).
-        1. If _smallestUnit_ is ~hour~, then
+        1. If _smallestUnit_ is *"hour"*, then
           1. Let _maximum_ be HoursPerDay.
-        1. Else if _smallestUnit_ is ~minute~, then
+        1. Else if _smallestUnit_ is *"minute"*, then
           1. Let _maximum_ be MinutesPerHour × HoursPerDay.
-        1. Else if _smallestUnit_ is ~second~, then
+        1. Else if _smallestUnit_ is *"second"*, then
           1. Let _maximum_ be SecondsPerMinute × MinutesPerHour × HoursPerDay.
-        1. Else if _smallestUnit_ is ~millisecond~, then
-          1. Let _maximum_ be ℝ(msPerDay).
-        1. Else if _smallestUnit_ is ~microsecond~, then
-          1. Let _maximum_ be 10<sup>3</sup> × ℝ(msPerDay).
+        1. Else if _smallestUnit_ is *"millisecond"*, then
+          1. Let _maximum_ be MilliescondsPerDay.
+        1. Else if _smallestUnit_ is *"microsecond"*, then
+          1. Let _maximum_ be 10<sup>3</sup> × MillisecondsPerDay.
         1. Else,
-          1. Assert: _smallestUnit_ is ~nanosecond~.
-          1. Let _maximum_ be nsPerDay.
+          1. Assert: _smallestUnit_ is *"nanosecond"*.
+          1. Let _maximum_ be NanosecondsPerDay.
         1. Perform ? ValidateTemporalRoundingIncrement(_roundingIncrement_, _maximum_, *true*).
-        1. Let _roundedNs_ be RoundEpochNanoseconds(_instant_.[[EpochNanoseconds]], _roundingIncrement_, _smallestUnit_, _roundingMode_).
-        1. Return ! CreateTemporalInstant(_roundedNs_).
+        1. Let _roundedNanoseconds_ be RoundEpochNanoseconds(_instant_.[[EpochNanoseconds]], _roundingIncrement_, _smallestUnit_, _roundingMode_).
+        1. Return ! CreateTemporalInstant(_roundedNanoseconds_).
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.equals">
+    <emu-clause id="sec-temporal.instant.prototype.equals" type="built-in function">
       <h1>Temporal.Instant.prototype.equals ( _other_ )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -224,36 +221,36 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.tostring">
+    <emu-clause id="sec-temporal.instant.prototype.tostring" type="built-in function">
       <h1>Temporal.Instant.prototype.toString ( [ _options_ ] )</h1>
       <p>This method performs the following steps when called:</p>
+      <!-- NOTE: Some of the following steps read options and perform independent validation in alphabetical order (GetTemporalFractionalSecondDigitsOption reads *"fractionalSecondDigits"* and GetRoundingModeOption reads *"roundingMode"*). -->
       <emu-alg>
         1. Let _instant_ be the *this* value.
         1. Perform ? RequireInternalSlot(_instant_, [[InitializedTemporalInstant]]).
         1. Let _resolvedOptions_ be ? GetOptionsObject(_options_).
-        1. NOTE: The following steps read options and perform independent validation in alphabetical order (GetTemporalFractionalSecondDigitsOption reads *"fractionalSecondDigits"* and GetRoundingModeOption reads *"roundingMode"*).
         1. Let _digits_ be ? GetTemporalFractionalSecondDigitsOption(_resolvedOptions_).
-        1. Let _roundingMode_ be ? GetRoundingModeOption(_resolvedOptions_, ~trunc~).
-        1. Let _smallestUnit_ be ? GetTemporalUnitValuedOption(_resolvedOptions_, *"smallestUnit"*, ~unset~).
+        1. Let _roundingMode_ be ? GetRoundingModeOption(_resolvedOptions_, *"trunc"*).
+        1. Let _smallestUnit_ be ? GetTemporalUnitValuedOption(_resolvedOptions_, *"smallestUnit"*, ~optional~).
         1. Let _timeZone_ be ? Get(_resolvedOptions_, *"timeZone"*).
         1. Perform ? ValidateTemporalUnitValue(_smallestUnit_, ~time~).
-        1. If _smallestUnit_ is ~hour~, throw a *RangeError* exception.
+        1. If _smallestUnit_ is *"hour"*, throw a *RangeError* exception.
         1. If _timeZone_ is not *undefined*, then
           1. Set _timeZone_ to ? ToTemporalTimeZoneIdentifier(_timeZone_).
         1. Let _precision_ be ToSecondsStringPrecisionRecord(_smallestUnit_, _digits_).
-        1. Let _roundedNs_ be RoundEpochNanoseconds(_instant_.[[EpochNanoseconds]], _precision_.[[Increment]], _precision_.[[Unit]], _roundingMode_).
-        1. Let _roundedInstant_ be ! CreateTemporalInstant(_roundedNs_).
+        1. Let _roundedNanoseconds_ be RoundEpochNanoseconds(_instant_.[[EpochNanoseconds]], _precision_.[[Increment]], _precision_.[[Unit]], _roundingMode_).
+        1. Let _roundedInstant_ be ! CreateTemporalInstant(_roundedNanoseconds_).
         1. Return TemporalInstantToString(_roundedInstant_, _timeZone_, _precision_.[[Precision]]).
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.tolocalestring">
+    <emu-clause id="sec-temporal.instant.prototype.tolocalestring" type="built-in function">
       <h1>Temporal.Instant.prototype.toLocaleString ( [ _locales_ [ , _options_ ] ] )</h1>
       <p>
-        An ECMAScript implementation that includes the ECMA-402 Internationalization API must implement this method as specified in the ECMA-402 specification.
-        If an ECMAScript implementation does not include the ECMA-402 API the following specification of this method is used.
+        An ECMAScript implementation that includes the ECMA-402 Internationalization API must implement this method as specified in ECMA-402.
+        Otherwise, the following specification of this method is used.
       </p>
-      <p>The meanings of the optional parameters to this method are defined in the ECMA-402 specification; implementations that do not include ECMA-402 support must not use those parameter positions for anything else.</p>
+      <p>The meanings of the optional parameters to this method are defined in ECMA-402; implementations that do not include ECMA-402 support must not use those parameter positions for anything else.</p>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
         1. Let _instant_ be the *this* value.
@@ -262,7 +259,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.tojson">
+    <emu-clause id="sec-temporal.instant.prototype.tojson" type="built-in function">
       <h1>Temporal.Instant.prototype.toJSON ( )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -272,7 +269,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.valueof">
+    <emu-clause id="sec-temporal.instant.prototype.valueof" type="built-in function">
       <h1>Temporal.Instant.prototype.valueOf ( )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -282,12 +279,12 @@
         <p>
           This method always throws, because in the absence of `valueOf()`, expressions with arithmetic operators such as `instant1 > instant2` would fall back to being equivalent to `instant1.toString() > instant2.toString()`.
           Lexicographical comparison of serialized strings might not seem obviously wrong, because the result would sometimes be correct.
-          Implementations are encouraged to phrase the error message to point users to `Temporal.Instant.compare()`, `Temporal.Instant.prototype.equals()`, and/or `Temporal.Instant.prototype.toString()`.
+          Implementations are encouraged to phrase the error message to point users to `Temporal.Instant.compare` (<emu-xref href="#sec-temporal.instant.compare"></emu-xref>), `Temporal.Instant.prototype.equals` (<emu-xref href="#sec-temporal.instant.prototype.equals"></emu-xref>), and/or `Temporal.Instant.prototype.toString` (<emu-xref href="#sec-temporal.instant.prototype.tostring"></emu-xref>).
         </p>
       </emu-note>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.instant.prototype.tozoneddatetimeiso">
+    <emu-clause id="sec-temporal.instant.prototype.tozoneddatetimeiso" type="built-in function">
       <h1>Temporal.Instant.prototype.toZonedDateTimeISO ( _timeZone_ )</h1>
       <p>This method performs the following steps when called:</p>
       <emu-alg>
@@ -329,7 +326,7 @@
             [[EpochNanoseconds]]
           </td>
           <td>
-            A BigInt representing the number of nanoseconds since the epoch, as described in <emu-xref href="#sec-epoch-nanoseconds"></emu-xref>
+            An epoch nanoseconds count representing the exact time of this Temporal.Instant instance.
           </td>
         </tr>
       </table>
@@ -342,7 +339,7 @@
     <emu-clause id="sec-createtemporalinstant" type="abstract operation">
       <h1>
         CreateTemporalInstant (
-          _epochNanoseconds_: an epoch nanoseconds value,
+          _epochNanoseconds_: an epoch nanoseconds count,
           optional _newTarget_: a constructor,
         ): either a normal completion containing a Temporal.Instant or a throw completion
       </h1>
@@ -351,7 +348,7 @@
         <dd>It creates a Temporal.Instant instance and fills the internal slots with valid values.</dd>
       </dl>
       <emu-alg>
-        1. Assert: IsValidEpochNanoseconds(_epochNanoseconds_) is *true*.
+        1. Assert: IsWithinEpochNanosecondsInterval(_epochNanoseconds_) is *true*.
         1. If _newTarget_ is not present, set _newTarget_ to %Temporal.Instant%.
         1. Let _object_ be ? OrdinaryCreateFromConstructor(_newTarget_, *"%Temporal.Instant.prototype%"*, « [[InitializedTemporalInstant]], [[EpochNanoseconds]] »).
         1. Set _object_.[[EpochNanoseconds]] to _epochNanoseconds_.
@@ -376,15 +373,15 @@
           1. NOTE: This use of ToPrimitive allows Instant-like objects to be converted.
           1. Set _item_ to ? ToPrimitive(_item_, ~string~).
         1. If _item_ is not a String, throw a *TypeError* exception.
-        1. Let _parsed_ be ? ParseISODateTime(_item_, « |TemporalInstantString| »).
+        1. Let _parsed_ be ? ParseISODateTime(_item_, ~instant~).
         1. Assert: Either _parsed_.[[TimeZone]].[[OffsetString]] is not ~empty~ or _parsed_.[[TimeZone]].[[Z]] is *true*, but not both.
         1. If _parsed_.[[TimeZone]].[[Z]] is *true*, let _offsetNanoseconds_ be 0; else let _offsetNanoseconds_ be ! ParseDateTimeUTCOffset(_parsed_.[[TimeZone]].[[OffsetString]]).
         1. Let _time_ be _parsed_.[[Time]].
         1. Assert: _time_ is not ~start-of-day~.
         1. Let _balanced_ be BalanceISODateTime(_parsed_.[[Year]], _parsed_.[[Month]], _parsed_.[[Day]], _time_.[[Hour]], _time_.[[Minute]], _time_.[[Second]], _time_.[[Millisecond]], _time_.[[Microsecond]], _time_.[[Nanosecond]] - _offsetNanoseconds_).
-        1. Perform ? CheckISODaysRange(_balanced_.[[ISODate]]).
+        1. Perform ? ValidateISODaysRange(_balanced_.[[ISODate]]).
         1. Let _epochNanoseconds_ be GetUTCEpochNanoseconds(_balanced_).
-        1. If IsValidEpochNanoseconds(_epochNanoseconds_) is *false*, throw a *RangeError* exception.
+        1. If IsWithinEpochNanosecondsInterval(_epochNanoseconds_) is *false*, throw a *RangeError* exception.
         1. Return ! CreateTemporalInstant(_epochNanoseconds_).
       </emu-alg>
     </emu-clause>
@@ -404,13 +401,13 @@
       <emu-alg>
         1. Let _outputTimeZone_ be _timeZone_.
         1. If _outputTimeZone_ is *undefined*, set _outputTimeZone_ to *"UTC"*.
-        1. Let _epochNs_ be _instant_.[[EpochNanoseconds]].
-        1. Let _isoDateTime_ be GetISODateTimeFor(_outputTimeZone_, _epochNs_).
-        1. Let _dateTimeString_ be FormatISODateTime(_isoDateTime_, *"iso8601"*, _precision_, ~never~).
+        1. Let _epochNanoseconds_ be _instant_.[[EpochNanoseconds]].
+        1. Let _isoDateTime_ be GetISODateTimeFor(_outputTimeZone_, _epochNanoseconds_).
+        1. Let _dateTimeString_ be FormatISODateTime(_isoDateTime_, *"iso8601"*, _precision_, *"never"*).
         1. If _timeZone_ is *undefined*, then
           1. Let _timeZoneString_ be *"Z"*.
         1. Else,
-          1. Let _offsetNanoseconds_ be GetOffsetNanosecondsFor(_outputTimeZone_, _epochNs_).
+          1. Let _offsetNanoseconds_ be GetOffsetNanosecondsFor(_outputTimeZone_, _epochNanoseconds_).
           1. Let _timeZoneString_ be FormatDateTimeUTCOffsetRounded(_offsetNanoseconds_).
         1. Return the string-concatenation of _dateTimeString_ and _timeZoneString_.
       </emu-alg>
@@ -419,7 +416,7 @@
     <emu-clause id="sec-adddurationtoinstant" type="abstract operation">
       <h1>
         AddDurationToInstant (
-          _operation_: either ~add~ or ~subtract~,
+          _operation_: ~add~ or ~subtract~,
           _instant_: a Temporal.Instant,
           _temporalDurationLike_: an ECMAScript language value,
         ): either a normal completion containing a Temporal.Instant or a throw completion
@@ -442,7 +439,7 @@
     <emu-clause id="sec-differencetemporalinstant" type="abstract operation">
       <h1>
         DifferenceTemporalInstant (
-          _operation_: either ~since~ or ~until~,
+          _operation_: ~since~ or ~until~,
           _instant_: a Temporal.Instant,
           _other_: an ECMAScript language value,
           _options_: an ECMAScript language value,
@@ -455,7 +452,7 @@
       <emu-alg>
         1. Set _other_ to ? ToTemporalInstant(_other_).
         1. Let _resolvedOptions_ be ? GetOptionsObject(_options_).
-        1. Let _settings_ be ? GetDifferenceSettings(_operation_, _resolvedOptions_, ~time~, « », ~nanosecond~, ~second~).
+        1. Let _settings_ be ? GetDifferenceSettings(_operation_, _resolvedOptions_, ~time~, « », *"nanosecond"*, *"second"*).
         1. Let _internalDuration_ be DifferenceEpochNanoseconds(_instant_.[[EpochNanoseconds]], _other_.[[EpochNanoseconds]], _settings_.[[RoundingIncrement]], _settings_.[[SmallestUnit]], _settings_.[[RoundingMode]]).
         1. Let _result_ be ! TemporalDurationFromInternal(_internalDuration_, _settings_.[[LargestUnit]]).
         1. If _operation_ is ~since~, set _result_ to CreateNegatedTemporalDuration(_result_).

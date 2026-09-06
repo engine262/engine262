@@ -3,7 +3,7 @@ import { type TemporalPlainMonthDayObject, isTemporalPlainMonthDayObject } from 
 import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { ToZeroPaddedDecimalString } from './addition.mts';
 import {
-  Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarMonthDayFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateWithinLimits, ISODateToFields, type CalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation,
+  Value, type ValueEvaluator, ObjectValue, Q, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, CalendarMonthDayFromFields, JSStringValue, Throw, CanonicalizeCalendar, CreateISODateRecord, ISODateWithinLimits, ISODateToFields, type KnownCalendarType, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, PadISOYear, FormatCalendarAnnotation,
   GetOptionsObject,
 } from '#self';
 
@@ -19,7 +19,7 @@ export function* ToTemporalMonthDay(
       return X(CreateTemporalMonthDay(item.ISODate, item.Calendar));
     }
     const calendar = Q(yield* GetTemporalCalendarIdentifierWithISODefault(item));
-    const fields = Q(yield* PrepareCalendarFields(calendar, item, ['year', 'month', 'month-code', 'day'], [], []));
+    const fields = Q(yield* PrepareCalendarFields(calendar, item, 'date-fields', 'no-non-calendar-fields', 'no-required-fields'));
     const resolvedOptions = Q(GetOptionsObject(options));
     const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
     const isoDate = Q(yield* CalendarMonthDayFromFields(calendar, fields, overflow));
@@ -28,17 +28,17 @@ export function* ToTemporalMonthDay(
   if (!(item instanceof JSStringValue)) {
     return Throw.TypeError('$1 is not a string', item);
   }
-  const result = Q(ParseISODateTime(item.stringValue(), ['TemporalMonthDayString']));
+  const result = Q(ParseISODateTime(item.stringValue(), 'month-day'));
   const calendar = result.Calendar ?? 'iso8601';
   const calendarType = Q(CanonicalizeCalendar(calendar));
   const resolvedOptions = Q(GetOptionsObject(options));
   Q(yield* GetTemporalOverflowOption(resolvedOptions));
   if (calendarType === 'iso8601') {
     const referenceISOYear = 1972n;
-    const isoDate = CreateISODateRecord(referenceISOYear, result.Month, result.Day);
+    const isoDate = X(CreateISODateRecord(referenceISOYear, result.Month, result.Day));
     return X(CreateTemporalMonthDay(isoDate, calendarType));
   }
-  let isoDate = CreateISODateRecord(result.Year!, result.Month, result.Day);
+  let isoDate = X(CreateISODateRecord(result.Year!, result.Month, result.Day));
   if (!ISODateWithinLimits(isoDate)) {
     return Throw.RangeError('PlainMonthDay out of range');
   }
@@ -50,7 +50,7 @@ export function* ToTemporalMonthDay(
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday */
 export function* CreateTemporalMonthDay(
   isoDate: ISODateRecord,
-  calendar: CalendarType,
+  calendar: KnownCalendarType,
   newTarget?: FunctionObject,
 ): ValueEvaluator<TemporalPlainMonthDayObject> {
   if (!ISODateWithinLimits(isoDate)) {
@@ -74,8 +74,8 @@ export function TemporalMonthDayToString(
   monthDay: TemporalPlainMonthDayObject,
   showCalendar: 'auto' | 'always' | 'never' | 'critical',
 ): string {
-  const month = ToZeroPaddedDecimalString(monthDay.ISODate.Month, 2);
-  const day = ToZeroPaddedDecimalString(monthDay.ISODate.Day, 2);
+  const month = ToZeroPaddedDecimalString(monthDay.ISODate.Month, 2n);
+  const day = ToZeroPaddedDecimalString(monthDay.ISODate.Day, 2n);
   let result = `${month}-${day}`;
   if ((showCalendar === 'always' || showCalendar === 'critical') || monthDay.Calendar !== 'iso8601') {
     const year = PadISOYear(monthDay.ISODate.Year);

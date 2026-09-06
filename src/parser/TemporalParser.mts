@@ -9,10 +9,10 @@ import {
   CreateTemporalDuration,
   CreateTimeRecord,
   EnsureCompletion,
-  EpochTimeForYear,
+  InLeapYear,
   IsValidISODate,
   JSStringValue,
-  MathematicalInLeapYear,
+  TimeFromYear,
   NormalCompletion,
   ObjectValue,
   Q,
@@ -23,10 +23,12 @@ import {
   X,
   type Formattable,
   type Integer,
+  type FiniteTimeValue,
   type MathematicalValue,
   type Mutable,
   type PlainCompletion, type PlainEvaluator, type TimeRecord,
   type ValueEvaluator,
+  ParseDateTimeUTCOffset,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-string-time-zone-parse-records */
@@ -47,12 +49,14 @@ export interface ISODateTimeParseRecord {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime */
-export function ParseISODateTime(isoString: string, allowedFormats: Array<'TemporalInstantString' | 'TemporalDateTimeString[~Zoned]' | 'TemporalTimeString' | 'TemporalMonthDayString' | 'TemporalYearMonthString' | 'TemporalDateTimeString[+Zoned]' | 'DateTimeString'>): PlainCompletion<ISODateTimeParseRecord> {
+type ISODateTimeParseGoal = 'TemporalInstantString' | 'TemporalDateTimeString[~Zoned]' | 'TemporalTimeString' | 'TemporalMonthDayString' | 'TemporalYearMonthString' | 'TemporalDateTimeString[+Zoned]' | 'DateTimeString';
+export type ISODateTimeParseFormat = 'all' | 'any-date-time' | 'zoned-date-time' | 'plain-date-time' | 'instant' | 'time' | 'year-month' | 'month-day' | 'non-spec-date';
+
+export function ParseISODateTime(isoString: string, allowedFormats: ISODateTimeParseFormat): PlainCompletion<ISODateTimeParseRecord> {
   let parseResult: undefined | RFC9557ParseNode.AnnotatedDateTime | RFC9557ParseNode.TemporalTimeString | RFC9557ParseNode.TemporalInstantString | RFC9557ParseNode.TemporalMonthDayString | RFC9557ParseNode.TemporalYearMonthString | RFC9557ParseNode.DateTime;
   let calendar: string | undefined;
   let yearAbsent = false;
 
-  // Note: see https://github.com/tc39/proposal-temporal/issues/3281
   let year = 0n;
   let month: bigint | undefined;
   let day: bigint | undefined;
@@ -80,7 +84,39 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
     UTCOffset = DateTimeUTCOffset?.UTCOffset;
   };
   let lastError: ObjectValue | undefined;
-  for (const goal of allowedFormats) {
+  let goalSymbols: readonly ISODateTimeParseGoal[];
+  switch (allowedFormats) {
+    case 'all':
+      goalSymbols = ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]', 'TemporalInstantString', 'TemporalTimeString', 'TemporalMonthDayString', 'TemporalYearMonthString'];
+      break;
+    case 'any-date-time':
+      goalSymbols = ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]'];
+      break;
+    case 'zoned-date-time':
+      goalSymbols = ['TemporalDateTimeString[+Zoned]'];
+      break;
+    case 'plain-date-time':
+      goalSymbols = ['TemporalDateTimeString[~Zoned]'];
+      break;
+    case 'instant':
+      goalSymbols = ['TemporalInstantString'];
+      break;
+    case 'time':
+      goalSymbols = ['TemporalTimeString'];
+      break;
+    case 'year-month':
+      goalSymbols = ['TemporalYearMonthString'];
+      break;
+    case 'month-day':
+      goalSymbols = ['TemporalMonthDayString'];
+      break;
+    case 'non-spec-date':
+      goalSymbols = ['DateTimeString', 'TemporalInstantString', 'TemporalDateTimeString[~Zoned]', 'TemporalDateTimeString[+Zoned]'];
+      break;
+    default:
+      throw OutOfRange.exhaustive(allowedFormats);
+  }
+  for (const goal of goalSymbols) {
     if (!parseResult) {
       const result = DateParser.parse(
         isoString,
@@ -143,7 +179,6 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
               return node;
             }
             case 'DateTimeString': {
-              // YYYY-MM-DDTHH:mm:ss.sssZ
               const node = parser.with({ DateCompatibility: true }, () => parser.parseDateTime());
               assignDateSpec(node.Date);
               if (node.Time) assignTimeSpec(node.Time);
@@ -211,7 +246,7 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
   }
   if (!parseResult) {
     if (lastError) return ThrowCompletion(lastError);
-    return Throw.RangeError('$1 does not match any of productions ($2)', Value(isoString), allowedFormats.join(', '));
+    return Throw.RangeError('$1 does not match any of productions ($2)', Value(isoString), allowedFormats);
   }
 
   month ??= 1n;
@@ -242,7 +277,7 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
   if (hour === undefined) {
     time = 'start-of-day';
   } else {
-    time = CreateTimeRecord(hour, minute, second, millisecondMV, microsecondMV, nanosecondMV);
+    time = X(CreateTimeRecord(hour, minute, second, millisecondMV, microsecondMV, nanosecondMV));
   }
   const timeZoneResult: Mutable<ISOStringTimeZoneParseRecord> = { Z: false, OffsetString: undefined, TimeZoneAnnotation: undefined };
   if (timeZoneIdentifier) timeZoneResult.TimeZoneAnnotation = timeZoneIdentifier.sourceText;
@@ -261,7 +296,7 @@ export function ParseISODateTime(isoString: string, allowedFormats: Array<'Tempo
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring */
 export function ParseTemporalCalendarString(isoString: string): PlainCompletion<string> {
-  const parseResult = EnsureCompletion(ParseISODateTime(isoString, ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]', 'TemporalInstantString', 'TemporalTimeString', 'TemporalMonthDayString', 'TemporalYearMonthString']));
+  const parseResult = EnsureCompletion(ParseISODateTime(isoString, 'all'));
   if (parseResult instanceof NormalCompletion) {
     const calendar = parseResult.Value.Calendar;
     if (calendar === undefined) return 'iso8601';
@@ -291,28 +326,28 @@ export function* ParseTemporalDurationString(isoString: string): ValueEvaluator<
   const [hours, fHours = ''] = hoursNode.split(_seperator);
   const [minutes, fMinutes = ''] = minutesNode.split(_seperator);
   const [seconds, fSeconds = ''] = secondsNode.split(_seperator);
-  let yearsMV = Q(yield* SnapToInteger(Value(years), 'truncate-strict'));
-  let monthsMV = Q(yield* SnapToInteger(Value(months), 'truncate-strict'));
-  let weeksMV = Q(yield* SnapToInteger(Value(weeks), 'truncate-strict'));
-  let daysMV = Q(yield* SnapToInteger(Value(days), 'truncate-strict'));
-  let hoursMV = Q(yield* SnapToInteger(Value(hours), 'truncate-strict'));
+  let yearsMV = Q(yield* SnapToInteger(Value(years), 'truncate'));
+  let monthsMV = Q(yield* SnapToInteger(Value(months), 'truncate'));
+  let weeksMV = Q(yield* SnapToInteger(Value(weeks), 'truncate'));
+  let daysMV = Q(yield* SnapToInteger(Value(days), 'truncate'));
+  let hoursMV = Q(yield* SnapToInteger(Value(hours), 'truncate'));
   let minutesMV: MathematicalValue;
   if (fHours) {
     Assert(!minutes && !fMinutes && !seconds && !fSeconds);
     const fHoursDigits = fHours.substring(1);
     const fHoursScale = fHoursDigits.length;
-    minutesMV = Decimal(Q(yield* SnapToInteger(Value(fHoursDigits), 'truncate-strict'))).divide(10 ** fHoursScale).multiply(60);
+    minutesMV = Decimal(Q(yield* SnapToInteger(Value(fHoursDigits), 'truncate'))).divide(10 ** fHoursScale).multiply(60);
   } else {
-    minutesMV = Decimal(Q(yield* SnapToInteger(Value(minutes), 'truncate-strict')));
+    minutesMV = Decimal(Q(yield* SnapToInteger(Value(minutes), 'truncate')));
   }
   let secondsMV: MathematicalValue;
   if (fMinutes) {
     Assert(!seconds && !fSeconds);
     const fMinutesDigits = fMinutes.substring(1);
     const fMinutesScale = fMinutesDigits.length;
-    secondsMV = Decimal(Q(yield* SnapToInteger(Value(fMinutesDigits), 'truncate-strict'))).divide(10 ** fMinutesScale).multiply(60);
+    secondsMV = Decimal(Q(yield* SnapToInteger(Value(fMinutesDigits), 'truncate'))).divide(10 ** fMinutesScale).multiply(60);
   } else if (seconds) {
-    secondsMV = Decimal(Q(yield* SnapToInteger(Value(seconds), 'truncate-strict')));
+    secondsMV = Decimal(Q(yield* SnapToInteger(Value(seconds), 'truncate')));
   } else {
     secondsMV = minutesMV.remainder(1).multiply(60);
   }
@@ -320,7 +355,7 @@ export function* ParseTemporalDurationString(isoString: string): ValueEvaluator<
   if (fSeconds) {
     const fSecondDigits = fSeconds.substring(1);
     const fSecondsScale = fSecondDigits.length;
-    millisecondsMV = Decimal(Q(yield* SnapToInteger(Value(fSecondDigits), 'truncate-strict'))).divide(10 ** fSecondsScale).multiply(1000);
+    millisecondsMV = Decimal(Q(yield* SnapToInteger(Value(fSecondDigits), 'truncate'))).divide(10 ** fSecondsScale).multiply(1000);
   } else {
     millisecondsMV = secondsMV.remainder(1).multiply(1000);
   }
@@ -350,7 +385,7 @@ export function ParseTemporalTimeZoneString(timeZoneString: string): PlainComple
   if (!Array.isArray(parseResult)) {
     return X(ParseTimeZoneIdentifier(timeZoneString));
   }
-  const result = Q(ParseISODateTime(timeZoneString, ['TemporalDateTimeString[+Zoned]', 'TemporalDateTimeString[~Zoned]', 'TemporalInstantString', 'TemporalTimeString', 'TemporalMonthDayString', 'TemporalYearMonthString']));
+  const result = Q(ParseISODateTime(timeZoneString, 'all'));
   const timeZoneResult = result.TimeZone;
   if (timeZoneResult.TimeZoneAnnotation !== undefined) {
     return X(ParseTimeZoneIdentifier(timeZoneResult.TimeZoneAnnotation));
@@ -398,31 +433,6 @@ export function* ParseMonthCode(argument: Value | string): PlainEvaluator<{ Mont
     return Throw.RangeError('$1 is not a valid month code', monthCode);
   }
   return { MonthNumber: monthNumber, IsLeapMonth: isLeapMonth };
-}
-
-/** https://tc39.es/proposal-temporal/#sec-parsedatetimeutcoffset */
-export function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<bigint> {
-  const parseResult = DateParser.parse(
-    offsetString,
-    (parser) => parser.parseUTCOffset(),
-    { SubMinutePrecision: true, RangeError: true },
-  );
-  if (Array.isArray(parseResult)) return ThrowCompletion(parseResult[0]);
-  Assert(!!parseResult.Sign);
-  const sign = parseResult.Sign === '-' ? -1n : 1n;
-  Assert(parseResult.Hour !== undefined);
-  const hours = BigInt(parseResult.Hour);
-  const minutes = parseResult.Minute ? BigInt(parseResult.Minute) : 0n;
-  const seconds = parseResult.Second ? BigInt(parseResult.Second) : 0n;
-  let nanoseconds;
-  if (!parseResult.TemporalDecimalFraction) {
-    nanoseconds = 0n;
-  } else {
-    const fraction = `${parseResult.TemporalDecimalFraction.separator + parseResult.TemporalDecimalFraction.digits}000000000`;
-    const nanosecondsString = fraction.substring(1, 10);
-    nanoseconds = BigInt(nanosecondsString);
-  }
-  return sign * (((hours * 60n + minutes) * 60n + seconds) * BigInt(1e9) + nanoseconds);
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneidentifier
@@ -747,17 +757,12 @@ export class DateParser {
     return this.parse(/[ Tt]/, () => this.raise('Expected DateTimeSeparator')) as ' ' | 'T' | 't';
   }
 
-  // TimeSecond ::: 00 to 60
+  // TimeSecond ::: Second | 60
   private parseTimeSecond(): bigint {
-    const result = this.eatRegExp(/0[0-9]|[1-5][0-9]|60/);
-    if (!result) {
-      if (this.grammarParameters.DateCompatibility) {
-        const second = this.eatRegExp(/\d/);
-        if (second) return BigInt(second);
-      }
-      throw this.raise('Invalid second');
+    if (this.eat('60')) {
+      return 60n;
     }
-    return BigInt(result);
+    return this.parseSecond();
   }
 
   //  TimeSeparator :::
@@ -780,17 +785,17 @@ export class DateParser {
   //
   //  TimeSpec[Extended] :::
   //    Hour
-  //    Hour TimeSeparator[?Extended] MinuteSecond
-  //    Hour TimeSeparator[?Extended] MinuteSecond TimeSeparator[?Extended] TimeSecond TemporalDecimalFraction?
+  //    Hour TimeSeparator[?Extended] Minute
+  //    Hour TimeSeparator[?Extended] Minute TimeSeparator[?Extended] Second TemporalDecimalFraction?
   //
   //  expanded to
   //
   //  TimeSpec :::
   //    Hour
-  //    Hour TimeSeparator[+Extended] MinuteSecond
-  //    Hour TimeSeparator[+Extended] MinuteSecond TimeSeparator[+Extended] TimeSecond TemporalDecimalFraction?
-  //    Hour TimeSeparator[~Extended] MinuteSecond
-  //    Hour TimeSeparator[~Extended] MinuteSecond TimeSeparator[~Extended] TimeSecond TemporalDecimalFraction?
+  //    Hour TimeSeparator[+Extended] Minute
+  //    Hour TimeSeparator[+Extended] Minute TimeSeparator[+Extended] Second TemporalDecimalFraction?
+  //    Hour TimeSeparator[~Extended] Minute
+  //    Hour TimeSeparator[~Extended] Minute TimeSeparator[~Extended] Second TemporalDecimalFraction?
   private parseTime(): RFC9557ParseNode.TimeSpec {
     const canContinue = (regExp: RegExp) => {
       const next = this.peek();
@@ -800,7 +805,7 @@ export class DateParser {
     const Hour = this.parseHour();
     if (!canContinue(/[:0-5]/)) return { Hour };
     const Extended = this.parseTimeSeparatorExtendedOrNot();
-    const Minute = this.parseMinuteSecond();
+    const Minute = this.parseMinute();
 
     if (!canContinue(Extended ? /[:0-6]/ : /[0-6]/)) return { Hour, Minute };
     this.parseTimeSeparator(!!Extended);
@@ -1074,10 +1079,10 @@ export class DateParser {
 
   // UTCOffset[SubMinutePrecision] :::
   //                         ASCIISign Hour
-  //                         ASCIISign Hour TimeSeparator[+Extended] MinuteSecond
-  //                         ASCIISign Hour TimeSeparator[~Extended] MinuteSecond
-  //   [+SubMinutePrecision] ASCIISign Hour TimeSeparator[+Extended] MinuteSecond TimeSeparator[+Extended] MinuteSecond TemporalDecimalFraction?
-  //   [+SubMinutePrecision] ASCIISign Hour TimeSeparator[~Extended] MinuteSecond TimeSeparator[~Extended] MinuteSecond TemporalDecimalFraction?
+  //                         ASCIISign Hour TimeSeparator[+Extended] Minute
+  //                         ASCIISign Hour TimeSeparator[~Extended] Minute
+  //   [+SubMinutePrecision] ASCIISign Hour TimeSeparator[+Extended] Minute TimeSeparator[+Extended] Second TemporalDecimalFraction?
+  //   [+SubMinutePrecision] ASCIISign Hour TimeSeparator[~Extended] Minute TimeSeparator[~Extended] Second TemporalDecimalFraction?
   parseUTCOffset(): RFC9557ParseNode.UTCOffset {
     const pos = this.pos;
     const Sign = this.parseAsciiSign();
@@ -1086,14 +1091,14 @@ export class DateParser {
       return { Sign, Hour, sourceText: this.input.slice(pos, this.pos) };
     }
     const Extended = !!this.parseTimeSeparatorExtendedOrNot();
-    const Minute = this.parseMinuteSecond();
+    const Minute = this.parseMinute();
     if (!this.grammarParameters.SubMinutePrecision || !/[0-6:]/.test(this.peek() || '')) {
       return {
         Sign, Hour, Minute, sourceText: this.input.slice(pos, this.pos),
       };
     }
     this.parseTimeSeparator(Extended);
-    const Second = this.parseMinuteSecond();
+    const Second = this.parseSecond();
     const TemporalDecimalFraction = this.tryParseTemporalDecimalFraction();
     return {
       Sign, Hour, Minute, Second, TemporalDecimalFraction, sourceText: this.input.slice(pos, this.pos),
@@ -1135,15 +1140,28 @@ export class DateParser {
     return BigInt(result);
   }
 
-  //  MinuteSecond :: number 00 to 59
-  parseMinuteSecond(): bigint {
+  //  Minute :: number 00 to 59
+  parseMinute(): bigint {
     const result = this.eatRegExp(/[0-5]\d/);
     if (!result) {
       if (this.grammarParameters.DateCompatibility) {
-        const minuteSecond = this.eatRegExp(/\d/);
-        if (minuteSecond) return BigInt(minuteSecond);
+        const minute = this.eatRegExp(/\d/);
+        if (minute) return BigInt(minute);
       }
-      throw this.raise('Invalid minute or second');
+      throw this.raise('Invalid minute');
+    }
+    return BigInt(result);
+  }
+
+  //  Second :: number 00 to 59
+  parseSecond(): bigint {
+    const result = this.eatRegExp(/[0-5]\d/);
+    if (!result) {
+      if (this.grammarParameters.DateCompatibility) {
+        const second = this.eatRegExp(/\d/);
+        if (second) return BigInt(second);
+      }
+      throw this.raise('Invalid second');
     }
     return BigInt(result);
   }
@@ -1238,7 +1256,7 @@ export class DateParser {
   IsValidDate(node: RFC9557ParseNode.DateSpec) {
     this.IsValidMonthDay(node);
     const year = node.Year;
-    if (node.Month === 2n && node.Day === 29n && !MathematicalInLeapYear(EpochTimeForYear(year))) {
+    if (node.Month === 2n && node.Day === 29n && InLeapYear(TimeFromYear(year) as FiniteTimeValue) === 0n) {
       this.raise('Invalid date: $1 is not a leap year, so February does not have 29 days', year);
     }
   }

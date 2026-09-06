@@ -1,36 +1,15 @@
 import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.mts';
-import { clamp, floorDiv } from '../math.mts';
+import { HostSystemUTCEpochNanoseconds } from '../date-objects.mts';
 import { SystemTimeZoneIdentifier } from './addition.mts';
 import {
-  ObjectValue, GetGlobalObject, Value, type PlainCompletion, Q, ToTemporalTimeZoneIdentifier, GetISODateTimeFor,
-  surroundingAgent,
-  MinEpochNanoseconds,
-  MaxEpochNanoseconds,
+  GetGlobalObject, Value, type PlainCompletion, Q, ToTemporalTimeZoneIdentifier, GetISODateTimeFor,
   type EpochNanoseconds,
-  type IntegralNumber,
 } from '#self';
-
-/** https://tc39.es/proposal-temporal/#sec-hostsystemutcepochnanoseconds */
-export function HostSystemUTCEpochNanoseconds(global: ObjectValue): EpochNanoseconds {
-  let host = surroundingAgent.hostDefinedOptions.hostHooks?.HostSystemUTCEpochNanoseconds?.(global);
-  if (host === undefined) {
-    host = BigInt(Date.now()) * BigInt(1e6) as EpochNanoseconds;
-  }
-  return clamp(MinEpochNanoseconds, host, MaxEpochNanoseconds);
-}
-
-/** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochmilliseconds */
-export function SystemUTCEpochMilliseconds(): IntegralNumber {
-  const global = GetGlobalObject();
-  const nowNs = HostSystemUTCEpochNanoseconds(global);
-  return Number(floorDiv(nowNs, BigInt(1e6)));
-}
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds */
 export function SystemUTCEpochNanoseconds(): EpochNanoseconds {
   const global = GetGlobalObject();
-  const nowNs = HostSystemUTCEpochNanoseconds(global);
-  return nowNs;
+  return HostSystemUTCEpochNanoseconds(global);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime */
@@ -41,6 +20,6 @@ export function SystemDateTime(temporalTimeZoneLike: Value): PlainCompletion<ISO
   } else {
     timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike));
   }
-  const epochNs = SystemUTCEpochNanoseconds();
-  return GetISODateTimeFor(timeZone, epochNs);
+  const epochNanoseconds = SystemUTCEpochNanoseconds();
+  return GetISODateTimeFor(timeZone, epochNanoseconds);
 }

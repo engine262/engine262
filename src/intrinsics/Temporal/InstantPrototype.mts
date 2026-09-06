@@ -2,13 +2,11 @@ import { bootstrapPrototype } from '../bootstrap.mts';
 import {
   GetRoundingIncrementOption,
   GetRoundingModeOption,
-  RoundingMode,
   type TimeZoneIdentifier,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
   GetTemporalUnitValuedOption,
-  TemporalUnit,
   ToSecondsStringPrecisionRecord,
   ValidateTemporalRoundingIncrement,
   ValidateTemporalUnitValue,
@@ -36,7 +34,7 @@ import {
   HoursPerDay,
   JSStringValue,
   MinutesPerHour,
-  msPerDay,
+  MillisecondsPerDay,
   OrdinaryObjectCreate,
   Q,
   RequireInternalSlot,
@@ -51,6 +49,7 @@ import {
   type PlainCompletion,
   type Realm,
   type ValueEvaluator,
+  NanosecondsPerMillisecond,
 } from '#self';
 
 function thisTemporalInstantValue(value: Value): PlainCompletion<TemporalInstantObject> {
@@ -61,9 +60,8 @@ function thisTemporalInstantValue(value: Value): PlainCompletion<TemporalInstant
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds */
 function InstantProto_epochMillisecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
-  const ns = instant.EpochNanoseconds;
-  const ms = floorDiv(ns, BigInt(1e6));
-  return F(Number(ms));
+  const epochMilliseconds = floorDiv(instant.EpochNanoseconds, NanosecondsPerMillisecond);
+  return F(Number(epochMilliseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds */
@@ -110,27 +108,27 @@ function* InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue
     roundTo = Q(GetOptionsObject(roundTo));
   }
   const roundingIncrement = Q(yield* GetRoundingIncrementOption(roundTo));
-  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
+  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, 'halfExpand'));
   const smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
   let maximum: Integer;
-  if (smallestUnit === TemporalUnit.Hour) {
+  if (smallestUnit === 'hour') {
     maximum = HoursPerDay;
-  } else if (smallestUnit === TemporalUnit.Minute) {
+  } else if (smallestUnit === 'minute') {
     maximum = MinutesPerHour * HoursPerDay;
-  } else if (smallestUnit === TemporalUnit.Second) {
+  } else if (smallestUnit === 'second') {
     maximum = SecondsPerMinute * MinutesPerHour * HoursPerDay;
-  } else if (smallestUnit === TemporalUnit.Millisecond) {
-    maximum = msPerDay;
-  } else if (smallestUnit === TemporalUnit.Microsecond) {
-    maximum = 1_000n * msPerDay;
+  } else if (smallestUnit === 'millisecond') {
+    maximum = MillisecondsPerDay;
+  } else if (smallestUnit === 'microsecond') {
+    maximum = 1_000n * MillisecondsPerDay;
   } else {
-    Assert(smallestUnit === TemporalUnit.Nanosecond);
+    Assert(smallestUnit === 'nanosecond');
     maximum = NanosecondsPerDay;
   }
   Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, true));
-  const roundedNs = RoundEpochNanoseconds(instant.EpochNanoseconds, roundingIncrement, smallestUnit, roundingMode);
-  return X(CreateTemporalInstant(roundedNs));
+  const roundedNanoseconds = RoundEpochNanoseconds(instant.EpochNanoseconds, roundingIncrement, smallestUnit, roundingMode);
+  return X(CreateTemporalInstant(roundedNanoseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals */
@@ -145,11 +143,11 @@ function* InstantProto_toString([options = Value.undefined]: Arguments, { thisVa
   const instant = Q(thisTemporalInstantValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
-  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, RoundingMode.Trunc));
-  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset'));
+  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 'trunc'));
+  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'optional'));
   const _timeZone = Q(yield* Get(resolvedOptions, Value('timeZone')));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
-  if (smallestUnit === TemporalUnit.Hour) {
+  if (smallestUnit === 'hour') {
     return Throw.RangeError('smallestUnit cannot be hour');
   }
   let timeZone: TimeZoneIdentifier | undefined;
@@ -157,11 +155,11 @@ function* InstantProto_toString([options = Value.undefined]: Arguments, { thisVa
     timeZone = Q(ToTemporalTimeZoneIdentifier(_timeZone));
   }
   const precision = ToSecondsStringPrecisionRecord(
-    smallestUnit as Exclude<TimeUnit, TemporalUnit.Hour> | 'unset',
+    smallestUnit as Exclude<TimeUnit, 'hour'> | 'no-unit',
     digits,
   );
-  const roundedNs = RoundEpochNanoseconds(instant.EpochNanoseconds, precision.Increment, precision.Unit, roundingMode);
-  const roundedInstant = X(CreateTemporalInstant(roundedNs));
+  const roundedNanoseconds = RoundEpochNanoseconds(instant.EpochNanoseconds, precision.Increment, precision.Unit, roundingMode);
+  const roundedInstant = X(CreateTemporalInstant(roundedNanoseconds));
   return Value(TemporalInstantToString(roundedInstant, timeZone, precision.Precision));
 }
 

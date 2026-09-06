@@ -2,9 +2,8 @@ import { bootstrapPrototype } from '../bootstrap.mts';
 import {
   GetRoundingIncrementOption,
   GetRoundingModeOption,
-  IsOffsetTimeZoneIdentifier,
-  RoundingMode,
 } from '../../abstract-ops/temporal/addition.mts';
+import { IsOffsetTimeZoneIdentifier, ParseDateTimeUTCOffset } from '../../abstract-ops/date-objects.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
   GetDirectionOption,
@@ -18,14 +17,13 @@ import {
   GetTemporalUnitValuedOption,
   ISODateToFields,
   MaximumTemporalDurationRoundingIncrement,
-  TemporalUnit,
+  type TemporalUnit,
   ToSecondsStringPrecisionRecord,
   ValidateTemporalRoundingIncrement,
   ValidateTemporalUnitValue,
   type TimeUnit,
 } from '../../abstract-ops/temporal/temporal.mts';
 import {
-  CalendarEquals,
   CalendarISOToDate,
   CalendarMergeFields,
   PrepareCalendarFields,
@@ -51,10 +49,8 @@ import {
   GetStartOfDay,
 } from '../../abstract-ops/temporal/time-zone.mts';
 import { AddDaysToISODate, CreateTemporalDate } from '../../abstract-ops/temporal/plain-date.mts';
-import { ParseDateTimeUTCOffset } from '../../parser/TemporalParser.mts';
 import { CreateTemporalTime, ToTemporalTime } from '../../abstract-ops/temporal/plain-time.mts';
 import {
-  CombineISODateAndTimeRecord,
   CreateTemporalDateTime,
   InterpretTemporalDateTimeFields,
   RoundISODateTime,
@@ -63,6 +59,7 @@ import { CreateTemporalInstant } from '../../abstract-ops/temporal/instant.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
 import { floorDiv, min } from '../../abstract-ops/math.mts';
 import type { TemporalZonedDateTimeObject } from './ZonedDateTime.mts';
+import type { ISODateTimeRecord } from './PlainDateTime.mts';
 import {
   AddTimeDurationToEpochNanoseconds,
   Assert,
@@ -86,6 +83,7 @@ import {
   type ValueEvaluator,
   TotalTimeDuration,
   GetOptionsObject,
+  NanosecondsPerMillisecond,
 } from '#self';
 
 function thisTemporalZonedDateTimeValue(value: Value): PlainCompletion<TemporalZonedDateTimeObject> {
@@ -107,7 +105,9 @@ function ZonedDateTimeProto_timeZoneIdGetter(_args: Arguments, { thisValue }: Fu
 function ZonedDateTimeProto_eraGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const zonedDateTime = Q(thisTemporalZonedDateTimeValue(thisValue));
   const isoDateTime = GetISODateTimeFor(zonedDateTime.TimeZone, zonedDateTime.EpochNanoseconds);
-  return Value(CalendarISOToDate(zonedDateTime.Calendar, isoDateTime.ISODate).Era);
+  const result = CalendarISOToDate(zonedDateTime.Calendar, isoDateTime.ISODate).Era;
+  if (result === undefined) return Value.undefined;
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/pr/3759/#sec-get-temporal.zoneddatetime.prototype.erayear */
@@ -218,10 +218,10 @@ function ZonedDateTimeProto_hoursInDayGetter(_args: Arguments, { thisValue }: Fu
   const isoDateTime = GetISODateTimeFor(timeZone, zonedDateTime.EpochNanoseconds);
   const today = isoDateTime.ISODate;
   const tomorrow = AddDaysToISODate(today, 1n);
-  const todayNs = Q(GetStartOfDay(timeZone, today));
-  const tomorrowNs = Q(GetStartOfDay(timeZone, tomorrow));
-  const diff = TimeDurationFromEpochNanosecondsDifference(tomorrowNs, todayNs);
-  return F(TotalTimeDuration(diff, TemporalUnit.Hour).toNumber());
+  const todayEpochNanoseconds = Q(GetStartOfDay(timeZone, today));
+  const tomorrowEpochNanoseconds = Q(GetStartOfDay(timeZone, tomorrow));
+  const diff = TimeDurationFromEpochNanosecondsDifference(todayEpochNanoseconds, tomorrowEpochNanoseconds);
+  return F(TotalTimeDuration(diff, 'hour').toNumber());
 }
 
 /** https://tc39.es/ecma262/pr/3759/#sec-get-temporal.zoneddatetime.prototype.weekofyear */
@@ -263,8 +263,9 @@ function ZonedDateTimeProto_nanosecondGetter(_args: Arguments, { thisValue }: Fu
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochmilliseconds */
 function ZonedDateTimeProto_epochMillisecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
-  const ns = Q(thisTemporalZonedDateTimeValue(thisValue)).EpochNanoseconds;
-  return F(Number(floorDiv(ns, BigInt(1e6))));
+  const zonedDateTime = Q(thisTemporalZonedDateTimeValue(thisValue));
+  const epochMilliseconds = floorDiv(zonedDateTime.EpochNanoseconds, NanosecondsPerMillisecond);
+  return F(Number(epochMilliseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochnanoseconds */
@@ -291,11 +292,11 @@ function* ZonedDateTimeProto_with([temporalZonedDateTimeLike = Value.undefined, 
   if (!Q(yield* IsPartialTemporalObject(temporalZonedDateTimeLike))) {
     return Throw.TypeError('$1 is not a partial Temporal object', temporalZonedDateTimeLike);
   }
-  const epochNs = zonedDateTime.EpochNanoseconds;
+  const epochNanoseconds = zonedDateTime.EpochNanoseconds;
   const timeZone = zonedDateTime.TimeZone;
   const calendar = zonedDateTime.Calendar;
-  const offsetNanoseconds = GetOffsetNanosecondsFor(timeZone, epochNs);
-  const isoDateTime = GetISODateTimeFor(timeZone, epochNs);
+  const offsetNanoseconds = GetOffsetNanosecondsFor(timeZone, epochNanoseconds);
+  const isoDateTime = GetISODateTimeFor(timeZone, epochNanoseconds);
   let fields = ISODateToFields(calendar, isoDateTime.ISODate, 'date');
   fields.Hour = isoDateTime.Time.Hour;
   fields.Minute = isoDateTime.Time.Minute;
@@ -304,7 +305,7 @@ function* ZonedDateTimeProto_with([temporalZonedDateTimeLike = Value.undefined, 
   fields.Microsecond = isoDateTime.Time.Microsecond;
   fields.Nanosecond = isoDateTime.Time.Nanosecond;
   fields.OffsetString = FormatUTCOffsetNanoseconds(offsetNanoseconds);
-  const partialZonedDateTime = Q(yield* PrepareCalendarFields(calendar, temporalZonedDateTimeLike as ObjectValue, ['year', 'month', 'month-code', 'day'], ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'offset'], 'partial'));
+  const partialZonedDateTime = Q(yield* PrepareCalendarFields(calendar, temporalZonedDateTimeLike as ObjectValue, 'date-fields', 'time-fields-with-offset', 'partial'));
   fields = CalendarMergeFields(calendar, fields, partialZonedDateTime);
   const resolvedOptions = Q(GetOptionsObject(options));
   const disambiguation = Q(yield* GetTemporalDisambiguationOption(resolvedOptions));
@@ -313,8 +314,8 @@ function* ZonedDateTimeProto_with([temporalZonedDateTimeLike = Value.undefined, 
   const dateTimeResult = Q(yield* InterpretTemporalDateTimeFields(calendar, fields, overflow));
   const offsetString = fields.OffsetString!;
   const newOffsetNanoseconds = X(ParseDateTimeUTCOffset(offsetString));
-  const epochNanoseconds = Q(InterpretISODateTimeOffset(dateTimeResult.ISODate, dateTimeResult.Time, 'option', newOffsetNanoseconds, timeZone, disambiguation, offset, 'match-exactly'));
-  return X(CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar));
+  const newEpochNanoseconds = Q(InterpretISODateTimeOffset(dateTimeResult.ISODate, dateTimeResult.Time, 'option', newOffsetNanoseconds, timeZone, disambiguation, offset, 'match-exactly'));
+  return X(CreateTemporalZonedDateTime(newEpochNanoseconds, timeZone, calendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaintime */
@@ -323,15 +324,15 @@ function* ZonedDateTimeProto_withPlainTime([plainTimeLike = Value.undefined]: Ar
   const timeZone = zonedDateTime.TimeZone;
   const calendar = zonedDateTime.Calendar;
   const isoDateTime = GetISODateTimeFor(timeZone, zonedDateTime.EpochNanoseconds);
-  let epochNs;
+  let epochNanoseconds;
   if (plainTimeLike instanceof UndefinedValue) {
-    epochNs = Q(GetStartOfDay(timeZone, isoDateTime.ISODate));
+    epochNanoseconds = Q(GetStartOfDay(timeZone, isoDateTime.ISODate));
   } else {
     const plainTime = Q(yield* ToTemporalTime(plainTimeLike));
-    const resultISODateTime = CombineISODateAndTimeRecord(isoDateTime.ISODate, plainTime.Time);
-    epochNs = Q(GetEpochNanosecondsFor(timeZone, resultISODateTime, 'compatible'));
+    const resultISODateTime: ISODateTimeRecord = { ISODate: isoDateTime.ISODate, Time: plainTime.Time };
+    epochNanoseconds = Q(GetEpochNanosecondsFor(timeZone, resultISODateTime, 'compatible'));
   }
-  return X(CreateTemporalZonedDateTime(epochNs, timeZone, calendar));
+  return X(CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withtimezone */
@@ -386,42 +387,42 @@ function* ZonedDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
     roundTo = Q(GetOptionsObject(roundTo));
   }
   const roundingIncrement = Q(yield* GetRoundingIncrementOption(roundTo));
-  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
+  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, 'halfExpand'));
   const smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required'));
-  Q(ValidateTemporalUnitValue(smallestUnit, 'time', [TemporalUnit.Day]));
+  Q(ValidateTemporalUnitValue(smallestUnit, 'time', ['day']));
   let maximum;
   let inclusive;
-  if (smallestUnit === TemporalUnit.Day) {
+  if (smallestUnit === 'day') {
     maximum = 1n;
     inclusive = true;
   } else {
     maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
-    Assert(maximum !== 'unset');
+    Assert(maximum !== 'no-maximum');
     inclusive = false;
   }
   Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, inclusive));
-  if (smallestUnit === TemporalUnit.Nanosecond && roundingIncrement === 1n) {
+  if (smallestUnit === 'nanosecond' && roundingIncrement === 1n) {
     return X(CreateTemporalZonedDateTime(zonedDateTime.EpochNanoseconds, zonedDateTime.TimeZone, zonedDateTime.Calendar));
   }
-  let thisNs = zonedDateTime.EpochNanoseconds;
+  let thisEpochNanoseconds = zonedDateTime.EpochNanoseconds;
   const timeZone = zonedDateTime.TimeZone;
   const calendar = zonedDateTime.Calendar;
-  const isoDateTime = GetISODateTimeFor(timeZone, thisNs);
+  const isoDateTime = GetISODateTimeFor(timeZone, thisEpochNanoseconds);
   let epochNanoseconds;
-  if (smallestUnit === TemporalUnit.Day) {
+  if (smallestUnit === 'day') {
     const dateStart = isoDateTime.ISODate;
     const dateEnd = AddDaysToISODate(dateStart, 1n);
-    const startNs = Q(GetStartOfDay(timeZone, dateStart));
-    Assert(thisNs >= startNs);
-    const endNs = Q(GetStartOfDay(timeZone, dateEnd));
-    thisNs = min(thisNs, endNs - 1n);
-    const dayLengthNs = endNs - startNs;
-    const dayProgressNs = TimeDurationFromEpochNanosecondsDifference(thisNs, startNs);
-    const roundedDayNs = X(RoundTimeDurationToIncrement(dayProgressNs, dayLengthNs, roundingMode));
-    epochNanoseconds = AddTimeDurationToEpochNanoseconds(roundedDayNs, startNs);
+    const startNanoseconds = Q(GetStartOfDay(timeZone, dateStart));
+    Assert(thisEpochNanoseconds >= startNanoseconds);
+    const endNanoseconds = Q(GetStartOfDay(timeZone, dateEnd));
+    thisEpochNanoseconds = min(thisEpochNanoseconds, endNanoseconds - 1n);
+    const dayLengthNanoseconds = endNanoseconds - startNanoseconds;
+    const dayProgressNanoseconds = TimeDurationFromEpochNanosecondsDifference(startNanoseconds, thisEpochNanoseconds);
+    const roundedDayNanoseconds = X(RoundTimeDurationToIncrement(dayProgressNanoseconds, dayLengthNanoseconds, roundingMode));
+    epochNanoseconds = AddTimeDurationToEpochNanoseconds(roundedDayNanoseconds, startNanoseconds);
   } else {
-    const roundResult = RoundISODateTime(isoDateTime, roundingIncrement, smallestUnit as TimeUnit | TemporalUnit.Day, roundingMode);
-    const offsetNanoseconds = GetOffsetNanosecondsFor(timeZone, thisNs);
+    const roundResult = RoundISODateTime(isoDateTime, roundingIncrement, smallestUnit as TimeUnit | 'day', roundingMode);
+    const offsetNanoseconds = GetOffsetNanosecondsFor(timeZone, thisEpochNanoseconds);
     epochNanoseconds = Q(InterpretISODateTimeOffset(roundResult.ISODate, roundResult.Time, 'option', offsetNanoseconds, timeZone, 'compatible', 'prefer', 'match-exactly'));
   }
   return X(CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar));
@@ -437,7 +438,8 @@ function* ZonedDateTimeProto_equals([_other = Value.undefined]: Arguments, { thi
   if (!TimeZoneEquals(zonedDateTime.TimeZone, other.TimeZone)) {
     return Value.false;
   }
-  return Value(CalendarEquals(zonedDateTime.Calendar, other.Calendar));
+  if (zonedDateTime.Calendar !== other.Calendar) return Value.false;
+  return Value.true;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tostring */
@@ -447,15 +449,15 @@ function* ZonedDateTimeProto_toString([options = Value.undefined]: Arguments, { 
   const showCalendar = Q(yield* GetTemporalShowCalendarNameOption(resolvedOptions));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
   const showOffset = Q(yield* GetTemporalShowOffsetOption(resolvedOptions));
-  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 3));
-  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset'));
+  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 'trunc'));
+  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'optional'));
   const showTimeZone = Q(yield* GetTemporalShowTimeZoneNameOption(resolvedOptions));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
-  if (smallestUnit === TemporalUnit.Hour) {
+  if (smallestUnit === 'hour') {
     return Throw.RangeError('smallestUnit cannot be hour');
   }
   const precision = ToSecondsStringPrecisionRecord(
-    smallestUnit as Exclude<TimeUnit, TemporalUnit.Hour> | 'unset',
+    smallestUnit as Exclude<TimeUnit, 'hour'> | 'no-unit',
     digits,
   );
   return Value(TemporalZonedDateTimeToString(zonedDateTime, precision.Precision, showCalendar, showTimeZone, showOffset, precision.Increment, precision.Unit, roundingMode));

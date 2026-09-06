@@ -1,13 +1,14 @@
 import type { TemporalDurationObject } from '../../intrinsics/Temporal/Duration.mts';
 import { type TemporalInstantObject, isTemporalInstantObject } from '../../intrinsics/Temporal/Instant.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
-import { ParseISODateTime, ParseDateTimeUTCOffset } from '../../parser/TemporalParser.mts';
+import { ParseISODateTime } from '../../parser/TemporalParser.mts';
+import { GetUTCEpochNanoseconds, ParseDateTimeUTCOffset } from '../date-objects.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  GetUTCEpochNanoseconds, RoundingMode, type TimeZoneIdentifier,
+  type RoundingMode, type TimeZoneIdentifier,
 } from './addition.mts';
 import {
-  type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, CheckISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, Table21_LengthInNanoSeconds, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalUnit, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays, MinEpochNanoseconds, MaxEpochNanoseconds,
+  type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, ValidateISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, TemporalUnitLength, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays, MinEpochNanoseconds, MaxEpochNanoseconds,
   BalanceISODateTime,
   FormatISODateTime,
   type EpochNanoseconds,
@@ -15,8 +16,8 @@ import {
   GetOptionsObject,
 } from '#self';
 
-/** https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds */
-export function IsValidEpochNanoseconds(epochNanoseconds: EpochNanoseconds): boolean {
+/** https://tc39.es/proposal-temporal/#sec-iswithinepochnanosecondsinterval */
+export function IsWithinEpochNanosecondsInterval(epochNanoseconds: Integer): boolean {
   if (epochNanoseconds < MinEpochNanoseconds || epochNanoseconds > MaxEpochNanoseconds) {
     return false;
   }
@@ -25,7 +26,7 @@ export function IsValidEpochNanoseconds(epochNanoseconds: EpochNanoseconds): boo
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant */
 export function* CreateTemporalInstant(epochNanoseconds: EpochNanoseconds, newTarget?: FunctionObject): ValueEvaluator<TemporalInstantObject> {
-  Assert(IsValidEpochNanoseconds(epochNanoseconds));
+  Assert(IsWithinEpochNanosecondsInterval(epochNanoseconds));
   if (newTarget === undefined) {
     newTarget = surroundingAgent.intrinsic('%Temporal.Instant%');
   }
@@ -48,7 +49,7 @@ export function* ToTemporalInstant(item: Value): ValueEvaluator<TemporalInstantO
   if (!(item instanceof JSStringValue)) {
     return Throw.TypeError('$1 is not a string', item);
   }
-  const parsed = Q(ParseISODateTime(item.stringValue(), ['TemporalInstantString']));
+  const parsed = Q(ParseISODateTime(item.stringValue(), 'instant'));
   // Assert: Either parsed.[[TimeZone]].[[OffsetString]] is not empty or parsed.[[TimeZone]].[[Z]] is true, but not both.
   {
     const a = parsed.TimeZone.OffsetString !== undefined;
@@ -60,29 +61,25 @@ export function* ToTemporalInstant(item: Value): ValueEvaluator<TemporalInstantO
   const time = parsed.Time;
   Assert(time !== 'start-of-day');
   const balanced = BalanceISODateTime(parsed.Year!, parsed.Month, parsed.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, time.Nanosecond - offsetNanoseconds);
-  Q(CheckISODaysRange(balanced.ISODate));
+  Q(ValidateISODaysRange(balanced.ISODate));
   const epochNanoseconds = GetUTCEpochNanoseconds(balanced);
-  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+  if (!IsWithinEpochNanosecondsInterval(epochNanoseconds)) {
     return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
   }
   return X(CreateTemporalInstant(epochNanoseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds */
-export function CompareEpochNanoseconds(epochNanosecondsOne: EpochNanoseconds, epochNanosecondsTwo: EpochNanoseconds): -1 | 0 | 1 {
-  if (epochNanosecondsOne > epochNanosecondsTwo) {
-    return 1;
-  }
-  if (epochNanosecondsOne < epochNanosecondsTwo) {
-    return -1;
-  }
+export function CompareEpochNanoseconds(xEpochNanoseconds: EpochNanoseconds, yEpochNanoseconds: EpochNanoseconds): -1 | 0 | 1 {
+  if (xEpochNanoseconds > yEpochNanoseconds) return 1;
+  if (xEpochNanoseconds < yEpochNanoseconds) return -1;
   return 0;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-addepochnanoseconds */
 export function AddEpochNanoseconds(epochNanoseconds: EpochNanoseconds, timeDuration: TimeDuration): PlainCompletion<EpochNanoseconds> {
   const result = AddTimeDurationToEpochNanoseconds(timeDuration, epochNanoseconds);
-  if (!IsValidEpochNanoseconds(result)) {
+  if (!IsWithinEpochNanosecondsInterval(result)) {
     return Throw.RangeError('$1 is not a valid epoch nanoseconds', result);
   }
   return result;
@@ -90,13 +87,13 @@ export function AddEpochNanoseconds(epochNanoseconds: EpochNanoseconds, timeDura
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant */
 export function DifferenceEpochNanoseconds(
-  ns1: EpochNanoseconds,
-  ns2: EpochNanoseconds,
+  epochNanosecondsFrom: EpochNanoseconds,
+  epochNanosecondsTo: EpochNanoseconds,
   roundingIncrement: Integer,
   smallestUnit: TimeUnit,
   roundingMode: RoundingMode,
 ): InternalDurationRecord {
-  let timeDuration = TimeDurationFromEpochNanosecondsDifference(ns2, ns1);
+  let timeDuration = TimeDurationFromEpochNanosecondsDifference(epochNanosecondsFrom, epochNanosecondsTo);
   timeDuration = X(RoundTimeDuration(timeDuration, roundingIncrement, smallestUnit, roundingMode));
   return CombineDateAndTimeDuration(ZeroDateDuration(), timeDuration);
 }
@@ -108,29 +105,28 @@ export function RoundEpochNanoseconds(
   unit: TimeUnit,
   roundingMode: RoundingMode,
 ): EpochNanoseconds {
-  const unitLength = Table21_LengthInNanoSeconds[unit];
-  const incrementNs = increment * unitLength;
-  return BigInt(RoundNumberToIncrementAsIfPositive(Decimal(epochNanoseconds), incrementNs, roundingMode));
+  const incrementNanoseconds = increment * TemporalUnitLength(unit);
+  return BigInt(RoundNumberToIncrementAsIfPositive(Decimal(epochNanoseconds), incrementNanoseconds, roundingMode));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalinstant-tostring */
 export function TemporalInstantToString(
   instant: TemporalInstantObject,
   timeZone: TimeZoneIdentifier | undefined,
-  precision: Integer | TemporalUnit.Minute | 'auto',
+  precision: Integer | 'minute' | 'auto',
 ): string {
   let outputTimeZone = timeZone;
   if (outputTimeZone === undefined) {
     outputTimeZone = 'UTC' as TimeZoneIdentifier;
   }
-  const epochNs = instant.EpochNanoseconds;
-  const isoDateTime = GetISODateTimeFor(outputTimeZone, epochNs);
+  const epochNanoseconds = instant.EpochNanoseconds;
+  const isoDateTime = GetISODateTimeFor(outputTimeZone, epochNanoseconds);
   const dateTimeString = FormatISODateTime(isoDateTime, 'iso8601', precision, 'never');
   let timeZoneString;
   if (timeZone === undefined) {
     timeZoneString = 'Z';
   } else {
-    const offsetNanoseconds = GetOffsetNanosecondsFor(outputTimeZone, epochNs);
+    const offsetNanoseconds = GetOffsetNanosecondsFor(outputTimeZone, epochNanoseconds);
     timeZoneString = FormatDateTimeUTCOffsetRounded(offsetNanoseconds);
   }
   return dateTimeString + timeZoneString;
@@ -145,7 +141,7 @@ export function* DifferenceTemporalInstant(
 ): ValueEvaluator<TemporalDurationObject> {
   const other = Q(yield* ToTemporalInstant(_other));
   const resolvedOptions = Q(GetOptionsObject(options));
-  const settings = Q(yield* GetDifferenceSettings(operation, resolvedOptions, 'time', [], TemporalUnit.Nanosecond, TemporalUnit.Second));
+  const settings = Q(yield* GetDifferenceSettings(operation, resolvedOptions, 'time', [], 'nanosecond', 'second'));
   const internalDuration = DifferenceEpochNanoseconds(instant.EpochNanoseconds, other.EpochNanoseconds, settings.RoundingIncrement, settings.SmallestUnit as TimeUnit, settings.RoundingMode);
   let result = X(TemporalDurationFromInternal(internalDuration, settings.LargestUnit));
   if (operation === 'since') {

@@ -2,11 +2,12 @@ import { bootstrapPrototype } from '../bootstrap.mts';
 import { abs } from '../../abstract-ops/math.mts';
 import { __ts_cast__ } from '../../utils/language.mts';
 import {
-  GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
+  GetRoundingIncrementOption, GetRoundingModeOption,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   type TemporalDurationObject,
 } from './Duration.mts';
+import type { ISODateTimeRecord } from './PlainDateTime.mts';
 import {
   AddDurations,
   AddTime,
@@ -15,7 +16,6 @@ import {
   Assert,
   CalendarDateAdd,
   CombineDateAndTimeDuration,
-  CombineISODateAndTimeRecord,
   CreateDataPropertyOrThrow,
   CreateDateDurationRecord,
   CreateNegatedTemporalDuration,
@@ -30,7 +30,7 @@ import {
   GetTemporalFractionalSecondDigitsOption,
   GetTemporalRelativeToOption,
   GetTemporalUnitValuedOption,
-  IsCalendarUnit,
+  isCalendarUnit,
   JSStringValue,
   LargerOfTwoTemporalUnits,
   MaximumTemporalDurationRoundingIncrement,
@@ -43,7 +43,7 @@ import {
   RoundTimeDuration,
   TemporalDurationFromInternal,
   TemporalDurationToString,
-  TemporalUnit,
+  type TemporalUnit,
   Throw,
   ToInternalDurationRecord,
   ToInternalDurationRecordWith24HourDays,
@@ -147,17 +147,17 @@ function DurationProto_blankGetter(_args: Arguments, { thisValue }: FunctionCall
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.with */
 function* DurationProto_with([_temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
-  const temporalDurationLike = Q(yield* ToPartialDurationRecord(_temporalDurationLike));
-  const years = BigInt(temporalDurationLike.Years ?? duration.Years);
-  const months = BigInt(temporalDurationLike.Months ?? duration.Months);
-  const weeks = BigInt(temporalDurationLike.Weeks ?? duration.Weeks);
-  const days = BigInt(temporalDurationLike.Days ?? duration.Days);
-  const hours = BigInt(temporalDurationLike.Hours ?? duration.Hours);
-  const minutes = BigInt(temporalDurationLike.Minutes ?? duration.Minutes);
-  const seconds = BigInt(temporalDurationLike.Seconds ?? duration.Seconds);
-  const milliseconds = BigInt(temporalDurationLike.Milliseconds ?? duration.Milliseconds);
-  const microseconds = BigInt(temporalDurationLike.Microseconds ?? duration.Microseconds);
-  const nanoseconds = BigInt(temporalDurationLike.Nanoseconds ?? duration.Nanoseconds);
+  const partial = Q(yield* ToPartialDurationRecord(_temporalDurationLike));
+  const years = BigInt(partial.Years ?? duration.Years);
+  const months = BigInt(partial.Months ?? duration.Months);
+  const weeks = BigInt(partial.Weeks ?? duration.Weeks);
+  const days = BigInt(partial.Days ?? duration.Days);
+  const hours = BigInt(partial.Hours ?? duration.Hours);
+  const minutes = BigInt(partial.Minutes ?? duration.Minutes);
+  const seconds = BigInt(partial.Seconds ?? duration.Seconds);
+  const milliseconds = BigInt(partial.Milliseconds ?? duration.Milliseconds);
+  const microseconds = BigInt(partial.Microseconds ?? duration.Microseconds);
+  const nanoseconds = BigInt(partial.Nanoseconds ?? duration.Nanoseconds);
   return Q(yield* CreateTemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 }
 
@@ -213,25 +213,25 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
   let smallestUnitPresent = true;
   let largestUnitPresent = true;
 
-  const largestUnitOption = Q(yield* GetTemporalUnitValuedOption(roundTo, 'largestUnit', 'unset'));
+  const largestUnitOption = Q(yield* GetTemporalUnitValuedOption(roundTo, 'largestUnit', 'optional'));
   const relativeToRecord = Q(yield* GetTemporalRelativeToOption(roundTo));
   const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
   const plainRelativeTo = relativeToRecord.PlainRelativeTo;
   const roundingIncrement = Q(yield* GetRoundingIncrementOption(roundTo));
-  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
-  let smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'unset'));
+  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, 'halfExpand'));
+  let smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'optional'));
   if (smallestUnit === 'auto') return Throw.RangeError('smallestUnit cannot be auto');
 
-  if (smallestUnit === 'unset') {
+  if (smallestUnit === 'no-unit') {
     smallestUnitPresent = false;
-    smallestUnit = TemporalUnit.Nanosecond;
+    smallestUnit = 'nanosecond';
   }
   __ts_cast__<TemporalUnit>(smallestUnit);
 
   const existingLargestUnit = DefaultTemporalLargestUnit(duration);
   const defaultLargestUnit = LargerOfTwoTemporalUnits(existingLargestUnit, smallestUnit);
-  let largestUnit;
-  if (largestUnitOption === 'unset') {
+  let largestUnit: TemporalUnit;
+  if (largestUnitOption === 'no-unit') {
     largestUnitPresent = false;
     largestUnit = defaultLargestUnit;
   } else if (largestUnitOption === 'auto') {
@@ -248,7 +248,7 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
   }
 
   const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
-  if (maximum !== 'unset') {
+  if (maximum !== 'no-maximum') {
     Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false));
   }
   if (roundingIncrement > 1 && largestUnit !== smallestUnit && isDateUnit(smallestUnit)) {
@@ -259,11 +259,11 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
     let internalDuration = ToInternalDurationRecord(duration);
     const timeZone = zonedRelativeTo.TimeZone;
     const calendar = zonedRelativeTo.Calendar;
-    const relativeEpochNs = zonedRelativeTo.EpochNanoseconds;
-    const targetEpochNs = Q(AddZonedDateTime(relativeEpochNs, timeZone, calendar, internalDuration, 'constrain'));
-    internalDuration = Q(DifferenceZonedDateTimeWithRounding(relativeEpochNs, targetEpochNs, timeZone, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode));
+    const relativeEpochNanoseconds = zonedRelativeTo.EpochNanoseconds;
+    const targetEpochNanoseconds = Q(AddZonedDateTime(relativeEpochNanoseconds, timeZone, calendar, internalDuration, 'constrain'));
+    internalDuration = Q(DifferenceZonedDateTimeWithRounding(relativeEpochNanoseconds, targetEpochNanoseconds, timeZone, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode));
     if (isDateUnit(largestUnit)) {
-      largestUnit = TemporalUnit.Hour;
+      largestUnit = 'hour';
     }
     return Q(yield* TemporalDurationFromInternal(internalDuration, largestUnit));
   }
@@ -274,20 +274,20 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
     const calendar = plainRelativeTo.Calendar;
     const dateDuration = Q(AdjustDateDurationRecord(internalDuration.Date, targetTime.Days));
     const targetDate = Q(CalendarDateAdd(calendar, plainRelativeTo.ISODate, dateDuration, 'constrain'));
-    const isoDateTime = CombineISODateAndTimeRecord(plainRelativeTo.ISODate, MidnightTimeRecord());
-    const targetDateTime = CombineISODateAndTimeRecord(targetDate, targetTime);
+    const isoDateTime: ISODateTimeRecord = { ISODate: plainRelativeTo.ISODate, Time: MidnightTimeRecord() };
+    const targetDateTime: ISODateTimeRecord = { ISODate: targetDate, Time: targetTime };
     internalDuration = Q(DifferencePlainDateTimeWithRounding(isoDateTime, targetDateTime, calendar, largestUnit, roundingIncrement, smallestUnit, roundingMode));
     return Q(yield* TemporalDurationFromInternal(internalDuration, largestUnit));
   }
 
-  if (IsCalendarUnit(existingLargestUnit) || IsCalendarUnit(largestUnit)) {
+  if (isCalendarUnit(existingLargestUnit) || isCalendarUnit(largestUnit)) {
     return Throw.RangeError('relativeTo is required for calendar units');
   }
-  Assert(IsCalendarUnit(smallestUnit) === false);
+  Assert(!isCalendarUnit(smallestUnit));
 
   let internalDuration = ToInternalDurationRecordWith24HourDays(duration);
-  if (smallestUnit === TemporalUnit.Day) {
-    const fractionalDays = TotalTimeDuration(internalDuration.Time, TemporalUnit.Day);
+  if (smallestUnit === 'day') {
+    const fractionalDays = TotalTimeDuration(internalDuration.Time, 'day');
     const days = RoundNumberToIncrement(fractionalDays, roundingIncrement, roundingMode);
     const dateDuration = Q(CreateDateDurationRecord(0n, 0n, 0n, days));
     internalDuration = CombineDateAndTimeDuration(dateDuration, 0n);
@@ -316,29 +316,28 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
   const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
   const plainRelativeTo = relativeToRecord.PlainRelativeTo;
   const unit = Q(yield* GetTemporalUnitValuedOption(totalOf, 'unit', 'required'));
-  Assert(unit !== 'unset');
-  if (unit === 'auto') return Throw.RangeError('unit cannot be auto');
+  if (unit === 'auto' || unit === 'no-unit') return Throw.RangeError('unit cannot be auto');
 
   let total: MathematicalValue;
   if (zonedRelativeTo !== undefined) {
     const internalDuration = ToInternalDurationRecord(duration);
     const timeZone = zonedRelativeTo.TimeZone;
     const calendar = zonedRelativeTo.Calendar;
-    const relativeEpochNs = zonedRelativeTo.EpochNanoseconds;
-    const targetEpochNs = Q(AddZonedDateTime(relativeEpochNs, timeZone, calendar, internalDuration, 'constrain'));
-    total = Q(DifferenceZonedDateTimeWithTotal(relativeEpochNs, targetEpochNs, timeZone, calendar, unit));
+    const relativeEpochNanoseconds = zonedRelativeTo.EpochNanoseconds;
+    const targetEpochNanoseconds = Q(AddZonedDateTime(relativeEpochNanoseconds, timeZone, calendar, internalDuration, 'constrain'));
+    total = Q(DifferenceZonedDateTimeWithTotal(relativeEpochNanoseconds, targetEpochNanoseconds, timeZone, calendar, unit));
   } else if (plainRelativeTo !== undefined) {
     const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
     const targetTime = AddTime(MidnightTimeRecord(), internalDuration.Time);
     const calendar = plainRelativeTo.Calendar;
     const dateDuration = Q(AdjustDateDurationRecord(internalDuration.Date, targetTime.Days));
     const targetDate = Q(CalendarDateAdd(calendar, plainRelativeTo.ISODate, dateDuration, 'constrain'));
-    const isoDateTime = CombineISODateAndTimeRecord(plainRelativeTo.ISODate, MidnightTimeRecord());
-    const targetDateTime = CombineISODateAndTimeRecord(targetDate, targetTime);
+    const isoDateTime: ISODateTimeRecord = { ISODate: plainRelativeTo.ISODate, Time: MidnightTimeRecord() };
+    const targetDateTime: ISODateTimeRecord = { ISODate: targetDate, Time: targetTime };
     total = Q(DifferencePlainDateTimeWithTotal(isoDateTime, targetDateTime, calendar, unit));
   } else {
     const largestUnit = DefaultTemporalLargestUnit(duration);
-    if (IsCalendarUnit(largestUnit) || IsCalendarUnit(unit)) {
+    if (isCalendarUnit(largestUnit) || isCalendarUnit(unit)) {
       return Throw.RangeError('relativeTo is required for calendar units');
     }
     const internalDuration = ToInternalDurationRecordWith24HourDays(duration);
@@ -352,18 +351,18 @@ function* DurationProto_toString([options = Value.undefined]: Arguments, { thisV
   const duration = Q(thisTemporalDurationValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
-  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, RoundingMode.Trunc));
-  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset'));
+  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 'trunc'));
+  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'optional'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
-  __ts_cast__<TimeUnit | 'unset'>(smallestUnit);
+  __ts_cast__<TimeUnit | 'no-unit'>(smallestUnit);
 
-  if (smallestUnit === TemporalUnit.Hour || smallestUnit === TemporalUnit.Minute) {
+  if (smallestUnit === 'hour' || smallestUnit === 'minute') {
     return Throw.RangeError('smallestUnit cannot be hour or minute');
   }
 
   const precision = ToSecondsStringPrecisionRecord(smallestUnit, digits);
 
-  if (precision.Unit === TemporalUnit.Nanosecond && precision.Increment === 1n) {
+  if (precision.Unit === 'nanosecond' && precision.Increment === 1n) {
     return Value(TemporalDurationToString(duration, precision.Precision));
   }
 
@@ -371,7 +370,7 @@ function* DurationProto_toString([options = Value.undefined]: Arguments, { thisV
   let internalDuration = ToInternalDurationRecord(duration);
   const timeDuration = Q(RoundTimeDuration(internalDuration.Time, precision.Increment, precision.Unit, roundingMode));
   internalDuration = CombineDateAndTimeDuration(internalDuration.Date, timeDuration);
-  const roundedLargestUnit = LargerOfTwoTemporalUnits(largestUnit, TemporalUnit.Second);
+  const roundedLargestUnit = LargerOfTwoTemporalUnits(largestUnit, 'second');
   const roundedDuration = Q(yield* TemporalDurationFromInternal(internalDuration, roundedLargestUnit));
   return Value(TemporalDurationToString(roundedDuration, precision.Precision as Integer | 'auto'));
 }

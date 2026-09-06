@@ -1,7 +1,7 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import {
   CanonicalizeCalendar,
-  type CalendarType,
+  type KnownCalendarType,
 } from '../../abstract-ops/temporal/calendar.mts';
 import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalPlainYearMonthPrototype } from './PlainYearMonthPrototype.mts';
@@ -21,7 +21,6 @@ import {
   CompareISODate,
   CreateISODateRecord,
   CreateTemporalYearMonth,
-  IsValidISODate,
   ToTemporalYearMonth,
 } from '#self';
 
@@ -29,7 +28,7 @@ import {
 export interface TemporalPlainYearMonthObject extends OrdinaryObject {
   readonly InitializedTemporalYearMonth: never;
   readonly ISODate: ISODateRecord;
-  readonly Calendar: CalendarType;
+  readonly Calendar: KnownCalendarType;
 }
 
 export function isTemporalPlainYearMonthObject(o: Value): o is TemporalPlainYearMonthObject {
@@ -55,8 +54,8 @@ function* PlainYearMonthConstructor([
   if (referenceISODay instanceof UndefinedValue) {
     referenceISODay = F(1);
   }
-  const y = Q(yield* SnapToInteger(isoYear, 'truncate-strict'));
-  const m = Q(yield* SnapToInteger(isoMonth, 'truncate-strict'));
+  const year = Q(yield* SnapToInteger(isoYear, 'truncate'));
+  const month = Q(yield* SnapToInteger(isoMonth, 'truncate'));
   if (_calendar instanceof UndefinedValue) {
     _calendar = Value('iso8601');
   }
@@ -64,11 +63,8 @@ function* PlainYearMonthConstructor([
     return Throw.TypeError('calendar is not a string');
   }
   const calendar = Q(CanonicalizeCalendar(_calendar.stringValue()));
-  const ref = Q(yield* SnapToInteger(referenceISODay, 'truncate-strict'));
-  if (!IsValidISODate(y, m, ref)) {
-    return Throw.RangeError('$1-$2-$3 is not a valid date', y, m, ref);
-  }
-  const isoDate = CreateISODateRecord(y, m, ref);
+  const ref = Q(yield* SnapToInteger(referenceISODay, 'truncate'));
+  const isoDate = Q(CreateISODateRecord(year, month, ref));
   return Q(yield* CreateTemporalYearMonth(isoDate, calendar, NewTarget));
 }
 
@@ -78,10 +74,10 @@ function* PlainYearMonth_from([item = Value.undefined, options = Value.undefined
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare */
-function* PlainYearMonth_compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalYearMonth(_one));
-  const two = Q(yield* ToTemporalYearMonth(_two));
-  return F(Number(CompareISODate(one.ISODate, two.ISODate)));
+function* PlainYearMonth_compare([_xPlainYearMonth = Value.undefined, _yPlainYearMonth = Value.undefined]: Arguments): ValueEvaluator {
+  const xPlainYearMonth = Q(yield* ToTemporalYearMonth(_xPlainYearMonth));
+  const yPlainYearMonth = Q(yield* ToTemporalYearMonth(_yPlainYearMonth));
+  return F(Number(CompareISODate(xPlainYearMonth.ISODate, yPlainYearMonth.ISODate)));
 }
 
 export function bootstrapTemporalPlainYearMonth(realmRec: Realm) {

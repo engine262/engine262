@@ -8,7 +8,7 @@ import {
 } from '../../abstract-ops/temporal/time-zone.mts';
 import {
   CanonicalizeCalendar,
-  type CalendarType,
+  type KnownCalendarType,
 } from '../../abstract-ops/temporal/calendar.mts';
 import { CreateTemporalZonedDateTime, ToTemporalZonedDateTime } from '../../abstract-ops/temporal/zoned-datetime.mts';
 import { ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
@@ -26,9 +26,10 @@ import {
   UndefinedValue,
   F,
   ToBigInt,
+  Assert,
   R,
   CompareEpochNanoseconds,
-  IsValidEpochNanoseconds,
+  IsWithinEpochNanosecondsInterval,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-zoneddatetime-instances */
@@ -36,7 +37,7 @@ export interface TemporalZonedDateTimeObject extends OrdinaryObject {
   readonly InitializedTemporalZonedDateTime: never;
   readonly EpochNanoseconds: bigint;
   readonly TimeZone: TimeZoneIdentifier;
-  readonly Calendar: CalendarType;
+  readonly Calendar: KnownCalendarType;
 }
 export function isTemporalZonedDateTimeObject(o: Value): o is TemporalZonedDateTimeObject {
   return 'InitializedTemporalZonedDateTime' in o;
@@ -52,7 +53,7 @@ function* ZonedDateTimeConstructor([
     return Throw.TypeError('Temporal.ZonedDateTime cannot be called without new');
   }
   const epochNanoseconds = R(Q(yield* ToBigInt(_epochNanoseconds)));
-  if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+  if (!IsWithinEpochNanosecondsInterval(epochNanoseconds)) {
     return Throw.RangeError('$1 is not a valid epoch nanoseconds', epochNanoseconds);
   }
   if (!(_timeZone instanceof JSStringValue)) {
@@ -61,9 +62,10 @@ function* ZonedDateTimeConstructor([
   const timeZoneParse = Q(ParseTimeZoneIdentifier(_timeZone.stringValue()));
   let timeZone;
   if (timeZoneParse.OffsetMinutes === undefined) {
-    const identifierRecord = GetAvailableNamedTimeZoneIdentifier((timeZoneParse.Name || '') as TimeZoneIdentifier);
+    Assert(timeZoneParse.Name !== undefined);
+    const identifierRecord = GetAvailableNamedTimeZoneIdentifier(timeZoneParse.Name as TimeZoneIdentifier);
     if (identifierRecord === undefined) {
-      return Throw.RangeError('invalid time zone identifier: $1', timeZoneParse.Name || '');
+      return Throw.RangeError('invalid time zone identifier: $1', timeZoneParse.Name as string);
     }
     timeZone = identifierRecord.Identifier;
   } else {
@@ -85,10 +87,10 @@ function* ZonedDateTime_from([item = Value.undefined, options = Value.undefined]
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.compare */
-function* ZonedDateTime_compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalZonedDateTime(_one));
-  const two = Q(yield* ToTemporalZonedDateTime(_two));
-  return F(CompareEpochNanoseconds(one.EpochNanoseconds, two.EpochNanoseconds));
+function* ZonedDateTime_compare([_xZonedDateTime = Value.undefined, _yZonedDateTime = Value.undefined]: Arguments): ValueEvaluator {
+  const xZonedDateTime = Q(yield* ToTemporalZonedDateTime(_xZonedDateTime));
+  const yZonedDateTime = Q(yield* ToTemporalZonedDateTime(_yZonedDateTime));
+  return F(CompareEpochNanoseconds(xZonedDateTime.EpochNanoseconds, yZonedDateTime.EpochNanoseconds));
 }
 
 export function bootstrapTemporalZonedDateTime(realmRec: Realm) {

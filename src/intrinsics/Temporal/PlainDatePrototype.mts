@@ -1,16 +1,15 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import type { TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalPlainDateObject } from './PlainDate.mts';
+import type { ISODateTimeRecord } from './PlainDateTime.mts';
 import {
   AddDurationToDate,
   CalendarDateFromFields,
-  CalendarEquals,
   CalendarISOToDate,
   CalendarMergeFields,
   CalendarMonthDayFromFields,
   CalendarYearMonthFromFields,
   CompareISODate,
-  CombineISODateAndTimeRecord,
   CreateTemporalDate,
   CreateTemporalDateTime,
   CreateTemporalMonthDay,
@@ -61,7 +60,9 @@ function PlainDateProto_calendarIdGetter(_args: Arguments, { thisValue }: Functi
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.era */
 function PlainDateProto_eraGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  return Value(CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Era);
+  const result = CalendarISOToDate(plainDate.Calendar, plainDate.ISODate).Era;
+  if (result === undefined) return Value.undefined;
+  return Value(result);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.erayear */
@@ -189,7 +190,7 @@ function* PlainDateProto_with([temporalDateLike = Value.undefined, options = Val
   }
   const calendar = plainDate.Calendar;
   let fields = ISODateToFields(calendar, plainDate.ISODate, 'date');
-  const partialDate = Q(yield* PrepareCalendarFields(calendar, temporalDateLike as ObjectValue, ['year', 'month', 'month-code', 'day'], [], 'partial'));
+  const partialDate = Q(yield* PrepareCalendarFields(calendar, temporalDateLike as ObjectValue, 'date-fields', 'no-non-calendar-fields', 'partial'));
   fields = CalendarMergeFields(calendar, fields, partialDate);
   const resolvedOptions = Q(GetOptionsObject(options));
   const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
@@ -223,14 +224,15 @@ function* PlainDateProto_equals([_other = Value.undefined]: Arguments, { thisVal
   if (CompareISODate(plainDate.ISODate, other.ISODate) !== 0n) {
     return Value.false;
   }
-  return Value(CalendarEquals(plainDate.Calendar, other.Calendar));
+  if (plainDate.Calendar !== other.Calendar) return Value.false;
+  return Value.true;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplaindatetime */
 function* PlainDateProto_toPlainDateTime([temporalTime = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDate = Q(thisTemporalDateValue(thisValue));
   const time = Q(yield* ToTimeRecordOrMidnight(temporalTime));
-  const isoDateTime = CombineISODateAndTimeRecord(plainDate.ISODate, time);
+  const isoDateTime: ISODateTimeRecord = { ISODate: plainDate.ISODate, Time: time };
   return Q(yield* CreateTemporalDateTime(isoDateTime, plainDate.Calendar));
 }
 
@@ -252,18 +254,18 @@ function* PlainDateProto_toZonedDateTime([item = Value.undefined]: Arguments, { 
     timeZone = Q(ToTemporalTimeZoneIdentifier(item));
     temporalTime = Value.undefined;
   }
-  let epochNs: bigint;
+  let epochNanoseconds: bigint;
   if (temporalTime === Value.undefined) {
-    epochNs = Q(GetStartOfDay(timeZone, plainDate.ISODate));
+    epochNanoseconds = Q(GetStartOfDay(timeZone, plainDate.ISODate));
   } else {
     const temporalTime2 = Q(yield* ToTemporalTime(temporalTime));
-    const isoDateTime = CombineISODateAndTimeRecord(plainDate.ISODate, temporalTime2.Time);
+    const isoDateTime: ISODateTimeRecord = { ISODate: plainDate.ISODate, Time: temporalTime2.Time };
     if (!ISODateTimeWithinLimits(isoDateTime)) {
       return Throw.RangeError('DateTime outside of range');
     }
-    epochNs = Q(GetEpochNanosecondsFor(timeZone, isoDateTime, 'compatible'));
+    epochNanoseconds = Q(GetEpochNanosecondsFor(timeZone, isoDateTime, 'compatible'));
   }
-  return X(CreateTemporalZonedDateTime(epochNs, timeZone, plainDate.Calendar));
+  return X(CreateTemporalZonedDateTime(epochNanoseconds, timeZone, plainDate.Calendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tostring */

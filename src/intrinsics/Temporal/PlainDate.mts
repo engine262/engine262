@@ -7,9 +7,8 @@ import {
   CompareISODate,
   CreateISODateRecord,
   CreateTemporalDate,
-  IsValidISODate,
   ToTemporalDate,
-  type CalendarType,
+  type KnownCalendarType,
   CanonicalizeCalendar,
   type Integer,
 } from '#self';
@@ -18,7 +17,7 @@ export interface TemporalPlainDateObject extends OrdinaryObject {
   /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindate-instances */
   readonly InitializedTemporalDate: never;
   readonly ISODate: ISODateRecord;
-  readonly Calendar: CalendarType;
+  readonly Calendar: KnownCalendarType;
 }
 export function isTemporalPlainDateObject(o: Value): o is TemporalPlainDateObject {
   return 'InitializedTemporalDate' in o;
@@ -36,9 +35,9 @@ function* PlainDateConstructor([isoYear = Value.undefined, isoMonth = Value.unde
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.PlainDate constructor cannot be called without new');
   }
-  const y = Q(yield* SnapToInteger(isoYear, 'truncate-strict'));
-  const m = Q(yield* SnapToInteger(isoMonth, 'truncate-strict'));
-  const d = Q(yield* SnapToInteger(isoDay, 'truncate-strict'));
+  const year = Q(yield* SnapToInteger(isoYear, 'truncate'));
+  const month = Q(yield* SnapToInteger(isoMonth, 'truncate'));
+  const day = Q(yield* SnapToInteger(isoDay, 'truncate'));
   if (_calendar instanceof UndefinedValue) {
     _calendar = Value('iso8601');
   }
@@ -46,10 +45,7 @@ function* PlainDateConstructor([isoYear = Value.undefined, isoMonth = Value.unde
     return Throw.TypeError('calendar must be a string, but $1', _calendar);
   }
   const calendar = Q(CanonicalizeCalendar(_calendar.stringValue()));
-  if (!IsValidISODate(y, m, d)) {
-    return Throw.RangeError('Invalid date');
-  }
-  const isoDate = CreateISODateRecord(y, m, d);
+  const isoDate = Q(CreateISODateRecord(year, month, day));
   return Q(yield* CreateTemporalDate(isoDate, calendar, NewTarget));
 }
 
@@ -59,10 +55,10 @@ function* PlainDate_From([item = Value.undefined, options = Value.undefined]: Ar
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.compare */
-function* PlainDate_Compare([_one = Value.undefined, _two = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalDate(_one));
-  const two = Q(yield* ToTemporalDate(_two));
-  return F(Number(CompareISODate(one.ISODate, two.ISODate)));
+function* PlainDate_Compare([_xPlainDate = Value.undefined, _yPlainDate = Value.undefined]: Arguments): ValueEvaluator {
+  const xPlainDate = Q(yield* ToTemporalDate(_xPlainDate));
+  const yPlainDate = Q(yield* ToTemporalDate(_yPlainDate));
+  return F(Number(CompareISODate(xPlainDate.ISODate, yPlainDate.ISODate)));
 }
 
 export function bootstrapTemporalPlainDate(realmRec: Realm) {

@@ -4,8 +4,8 @@
     {
       "name": "temporal",
       "description": "Temporal proposal",
-      "source": "https://github.com/tc39/ecma262/pull/3759",
-      "commit": "21f20a9ed94d60bc91f14056b8af2e01185f97da",
+      "source": "https://github.com/tc39/ecma262/pull/3966",
+      "commit": "f380aa760b29eea780d91c2f37fbcc1332efe765",
       "path": ["temporal/*.emu"],
       "diff": ["spec.html"]
     },

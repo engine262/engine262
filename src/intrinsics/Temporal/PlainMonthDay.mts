@@ -1,7 +1,7 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import {
   CanonicalizeCalendar,
-  type CalendarType,
+  type KnownCalendarType,
 } from '../../abstract-ops/temporal/calendar.mts';
 import { SnapToInteger } from '../../abstract-ops/type-conversion.mts';
 import { bootstrapTemporalPlainMonthDayPrototype } from './PlainMonthDayPrototype.mts';
@@ -20,7 +20,6 @@ import {
   type ValueEvaluator,
   CreateISODateRecord,
   CreateTemporalMonthDay,
-  IsValidISODate,
   ToTemporalMonthDay,
 } from '#self';
 
@@ -28,7 +27,7 @@ import {
 export interface TemporalPlainMonthDayObject extends OrdinaryObject {
   readonly InitializedTemporalMonthDay: never;
   readonly ISODate: ISODateRecord;
-  readonly Calendar: CalendarType;
+  readonly Calendar: KnownCalendarType;
 }
 
 export function isTemporalPlainMonthDayObject(o: Value): o is TemporalPlainMonthDayObject {
@@ -48,8 +47,8 @@ function* PlainMonthDayConstructor([
   if (referenceISOYear instanceof UndefinedValue) {
     referenceISOYear = F(1972);
   }
-  const m = Q(yield* SnapToInteger(isoMonth, 'truncate-strict'));
-  const d = Q(yield* SnapToInteger(isoDay, 'truncate-strict'));
+  const month = Q(yield* SnapToInteger(isoMonth, 'truncate'));
+  const day = Q(yield* SnapToInteger(isoDay, 'truncate'));
   if (_calendar instanceof UndefinedValue) {
     _calendar = Value('iso8601');
   }
@@ -57,11 +56,8 @@ function* PlainMonthDayConstructor([
     return Throw.TypeError('calendar is not a string');
   }
   const calendar = Q(CanonicalizeCalendar(_calendar.stringValue()));
-  const y = Q(yield* SnapToInteger(referenceISOYear, 'truncate-strict'));
-  if (!IsValidISODate(y, m, d)) {
-    return Throw.RangeError('$1-$2-$3 is not a valid date', y, m, d);
-  }
-  const isoDate = CreateISODateRecord(y, m, d);
+  const ref = Q(yield* SnapToInteger(referenceISOYear, 'truncate'));
+  const isoDate = Q(CreateISODateRecord(ref, month, day));
   return Q(yield* CreateTemporalMonthDay(isoDate, calendar, NewTarget));
 }
 

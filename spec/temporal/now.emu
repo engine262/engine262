@@ -25,7 +25,7 @@
   <emu-clause id="sec-function-properties-of-the-temporal-now-object">
     <h1>Function Properties of the Temporal.Now Object</h1>
 
-    <emu-clause id="sec-temporal.now.timezoneid">
+    <emu-clause id="sec-temporal.now.timezoneid" type="built-in function">
       <h1>Temporal.Now.timeZoneId ( )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -33,7 +33,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.now.instant">
+    <emu-clause id="sec-temporal.now.instant" type="built-in function">
       <h1>Temporal.Now.instant ( )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -42,7 +42,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.now.plaindatetimeiso">
+    <emu-clause id="sec-temporal.now.plaindatetimeiso" type="built-in function">
       <h1>Temporal.Now.plainDateTimeISO ( [ _temporalTimeZoneLike_ ] )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -51,7 +51,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.now.zoneddatetimeiso">
+    <emu-clause id="sec-temporal.now.zoneddatetimeiso" type="built-in function">
       <h1>Temporal.Now.zonedDateTimeISO ( [ _temporalTimeZoneLike_ ] )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -64,7 +64,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.now.plaindateiso">
+    <emu-clause id="sec-temporal.now.plaindateiso" type="built-in function">
       <h1>Temporal.Now.plainDateISO ( [ _temporalTimeZoneLike_ ] )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -73,7 +73,7 @@
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal.now.plaintimeiso">
+    <emu-clause id="sec-temporal.now.plaintimeiso" type="built-in function">
       <h1>Temporal.Now.plainTimeISO ( [ _temporalTimeZoneLike_ ] )</h1>
       <p>This function performs the following steps when called:</p>
       <emu-alg>
@@ -101,13 +101,13 @@
           1. Let _timeZone_ be SystemTimeZoneIdentifier().
         1. Else,
           1. Let _timeZone_ be ? ToTemporalTimeZoneIdentifier(_temporalTimeZoneLike_).
-        1. Let _epochNs_ be SystemUTCEpochNanoseconds().
-        1. Return GetISODateTimeFor(_timeZone_, _epochNs_).
+        1. Let _epochNanoseconds_ be SystemUTCEpochNanoseconds().
+        1. Return GetISODateTimeFor(_timeZone_, _epochNanoseconds_).
       </emu-alg>
     </emu-clause>
 
     <emu-clause id="sec-systemutcepochnanoseconds" type="abstract operation">
-      <h1>SystemUTCEpochNanoseconds ( ): an epoch nanoseconds value</h1>
+      <h1>SystemUTCEpochNanoseconds ( ): an epoch nanoseconds count</h1>
       <dl class="header">
         <dt>description</dt>
         <dd></dd>

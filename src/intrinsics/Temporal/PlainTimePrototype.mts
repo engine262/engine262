@@ -1,6 +1,6 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
 import {
-  GetRoundingIncrementOption, GetRoundingModeOption, RoundingMode,
+  GetRoundingIncrementOption, GetRoundingModeOption,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
@@ -8,7 +8,7 @@ import {
   GetTemporalUnitValuedOption,
   IsPartialTemporalObject,
   MaximumTemporalDurationRoundingIncrement,
-  TemporalUnit,
+  type TemporalUnit,
   ToSecondsStringPrecisionRecord,
   ValidateTemporalRoundingIncrement,
   ValidateTemporalUnitValue,
@@ -23,7 +23,7 @@ import {
   RoundTime,
   TimeRecordToString,
   ToTemporalTime,
-  ToTemporalTimeRecord,
+  ToPartialTimeRecord,
 } from '../../abstract-ops/temporal/plain-time.mts';
 import type { TemporalPlainTimeObject } from './PlainTime.mts';
 import {
@@ -106,7 +106,7 @@ function* PlainTimeProto_with([temporalTimeLike = Value.undefined, options = Val
   if (!Q(yield* IsPartialTemporalObject(temporalTimeLike))) {
     return Throw.TypeError('$1 is not a partial Temporal object', temporalTimeLike);
   }
-  const partialTime = Q(yield* ToTemporalTimeRecord(temporalTimeLike as ObjectValue, 'partial'));
+  const partialTime = Q(yield* ToPartialTimeRecord(temporalTimeLike as ObjectValue, 'partial'));
   const hour = partialTime.Hour ?? plainTime.Time.Hour;
   const minute = partialTime.Minute ?? plainTime.Time.Minute;
   const second = partialTime.Second ?? plainTime.Time.Second;
@@ -145,13 +145,13 @@ function* PlainTimeProto_round([roundTo = Value.undefined]: Arguments, { thisVal
     roundTo = Q(GetOptionsObject(roundTo));
   }
   const roundingIncrement = Q(yield* GetRoundingIncrementOption(roundTo));
-  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, RoundingMode.HalfExpand));
+  const roundingMode = Q(yield* GetRoundingModeOption(roundTo, 'halfExpand'));
   const smallestUnit = Q(yield* GetTemporalUnitValuedOption(roundTo, 'smallestUnit', 'required'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
   const maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit as TemporalUnit);
-  Assert(maximum !== 'unset');
+  Assert(maximum !== 'no-maximum');
   Q(ValidateTemporalRoundingIncrement(roundingIncrement, maximum, false));
-  const result = RoundTime(plainTime.Time, roundingIncrement, smallestUnit as TimeUnit | TemporalUnit.Day, roundingMode);
+  const result = RoundTime(plainTime.Time, roundingIncrement, smallestUnit as TimeUnit | 'day', roundingMode);
   return Q(yield* CreateTemporalTime(result));
 }
 
@@ -167,14 +167,14 @@ function* PlainTimeProto_toString([options = Value.undefined]: Arguments, { this
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
-  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 3));
-  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'unset'));
+  const roundingMode = Q(yield* GetRoundingModeOption(resolvedOptions, 'trunc'));
+  const smallestUnit = Q(yield* GetTemporalUnitValuedOption(resolvedOptions, 'smallestUnit', 'optional'));
   Q(ValidateTemporalUnitValue(smallestUnit, 'time'));
-  if (smallestUnit === TemporalUnit.Hour) {
+  if (smallestUnit === 'hour') {
     return Throw.RangeError('smallestUnit cannot be hour');
   }
   const precision = ToSecondsStringPrecisionRecord(
-    smallestUnit as Exclude<TimeUnit, TemporalUnit.Hour> | 'unset',
+    smallestUnit as Exclude<TimeUnit, 'hour'> | 'no-unit',
     digits,
   );
   const roundResult = RoundTime(plainTime.Time, precision.Increment, precision.Unit, roundingMode);

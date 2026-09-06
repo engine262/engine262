@@ -7,8 +7,8 @@ import {
   type ValueEvaluator,
 } from '../completion.mts';
 import type { Mutable } from '../utils/language.mts';
-import { GetUTCEpochNanoseconds, UTC_TemporalEdited } from '../abstract-ops/temporal/addition.mts';
-import { ParseDateTimeUTCOffset, ParseISODateTime } from '../parser/TemporalParser.mts';
+import { GetUTCEpochNanoseconds, ParseDateTimeUTCOffset, UTC } from '../abstract-ops/date-objects.mts';
+import { ParseISODateTime } from '../parser/TemporalParser.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { ToDateString, thisTimeValue } from './DatePrototype.mts';
 import {
@@ -31,8 +31,8 @@ import {
   EnsureCompletion,
   NormalCompletion,
   BalanceISODateTime,
-  CheckISODaysRange,
-  IsValidEpochNanoseconds,
+  ValidateISODaysRange,
+  IsWithinEpochNanosecondsInterval,
   MakeFullYear,
 } from '#self';
 
@@ -87,7 +87,7 @@ function* DateConstructor(values: Arguments, { NewTarget }: FunctionCallContext)
     const yr = MakeFullYear(y);
     const finalDate = MakeDate(MakeDay(yr, R(m), R(dt)), MakeTime(R(h), R(min), R(s), R(milli)));
     const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
-    O.DateValue = TimeClip(UTC_TemporalEdited(finalDate));
+    O.DateValue = TimeClip(UTC(finalDate));
     return O;
   } else if (numberOfArgs === 1) {
     const [value] = values;
@@ -179,7 +179,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
 /** https://tc39.es/ecma262/#sec-date-time-string-format */
 function parseDate(dateTimeString: JSStringValue): NumberValue {
   const str = dateTimeString.stringValue();
-  const result = EnsureCompletion(ParseISODateTime(str, ['DateTimeString', 'TemporalInstantString', 'TemporalDateTimeString[~Zoned]', 'TemporalDateTimeString[+Zoned]']));
+  const result = EnsureCompletion(ParseISODateTime(str, 'non-spec-date'));
   if (result instanceof NormalCompletion) {
     const parsed = result.Value;
     const OffsetString = parsed.TimeZone.OffsetString;
@@ -190,11 +190,11 @@ function parseDate(dateTimeString: JSStringValue): NumberValue {
     const time = parsed.Time;
     Assert(time !== 'start-of-day');
     const balanced = BalanceISODateTime(parsed.Year!, parsed.Month, parsed.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Microsecond, time.Nanosecond - offsetNanoseconds);
-    if (CheckISODaysRange(balanced.ISODate) instanceof ThrowCompletion) {
+    if (ValidateISODaysRange(balanced.ISODate) instanceof ThrowCompletion) {
       return F(NaN);
     }
     const epochNanoseconds = GetUTCEpochNanoseconds(balanced);
-    if (!IsValidEpochNanoseconds(epochNanoseconds)) {
+    if (!IsWithinEpochNanosecondsInterval(epochNanoseconds)) {
       return F(NaN);
     }
     return F(Number(epochNanoseconds / 1000000n));

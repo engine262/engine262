@@ -18,7 +18,7 @@ import {
   ToInternalDurationRecord,
   ToTemporalDuration,
   GetTemporalRelativeToOption,
-  IsCalendarUnit,
+  isCalendarUnit,
   AddZonedDateTime,
   isDateUnit,
   GetOptionsObject,
@@ -45,31 +45,31 @@ export function isTemporalDurationObject(item: Value): item is TemporalDurationO
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration */
 function* DurationConstructor([
-  years = Value.undefined,
-  months = Value.undefined,
-  weeks = Value.undefined,
-  days = Value.undefined,
-  hours = Value.undefined,
-  minutes = Value.undefined,
-  seconds = Value.undefined,
-  milliseconds = Value.undefined,
-  microseconds = Value.undefined,
-  nanoseconds = Value.undefined,
+  yearsValue = Value.undefined,
+  monthsValue = Value.undefined,
+  weeksValue = Value.undefined,
+  daysValue = Value.undefined,
+  hoursValue = Value.undefined,
+  minutesValue = Value.undefined,
+  secondsValue = Value.undefined,
+  millisecondsValue = Value.undefined,
+  microsecondsValue = Value.undefined,
+  nanosecondsValue = Value.undefined,
 ]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   if (NewTarget instanceof UndefinedValue) {
     return Throw.TypeError('Temporal.Duration constructor cannot be called without new');
   }
-  const y = years instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(years, 'strict'));
-  const mo = months instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(months, 'strict'));
-  const w = weeks instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(weeks, 'strict'));
-  const d = days instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(days, 'strict'));
-  const h = hours instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(hours, 'strict'));
-  const m = minutes instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(minutes, 'strict'));
-  const s = seconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(seconds, 'strict'));
-  const ms = milliseconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(milliseconds, 'strict'));
-  const mis = microseconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(microseconds, 'strict'));
-  const ns = nanoseconds instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(nanoseconds, 'strict'));
-  return Q(yield* CreateTemporalDuration(BigInt(y), BigInt(mo), BigInt(w), BigInt(d), BigInt(h), BigInt(m), BigInt(s), BigInt(ms), BigInt(mis), BigInt(ns), NewTarget));
+  const years = yearsValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(yearsValue, 'reject'));
+  const months = monthsValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(monthsValue, 'reject'));
+  const weeks = weeksValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(weeksValue, 'reject'));
+  const days = daysValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(daysValue, 'reject'));
+  const hours = hoursValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(hoursValue, 'reject'));
+  const minutes = minutesValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(minutesValue, 'reject'));
+  const seconds = secondsValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(secondsValue, 'reject'));
+  const milliseconds = millisecondsValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(millisecondsValue, 'reject'));
+  const microseconds = microsecondsValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(microsecondsValue, 'reject'));
+  const nanoseconds = nanosecondsValue instanceof UndefinedValue ? 0 : Q(yield* SnapToInteger(nanosecondsValue, 'reject'));
+  return Q(yield* CreateTemporalDuration(BigInt(years), BigInt(months), BigInt(weeks), BigInt(days), BigInt(hours), BigInt(minutes), BigInt(seconds), BigInt(milliseconds), BigInt(microseconds), BigInt(nanoseconds), NewTarget));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.from */
@@ -78,54 +78,54 @@ function* Duration_From([item = Value.undefined]: Arguments): ValueEvaluator {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.compare */
-function* Duration_Compare([_one = Value.undefined, _two = Value.undefined, options = Value.undefined]: Arguments): ValueEvaluator {
-  const one = Q(yield* ToTemporalDuration(_one));
-  const two = Q(yield* ToTemporalDuration(_two));
+function* Duration_Compare([_xDurationLike = Value.undefined, _yDurationLike = Value.undefined, options = Value.undefined]: Arguments): ValueEvaluator {
+  const xDurationLike = Q(yield* ToTemporalDuration(_xDurationLike));
+  const yDurationLike = Q(yield* ToTemporalDuration(_yDurationLike));
   const resolvedOptions = Q(GetOptionsObject(options));
   const relativeToRecord = Q(yield* GetTemporalRelativeToOption(resolvedOptions));
-  if (one.Years === two.Years
-    && one.Months === two.Months
-    && one.Weeks === two.Weeks
-    && one.Days === two.Days
-    && one.Hours === two.Hours
-    && one.Minutes === two.Minutes
-    && one.Seconds === two.Seconds
-    && one.Milliseconds === two.Milliseconds
-    && one.Microseconds === two.Microseconds
-    && one.Nanoseconds === two.Nanoseconds) {
+  if (xDurationLike.Years === yDurationLike.Years
+    && xDurationLike.Months === yDurationLike.Months
+    && xDurationLike.Weeks === yDurationLike.Weeks
+    && xDurationLike.Days === yDurationLike.Days
+    && xDurationLike.Hours === yDurationLike.Hours
+    && xDurationLike.Minutes === yDurationLike.Minutes
+    && xDurationLike.Seconds === yDurationLike.Seconds
+    && xDurationLike.Milliseconds === yDurationLike.Milliseconds
+    && xDurationLike.Microseconds === yDurationLike.Microseconds
+    && xDurationLike.Nanoseconds === yDurationLike.Nanoseconds) {
     return F(0);
   }
   const zonedRelativeTo = relativeToRecord.ZonedRelativeTo;
   const plainRelativeTo = relativeToRecord.PlainRelativeTo;
-  const largestUnit1 = DefaultTemporalLargestUnit(one);
-  const largestUnit2 = DefaultTemporalLargestUnit(two);
-  const duration1 = ToInternalDurationRecord(one);
-  const duration2 = ToInternalDurationRecord(two);
+  const xLargestUnit = DefaultTemporalLargestUnit(xDurationLike);
+  const yLargestUnit = DefaultTemporalLargestUnit(yDurationLike);
+  const xDuration = ToInternalDurationRecord(xDurationLike);
+  const yDuration = ToInternalDurationRecord(yDurationLike);
   if (zonedRelativeTo !== undefined
-    && (isDateUnit(largestUnit1) || isDateUnit(largestUnit2))) {
+    && (isDateUnit(xLargestUnit) || isDateUnit(yLargestUnit))) {
     const timeZone = zonedRelativeTo.TimeZone;
     const calendar = zonedRelativeTo.Calendar;
-    const after1 = Q(AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, duration1, 'constrain'));
-    const after2 = Q(AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, duration2, 'constrain'));
-    if (after1 > after2) return F(1);
-    if (after1 < after2) return F(-1);
+    const xAfter = Q(AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, xDuration, 'constrain'));
+    const yAfter = Q(AddZonedDateTime(zonedRelativeTo.EpochNanoseconds, timeZone, calendar, yDuration, 'constrain'));
+    if (xAfter > yAfter) return F(1);
+    if (xAfter < yAfter) return F(-1);
     return F(0);
   }
-  let days1: bigint;
-  let days2: bigint;
-  if (IsCalendarUnit(largestUnit1) || IsCalendarUnit(largestUnit2)) {
+  let xDays: bigint;
+  let yDays: bigint;
+  if (isCalendarUnit(xLargestUnit) || isCalendarUnit(yLargestUnit)) {
     if (plainRelativeTo === undefined) {
       return Throw.RangeError('relativeTo option is required when comparing durations with calendar units');
     }
-    days1 = Q(DateDurationDays(duration1.Date, plainRelativeTo));
-    days2 = Q(DateDurationDays(duration2.Date, plainRelativeTo));
+    xDays = Q(DateDurationDays(xDuration.Date, plainRelativeTo));
+    yDays = Q(DateDurationDays(yDuration.Date, plainRelativeTo));
   } else {
-    days1 = one.Days;
-    days2 = two.Days;
+    xDays = xDurationLike.Days;
+    yDays = yDurationLike.Days;
   }
-  const timeDuration1 = Q(Add24HourDaysToTimeDuration(duration1.Time, days1));
-  const timeDuration2 = Q(Add24HourDaysToTimeDuration(duration2.Time, days2));
-  return F(CompareTimeDuration(timeDuration1, timeDuration2));
+  const xTimeDuration = Q(Add24HourDaysToTimeDuration(xDuration.Time, xDays));
+  const yTimeDuration = Q(Add24HourDaysToTimeDuration(yDuration.Time, yDays));
+  return F(CompareTimeDuration(xTimeDuration, yTimeDuration));
 }
 
 export function bootstrapTemporalDuration(realmRec: Realm) {

@@ -7,7 +7,6 @@ import {
 } from '../../abstract-ops/temporal/temporal.mts';
 import {
   CalendarDateFromFields,
-  CalendarEquals,
   CalendarISOToDate,
   CalendarMergeFields,
   CalendarYearMonthFromFields,
@@ -52,7 +51,9 @@ function PlainYearMonthProto_calendarIdGetter(_args: Arguments, { thisValue }: F
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.era */
 function PlainYearMonthProto_eraGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainYearMonth = Q(thisTemporalYearMonthValue(thisValue));
-  return Value(CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Era);
+  const result = CalendarISOToDate(plainYearMonth.Calendar, plainYearMonth.ISODate).Era;
+  if (result === undefined) return Value.undefined;
+  return Value(result);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.erayear */
@@ -112,7 +113,7 @@ function* PlainYearMonthProto_with([temporalYearMonthLike = Value.undefined, opt
   }
   const calendar = plainYearMonth.Calendar;
   let fields = ISODateToFields(calendar, plainYearMonth.ISODate, 'year-month');
-  const partialYearMonth = Q(yield* PrepareCalendarFields(calendar, temporalYearMonthLike as ObjectValue, ['year', 'month', 'month-code'], [], 'partial'));
+  const partialYearMonth = Q(yield* PrepareCalendarFields(calendar, temporalYearMonthLike as ObjectValue, 'year-month-fields', 'no-non-calendar-fields', 'partial'));
   fields = CalendarMergeFields(calendar, fields, partialYearMonth);
   const resolvedOptions = Q(GetOptionsObject(options));
   const overflow = Q(yield* GetTemporalOverflowOption(resolvedOptions));
@@ -151,7 +152,8 @@ function* PlainYearMonthProto_equals([_other = Value.undefined]: Arguments, { th
   if (CompareISODate(plainYearMonth.ISODate, other.ISODate) !== 0n) {
     return Value.false;
   }
-  return Value(CalendarEquals(plainYearMonth.Calendar, other.Calendar));
+  if (plainYearMonth.Calendar !== other.Calendar) return Value.false;
+  return Value.true;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring */
@@ -188,7 +190,7 @@ function* PlainYearMonthProto_toPlainDate([item = Value.undefined]: Arguments, {
   }
   const calendar = plainYearMonth.Calendar;
   const fields = ISODateToFields(calendar, plainYearMonth.ISODate, 'year-month');
-  const inputFields = Q(yield* PrepareCalendarFields(calendar, item, ['day'], [], []));
+  const inputFields = Q(yield* PrepareCalendarFields(calendar, item, 'only-day', 'no-non-calendar-fields', 'no-required-fields'));
   const mergedFields = CalendarMergeFields(calendar, fields, inputFields);
   const isoDate = Q(yield* CalendarDateFromFields(calendar, mergedFields, 'constrain'));
   return X(CreateTemporalDate(isoDate, calendar));

@@ -1,45 +1,57 @@
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-date-objects */
 
-import { X } from '../completion.mts';
+import type { ISODateTimeRecord } from '../intrinsics/Temporal/PlainDateTime.mts';
+import { ThrowCompletion, X } from '../completion.mts';
+import { GetGlobalObject } from '../execution-context/ExecutionContext.mts';
+import { surroundingAgent } from '../execution-context/Agent.mts';
+import { DateParser, ParseTimeZoneIdentifier } from '../parser/TemporalParser.mts';
 import {
   ToIntegerOrInfinity,
-  F, R,
   Assert,
   type Integer,
   type IntegralNumber,
   type NaN,
   type Num,
 } from './all.mts';
-import { floorDiv, modulo } from './math.mts';
-import { mark_OtherCalendarNotImplemented } from './temporal/not-implemented.mts';
-import { NumberValue } from '#self';
+import { clamp, floorDiv, modulo, truncateDiv } from './math.mts';
+import {
+  GetNamedTimeZoneEpochNanoseconds,
+  GetNamedTimeZoneOffsetNanoseconds,
+  SystemTimeZoneIdentifier,
+} from './temporal/addition.mts';
+import { TimeValueToISODateTimeRecord } from './temporal/plain-date-time.mts';
+import type { EpochNanoseconds } from './temporal/temporal.mts';
+import { NumberValue, ObjectValue, Value, type PlainCompletion } from '#self';
 
 /** https://tc39.es/ecma262/pr/3759/#sec-time-values-and-time-range */
 export type FiniteTimeValue = IntegralNumber;
 export type TimeValue = FiniteTimeValue | NaN;
+
+/** https://tc39.es/ecma262/pr/3759/#sec-time-related-constants */
 export const HoursPerDay = 24n;
 export const MinutesPerHour = 60n;
 export const SecondsPerMinute = 60n;
-export const msPerSecond = 1000n;
-export const nsPerSecond = 10n ** 9n;
-export const nsPerMillisecond = 10n ** 6n;
-export const nsPerMicrosecond = 10n ** 3n;
-export const msPerMinute = msPerSecond * SecondsPerMinute;
-export const msPerHour = msPerMinute * MinutesPerHour;
-export const msPerDay = msPerHour * HoursPerDay;
-export const NanosecondsPerDay = 10n ** 6n * msPerDay;
+export const MillisecondsPerSecond = 1000n;
+export const NanosecondsPerSecond = 10n ** 9n;
+export const NanosecondsPerMillisecond = 10n ** 6n;
+export const NanosecondsPerMicrosecond = 10n ** 3n;
+export const NanosecondsPerMinute = NanosecondsPerSecond * SecondsPerMinute;
+export const NanosecondsPerHour = NanosecondsPerMinute * MinutesPerHour;
+export const MillisecondsPerMinute = MillisecondsPerSecond * SecondsPerMinute;
+export const MillisecondsPerHour = MillisecondsPerMinute * MinutesPerHour;
+export const MillisecondsPerDay = MillisecondsPerHour * HoursPerDay;
+export const NanosecondsPerDay = 10n ** 6n * MillisecondsPerDay;
 export const MaxEpochNanoseconds = 10n ** 8n * NanosecondsPerDay;
 export const MinEpochNanoseconds = -MaxEpochNanoseconds;
-export const msPerAverageYear = 12 * 30.436875 * Number(msPerDay);
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
 export function Day(t: FiniteTimeValue): Integer {
-  return floorDiv(BigInt(t), msPerDay);
+  return floorDiv(BigInt(t), MillisecondsPerDay);
 }
 
 export function TimeWithinDay(t: FiniteTimeValue): Integer {
-  return modulo(BigInt(t), msPerDay);
+  return modulo(BigInt(t), MillisecondsPerDay);
 }
 
 /** https://tc39.es/ecma262/#sec-dayfromyear */
@@ -52,10 +64,11 @@ export function DayFromYear(y: Integer): Integer {
 }
 
 export function TimeFromYear(y: Integer): TimeValue {
-  return Number(msPerDay * DayFromYear(y)) as TimeValue;
+  return Number(MillisecondsPerDay * DayFromYear(y)) as TimeValue;
 }
 
 export function YearFromTime(t: FiniteTimeValue): Integer {
+  const msPerAverageYear = 12 * 30.436875 * Number(MillisecondsPerDay);
   let year = BigInt(Math.floor(((t + msPerAverageYear / 2) / msPerAverageYear) + 1970));
   if (TimeFromYear(year) > t) {
     year -= 1n;
@@ -122,38 +135,75 @@ export function WeekDay(t: FiniteTimeValue): Integer {
   return modulo(Day(t) + 4n, 7n);
 }
 
-/** https://tc39.es/ecma262/#sec-local-time-zone-adjustment */
-// remove after Temporal merged
-export function LocalTZA(_t: NumberValue, _isUTC: boolean) {
-  mark_OtherCalendarNotImplemented();
-  return 0;
+/** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
+export function HourFromTime(t: FiniteTimeValue): Integer {
+  return modulo(floorDiv(BigInt(t), MillisecondsPerHour), HoursPerDay);
+}
+
+export function MinuteFromTime(t: FiniteTimeValue): Integer {
+  return modulo(floorDiv(BigInt(t), MillisecondsPerMinute), MinutesPerHour);
+}
+
+export function SecondFromTime(t: FiniteTimeValue): Integer {
+  return modulo(floorDiv(BigInt(t), MillisecondsPerSecond), SecondsPerMinute);
+}
+
+export function MillisecondFromTime(t: FiniteTimeValue): Integer {
+  return modulo(BigInt(t), MillisecondsPerSecond);
+}
+
+/** https://tc39.es/ecma262/#sec-getutcepochnanoseconds */
+export function GetUTCEpochNanoseconds(
+  isoDateTime: ISODateTimeRecord,
+): EpochNanoseconds {
+  const date = MakeDay(Number(isoDateTime.ISODate.Year), Number(isoDateTime.ISODate.Month - 1n), Number(isoDateTime.ISODate.Day));
+  const time = MakeTime(Number(isoDateTime.Time.Hour), Number(isoDateTime.Time.Minute), Number(isoDateTime.Time.Second), Number(isoDateTime.Time.Millisecond));
+  const epochMilliseconds = MakeDate(date, time);
+  Assert(Value(epochMilliseconds).isIntegralNumber());
+  return BigInt(epochMilliseconds) * NanosecondsPerMillisecond + isoDateTime.Time.Microsecond * NanosecondsPerMicrosecond + isoDateTime.Time.Nanosecond;
 }
 
 /** https://tc39.es/ecma262/#sec-localtime */
-export function LocalTime(t: NumberValue) {
-  return F(R(t) + LocalTZA(t, true));
+export function LocalTime(tv: FiniteTimeValue): IntegralNumber {
+  const systemTimeZoneIdentifier = SystemTimeZoneIdentifier();
+  const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
+  let offsetNanoseconds: bigint;
+  if (parseResult.OffsetMinutes !== undefined) {
+    offsetNanoseconds = parseResult.OffsetMinutes * NanosecondsPerMinute;
+  } else {
+    offsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, BigInt(tv) * NanosecondsPerMillisecond);
+  }
+  const offsetMilliseconds = truncateDiv(offsetNanoseconds, NanosecondsPerMillisecond);
+  return tv + Number(offsetMilliseconds);
 }
 
 /** https://tc39.es/ecma262/#sec-utc-t */
-export function UTC(t: NumberValue) {
-  return F(R(t) - LocalTZA(t, false));
-}
-
-/** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
-export function HourFromTime(t: FiniteTimeValue): Integer {
-  return modulo(floorDiv(BigInt(t), msPerHour), HoursPerDay);
-}
-
-export function MinFromTime(t: FiniteTimeValue): Integer {
-  return modulo(floorDiv(BigInt(t), msPerMinute), MinutesPerHour);
-}
-
-export function SecFromTime(t: FiniteTimeValue): Integer {
-  return modulo(floorDiv(BigInt(t), msPerSecond), SecondsPerMinute);
-}
-
-export function MillisecFromTime(t: FiniteTimeValue): Integer {
-  return modulo(BigInt(t), msPerSecond);
+export function UTC(t: Num): TimeValue {
+  if (!Number.isFinite(t)) return NaN as NaN;
+  const systemTimeZoneIdentifier = SystemTimeZoneIdentifier();
+  const parseResult = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier));
+  let offsetNanoseconds: bigint;
+  if (parseResult.OffsetMinutes !== undefined) {
+    offsetNanoseconds = parseResult.OffsetMinutes * NanosecondsPerMinute;
+  } else {
+    const isoDateTime = TimeValueToISODateTimeRecord(t);
+    const possibleInstants = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, isoDateTime);
+    let disambiguatedInstant: EpochNanoseconds;
+    if (possibleInstants.length > 0) {
+      disambiguatedInstant = possibleInstants[0];
+    } else {
+      let tBefore = Math.floor(t) - 1;
+      let possibleInstantsBefore: EpochNanoseconds[] = [];
+      while (possibleInstantsBefore.length === 0) {
+        possibleInstantsBefore = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, TimeValueToISODateTimeRecord(tBefore));
+        tBefore -= 1;
+      }
+      disambiguatedInstant = possibleInstantsBefore[possibleInstantsBefore.length - 1];
+    }
+    offsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, disambiguatedInstant);
+  }
+  const offsetMilliseconds = truncateDiv(offsetNanoseconds, NanosecondsPerMillisecond);
+  return t - Number(offsetMilliseconds) as TimeValue;
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
@@ -165,7 +215,7 @@ export function MakeTime(hour: Num, min: Num, sec: Num, ms: Num): Num {
   const m = X(ToIntegerOrInfinity(min));
   const s = X(ToIntegerOrInfinity(sec));
   const milli = X(ToIntegerOrInfinity(ms));
-  return ((h * Number(msPerHour) + m * Number(msPerMinute)) + s * Number(msPerSecond)) + milli;
+  return ((h * Number(MillisecondsPerHour) + m * Number(MillisecondsPerMinute)) + s * Number(MillisecondsPerSecond)) + milli;
 }
 
 const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
@@ -183,7 +233,7 @@ export function MakeDay(year: Num, month: Num, date: Num): Num | NaN {
   const mn = modulo(m, 12);
   // Find a finite time value t such that YearFromTime(t) = ℝ(ym), MonthFromTime(t) = mn, and DateFromTime(t) = 1; but if this is not possible (because some argument is out of range), return NaN.
   const ymday = Number(DayFromYear(BigInt(ym + (mn > 1 ? 1 : 0)))) - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
-  const t = Math.floor(ymday * Number(msPerDay));
+  const t = Math.floor(ymday * Number(MillisecondsPerDay));
   if (!Number.isFinite(t)) return NaN;
   return Number(Day(t)) + dt - 1;
 }
@@ -193,7 +243,7 @@ export function MakeDate(day: Num, time: Num): Num | NaN {
   if (!Number.isFinite(day) || !Number.isFinite(time)) {
     return NaN;
   }
-  const tv = day * Number(msPerDay) + time;
+  const tv = day * Number(MillisecondsPerDay) + time;
   if (!Number.isFinite(tv)) {
     return NaN;
   }
@@ -223,4 +273,52 @@ export function TimeClip(time: Num): TimeValue {
   }
   // 3. Return 𝔽(! ToIntegerOrInfinity(time)).
   return X(ToIntegerOrInfinity(time));
+}
+
+/** https://tc39.es/ecma262/#sec-isoffsettimezoneidentifier */
+export function IsOffsetTimeZoneIdentifier(offsetString: string): boolean {
+  const parseResult = DateParser.parse(offsetString, (parser) => parser.parseUTCOffset());
+  if (Array.isArray(parseResult)) return false;
+  return true;
+}
+
+/** https://tc39.es/ecma262/#sec-parsedatetimeutcoffset */
+export function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<bigint> {
+  const parseResult = DateParser.parse(
+    offsetString,
+    (parser) => parser.parseUTCOffset(),
+    { SubMinutePrecision: true, RangeError: true },
+  );
+  if (Array.isArray(parseResult)) return ThrowCompletion(parseResult[0]);
+  Assert(!!parseResult.Sign);
+  const sign = parseResult.Sign === '-' ? -1n : 1n;
+  Assert(parseResult.Hour !== undefined);
+  const hours = BigInt(parseResult.Hour);
+  const minutes = parseResult.Minute ? BigInt(parseResult.Minute) : 0n;
+  const seconds = parseResult.Second ? BigInt(parseResult.Second) : 0n;
+  let nanoseconds;
+  if (!parseResult.TemporalDecimalFraction) {
+    nanoseconds = 0n;
+  } else {
+    const fraction = `${parseResult.TemporalDecimalFraction.separator + parseResult.TemporalDecimalFraction.digits}000000000`;
+    const nanosecondsString = fraction.substring(1, 10);
+    nanoseconds = BigInt(nanosecondsString);
+  }
+  return sign * (((hours * MinutesPerHour + minutes) * SecondsPerMinute + seconds) * NanosecondsPerSecond + nanoseconds);
+}
+
+/** https://tc39.es/ecma262/#sec-hostsystemutcepochnanoseconds */
+export function HostSystemUTCEpochNanoseconds(global: ObjectValue): EpochNanoseconds {
+  let host = surroundingAgent.hostDefinedOptions.hostHooks?.HostSystemUTCEpochNanoseconds?.(global);
+  if (host === undefined) {
+    host = BigInt(Date.now()) * NanosecondsPerMillisecond as EpochNanoseconds;
+  }
+  return clamp(MinEpochNanoseconds, host, MaxEpochNanoseconds);
+}
+
+/** https://tc39.es/ecma262/#sec-systemutcepochmilliseconds */
+export function SystemUTCEpochMilliseconds(): IntegralNumber {
+  const global = GetGlobalObject();
+  const nowEpochNanoseconds = HostSystemUTCEpochNanoseconds(global);
+  return Number(floorDiv(nowEpochNanoseconds, NanosecondsPerMillisecond));
 }
