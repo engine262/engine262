@@ -503,11 +503,11 @@ export function* EvaluateModuleSync(module: ModuleRecord, importedNames: Importe
   // 5. If promise.[[PromiseState]] is rejected, then
   if (promise.PromiseState === 'rejected') {
     // a. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
-    if (promise.PromiseIsHandled === Value.false) {
+    if (!promise.PromiseIsHandled) {
       HostPromiseRejectionTracker(promise, 'handle');
     }
     // b. Set promise.[[PromiseIsHandled]] to true.
-    promise.PromiseIsHandled = Value.true;
+    promise.PromiseIsHandled = true;
     // c. Return ThrowCompletion(promise.[[PromiseResult]]).
     Throw(promise.PromiseResult!);
   }

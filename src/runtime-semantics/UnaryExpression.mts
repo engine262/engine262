@@ -37,7 +37,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
   // 4. If IsUnresolvableReference(ref) is true, then
   if (IsUnresolvableReference(ref) === Value.true) {
     // a. Assert: ref.[[Strict]] is false.
-    Assert(ref.Strict === Value.false);
+    Assert(!ref.Strict);
     // b. Return true.
     return Value.true;
   }
@@ -60,7 +60,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     // e. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
     const deleteStatus = Q(yield* baseObj.Delete(ref.ReferencedName as JSStringValue));
     // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
-    if (deleteStatus === Value.false && ref.Strict === Value.true) {
+    if (deleteStatus === Value.false && ref.Strict) {
       return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);
     }
     // g. Return deleteStatus.

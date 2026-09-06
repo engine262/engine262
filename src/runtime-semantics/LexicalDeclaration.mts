@@ -33,7 +33,7 @@ function* BindingEvaluation_LexicalBinding(
       if (LexicalBinding.Initializer) {
         const { Initializer, BindingIdentifier } = LexicalBinding;
         const bindingId = StringValue(BindingIdentifier);
-        const lhs = X(ResolveBinding(bindingId));
+        const lhs = X(ResolveBinding(bindingId, BindingIdentifier.strict));
         let value: Value;
         if (IsAnonymousFunctionDefinition(Initializer)) {
           value = Q(yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId));
@@ -53,7 +53,7 @@ function* BindingEvaluation_LexicalBinding(
         // LexicalBinding : BindingIdentifier
         const { BindingIdentifier } = LexicalBinding;
         Assert(kind === 'normal');
-        const lhs = X(ResolveBinding(StringValue(BindingIdentifier)));
+        const lhs = X(ResolveBinding(StringValue(BindingIdentifier), BindingIdentifier.strict));
         X(InitializeReferencedBinding(lhs, Value.undefined));
         return undefined;
       }

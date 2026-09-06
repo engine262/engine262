@@ -18,7 +18,7 @@ export function* EvaluatePropertyAccessWithExpressionKey(baseValue: Value, expre
   return new ReferenceRecord({
     Base: baseValue,
     ReferencedName: propertyNameValue,
-    Strict: strict ? Value.true : Value.false,
+    Strict: strict,
     ThisValue: undefined,
   });
 }
@@ -33,7 +33,7 @@ export function EvaluatePropertyAccessWithIdentifierKey(baseValue: Value, identi
   return new ReferenceRecord({
     Base: baseValue,
     ReferencedName: propertyNameString,
-    Strict: strict ? Value.true : Value.false,
+    Strict: strict,
     ThisValue: undefined,
   });
 }

@@ -36,7 +36,7 @@ export function* KeyedBindingInitialization(node: ParseNode.BindingElement | Par
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(node.BindingIdentifier);
     // 2. Let lhs be ? ResolveBinding(bindingId, environment).
-    const lhs = Q(yield* ResolveBinding(bindingId, environment, node.BindingIdentifier.strict));
+    const lhs = Q(yield* ResolveBinding(bindingId, node.BindingIdentifier.strict, environment));
     // 3. Let v be ? GetV(value, propertyName).
     let v = Q(yield* GetV(value, propertyName));
     if (node.Initializer && v === Value.undefined) {

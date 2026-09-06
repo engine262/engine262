@@ -94,7 +94,7 @@ export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]).
-    return Q(yield* base.GetBindingValue(V.ReferencedName as JSStringValue, V.Strict));
+    return Q(yield* base.GetBindingValue(V.ReferencedName as JSStringValue, Value(V.Strict)));
   }
 }
 
@@ -107,7 +107,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
   // 2. If IsUnresolvableReference(V) is true, then
   if (IsUnresolvableReference(V) === Value.true) {
     // a. If V.[[Strict]] is true, throw a ReferenceError exception.
-    if (V.Strict === Value.true) {
+    if (V.Strict) {
       return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
     }
     // b. Let globalObj be GetGlobalObject().
@@ -131,7 +131,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // c. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
     const succeeded = Q(yield* baseObj.Set(V.ReferencedName, W, GetThisValue(V)));
     // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
-    if (succeeded === Value.false && V.Strict === Value.true) {
+    if (succeeded === Value.false && V.Strict) {
       return Throw.TypeError('Cannot set property $1 on $2', V.ReferencedName, baseObj);
     }
     // e. Return.
@@ -142,7 +142,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
-    return Q(yield* base.SetMutableBinding(V.ReferencedName as JSStringValue, W, V.Strict));
+    return Q(yield* base.SetMutableBinding(V.ReferencedName as JSStringValue, W, Value(V.Strict)));
   }
 }
 
@@ -192,7 +192,7 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
       return new ReferenceRecord({
         Base: baseValue,
         ReferencedName: privateName,
-        Strict: Value.true,
+        Strict: true,
         ThisValue: undefined,
       });
     } else {
@@ -205,7 +205,7 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
   return new ReferenceRecord({
     Base: baseValue,
     ReferencedName: privateName,
-    Strict: Value.true,
+    Strict: true,
     ThisValue: undefined,
   });
 }

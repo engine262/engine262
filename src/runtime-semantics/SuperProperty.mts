@@ -26,7 +26,7 @@ function MakeSuperPropertyReference(actualThis: Value, propertyKey: Value, stric
   return new ReferenceRecord({
     Base: baseValue,
     ReferencedName: propertyKey,
-    Strict: strict ? Value.true : Value.false,
+    Strict: strict,
     ThisValue: actualThis,
   });
 }

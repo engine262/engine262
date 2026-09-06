@@ -26,7 +26,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(BindingIdentifier);
     // 2. Let lhs be ? ResolveBinding(bindingId).
-    const lhs = Q(yield* ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
+    const lhs = Q(yield* ResolveBinding(bindingId, BindingIdentifier.strict));
     // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
     let value;
     if (IsAnonymousFunctionDefinition(Initializer)) {

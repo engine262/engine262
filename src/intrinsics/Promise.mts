@@ -1,5 +1,4 @@
 import {
-  BooleanValue,
   Descriptor,
   ObjectValue,
   UndefinedValue,
@@ -61,7 +60,7 @@ export interface PromiseObject extends OrdinaryObject {
   PromiseResult: Value | undefined;
   PromiseFulfillReactions: undefined | PromiseReactionRecord[];
   PromiseRejectReactions: undefined | PromiseReactionRecord[];
-  PromiseIsHandled: BooleanValue;
+  PromiseIsHandled: boolean;
 }
 
 export function isPromiseObject(value: Value): value is PromiseObject {
@@ -93,7 +92,7 @@ function* PromiseConstructor(this: FunctionObject, [executor = Value.undefined]:
   // 6. Set promise.[[PromiseFulfillReactions]] to a new empty List.
   promise.PromiseRejectReactions = [];
   // 7. Set promise.[[PromiseIsHandled]] to false.
-  promise.PromiseIsHandled = Value.false;
+  promise.PromiseIsHandled = false;
   // 8. Let resolvingFunctions be CreateResolvingFunctions(promise).
   const resolvingFunctions = CreateResolvingFunctions(promise);
   // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).

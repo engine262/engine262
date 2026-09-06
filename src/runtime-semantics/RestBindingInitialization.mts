@@ -15,7 +15,7 @@ import type { EnvironmentRecord, PropertyKeyValue, UndefinedValue } from '#self'
 // BindingRestProperty : `...` BindingIdentifier
 export function* RestBindingInitialization({ BindingIdentifier }: ParseNode.BindingRestProperty, value: Value, environment: EnvironmentRecord | UndefinedValue, excludedNames: readonly PropertyKeyValue[]) {
   // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
-  const lhs = Q(yield* ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
+  const lhs = Q(yield* ResolveBinding(StringValue(BindingIdentifier), BindingIdentifier.strict, environment));
   // 2. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
   const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 3. Perform ? CopyDataProperties(restObj, value, excludedNames).

@@ -260,7 +260,7 @@ function RejectPromise(promise: PromiseObject, reason: Value) {
   promise.PromiseFulfillReactions = undefined;
   promise.PromiseRejectReactions = undefined;
   promise.PromiseState = 'rejected';
-  if (promise.PromiseIsHandled === Value.false) {
+  if (!promise.PromiseIsHandled) {
     HostPromiseRejectionTracker(promise, 'reject');
   }
   return TriggerPromiseReactions(reactions!, reason);
@@ -423,7 +423,7 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
     // b. Let reason be promise.[[PromiseResult]].
     const reason = promise.PromiseResult!;
     // c. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
-    if (promise.PromiseIsHandled === Value.false) {
+  if (!promise.PromiseIsHandled) {
       HostPromiseRejectionTracker(promise, 'handle');
     }
     // d. Let rejectJob be NewPromiseReactionJob(rejectReaction, reason).
@@ -432,7 +432,7 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
     HostEnqueuePromiseJob(rejectJob.Job, rejectJob.Realm);
   }
   // 12. Set promise.[[PromiseIsHandled]] to true.
-  promise.PromiseIsHandled = Value.true;
+  promise.PromiseIsHandled = true;
   // 13. If resultCapability is undefined, then
   if (resultCapability instanceof UndefinedValue) {
     // a. Return undefined.

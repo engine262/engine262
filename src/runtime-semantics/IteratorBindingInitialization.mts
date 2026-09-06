@@ -76,7 +76,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier);
   // 2. Let lhs be ? ResolveBinding(bindingId, environment).
-  const lhs = Q(yield* ResolveBinding(bindingId, environment, BindingIdentifier.strict));
+  const lhs = Q(yield* ResolveBinding(bindingId, BindingIdentifier.strict, environment));
   let v: Value = Value.undefined;
   // 3. If iteratorRecord.[[Done]] is false, then
   if (iteratorRecord.Done === Value.false) {
@@ -110,7 +110,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
 function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, BindingPattern }: ParseNode.BindingRestElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
   if (BindingIdentifier) {
     // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
-    const lhs = Q(yield* ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
+    const lhs = Q(yield* ResolveBinding(StringValue(BindingIdentifier), BindingIdentifier.strict, environment));
     // 2. Let A be ! ArrayCreate(0).
     const array = X(ArrayCreate(0));
     // 3. Let n be 0.

@@ -11,5 +11,5 @@ import { ResolveBinding } from '#self';
 //   `await`
 export function* Evaluate_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference): PlainEvaluator<ReferenceRecord> {
   // 1. Return ? ResolveBinding(StringValue of Identifier).
-  return yield* ResolveBinding(StringValue(IdentifierReference), undefined, IdentifierReference.strict);
+  return yield* ResolveBinding(StringValue(IdentifierReference), IdentifierReference.strict);
 }

@@ -886,7 +886,7 @@ export class ReferenceRecord {
 
   ReferencedName: Value | PrivateName;
 
-  readonly Strict: BooleanValue;
+  readonly Strict: boolean;
 
   readonly ThisValue: Value | undefined;
 

@@ -657,7 +657,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
         Assert(boundNames.length === 1);
         // 2. Let lhsName be the sole element of the BoundNames of lhs.
         const lhsName = boundNames[0];
-        lhsRef = X(ResolveBinding(lhsName));
+        lhsRef = X(ResolveBinding(lhsName, lhs.strict));
         if (declarationKind !== 'normal') {
           Assert(IsUnresolvableReference(lhsRef) === Value.false);
           const base = lhsRef.Base;
@@ -744,5 +744,5 @@ export function Evaluate_ForBinding({ BindingIdentifier, strict }: ParseNode.For
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier!);
   // 2. Return ? ResolveBinding(bindingId).
-  return ResolveBinding(bindingId, undefined, strict);
+  return ResolveBinding(bindingId, strict);
 }

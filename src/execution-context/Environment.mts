@@ -963,7 +963,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 export type EnvironmentRecordWithThisBinding = FunctionEnvironmentRecord | GlobalEnvironmentRecord | ModuleEnvironmentRecord;
 
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
-export function* GetIdentifierReference(env: EnvironmentRecord | null, name: JSStringValue, strict: BooleanValue): PlainEvaluator<ReferenceRecord> {
+export function* GetIdentifierReference(env: EnvironmentRecord | null, name: JSStringValue, strict: boolean): PlainEvaluator<ReferenceRecord> {
   // 1. If lex is the value null, then
   if (env === null) {
     // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.

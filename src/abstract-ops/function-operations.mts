@@ -73,7 +73,7 @@ export interface BaseFunctionObject extends OrdinaryObject {
   InitialName: JSStringValue | NullValue;
   readonly Async: boolean;
   // https://github.com/tc39/ecma262/pull/3212/
-  readonly IsClassConstructor: BooleanValue;
+  readonly IsClassConstructor: boolean;
   Call(thisValue: Value, args: Arguments): ValueEvaluator;
   Construct(args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
 }
@@ -309,7 +309,7 @@ function* FunctionCallSlot(this: FunctionObject, thisArgument: Value, argumentsL
   // 4. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
   // 5. If F.[[IsClassConstructor]] is true, then
-  if (F.IsClassConstructor === Value.true) {
+  if (F.IsClassConstructor) {
     // a. Let error be a newly created TypeError object.
     const error = Throw.TypeError('$1 cannot be invoked without new', F);
     // b. NOTE: _error_ is created in _calleeContext_ with _F_'s associated Realm Record.
@@ -433,7 +433,7 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
     F.ThisMode = 'global';
   }
   // 13. Set F.[[IsClassConstructor]] to false.
-  F.IsClassConstructor = Value.false;
+  F.IsClassConstructor = false;
   // 14. Set F.[[Environment]] to Scope.
   F.Environment = Scope;
   // 15. Set F.[[PrivateEnvironment]] to PrivateScope.
@@ -494,8 +494,8 @@ export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFu
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
 export function MakeClassConstructor(F: Mutable<FunctionObject>): void {
-  Assert(F.IsClassConstructor === Value.false);
-  F.IsClassConstructor = Value.true;
+  Assert(!F.IsClassConstructor);
+  F.IsClassConstructor = true;
 }
 
 /** https://tc39.es/ecma262/#sec-makemethod */
@@ -668,7 +668,7 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
   // https://github.com/tc39/ecma262/pull/3212/
-  func.IsClassConstructor = Value.false;
+  func.IsClassConstructor = false;
   // 11. Perform ! SetFunctionLength(func, length).
   X(SetFunctionLength(func, length));
   // 12. If prefix is not present, then
