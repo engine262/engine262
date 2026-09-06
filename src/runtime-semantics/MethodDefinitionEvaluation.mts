@@ -119,7 +119,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, PropertySetParameterList, FunctionBody, 'non-lexical-this', scope, privateScope);
       // 7. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
-      // 8. Perform SetFunctionName(closure, propKey, "get").
+      // 8. Perform SetFunctionName(closure, propKey, "set").
       SetFunctionName(closure, propKey, Value('set'));
       if (enumerable) {
         // 9. If propKey is a Private Name, then

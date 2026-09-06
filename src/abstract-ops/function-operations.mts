@@ -540,10 +540,7 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
   } else if (name instanceof PrivateName) {
     name = name.Description;
   }
-  if ('InitialName' in func) {
-    func.InitialName = name;
-  }
-
+  let initialName = name;
   // non-spec
   if ('HostInitialName' in func) {
     func.HostInitialName = name;
@@ -551,12 +548,12 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
 
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-    name = Value(`${prefix.stringValue()} ${name.stringValue()}`);
-    if ('InitialName' in func) {
-      // i. NOTE: The choice in the following step is made independently each time this Abstract Operation is invoked.
-      // i. Set _func_.[[InitialName]] to an implementation-defined choice of either _name_ or _prefixedName_.
-      func.InitialName = name;
-    }
+    const prefixedName = Value(`${prefix.stringValue()} ${name.stringValue()}`);
+    initialName = prefixedName;
+    name = prefixedName;
+  }
+  if ('InitialName' in func) {
+    func.InitialName = initialName;
   }
   X(DefinePropertyOrThrow(func, Value('name'), Descriptor({
     Value: name,
