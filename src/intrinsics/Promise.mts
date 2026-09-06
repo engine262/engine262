@@ -745,22 +745,18 @@ function* Promise_try([callback = Value.undefined, ...args]: Arguments, { thisVa
   if (!(constructor instanceof ObjectValue)) {
     return Throw.TypeError('$1 called on invalid receiver: $2', 'Promise.try', constructor);
   }
-  // 3. Let promiseCapability be ? NewPromiseCapability(C).
-  const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(constructor));
   // 4. Let status be Completion(Call(callback, undefined, args)).
   const status = EnsureCompletion(yield* Call(callback, Value.undefined, args as Arguments));
 
   if (status instanceof AbruptCompletion) {
+    const promiseCapability: PromiseCapabilityRecord = Q(yield* NewPromiseCapability(constructor));
     // 5. If status is an abrupt completion, then
     //   a. Perform ? Call(promiseCapability.[[Reject]], undefined, « status.[[Value]] »).
     Q(yield* Call(promiseCapability.Reject, Value.undefined, [status.Value]));
+    return promiseCapability.Promise;
   } else {
-    // 6. Else,
-    //   a. Perform ? Call(promiseCapability.[[Resolve]], undefined, « status.[[Value]] »).
-    Q(yield* Call(promiseCapability.Resolve, Value.undefined, [status.Value]));
+    return Q(yield* PromiseResolve(constructor, X(status)));
   }
-  // 7. Return promiseCapability.[[Promise]].
-  return EnsureCompletion(promiseCapability.Promise);
 }
 
 /** https://tc39.es/ecma262/#sec-promise.withResolvers */
