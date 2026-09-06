@@ -187,8 +187,8 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
   //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
   //    value of func.[[InitialName]].
   if (isBuiltinFunctionObject(func)) {
-    if (func.InitialName instanceof JSStringValue) {
-      return Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
+    if (func.InitialName !== null) {
+      return Value(`function ${func.InitialName}() { [native code] }`);
     }
     return Value('function() { [native code] }');
   }

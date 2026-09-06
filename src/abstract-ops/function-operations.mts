@@ -70,7 +70,7 @@ import {
 
 export interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm: Realm;
-  InitialName: JSStringValue | NullValue;
+  InitialName: string | null;
   readonly Async: boolean;
   // https://github.com/tc39/ecma262/pull/3212/
   readonly IsClassConstructor: boolean;
@@ -538,9 +538,9 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
       name = Value(`[${(description as JSStringValue).stringValue()}]`);
     }
   } else if (name instanceof PrivateName) {
-    name = name.Description;
+    name = Value(name.Description) as JSStringValue;
   }
-  let initialName = name;
+  let initialName = name instanceof JSStringValue ? name.stringValue() : null;
   // non-spec
   if ('HostInitialName' in func) {
     func.HostInitialName = name;
@@ -548,9 +548,9 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
 
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-    const prefixedName = Value(`${prefix.stringValue()} ${name.stringValue()}`);
+    const prefixedName = `${prefix.stringValue()} ${name.stringValue()}`;
     initialName = prefixedName;
-    name = prefixedName;
+    name = Value(prefixedName) as JSStringValue;
   }
   if ('InitialName' in func) {
     func.InitialName = initialName;
@@ -666,7 +666,7 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
   // 8. Set func.[[Extensible]] to true.
   func.Extensible = Value.true;
   // 10. Set func.[[InitialName]] to null.
-  func.InitialName = Value.null;
+  func.InitialName = null;
   // https://github.com/tc39/ecma262/pull/3212/
   func.IsClassConstructor = false;
   // 11. Perform ! SetFunctionLength(func, length).

@@ -56,7 +56,7 @@ import {
 export interface IteratorRecord {
   readonly Iterator: ObjectValue;
   readonly NextMethod: Value;
-  Done: BooleanValue;
+  Done: boolean;
 }
 
 export interface IteratorObject extends OrdinaryObject {
@@ -69,7 +69,7 @@ export function* GetIteratorDirect(obj: ObjectValue): PlainEvaluator<IteratorRec
   const iteratorRecord: IteratorRecord = {
     Iterator: obj,
     NextMethod: nextMethod,
-    Done: Value.false,
+    Done: false,
   };
   return iteratorRecord;
 }
@@ -138,12 +138,12 @@ export function* IteratorNext(iteratorRecord: IteratorRecord, value?: Value): Va
     result = EnsureCompletion(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
   if (result instanceof ThrowCompletion) {
-    iteratorRecord.Done = Value.true;
+    iteratorRecord.Done = true;
     return Q(result);
   }
   result = X(result);
   if (!(result instanceof ObjectValue)) {
-    iteratorRecord.Done = Value.true;
+    iteratorRecord.Done = true;
     return Throw.TypeError('$1 is not an object', result);
   }
   return result;
@@ -164,12 +164,12 @@ export function* IteratorStep(iteratorRecord: IteratorRecord): PlainEvaluator<Ob
   const result = Q(yield* IteratorNext(iteratorRecord));
   let done: ValueCompletion = EnsureCompletion(yield* IteratorComplete(result));
   if (done instanceof ThrowCompletion) {
-    iteratorRecord.Done = Value.true;
+    iteratorRecord.Done = true;
     return done;
   }
   done = X(done);
   if (done === Value.true) {
-    iteratorRecord.Done = Value.true;
+    iteratorRecord.Done = true;
     return 'done';
   }
   return result;
@@ -183,7 +183,7 @@ export function* IteratorStepValue(iteratorRecord: IteratorRecord): PlainEvaluat
   }
   const value = EnsureCompletion(yield* IteratorValue(result));
   if (value instanceof ThrowCompletion) {
-    iteratorRecord.Done = Value.true;
+    iteratorRecord.Done = true;
   }
   return value;
 }
@@ -267,7 +267,7 @@ export function CreateListIteratorRecord(list: Iterable<Value>): IteratorRecord 
   return {
     Iterator: iterator,
     NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
-    Done: Value.false,
+    Done: false,
   };
 }
 
@@ -293,7 +293,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord):
   return {
     Iterator: asyncIterator,
     NextMethod: nextMethod,
-    Done: Value.false,
+    Done: false,
   };
 }
 

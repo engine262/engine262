@@ -568,7 +568,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly JSStringValue[
     // d. Let nextMethod be ! GetV(iterator, "next").
     const nextMethod = X(GetV(iterator, Value('next')));
     // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    return { Iterator: iterator, NextMethod: nextMethod, Done: Value.false };
+    return { Iterator: iterator, NextMethod: nextMethod, Done: false };
   } else { // 7. Else,
     // a. Assert: iterationKind is iterate or async-iterate.
     Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate');

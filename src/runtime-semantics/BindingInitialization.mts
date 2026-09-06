@@ -79,7 +79,7 @@ export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.Bi
       // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
       const result = EnsureCompletion(yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment));
       // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
-      if (iteratorRecord.Done === Value.false) {
+      if (!iteratorRecord.Done) {
         return Q(yield* IteratorClose(iteratorRecord, result));
       }
       // 4. Return ? result.

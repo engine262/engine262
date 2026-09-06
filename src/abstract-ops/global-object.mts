@@ -98,7 +98,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
   let pointer = direct ? surroundingAgent.runningExecutionContext.PrivateEnvironment : null;
   while (pointer !== null) {
     for (const binding of pointer.Names) {
-      privateIdentifiers.push(binding.Description.stringValue());
+      privateIdentifiers.push(binding.Description);
     }
     pointer = pointer.OuterPrivateEnvironment;
   }

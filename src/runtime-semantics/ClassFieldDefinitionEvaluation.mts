@@ -9,7 +9,6 @@ import {
 import {
   ClassElementDefinitionRecord,
   Descriptor,
-  JSStringValue,
   SymbolValue,
   Value,
   type Arguments,
@@ -95,15 +94,15 @@ export function* ClassFieldDefinitionEvaluation_decorator(FieldDefinition: Parse
     });
   } else {
     const name = Q(yield* Evaluate_PropertyName(ClassElementName));
-    let readableName: JSStringValue;
+    let readableName: string;
     if (name instanceof PrivateName) {
       readableName = name.Description;
     } else if (name instanceof SymbolValue) {
-      readableName = SymbolDescriptiveString(name);
+      readableName = SymbolDescriptiveString(name).stringValue();
     } else {
-      readableName = name;
+      readableName = name.stringValue();
     }
-    const privateStateDesc = `${readableName.stringValue()} accessor storage`;
+    const privateStateDesc = `${readableName} accessor storage`;
     const privateStateName = new PrivateName(Value(privateStateDesc));
     const getter = MakeAutoAccessorGetter(homeObject, name, privateStateName);
     const setter = MakeAutoAccessorSetter(homeObject, name, privateStateName);

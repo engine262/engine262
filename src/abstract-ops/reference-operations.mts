@@ -186,7 +186,7 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
     if (script instanceof DynamicParsedCodeRecord && script?.HostDefined?.isInspectorEval) {
       let privateName;
       if (baseValue instanceof ObjectValue) {
-        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description.stringValue() === privateIdentifier.stringValue())?.Key;
+        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description === privateIdentifier.stringValue())?.Key;
       }
       privateName ??= new PrivateName(privateIdentifier);
       return new ReferenceRecord({

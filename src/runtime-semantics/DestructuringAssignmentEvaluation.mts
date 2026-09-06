@@ -171,7 +171,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({ AssignmentE
   // 3. If status is an abrupt completion, then
   if (status instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
-    if (iteratorRecord.Done === Value.false) {
+    if (!iteratorRecord.Done) {
       return Q(yield* IteratorClose(iteratorRecord, status));
     }
     // b. Return Completion(status).
@@ -185,7 +185,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({ AssignmentE
     status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation(AssignmentRestElement, iteratorRecord));
   }
   // 6. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
-  if (iteratorRecord.Done === Value.false) {
+  if (!iteratorRecord.Done) {
     return Q(yield* IteratorClose(iteratorRecord, status));
   }
   return Completion(status);
@@ -201,7 +201,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
   switch (node.type) {
     case 'Elision':
       // 1. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === Value.false) {
+      if (!iteratorRecord.Done) {
         // a. Perform ? IteratorStep(iteratorRecord).
         Q(yield* IteratorStep(iteratorRecord));
       }
@@ -217,7 +217,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       }
       let value: Value = Value.undefined;
       // 2. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === Value.false) {
+      if (!iteratorRecord.Done) {
         // a. Let next be ? IteratorStepValue(iteratorRecord).
         const next = Q(yield* IteratorStepValue(iteratorRecord));
         // d. If next is not done, set value to next.
@@ -268,7 +268,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 3. Let n be 0.
       let n = 0;
       // 4. Repeat, while iteratorRecord.[[Done]] is false,
-      while (iteratorRecord.Done === Value.false) {
+      while (!iteratorRecord.Done) {
         // a. Let next be IteratorStep(iteratorRecord).
         const next = Q(yield* IteratorStepValue(iteratorRecord));
         // d. If next is not done, then

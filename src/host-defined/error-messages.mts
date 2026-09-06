@@ -75,7 +75,7 @@ export function format(arg: Formattable): string {
     case typeof arg !== 'object':
       return String(arg);
     case arg instanceof PrivateName:
-      return `#${arg.Description instanceof UndefinedValue ? '' : arg.Description.stringValue()}`;
+      return `#${arg.Description}`;
     case arg instanceof JSStringValue:
       return JSON.stringify(arg.stringValue());
     case arg instanceof NumberValue: {
@@ -166,7 +166,7 @@ function toDisplayableValue(arg: Formattable): Value | string {
     case arg instanceof Value:
       return arg;
     case arg instanceof PrivateName:
-      return Value(`#${arg.Description.stringValue()}`);
+      return Value(`#${arg.Description}`);
     case isArray(arg):
       return CreateArrayFromList(arg.map((value) => {
         const v = toDisplayableValue(value);

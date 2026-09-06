@@ -144,7 +144,7 @@ function propertyNameToString(value: PropertyKeyValue | PrivateName): string {
   if (value instanceof JSStringValue) {
     return value.stringValue();
   } else if (value instanceof PrivateName) {
-    return value.Description.stringValue();
+    return value.Description;
   } else {
     return SymbolDescriptiveString(value).stringValue();
   }

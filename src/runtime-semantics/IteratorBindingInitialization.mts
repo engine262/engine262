@@ -79,7 +79,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
   const lhs = Q(yield* ResolveBinding(bindingId, BindingIdentifier.strict, environment));
   let v: Value = Value.undefined;
   // 3. If iteratorRecord.[[Done]] is false, then
-  if (iteratorRecord.Done === Value.false) {
+  if (!iteratorRecord.Done) {
     // a. Let next be ? IteratorStepValue(iteratorRecord).
     const next = Q(yield* IteratorStepValue(iteratorRecord));
     // d. If next is not DONE,
@@ -119,7 +119,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
     while (true) {
       let next: 'done' | Value = 'done';
       // a. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === Value.false) {
+      if (!iteratorRecord.Done) {
         // i. Let next be ? IteratorStepValue(iteratorRecord).
         next = Q(yield* IteratorStepValue(iteratorRecord));
       }
@@ -145,7 +145,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
     while (true) {
       let next: 'done' | Value = 'done';
       // a. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === Value.false) {
+      if (!iteratorRecord.Done) {
         // i. Let next be ? IteratorStepValue(iteratorRecord).
         next = Q(yield* IteratorStepValue(iteratorRecord));
       }
@@ -165,7 +165,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
 function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initializer }: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
   let v: Value = Value.undefined;
   // 1. If iteratorRecord.[[Done]] is false, then
-  if (iteratorRecord.Done === Value.false) {
+  if (!iteratorRecord.Done) {
     // a. Let next be ? IteratorStepValue(iteratorRecord).
     const next = Q(yield* IteratorStepValue(iteratorRecord));
     if (next !== 'done') {
@@ -186,7 +186,7 @@ function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initial
 function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.Elision, iteratorRecord: IteratorRecord): PlainEvaluator {
   Assert(node.type === 'Elision');
   // 1. If iteratorRecord.[[Done]] is false, then
-  if (iteratorRecord.Done === Value.false) {
+  if (!iteratorRecord.Done) {
     // a. Perform ? IteratorStep(iteratorRecord).
     Q(yield* IteratorStep(iteratorRecord));
   }

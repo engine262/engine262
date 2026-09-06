@@ -141,7 +141,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do
     for (const dn of PrivateBoundIdentifiers(ClassBody)) {
       // i. If classPrivateEnvironment.[[Names]] contains a Private Name whose [[Description]] is dn, then
-      const existing = classPrivateEnvironment.Names.find((n) => n.Description.stringValue() === dn.stringValue());
+      const existing = classPrivateEnvironment.Names.find((n) => n.Description === dn.stringValue());
       if (existing) {
         // 1. Assert: This is only possible for getter/setter pairs.
       } else { // ii. Else,
@@ -631,7 +631,7 @@ export function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinit
     }
     if (name instanceof PrivateName) {
       X(CreateDataPropertyOrThrow(contextObj, Value('private'), Value.true));
-      X(CreateDataPropertyOrThrow(contextObj, Value('name'), name.Description));
+      X(CreateDataPropertyOrThrow(contextObj, Value('name'), Value(name.Description)));
     } else {
       X(CreateDataPropertyOrThrow(contextObj, Value('private'), Value.false));
       X(CreateDataPropertyOrThrow(contextObj, Value('name'), name));

@@ -9,7 +9,7 @@ import {
 } from '../completion.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
-  JSStringValue, ObjectValue, UndefinedValue, Value,
+  JSStringValue, ObjectValue, Value,
 } from '../value.mts';
 import {
   Evaluate, type ValueEvaluator, type YieldEvaluator,
@@ -32,7 +32,7 @@ import {
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 export interface GeneratorObject extends OrdinaryObject {
-  GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | UndefinedValue;
+  GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | undefined;
   GeneratorContext: ExecutionContext | null;
   readonly GeneratorBrand: JSStringValue | undefined;
   UnderlyingIterators?: IteratorRecord[];

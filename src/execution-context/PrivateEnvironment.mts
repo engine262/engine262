@@ -25,7 +25,7 @@ export function ResolvePrivateIdentifier(privEnv: PrivateEnvironmentRecord, iden
   // 1. Let names be privEnv.[[Names]].
   const names = privEnv.Names;
   // 2. If names contains a Private Name whose [[Description]] is identifier, then
-  const name = names.find((n) => n.Description.stringValue() === identifier.stringValue());
+  const name = names.find((n) => n.Description === identifier.stringValue());
   if (name) {
     // a. Let name be that Private Name.
     // b. Return name.

@@ -874,10 +874,10 @@ export class PrivateName {
   //       remove it from unions with `SymbolValue` due to structural overlap.
   declare private _: never;
 
-  readonly Description: JSStringValue;
+  readonly Description: string;
 
   constructor(description: JSStringValue) {
-    this.Description = description;
+    this.Description = description.stringValue();
   }
 }
 

@@ -62,8 +62,8 @@ export class CallSite {
           return name.replace('Proto_', '#').replace(/(Constructor|_getter|_setter|Getter|Setter)$/, '').replaceAll(/([a-zA-Z])_([a-zA-Z])/g, '$1.$2');
         }
       }
-      if (func.InitialName instanceof JSStringValue) {
-        return func.InitialName.stringValue();
+      if (typeof func.InitialName === 'string') {
+        return func.InitialName;
       }
       const name = func.properties.get('name');
       if (name && name.Value && name.Value instanceof JSStringValue) {

@@ -226,7 +226,7 @@ function* Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === Value.false) {
+    if (!iteratorRecord.Done) {
       result = yield* IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).
@@ -416,7 +416,7 @@ function* Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValu
   let result: ValueCompletion = yield* PerformPromiseAllSettled(iteratorRecord, constructor, promiseCapability, promiseResolve);
 
   if (result instanceof AbruptCompletion) {
-    if (iteratorRecord.Done === Value.false) {
+    if (!iteratorRecord.Done) {
       result = yield* IteratorClose(iteratorRecord, result);
     }
     IfAbruptRejectPromise(result, promiseCapability);
@@ -641,7 +641,7 @@ function* Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === Value.false) {
+    if (!iteratorRecord.Done) {
       result = yield* IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).
@@ -696,7 +696,7 @@ function* Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: F
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === Value.false) {
+    if (!iteratorRecord.Done) {
       result = yield* IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).

@@ -169,7 +169,7 @@ export class InspectorContext {
     if (!accessorPropertiesOnly) {
       object.PrivateElements.forEach((value) => {
         const desc: Protocol.Runtime.PrivatePropertyDescriptor = {
-          name: value.Key.Description.stringValue(),
+          name: value.Key.Description,
         };
         if (value.Value) desc.value = wrap(value.Value);
         if (value.Getter) desc.get = wrap(value.Getter);
