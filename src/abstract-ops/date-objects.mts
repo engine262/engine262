@@ -207,35 +207,35 @@ export function UTC(t: Num): TimeValue {
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
-export function MakeTime(hour: Num, min: Num, sec: Num, ms: Num): Num {
-  if (!Number.isFinite(hour) || !Number.isFinite(min) || !Number.isFinite(sec) || !Number.isFinite(ms)) {
+export function MakeTime(hour: Num, minute: Num, second: Num, millisecond: Num): Num {
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second) || !Number.isFinite(millisecond)) {
     return NaN;
   }
-  const h = X(ToIntegerOrInfinity(hour));
-  const m = X(ToIntegerOrInfinity(min));
-  const s = X(ToIntegerOrInfinity(sec));
-  const milli = X(ToIntegerOrInfinity(ms));
-  return ((h * Number(MillisecondsPerHour) + m * Number(MillisecondsPerMinute)) + s * Number(MillisecondsPerSecond)) + milli;
+  const hourMV = X(ToIntegerOrInfinity(hour));
+  const minuteMV = X(ToIntegerOrInfinity(minute));
+  const secondMV = X(ToIntegerOrInfinity(second));
+  const millisecondMV = X(ToIntegerOrInfinity(millisecond));
+  return ((hourMV * Number(MillisecondsPerHour) + minuteMV * Number(MillisecondsPerMinute)) + secondMV * Number(MillisecondsPerSecond)) + millisecondMV;
 }
 
 const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
 /** https://tc39.es/ecma262/#sec-makeday */
-export function MakeDay(year: Num, month: Num, date: Num): Num | NaN {
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(date)) {
+export function MakeDay(year: Num, month: Num, day: Num): Num | NaN {
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
     return NaN;
   }
-  const y = X(ToIntegerOrInfinity(year));
-  const m = X(ToIntegerOrInfinity(month));
-  const dt = X(ToIntegerOrInfinity(date));
-  const ym = y + Math.floor(m / 12);
+  const yearMV = X(ToIntegerOrInfinity(year));
+  const monthMV = X(ToIntegerOrInfinity(month));
+  const dayNumber = X(ToIntegerOrInfinity(day));
+  const ym = yearMV + Math.floor(monthMV / 12);
   if (!Number.isFinite(ym)) return NaN;
-  const mn = modulo(m, 12);
+  const mn = modulo(monthMV, 12);
   // Find a finite time value t such that YearFromTime(t) = ℝ(ym), MonthFromTime(t) = mn, and DateFromTime(t) = 1; but if this is not possible (because some argument is out of range), return NaN.
   const ymday = Number(DayFromYear(BigInt(ym + (mn > 1 ? 1 : 0)))) - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
   const t = Math.floor(ymday * Number(MillisecondsPerDay));
   if (!Number.isFinite(t)) return NaN;
-  return Number(Day(t)) + dt - 1;
+  return Number(Day(t)) + dayNumber - 1;
 }
 
 /** https://tc39.es/ecma262/#sec-makedate */
