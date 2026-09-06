@@ -1,5 +1,5 @@
 import {
-  JSStringValue, Value, type Arguments,
+  Value, type Arguments,
 } from './value.mts';
 import { kAsyncContext } from './utils/internal.mts';
 import { callable, OutOfRange } from './utils/language.mts';
@@ -57,7 +57,7 @@ class CompletionImpl<const T> {
 
   readonly Value!: T | Value;
 
-  readonly Target!: JSStringValue | undefined;
+  readonly Target!: string | undefined;
 
   constructor(init: CompletionInit<T>) {
     if (new.target === CompletionImpl) {
@@ -119,8 +119,8 @@ export const Completion = CompletionImpl as {
 
   /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   new <const T>(completion: { Type: 'normal', Value: T, Target: undefined }): NormalCompletion<T>;
-  new(completion: { Type: 'break', Value: void, Target: JSStringValue | undefined }): BreakCompletion;
-  new(completion: { Type: 'continue', Value: void, Target: JSStringValue | undefined }): ContinueCompletion;
+  new(completion: { Type: 'break', Value: void, Target: string | undefined }): BreakCompletion;
+  new(completion: { Type: 'continue', Value: void, Target: string | undefined }): ContinueCompletion;
   new(completion: { Type: 'return', Value: Value, Target: undefined }): ReturnCompletion;
   new(completion: { Type: 'throw', Value: Value, Target: undefined }): ThrowCompletion;
   readonly prototype: CompletionImpl<unknown>;
@@ -171,7 +171,7 @@ export const AbruptCompletion = (() => {
 
     declare readonly Value: T | Value;
 
-    declare readonly Target: JSStringValue | undefined;
+    declare readonly Target: string | undefined;
 
     constructor(init: AbruptCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
       super(init);
@@ -208,7 +208,7 @@ export class ContinueCompletion extends AbruptCompletion<void> {
 
   declare readonly Value: void;
 
-  declare readonly Target: JSStringValue | undefined;
+  declare readonly Target: string | undefined;
 
   private constructor(init: ContinueCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);

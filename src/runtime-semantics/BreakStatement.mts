@@ -12,7 +12,7 @@ export function Evaluate_BreakStatement({ LabelIdentifier }: ParseNode.BreakStat
     return new Completion({ Type: 'break', Value: undefined, Target: undefined });
   }
   // 1. Let label be the StringValue of LabelIdentifier.
-  const label = StringValue(LabelIdentifier);
+  const label = StringValue(LabelIdentifier).stringValue();
   // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
   return new Completion({ Type: 'break', Value: undefined, Target: label });
 }

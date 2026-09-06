@@ -57,7 +57,6 @@ import {
   AsyncIteratorClose,
   ToBoolean,
   ToObject,
-  SameValue,
   Throw,
   type IteratorRecord,
   ValueOfNormalCompletion,
@@ -106,13 +105,13 @@ export function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode
 //   LabelledStatement : LabelIdentifier `:` LabelledItem
 function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }: ParseNode.LabelledStatement, labelSet: JSStringSet) {
   // 1. Let label be the StringValue of LabelIdentifier.
-  const label = StringValue(LabelIdentifier);
+  const label = StringValue(LabelIdentifier).stringValue();
   // 2. Append label as an element of labelSet.
   labelSet.add(label);
   // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
   let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet));
   // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
-  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target!, label)) {
+  if (stmtResult.Type === 'break' && stmtResult.Target === label) {
     // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
     stmtResult = NormalCompletion(stmtResult.Value);
   }
