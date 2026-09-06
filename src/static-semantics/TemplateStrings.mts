@@ -95,8 +95,8 @@ export function TV(s: string) {
   return buffer;
 }
 
-export function TemplateStrings(node: ParseNode.TemplateLiteral, raw: boolean) {
-  if (raw) {
+export function TemplateStrings(node: ParseNode.TemplateLiteral, escapes: 'raw' | 'cooked') {
+  if (escapes === 'raw') {
     return node.TemplateSpanList.map((s) => Value(s));
   }
   return node.TemplateSpanList.map((v) => {

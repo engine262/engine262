@@ -32,10 +32,10 @@ function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
       return e.Array;
     }
   }
-  // 4. Let rawStrings be TemplateStrings of templateLiteral with argument true.
-  const rawStrings = TemplateStrings(templateLiteral, true);
-  // 5. Let cookedStrings be TemplateStrings of templateLiteral with argument false.
-  const cookedStrings = TemplateStrings(templateLiteral, false);
+  // 4. Let rawStrings be the TemplateStrings of templateLiteral with argument ~raw~.
+  const rawStrings = TemplateStrings(templateLiteral, 'raw');
+  // 5. Let cookedStrings be the TemplateStrings of templateLiteral with argument ~cooked~.
+  const cookedStrings = TemplateStrings(templateLiteral, 'cooked');
   // 6. Let count be the number of elements in the List cookedStrings.
   const count = cookedStrings.length;
   // 7. Assert: count ≤ 232 - 1.
