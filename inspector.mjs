@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 975ebf048c361a916ea4bcb4cf24192e718e4f8e
+ * engine262 0.0.1 bf86ab02e64eddc938519c6c81b2aefdbe4397c0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -438,7 +438,7 @@ function propertyNameToString(value) {
   if (value instanceof JSStringValue) {
     return value.stringValue();
   } else if (value instanceof PrivateName) {
-    return value.Description.stringValue();
+    return value.Description;
   } else {
     return SymbolDescriptiveString(value).stringValue();
   }
@@ -716,7 +716,7 @@ const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
 const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
   let text = '';
   nativeEvalInAnyRealm(true, context, () => {
-    const completion = EnsureCompletion(skipDebugger(Get(value, Value('stack'))));
+    const completion = EnsureCompletion(skipDebugger(Get(value, 'stack')));
     if (completion instanceof NormalCompletion && completion.Value instanceof JSStringValue) {
       text = completion.Value.stringValue();
       if (!text.includes('  at') && !text.includes('SyntaxError')) {
@@ -741,13 +741,13 @@ const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
       stackGetterValue
     } = getHostDefinedErrorDetails(error);
     if (!message || !stackGetterValue) return undefined;
-    const stackC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('stack')))));
+    const stackC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, 'stack'))));
     if (stackC instanceof NormalCompletion && stackC.Value instanceof JSStringValue) {
       const stackMaybeModified = stackC.Value.stringValue();
       if (stackMaybeModified !== stackGetterValue) return undefined;
     }
     let constructorName = 'Error';
-    const nameC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, Value('name')))));
+    const nameC = EnsureCompletion(nativeEvalInAnyRealm(true, context, () => skipDebugger(Get(error, 'name'))));
     if (nameC instanceof NormalCompletion && nameC.Value instanceof JSStringValue) constructorName = nameC.Value.stringValue();
     const header = JSON.stringify(['span', null, constructorName, ': ', ...message.map(part => typeof part === 'string' ? part : ['object', getInspector(part).toRemoteObject(part, getObjectId, context, false)]), stack]);
     return {
@@ -959,7 +959,7 @@ class InspectorContext {
     if (!accessorPropertiesOnly) {
       object.PrivateElements.forEach(value => {
         const desc = {
-          name: value.Key.Description.stringValue()
+          name: value.Key.Description
         };
         if (value.Value) desc.value = wrap(value.Value);
         if (value.Getter) desc.get = wrap(value.Getter);
@@ -1654,7 +1654,7 @@ const consoleMethods = ['log', 'debug', 'info', 'error', 'warning', 'dir', 'dirx
 function createConsole(realm, defaultBehaviour) {
   const pop = realm.pushTopContext();
   const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-  X(DefinePropertyOrThrow(realm.GlobalObject, Value('console'), Descriptor({
+  X(DefinePropertyOrThrow(realm.GlobalObject, 'console', Descriptor({
     Configurable: Value.true,
     Enumerable: Value.false,
     Writable: Value.true,

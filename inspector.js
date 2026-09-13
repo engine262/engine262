@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 975ebf048c361a916ea4bcb4cf24192e718e4f8e
+ * engine262 0.0.1 bf86ab02e64eddc938519c6c81b2aefdbe4397c0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -442,7 +442,7 @@
     if (value instanceof engine262_mjs.JSStringValue) {
       return value.stringValue();
     } else if (value instanceof engine262_mjs.PrivateName) {
-      return value.Description.stringValue();
+      return value.Description;
     } else {
       return engine262_mjs.SymbolDescriptiveString(value).stringValue();
     }
@@ -720,7 +720,7 @@
   const Error$1 = new ObjectInspector('Error', 'error', (value, context) => {
     let text = '';
     nativeEvalInAnyRealm(true, context, () => {
-      const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(value, engine262_mjs.Value('stack'))));
+      const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(value, 'stack')));
       if (completion instanceof engine262_mjs.NormalCompletion && completion.Value instanceof engine262_mjs.JSStringValue) {
         text = completion.Value.stringValue();
         if (!text.includes('  at') && !text.includes('SyntaxError')) {
@@ -745,13 +745,13 @@
         stackGetterValue
       } = engine262_mjs.getHostDefinedErrorDetails(error);
       if (!message || !stackGetterValue) return undefined;
-      const stackC = engine262_mjs.EnsureCompletion(nativeEvalInAnyRealm(true, context, () => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('stack')))));
+      const stackC = engine262_mjs.EnsureCompletion(nativeEvalInAnyRealm(true, context, () => engine262_mjs.skipDebugger(engine262_mjs.Get(error, 'stack'))));
       if (stackC instanceof engine262_mjs.NormalCompletion && stackC.Value instanceof engine262_mjs.JSStringValue) {
         const stackMaybeModified = stackC.Value.stringValue();
         if (stackMaybeModified !== stackGetterValue) return undefined;
       }
       let constructorName = 'Error';
-      const nameC = engine262_mjs.EnsureCompletion(nativeEvalInAnyRealm(true, context, () => engine262_mjs.skipDebugger(engine262_mjs.Get(error, engine262_mjs.Value('name')))));
+      const nameC = engine262_mjs.EnsureCompletion(nativeEvalInAnyRealm(true, context, () => engine262_mjs.skipDebugger(engine262_mjs.Get(error, 'name'))));
       if (nameC instanceof engine262_mjs.NormalCompletion && nameC.Value instanceof engine262_mjs.JSStringValue) constructorName = nameC.Value.stringValue();
       const header = JSON.stringify(['span', null, constructorName, ': ', ...message.map(part => typeof part === 'string' ? part : ['object', getInspector(part).toRemoteObject(part, getObjectId, context, false)]), stack]);
       return {
@@ -963,7 +963,7 @@
       if (!accessorPropertiesOnly) {
         object.PrivateElements.forEach(value => {
           const desc = {
-            name: value.Key.Description.stringValue()
+            name: value.Key.Description
           };
           if (value.Value) desc.value = wrap(value.Value);
           if (value.Getter) desc.get = wrap(value.Getter);
@@ -1658,7 +1658,7 @@
   function createConsole(realm, defaultBehaviour) {
     const pop = realm.pushTopContext();
     const console = engine262_mjs.OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    engine262_mjs.X(engine262_mjs.DefinePropertyOrThrow(realm.GlobalObject, engine262_mjs.Value('console'), engine262_mjs.Descriptor({
+    engine262_mjs.X(engine262_mjs.DefinePropertyOrThrow(realm.GlobalObject, 'console', engine262_mjs.Descriptor({
       Configurable: engine262_mjs.Value.true,
       Enumerable: engine262_mjs.Value.false,
       Writable: engine262_mjs.Value.true,
