@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  "projectFolder": "../..",
+  "newlineKind": "lf",
+  "mainEntryPointFilePath": "<projectFolder>/lib/inspector/index.d.mts",
+  "compiler": { "overrideTsconfig": { "files": ["lib/inspector/index.d.mts"], "compilerOptions": { "baseUrl": ".", "module": "NodeNext", "moduleResolution": "NodeNext", "preserveSymlinks": true, "paths": { "#self": ["node_modules/@engine262/engine262/declaration/index.d.mts"] } } } },
+  "apiReport": { "enabled": false }, "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": true, "untrimmedFilePath": "<projectFolder>/api-baseline/inspector.d.mts" },
+  "tsdocMetadata": { "enabled": false },
+  "messages": { "extractorMessageReporting": { "ae-missing-release-tag": { "logLevel": "none" }, "ae-unresolved-link": { "logLevel": "none" } }, "tsdocMessageReporting": { "tsdoc-escape-greater-than": { "logLevel": "none" }, "tsdoc-escape-right-brace": { "logLevel": "none" }, "tsdoc-malformed-inline-tag": { "logLevel": "none" }, "tsdoc-param-tag-missing-hyphen": { "logLevel": "none" }, "tsdoc-undefined-tag": { "logLevel": "none" }, "tsdoc-unnecessary-backslash": { "logLevel": "none" } } }
+}

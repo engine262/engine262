@@ -630,11 +630,11 @@ export interface Throw {
 }
 
 // thanks https://github.com/type-challenges/type-challenges/blob/main/questions/00147-hard-c-printf-parser/README.md
-type ParametersMap = {
+export type ParametersMap = {
   '1': Formattable;
   '2': Formattable;
   '3': Formattable;
   '4': Formattable;
   '5': Formattable;
 }
-type ParsePrintFormat<S extends string> = S extends `${string}$${infer T}${infer End}` ? T extends keyof ParametersMap ? [ParametersMap[T], ...ParsePrintFormat<End>] : ParsePrintFormat<End> : []
+export type ParsePrintFormat<S extends string> = S extends `${string}$${infer T}${infer End}` ? T extends keyof ParametersMap ? [ParametersMap[T], ...ParsePrintFormat<End>] : ParsePrintFormat<End> : []

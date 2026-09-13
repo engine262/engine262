@@ -11,7 +11,7 @@ export enum FunctionKind {
   ASYNC = 1,
 }
 
-interface ArrowParameterConversions {
+export interface ArrowParameterConversions {
   'IdentifierReference': ParseNode.SingleNameBinding;
   'BindingRestElement': ParseNode.BindingRestElement;
   'Elision': ParseNode.Elision;
@@ -24,7 +24,7 @@ interface ArrowParameterConversions {
   'AssignmentRestElement': ParseNode.BindingRestElement;
 }
 
-type ConvertArrowParameterResult<T> =
+export type ConvertArrowParameterResult<T> =
   T extends keyof ArrowParameterConversions ? ArrowParameterConversions[T] : never;
 
 interface ConciseBodyInfo {

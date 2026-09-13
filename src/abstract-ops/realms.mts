@@ -14,7 +14,7 @@ import {
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#table-well-known-intrinsic-objects */
-interface Intrinsics_Table6 {
+export interface Intrinsics_Table6 {
   '%AbstractModuleSource%': FunctionObject;
   '%AggregateError%': FunctionObject;
   '%AsyncDisposableStack%': FunctionObject;

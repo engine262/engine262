@@ -23,6 +23,7 @@ jobs:
       # build and lint
       - run: npm install
       - run: npm run build
+      - run: npm run api:check
       - run: npm run lint
 
       # upload build artifacts

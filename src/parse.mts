@@ -26,6 +26,27 @@ import {
 } from '#self';
 
 export { Parser, RegExpParser };
+export type { ParserOptions } from './parser/Parser.mts';
+export type { LanguageParser } from './parser/LanguageParser.mts';
+export type { ModuleParser } from './parser/ModuleParser.mts';
+export type { StatementParser } from './parser/StatementParser.mts';
+export type { ExpressionParser } from './parser/ExpressionParser.mts';
+export { FunctionKind } from './parser/FunctionParser.mts';
+export type { ArrowParameterConversions, ConvertArrowParameterResult, FunctionParser } from './parser/FunctionParser.mts';
+export type { IdentifierParser } from './parser/IdentifierParser.mts';
+export type { BaseParser } from './parser/BaseParser.mts';
+export type { Lexer } from './parser/Lexer.mts';
+export type { Locatable } from './parser/Lexer.mts';
+export { TokenData } from './parser/Lexer.mts';
+export {
+  RawTokens,
+  Token,
+  type ParserTokenIndex,
+  type TokenArrayToEnumLike,
+  type TokenDefinition,
+} from './parser/tokens.mts';
+export { Flag, type LabelType } from './parser/Scope.mts';
+export type { RegExpParserContext } from './parser/RegExpParser.mts';
 
 export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   const p = new Parser(init);

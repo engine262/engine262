@@ -10,7 +10,8 @@ import type {
 const ignoreNamespaces = ['Network'];
 const ignoreMethods: string[] = [];
 
-export type { DebuggerPreference } from './types.mts';
+export type { DebuggerPreference, DevtoolEvents } from './types.mts';
+export { consoleMethods, type ConsoleMethod } from './utils.mts';
 export { createConsole } from './utils.mts';
 
 interface AgentRecord {

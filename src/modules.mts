@@ -97,7 +97,7 @@ export interface AbstractModuleInit {
   readonly Namespace: AbstractModuleRecord['Namespace'];
 }
 
-interface ResolveSetItem {
+export interface ResolveSetItem {
   readonly Module: AbstractModuleRecord;
   readonly ExportName: JSStringValue;
 }

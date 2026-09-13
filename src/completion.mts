@@ -26,23 +26,23 @@ let createContinueCompletion: (init: ContinueCompletionInit) => ContinueCompleti
 let createReturnCompletion: (init: ReturnCompletionInit) => ReturnCompletion;
 let createThrowCompletion: (init: ThrowCompletionInit) => ThrowCompletion_;
 
-type NormalCompletionInit<T> = Pick<NormalCompletion<T>, 'Type' | 'Value' | 'Target'>;
+export type NormalCompletionInit<T> = Pick<NormalCompletion<T>, 'Type' | 'Value' | 'Target'>;
 
-type BreakCompletionInit = Pick<BreakCompletion, 'Type' | 'Value' | 'Target'>;
+export type BreakCompletionInit = Pick<BreakCompletion, 'Type' | 'Value' | 'Target'>;
 
-type ContinueCompletionInit = Pick<ContinueCompletion, 'Type' | 'Value' | 'Target'>;
+export type ContinueCompletionInit = Pick<ContinueCompletion, 'Type' | 'Value' | 'Target'>;
 
-type ReturnCompletionInit = Pick<ReturnCompletion, 'Type' | 'Value' | 'Target'>;
+export type ReturnCompletionInit = Pick<ReturnCompletion, 'Type' | 'Value' | 'Target'>;
 
-type ThrowCompletionInit = Pick<ThrowCompletion, 'Type' | 'Value' | 'Target'>;
+export type ThrowCompletionInit = Pick<ThrowCompletion, 'Type' | 'Value' | 'Target'>;
 
-type AbruptCompletionInit =
+export type AbruptCompletionInit =
   | BreakCompletionInit
   | ContinueCompletionInit
   | ReturnCompletionInit
   | ThrowCompletionInit;
 
-type CompletionInit<T> =
+export type CompletionInit<T> =
   | NormalCompletionInit<T>
   | AbruptCompletionInit;
 
@@ -52,7 +52,7 @@ type CompletionInit<T> =
   // 2. Return completionRecord as the Completion Record of this abstract operation.
   return completionRecord;
 })
-class CompletionImpl<const T> {
+export class CompletionImpl<const T> {
   declare readonly Type: 'normal' | 'break' | 'continue' | 'return' | 'throw';
 
   readonly Value!: T | Value;
@@ -130,7 +130,7 @@ export const Completion = CompletionImpl as {
   // 1. Return Completion { [[Type]]: normal, [[Value]]: value, [[Target]]: empty }.
   return new Completion({ Type: 'normal', Value: value, Target: undefined });
 })
-class NormalCompletionImpl<const T> extends CompletionImpl<T> {
+export class NormalCompletionImpl<const T> extends CompletionImpl<T> {
   declare readonly Type: 'normal';
 
   declare readonly Value: T;
@@ -226,7 +226,7 @@ export class ContinueCompletion extends AbruptCompletion<void> {
   // 1. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: value as Value, Target: undefined });
 })
-class ReturnCompletion_ extends AbruptCompletion<Value> {
+export class ReturnCompletion_ extends AbruptCompletion<Value> {
   declare readonly Type: 'return';
 
   declare readonly Value: Value;
@@ -259,7 +259,7 @@ const debugging = false;
   // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: value as Value, Target: undefined });
 })
-class ThrowCompletion_<T extends Value = Value> extends AbruptCompletion<T> {
+export class ThrowCompletion_<T extends Value = Value> extends AbruptCompletion<T> {
   declare readonly Type: 'throw';
 
   declare readonly Value: T;
@@ -411,9 +411,9 @@ export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabili
  *     let val = Q(operation);
  * });
  */
-export function evalQ<T>(callback: (q: typeof Q) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
-export function evalQ<T>(callback: (q: typeof Q) => T): NormalCompletion<T> | ThrowCompletion
-export function evalQ<T>(callback: (q: typeof Q) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
+export function evalQ<T>(callback: (q: <const V>(completion: V) => Q<V>) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
+export function evalQ<T>(callback: (q: <const V>(completion: V) => Q<V>) => T): NormalCompletion<T> | ThrowCompletion
+export function evalQ<T>(callback: (q: <const V>(completion: V) => Q<V>) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
   try {
     const result = callback(Q_runtime);
     if (result instanceof Promise) {
@@ -438,7 +438,7 @@ export function evalQ<T>(callback: (q: typeof Q) => T | Promise<T>): Promise<Nor
 export type EnsureCompletion<T> = EnsureCompletionWorker<T, T>;
 
 // Distribute over `T`s that are `Completion`s, but don't distribute over `T`s that aren't `Completion`s
-type EnsureCompletionWorker<T, _T> = T extends Completion<unknown> ? T : NormalCompletion<Exclude<_T, PlainCompletion<unknown>>>;
+export type EnsureCompletionWorker<T, _T> = T extends Completion<unknown> ? T : NormalCompletion<Exclude<_T, PlainCompletion<unknown>>>;
 
 /** https://tc39.es/ecma262/#sec-implicit-normal-completion */
 export function EnsureCompletion(val: Value): NormalCompletion<Value>;

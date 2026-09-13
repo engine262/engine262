@@ -10,7 +10,7 @@ const {
 } = (decimal.default || decimal);
 
 
-type DecimalInit = string | number | bigint | decimal.Decimal | Decimal;
+export type DecimalInit = string | number | bigint | decimal.Decimal | Decimal;
 // @ts-expect-error
 export declare function Decimal(value: DecimalInit): Decimal;
 @callable((_, _t, args) => new Decimal(args[0] as DecimalInit))

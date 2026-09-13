@@ -68,7 +68,7 @@ export abstract class EnvironmentRecord {
   }
 }
 
-interface DeclarativeEnvironmentBinding {
+export interface DeclarativeEnvironmentBinding {
   readonly indirect: boolean;
   initialized: boolean;
   readonly mutable?: boolean;
@@ -79,7 +79,7 @@ interface DeclarativeEnvironmentBinding {
   mark(m: GCMarker): void;
 }
 
-interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
+export interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
   readonly target?: [AbstractModuleRecord, JSStringValue];
 }
 

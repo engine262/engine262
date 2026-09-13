@@ -111,9 +111,12 @@ export class ExecutionContextStack extends Array<ExecutionContext> {
     super(+length);
   }
 
-  // @ts-expect-error
-  override pop(ctx: ExecutionContext) {
-    if (!ctx.poppedForTailCall) {
+  override pop(ctx?: ExecutionContext): undefined {
+    if (!ctx) {
+      // TODO: add a eslint plugin for it.
+      throw new Error("ExecutionContextStack.pop() must be called with a context for the sanity check");
+    }
+    if (!ctx?.poppedForTailCall) {
       const popped = super.pop();
       Assert(popped === ctx);
     }

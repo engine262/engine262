@@ -1,17 +1,17 @@
-/** Coerces a property key into a numeric index */
-type ToIndex<T extends PropertyKey> =
-  T extends number ? ToIndex<`${T}`> :
+/** Coerces a property key into a numeric index. */
+export type ParserTokenIndex<T extends PropertyKey> =
+  T extends number ? ParserTokenIndex<`${T}`> :
   T extends `${bigint}` ? T extends `${infer I extends number}` ? I : never :
   never;
 
-type TokenDefinition = readonly [name: string, value: string | null];
+export type TokenDefinition = readonly [name: string, value: string | null];
 
 type TokenArrayToAssignTokenArray<A extends readonly TokenDefinition[]> = {
   readonly [P in keyof A]: readonly [`ASSIGN_${A[P][0]}`, `${A[P][1]}=`];
 };
 
-type TokenArrayToEnumLike<A extends readonly TokenDefinition[]> = {
-  readonly [I in ToIndex<keyof A> as A[I][0]]: I;
+export type TokenArrayToEnumLike<A extends readonly TokenDefinition[]> = {
+  readonly [I in ParserTokenIndex<keyof A> as A[I][0]]: I;
 };
 
 type TokenArrayToElementArray<A extends readonly TokenDefinition[], I extends 0 | 1> = {
@@ -19,8 +19,8 @@ type TokenArrayToElementArray<A extends readonly TokenDefinition[], I extends 0 
 };
 
 type TokenArrayToKeywordsArray<A extends readonly TokenDefinition[]> = readonly {
-  readonly [I in ToIndex<keyof A>]: A[I][1] extends Lowercase<A[I][0]> ? A[I][1] : never;
-}[ToIndex<keyof A>][];
+  readonly [I in ParserTokenIndex<keyof A>]: A[I][1] extends Lowercase<A[I][0]> ? A[I][1] : never;
+}[ParserTokenIndex<keyof A>][];
 
 type KeywordsArrayToEnumLike<A extends readonly string[]> = {
   readonly [P in A[number]]: typeof Token[Uppercase<P> & keyof typeof Token];

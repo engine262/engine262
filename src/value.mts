@@ -34,7 +34,7 @@ let createStringValue: (value: string) => JSStringValue; // set by static block 
 let createNumberValue: (value: number) => NumberValue; // set by static block in NumberValue for privileged access to constructor
 let createBigIntValue: (value: bigint) => BigIntValue; // set by static block in BigIntValue for privileged access to constructor
 
-abstract class BaseValue {
+export abstract class BaseValue {
   static declare readonly null: NullValue; // defined in static block of NullValue
 
   static declare readonly undefined: UndefinedValue; // defined in static block of UndefinedValue
@@ -761,7 +761,7 @@ export interface ObjectInternalMethods<Self> {
   Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
 }
 
-type ObjectSlotReturn = {
+export type ObjectSlotReturn = {
   [key in keyof ObjectInternalMethods<ObjectValue>]: ReturnType<NonNullable<ObjectInternalMethods<ObjectValue>[key]>>
 };
 /** https://tc39.es/ecma262/#sec-object-type */
@@ -971,7 +971,7 @@ export function SameType(x: Value, y: Value) {
   }
 }
 
-type SafeAccessMethods = 'map' | 'values' | 'entries' | 'filter' | 'forEach' | 'find';
+export type SafeAccessMethods = 'map' | 'values' | 'entries' | 'filter' | 'forEach' | 'find';
 // function* myFunction([callback]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator
 //                       ^^^^^^^^
 // if user calls myFunction with no arguments, callback would be undefined, not Value.undefined

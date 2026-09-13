@@ -8,7 +8,7 @@ import {
   X,
 } from '#self';
 
-const consoleMethods = [
+export const consoleMethods = [
   'log',
   'debug',
   'info',
@@ -28,7 +28,7 @@ const consoleMethods = [
   'count',
   'timeEnd',
 ] as const;
-type ConsoleMethod = typeof consoleMethods[number];
+export type ConsoleMethod = typeof consoleMethods[number];
 export function createConsole(
   realm: ManagedRealm,
   defaultBehaviour: Partial<Record<ConsoleMethod, (args: Arguments) => void | PlainCompletion<void> | PlainEvaluator<void>>> & { default?: (method: ConsoleMethod, args: Arguments) => void | PlainCompletion<void> | PlainEvaluator<void> },

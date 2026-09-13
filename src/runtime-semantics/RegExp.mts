@@ -49,7 +49,7 @@ class MatchState {
 }
 export { MatchState as RegExpState };
 
-type MatcherResult = MatchState | 'failure';
+export type MatcherResult = MatchState | 'failure';
 export type RegExpMatcher = (input: RegExpMatchingSource, index: number) => MatcherResult;
 
 // Note: A strict spec implementation cannot pass test262 because of stack overflow. We use generator to lift all calls to the top level.
@@ -380,7 +380,7 @@ export interface RegExpRecord {
   readonly CapturingGroupsCount: number;
 }
 
-interface Range {
+export interface Range {
   readonly startIndex: number;
   readonly endIndex: number;
 }
