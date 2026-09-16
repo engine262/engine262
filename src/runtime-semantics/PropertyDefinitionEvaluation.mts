@@ -1,5 +1,5 @@
 import {
-  Value, NullValue, ObjectValue, type PropertyKeyValue, JSStringValue, BooleanValue,
+  Value, NullValue, ObjectValue, type PropertyKeyValue, JSStringValue,
 } from '../value.mts';
 import {
   StringValue,
@@ -28,7 +28,7 @@ import {
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :
 //     PropertyDefinitionList `,` PropertyDefinition
-export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): PlainEvaluator {
+export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: boolean): PlainEvaluator {
   for (const PropertyDefinition of PropertyDefinitionList) {
     Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
   }
@@ -38,7 +38,7 @@ export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDef
 //   `...` AssignmentExpression
 //   IdentifierReference
 //   PropertyName `:` AssignmentExpression
-function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: ParseNode.PropertyDefinitionLike, object: ObjectValue, enumerable: BooleanValue<true>) {
+function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: ParseNode.PropertyDefinitionLike, object: ObjectValue, enumerable: boolean) {
   switch (PropertyDefinition.type) {
     case 'IdentifierReference':
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(PropertyDefinition, object, enumerable);
@@ -110,14 +110,14 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
     return NormalCompletion(undefined);
   }
   // 8. Assert: enumerable is true.
-  Assert(enumerable === Value.true);
+  Assert(enumerable);
   // 9. Assert: object is an ordinary, extensible object with no non-configurable properties.
   // 10. Return ! CreateDataPropertyOrThrow(object, propKey, propValue).
   return X(CreateDataPropertyOrThrow(object, propKey as PropertyKeyValue, X(propValue)));
 }
 
 // PropertyDefinition : IdentifierReference
-function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object: ObjectValue, enumerable: BooleanValue<true>): ValueEvaluator {
+function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object: ObjectValue, enumerable: boolean): ValueEvaluator {
   // 1. Let propName be StringValue of IdentifierReference.
   const propName = StringValue(IdentifierReference);
   // 2. Let exprValue be the result of evaluating IdentifierReference.
@@ -125,8 +125,8 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
   // 3. Let propValue be ? GetValue(exprValue).
   const propValue = Q(yield* GetValue(exprValue));
   // 4. Assert: enumerable is true.
-  Assert(enumerable === Value.true);
+  Assert(enumerable);
   // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.
   // 6. Return ! CreateDataPropertyOrThrow(object, propName, propValue).
-  return X(CreateDataPropertyOrThrow(object, propName, propValue));
+  return Value(X(CreateDataPropertyOrThrow(object, propName, propValue)));
 }

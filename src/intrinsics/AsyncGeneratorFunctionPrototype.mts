@@ -5,14 +5,14 @@ import type { Realm } from '#self';
 
 export function bootstrapAsyncGeneratorFunctionPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
-    ['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, { Writable: Value.false }],
+    ['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, { Writable: false }],
   ], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
 
   X((realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({
     Value: proto,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: false,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'] = proto;

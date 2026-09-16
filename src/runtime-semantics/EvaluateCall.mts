@@ -21,7 +21,7 @@ export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: P
   let thisValue;
   if (ref instanceof ReferenceRecord) {
     // a. If IsPropertyReference(ref) is true, then
-    if (IsPropertyReference(ref) === Value.true) {
+    if (IsPropertyReference(ref)) {
       // i. Let thisValue be GetThisValue(ref).
       thisValue = GetThisValue(ref);
     } else {

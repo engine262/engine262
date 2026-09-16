@@ -9,7 +9,6 @@ import {
   ModuleRecord,
 } from '../modules.mts';
 import {
-  BooleanValue,
   ObjectValue, Value,
 } from '../value.mts';
 import {
@@ -38,7 +37,6 @@ import {
   ModuleRequestsKeyEqual,
   type Arguments, type ImportAttributeRecord, type ImportedNamesValue, type ModuleRequestRecord, type PlainEvaluator, type ScriptRecord, type SourceTextModuleRecord,
   Throw,
-  JSStringValue,
   type HostLoadImportedModulePayloadOpaque,
 } from '#self';
 
@@ -421,17 +419,17 @@ export function InnerModuleLinking(
 }
 
 /** https://tc39.es/proposal-defer-import-eval/#sec-ismodulesccevaluated */
-export function IsModuleSCCEvaluated(module: CyclicModuleRecord): BooleanValue {
+export function IsModuleSCCEvaluated(module: CyclicModuleRecord): boolean {
   if (module.CycleRoot !== undefined) {
     if (module.CycleRoot.Status === 'evaluated') {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
   if (module.Status === 'evaluated') {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-ReadyForSyncExecution */
@@ -439,32 +437,32 @@ export function ReadyForSyncExecution(
   module: ModuleRecord,
   importedNames: ImportedNamesValue = 'all',
   seen: Set<CyclicModuleRecord> = new Set(),
-): BooleanValue {
+): boolean {
   // 1. If module is not a Cyclic Module Record, return true.
   if (!(module instanceof CyclicModuleRecord)) {
-    return Value.true;
+    return true;
   }
   // 2. If seen is not present, set seen to a new empty List.
   //    (handled via the default parameter above)
   // 3. If seen contains module, return true.
   if (seen.has(module)) {
-    return Value.true;
+    return true;
   }
   // 4. Append module to seen.
   seen.add(module);
   // 5. If IsModuleSCCEvaluated(module), return true.
-  if (IsModuleSCCEvaluated(module) === Value.true) {
-    return Value.true;
+  if (IsModuleSCCEvaluated(module)) {
+    return true;
   }
   // 6. If module.[[Status]] is evaluating or evaluating-async, return false.
   if (module.Status === 'evaluating' || module.Status === 'evaluating-async') {
-    return Value.false;
+    return false;
   }
   // 7. Assert: module.[[Status]] is linked.
   Assert(module.Status === 'linked');
   // 8. If module.[[HasTLA]] is true, return false.
-  if (module.HasTLA === Value.true) {
-    return Value.false;
+  if (module.HasTLA) {
+    return false;
   }
   // 9. Let requests be the list-concatenation of module.[[RequestedModules]] and module.GetOptionalIndirectExportsModuleRequests(importedNames).
   const requests = [...module.RequestedModules, ...module.GetOptionalIndirectExportsModuleRequests(importedNames)];
@@ -477,20 +475,20 @@ export function ReadyForSyncExecution(
     // a. Let requiredModule be GetImportedModule(module, request).
     const requiredModule = GetImportedModule(module, request);
     // b. If ReadyForSyncExecution(requiredModule, request.[[ImportedNames]], seen) is false, then
-    if (ReadyForSyncExecution(requiredModule, request.ImportedNames, seen) === Value.false) {
+    if (!ReadyForSyncExecution(requiredModule, request.ImportedNames, seen)) {
       // i. Return false.
-      return Value.false;
+      return false;
     }
   }
   // 11. Return true.
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-EvaluateModuleSync */
 export function* EvaluateModuleSync(module: ModuleRecord, importedNames: ImportedNamesValue = []): PlainEvaluator<undefined> {
   // 1. If importedNames is not present, set importedNames to « ».
   // 2. If ReadyForSyncExecution(module, importedNames) is false, throw a TypeError exception.
-  if (ReadyForSyncExecution(module, importedNames) === Value.false) {
+  if (!ReadyForSyncExecution(module, importedNames)) {
     return Throw.TypeError('Module "$1" is not ready for synchronous execution', (module as CyclicModuleRecord).HostDefined?.specifier ?? '<anonymous module>');
   }
   if (!(module instanceof CyclicModuleRecord && module.Status === 'evaluated')) {
@@ -592,7 +590,7 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     }
   }
   // 14. If module.[[HasTLA]] is true or module.[[PendingAsyncDependencies]] > 0, then
-  if (module.HasTLA === Value.true || module.PendingAsyncDependencies > 0) {
+  if (module.HasTLA || module.PendingAsyncDependencies > 0) {
     // a. Assert: module.[[AsyncEvaluationOrder]] is unset.
     Assert(module.AsyncEvaluationOrder === 'unset');
     // b. Set module.[[AsyncEvaluationOrder]] to IncrementModuleAsyncEvaluationCount().
@@ -658,11 +656,11 @@ export function GatherAsynchronousTransitiveDependencies(module: ModuleRecord, s
     return result;
   }
   // 6. If module.[[Status]] is evaluating or IsModuleSCCEvaluated(module), return result.
-  if (module.Status === 'evaluating' || IsModuleSCCEvaluated(module) === Value.true) {
+  if (module.Status === 'evaluating' || IsModuleSCCEvaluated(module)) {
     return result;
   }
   // 7. If module.[[HasTLA]] is true, then
-  if (module.HasTLA === Value.true) {
+  if (module.HasTLA) {
     // a. Append module to result.
     result.push(module);
     // b. Return result.
@@ -749,7 +747,7 @@ function* ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
   // 2. Assert: module.[[HasTLA]] is true.
-  Assert(module.HasTLA === Value.true);
+  Assert(module.HasTLA);
   // 3. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
@@ -799,7 +797,7 @@ function GatherAvailableAncestors(module: CyclicModuleRecord, execList: CyclicMo
         // 1. Append m to execList.
         execList.push(m);
         // 2. If m.[[HasTLA]] is false, perform GatherAvailableAncestors(m, execList).
-        if (m.HasTLA === Value.false) {
+        if (!m.HasTLA) {
           GatherAvailableAncestors(m, execList);
         }
       }
@@ -851,7 +849,7 @@ function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): PlainEvalua
     if (m.Status === 'evaluated') {
       // i. Assert: m.[[EvaluationError]] is not empty.
       Assert(m.EvaluationError !== undefined);
-    } else if (m.HasTLA === Value.true) { // b. Else if m.[[HasTLA]] is true, then
+    } else if (m.HasTLA) { // b. Else if m.[[HasTLA]] is true, then
       // i. Perform ExecuteAsyncModule(m).
       X(yield* ExecuteAsyncModule(m));
     } else { // c. Else,
@@ -991,8 +989,8 @@ export function GetModuleNamespace(
     const exportedNames = module.GetExportedNames();
     const unambiguousNames = [];
     for (const name of exportedNames) {
-      if (importedNames === 'all' || importedNames.includes(name.stringValue())) {
-        if (phase !== 'defer' || name.stringValue() !== 'then') {
+      if (importedNames === 'all' || importedNames.includes(name)) {
+        if (phase !== 'defer' || name !== 'then') {
           const resolution = module.ResolveExport(name);
           if (resolution instanceof ResolvedBindingRecord) {
             unambiguousNames.push(name);
@@ -1017,7 +1015,7 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
   const closure = function* closure(module: SyntheticModuleRecord): PlainEvaluator {
     // a. Return module.SetSyntheticExport("default", defaultExport).
-    Q(yield* module.SetSyntheticExport(Value('default'), defaultExport));
+    Q(yield* module.SetSyntheticExport('default', defaultExport));
     return NormalCompletion(undefined);
   };
   return new SyntheticModuleRecord({
@@ -1026,14 +1024,14 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
     Namespace: undefined,
     ModuleSource: undefined,
     HostDefined: undefined,
-    ExportNames: [Value('default')],
+    ExportNames: ['default'],
     EvaluationSteps: closure,
   });
 }
 
 /** https://tc39.es/proposal-import-text/#sec-create-text-module */
-export function CreateTextModule(source: JSStringValue) {
-  return CreateDefaultExportSyntheticModule(source);
+export function CreateTextModule(source: string) {
+  return CreateDefaultExportSyntheticModule(Value(source));
 }
 
 export function CreateBytesModule(arrayBuffer: ArrayBufferObject) {

@@ -41,14 +41,14 @@ export function* SortIndexedProperties(obj: ObjectValue, len: number, SortCompar
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
-    let kRead;
+    let kRead: boolean;
     if (holes === 'skip-holes') {
       kRead = Q(yield* HasProperty(obj, Pk));
     } else {
       Assert(holes === 'read-through-holes');
-      kRead = Value.true;
+      kRead = true;
     }
-    if (kRead === Value.true) {
+    if (kRead) {
       const kValue = Q(yield* Get(obj, Pk));
       items.push(kValue);
     }
@@ -94,16 +94,16 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      let kPresent;
+      let kPresent: boolean;
       if (kind === 'Array') {
         kPresent = Q(yield* HasProperty(O, Pk));
       } else {
-        kPresent = Value.true;
+        kPresent = true;
       }
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const kValue = Q(yield* Get(O, Pk));
         const testResult = ToBoolean(Q(yield* Call(callbackFn, thisArg, [kValue, F(k), O])));
-        if (testResult === Value.false) {
+        if (!testResult) {
           return Value.false;
         }
       }
@@ -126,7 +126,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       const Pk = X(ToString(F(k)));
       const kValue = Q(yield* Get(O, Pk));
       const testResult = ToBoolean(Q(yield* Call(predicate, thisArg, [kValue, F(k), O])));
-      if (testResult === Value.true) {
+      if (testResult) {
         return kValue;
       }
       k += 1;
@@ -148,7 +148,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       const Pk = X(ToString(F(k)));
       const kValue = Q(yield* Get(O, Pk));
       const testResult = ToBoolean(Q(yield* Call(predicate, thisArg, [kValue, F(k), O])));
-      if (testResult === Value.true) {
+      if (testResult) {
         return F(k);
       }
       k += 1;
@@ -179,7 +179,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
       const testResult = ToBoolean(Q(yield* Call(predicate, thisArg, [kValue, F(k), O])));
       // d. If testResult is true, return kValue.
-      if (testResult === Value.true) {
+      if (testResult) {
         return kValue;
       }
       // e. Set k to k - 1.
@@ -212,7 +212,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
       const testResult = ToBoolean(Q(yield* Call(predicate, thisArg, [kValue, F(k), O])));
       // d. If testResult is true, return 𝔽(k).
-      if (testResult === Value.true) {
+      if (testResult) {
         return F(k);
       }
       // e. Set k to k - 1.
@@ -234,13 +234,13 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      let kPresent;
+      let kPresent: boolean;
       if (kind === 'Array') {
         kPresent = Q(yield* HasProperty(O, Pk));
       } else {
-        kPresent = Value.true;
+        kPresent = true;
       }
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const kValue = Q(yield* Get(O, Pk));
         Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O]));
       }
@@ -283,7 +283,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     while (k < length) {
       const kStr = X(ToString(F(k)));
       const kPresent = Q(yield* HasProperty(O, kStr));
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const elementK = Q(yield* Get(O, kStr));
         const same = IsStrictlyEqual(searchElement, elementK);
         if (same) {
@@ -305,7 +305,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     if (separator instanceof UndefinedValue) {
       sep = ',';
     } else {
-      sep = Q(yield* ToString(separator)).stringValue();
+      sep = Q(yield* ToString(separator));
     }
     let R = '';
     let k = 0;
@@ -315,11 +315,11 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       }
       const kStr = X(ToString(F(k)));
       const element = Q(yield* Get(O, kStr));
-      let next;
+      let next: string;
       if (element instanceof UndefinedValue || element instanceof NullValue) {
         next = '';
       } else {
-        next = Q(yield* ToString(element)).stringValue();
+        next = Q(yield* ToString(element));
       }
       R = `${R}${next}`;
       k += 1;
@@ -345,7 +345,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     while (k >= 0) {
       const kStr = X(ToString(F(k)));
       const kPresent = Q(yield* HasProperty(O, kStr));
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const elementK = Q(yield* Get(O, kStr));
         const same = IsStrictlyEqual(searchElement, elementK);
         if (same) {
@@ -378,7 +378,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       while (kPresent === false && k < len) {
         const Pk = X(ToString(F(k)));
         if (kind === 'Array') {
-          kPresent = Q(yield* HasProperty(O, Pk)) === Value.true;
+          kPresent = Q(yield* HasProperty(O, Pk));
         } else {
           kPresent = true;
         }
@@ -393,13 +393,13 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     }
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      let kPresent;
+      let kPresent: boolean;
       if (kind === 'Array') {
         kPresent = Q(yield* HasProperty(O, Pk));
       } else {
-        kPresent = Value.true;
+        kPresent = true;
       }
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const kValue = Q(yield* Get(O, Pk));
         accumulator = Q(yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
       }
@@ -429,7 +429,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       while (kPresent === false && k >= 0) {
         const Pk = X(ToString(F(k)));
         if (kind === 'Array') {
-          kPresent = Q(yield* HasProperty(O, Pk)) === Value.true;
+          kPresent = Q(yield* HasProperty(O, Pk));
         } else {
           kPresent = true;
         }
@@ -444,13 +444,13 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     }
     while (k >= 0) {
       const Pk = X(ToString(F(k)));
-      let kPresent;
+      let kPresent: boolean;
       if (kind === 'Array') {
         kPresent = Q(yield* HasProperty(O, Pk));
       } else {
-        kPresent = Value.true;
+        kPresent = true;
       }
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const kValue = Q(yield* Get(O, Pk));
         accumulator = Q(yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
       }
@@ -474,22 +474,22 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       const lowerExists = Q(yield* HasProperty(O, lowerP));
       let lowerValue;
       let upperValue;
-      if (lowerExists === Value.true) {
+      if (lowerExists) {
         lowerValue = Q(yield* Get(O, lowerP));
       }
       const upperExists = Q(yield* HasProperty(O, upperP));
-      if (upperExists === Value.true) {
+      if (upperExists) {
         upperValue = Q(yield* Get(O, upperP));
       }
-      if (lowerExists === Value.true && upperExists === Value.true) {
-        Q(yield* Set(O, lowerP, upperValue as Value, Value.true));
-        Q(yield* Set(O, upperP, lowerValue as Value, Value.true));
-      } else if (lowerExists === Value.false && upperExists === Value.true) {
-        Q(yield* Set(O, lowerP, upperValue as Value, Value.true));
+      if (lowerExists && upperExists) {
+        Q(yield* Set(O, lowerP, upperValue as Value, true));
+        Q(yield* Set(O, upperP, lowerValue as Value, true));
+      } else if (!lowerExists && upperExists) {
+        Q(yield* Set(O, lowerP, upperValue as Value, true));
         Q(yield* DeletePropertyOrThrow(O, upperP));
-      } else if (lowerExists === Value.true && upperExists === Value.false) {
+      } else if (lowerExists && !upperExists) {
         Q(yield* DeletePropertyOrThrow(O, lowerP));
-        Q(yield* Set(O, upperP, lowerValue as Value, Value.true));
+        Q(yield* Set(O, upperP, lowerValue as Value, true));
       } else {
         // no further action is required
       }
@@ -510,16 +510,16 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      let kPresent;
+      let kPresent: boolean;
       if (kind === 'Array') {
         kPresent = Q(yield* HasProperty(O, Pk));
       } else {
-        kPresent = Value.true;
+        kPresent = true;
       }
-      if (kPresent === Value.true) {
+      if (kPresent) {
         const kValue = Q(yield* Get(O, Pk));
         const testResult = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O])));
-        if (testResult === Value.true) {
+        if (testResult) {
           return Value.true;
         }
       }
@@ -544,7 +544,7 @@ export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValu
       const kStr = X(ToString(F(k)));
       const nextElement = Q(yield* Get(array, kStr));
       if (nextElement !== Value.undefined && nextElement !== Value.null) {
-        const S = Q(yield* ToString(Q(yield* Invoke(nextElement, 'toLocaleString')))).stringValue();
+        const S = Q(yield* ToString(Q(yield* Invoke(nextElement, 'toLocaleString'))));
         R = `${R}${S}`;
       }
       k += 1;

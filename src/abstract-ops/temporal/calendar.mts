@@ -182,7 +182,7 @@ export function* PrepareCalendarFields(
       }
     } else {
       anyPresent = true;
-      if (property === 'era') result.Era = Q(yield* ToString(value)).stringValue();
+      if (property === 'era') result.Era = Q(yield* ToString(value));
       else if (property === 'eraYear') result.EraYear = Q(yield* SnapToInteger(value, 'truncate'));
       else if (property === 'year') result.Year = Q(yield* SnapToInteger(value, 'truncate'));
       else if (property === 'month') result.Month = Q(yield* SnapToInteger(value, 'truncate', 1n));

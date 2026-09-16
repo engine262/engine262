@@ -161,7 +161,8 @@ function* DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value
     littleEndian = Value.undefined;
   }
   // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigInt64, value).
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64 */
@@ -173,7 +174,8 @@ function* DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Valu
     littleEndian = Value.undefined;
   }
   // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigUint64, value).
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
@@ -182,7 +184,8 @@ function* DataViewProto_setFloat16([byteOffset = Value.undefined, value = Value.
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float16', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float16', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
@@ -191,7 +194,8 @@ function* DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float32', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float32', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64 */
@@ -200,13 +204,15 @@ function* DataViewProto_setFloat64([byteOffset = Value.undefined, value = Value.
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float64', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Float64', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint8 */
 function* DataViewProto_setInt8([byteOffset = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const v = thisValue;
-  return Q(yield* SetViewValue(v, byteOffset, Value.true, 'Int8', value));
+  Q(yield* SetViewValue(v, byteOffset, Value.true, 'Int8', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint16 */
@@ -215,7 +221,8 @@ function* DataViewProto_setInt16([byteOffset = Value.undefined, value = Value.un
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Int16', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Int16', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint32 */
@@ -224,13 +231,15 @@ function* DataViewProto_setInt32([byteOffset = Value.undefined, value = Value.un
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Int32', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Int32', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint8 */
 function* DataViewProto_setUint8([byteOffset = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const v = thisValue;
-  return Q(yield* SetViewValue(v, byteOffset, Value.true, 'Uint8', value));
+  Q(yield* SetViewValue(v, byteOffset, Value.true, 'Uint8', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint16 */
@@ -239,7 +248,8 @@ function* DataViewProto_setUint16([byteOffset = Value.undefined, value = Value.u
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Uint16', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Uint16', value));
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint32 */
@@ -248,7 +258,8 @@ function* DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.u
   if (littleEndian === undefined) {
     littleEndian = Value.false;
   }
-  return Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Uint32', value));
+  Q(yield* SetViewValue(v, byteOffset, littleEndian, 'Uint32', value));
+  return Value.undefined;
 }
 
 export function bootstrapDataViewPrototype(realmRec: Realm) {

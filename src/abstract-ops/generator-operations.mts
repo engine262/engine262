@@ -9,7 +9,7 @@ import {
 } from '../completion.mts';
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import {
-  JSStringValue, ObjectValue, Value,
+  ObjectValue, Value,
 } from '../value.mts';
 import {
   Evaluate, type ValueEvaluator, type YieldEvaluator,
@@ -22,7 +22,6 @@ import {
   CreateIteratorResultObject,
   OrdinaryObjectCreate,
   RequireInternalSlot,
-  SameValue,
   type IteratorRecord,
   type OrdinaryObject,
 } from './all.mts';
@@ -34,7 +33,7 @@ import {
 export interface GeneratorObject extends OrdinaryObject {
   GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | undefined;
   GeneratorContext: ExecutionContext | null;
-  readonly GeneratorBrand: JSStringValue | undefined;
+  readonly GeneratorBrand: string | undefined;
   UnderlyingIterators?: IteratorRecord[];
   // NON-SPEC
   HostCapturedValues?: readonly Value[];
@@ -94,7 +93,7 @@ export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseN
         resultValue = result.Value;
       }
       // k. Let resumption be NormalCompletion(CreateIteratorResultObject(resultValue, true)).
-      resumption = CreateIteratorResultObject(resultValue, Value.true);
+      resumption = CreateIteratorResultObject(resultValue, true);
     }
     // l. Let callerContext be the running execution context.
     // m. Resume callerContext, passing resumption.
@@ -114,10 +113,10 @@ export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseN
   // 7. Return unused.
 }
 
-export function generatorBrandToErrorMessageType(generatorBrand: JSStringValue | undefined) {
+export function generatorBrandToErrorMessageType(generatorBrand: string | undefined) {
   let expectedType;
   if (generatorBrand !== undefined) {
-    expectedType = generatorBrand.stringValue();
+    expectedType = generatorBrand;
     if (expectedType.startsWith('%') && expectedType.endsWith('Prototype%')) {
       expectedType = expectedType.slice(1, -10).trim();
       if (expectedType.endsWith('Iterator')) {
@@ -129,7 +128,7 @@ export function generatorBrandToErrorMessageType(generatorBrand: JSStringValue |
 }
 
 /** https://tc39.es/ecma262/#sec-generatorvalidate */
-export function GeneratorValidate(generator: Value, generatorBrand: JSStringValue | undefined) {
+export function GeneratorValidate(generator: Value, generatorBrand: string | undefined) {
   // 1. Perform ? RequireInternalSlot(generator, [[GeneratorState]]).
   Q(RequireInternalSlot(generator, 'GeneratorState'));
   // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
@@ -137,11 +136,7 @@ export function GeneratorValidate(generator: Value, generatorBrand: JSStringValu
   __ts_cast__<GeneratorObject>(generator);
   // 3. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
-  if (
-    brand === undefined || generatorBrand === undefined
-      ? brand !== generatorBrand
-      : !SameValue(brand, generatorBrand)
-  ) {
+  if (brand !== generatorBrand) {
     return Throw.TypeError('$1 is not a $2 object', generator, generatorBrandToErrorMessageType(generatorBrand) || 'Generator');
   }
   // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
@@ -157,13 +152,13 @@ export function GeneratorValidate(generator: Value, generatorBrand: JSStringValu
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresume */
-export function* GeneratorResume(generator: Value, value: Value | undefined, generatorBrand: JSStringValue | undefined): ValueEvaluator {
+export function* GeneratorResume(generator: Value, value: Value | undefined, generatorBrand: string | undefined): ValueEvaluator {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   const state = Q(GeneratorValidate(generator, generatorBrand));
   __ts_cast__<GeneratorObject>(generator);
   // 2. If state is completed, return CreateIteratorResultObject(undefined, true).
   if (state === 'completed') {
-    return X(CreateIteratorResultObject(Value.undefined, Value.true));
+    return X(CreateIteratorResultObject(Value.undefined, true));
   }
   // 3. Assert: state is either suspendedStart or suspendedYield.
   Assert(state === 'suspendedStart' || state === 'suspendedYield');
@@ -177,7 +172,7 @@ export function* GeneratorResume(generator: Value, value: Value | undefined, gen
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
-export function* GeneratorResumeAbrupt(generator: Value, abruptCompletion: ThrowCompletion | ReturnCompletion, generatorBrand: JSStringValue | undefined): ValueEvaluator {
+export function* GeneratorResumeAbrupt(generator: Value, abruptCompletion: ThrowCompletion | ReturnCompletion, generatorBrand: string | undefined): ValueEvaluator {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   let state = Q(GeneratorValidate(generator, generatorBrand));
   __ts_cast__<GeneratorObject>(generator);
@@ -197,7 +192,7 @@ export function* GeneratorResumeAbrupt(generator: Value, abruptCompletion: Throw
     // a. If abruptCompletion.[[Type]] is return, then
     if (abruptCompletion.Type === 'return') {
       // i. Return CreateIteratorResultObject(abruptCompletion.[[Value]], true).
-      return X(CreateIteratorResultObject(abruptCompletion.Value, Value.true));
+      return X(CreateIteratorResultObject(abruptCompletion.Value, true));
     }
     // b. Return Completion(abruptCompletion).
     return Completion(abruptCompletion);
@@ -251,11 +246,11 @@ export function* Yield(value: Value): YieldEvaluator {
     return Q(yield* AsyncGeneratorYield(Q(yield* Await(value))));
   }
   // 3. Otherwise, return ? GeneratorYield(CreateIteratorResultObject(value, false)).
-  return Q(yield* GeneratorYield(CreateIteratorResultObject(value, Value.false)));
+  return Q(yield* GeneratorYield(CreateIteratorResultObject(value, false)));
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject> {
+export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject> {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
   // 2. If extraSlots is not present, set extraSlots to a new empty List.

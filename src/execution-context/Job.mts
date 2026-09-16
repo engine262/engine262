@@ -1,6 +1,6 @@
 import type { kAsyncContext } from '../utils/internal.mts';
 import {
-  type Realm, type AbstractModuleRecord, type ScriptRecord, type NullValue, type ExecutionContext, type FunctionObject,
+  type Realm, type AbstractModuleRecord, type ScriptRecord, type ExecutionContext, type FunctionObject,
   Assert,
   Call,
   IsCallable,
@@ -18,7 +18,7 @@ export interface Job {
   readonly queueName: string;
   readonly job: () => PlainEvaluator<unknown>;
   readonly callerRealm: Realm | undefined;
-  readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
+  readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
 }
 
 /** https://tc39.es/ecma262/#sec-jobcallback-records */

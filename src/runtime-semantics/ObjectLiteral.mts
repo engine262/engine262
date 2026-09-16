@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { ValueEvaluator } from '../evaluator.mts';
@@ -19,7 +18,7 @@ export function* Evaluate_ObjectLiteral({ PropertyDefinitionList }: ParseNode.Ob
     return obj;
   }
   // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with arguments obj and true.
-  Q(yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true));
+  Q(yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, true));
   // 3. Return obj.
   return obj;
 }

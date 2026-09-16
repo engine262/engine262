@@ -49,7 +49,7 @@ function* WrapForValidIteratorPrototype_return(_args: Arguments, { thisValue }: 
   // 6. If returnMethod is undefined, then
   if (returnMethod instanceof UndefinedValue) {
     // a. Return CreateIteratorResultObject(undefined, true).
-    return CreateIteratorResultObject(Value.undefined, Value.true);
+    return CreateIteratorResultObject(Value.undefined, true);
   }
   // 7. Return ? Call(returnMethod, iterator).
   return Q(yield* Call(returnMethod, iterator));

@@ -1,4 +1,3 @@
-import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { LabelledEvaluation } from './all.mts';
 
@@ -12,7 +11,7 @@ import { LabelledEvaluation } from './all.mts';
 //     (WhileStatement)
 export function Evaluate_BreakableStatement(BreakableStatement: ParseNode.BreakableStatement) {
   // 1. Let newLabelSet be a new empty List.
-  const newLabelSet = new JSStringSet();
+  const newLabelSet = new Set<string>();
   // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
   return LabelledEvaluation(BreakableStatement, newLabelSet);
 }

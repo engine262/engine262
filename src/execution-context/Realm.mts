@@ -284,17 +284,17 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
   ] as const) {
     X(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: value,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
     })));
   }
 
   X(DefinePropertyOrThrow(global, 'globalThis', Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   for (const name of [
@@ -370,9 +370,9 @@ export function SetDefaultGlobalBindings(realmRec: Realm) {
     }
     X(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: value,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
     })));
   }
 }

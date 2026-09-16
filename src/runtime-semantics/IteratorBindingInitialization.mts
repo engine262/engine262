@@ -32,7 +32,7 @@ import {
 // FormalParameters :
 //   [empty]
 //   FormalParameterList `,` FunctionRestParameter
-export function* IteratorBindingInitialization_FormalParameters(FormalParameters: ParseNode.FormalParameters, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
+export function* IteratorBindingInitialization_FormalParameters(FormalParameters: ParseNode.FormalParameters, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined) {
   if (FormalParameters.length === 0) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -50,21 +50,21 @@ export function* IteratorBindingInitialization_FormalParameters(FormalParameters
 }
 
 // FormalParameter : BindingElement
-function IteratorBindingInitialization_FormalParameter(BindingElement: ParseNode.FormalParametersElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
+function IteratorBindingInitialization_FormalParameter(BindingElement: ParseNode.FormalParametersElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined) {
   // TODO
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return IteratorBindingInitialization_BindingElement(BindingElement as any, iteratorRecord, environment);
 }
 
 // FunctionRestParameter : BindingRestElement
-function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter: ParseNode.FunctionRestParameter, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
+function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter: ParseNode.FunctionRestParameter, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined) {
   return IteratorBindingInitialization_BindingRestElement(FunctionRestParameter, iteratorRecord, environment);
 }
 
 // BindingElement :
 //   SingleNameBinding
 //   BindingPattern
-function IteratorBindingInitialization_BindingElement(BindingElement: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
+function IteratorBindingInitialization_BindingElement(BindingElement: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined) {
   if ('BindingPattern' in BindingElement) {
     return IteratorBindingInitialization_BindingPattern(BindingElement, iteratorRecord, environment);
   }
@@ -72,7 +72,7 @@ function IteratorBindingInitialization_BindingElement(BindingElement: ParseNode.
 }
 
 // SingleNameBinding : BindingIdentifier Initializer?
-function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, Initializer }: ParseNode.SingleNameBinding, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
+function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, Initializer }: ParseNode.SingleNameBinding, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined): PlainEvaluator {
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier);
   // 2. Let lhs be ? ResolveBinding(bindingId, environment).
@@ -97,7 +97,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
     }
   }
   // 6. If environment is undefined, return ? PutValue(lhs, v).
-  if (environment === Value.undefined) {
+  if (!environment) {
     return Q(yield* PutValue(lhs, v));
   }
   // 7. Return InitializeReferencedBinding(lhs, v).
@@ -107,7 +107,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
 // BindingRestElement :
 //   `...` BindingIdentifier
 //   `...` BindingPattern
-function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, BindingPattern }: ParseNode.BindingRestElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
+function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, BindingPattern }: ParseNode.BindingRestElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined) {
   if (BindingIdentifier) {
     // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
     const lhs = Q(yield* ResolveBinding(StringValue(BindingIdentifier), BindingIdentifier.strict, environment));
@@ -125,7 +125,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       }
       if (next === 'done') {
         // i. If environment is undefined, return ? PutValue(lhs, A).
-        if (environment === Value.undefined) {
+        if (!environment) {
           return Q(yield* PutValue(lhs, array));
         }
         // ii. Return InitializeReferencedBinding(lhs, A).
@@ -162,7 +162,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
   }
 }
 
-function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initializer }: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
+function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initializer }: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined) {
   let v: Value = Value.undefined;
   // 1. If iteratorRecord.[[Done]] is false, then
   if (!iteratorRecord.Done) {
@@ -194,7 +194,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.Elision, ite
   return NormalCompletion(undefined);
 }
 
-export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
+export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined): PlainEvaluator {
   for (const BindingElement of BindingElementList) {
     if (BindingElement.type === 'Elision') {
       Q(yield* IteratorDestructuringAssignmentEvaluation(BindingElement, iteratorRecord));

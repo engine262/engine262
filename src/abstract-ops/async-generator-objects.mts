@@ -11,7 +11,7 @@ import {
 } from '../completion.mts';
 import { Evaluate, type PlainEvaluator, type YieldEvaluator } from '../evaluator.mts';
 import {
-  BooleanValue, JSStringValue, Value, type Arguments,
+  Value, type Arguments,
   type NativeSteps,
 } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
@@ -27,7 +27,6 @@ import {
   PromiseCapabilityRecord,
   PromiseResolve,
   RequireInternalSlot,
-  SameValue,
   type OrdinaryObject,
 } from './all.mts';
 import {
@@ -56,7 +55,7 @@ export interface AsyncGeneratorObject extends OrdinaryObject {
   AsyncGeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | 'draining-queue';
   AsyncGeneratorContext: ExecutionContext;
   AsyncGeneratorQueue: AsyncGeneratorRequestRecord[];
-  GeneratorBrand: JSStringValue | undefined;
+  GeneratorBrand: string | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorstart */
@@ -96,7 +95,7 @@ export function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBo
       result = NormalCompletion(result.Value);
     }
     // h. Perform AsyncGeneratorCompleteStep(generator, result, true).
-    AsyncGeneratorCompleteStep(acGenerator, result, Value.true);
+    AsyncGeneratorCompleteStep(acGenerator, result, true);
     // i. Perform AsyncGeneratorDrainQueue(generator).
     yield* AsyncGeneratorDrainQueue(acGenerator);
     // j. Let callerContext be the running execution context.
@@ -116,7 +115,7 @@ export function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBo
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
-export function AsyncGeneratorValidate(generator: Value, generatorBrand: JSStringValue | undefined) {
+export function AsyncGeneratorValidate(generator: Value, generatorBrand: string | undefined) {
   // 1. Perform ? RequireInternalSlot(generator, [[AsyncGeneratorContext]]).
   Q(RequireInternalSlot(generator, 'AsyncGeneratorContext'));
   // 2. Perform ? RequireInternalSlot(generator, [[AsyncGeneratorState]]).
@@ -126,11 +125,7 @@ export function AsyncGeneratorValidate(generator: Value, generatorBrand: JSStrin
   __ts_cast__<AsyncGeneratorObject>(generator);
   // 4. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
-  if (
-    brand === undefined || generatorBrand === undefined
-      ? brand !== generatorBrand
-      : !SameValue(brand, generatorBrand)
-  ) {
+  if (brand !== generatorBrand) {
     return Throw.TypeError('$1 is not a $2', generator, generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator');
   }
   return undefined;
@@ -145,7 +140,7 @@ export function AsyncGeneratorEnqueue(generator: AsyncGeneratorObject, completio
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep */
-function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion: YieldCompletion, done: BooleanValue, realm?: Realm) {
+function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion: YieldCompletion, done: boolean, realm?: Realm) {
   // 1. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
   // 2. Assert: queue is not empty.
@@ -231,7 +226,7 @@ export function* AsyncGeneratorYield(arg: Value): YieldEvaluator {
   const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
 
   const previousRealm = previousContext.Realm;
-  AsyncGeneratorCompleteStep(gen, completion, Value.false, previousRealm);
+  AsyncGeneratorCompleteStep(gen, completion, false, previousRealm);
   const queue = gen.AsyncGeneratorQueue;
   if (queue.length) {
     // a. NOTE: Execution continues without suspending the generator.
@@ -260,7 +255,7 @@ export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Pla
   // 6. Let promise be PromiseResolve(%Promise%, completion.[[Value]]).
   const promiseCompletion = yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
   if (promiseCompletion instanceof AbruptCompletion) {
-    AsyncGeneratorCompleteStep(generator, promiseCompletion, Value.true);
+    AsyncGeneratorCompleteStep(generator, promiseCompletion, true);
     yield* AsyncGeneratorDrainQueue(generator);
     return;
   }
@@ -271,7 +266,7 @@ export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Pla
     // b. Let result be NormalCompletion(value).
     const result = NormalCompletion(value);
     // c. Perform AsyncGeneratorCompleteStep(generator, result, true).
-    AsyncGeneratorCompleteStep(generator, result, Value.true);
+    AsyncGeneratorCompleteStep(generator, result, true);
     // d. Perform AsyncGeneratorDrainQueue(generator).
     yield* AsyncGeneratorDrainQueue(generator);
     // e. Return undefined.
@@ -285,7 +280,7 @@ export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Pla
     // b. Let result be ThrowCompletion(reason).
     const result = ThrowCompletion(reason);
     // c. Perform AsyncGeneratorCompleteStep(generator, result, true).
-    AsyncGeneratorCompleteStep(generator, result, Value.true);
+    AsyncGeneratorCompleteStep(generator, result, true);
     // d. Perform AsyncGeneratorDrainQueue(generator).
     yield* AsyncGeneratorDrainQueue(generator);
     // e. Return undefined.
@@ -313,7 +308,7 @@ function* AsyncGeneratorDrainQueue(generator: AsyncGeneratorObject) {
       if (completion instanceof NormalCompletion) {
         completion = NormalCompletion(Value.undefined);
       }
-      AsyncGeneratorCompleteStep(generator, completion, Value.true);
+      AsyncGeneratorCompleteStep(generator, completion, true);
     }
   }
   generator.AsyncGeneratorState = 'completed';

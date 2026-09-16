@@ -28,7 +28,7 @@ export function* GetRoundingModeOption(
 ): PlainEvaluator<RoundingMode> {
   const value = Q(yield* Get(options, 'roundingMode'));
   if (value instanceof UndefinedValue) return fallback;
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   const acceptedValues = ['ceil', 'floor', 'expand', 'trunc', 'halfCeil', 'halfFloor', 'halfExpand', 'halfTrunc', 'halfEven'] as readonly RoundingMode[];
   if (!acceptedValues.includes(stringValue as RoundingMode)) {
     return Throw.RangeError('"roundingMode" on object $1 is not valid ($2), only $3 are accepted', options, stringValue, acceptedValues.join(', '));

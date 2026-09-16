@@ -85,7 +85,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
         // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
         const entry: ImportEntry = {
           ModuleRequest: module,
-          ImportName: importName,
+          ImportName: Value(importName),
           LocalName: localName,
           NamespaceNamesFilter: [],
         };
@@ -97,7 +97,7 @@ export function ImportEntriesForModule(node: ParseNode, module: ModuleRequestRec
         // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: localName, [[LocalName]]: localName }.
         const entry: ImportEntry = {
           ModuleRequest: module,
-          ImportName: localName,
+          ImportName: Value(localName),
           LocalName: localName,
           NamespaceNamesFilter: [],
         };

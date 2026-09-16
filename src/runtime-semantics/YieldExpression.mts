@@ -65,7 +65,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         // iv. Let done be ? IteratorComplete(innerResult).
         const done = Q(yield* IteratorComplete(innerResult));
         // v. If done is true, then
-        if (done === Value.true) {
+        if (done) {
           // 1. Return ? IteratorValue(innerResult).
           return Q(yield* IteratorValue(innerResult));
         }
@@ -94,7 +94,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
           // 5. Let done be ? IteratorComplete(innerResult).
           const done = Q(yield* IteratorComplete(innerResult));
           // 6. If done is true, then
-          if (done === Value.true) {
+          if (done) {
             // a. Return ? IteratorValue(innerResult).
             return Q(yield* IteratorValue(innerResult));
           }
@@ -147,7 +147,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         // vii. Let done be ? IteratorComplete(innerReturnResult).
         const done = Q(yield* IteratorComplete(innerReturnResult));
         // viii. If done is true, then
-        if (done === Value.true) {
+        if (done) {
           // 1. Set returnedValue to ? IteratorValue(innerReturnResult).
           const returnedValue = Q(yield* IteratorValue(innerReturnResult));
           // 2. Return ReturnCompletion(value).

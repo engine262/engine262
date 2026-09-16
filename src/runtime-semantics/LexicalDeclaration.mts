@@ -42,7 +42,7 @@ function* BindingEvaluation_LexicalBinding(
           value = Q(yield* GetValue(rhs));
         }
         if (kind !== 'normal') {
-          Assert(IsUnresolvableReference(lhs) === Value.false);
+          Assert(!IsUnresolvableReference(lhs));
           const base = lhs.Base;
           Assert(base instanceof DeclarativeEnvironmentRecord);
           Q(yield* AddDisposableResource(base.DisposableResourceStack, value, kind));

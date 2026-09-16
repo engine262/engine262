@@ -25,7 +25,7 @@ export function* ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryO
       // ii. Let rstr be ? ToString(rprim).
       const rstr = Q(yield* ToString(rprim));
       // iii. Return the string-concatenation of lstr and rstr.
-      return Value(lstr.stringValue() + rstr.stringValue());
+      return Value(lstr + rstr);
     }
     // d. Set lval to lprim.
     lval = lprim;

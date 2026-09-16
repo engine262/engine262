@@ -172,7 +172,7 @@ export function createFileSystemModuleLoader(options: FileSystemLoaderOptions = 
             return Value.undefined;
           },
           callerRealm: undefined,
-          callerScriptOrModule: Value.null,
+          callerScriptOrModule: null,
         };
         const result = { err: null as unknown, data: '' };
         surroundingAgent.eventLoop.enqueueAsync('poll', job, (enqueue) => {
@@ -207,7 +207,7 @@ export function createFileSystemModuleLoader(options: FileSystemLoaderOptions = 
             return Value.undefined;
           },
           callerRealm: undefined,
-          callerScriptOrModule: Value.null,
+          callerScriptOrModule: null,
         };
         const result = { err: null as unknown, data: new Uint8Array() };
         surroundingAgent.eventLoop.enqueueAsync('poll', job, (enqueue) => {

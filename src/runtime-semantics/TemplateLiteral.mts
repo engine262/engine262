@@ -27,7 +27,7 @@ export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }: 
     // 4. Let middle be ? ToString(sub).
     const middle = Q(yield* ToString(sub));
     str += head;
-    str += middle.stringValue();
+    str += middle;
   }
   const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
   return Value(str + tail);

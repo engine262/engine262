@@ -33,8 +33,8 @@ import {
 } from '#self';
 
 export interface RegExpObject extends OrdinaryObject {
-  readonly OriginalSource: JSStringValue;
-  readonly OriginalFlags: JSStringValue;
+  readonly OriginalSource: string;
+  readonly OriginalFlags: string;
   readonly RegExpMatcher: RegExpMatcher;
   readonly RegExpRecord: RegExpRecord;
   readonly parsedPattern: ParseNode.RegExp.Pattern;
@@ -52,7 +52,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
     // a. Let newTarget be the active function object.
     newTarget = surroundingAgent.activeFunctionObject;
     // b. If patternIsRegExp is true and flags is undefined, then
-    if (patternIsRegExp === Value.true && flags === Value.undefined) {
+    if (patternIsRegExp && flags === Value.undefined) {
       // i. Let patternConstructor be ? Get(pattern, "constructor").
       const patternConstructor = Q(yield* Get(pattern as ObjectValue, 'constructor'));
       // ii. If SameValue(newTarget, patternConstructor) is true, return pattern.
@@ -63,19 +63,19 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
   } else { // 3. Else, let newTarget be NewTarget.
     newTarget = NewTarget;
   }
-  let P;
-  let F;
+  let P: string | Value;
+  let F: string | Value;
   // 4. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
   if (isRegExpObject(pattern)) {
     // a. Let P be pattern.[[OriginalSource]].
-    P = pattern.OriginalSource;
+    P = Value(pattern.OriginalSource);
     // b. If flags is undefined, let F be pattern.[[OriginalFlags]].
     if (flags === Value.undefined) {
       F = pattern.OriginalFlags;
     } else { // c. Else, let F be flags.
       F = flags;
     }
-  } else if (patternIsRegExp === Value.true) { // 5. Else if patternIsRegExp is true, then
+  } else if (patternIsRegExp) { // 5. Else if patternIsRegExp is true, then
     // a. Else if patternIsRegExp is true, then
     P = Q(yield* Get(pattern as ObjectValue, 'source'));
     // b. If flags is undefined, then

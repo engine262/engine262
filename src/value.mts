@@ -28,6 +28,12 @@ import {
   Throw,
   surroundingAgent,
   type Integer,
+  type FullyPopulatedDescriptor,
+  type AccessorDescriptor,
+  type FullyPopulatedDataDescriptor,
+  type GenericDescriptor,
+  type DataDescriptor,
+  type FullyPopulatedAccessorDescriptor,
 } from '#self';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
@@ -218,9 +224,9 @@ export class JSStringValue extends PrimitiveValue {
 export class SymbolValue extends PrimitiveValue {
   declare readonly type: 'Symbol'; // defined on prototype by static block
 
-  readonly Description: JSStringValue | UndefinedValue;
+  readonly Description: string | undefined;
 
-  constructor(Description: JSStringValue | UndefinedValue) {
+  constructor(Description: string | undefined) {
     super();
     this.Description = Description;
   }
@@ -234,21 +240,21 @@ export class SymbolValue extends PrimitiveValue {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export const wellKnownSymbols = {
-  asyncDispose: new SymbolValue(Value('Symbol.asyncDispose')),
-  asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
-  dispose: new SymbolValue(Value('Symbol.dispose')),
-  hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
-  isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
-  iterator: new SymbolValue(Value('Symbol.iterator')),
-  match: new SymbolValue(Value('Symbol.match')),
-  matchAll: new SymbolValue(Value('Symbol.matchAll')),
-  replace: new SymbolValue(Value('Symbol.replace')),
-  search: new SymbolValue(Value('Symbol.search')),
-  species: new SymbolValue(Value('Symbol.species')),
-  split: new SymbolValue(Value('Symbol.split')),
-  toPrimitive: new SymbolValue(Value('Symbol.toPrimitive')),
-  toStringTag: new SymbolValue(Value('Symbol.toStringTag')),
-  unscopables: new SymbolValue(Value('Symbol.unscopables')),
+  asyncDispose: new SymbolValue('Symbol.asyncDispose'),
+  asyncIterator: new SymbolValue('Symbol.asyncIterator'),
+  dispose: new SymbolValue('Symbol.dispose'),
+  hasInstance: new SymbolValue('Symbol.hasInstance'),
+  isConcatSpreadable: new SymbolValue('Symbol.isConcatSpreadable'),
+  iterator: new SymbolValue('Symbol.iterator'),
+  match: new SymbolValue('Symbol.match'),
+  matchAll: new SymbolValue('Symbol.matchAll'),
+  replace: new SymbolValue('Symbol.replace'),
+  search: new SymbolValue('Symbol.search'),
+  species: new SymbolValue('Symbol.species'),
+  split: new SymbolValue('Symbol.split'),
+  toPrimitive: new SymbolValue('Symbol.toPrimitive'),
+  toStringTag: new SymbolValue('Symbol.toStringTag'),
+  unscopables: new SymbolValue('Symbol.unscopables'),
 } as const;
 Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
@@ -369,82 +375,82 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
-  static lessThan(x: NumberValue, y: NumberValue) {
+  static lessThan(x: NumberValue, y: NumberValue): boolean | undefined {
     if (x.isNaN()) {
-      return Value.undefined;
+      return undefined;
     }
     if (y.isNaN()) {
-      return Value.undefined;
+      return undefined;
     }
     // If nx and ny are the same Number value, return false.
     // If nx is +0 and ny is -0, return false.
     // If nx is -0 and ny is +0, return false.
     if (R(x) === R(y)) {
-      return Value.false;
+      return false;
     }
     if (R(x) === +Infinity) {
-      return Value.false;
+      return false;
     }
     if (R(y) === +Infinity) {
-      return Value.true;
+      return true;
     }
     if (R(y) === -Infinity) {
-      return Value.false;
+      return false;
     }
     if (R(x) === -Infinity) {
-      return Value.true;
+      return true;
     }
-    return R(x) < R(y) ? Value.true : Value.false;
+    return R(x) < R(y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
-  static equal(x: NumberValue, y: NumberValue) {
+  static equal(x: NumberValue, y: NumberValue): boolean {
     if (x.isNaN()) {
-      return Value.false;
+      return false;
     }
     if (y.isNaN()) {
-      return Value.false;
+      return false;
     }
     const xVal = R(x);
     const yVal = R(y);
     if (xVal === yVal) {
-      return Value.true;
+      return true;
     }
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return Value.true;
+      return true;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
-  static sameValue(x: NumberValue, y: NumberValue) {
+  static sameValue(x: NumberValue, y: NumberValue): boolean {
     if (x.isNaN() && y.isNaN()) {
-      return Value.true;
+      return true;
     }
     const xVal = x.value;
     const yVal = y.value;
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return Value.false;
+      return false;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return Value.false;
+      return false;
     }
     if (xVal === yVal) {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
-  static sameValueZero(x: NumberValue, y: NumberValue) {
-    if (x.isNaN() && y.isNaN()) return Value.true;
-    if (Object.is(x.value, 0) && Object.is(y.value, -0)) return Value.true;
-    if (Object.is(x.value, -0) && Object.is(y.value, 0)) return Value.true;
-    if (x.value === y.value) return Value.true;
-    return Value.false;
+  static sameValueZero(x: NumberValue, y: NumberValue): boolean {
+    if (x.isNaN() && y.isNaN()) return true;
+    if (Object.is(x.value, 0) && Object.is(y.value, -0)) return true;
+    if (Object.is(x.value, -0) && Object.is(y.value, 0)) return true;
+    if (x.value === y.value) return true;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
@@ -466,12 +472,12 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static override toString(x: NumberValue, radix: Integer): JSStringValue {
-    if (x.isNaN()) return Value('NaN');
-    if (Object.is(x.value, -0) || Object.is(x.value, 0)) return Value('0');
-    if (x.value < 0) return Value(`-${NumberValue.toString(F(-x.value), radix).stringValue()}`);
-    if (x.isInfinity()) return Value('Infinity');
-    return Value(`${x.value.toString(Number(radix))}`);
+  static override toString(x: NumberValue, radix: Integer): string {
+    if (x.isNaN()) return 'NaN';
+    if (Object.is(x.value, -0) || Object.is(x.value, 0)) return '0';
+    if (x.value < 0) return `-${NumberValue.toString(F(-x.value), radix)}`;
+    if (x.isInfinity()) return 'Infinity';
+    return `${x.value.toString(Number(radix))}`;
   }
 
   static readonly unit = new NumberValue(1);
@@ -616,26 +622,14 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
-  static lessThan(x: BigIntValue, y: BigIntValue) {
-    return R(x) < R(y) ? Value.true : Value.false;
+  static lessThan(x: BigIntValue, y: BigIntValue): boolean {
+    return R(x) < R(y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
-  static equal(x: BigIntValue, y: BigIntValue) {
+  static equal(x: BigIntValue, y: BigIntValue): boolean {
     // Return true if x and y have the same mathematical integer value and false otherwise.
-    return R(x) === R(y) ? Value.true : Value.false;
-  }
-
-  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-  static sameValue(x: BigIntValue, y: BigIntValue) {
-    // 1. Return BigInt::equal(x, y).
-    return BigIntValue.equal(x, y);
-  }
-
-  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-  static sameValueZero(x: BigIntValue, y: BigIntValue) {
-    // 1. Return BigInt::equal(x, y).
-    return BigIntValue.equal(x, y);
+    return R(x) === R(y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
@@ -657,14 +651,14 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static override toString(x: BigIntValue, radix: Integer): JSStringValue {
+  static override toString(x: BigIntValue, radix: Integer): string {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (R(x) < 0n) {
-      const str = X(BigIntValue.toString(Z(-R(x)), radix)).stringValue();
-      return Value(`-${str}`);
+      const str = X(BigIntValue.toString(Z(-R(x)), radix));
+      return `-${str}`;
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return Value(`${R(x).toString(Number(radix))}`);
+    return `${R(x).toString(Number(radix))}`;
   }
 
   static readonly unit = new BigIntValue(1n);
@@ -679,60 +673,6 @@ export class BigIntValue extends PrimitiveValue {
 
 /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
 function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
-  // TODO: figure out why this doesn't work, probably the modulo.
-  /*
-  // 1. Assert: op is "&", "|", or "^".
-  Assert(['&', '|', '^'].includes(op));
-  // 2. Let result be 0n.
-  let result = 0n;
-  // 3. Let shift be 0.
-  let shift = 0n;
-  // 4. Repeat, until (x = 0 or x = -1) and (y = 0 or y = -1),
-  while (!((x === 0n || x === -1n) && (y === 0n || y === -1n))) {
-    // a. Let xDigit be x modulo 2.
-    const xDigit = x % 2n;
-    // b. Let yDigit be y modulo 2.
-    const yDigit = y % 2n;
-    // c. If op is "&", set result to result + 2^shift × BinaryAnd(xDigit, yDigit).
-    if (op === '&') {
-      result += (2n ** shift) * BinaryAnd(xDigit, yDigit);
-    } else if (op === '|') {
-      // d. Else if op is "|", set result to result + 2shift × BinaryOr(xDigit, yDigit).
-      result += (2n ** shift) * BinaryXor(xDigit, yDigit);
-    } else {
-      // i. Assert: op is "^".
-      Assert(op === '^');
-      // ii. Set result to result + 2^shift × BinaryXor(xDigit, yDigit).
-      result += (2n ** shift) * BinaryXor(xDigit, yDigit);
-    }
-    // f. Set shift to shift + 1.
-    shift += 1n;
-    // g. Set x to (x - xDigit) / 2.
-    x = (x - xDigit) / 2n;
-    // h. Set y to (y - yDigit) / 2.
-    y = (y - yDigit) / 2n;
-  }
-  let tmp;
-  // 5. If op is "&", let tmp be BinaryAnd(x modulo 2, y modulo 2).
-  if (op === '&') {
-    tmp = BinaryAnd(x % 2n, y % 2n);
-  } else if (op === '|') {
-    // 6. Else if op is "|", let tmp be BinaryOr(x modulo 2, y modulo 2).
-    tmp = BinaryOr(x % 2n, y % 2n);
-  } else {
-    // a. Assert: op is "^".
-    Assert(op === '^');
-    // b. Let tmp be BinaryXor(x modulo 2, y modulo 2).
-    tmp = BinaryXor(x % 2n, y % 2n);
-  }
-  // 8. If tmp ≠ 0, then
-  if (tmp !== 0n) {
-    // a. Set result to result - 2^shift. NOTE: This extends the sign.
-    result -= 2n ** shift;
-  }
-  // 9. Return result.
-  return Z(result);
- */
   switch (op) {
     case '&':
       return Z(R(x) & R(y));
@@ -747,15 +687,15 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
 
 export interface ObjectInternalMethods<Self> {
   GetPrototypeOf(this: Self): ValueEvaluator<ObjectValue | NullValue>;
-  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ValueEvaluator<BooleanValue>;
-  IsExtensible(this: Self): ValueEvaluator<BooleanValue>;
-  PreventExtensions(this: Self): ValueEvaluator<BooleanValue>;
-  GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<Descriptor | UndefinedValue>;
-  DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue>;
-  HasProperty(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): PlainEvaluator<boolean>;
+  IsExtensible(this: Self): PlainEvaluator<boolean>;
+  PreventExtensions(this: Self): PlainEvaluator<boolean>;
+  GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<FullyPopulatedDescriptor | undefined>;
+  DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): PlainEvaluator<boolean>;
+  HasProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
   Get(this: Self, P: PropertyKeyValue | string, Receiver: Value): ValueEvaluator;
-  Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): ValueEvaluator<BooleanValue>;
-  Delete(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+  Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): PlainEvaluator<boolean>;
+  Delete(this: Self, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
   OwnPropertyKeys(this: Self): PlainEvaluator<PropertyKeyValue[]>;
   Call?(this: Self, thisArg: Value, args: Arguments): ValueEvaluator;
   Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
@@ -768,7 +708,7 @@ export type ObjectSlotReturn = {
 export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
   declare readonly type: 'Object'; // defined on prototype by static block
 
-  readonly properties: PropertyKeyMap<Descriptor>;
+  readonly properties: PropertyKeyMap<FullyPopulatedDescriptor>;
 
   readonly internalSlotsList: readonly string[];
 
@@ -813,29 +753,35 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
 
   // eslint-disable-next-line require-yield
   * GetOwnProperty(P: PropertyKeyValue | string): ObjectSlotReturn['GetOwnProperty'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     return OrdinaryGetOwnProperty(this as unknown as OrdinaryObject, P);
   }
 
   * DefineOwnProperty(P: PropertyKeyValue | string, Desc: Descriptor): ObjectSlotReturn['DefineOwnProperty'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return yield* OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
   }
 
   * HasProperty(P: PropertyKeyValue | string): ObjectSlotReturn['HasProperty'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     return yield* OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
   }
 
   * Get(P: PropertyKeyValue | string, Receiver: Value): ObjectSlotReturn['Get'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     return yield* OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
   }
 
   * Set(P: PropertyKeyValue | string, V: Value, Receiver: Value): ObjectSlotReturn['Set'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     // TODO:
     Q(surroundingAgent.debugger_tryTouchDuringPreview(Receiver as ObjectValue));
     return yield* OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
   }
 
   * Delete(P: PropertyKeyValue | string): ObjectSlotReturn['Delete'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return yield* OrdinaryDelete(this as unknown as OrdinaryObject, P);
   }
@@ -876,8 +822,8 @@ export class PrivateName {
 
   readonly Description: string;
 
-  constructor(description: JSStringValue) {
-    this.Description = description.stringValue();
+  constructor(description: string) {
+    this.Description = description;
   }
 }
 
@@ -910,45 +856,80 @@ export class ReferenceRecord {
   }
 }
 
-export type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>;
+export interface DescriptorWithEnumerableAndConfigurable {
+  readonly Configurable: boolean;
+  readonly Enumerable: boolean;
+}
+
+export type AccessorDescriptorInit = ({
+  readonly Get: FunctionObject | UndefinedValue;
+  readonly Set?: FunctionObject | UndefinedValue;
+} | {
+  readonly Get?: FunctionObject | UndefinedValue;
+  readonly Set: FunctionObject | UndefinedValue;
+}) & Partial<DescriptorWithEnumerableAndConfigurable>
+
+export type DataDescriptorInit = ({
+  readonly Value: Value;
+  readonly Writable?: boolean;
+} | {
+  readonly Value?: Value;
+  readonly Writable: boolean;
+}) & Partial<DescriptorWithEnumerableAndConfigurable>
+
+export interface GenericDescriptorInit {
+  readonly Configurable?: boolean;
+  readonly Enumerable?: boolean;
+  readonly Value?: never;
+  readonly Writable?: never;
+  readonly Get?: never;
+  readonly Set?: never;
+}
+
 // @ts-expect-error
-export function Descriptor(O: DescriptorInit): Descriptor // @ts-expect-error
+export function Descriptor(init: Required<AccessorDescriptorInit>): FullyPopulatedAccessorDescriptor // @ts-expect-error
+export function Descriptor(init: Required<DataDescriptorInit>): FullyPopulatedDataDescriptor // @ts-expect-error
+export function Descriptor(init: AccessorDescriptorInit): AccessorDescriptor // @ts-expect-error
+export function Descriptor(init: DataDescriptorInit): DataDescriptor // @ts-expect-error
+export function Descriptor(init: Partial<AccessorDescriptorInit>): GenericDescriptor // @ts-expect-error
+export function Descriptor(init: Partial<DataDescriptorInit>): GenericDescriptor // @ts-expect-error
+export function Descriptor(init: Partial<GenericDescriptorInit>): GenericDescriptor // @ts-expect-error
 export @callable() class Descriptor {
   readonly Value?: Value;
 
-  readonly Getter?: FunctionObject | UndefinedValue;
+  readonly Get?: FunctionObject | UndefinedValue;
 
-  readonly Setter?: FunctionObject | UndefinedValue;
+  readonly Set?: FunctionObject | UndefinedValue;
 
-  readonly Writable?: BooleanValue;
+  readonly Writable?: boolean;
 
-  readonly Enumerable?: BooleanValue;
+  readonly Enumerable?: boolean;
 
-  readonly Configurable?: BooleanValue;
+  readonly Configurable?: boolean;
 
-  constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>) {
+  private constructor(O: AccessorDescriptorInit & DataDescriptorInit) {
     this.Value = O.Value;
-    this.Getter = O.Getter;
-    this.Setter = O.Setter;
+    this.Get = O.Get;
+    this.Set = O.Set;
     this.Writable = O.Writable;
     this.Enumerable = O.Enumerable;
     this.Configurable = O.Configurable;
   }
 
-  everyFieldIsAbsent() {
-    return this.Value === undefined
-      && this.Getter === undefined
-      && this.Setter === undefined
-      && this.Writable === undefined
-      && this.Enumerable === undefined
-      && this.Configurable === undefined;
+  static everyFieldIsAbsent(descriptor: Descriptor) {
+    return descriptor.Value === undefined
+      && descriptor.Get === undefined
+      && descriptor.Set === undefined
+      && descriptor.Writable === undefined
+      && descriptor.Enumerable === undefined
+      && descriptor.Configurable === undefined;
   }
 
   // NON-SPEC
   mark(m: GCMarker) {
     m(this.Value);
-    m(this.Getter);
-    m(this.Setter);
+    m(this.Get);
+    m(this.Set);
   }
 }
 

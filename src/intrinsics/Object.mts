@@ -4,7 +4,6 @@ import {
   Value,
   type Arguments,
   type FunctionCallContext,
-  UndefinedValue,
   type PropertyKeyValue,
   Descriptor,
   SymbolValue,
@@ -82,11 +81,11 @@ function* Object_assign([target = Value.undefined, ...sources]: Arguments): Valu
         // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
         const desc = Q(yield* from.GetOwnProperty(nextKey));
         // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
-        if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+        if (desc && desc.Enumerable) {
           // a. Let propValue be ? Get(from, nextKey).
           const propValue = Q(yield* Get(from, nextKey));
           // b. Perform ? Set(to, nextKey, propValue, true).
-          Q(yield* Set(to, nextKey, propValue, Value.true));
+          Q(yield* Set(to, nextKey, propValue, true));
         }
       }
     }
@@ -135,7 +134,7 @@ function* ObjectDefineProperties(O: Value, Properties: Value) {
     // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
     const propDesc = Q(yield* props.GetOwnProperty(nextKey));
     // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
-    if (!(propDesc instanceof UndefinedValue) && propDesc.Enumerable === Value.true) {
+    if (propDesc && propDesc.Enumerable) {
       // i. Let descObj be ? Get(props, nextKey).
       const descObj = Q(yield* Get(props, nextKey));
       // ii. Let desc be ? ToPropertyDescriptor(descObj).
@@ -192,7 +191,7 @@ function* Object_freeze([O = Value.undefined]: Arguments) {
   // 2. Let status be ? SetIntegrityLevel(O, frozen).
   const status = Q(yield* SetIntegrityLevel(O, 'frozen'));
   // 3. If status is false, throw a TypeError exception.
-  if (status === Value.false) {
+  if (!status) {
     return Throw.TypeError('Unable to freeze object $1', O);
   }
   // 4. Return O.
@@ -206,7 +205,7 @@ function* Object_fromEntries([iterable = Value.undefined]: Arguments): ValueEval
   // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   // 3. Assert: obj is an extensible ordinary object with no own properties.
-  Assert(obj.Extensible === Value.true && obj.properties.size === 0);
+  Assert(obj.Extensible && obj.properties.size === 0);
   // 4. Let closure be a new Abstract Closure with parameters (key, value) that captures obj and performs the following steps when called:
   function* closure([key = Value.undefined, value = Value.undefined]: Arguments): ValueEvaluator {
     // a. Let propertyKey be ? ToPropertyKey(key).
@@ -322,7 +321,7 @@ function* Object_hasOwn([O = Value.undefined, P = Value.undefined]: Arguments): 
   // 2. Let O be ? ToObject(this value).
   const key = Q(yield* ToPropertyKey(P));
   // 3. Return ? HasOwnProperty(obj, key).
-  return yield* HasOwnProperty(obj, key);
+  return Value(Q(yield* HasOwnProperty(obj, key)));
 }
 
 /** https://tc39.es/ecma262/#sec-object.is */
@@ -338,7 +337,7 @@ function* Object_isExtensible([O = Value.undefined]: Arguments): ValueEvaluator 
     return Value.false;
   }
   // 2. Return ? IsExtensible(O).
-  return Q(yield* IsExtensible(O));
+  return Value(Q(yield* IsExtensible(O)));
 }
 
 /** https://tc39.es/ecma262/#sec-object.isfrozen */
@@ -348,7 +347,7 @@ function* Object_isFrozen([O = Value.undefined]: Arguments): ValueEvaluator {
     return Value.true;
   }
   // 2. Return ? TestIntegrityLevel(O, frozen).
-  return Q(yield* TestIntegrityLevel(O, 'frozen'));
+  return Value(Q(yield* TestIntegrityLevel(O, 'frozen')));
 }
 
 /** https://tc39.es/ecma262/#sec-object.issealed */
@@ -358,7 +357,7 @@ function* Object_isSealed([O = Value.undefined]: Arguments): ValueEvaluator {
     return Value.true;
   }
   // 2. Return ? TestIntegrityLevel(O, sealed).
-  return Q(yield* TestIntegrityLevel(O, 'sealed'));
+  return Value(Q(yield* TestIntegrityLevel(O, 'sealed')));
 }
 
 /** https://tc39.es/ecma262/#sec-object.keys */
@@ -380,7 +379,7 @@ function* Object_preventExtensions([O = Value.undefined]: Arguments) {
   // 2. Let status be ? O.[[PreventExtensions]]().
   const status = Q(yield* O.PreventExtensions());
   // 3. If status is false, throw a TypeError exception.
-  if (status === Value.false) {
+  if (!status) {
     return Throw.TypeError('Unable to prevent extensions on object $1', O);
   }
   // 4. Return O.
@@ -396,7 +395,7 @@ function* Object_seal([O = Value.undefined]: Arguments) {
   // 2. Let status be ? SetIntegrityLevel(O, sealed).
   const status = Q(yield* SetIntegrityLevel(O, 'sealed'));
   // 3. If status is false, throw a TypeError exception.
-  if (status === Value.false) {
+  if (!status) {
     return Throw.TypeError('Unable to seal object $1', O);
   }
   // 4. Return O.
@@ -418,7 +417,7 @@ function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]: 
   // 4. Let status be ? O.[[SetPrototypeOf]](proto).
   const status = Q(yield* O.SetPrototypeOf(proto));
   // 5. If status is false, throw a TypeError exception.
-  if (status === Value.false) {
+  if (!status) {
     return Throw.TypeError('Could not set prototype of object');
   }
   // 6. Return O.

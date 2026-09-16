@@ -17,7 +17,7 @@ function MakeSuperPropertyReference(actualThis: Value, propertyKey: Value, stric
   // 1. Let env be GetThisEnvironment().
   const env = GetThisEnvironment();
   // 2. Assert: env.HasSuperBinding() is true.
-  Assert(env.HasSuperBinding() === Value.true);
+  Assert(env.HasSuperBinding());
   // 3. Assert: env is a Function Environment Record.
   Assert(env instanceof FunctionEnvironmentRecord);
   // 4. Let baseValue be ? env.GetSuperBase().
@@ -53,6 +53,6 @@ export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }: 
     const propertyKey = StringValue(IdentifierName!);
     // 4. const strict = SuperProperty.strict;
     // 5. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-    return Q(MakeSuperPropertyReference(actualThis, propertyKey, strict));
+    return Q(MakeSuperPropertyReference(actualThis, Value(propertyKey), strict));
   }
 }

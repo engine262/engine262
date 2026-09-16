@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import { Q, NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -16,7 +15,7 @@ export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.C
   const { BindingIdentifier, ClassTail } = ClassDeclaration;
   const sourceText = ClassDeclaration.sourceText;
   if (!BindingIdentifier) {
-    return Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default'), sourceText, decorators));
+    return Q(yield* ClassDefinitionEvaluation(ClassTail, undefined, 'default', sourceText, decorators));
   }
   // 1. Let className be StringValue of BindingIdentifier.
   const className = StringValue(BindingIdentifier);

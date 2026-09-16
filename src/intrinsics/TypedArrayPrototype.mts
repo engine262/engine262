@@ -4,7 +4,7 @@ import {
 } from '../completion.mts';
 import {
   BigIntValue,
-  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
+  Descriptor, NumberValue, ObjectValue, Value, wellKnownSymbols,
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
@@ -63,7 +63,7 @@ function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallCon
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. Return buffer.
-  return buffer;
+  return buffer || Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */
@@ -165,7 +165,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   let k = startIndex;
   while (k < endIndex) {
     const Pk = X(ToString(F(k)));
-    X(Set(obj, Pk, value, Value.true));
+    X(Set(obj, Pk, value, true));
     k += 1;
   }
   return obj;
@@ -186,7 +186,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
     const Pk = X(ToString(F(k)));
     const kValue = X(Get(O, Pk));
     const selected = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O])));
-    if (selected === Value.true) {
+    if (selected) {
       kept.push(kValue);
       captured += 1;
     }
@@ -195,7 +195,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
   const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(captured)]));
   let n = 0;
   for (const e of kept) {
-    X(Set(resultArray, X(ToString(F(n))), e, Value.true));
+    X(Set(resultArray, X(ToString(F(n))), e, true));
     n += 1;
   }
   return resultArray;
@@ -238,7 +238,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
     const Pk = X(ToString(F(k)));
     const kValue = X(Get(O, Pk));
     const mappedValue = Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O]));
-    X(Set(resultArray, Pk, mappedValue, Value.true));
+    X(Set(resultArray, Pk, mappedValue, true));
     k += 1;
   }
   return resultArray;
@@ -385,7 +385,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
       while (k < endIndex) {
         const Pk = X(ToString(F(k)));
         const kValue = X(Get(obj, Pk));
-        X(Set(resultArray, X(ToString(F(n))), kValue, Value.true));
+        X(Set(resultArray, X(ToString(F(n))), kValue, true));
         k += 1;
         n += 1;
       }
@@ -410,7 +410,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { this
   const sortedList = Q(yield* SortIndexedProperties(obj, len, SortCompare, 'read-through-holes'));
   let j = 0;
   while (j < len) {
-    X(Set(obj, X(ToString(F(j))), sortedList[j], Value.true));
+    X(Set(obj, X(ToString(F(j))), sortedList[j], true));
     j += 1;
   }
   return obj;
@@ -433,7 +433,7 @@ function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { 
   const sortedList = Q(yield* SortIndexedProperties(O, len, SortCompare, 'read-through-holes'));
   let j = 0;
   while (j < len) {
-    X(Set(resultArray, X(ToString(F(j))), sortedList[j], Value.true));
+    X(Set(resultArray, X(ToString(F(j))), sortedList[j], true));
     j += 1;
   }
   return resultArray;
@@ -489,9 +489,9 @@ function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCa
   // 4. Let name be O.[[TypedArrayName]].
   const name = O.TypedArrayName;
   // 5. Assert: Type(name) is String.
-  Assert(name instanceof JSStringValue);
+  Assert(typeof name === 'string');
   // 6. Return name.
-  return name;
+  return Value(name);
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
@@ -519,7 +519,7 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
   } else {
     numericValue = Q(yield* ToNumber(value));
   }
-  if (IsValidIntegerIndex(obj, F(actualIndex)) === Value.false) {
+  if (!IsValidIntegerIndex(obj, F(actualIndex))) {
     return Throw.RangeError('TypedArray index out of bounds');
   }
   const resultArray = Q(yield* TypedArrayCreateSameType(obj, length));
@@ -532,7 +532,7 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
     } else {
       fromValue = X(Get(obj, Pk));
     }
-    X(Set(resultArray, Pk, fromValue, Value.true));
+    X(Set(resultArray, Pk, fromValue, true));
     k += 1;
   }
   return resultArray;
@@ -549,7 +549,7 @@ function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCa
     const from = X(ToString(F(len - k - 1)));
     const Pk = X(ToString(F(k)));
     const fromValue = X(Get(O, from));
-    X(Set(resultArray, Pk, fromValue, Value.true));
+    X(Set(resultArray, Pk, fromValue, true));
     k += 1;
   }
   return resultArray;
@@ -590,9 +590,9 @@ export function bootstrapTypedArrayPrototype(realmRec: Realm) {
     const fn = X(Get(proto, 'values'));
     X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
       Value: fn,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
     })));
   }
 

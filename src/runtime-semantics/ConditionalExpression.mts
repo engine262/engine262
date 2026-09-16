@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -17,7 +16,7 @@ export function* Evaluate_ConditionalExpression({
   // 2. Let lval be ! ToBoolean(? GetValue(lref)).
   const lval = X(ToBoolean(Q(yield* GetValue(lref))));
   // 3. If lval is true, then
-  if (lval === Value.true) {
+  if (lval) {
     // a. Let trueRef be the result of evaluating the first AssignmentExpression.
     const trueRef = Q(yield* Evaluate(AssignmentExpression_a));
     // b. Return ? GetValue(trueRef).

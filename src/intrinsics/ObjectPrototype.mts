@@ -1,7 +1,6 @@
 import {
   NullValue,
   JSStringValue,
-  UndefinedValue,
   ObjectValue,
   Value,
   Descriptor,
@@ -44,7 +43,7 @@ function* ObjectProto_hasOwnProperty([V = Value.undefined]: Arguments, { thisVal
   // 2. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 3. Return ? HasOwnProperty(O, P).
-  return yield* HasOwnProperty(O, P);
+  return Value(Q(yield* HasOwnProperty(O, P)));
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
@@ -79,11 +78,11 @@ function* ObjectProto_propertyIsEnumerable([V = Value.undefined]: Arguments, { t
   // 3. Let desc be ? O.[[GetOwnProperty]](P).
   const desc = Q(yield* O.GetOwnProperty(P));
   // 4. If desc is undefined, return false.
-  if (desc instanceof UndefinedValue) {
+  if (!desc) {
     return Value.false;
   }
   // 5. Return desc.[[Enumerable]].
-  return desc.Enumerable!;
+  return Value(desc.Enumerable);
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
@@ -110,7 +109,7 @@ function* ObjectProto_toString(_argList: Arguments, { thisValue }: FunctionCallC
   const isArray = Q(IsArray(O));
   let builtinTag;
   // 5. If isArray is true, let builtinTag be "Array".
-  if (isArray === Value.true) {
+  if (isArray) {
     builtinTag = 'Array';
   } else if ('ParameterMap' in O) { // 6. Else if O has a [[ParameterMap]] internal slot, let builtinTag be "Arguments".
     builtinTag = 'Arguments';
@@ -160,9 +159,9 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Getter: getter,
-    Enumerable: Value.true,
-    Configurable: Value.true,
+    Get: getter,
+    Enumerable: true,
+    Configurable: true,
   });
   // 4. Let key be ? ToPropertyKey(P).
   const key = Q(yield* ToPropertyKey(P));
@@ -182,9 +181,9 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Setter: setter,
-    Enumerable: Value.true,
-    Configurable: Value.true,
+    Set: setter,
+    Enumerable: true,
+    Configurable: true,
   });
   // 4. Let key be ? ToPropertyKey(P).
   const key = Q(yield* ToPropertyKey(P));
@@ -206,10 +205,10 @@ function* ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisVa
     // a. Let desc be ? O.[[GetOwnProperty]](key).
     const desc = Q(yield* O.GetOwnProperty(key));
     // b. If desc is not undefined, then
-    if (!(desc instanceof UndefinedValue)) {
+    if (desc) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Getter;
+        return desc.Get;
       }
       // ii. Return undefined.
       return Value.undefined;
@@ -235,10 +234,10 @@ function* ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisVa
     // a. Let desc be ? O.[[GetOwnProperty]](key).
     const desc = Q(yield* O.GetOwnProperty(key));
     // b. If desc is not undefined, then
-    if (!(desc instanceof UndefinedValue)) {
+    if (desc) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Setter;
+        return desc.Set;
       }
       // ii. Return undefined.
       return Value.undefined;
@@ -277,7 +276,7 @@ function* ObjectProto___proto___setter([proto = Value.undefined]: Arguments, { t
   // 4. Let status be ? O.[[SetPrototypeOf]](proto).
   const status = Q(yield* O.SetPrototypeOf(proto));
   // 5. If status is false, throw a TypeError exception.
-  if (status === Value.false) {
+  if (!status) {
     return Throw.TypeError('Could not set prototype of object');
   }
   // 6. Return undefined.
@@ -298,7 +297,7 @@ export function makeObjectPrototype(realmRec: Realm) {
   const proto = MakeBasicObject(['Prototype', 'Extensible']) as Mutable<ImmutablePrototypeObject & OrdinaryObject>;
 
   // * has an [[Extensible]] internal slot whose value is true.
-  proto.Extensible = Value.true;
+  proto.Extensible = true;
 
   // * has a [[Prototype]] internal slot whose value is null.
   proto.Prototype = Value.null;

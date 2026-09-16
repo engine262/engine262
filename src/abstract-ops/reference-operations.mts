@@ -27,32 +27,32 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
-export function IsPropertyReference(V: ReferenceRecord) {
+export function IsPropertyReference(V: ReferenceRecord): boolean {
   // 1. If V.[[Base]] is unresolvable, return false.
   if (V.Base === 'unresolvable') {
-    return Value.false;
+    return false;
   }
   // 2. If V.[[Base]] is an Environment Record, return false; otherwise return true.
-  return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
+  return V.Base instanceof EnvironmentRecord ? false : true;
 }
 export type PropertyReference = ReferenceRecord & {
   readonly Base: Exclude<ReferenceRecord['Base'], 'unresolvable' | EnvironmentRecord>,
 };
 
 /** https://tc39.es/ecma262/#sec-isunresolvablereference */
-export function IsUnresolvableReference(V: ReferenceRecord) {
+export function IsUnresolvableReference(V: ReferenceRecord): boolean {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[Base]] is unresolvable, return true; otherwise return false.
-  return V.Base === 'unresolvable' ? Value.true : Value.false;
+  return V.Base === 'unresolvable' ? true : false;
 }
 
 /** https://tc39.es/ecma262/#sec-issuperreference */
-export function IsSuperReference(V: ReferenceRecord) {
+export function IsSuperReference(V: ReferenceRecord): boolean {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
-  return V.ThisValue !== undefined ? Value.true : Value.false;
+  return V.ThisValue !== undefined ? true : false;
 }
 
 /** https://tc39.es/ecma262/#sec-isprivatereference */
@@ -70,11 +70,11 @@ export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
     return V;
   }
   // 2. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
-  if (IsUnresolvableReference(V) === Value.true) {
+  if (IsUnresolvableReference(V)) {
     return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
   }
   // 3. If IsPropertyReference(V) is true, then
-  if (IsPropertyReference(V) === Value.true) {
+  if (IsPropertyReference(V)) {
     __ts_cast__<PropertyReference>(V);
     // a. Let baseObj be ? ToObject(V.[[Base]]).
     const baseObj = Q(ToObject(V.Base));
@@ -94,7 +94,7 @@ export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]).
-    return Q(yield* base.GetBindingValue(V.ReferencedName as JSStringValue, Value(V.Strict)));
+    return Q(yield* base.GetBindingValue((V.ReferencedName as JSStringValue).stringValue(), V.Strict));
   }
 }
 
@@ -105,7 +105,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     return Throw.ReferenceError('Invalid assignment target');
   }
   // 2. If IsUnresolvableReference(V) is true, then
-  if (IsUnresolvableReference(V) === Value.true) {
+  if (IsUnresolvableReference(V)) {
     // a. If V.[[Strict]] is true, throw a ReferenceError exception.
     if (V.Strict) {
       return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
@@ -113,11 +113,11 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // b. Let globalObj be GetGlobalObject().
     const globalObj = GetGlobalObject();
     // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
-    Q(yield* Set(globalObj, V.ReferencedName as JSStringValue, W, Value.false));
+    Q(yield* Set(globalObj, V.ReferencedName as JSStringValue, W, false));
     return undefined;
   }
   // 5. If IsPropertyReference(V) is true, then
-  if (IsPropertyReference(V) === Value.true) {
+  if (IsPropertyReference(V)) {
     // a. Let baseObj be ? ToObject(V.[[Base]]).
     const baseObj = Q(ToObject(V.Base as JSStringValue));
     // b. If IsPrivateReference(V) is true, then
@@ -131,7 +131,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // c. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
     const succeeded = Q(yield* baseObj.Set(V.ReferencedName, W, GetThisValue(V)));
     // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
-    if (succeeded === Value.false && V.Strict) {
+    if (!succeeded && V.Strict) {
       return Throw.TypeError('Cannot set property $1 on $2', V.ReferencedName, baseObj);
     }
     // e. Return.
@@ -142,16 +142,16 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
-    return Q(yield* base.SetMutableBinding(V.ReferencedName as JSStringValue, W, Value(V.Strict)));
+    return Q(yield* base.SetMutableBinding((V.ReferencedName as JSStringValue).stringValue(), W, V.Strict));
   }
 }
 
 /** https://tc39.es/ecma262/#sec-getthisvalue */
 export function GetThisValue(V: ReferenceRecord) {
   // 1. Assert: IsPropertyReference(V) is true.
-  Assert(IsPropertyReference(V) === Value.true);
+  Assert(IsPropertyReference(V));
   // 2. If IsSuperReference(V) is true, return V.[[ThisValue]]; otherwise return V.[[Base]].
-  if (IsSuperReference(V) === Value.true) {
+  if (IsSuperReference(V)) {
     return V.ThisValue!;
   } else {
     return V.Base as Value;
@@ -165,17 +165,17 @@ export function* InitializeReferencedBinding(V: PlainCompletion<ReferenceRecord>
   // 3. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 4. Assert: IsUnresolvableReference(V) is false.
-  Assert(IsUnresolvableReference(V) === Value.false);
+  Assert(!IsUnresolvableReference(V));
   // 5. Let base be V.[[Base]].
   const base = V.Base;
   // 6. Assert: base is an Environment Record.
   Assert(base instanceof EnvironmentRecord);
   // 7. Return base.InitializeBinding(V.[[ReferencedName]], W).
-  return yield* base.InitializeBinding(V.ReferencedName as JSStringValue, W);
+  return yield* base.InitializeBinding((V.ReferencedName as JSStringValue).stringValue(), W);
 }
 
 /** https://tc39.es/ecma262/#sec-makeprivatereference */
-export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStringValue) {
+export function MakePrivateReference(baseValue: Value, privateIdentifier: string) {
   // 1. Let privEnv be the running execution context's PrivateEnvironment.
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 2. Assert: privEnv is not null.
@@ -186,7 +186,7 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
     if (script instanceof DynamicParsedCodeRecord && script?.HostDefined?.isInspectorEval) {
       let privateName;
       if (baseValue instanceof ObjectValue) {
-        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description === privateIdentifier.stringValue())?.Key;
+        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description === privateIdentifier)?.Key;
       }
       privateName ??= new PrivateName(privateIdentifier);
       return new ReferenceRecord({

@@ -22,9 +22,9 @@ export function ThisBigIntValue(value: Value) {
   // 2. If Type(value) is Object and value has a [[BigIntData]] internal slot, then
   if (value instanceof ObjectValue && 'BigIntData' in value) {
     // a. Assert: Type(value.[[BigIntData]]) is BigInt.
-    Assert(value.BigIntData instanceof BigIntValue);
+    Assert(typeof value.BigIntData === 'bigint');
     // b. Return value.[[BigIntData]].
-    return value.BigIntData;
+    return Value(value.BigIntData);
   }
   // 3. Throw a TypeError exception.
   return Throw.TypeError('$1 is not a $2 object', value, 'BigInt');
@@ -44,7 +44,7 @@ function* BigIntProto_toString([radix = Value.undefined]: Arguments, { thisValue
   } else {
     radixMV = Q(yield* SnapToInteger(radix, 'truncate', 2n, 36n));
   }
-  return BigIntValue.toString(x, radixMV);
+  return Value(BigIntValue.toString(x, radixMV));
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */

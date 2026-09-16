@@ -14,7 +14,7 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
-export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: PropertyKeyValue | PrivateName) {
+export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: string | PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -26,7 +26,7 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: Pars
     // 4. Let funcEnv be ! NewDeclarativeEnvironment(scope).
     const funcEnv = X(new DeclarativeEnvironmentRecord(scope));
     // 5. Perform ! funcEnv.CreateImmutableBinding(name, false).
-    X(funcEnv.CreateImmutableBinding(name, Value.false));
+    X(funcEnv.CreateImmutableBinding(name, false));
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by AsyncFunctionExpression.

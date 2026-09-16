@@ -56,7 +56,7 @@ function* ParseInt([string = Value.undefined, radix = Value.undefined]: Argument
   const inputString = Q(yield* ToString(string));
   let radixMV = R(Q(yield* ToInt32(radix)));
   if (radixMV !== 0 && (radixMV < 2 || radixMV > 36)) return F(NaN);
-  let trimmedString = X(TrimString(inputString, 'start')).stringValue();
+  let trimmedString = X(TrimString(inputString, 'start'));
   if (trimmedString === '') return F(NaN);
   let sign = 1;
   if (trimmedString[0] === '\x2D') {

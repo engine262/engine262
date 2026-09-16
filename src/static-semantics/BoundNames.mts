@@ -1,9 +1,8 @@
 import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { JSStringValue, Value } from '../value.mts';
 import { StringValue } from './all.mts';
 
-export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
+export function BoundNames(node: ParseNode | readonly ParseNode[]): string[] {
   if (isArray(node)) {
     const names = [];
     for (const item of node) {
@@ -45,7 +44,7 @@ export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValu
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return [Value('*default*')];
+      return ['*default*'];
     case 'ImportDeclaration':
       if (node.ImportedBinding) {
         return BoundNames(node.ImportedBinding);
@@ -72,7 +71,7 @@ export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValu
         return declarationNames;
       }
       if (node.AssignmentExpression) {
-        return [Value('*default*')];
+        return ['*default*'];
       }
       throw OutOfRange.exhaustive(node);
     case 'SingleNameBinding':

@@ -1,13 +1,10 @@
 import {
   Value, NullValue, ObjectValue, PrivateName,
-  BooleanValue,
-  JSStringValue,
   type Arguments,
   type FunctionCallContext,
   UndefinedValue,
   type PropertyKeyValue,
   ReferenceRecord,
-  SymbolValue,
 } from '../value.mts';
 import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
@@ -38,6 +35,7 @@ import {
   PrivateEnvironmentRecord,
 
   CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
+  type PlainCompletion,
 } from '#self';
 import {
   Assert,
@@ -66,10 +64,10 @@ import {
 
 /** https://tc39.es/ecma262/#sec-static-semantics-classelementevaluation */
 // -decorator
-function ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.AsyncGeneratorMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | ClassFieldDefinitionRecord | void>
+function ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.AsyncGeneratorMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object: ObjectValue, enumerable: boolean): PlainEvaluator<PrivateElementRecord | ClassFieldDefinitionRecord | void>
 // +decorator
 function ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.AsyncGeneratorMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord | ClassStaticBlockDefinitionRecord | void>
-function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.AsyncGeneratorMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object: ObjectValue, enumerable?: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord | ClassFieldDefinitionRecord | ClassStaticBlockDefinitionRecord | PrivateElementRecord | void> {
+function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.AsyncGeneratorMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | ClassFieldDefinitionRecord | ClassStaticBlockDefinitionRecord | PrivateElementRecord | void> {
   switch (node.type) {
     case 'MethodDefinition':
     case 'GeneratorMethod':
@@ -121,16 +119,16 @@ export interface DefaultConstructorBuiltinFunction extends BuiltinFunctionObject
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
 /** https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation */
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-runtime-semantics-classdefinitionevaluation */
-export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: JSStringValue | UndefinedValue, className: PropertyKeyValue | PrivateName, sourceText: string, decorators: readonly DecoratorDefinitionRecord[]): ValueEvaluator<FunctionObject> {
+export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: string | undefined, className: string | PropertyKeyValue | PrivateName, sourceText: string, decorators: readonly DecoratorDefinitionRecord[]): ValueEvaluator<FunctionObject> {
   const { ClassHeritage, ClassBody } = ClassTail;
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let classScope be NewDeclarativeEnvironment(env).
   const classScope = new DeclarativeEnvironmentRecord(env);
   // 3. If classBinding is not undefined, then
-  if (!(classBinding instanceof UndefinedValue)) {
+  if (classBinding !== undefined) {
     // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
-    classScope.CreateImmutableBinding(classBinding, Value.true);
+    classScope.CreateImmutableBinding(classBinding, true);
   }
   // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
   const outerPrivateEnvironment = surroundingAgent.runningExecutionContext.PrivateEnvironment;
@@ -141,7 +139,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do
     for (const dn of PrivateBoundIdentifiers(ClassBody)) {
       // i. If classPrivateEnvironment.[[Names]] contains a Private Name whose [[Description]] is dn, then
-      const existing = classPrivateEnvironment.Names.find((n) => n.Description === dn.stringValue());
+      const existing = classPrivateEnvironment.Names.find((n) => n.Description === dn);
       if (existing) {
         // 1. Assert: This is only possible for getter/setter pairs.
       } else { // ii. Else,
@@ -248,10 +246,10 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     SetFunctionName(F, className);
   }
   __ts_cast__<Mutable<DefaultConstructorBuiltinFunction>>(F);
-  F.HostInitialName = className;
+  F.HostInitialName = typeof className === 'string' ? Value(className) : className;
   F.SourceText = sourceText;
   // 16. Perform MakeConstructor(F, false, proto).
-  MakeConstructor(F, Value.false, proto);
+  MakeConstructor(F, false, proto);
   // https://github.com/tc39/ecma262/pull/3212/
   // 17. Perform MakeClassConstructor(F).
   MakeClassConstructor(F);
@@ -366,7 +364,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     }
     F = Q(newF);
     // 27. If classBinding is not undefined, then
-    if (!(classBinding instanceof UndefinedValue)) {
+    if (classBinding !== undefined) {
       // a. Perform classScope.InitializeBinding(classBinding, F).
       yield* classScope.InitializeBinding(classBinding, F);
     }
@@ -417,26 +415,26 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     const staticElements: (ClassFieldDefinitionRecord | ClassStaticBlockDefinitionRecord)[] = [];
     // 25. For each ClassElement e of elements, do
     for (const e of elements) {
-      let field;
+      let _field: PlainCompletion<ClassFieldDefinitionRecord | PrivateElementRecord | ClassStaticBlockDefinitionRecord | void>;
       // a. If IsStatic of e is false, then
       if (IsStatic(e) === false) {
         // i. Let field be ClassElementEvaluation of e with arguments proto and false.
-        field = (yield* ClassElementEvaluation(e, proto, Value.false))!;
+        _field = (yield* ClassElementEvaluation(e, proto, false))!;
       } else { // b. Else,
         // i. Let field be ClassElementEvaluation of e with arguments F and false.
-        field = (yield* ClassElementEvaluation(e, F, Value.false))!;
+        _field = (yield* ClassElementEvaluation(e, F, false))!;
       }
       // c. If field is an abrupt completion, then
-      if (field instanceof AbruptCompletion) {
+      if (_field instanceof AbruptCompletion) {
         // i. Set the running execution context's LexicalEnvironment to env.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
         // ii. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
         surroundingAgent.runningExecutionContext.PrivateEnvironment = outerPrivateEnvironment;
         // iii. Return Completion(field).
-        return field;
+        return _field;
       }
       // d. Set field to field.[[Value]].
-      Q(field);
+      const field = Q(_field);
       // e. If field is a PrivateElement, then
       if (field instanceof PrivateElementRecord) {
         // i. Assert: field.[[Kind]] is either method or accessor.
@@ -457,19 +455,19 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
           Assert(field.Kind === 'accessor' && existing.Kind === 'accessor');
           // 3. If field.[[Get]] is undefined, then
           let combined;
-          if (field.Getter === Value.undefined) {
+          if (field.Get === Value.undefined) {
             combined = PrivateElementRecord({
               Key: field.Key,
               Kind: 'accessor',
-              Getter: existing.Getter,
-              Setter: field.Setter,
+              Get: existing.Get,
+              Set: field.Set,
             });
           } else { // 4. Else
             combined = PrivateElementRecord({
               Key: field.Key,
               Kind: 'accessor',
-              Getter: field.Getter,
-              Setter: existing.Setter,
+              Get: field.Get,
+              Set: existing.Set,
             });
           }
           // 5. Replace existing in container with combined.
@@ -485,7 +483,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
         } else { // ii. Else, append field to staticElements.
           staticElements.push(field);
         }
-      } else if (field instanceof ClassStaticBlockDefinitionRecord) { // g. Else if element is a ClassStaticBlockDefinition Record, then
+      } else if (field && field instanceof ClassStaticBlockDefinitionRecord) { // g. Else if element is a ClassStaticBlockDefinition Record, then
         // i. Append element to staticElements.
         staticElements.push(field);
       } else {
@@ -496,7 +494,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // 26. Set the running execution context's LexicalEnvironment to env.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
     // 27. If classBinding is not undefined, then
-    if (!(classBinding instanceof UndefinedValue)) {
+    if (classBinding !== undefined) {
       // a. Perform classScope.InitializeBinding(classBinding, F).
       yield* classScope.InitializeBinding(classBinding, F);
     }
@@ -556,14 +554,14 @@ export function* DecoratorListEvaluation(decoratorList: readonly ParseNode.Decor
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createdecoratoraccessobject */
-export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['Kind'], name: PropertyKeyValue | PrivateName): ObjectValue {
+export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['Kind'], name: string | PropertyKeyValue | PrivateName): ObjectValue {
   const accessObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   if (kind === 'field' || kind === 'method' || kind === 'accessor' || kind === 'getter') {
     const getterClosure = function* getter([obj = Value.undefined]: Arguments) {
       if (!(obj instanceof ObjectValue)) {
         return Throw.TypeError('Invalid receiver');
       }
-      if (IsPropertyKey(name)) {
+      if (IsPropertyKey(name) || typeof name === 'string') {
         return Q(yield* Get(obj, name));
       } else {
         return Q(yield* PrivateGet(obj, name));
@@ -573,25 +571,25 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
     X(CreateDataPropertyOrThrow(accessObj, 'get', getter));
   }
   if (kind === 'field' || kind === 'accessor' || kind === 'setter') {
-    const setterClosure = function* setter([obj = Value.undefined, value = Value.undefined]: Arguments) {
+    const setterClosure = function* setter([obj = Value.undefined, value = Value.undefined]: Arguments): ValueEvaluator {
       if (!(obj instanceof ObjectValue)) {
         return Throw.TypeError('Invalid receiver');
       }
-      if (IsPropertyKey(name)) {
-        return Q(yield* Set(obj, name, value, Value.true));
+      if (IsPropertyKey(name) || typeof name === 'string') {
+        return Value(Q(yield* Set(obj, name, value, true)));
       } else {
-        return Q(yield* PrivateSet(obj, name, value));
+        return Value(Q(yield* PrivateSet(obj, name, value)));
       }
     };
     const setter = CreateBuiltinFunction(setterClosure, 2, Value(''), []);
     X(CreateDataPropertyOrThrow(accessObj, 'set', setter));
   }
-  const hasClosure = function* has(this: Value, [obj = Value.undefined]: Arguments) {
+  const hasClosure = function* has(this: Value, [obj = Value.undefined]: Arguments): ValueEvaluator {
     if (!(obj instanceof ObjectValue)) {
       return Throw.TypeError('Invalid receiver');
     }
-    if (IsPropertyKey(name)) {
-      return Q(yield* HasProperty(obj, name));
+    if (IsPropertyKey(name) || typeof name === 'string') {
+      return Value(Q(yield* HasProperty(obj, name)));
     }
     if (PrivateElementFind(name, obj)) {
       return Value.true;
@@ -620,7 +618,7 @@ export function CreateAddInitializerFunction(initializers: FunctionObject[], dec
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createdecoratorcontextobject */
-export function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinitionRecord['Kind'], name: PropertyKeyValue | PrivateName, initializers: FunctionObject[], decorationState: { Finished: boolean }, isStatic?: boolean): ObjectValue {
+export function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinitionRecord['Kind'], name: string | PropertyKeyValue | PrivateName, initializers: FunctionObject[], decorationState: { Finished: boolean }, isStatic?: boolean): ObjectValue {
   const contextObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   const kindStr = Value(kind);
   X(CreateDataPropertyOrThrow(contextObj, 'kind', kindStr));
@@ -634,7 +632,7 @@ export function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinit
       X(CreateDataPropertyOrThrow(contextObj, 'name', Value(name.Description)));
     } else {
       X(CreateDataPropertyOrThrow(contextObj, 'private', Value.false));
-      X(CreateDataPropertyOrThrow(contextObj, 'name', name));
+      X(CreateDataPropertyOrThrow(contextObj, 'name', typeof name === 'string' ? Value(name) : name));
     }
   } else {
     // TODO(decorator): spec bug, no assert to the name
@@ -725,7 +723,7 @@ export function* ApplyDecoratorsToElementDefinition(_homeObject: ObjectValue, el
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-applydecoratorstoclassdefinition */
-export function* ApplyDecoratorsToClassDefinition(classDef: FunctionObject, decorators: readonly DecoratorDefinitionRecord[], className: PropertyKeyValue | PrivateName, extraInitializers: FunctionObject[]): PlainEvaluator<FunctionObject> {
+export function* ApplyDecoratorsToClassDefinition(classDef: FunctionObject, decorators: readonly DecoratorDefinitionRecord[], className: string | PropertyKeyValue | PrivateName, extraInitializers: FunctionObject[]): PlainEvaluator<FunctionObject> {
   for (const decoratorRecord of decorators) {
     const decorator = decoratorRecord.Decorator;
     const decoratorReceiver = decoratorRecord.Receiver;
@@ -762,21 +760,21 @@ export interface DecoratorDefinitionRecord {
 export type ClassElementDefinitionRecord = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
 export interface ClassElementDefinitionRecord_Method {
   readonly Kind: 'method';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // TODO(decorator): spec bug, spec is ECMAScriptFunctionObject
   Value: FunctionObject;
   Decorators: DecoratorDefinitionRecord[] | undefined;
 }
 export interface ClassElementDefinitionRecord_Field {
   readonly Kind: 'field';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   Decorators: DecoratorDefinitionRecord[] | undefined;
   readonly Initializers: FunctionObject[];
   readonly ExtraInitializers: FunctionObject[];
 }
 export interface ClassElementDefinitionRecord_Accessor {
   readonly Kind: 'accessor';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // https://github.com/tc39/proposal-decorators/issues/572
   Get: FunctionObject;
   // https://github.com/tc39/proposal-decorators/issues/572
@@ -788,14 +786,14 @@ export interface ClassElementDefinitionRecord_Accessor {
 }
 export interface ClassElementDefinitionRecord_Getter {
   readonly Kind: 'getter';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // https://github.com/tc39/proposal-decorators/issues/572
   Get: FunctionObject;
   Decorators: readonly DecoratorDefinitionRecord[] | undefined;
 }
 export interface ClassElementDefinitionRecord_Setter {
   readonly Kind: 'setter';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // https://github.com/tc39/proposal-decorators/issues/572
   Set: FunctionObject;
   Decorators: readonly DecoratorDefinitionRecord[] | undefined;

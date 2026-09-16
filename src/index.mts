@@ -28,7 +28,7 @@ export type { RegExpParserContext } from './parser/RegExpParser.mts';
 export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';
 export { type Mutable, OutOfRange } from './utils/language.mts';
 export { kInternal } from './utils/internal.mts';
-export { JSStringMap, JSStringSet, PropertyKeyMap } from './utils/container.mts';
+export { PropertyKeyMap } from './utils/container.mts';
 export {
   CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
 } from './utils/stack.mts';
@@ -59,7 +59,7 @@ export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 export { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 export type { FinalizationRegistryCell } from './intrinsics/FinalizationRegistry.mts';
 export type { StringObject } from './intrinsics/String.mts';
-export { typedArrayInfoByType, type TypedArrayTypes } from './intrinsics/TypedArray.mts';
+export { typedArrayInfoByName, typedArrayInfoByType, type TypedArrayTypes, type TypedArrayConstructorNames } from './intrinsics/TypedArray.mts';
 export type { ISODateRecord } from './intrinsics/Temporal/PlainDate.mts';
 export type { ISODateTimeRecord } from './intrinsics/Temporal/PlainDateTime.mts';
 export type { ISOYearMonthRecord } from './intrinsics/Temporal/PlainYearMonth.mts';

@@ -1,14 +1,13 @@
 import {
   ObjectValue, Value, NumberValue,
   JSStringValue,
+  UndefinedValue,
   type ObjectInternalMethods,
   SymbolValue,
   Descriptor,
-  UndefinedValue,
-  BooleanValue,
 } from '../value.mts';
 import {
-  Q, X, type ValueEvaluator,
+  Q, X,
 } from '../completion.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import {
@@ -45,37 +44,38 @@ import {
   IsViewOutOfBounds,
   MakeDataViewWithBufferWitnessRecord,
 } from './all.mts';
+import type { BigIntValue, FullyPopulatedDescriptor, PlainEvaluator, PropertyKeyValue } from '#self';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-typedarray-preventextensions */
-  * PreventExtensions() {
+  * PreventExtensions(): PlainEvaluator<boolean> {
     const O = this;
     if (!IsTypedArrayFixedLength(O)) {
-      return Value.false;
+      return false;
     }
     return OrdinaryPreventExtensions(O);
   },
   /** https://tc39.es/ecma262/#sec-typedarray-getownproperty */
-  * GetOwnProperty(P) {
+  * GetOwnProperty(P): PlainEvaluator<FullyPopulatedDescriptor | undefined> {
     const O = this;
-    // 3. If Type(P) is String, then
-    if (P instanceof JSStringValue) {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P === 'string') {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // i. Let value be TypedArrayGetElement(O, numericIndex).
         const value = TypedArrayGetElement(O, numericIndex);
         // ii. If value is undefined, return undefined.
-        if (value === Value.undefined) {
-          return Value.undefined;
+        if (value instanceof UndefinedValue) {
+          return undefined;
         }
         // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
         return Descriptor({
           Value: value,
-          Writable: Value.true,
-          Enumerable: Value.true,
-          Configurable: Value.true,
+          Writable: true,
+          Enumerable: true,
+          Configurable: true,
         });
       }
     }
@@ -83,14 +83,14 @@ const InternalMethods = {
     return OrdinaryGetOwnProperty(O, P);
   },
   /** https://tc39.es/ecma262/#sec-typedarray-hasproperty */
-  * HasProperty(P) {
+  * HasProperty(P): PlainEvaluator<boolean> {
     const O = this;
-    // 3. If Type(P) is String, then
-    if (P instanceof JSStringValue) {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P === 'string') {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         return IsValidIntegerIndex(O, numericIndex);
       }
     }
@@ -98,54 +98,54 @@ const InternalMethods = {
     return Q(yield* OrdinaryHasProperty(O, P));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-defineownproperty */
-  * DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc): PlainEvaluator<boolean> {
     const O = this;
-    // 3. If Type(P) is String, then
-    if (P instanceof JSStringValue) {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P === 'string') {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
-        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-          return Value.false;
+        if (!IsValidIntegerIndex(O, numericIndex)) {
+          return false;
         }
         // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-        if (Desc.Configurable === Value.false) {
-          return Value.false;
+        if (Desc.Configurable === false) {
+          return false;
         }
         // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
-        if (Desc.Enumerable === Value.false) {
-          return Value.false;
+        if (Desc.Enumerable === false) {
+          return false;
         }
         // ii. If IsAccessorDescriptor(Desc) is true, return false.
         if (IsAccessorDescriptor(Desc)) {
-          return Value.false;
+          return false;
         }
         // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
-        if (Desc.Writable === Value.false) {
-          return Value.false;
+        if (Desc.Writable === false) {
+          return false;
         }
         // vi. If Desc has a [[Value]] field, then
         if (Desc.Value !== undefined) {
           return Q(yield* TypedArraySetElement(O, numericIndex, Desc.Value));
         }
         // vii. Return true.
-        return Value.true;
+        return true;
       }
     }
     // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
     return Q(yield* OrdinaryDefineOwnProperty(O, P, Desc));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-get */
-  *  Get(P, Receiver) {
+  * Get(P, Receiver) {
     const O = this;
-    // 2. If Type(P) is String, then
-    if (P instanceof JSStringValue) {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P === 'string') {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // i. Return ! IntegerIndexedElementGet(O, numericIndex).
         return X(TypedArrayGetElement(O, numericIndex));
       }
@@ -154,22 +154,22 @@ const InternalMethods = {
     return Q(yield* OrdinaryGet(O, P, Receiver));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-set */
-  * Set(P, V, Receiver) {
+  * Set(P, V, Receiver): PlainEvaluator<boolean> {
     const O = this;
-    // 2. If Type(P) is String, then
-    if (P instanceof JSStringValue) {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P === 'string') {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         if (SameValue(O, Receiver)) {
           // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
           Q(yield* TypedArraySetElement(O, numericIndex, V));
           // ii. Return true.
-          return Value.true;
+          return true;
         }
-        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-          return Value.true;
+        if (!IsValidIntegerIndex(O, numericIndex)) {
+          return true;
         }
       }
     }
@@ -177,20 +177,20 @@ const InternalMethods = {
     return Q(yield* OrdinarySet(O, P, V, Receiver));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-delete */
-  * Delete(P) {
+  * Delete(P): PlainEvaluator<boolean> {
     const O = this;
-    // 3. If Type(P) is String, then
-    if (P instanceof JSStringValue) {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P === 'string') {
       // a. Let numericIndex be ! CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // ii. If IsValidIntegerIndex(O, numericIndex) is false, return true.
-        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-          return Value.true;
+        if (!IsValidIntegerIndex(O, numericIndex)) {
+          return true;
         } else {
           // iii. Return false.
-          return Value.false;
+          return false;
         }
       }
     }
@@ -202,13 +202,13 @@ const InternalMethods = {
     const O = this;
     const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
     // 1. Let keys be a new empty List.
-    const keys = [];
+    const keys: PropertyKeyValue[] = [];
     if (!IsTypedArrayOutOfBounds(taRecord)) {
       const length = TypedArrayLength(taRecord);
       // 4. For each integer i starting with 0 such that i < len, in ascending order, do
       for (let i = 0; i < length; i += 1) {
         // a. Add ! ToString(𝔽(i)) as the last element of keys.
-        keys.push(X(ToString(F(i))));
+        keys.push(Value(X(ToString(F(i)))));
       }
     }
     // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
@@ -330,20 +330,20 @@ export function IsTypedArrayFixedLength(O: TypedArrayObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
-export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue) {
-  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) return Value.false;
-  if (IsIntegralNumber(index) === Value.false) return Value.false;
-  if (Object.is(index.value, -0) || index.value < 0) return Value.false;
+export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue): boolean {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) return false;
+  if (!IsIntegralNumber(index)) return false;
+  if (Object.is(index.value, -0) || index.value < 0) return false;
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
-  if (IsTypedArrayOutOfBounds(taRecord)) return Value.false;
+  if (IsTypedArrayOutOfBounds(taRecord)) return false;
   const length = TypedArrayLength(taRecord);
-  if (R(index) >= length) return Value.false;
-  return Value.true;
+  if (R(index) >= length) return false;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-typedarraygetelement */
-export function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue) {
-  if (IsValidIntegerIndex(O, index) === Value.false) {
+export function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue): BigIntValue | NumberValue | UndefinedValue {
+  if (!IsValidIntegerIndex(O, index)) {
     return Value.undefined;
   }
   const offset = O.ByteOffset;
@@ -354,7 +354,7 @@ export function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-integerindexedelementset */
-export function* TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): ValueEvaluator<BooleanValue> {
+export function* TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): PlainEvaluator<boolean> {
   // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
   // 4. Otherwise, let numValue be ? ToNumber(value).
   let numValue;
@@ -363,15 +363,15 @@ export function* TypedArraySetElement(O: TypedArrayObject, index: NumberValue, v
   } else {
     numValue = Q(yield* ToNumber(value));
   }
-  if (IsValidIntegerIndex(O, index) === Value.true) {
+  if (IsValidIntegerIndex(O, index)) {
     const offset = O.ByteOffset;
     const elementSize = TypedArrayElementSize(O);
     const byteIndexInBuffer = (R(index) * elementSize) + offset;
     const elementType = TypedArrayElementType(O);
     Q(yield* SetValueInBuffer(O.ViewedArrayBuffer as ArrayBufferObject, byteIndexInBuffer, elementType, numValue, true, 'unordered'));
-    return Value.true;
+    return true;
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-isarraybufferviewoutofbounds */

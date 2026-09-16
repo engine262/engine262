@@ -27,9 +27,9 @@ export function Evaluate_Literal(Literal: ParseNode.Literal): NormalCompletion<V
       throw OutOfRange.nonExhaustive(Literal);
     case 'NumericLiteral':
       // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
-      return NormalCompletion(NumericValue(Literal));
+      return NormalCompletion(Value(NumericValue(Literal)));
     case 'StringLiteral':
-      return NormalCompletion(StringValue(Literal));
+      return NormalCompletion(Value(StringValue(Literal)));
     default:
       throw OutOfRange.exhaustive(Literal);
   }

@@ -49,7 +49,7 @@ function* AsyncFromSyncIteratorPrototype_next([value]: Arguments, { thisValue }:
   IfAbruptRejectPromise(result, promiseCapability);
   __ts_cast__<ObjectValue>(result);
   // 8. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true).
-  return X(AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true));
+  return X(AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true));
 }
 
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
@@ -71,7 +71,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
   // 7. If return is undefined, then
   if (ret === Value.undefined) {
     // a. Let iteratorResult be CreateIteratorResultObject(value, true).
-    const iteratorResult = CreateIteratorResultObject(value || Value.undefined, Value.true);
+    const iteratorResult = CreateIteratorResultObject(value || Value.undefined, true);
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
     // c. Return promiseCapability.[[Promise]].
@@ -99,7 +99,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
     return promiseCapability.Promise;
   }
   // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, false).
-  return X(AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.false));
+  return X(AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, false));
 }
 
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
@@ -151,7 +151,7 @@ function* AsyncFromSyncIteratorPrototype_throw([value = Value.undefined]: Argume
     return promiseCapability.Promise;
   }
   // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true).
-  return X(AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true));
+  return X(AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true));
 }
 
 export function bootstrapAsyncFromSyncIteratorPrototype(realmRec: Realm) {

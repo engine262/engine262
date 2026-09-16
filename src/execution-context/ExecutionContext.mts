@@ -5,7 +5,6 @@ import {
   surroundingAgent,
   Assert,
   GetIdentifierReference,
-  JSStringValue,
   UndefinedValue,
   type EnvironmentRecordWithThisBinding,
   ObjectValue,
@@ -49,7 +48,7 @@ export class ExecutionContext {
 
   Function: NullValue | FunctionObject = Value.null;
 
-  ScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue = Value.null;
+  ScriptOrModule: AbstractModuleRecord | ScriptRecord | null = null;
 
   Realm!: Realm;
 
@@ -124,20 +123,20 @@ export class ExecutionContextStack extends Array<ExecutionContext> {
 }
 
 /** https://tc39.es/ecma262/#sec-getactivescriptormodule */
-export function GetActiveScriptOrModule() {
+export function GetActiveScriptOrModule(): AbstractModuleRecord | ScriptRecord | null {
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
-    if (e.ScriptOrModule !== Value.null) {
+    if (e.ScriptOrModule !== null) {
       return e.ScriptOrModule;
     }
   }
-  return Value.null;
+  return null;
 }
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */
-export function ResolveBinding(name: JSStringValue, strict: boolean, env?: EnvironmentRecord | UndefinedValue | NullValue) {
+export function ResolveBinding(name: string, strict: boolean, env?: EnvironmentRecord | undefined | null) {
   // 1. If env is not present or if env is undefined, then
-  if (env === undefined || env === Value.undefined) {
+  if (!env) {
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
   Assert(env instanceof EnvironmentRecord);
@@ -159,7 +158,7 @@ export function GetThisEnvironment(): EnvironmentRecordWithThisBinding {
     // a. Let exists be env.HasThisBinding().
     const exists = env.HasThisBinding();
     // b. If exists is true, return envRec.
-    if (exists === Value.true) {
+    if (exists) {
       return env as EnvironmentRecordWithThisBinding;
     }
     // c. Let outer be env.[[OuterEnv]].

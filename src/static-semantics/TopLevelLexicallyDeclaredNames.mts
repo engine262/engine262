@@ -1,9 +1,8 @@
 import { isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { JSStringValue } from '../value.mts';
 import { BoundNames } from './all.mts';
 
-export function TopLevelLexicallyDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
+export function TopLevelLexicallyDeclaredNames(node: ParseNode | readonly ParseNode[]): string[] {
   if (isArray(node)) {
     const names = [];
     for (const StatementListItem of node) {

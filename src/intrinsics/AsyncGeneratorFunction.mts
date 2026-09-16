@@ -22,15 +22,15 @@ export function bootstrapAsyncGeneratorFunction(realmRec: Realm) {
   const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
   X(cons.DefineOwnProperty(Value('prototype'), Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   })));
 
   X((realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: false,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   cons.Prototype = realmRec.Intrinsics['%Function%'];

@@ -3,8 +3,6 @@ import {
 } from '../completion.mts';
 import {
   BigIntValue,
-  BooleanValue,
-  JSStringValue,
   NullValue,
   NumberValue,
   ObjectValue,
@@ -161,13 +159,13 @@ export type TypedArrayTypes = keyof typeof typedArrayInfoByType;
 
 export interface TypedArrayObject extends ExoticObject {
   readonly Prototype: ObjectValue | NullValue;
-  readonly Extensible: BooleanValue<false>;
+  readonly Extensible: false;
 
-  ViewedArrayBuffer: ArrayBufferObject | UndefinedValue;
+  ViewedArrayBuffer: ArrayBufferObject | undefined;
   readonly ArrayLength: number | 'auto';
   readonly ByteOffset: number;
   readonly ContentType: 'BigInt' | 'Number';
-  readonly TypedArrayName: JSStringValue;
+  readonly TypedArrayName: TypedArrayConstructorNames;
   readonly ByteLength: number | 'auto';
 }
 export function isTypedArrayObject(value: Value): value is TypedArrayObject {
@@ -181,7 +179,7 @@ export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentLis
     && 'TypedArrayName' in exemplar
     && 'ContentType' in exemplar);
   // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
-  const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
+  const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName].IntrinsicName);
   // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
   const constructor = Q(yield* SpeciesConstructor(exemplar, defaultConstructor));
   // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
@@ -214,7 +212,7 @@ export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, ar
 
 /** https://tc39.es/ecma262/#sec-typedarray-create-same-type */
 export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, length: number): ValueEvaluator<TypedArrayObject> {
-  const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
+  const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName].IntrinsicName);
   const result = Q(yield* TypedArrayCreateFromConstructor(constructor, [Value(length)]));
   Assert('TypedArrayName' in result && 'ContentType' in result);
   Assert(result.ContentType === exemplar.ContentType);
@@ -239,13 +237,13 @@ export function ValidateTypedArrayBounds(ta: TypedArrayObject, order: 'seq-cst' 
 
 /** https://tc39.es/ecma262/#sec-typedarrayelementsize */
 export function TypedArrayElementSize(O: TypedArrayObject): number {
-  const type = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
+  const type = O.TypedArrayName;
   return typedArrayInfoByName[type].ElementSize;
 }
 
 /** https://tc39.es/ecma262/#sec-typedarrayelementtype */
 export function TypedArrayElementType(O: TypedArrayObject): TypedArrayTypes {
-  const type = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
+  const type = O.TypedArrayName;
   return typedArrayInfoByName[type].ElementType;
 }
 
@@ -293,18 +291,18 @@ function TypedArrayConstructor(this: BuiltinFunctionObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-allocatetypedarray */
-export function* AllocateTypedArray(constructorName: JSStringValue, newTarget: FunctionObject, defaultProto: keyof Intrinsics, length?: number): ValueEvaluator<Mutable<TypedArrayObject>> {
+export function* AllocateTypedArray(constructorName: TypedArrayConstructorNames, newTarget: FunctionObject, defaultProto: keyof Intrinsics, length?: number): ValueEvaluator<Mutable<TypedArrayObject>> {
   // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
   const proto = Q(yield* GetPrototypeFromConstructor(newTarget, defaultProto));
   // 2. Let obj be TypedArrayCreate(proto).
   const obj = TypedArrayCreate(proto) as Mutable<TypedArrayObject>;
   // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
-  Assert(obj.ViewedArrayBuffer === Value.undefined);
+  Assert(obj.ViewedArrayBuffer === undefined);
   // 4. Set obj.[[TypedArrayName]] to constructorName.
   obj.TypedArrayName = constructorName;
   // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
   // 6. Otherwise, set obj.[[ContentType]] to Number.
-  if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
+  if (constructorName === 'BigInt64Array' || constructorName === 'BigUint64Array') {
     obj.ContentType = 'BigInt';
   } else {
     obj.ContentType = 'Number';
@@ -415,7 +413,7 @@ export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, valu
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = value[k];
-    Q(yield* Set(O, Pk, kValue, Value.true));
+    Q(yield* Set(O, Pk, kValue, true));
     k += 1;
   }
 }
@@ -428,7 +426,7 @@ export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>,
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = Q(yield* Get(arrayLike, Pk));
-    Q(yield* Set(O, Pk, kValue, Value.true));
+    Q(yield* Set(O, Pk, kValue, true));
     k += 1;
   }
 }
@@ -438,11 +436,11 @@ export function* AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): 
   // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
   Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
   // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
-  Assert(O.ViewedArrayBuffer === Value.undefined);
+  Assert(O.ViewedArrayBuffer === undefined);
   // 3. Assert: length is a non-negative integer.
   Assert(isNonNegativeInteger(length));
   // 4. Let constructorName be the String value of O.[[TypedArrayName]].
-  const constructorName = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
+  const constructorName = O.TypedArrayName;
   // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
   const elementSize = typedArrayInfoByName[constructorName].ElementSize;
   // 6. Let byteLength be elementSize × length.
@@ -499,7 +497,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       } else {
         mappedValue = kValue;
       }
-      Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
+      Q(yield* Set(targetObj, Pk, mappedValue, true));
       k += 1;
     }
     return targetObj;
@@ -529,7 +527,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       mappedValue = kValue;
     }
     // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-    Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
+    Q(yield* Set(targetObj, Pk, mappedValue, true));
     // f. Set k to k + 1.
     k += 1;
   }
@@ -559,7 +557,7 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
     // b. Let Pk be ! ToString(𝔽(k)).
     const Pk = X(ToString(F(k)));
     // c. Perform ? Set(newObj, Pk, kValue, true).
-    Q(yield* Set(newObj, Pk, kValue!, Value.true));
+    Q(yield* Set(newObj, Pk, kValue!, true));
     // d. Set k to k + 1.
     k += 1;
   }

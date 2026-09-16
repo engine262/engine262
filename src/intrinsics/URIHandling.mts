@@ -1,4 +1,4 @@
-import { JSStringValue, Value, type Arguments } from '../value.mts';
+import { Value, type Arguments } from '../value.mts';
 import { CodePointAt, UTF16EncodeCodePoint } from '../static-semantics/all.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
 import {
@@ -107,8 +107,7 @@ function utf8Decode(bytes: readonly number[]): CodePoint | null {
 }
 
 /** https://tc39.es/ecma262/#sec-encode */
-function Encode(_string: JSStringValue, extraUnescaped: string) {
-  const string = _string.stringValue();
+function Encode(string: string, extraUnescaped: string) {
   const len = string.length;
   let R = '';
   const alwaysUnescaped = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.!~*\'()';
@@ -138,8 +137,7 @@ function Encode(_string: JSStringValue, extraUnescaped: string) {
 }
 
 /** https://tc39.es/ecma262/#sec-decode */
-function Decode(_string: JSStringValue, preserveEscapeSet: string) {
-  const string = _string.stringValue();
+function Decode(string: string, preserveEscapeSet: string) {
   const len = string.length;
   let R = '';
   let k = 0;

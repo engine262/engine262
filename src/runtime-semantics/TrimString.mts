@@ -1,19 +1,23 @@
-import { JSStringValue, Value } from '../value.mts';
-import { Q, type ValueEvaluator } from '../completion.mts';
-import { Assert, RequireObjectCoercible, ToString } from '#self';
+import { Value } from '../value.mts';
+import { Q } from '../completion.mts';
+import { Assert, RequireObjectCoercible, ToString, type PlainEvaluator } from '#self';
 
 /** https://tc39.es/ecma262/#sec-trimstring */
-export function* TrimString(string: Value, where: 'start' | 'end' | 'start+end'): ValueEvaluator<JSStringValue> {
-  Q(RequireObjectCoercible(string));
-  const S = Q(yield* ToString(string)).stringValue();
+export function* TrimString(arg: string | Value, where: 'start' | 'end' | 'start+end'): PlainEvaluator<string> {
+  let string;
+  if (typeof arg === 'string') string = arg;
+  else {
+    Q(RequireObjectCoercible(arg));
+    string = Q(yield* ToString(arg));
+  }
   let T;
   if (where === 'start') {
-    T = S.trimStart();
+    T = string.trimStart();
   } else if (where === 'end') {
-    T = S.trimEnd();
+    T = string.trimEnd();
   } else {
     Assert(where === 'start+end');
-    T = S.trim();
+    T = string.trim();
   }
-  return Value(T);
+  return T;
 }

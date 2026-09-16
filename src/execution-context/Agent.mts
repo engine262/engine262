@@ -268,7 +268,7 @@ export class Agent {
       if (breakpoint.condition) {
         const result = EnsureCompletion(skipDebugger(performDevtoolsEval(breakpoint.condition, surroundingAgent.currentRealmRecord as ManagedRealm, false, true)));
         if (result instanceof NormalCompletion) {
-          return ToBoolean(result.Value).booleanValue();
+          return ToBoolean(result.Value);
         } else {
           // ignore them now.
           // should report to inspector, but it requires us to adjust code to move part of breakpoint code to the inspector class.

@@ -3,7 +3,6 @@ import {
   ObjectValue,
   SymbolValue,
   JSStringValue,
-  UndefinedValue,
   Value,
   type PropertyKeyValue,
   type ObjectInternalMethods,
@@ -25,39 +24,41 @@ import {
   ToString,
   isArrayIndex,
   F, R,
+  type FullyPopulatedDataDescriptor,
 } from './all.mts';
+import type { PlainEvaluator } from '#self';
 
 const InternalMethods = {
   * GetOwnProperty(P) {
     const S = this;
-    Assert(IsPropertyKey(P));
+    if (P instanceof JSStringValue) P = P.stringValue();
+    Assert(typeof P === 'string' || IsPropertyKey(P));
     const desc = OrdinaryGetOwnProperty(S, P);
-    if (!(desc instanceof UndefinedValue)) {
-      return desc;
-    }
-    return X(StringGetOwnProperty(S, P));
+    if (desc) return desc;
+    return StringGetOwnProperty(S, P);
   },
   * DefineOwnProperty(P, Desc) {
     const S = this;
-    Assert(IsPropertyKey(P));
+    if (P instanceof JSStringValue) P = P.stringValue();
+    Assert(typeof P === 'string' || IsPropertyKey(P));
     const stringDesc = X(StringGetOwnProperty(S, P));
-    if (!(stringDesc instanceof UndefinedValue)) {
+    if (stringDesc) {
       const extensible = S.Extensible;
       return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
     }
     return X(OrdinaryDefineOwnProperty(S, P, Desc));
   },
-  * OwnPropertyKeys() {
+  * OwnPropertyKeys(): PlainEvaluator<PropertyKeyValue[]> {
     const O = this;
-    const keys = [];
+    const keys: PropertyKeyValue[] = [];
     const str = O.StringData;
-    Assert(str instanceof JSStringValue);
-    const len = str.stringValue().length;
+    Assert(typeof str === 'string');
+    const len = str.length;
 
     // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
     for (let i = 0; i < len; i += 1) {
       // a. Add ! ToString(𝔽(i)) as the last element of keys.
-      keys.push(X(ToString(F(i))));
+      keys.push(Value(X(ToString(F(i)))));
     }
 
     // For each own property key P of O such that P is an array index and
@@ -95,9 +96,9 @@ const InternalMethods = {
 } satisfies Partial<ObjectInternalMethods<StringObject>>;
 
 /** https://tc39.es/ecma262/#sec-stringcreate */
-export function StringCreate(value: JSStringValue, prototype: ObjectValue) {
+export function StringCreate(value: string, prototype: ObjectValue) {
   // 1. Assert: Type(value) is String.
-  Assert(value instanceof JSStringValue);
+  Assert(typeof value === 'string');
   // 2. Let S be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
   const S = X(MakeBasicObject(['Prototype', 'Extensible', 'StringData'])) as Mutable<StringObject>;
   // 3. Set S.[[Prototype]] to prototype.
@@ -111,46 +112,45 @@ export function StringCreate(value: JSStringValue, prototype: ObjectValue) {
   // 7. Set S.[[OwnPropertyKeys]] as specified in 9.4.3.3.
   S.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
   // 8. Let length be the number of code unit elements in value.
-  const length = value.stringValue().length;
+  const length = value.length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(S, 'length', Descriptor({
     Value: F(length),
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   })));
   // 10. Return S.
   return S;
 }
 
 /** https://tc39.es/ecma262/#sec-stringgetownproperty */
-export function StringGetOwnProperty(S: ObjectValue, P: PropertyKeyValue) {
+export function StringGetOwnProperty(S: ObjectValue, P: string | PropertyKeyValue): FullyPopulatedDataDescriptor | undefined {
   Assert(S instanceof ObjectValue && 'StringData' in S);
-  Assert(IsPropertyKey(P));
-  if (!(P instanceof JSStringValue)) {
-    return Value.undefined;
-  }
+  Assert(IsPropertyKey(P) || typeof P === 'string');
+  if (P instanceof JSStringValue) P = P.stringValue();
+  if (typeof P !== 'string') return undefined;
   const index = X(CanonicalNumericIndexString(P));
-  if (index instanceof UndefinedValue) {
-    return Value.undefined;
+  if (index === undefined) {
+    return undefined;
   }
-  if (IsIntegralNumber(index) === Value.false) {
-    return Value.undefined;
+  if (!IsIntegralNumber(index)) {
+    return undefined;
   }
   if (Object.is(index.value, -0)) {
-    return Value.undefined;
+    return undefined;
   }
   const str = S.StringData;
-  Assert(str instanceof JSStringValue);
-  const len = str.stringValue().length;
+  Assert(typeof str === 'string');
+  const len = str.length;
   if (R(index) < 0 || len <= R(index)) {
-    return Value.undefined;
+    return undefined;
   }
-  const resultStr = str.stringValue()[R(index)];
+  const resultStr = str[R(index)];
   return Descriptor({
     Value: Value(resultStr),
-    Writable: Value.false,
-    Enumerable: Value.true,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: true,
+    Configurable: false,
   });
 }

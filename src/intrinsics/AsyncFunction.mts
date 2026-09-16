@@ -22,9 +22,9 @@ export function bootstrapAsyncFunction(realmRec: Realm) {
   const cons = bootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
 
   X(cons.DefineOwnProperty(Value('prototype'), Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   })));
 
   cons.Prototype = realmRec.Intrinsics['%Function%'];

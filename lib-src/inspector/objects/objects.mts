@@ -89,7 +89,7 @@ export class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
       } else {
         const array = new ObjectValue([]);
         array.DefineOwnProperty = ArrayExoticObjectInternalMethods.DefineOwnProperty;
-        array.properties.set('length', Descriptor({ Value: F(val.length) }));
+        array.properties.set('length', Descriptor({ Value: F(val.length), Configurable: true, Enumerable: false, Writable: true }));
         for (const [index, item] of val.entries()) {
           let value;
           if (item instanceof Value) {
@@ -99,10 +99,10 @@ export class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
               continue;
             }
             value = new ObjectValue(['InspectorEntry']);
-            value.properties.set('key', Descriptor({ Value: item.Key }));
-            value.properties.set('value', Descriptor({ Value: item.Value }));
+            value.properties.set('key', Descriptor({ Value: item.Key, Configurable: true, Enumerable: false, Writable: true }));
+            value.properties.set('value', Descriptor({ Value: item.Value, Configurable: true, Enumerable: false, Writable: true }));
           }
-          array.properties.set(Value(index.toString()), Descriptor({ Value: value }));
+          array.properties.set(Value(index.toString()), Descriptor({ Value: value, Configurable: true, Enumerable: false, Writable: true }));
         }
         value = getInspector(array).toRemoteObject(array, getObjectId, context, generatePreview);
       }
@@ -146,13 +146,13 @@ function propertyNameToString(value: PropertyKeyValue | PrivateName): string {
   } else if (value instanceof PrivateName) {
     return value.Description;
   } else {
-    return SymbolDescriptiveString(value).stringValue();
+    return SymbolDescriptiveString(value);
   }
 }
 
 export function propertyToPropertyPreview(key: PropertyKeyValue | PrivateName, desc: Descriptor | PrivateElementRecord, context: InspectorContext): Protocol.Runtime.PropertyPreview {
   const name = propertyNameToString(key);
-  if (desc.Getter || desc.Setter) {
+  if (desc.Get || desc.Set) {
     return { name, type: 'accessor' };
   } else {
     return getInspector(desc.Value!).toPropertyPreview(name, desc.Value!, context);

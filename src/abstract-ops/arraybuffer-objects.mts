@@ -12,8 +12,7 @@ import {
   surroundingAgent,
   NumberValue, BigIntValue, Value,
   DataBlock,
-  UndefinedValue,
-  Q, X, NormalCompletion, type ValueEvaluator,
+  Q, X, type ValueEvaluator,
   type Mutable,
   Assert, OrdinaryCreateFromConstructor,
   isNonNegativeInteger, CreateByteDataBlock,
@@ -35,7 +34,7 @@ import {
 export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferData: DataBlock | null;
   readonly ArrayBufferByteLength: number;
-  readonly ArrayBufferDetachKey: Value;
+  readonly ArrayBufferDetachKey: Value | undefined;
 }
 
 export interface ResizableArrayBufferObject extends ArrayBufferObject {
@@ -117,7 +116,7 @@ export function* ArrayBufferCopyAndDetach(
     newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
   }
 
-  if (arrayBuffer.ArrayBufferDetachKey !== Value.undefined) {
+  if (arrayBuffer.ArrayBufferDetachKey !== undefined) {
     return Throw.TypeError('Cannot transfer ArrayBuffer with custom detach key');
   }
 
@@ -142,13 +141,11 @@ export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
 export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(!IsSharedArrayBuffer(arrayBuffer));
-  // 3. If key is not present, set key to undefined.
-  if (key === undefined) {
-    key = Value.undefined;
-  }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (!SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
-    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
+  if (arrayBuffer.ArrayBufferDetachKey === undefined
+      ? key !== undefined
+      : key === undefined || !SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
+    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key ?? Value.undefined);
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
@@ -298,8 +295,9 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
   } else if (type === 'Float64') {
     rawBytes = encodeFloat64(Number(value.value));
   } else {
-    const conversionOperation = typedArrayInfoByType[type].ConversionOperation as (argument: Value) => ValueEvaluator<NumberValue | BigIntValue>;
-    const intValue = R(X(conversionOperation(value)));
+    const conversionOperation = typedArrayInfoByType[type].ConversionOperation as (argument: Value) => PlainEvaluator<NumberValue | BigIntValue | bigint | number>;
+    const converted = X(conversionOperation(value));
+    const intValue = R(typeof converted === 'bigint' || typeof converted === 'number' ? Value(converted) : converted);
     // If intValue ≥ 0, then
     //     Let rawBytes be a List whose elements are the n-byte binary encoding of intValue. The bytes are ordered in little endian order.
     // Else,
@@ -322,7 +320,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
 }
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
-export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): ValueEvaluator<UndefinedValue> {
+export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): PlainEvaluator<void> {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(!IsDetachedBuffer(arrayBuffer));
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
@@ -355,7 +353,6 @@ export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: num
     block[byteIndex + i] = byte;
   });
   // 11. Return NormalCompletion(undefined).
-  return NormalCompletion(Value.undefined);
 }
 
 // TODO: GetModifySetValueInBuffer

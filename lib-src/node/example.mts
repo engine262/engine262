@@ -27,13 +27,13 @@ const agent = new Agent({
           const env = new ModuleEnvironmentRecord(null);
           const module = new SyntheticModuleRecord({
             Environment: env,
-            ExportNames: [Value('foo')],
+            ExportNames: ['foo'],
             EvaluationSteps() {
               // Create built-in function
               const foo = CreateBuiltinFunction.from(function* foo(value = Value.undefined) {
-                console.log('Native function foo called with argument:', inspect(yield* ToString(value)));
+                console.log('Native function foo called with argument:', yield* ToString(value));
               }, 'foo');
-              X(module.SetSyntheticExport(Value('foo'), foo));
+              X(module.SetSyntheticExport('foo', foo));
               console.log('Builtin module evaluated');
             },
             HostDefined: {},

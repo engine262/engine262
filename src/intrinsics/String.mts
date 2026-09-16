@@ -1,6 +1,4 @@
 import {
-  BooleanValue,
-  JSStringValue,
   NullValue,
   ObjectValue,
   SymbolValue,
@@ -32,26 +30,26 @@ import {
 } from '#self';
 
 export interface StringObject extends ExoticObject {
-  readonly StringData: JSStringValue;
+  readonly StringData: string;
   Prototype: ObjectValue | NullValue;
-  Extensible: BooleanValue;
+  Extensible: boolean;
 }
 export function isStringObject(o: Value): o is StringObject {
   return 'StringData' in o;
 }
 /** https://tc39.es/ecma262/#sec-string-constructor-string-value */
 function* StringConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
-  let s;
+  let s: string;
   if (value === undefined) {
-    s = Value('');
+    s = '';
   } else {
     if (NewTarget === Value.undefined && value instanceof SymbolValue) {
-      return X(SymbolDescriptiveString(value));
+      return Value(X(SymbolDescriptiveString(value)));
     }
     s = Q(yield* ToString(value));
   }
   if (NewTarget instanceof UndefinedValue) {
-    return s;
+    return Value(s);
   }
   return X(StringCreate(s, Q(yield* GetPrototypeFromConstructor(NewTarget, '%String.prototype%'))));
 }
@@ -80,7 +78,7 @@ function* String_fromCodePoint(codePoints: Arguments) {
     // a. Let nextCP be ? ToNumber(next).
     const nextCP = Q(yield* ToNumber(next));
     // b. If IsIntegralNumber(nextCP) is false, throw a RangeError exception.
-    if (X(IsIntegralNumber(nextCP)) === Value.false) {
+    if (!IsIntegralNumber(nextCP)) {
       return Throw.RangeError('Invalid code point $1', next);
     }
     // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
@@ -111,7 +109,7 @@ function* String_raw([template = Value.undefined, ...substitutions]: Arguments):
   while (true) {
     const nextKey = X(ToString(F(nextIndex)));
     const nextSeg = Q(yield* ToString(Q(yield* Get(raw, nextKey))));
-    stringElements.push(nextSeg.stringValue());
+    stringElements.push(nextSeg);
     if (nextIndex + 1 === literalSegments) {
       return Value(stringElements.join(''));
     }
@@ -122,7 +120,7 @@ function* String_raw([template = Value.undefined, ...substitutions]: Arguments):
       next = Value('');
     }
     const nextSub = Q(yield* ToString(next!));
-    stringElements.push(nextSub.stringValue());
+    stringElements.push(nextSub);
     nextIndex += 1;
   }
 }

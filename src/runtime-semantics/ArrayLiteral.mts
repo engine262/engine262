@@ -1,4 +1,4 @@
-import { ObjectValue, Value } from '../value.mts';
+import { ObjectValue } from '../value.mts';
 import {
   Evaluate, type PlainEvaluator,
   type ValueEvaluator,
@@ -35,7 +35,7 @@ function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectVal
     switch (element.type) {
       case 'Elision':
         postIndex += 1;
-        Q(yield* Set(array, 'length', F(postIndex), Value.true));
+        Q(yield* Set(array, 'length', F(postIndex), true));
         break;
       case 'SpreadElement':
         postIndex = Q(yield* ArrayAccumulation_SpreadElement(element, array, postIndex));

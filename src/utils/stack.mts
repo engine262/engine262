@@ -4,7 +4,6 @@ import { isArray } from './language.mts';
 import {
   ExecutionContext, type ParseNode, Value, NullValue, isECMAScriptFunctionObject, isBuiltinFunctionObject, type FunctionObject, isFunctionObject, JSStringValue, surroundingAgent, DynamicParsedCodeRecord,
   IsError as isErrorObject,
-  UndefinedValue,
 } from '#self';
 
 
@@ -54,7 +53,7 @@ export class CallSite {
     return isBuiltinFunctionObject(this.context.Function);
   }
 
-  static getFunctionName(func: FunctionObject | NullValue) {
+  static getFunctionName(func: FunctionObject) {
     if (isFunctionObject(func)) {
       if (isBuiltinFunctionObject(func)) {
         const name = func.nativeFunction.name;
@@ -74,6 +73,7 @@ export class CallSite {
   }
 
   getFunctionName(): string | null {
+    if (this.context.Function instanceof NullValue) return null;
     return CallSite.getFunctionName(this.context.Function);
   }
 
@@ -81,7 +81,7 @@ export class CallSite {
     if (this.context.HostDefined?.scriptId && surroundingAgent.parsedSources.get(this.context.HostDefined.scriptId) instanceof DynamicParsedCodeRecord) {
       return null;
     }
-    if (!(this.context.ScriptOrModule instanceof NullValue)) {
+    if (this.context.ScriptOrModule) {
       return this.context.ScriptOrModule.HostDefined?.specifier;
     }
     return null;
@@ -92,7 +92,7 @@ export class CallSite {
     if (context) {
       return context;
     }
-    if (!(this.context.ScriptOrModule instanceof NullValue)) {
+    if (this.context.ScriptOrModule) {
       return this.context.ScriptOrModule.HostDefined?.scriptId;
     }
     return undefined;
@@ -258,7 +258,7 @@ function captureAsyncStack(stack: CallSite[]) {
       } else {
         return;
       }
-    } else if (!(reaction.Capability instanceof UndefinedValue)) {
+    } else if (reaction.Capability) {
       if ('PromiseState' in reaction.Capability.Promise) {
         promise = reaction.Capability.Promise;
       } else {

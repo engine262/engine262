@@ -68,11 +68,11 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     // 2. Let className be the sole element of BoundNames of ClassDeclaration.
     const className = BoundNames(ClassDeclaration)[0];
     // If className is "*default*", then
-    if (className.stringValue() === '*default*') {
+    if (className === '*default*') {
       // a. Let env be the running execution context's LexicalEnvironment.
       const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // b. Perform ? InitializeBoundName("*default*", value, env).
-      Q(yield* InitializeBoundName(Value('*default*'), value, env));
+      Q(yield* InitializeBoundName('*default*', value, env));
     }
     // 3. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -92,7 +92,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    Q(yield* InitializeBoundName(Value('*default*'), value as ECMAScriptFunctionObject, env));
+    Q(yield* InitializeBoundName('*default*', value as ECMAScriptFunctionObject, env));
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

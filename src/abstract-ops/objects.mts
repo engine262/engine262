@@ -3,9 +3,7 @@ import {
   ObjectValue,
   SymbolValue, JSStringValue, UndefinedValue, NullValue,
   Value,
-  BooleanValue,
   type PropertyKeyValue,
-  type DescriptorInit,
   type CanBeNativeSteps,
 } from '../value.mts';
 import {
@@ -31,11 +29,11 @@ import {
   type FunctionObject,
   type Intrinsics,
 } from './all.mts';
-import { CreateBuiltinFunction, surroundingAgent } from '#self';
+import { CreateBuiltinFunction, surroundingAgent, type PlainEvaluator, type FullyPopulatedDescriptor, type DataDescriptorInit, type AccessorDescriptorInit } from '#self';
 
 export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;
-  Extensible: BooleanValue;
+  Extensible: boolean;
 }
 
 export function isOrdinaryObject(value: Value): value is OrdinaryObject {
@@ -57,225 +55,181 @@ export function isOrdinaryObject(value: Value): value is OrdinaryObject {
 
 // TODO: ban other direct extension from ObjectValue in the linter
 export type ExoticObject = ObjectValue;
-// 9.1.1.1 OrdinaryGetPrototypeOf
-export function OrdinaryGetPrototypeOf(O: OrdinaryObject) {
-  return O.Prototype;
+
+/** https://tc39.es/ecma262/#sec-ordinarygetprototypeof */
+export function OrdinaryGetPrototypeOf(obj: OrdinaryObject) {
+  return obj.Prototype;
 }
 
-// 9.1.2.1 OrdinarySetPrototypeOf
-export function OrdinarySetPrototypeOf(O: OrdinaryObject, V: ObjectValue | NullValue) {
-  Assert(V instanceof ObjectValue || V instanceof NullValue);
+/** https://tc39.es/ecma262/#sec-ordinarysetprototypeof */
+export function OrdinarySetPrototypeOf(obj: OrdinaryObject, proto: ObjectValue | NullValue): boolean {
+  Assert(proto instanceof ObjectValue || proto instanceof NullValue);
 
-  const current = O.Prototype;
-  if (SameValue(V, current)) {
-    return Value.true;
-  }
-  const extensible = O.Extensible;
-  if (extensible === Value.false) {
-    return Value.false;
-  }
-  let p = V;
+  const current = obj.Prototype;
+  if (SameValue(proto, current)) return true;
+  const extensible = obj.Extensible;
+  if (!extensible) return false;
+  let cursor = proto;
   let done = false;
-  while (done === false) {
-    if (p instanceof NullValue) {
+  while (!done) {
+    if (cursor instanceof NullValue) {
       done = true;
-    } else if (SameValue(p, O)) {
-      return Value.false;
-    } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
-      done = true;
+    } else if (SameValue(cursor, obj)) {
+      return false;
     } else {
-      p = (p as OrdinaryObject).Prototype;
+      if (cursor.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
+        done = true;
+      } else {
+        cursor = (cursor as OrdinaryObject).Prototype;
+      }
     }
   }
-  O.Prototype = V;
-  return Value.true;
+  obj.Prototype = proto;
+  return true;
 }
 
-// 9.1.3.1 OrdinaryIsExtensible
-export function OrdinaryIsExtensible(O: OrdinaryObject) {
-  return O.Extensible;
+/** https://tc39.es/ecma262/#sec-ordinaryisextensible */
+export function OrdinaryIsExtensible(obj: OrdinaryObject) {
+  return obj.Extensible;
 }
 
-// 9.1.4.1 OrdinaryPreventExtensions
-export function OrdinaryPreventExtensions(O: OrdinaryObject) {
-  O.Extensible = Value.false;
-  return Value.true;
+/** https://tc39.es/ecma262/#sec-ordinarypreventextensions */
+export function OrdinaryPreventExtensions(obj: OrdinaryObject): boolean {
+  obj.Extensible = false;
+  return true;
 }
 
-// 9.1.5.1 OrdinaryGetOwnProperty
-export function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue | string) {
-  Assert(typeof P === 'string' || IsPropertyKey(P));
-
-  if (!O.properties.has(P)) {
-    return Value.undefined;
+/** https://tc39.es/ecma262/#sec-ordinarygetownproperty */
+export function OrdinaryGetOwnProperty(obj: ObjectValue, propertyKey: PropertyKeyValue | string): FullyPopulatedDescriptor | undefined {
+  if (!obj.properties.has(propertyKey)) {
+    return undefined;
   }
 
-  const D: Mutable<DescriptorInit> = {};
+  const propertyDesc = {} as Mutable<AccessorDescriptorInit & DataDescriptorInit>;
+  const ownProperty = obj.properties.get(propertyKey)!;
 
-  const x = O.properties.get(P)!;
-
-  if (IsDataDescriptor(x)) {
-    D.Value = x.Value;
-    D.Writable = x.Writable;
-  } else if (IsAccessorDescriptor(x)) {
-    D.Getter = x.Getter;
-    D.Setter = x.Setter;
+  if (IsDataDescriptor(ownProperty)) {
+    propertyDesc.Value = ownProperty.Value;
+    propertyDesc.Writable = ownProperty.Writable;
+  } else if (IsAccessorDescriptor(ownProperty)) {
+    propertyDesc.Get = ownProperty.Get;
+    propertyDesc.Set = ownProperty.Set;
+  } else {
+    throw new TypeError('Invalid property descriptor stored on an object.');
   }
-  D.Enumerable = x.Enumerable;
-  D.Configurable = x.Configurable;
+  propertyDesc.Enumerable = ownProperty.Enumerable;
+  propertyDesc.Configurable = ownProperty.Configurable;
 
-  return Descriptor(D);
+  return Descriptor(propertyDesc) as FullyPopulatedDescriptor;
 }
 
-// 9.1.6.1 OrdinaryDefineOwnProperty
-export function* OrdinaryDefineOwnProperty(O: ObjectValue, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue> {
-  Assert(typeof P === 'string' || IsPropertyKey(P));
-  const current = Q(yield* O.GetOwnProperty(P));
-  const extensible = Q(yield* IsExtensible(O));
-  return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
+/** https://tc39.es/ecma262/#sec-ordinarydefineownproperty */
+export function* OrdinaryDefineOwnProperty(obj: ObjectValue, propertyKey: PropertyKeyValue | string, propertyDesc: Descriptor): PlainEvaluator<boolean> {
+  Assert(typeof propertyKey === 'string' || IsPropertyKey(propertyKey));
+  const current = Q(yield* obj.GetOwnProperty(propertyKey));
+  const extensible = Q(yield* IsExtensible(obj));
+  return ValidateAndApplyPropertyDescriptor(obj, propertyKey, extensible, propertyDesc, current);
 }
 
 /** https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
-export function IsCompatiblePropertyDescriptor(Extensible: BooleanValue, Desc: Descriptor, Current: UndefinedValue | Descriptor) {
-  return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
+export function IsCompatiblePropertyDescriptor(extensible: boolean, propertyDesc: Descriptor, current: undefined | FullyPopulatedDescriptor) {
+  return ValidateAndApplyPropertyDescriptor(undefined, "", extensible, propertyDesc, current);
 }
 
-// 9.1.6.3 ValidateAndApplyPropertyDescriptor
-export function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedValue, P: PropertyKeyValue | string | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
-  Assert(O === Value.undefined || typeof P === 'string' || IsPropertyKey(P));
+/** https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor */
+export function ValidateAndApplyPropertyDescriptor(obj: ObjectValue | undefined, propertyKey: PropertyKeyValue | string, extensible: boolean, propertyDesc: Descriptor, current: undefined | FullyPopulatedDescriptor): boolean {
+  if (!current) {
+    if (!extensible) return false;
+    if (!obj) return true;
 
-  if (current instanceof UndefinedValue) {
-    if (extensible === Value.false) {
-      return Value.false;
-    }
-
-    Assert(extensible === Value.true);
-
-    if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-      if (!(O instanceof UndefinedValue)) {
-        O.properties.set(P as PropertyKeyValue | string, Descriptor({
-          Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
-          Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
-          Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
-          Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable,
-        }));
-      }
+    if (IsAccessorDescriptor(propertyDesc)) {
+      obj.properties.set(propertyKey, Descriptor({
+        Get: propertyDesc.Get ?? Value.undefined,
+        Set: propertyDesc.Set ?? Value.undefined,
+        Enumerable: propertyDesc.Enumerable ?? false,
+        Configurable: propertyDesc.Configurable ?? false,
+      }));
     } else {
-      Assert(IsAccessorDescriptor(Desc));
-      if (!(O instanceof UndefinedValue)) {
-        O.properties.set(P as PropertyKeyValue | string, Descriptor({
-          Getter: Desc.Getter === undefined ? Value.undefined : Desc.Getter,
-          Setter: Desc.Setter === undefined ? Value.undefined : Desc.Setter,
-          Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
-          Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable,
-        }));
-      }
+      obj.properties.set(propertyKey, Descriptor({
+        Value: propertyDesc.Value ?? Value.undefined,
+        Writable: propertyDesc.Writable ?? false,
+        Enumerable: propertyDesc.Enumerable ?? false,
+        Configurable: propertyDesc.Configurable ?? false,
+      }));
     }
-
-    return Value.true;
+    return true;
   }
 
-  if (Desc.everyFieldIsAbsent()) {
-    return Value.true;
-  }
-
-  if ((current as Descriptor).Configurable === Value.false) {
-    if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
-      return Value.false;
-    }
-
-    if (Desc.Enumerable !== undefined && Desc.Enumerable !== (current as Descriptor).Enumerable) {
-      return Value.false;
+  if (Descriptor.everyFieldIsAbsent(propertyDesc)) return true;
+  if (!current.Configurable) {
+    if (propertyDesc.Configurable !== undefined && propertyDesc.Configurable === true) return false;
+    if (propertyDesc.Enumerable !== undefined && propertyDesc.Enumerable !== current.Enumerable) return false;
+    if (!IsGenericDescriptor(propertyDesc) && IsAccessorDescriptor(propertyDesc) !== IsAccessorDescriptor(current)) return false;
+    if (IsAccessorDescriptor(current)) {
+      if (propertyDesc.Get && SameValue(propertyDesc.Get, current.Get) === false) return false;
+      if (propertyDesc.Set && SameValue(propertyDesc.Set, current.Set) === false) return false;
+    } else if (!current.Writable) {
+      if (propertyDesc.Writable !== undefined && propertyDesc.Writable) return false;
+      // ii. NOTE: SameValue returns true for NaN values which may be distinguishable by other means. Returning here ensures that any existing property of obj remains unmodified.
+      if (propertyDesc.Value !== undefined) return SameValue(propertyDesc.Value, current.Value);
     }
   }
 
-  if (IsGenericDescriptor(Desc)) {
-    // No further validation is required.
-  } else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
-    if ((current as Descriptor).Configurable === Value.false) {
-      return Value.false;
-    }
-    if (IsDataDescriptor(current)) {
-      if (!(O instanceof UndefinedValue)) {
-        const entry = { ...O.properties.get(P as PropertyKeyValue)! };
-        entry.Value = undefined;
-        entry.Writable = undefined;
-        entry.Getter = Value.undefined;
-        entry.Setter = Value.undefined;
-        O.properties.set(P as PropertyKeyValue, Descriptor(entry));
-      }
+  if (obj) {
+    if (IsDataDescriptor(current) && IsAccessorDescriptor(propertyDesc)) {
+      const configurable = propertyDesc.Configurable !== undefined ? propertyDesc.Configurable : current.Configurable;
+      const enumerable = propertyDesc.Enumerable !== undefined ? propertyDesc.Enumerable : current.Enumerable;
+      obj.properties.set(propertyKey, Descriptor({
+        // note: type definition of Get and Set is not precise, one of Get/Set may be undefined (instead of Value.undefined)
+        Get: propertyDesc.Get ?? Value.undefined,
+        Set: propertyDesc.Set ?? Value.undefined,
+        Enumerable: enumerable,
+        Configurable: configurable,
+      }));
+    } else if (IsAccessorDescriptor(current) && IsDataDescriptor(propertyDesc)) {
+      const configurable = propertyDesc.Configurable !== undefined ? propertyDesc.Configurable : current.Configurable;
+      const enumerable = propertyDesc.Enumerable !== undefined ? propertyDesc.Enumerable : current.Enumerable;
+      obj.properties.set(propertyKey, Descriptor({
+        Value: propertyDesc.Value ?? Value.undefined,
+        Writable: propertyDesc.Writable ?? false,
+        Enumerable: enumerable,
+        Configurable: configurable,
+      }));
     } else {
-      if (!(O instanceof UndefinedValue)) {
-        const entry = { ...O.properties.get(P as PropertyKeyValue) };
-        entry.Getter = undefined;
-        entry.Setter = undefined;
-        entry.Value = Value.undefined;
-        entry.Writable = Value.false;
-        O.properties.set(P as PropertyKeyValue, Descriptor(entry));
+      const existing = obj.properties.get(propertyKey)!;
+      if (IsAccessorDescriptor(existing)) {
+        obj.properties.set(propertyKey, Descriptor({
+          Get: propertyDesc.Get ?? existing.Get,
+          Set: propertyDesc.Set ?? existing.Set,
+          Enumerable: propertyDesc.Enumerable ?? existing.Enumerable,
+          Configurable: propertyDesc.Configurable ?? existing.Configurable,
+        } as Required<AccessorDescriptorInit>));
+      } else {
+        obj.properties.set(propertyKey, Descriptor({
+          Value: propertyDesc.Value ?? existing.Value,
+          Writable: propertyDesc.Writable ?? existing.Writable,
+          Enumerable: propertyDesc.Enumerable ?? existing.Enumerable,
+          Configurable: propertyDesc.Configurable ?? existing.Configurable,
+        } as Required<DataDescriptorInit>));
       }
-    }
-  } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
-    if (current.Configurable === Value.false && current.Writable === Value.false) {
-      if (Desc.Writable !== undefined && Desc.Writable === Value.true) {
-        return Value.false;
-      }
-      if (Desc.Value !== undefined && !SameValue(Desc.Value, current.Value)) {
-        return Value.false;
-      }
-      return Value.true;
-    }
-  } else {
-    Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc));
-    if (current.Configurable === Value.false) {
-      if (Desc.Setter !== undefined && !SameValue(Desc.Setter, current.Setter)) {
-        return Value.false;
-      }
-      if (Desc.Getter !== undefined && !SameValue(Desc.Getter, current.Getter)) {
-        return Value.false;
-      }
-      return Value.true;
     }
   }
-
-  if (!(O instanceof UndefinedValue)) {
-    const target = { ...O.properties.get(P as PropertyKeyValue) };
-    if (Desc.Value !== undefined) {
-      target.Value = Desc.Value;
-    }
-    if (Desc.Writable !== undefined) {
-      target.Writable = Desc.Writable;
-    }
-    if (Desc.Getter !== undefined) {
-      target.Getter = Desc.Getter;
-    }
-    if (Desc.Setter !== undefined) {
-      target.Setter = Desc.Setter;
-    }
-    if (Desc.Enumerable !== undefined) {
-      target.Enumerable = Desc.Enumerable;
-    }
-    if (Desc.Configurable !== undefined) {
-      target.Configurable = Desc.Configurable;
-    }
-    O.properties.set(P as PropertyKeyValue, Descriptor(target));
-  }
-
-  return Value.true;
+  return true;
 }
 
 // 9.1.7.1 OrdinaryHasProperty
-export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
+export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean> {
   Assert(typeof P === 'string' || IsPropertyKey(P));
 
   const hasOwn = Q(yield* O.GetOwnProperty(P));
-  if (!(hasOwn instanceof UndefinedValue)) {
-    return Value.true;
+  if (hasOwn) {
+    return true;
   }
   const parent = Q(yield* O.GetPrototypeOf());
   if (!(parent instanceof NullValue)) {
     return Q(yield* parent.HasProperty(P));
   }
-  return Value.false;
+  return false;
 }
 
 // 9.1.8.1
@@ -283,7 +237,7 @@ export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue | string, Recei
   Assert(typeof P === 'string' || IsPropertyKey(P));
 
   const desc = Q(yield* O.GetOwnProperty(P));
-  if (desc instanceof UndefinedValue) {
+  if (!desc) {
     const parent = Q(yield* O.GetPrototypeOf());
     if (parent instanceof NullValue) {
       return Value.undefined;
@@ -294,7 +248,7 @@ export function* OrdinaryGet(O: ObjectValue, P: PropertyKeyValue | string, Recei
     return desc.Value;
   }
   Assert(IsAccessorDescriptor(desc));
-  const getter = desc.Getter;
+  const getter = desc.Get;
   if (getter instanceof UndefinedValue) {
     return Value.undefined;
   }
@@ -309,37 +263,37 @@ export function* OrdinarySet(O: ObjectValue, P: PropertyKeyValue | string, V: Va
 }
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
-export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue> {
+export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value, ownDesc: Descriptor | undefined): PlainEvaluator<boolean> {
   Assert(typeof P === 'string' || IsPropertyKey(P));
 
-  if (ownDesc instanceof UndefinedValue) {
+  if (!ownDesc) {
     const parent = Q(yield* O.GetPrototypeOf());
     if (!(parent instanceof NullValue)) {
       return Q(yield* parent.Set(P, V, Receiver));
     }
     ownDesc = Descriptor({
       Value: Value.undefined,
-      Writable: Value.true,
-      Enumerable: Value.true,
-      Configurable: Value.true,
+      Writable: true,
+      Enumerable: true,
+      Configurable: true,
     });
   }
 
   if (IsDataDescriptor(ownDesc)) {
-    if (ownDesc.Writable !== undefined && ownDesc.Writable === Value.false) {
-      return Value.false;
+    if (ownDesc.Writable !== undefined && !ownDesc.Writable) {
+      return false;
     }
     if (!(Receiver instanceof ObjectValue)) {
-      return Value.false;
+      return false;
     }
 
     const existingDescriptor = Q(yield* Receiver.GetOwnProperty(P));
-    if (!(existingDescriptor instanceof UndefinedValue)) {
+    if (existingDescriptor) {
       if (IsAccessorDescriptor(existingDescriptor)) {
-        return Value.false;
+        return false;
       }
-      if (existingDescriptor.Writable === Value.false) {
-        return Value.false;
+      if (!existingDescriptor.Writable) {
+        return false;
       }
       const valueDesc = Descriptor({ Value: V });
       return Q(yield* Receiver.DefineOwnProperty(P, valueDesc));
@@ -348,26 +302,26 @@ export function* OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValu
   }
 
   Assert(IsAccessorDescriptor(ownDesc));
-  const setter = ownDesc.Setter;
+  const setter = ownDesc.Set;
   if (setter === undefined || setter instanceof UndefinedValue) {
-    return Value.false;
+    return false;
   }
   Q(yield* Call(setter, Receiver, [V]));
-  return Value.true;
+  return true;
 }
 
 // 9.1.10.1 OrdinaryDelete
-export function* OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
+export function* OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean> {
   Assert(typeof P === 'string' || IsPropertyKey(P));
   const desc = Q(yield* O.GetOwnProperty(P));
-  if (desc instanceof UndefinedValue) {
-    return Value.true;
+  if (!desc) {
+    return true;
   }
-  if (desc.Configurable === Value.true) {
+  if (desc.Configurable) {
     O.properties.delete(P);
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 // 9.1.11.1

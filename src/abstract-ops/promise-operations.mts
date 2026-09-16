@@ -4,7 +4,7 @@ import {
   HostCallJobCallback,
 } from '../execution-context/Job.mts';
 import {
-  ObjectValue, Value, UndefinedValue, BooleanValue, type Arguments,
+  ObjectValue, Value, UndefinedValue, type Arguments,
 } from '../value.mts';
 import {
   AbruptCompletion,
@@ -73,7 +73,7 @@ export class PromiseCapabilityRecord {
 
 /** https://tc39.es/ecma262/#sec-promisereaction-records */
 export class PromiseReactionRecord {
-  readonly Capability: PromiseCapabilityRecord | UndefinedValue;
+  readonly Capability: PromiseCapabilityRecord | undefined;
 
   readonly Type: 'Fulfill' | 'Reject';
 
@@ -81,7 +81,7 @@ export class PromiseReactionRecord {
 
   constructor(O: PromiseReactionRecord) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
-        || O.Capability === Value.undefined);
+        || O.Capability === undefined);
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject');
     Assert(O.Handler === undefined
            || isFunctionObject(O.Handler.Callback));
@@ -242,14 +242,14 @@ export function* NewPromiseCapability(constructor: Value): PlainEvaluator<Promis
 }
 
 /** https://tc39.es/ecma262/#sec-ispromise */
-export function IsPromise(x: Value): BooleanValue {
+export function IsPromise(x: Value): boolean {
   if (!(x instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if (!('PromiseState' in x)) {
-    return Value.false;
+    return false;
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-rejectpromise */
@@ -282,7 +282,7 @@ function TriggerPromiseReactions(reactions: readonly PromiseReactionRecord[], ar
 /** https://tc39.es/ecma262/#sec-promise-resolve */
 export function* PromiseResolve(constructor: ObjectValue, resolution: Value): ValueEvaluator<PromiseObject> {
   Assert(constructor instanceof ObjectValue);
-  if (IsPromise(resolution) === Value.true) {
+  if (IsPromise(resolution)) {
     const xConstructor = Q(yield* Get(resolution as PromiseObject, 'constructor'));
     if (SameValue(xConstructor, constructor)) {
       return resolution as PromiseObject;
@@ -323,7 +323,7 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
       handlerResult = yield* HostCallJobCallback(handler, Value.undefined, [argument]);
     }
     // g. If promiseCapability is undefined, then
-    if (promiseCapability instanceof UndefinedValue) {
+    if (!promiseCapability) {
       // i. Assert: handlerResult is not an abrupt completion.
       Assert(!(handlerResult instanceof AbruptCompletion));
       // ii. Return NormalCompletion(empty).
@@ -364,15 +364,15 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
 
 /** https://tc39.es/ecma262/#sec-performpromisethen */
 export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability: PromiseCapabilityRecord): PromiseObject
-export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: UndefinedValue): UndefinedValue
-export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue
-export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue {
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: undefined): undefined
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | undefined): PromiseObject | undefined
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | undefined): PromiseObject | undefined {
   // 1. Assert: IsPromise(promise) is true.
-  Assert(IsPromise(promise) === Value.true);
+  Assert(IsPromise(promise));
   // 2. If resultCapability is not present, then
   if (resultCapability === undefined) {
     // a. Set resultCapability to undefined.
-    resultCapability = Value.undefined;
+    resultCapability = undefined;
   }
   let onFulfilledJobCallback;
   // 3. If IsCallable(onFulfilled) is false, then
@@ -434,9 +434,9 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
   // 12. Set promise.[[PromiseIsHandled]] to true.
   promise.PromiseIsHandled = true;
   // 13. If resultCapability is undefined, then
-  if (resultCapability instanceof UndefinedValue) {
+  if (resultCapability === undefined) {
     // a. Return undefined.
-    return Value.undefined;
+    return undefined;
   } else { // 14. Else,
     // a. Return resultCapability.[[Promise]].
     return resultCapability.Promise;

@@ -1,34 +1,38 @@
-import { JSStringValue, Value } from '../value.mts';
+import { Value } from '../value.mts';
 import { Q } from '../completion.mts';
-import type { ValueEvaluator } from '../evaluator.mts';
 import {
   Assert, ToString, ToLength, R,
+  type PlainEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-stringpad */
-export function* StringPad(O: Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): ValueEvaluator<JSStringValue> {
+export function* StringPad(_string: string | Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): PlainEvaluator<string> {
   Assert(placement === 'start' || placement === 'end');
-  const S = Q(yield* ToString(O));
+  let string;
+  if (typeof _string === 'string') string = _string;
+  else {
+    string = Q(yield* ToString(_string));
+  }
   const intMaxLength = R(Q(yield* ToLength(maxLength)));
-  const stringLength = S.stringValue().length;
+  const stringLength = string.length;
   if (intMaxLength <= stringLength) {
-    return S;
+    return string;
   }
   let filler;
   if (fillString === Value.undefined) {
     filler = ' ';
   } else {
-    filler = Q(yield* ToString(fillString)).stringValue();
+    filler = Q(yield* ToString(fillString));
   }
   if (filler === '') {
-    return S;
+    return string;
   }
   const fillLen = intMaxLength - stringLength;
   const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
   const truncatedStringFiller = stringFiller.slice(0, fillLen);
   if (placement === 'start') {
-    return Value(truncatedStringFiller + S.stringValue());
+    return truncatedStringFiller + string;
   } else {
-    return Value(S.stringValue() + truncatedStringFiller);
+    return string + truncatedStringFiller;
   }
 }

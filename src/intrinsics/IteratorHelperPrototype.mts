@@ -19,7 +19,7 @@ import {
 /** https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.next */
 function* IteratorHelperPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, undefined, "Iterator Helper").
-  return Q(yield* GeneratorResume(thisValue, Value.undefined, Value('Iterator Helper')));
+  return Q(yield* GeneratorResume(thisValue, Value.undefined, 'Iterator Helper'));
 }
 
 /** https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.return */
@@ -42,13 +42,13 @@ function* IteratorHelperPrototype_return(_args: Arguments, { thisValue }: Functi
     Q(yield* IteratorCloseAll((O as GeneratorObject).UnderlyingIterators!, NormalCompletion(undefined)));
 
     // d. Return CreateIteratorResultObject(undefined, true).
-    return CreateIteratorResultObject(Value.undefined, Value.true);
+    return CreateIteratorResultObject(Value.undefined, true);
   }
 
   // 5. Let C be ReturnCompletion(undefined).
   const completion = ReturnCompletion(Value.undefined);
   // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
-  return Q(yield* GeneratorResumeAbrupt(O, completion, Value('Iterator Helper')));
+  return Q(yield* GeneratorResumeAbrupt(O, completion, 'Iterator Helper'));
 }
 
 export function bootstrapIteratorHelperPrototype(realmRec: Realm) {

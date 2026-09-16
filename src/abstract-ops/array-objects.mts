@@ -2,7 +2,6 @@ import { ValidateTypedArrayBounds } from '../intrinsics/TypedArray.mts';
 import {
   surroundingAgent, Descriptor, ObjectValue, JSStringValue, Value, wellKnownSymbols, type ObjectInternalMethods,
   NumberValue, UndefinedValue,
-  BooleanValue,
   Q, X, type ValueCompletion, type ValueEvaluator,
   type Mutable, type YieldEvaluator,
   IsLessThan,
@@ -36,38 +35,40 @@ import {
   CreateIteratorResultObject,
   GeneratorYield,
   Throw,
+  type PlainEvaluator,
 } from '#self';
 import { isTypedArrayObject } from '#self';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
-  * DefineOwnProperty(P, Desc): ValueEvaluator<BooleanValue> {
+  * DefineOwnProperty(P, Desc): PlainEvaluator<boolean> {
     const array = this;
 
-    Assert(IsPropertyKey(P));
-    if (P instanceof JSStringValue && P.stringValue() === 'length') {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    Assert(typeof P === 'string' || IsPropertyKey(P));
+    if (P === 'length') {
       return Q(yield* ArraySetLength(array, Desc));
     } else if (isArrayIndex(P)) {
       let lengthDesc = OrdinaryGetOwnProperty(array, Value('length'));
-      Assert(!(lengthDesc instanceof UndefinedValue));
+      Assert(!!lengthDesc);
       Assert(IsDataDescriptor(lengthDesc));
-      Assert(lengthDesc.Configurable === Value.false);
+      Assert(lengthDesc.Configurable === false);
       const length = lengthDesc.Value;
       Assert(length instanceof NumberValue && isNonNegativeInteger(R(length)));
-      const index = X(ToUint32(P));
-      if (R(index) >= R(length) && lengthDesc.Writable === Value.false) {
-        return Value.false;
+      const index = X(ToUint32(typeof P === 'string' ? Value(P) : P));
+      if (R(index) >= R(length) && !lengthDesc.Writable) {
+        return false;
       }
       let succeeded = X(OrdinaryDefineOwnProperty(array, P, Desc));
-      if (succeeded === Value.false) {
-        return Value.false;
+      if (!succeeded) {
+        return false;
       }
       if (R(index) >= R(length)) {
         lengthDesc = Descriptor({ ...lengthDesc, Value: F(R(index) + 1) });
         succeeded = X(OrdinaryDefineOwnProperty(array, Value('length'), lengthDesc));
-        Assert(succeeded === Value.true);
+        Assert(succeeded);
       }
-      return Value.true;
+      return true;
     }
     return yield* OrdinaryDefineOwnProperty(array, P, Desc);
   },
@@ -97,9 +98,9 @@ export function ArrayCreate(length: number, proto?: ObjectValue): ValueCompletio
 
   X(OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({
     Value: F(length),
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
 
   return array;
@@ -112,7 +113,7 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
     length = +0;
   }
   const isArray = Q(IsArray(originalArray));
-  if (isArray === Value.false) {
+  if (!isArray) {
     return Q(ArrayCreate(length));
   }
   let constructor = Q(yield* Get(originalArray, 'constructor'));
@@ -141,7 +142,7 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
 }
 
 /** https://tc39.es/ecma262/#sec-arraysetlength */
-export function* ArraySetLength(array: OrdinaryObject, Desc: Descriptor): ValueEvaluator<BooleanValue> {
+export function* ArraySetLength(array: OrdinaryObject, Desc: Descriptor): PlainEvaluator<boolean> {
   if (Desc.Value === undefined) {
     return yield* OrdinaryDefineOwnProperty(array, Value('length'), Desc);
   }
@@ -153,26 +154,26 @@ export function* ArraySetLength(array: OrdinaryObject, Desc: Descriptor): ValueE
   }
   newLenDesc = Descriptor({ ...Desc, Value: F(newLen) });
   const oldLenDesc = OrdinaryGetOwnProperty(array, Value('length'));
-  Assert(!(oldLenDesc instanceof UndefinedValue));
+  Assert(!!oldLenDesc);
   Assert(IsDataDescriptor(oldLenDesc));
-  Assert(oldLenDesc.Configurable === Value.false);
+  Assert(!oldLenDesc.Configurable);
   const oldLen = R(oldLenDesc.Value as NumberValue);
   if (newLen >= oldLen) {
     return yield* OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc);
   }
-  if (oldLenDesc.Writable === Value.false) {
-    return Value.false;
+  if (!oldLenDesc.Writable) {
+    return false;
   }
   let newWritable;
-  if (newLenDesc.Writable === undefined || newLenDesc.Writable === Value.true) {
+  if (newLenDesc.Writable === undefined || newLenDesc.Writable) {
     newWritable = true;
   } else {
     newWritable = false;
-    newLenDesc = Descriptor({ ...newLenDesc, Writable: Value.true });
+    newLenDesc = Descriptor({ ...newLenDesc, Writable: true });
   }
   const succeeded = X(OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc));
-  if (succeeded === Value.false) {
-    return Value.false;
+  if (!succeeded) {
+    return false;
   }
   const keys: JSStringValue[] = [];
   array.properties.forEach((_value, key) => {
@@ -183,26 +184,26 @@ export function* ArraySetLength(array: OrdinaryObject, Desc: Descriptor): ValueE
   keys.sort((a, b) => Number(b.stringValue()) - Number(a.stringValue()));
   for (const P of keys) {
     const deleteSucceeded = X(array.Delete(P));
-    if (deleteSucceeded === Value.false) {
+    if (!deleteSucceeded) {
       newLenDesc = Descriptor({ ...newLenDesc, Value: F(R(X(ToUint32(P))) + 1) });
       if (newWritable === false) {
-        newLenDesc = Descriptor({ ...newLenDesc, Writable: Value.false });
+        newLenDesc = Descriptor({ ...newLenDesc, Writable: false });
       }
       X(OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc));
-      return Value.false;
+      return false;
     }
   }
   if (newWritable === false) {
-    const s = yield* OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({ Writable: Value.false }));
-    Assert(s === Value.true);
+    const s = X(yield* OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({ Writable: false })));
+    Assert(s);
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-isconcatspreadable */
-export function* IsConcatSpreadable(O: Value): ValueEvaluator<BooleanValue> {
+export function* IsConcatSpreadable(O: Value): PlainEvaluator<boolean> {
   if (!(O instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   const spreadable = Q(yield* Get(O, wellKnownSymbols.isConcatSpreadable));
   if (spreadable !== Value.undefined) {
@@ -241,15 +242,15 @@ export function* CompareArrayElements(x: Value, y: Value, comparefn: FunctionObj
   // 6. Let yString be ? ToString(y).
   const yString = Q(yield* ToString(y));
   // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
-  const xSmaller = yield* IsLessThan(xString, yString);
+  const xSmaller = yield* IsLessThan(Value(xString), Value(yString));
   // 8. If xSmaller is true, return -1𝔽.
-  if (xSmaller === Value.true) {
+  if (xSmaller) {
     return F(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
-  const ySmaller = yield* IsLessThan(yString, xString);
+  const ySmaller = yield* IsLessThan(Value(yString), Value(xString));
   // 10. If ySmaller is true, return 1𝔽.
-  if (ySmaller === Value.true) {
+  if (ySmaller) {
     return F(1);
   }
   // 11. Return +0𝔽.
@@ -300,12 +301,12 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
           result = CreateArrayFromList([indexNumber, elementValue]);
         }
       }
-      Q(yield* GeneratorYield(CreateIteratorResultObject(result, Value.false)));
+      Q(yield* GeneratorYield(CreateIteratorResultObject(result, false)));
       // vi. Set index to index + 1.
       index += 1;
     }
   };
   // 4. Return CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-  const generator = CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), ['HostCapturedValues'], [array]);
+  const generator = CreateIteratorFromClosure(closure, '%ArrayIteratorPrototype%', surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), ['HostCapturedValues'], [array]);
   return generator;
 }

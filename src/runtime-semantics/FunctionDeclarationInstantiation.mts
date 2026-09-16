@@ -10,13 +10,12 @@ import {
   LexicallyScopedDeclarations,
 } from '../static-semantics/all.mts';
 import { Q, X, NormalCompletion } from '../completion.mts';
-import { JSStringSet } from '../utils/container.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mts';
-import { surroundingAgent, DeclarativeEnvironmentRecord } from '#self';
+import { surroundingAgent, DeclarativeEnvironmentRecord, EnvironmentRecord } from '#self';
 import {
   Assert,
   CreateListIteratorRecord,
@@ -38,7 +37,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   // 5. Let parameterNames be BoundNames of formals.
   const parameterNames = BoundNames(formals);
   // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
-  const hasDuplicates = new JSStringSet(parameterNames).size !== parameterNames.length;
+  const hasDuplicates = new Set(parameterNames).size !== parameterNames.length;
   // 7. Let simpleParameterList be IsSimpleParameterList of formals.
   const simpleParameterList = IsSimpleParameterList(formals);
   // 8. Let hasParameterExpressions be ContainsExpression of formals.
@@ -48,9 +47,9 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   // 10. Let varDeclarations be the VarScopedDeclarations of code.
   const varDeclarations = VarScopedDeclarations(code);
   // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
-  const lexicalNames = new JSStringSet(LexicallyDeclaredNames(code));
+  const lexicalNames = new Set(LexicallyDeclaredNames(code));
   // 12. Let functionNames be a new empty List.
-  const functionNames = new JSStringSet();
+  const functionNames = new Set<string>();
   // 13. Let functionNames be a new empty List.
   const functionsToInitialize = [];
   // 14. For each d in varDeclarations, in reverse list order, do
@@ -83,7 +82,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     // a. NOTE: Arrow functions never have an arguments objects.
     // b. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else if (new JSStringSet(parameterNames).has('arguments')) {
+  } else if (new Set(parameterNames).has('arguments')) {
     // a. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
@@ -118,9 +117,9 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
     //    non-strict functions that do not have parameter default values or rest parameters.
     // c. If alreadyDeclared is false, then
-    if (alreadyDeclared === Value.false) {
+    if (!alreadyDeclared) {
       // i. Perform ! env.CreateMutableBinding(paramName, false).
-      X(env.CreateMutableBinding(paramName, Value.false));
+      X(env.CreateMutableBinding(paramName, false));
       // ii. If hasDuplicates is true, then
       if (hasDuplicates === true) {
         // 1. Perform ! env.InitializeBinding(paramName, undefined).
@@ -129,7 +128,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     }
   }
   // 22. If argumentsObjectNeeded is true, then
-  let parameterBindings: JSStringSet;
+  let parameterBindings: Set<string>;
   if (argumentsObjectNeeded === true) {
     let ao;
     // a. If strict is true or if simpleParameterList is false, then
@@ -146,26 +145,26 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     // c. If strict is true, then
     if (strict) {
       // i. Perform ! env.CreateImmutableBinding("arguments", false).
-      X(env.CreateImmutableBinding(Value('arguments'), Value.false));
+      X(env.CreateImmutableBinding('arguments', false));
     } else {
       // i. Perform ! env.CreateMutableBinding("arguments", false).
-      X(env.CreateMutableBinding(Value('arguments'), Value.false));
+      X(env.CreateMutableBinding('arguments', false));
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    yield* env.InitializeBinding(Value('arguments'), ao);
+    yield* env.InitializeBinding('arguments', ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-    parameterBindings = new JSStringSet(parameterNames);
+    parameterBindings = new Set(parameterNames);
     parameterBindings.add('arguments');
   } else {
     // a. Let parameterBindings be parameterNames.
-    parameterBindings = new JSStringSet(parameterNames);
+    parameterBindings = new Set(parameterNames);
   }
   // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
   const iteratorRecord = CreateListIteratorRecord(argumentsList.values());
-  let usedEnv;
+  let usedEnv: EnvironmentRecord | undefined;
   // 25. If hasDuplicates is true, then
   if (hasDuplicates) {
-    usedEnv = Value.undefined;
+    usedEnv = undefined;
   } else {
     usedEnv = env;
   }
@@ -177,7 +176,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   if (hasParameterExpressions === false) {
     // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
     // b. Let instantiatedVarNames be a copy of the List parameterBindings.
-    const instantiatedVarNames = new JSStringSet(parameterBindings);
+    const instantiatedVarNames = new Set(parameterBindings);
     // c. For each n in varNames, do
     for (const n of varNames) {
       // i. If n is not an element of instantiatedVarNames, then
@@ -185,7 +184,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
         // 1. Append n to instantiatedVarNames.
         instantiatedVarNames.add(n);
         // 2. Perform ! env.CreateMutableBinding(n, false).
-        X(env.CreateMutableBinding(n, Value.false));
+        X(env.CreateMutableBinding(n, false));
         // 3. Call env.InitializeBinding(n, undefined).
         yield* env.InitializeBinding(n, Value.undefined);
       }
@@ -200,7 +199,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     // c. Set the VariableEnvironment of calleeContext to varEnv.
     calleeContext.VariableEnvironment = varEnv;
     // d. Let instantiatedVarNames be a new empty List.
-    const instantiatedVarNames = new JSStringSet();
+    const instantiatedVarNames = new Set<string>();
     // e. For each n in varNames, do
     for (const n of varNames) {
       // If n is not an element of instantiatedVarNames, then
@@ -208,14 +207,14 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
         // 1. Append n to instantiatedVarNames.
         instantiatedVarNames.add(n);
         // 2. Perform ! varEnv.CreateMutableBinding(n, false).
-        X(varEnv.CreateMutableBinding(n, Value.false));
+        X(varEnv.CreateMutableBinding(n, false));
         let initialValue;
         // 3. If n is not an element of parameterBindings or if n is an element of functionNames, let initialValue be undefined.
         if (!parameterBindings.has(n) || functionNames.has(n)) {
           initialValue = Value.undefined;
         } else {
           // a. Let initialValue be ! env.GetBindingValue(n, false).
-          initialValue = X(env.GetBindingValue(n, Value.false));
+          initialValue = X(env.GetBindingValue(n, false));
         }
         // 5. Call varEnv.InitializeBinding(n, initialValue).
         yield* varEnv.InitializeBinding(n, initialValue);
@@ -250,10 +249,10 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
         // 1. Perform ! lexEnv.CreateImmutableBinding(dn, true).
-        X(lexEnv.CreateImmutableBinding(dn, Value.true));
+        X(lexEnv.CreateImmutableBinding(dn, true));
       } else {
         // 1. Perform ! lexEnv.CreateMutableBinding(dn, false).
-        X(lexEnv.CreateMutableBinding(dn, Value.false));
+        X(lexEnv.CreateMutableBinding(dn, false));
       }
     }
   }
@@ -266,7 +265,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
     // b. Let fo be InstantiateFunctionObject of f with argument lexEnv and privateEnv.
     const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
     // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-    X(varEnv.SetMutableBinding(fn, fo, Value.false));
+    X(varEnv.SetMutableBinding(fn, fo, false));
   }
   // 37. Return NormalCompletion(empty).
   return NormalCompletion(undefined);

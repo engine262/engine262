@@ -215,7 +215,7 @@ export function HostPromiseRejectionTracker(promise: PromiseObject, operation: '
 }
 
 const HasSourceTextAvailable = new WeakMap<FunctionObject, boolean>();
-export function HostHasSourceTextAvailable(func: FunctionObject) {
+export function HostHasSourceTextAvailable(func: FunctionObject): boolean {
   // It must be deterministic with respect to its parameters. Each time it is called with a specific func as its argument, it must return the same result.
   if (HasSourceTextAvailable.has(func)) {
     return HasSourceTextAvailable.get(func)!;
@@ -223,7 +223,7 @@ export function HostHasSourceTextAvailable(func: FunctionObject) {
   if (surroundingAgent.hostDefinedOptions.hostHooks?.HostHasSourceTextAvailable) {
     return surroundingAgent.hostDefinedOptions.hostHooks.HostHasSourceTextAvailable(func);
   }
-  return Value.true;
+  return true;
 }
 
 export function HostGetSupportedImportAttributes(): readonly string[] {
@@ -274,7 +274,6 @@ export function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: Ab
   if (realm.HostDefined.finalizeImportMeta) {
     return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined?.public));
   }
-  return Value.undefined;
 }
 
 export type GCMarker = (value: unknown) => void;

@@ -20,8 +20,8 @@ export function ThisBooleanValue(value: Value) {
 
   if (value instanceof ObjectValue && 'BooleanData' in value) {
     const b = value.BooleanData;
-    Assert(b instanceof BooleanValue);
-    return b;
+    Assert(typeof b === 'boolean');
+    return Value(b);
   }
 
   return Throw.TypeError('$1 is not a $2 object', value, 'Boolean');
@@ -50,7 +50,7 @@ export function bootstrapBooleanPrototype(realmRec: Realm) {
     ['valueOf', BooleanProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  (proto as Mutable<BooleanObject>).BooleanData = Value.false;
+  (proto as Mutable<BooleanObject>).BooleanData = false;
 
   realmRec.Intrinsics['%Boolean.prototype%'] = proto;
 }

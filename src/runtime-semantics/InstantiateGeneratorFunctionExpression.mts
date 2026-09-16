@@ -19,7 +19,7 @@ import {
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `* `BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?: PropertyKeyValue | PrivateName) {
+export function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?: string | PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -31,7 +31,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression: Pars
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
     const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-    funcEnv.CreateImmutableBinding(name, Value.false);
+    funcEnv.CreateImmutableBinding(name, false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by GeneratorExpression.
@@ -43,11 +43,11 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression: Pars
     // 10. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    X(DefinePropertyOrThrow(closure, 'prototype', new Descriptor({
+    X(DefinePropertyOrThrow(closure, 'prototype', Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false,
+      Writable: true,
+      Enumerable: false,
+      Configurable: false,
     })));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
     X(funcEnv.InitializeBinding(name, closure));
@@ -71,11 +71,11 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression: Pars
   // 7. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(closure, 'prototype', new Descriptor({
+  X(DefinePropertyOrThrow(closure, 'prototype', Descriptor({
     Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
   // 9. Return closure.
   return closure;

@@ -15,7 +15,7 @@ function* ParseFloat([string = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let inputString be ? ToString(string).
   const inputString = Q(yield* ToString(string));
   // 2. Let trimmedString be ! TrimString(inputString, start).
-  const trimmedString = X(TrimString(inputString, 'start')).stringValue();
+  const trimmedString = X(TrimString(inputString, 'start'));
   // 3. If neither trimmedString nor any prefix of trimmedString satisfies the syntax of a StrDecimalLiteral (see 7.1.4.1), return NaN.
   // 4. Let numberString be the longest prefix of trimmedString, which might be trimmedString itself, that satisfies the syntax of a StrDecimalLiteral.
   // 5. Let mathFloat be MV of numberString.

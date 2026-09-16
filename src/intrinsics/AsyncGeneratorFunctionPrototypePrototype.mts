@@ -38,7 +38,7 @@ function* AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { t
   // 6. If state is completed, then
   if (state === 'completed') {
     // a. Let iteratorResult be CreateIteratorResultObject(undefined, true).
-    const iteratorResult = CreateIteratorResultObject(Value.undefined, Value.true);
+    const iteratorResult = CreateIteratorResultObject(Value.undefined, true);
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
     // c. Return promiseCapability.[[Promise]].

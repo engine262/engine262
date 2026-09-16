@@ -25,7 +25,7 @@ export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }: 
   if (Statement_b) {
     let stmtCompletion;
     // 3. If exprValue is true, then
-    if (exprValue === Value.true) {
+    if (exprValue) {
       // a. Let stmtCompletion be the result of evaluating the first Statement.
       stmtCompletion = yield* Evaluate(Statement_a);
     } else { // 4. Else,
@@ -36,7 +36,7 @@ export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }: 
     return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
   } else {
     // 3. If exprValue is false, then
-    if (exprValue === Value.false) {
+    if (!exprValue) {
       // a. Return NormalCompletion(undefined).
       return NormalCompletion(Value.undefined);
     } else { // 4. Else,

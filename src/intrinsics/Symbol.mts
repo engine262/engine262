@@ -11,7 +11,6 @@ import { bootstrapConstructor } from './bootstrap.mts';
 import {
   KeyForSymbol,
   Realm,
-  SameValue,
   surroundingAgent,
   Throw,
   ToString,
@@ -32,9 +31,9 @@ function* SymbolConstructor(this: FunctionObject, [description = Value.undefined
     return Throw.TypeError('Symbol is not a constructor');
   }
   // 2. If description is undefined, let descString be undefined.
-  let descString;
+  let descString: string | undefined;
   if (description === Value.undefined) {
-    descString = Value.undefined;
+    descString = undefined;
   } else { // 3. Else, let descString be ? ToString(description).
     descString = Q(yield* ToString(description));
   }
@@ -50,7 +49,7 @@ function* Symbol_for([key = Value.undefined]: Arguments): ValueEvaluator {
   const globalSymbolRegistry = agentRecord.GlobalSymbolRegistry;
   for (const e of globalSymbolRegistry) {
     // a. If SameValue(e.[[Key]], stringKey) is true, return e.[[Symbol]].
-    if (SameValue(e.Key, stringKey)) {
+    if (e.Key === stringKey) {
       return e.Symbol;
     }
   }
@@ -70,7 +69,7 @@ function Symbol_keyFor([sym = Value.undefined]: Arguments) {
     return Throw.TypeError('arguments[0] ($1) is not a symbol', sym);
   }
   // 2. Return KeyForSymbol(sym).
-  return KeyForSymbol(sym);
+  return Value(KeyForSymbol(sym));
 }
 
 export function bootstrapSymbol(realmRec: Realm) {
@@ -82,17 +81,17 @@ export function bootstrapSymbol(realmRec: Realm) {
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
     X(symbolConstructor.DefineOwnProperty(Value(name), Descriptor({
       Value: sym,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
     })));
   }
 
   X(symbolConstructor.DefineOwnProperty(Value('prototype'), Descriptor({
     Value: realmRec.Intrinsics['%Symbol.prototype%'],
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   realmRec.Intrinsics['%Symbol%'] = symbolConstructor;

@@ -7,7 +7,7 @@ import type { PrivateName, PropertyKeyValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression */
 // ArrowFunction : ArrowParameters `=>` ConciseBody
-export function InstantiateArrowFunctionExpression(ArrowFunction: ParseNode.ArrowFunction, name?: PropertyKeyValue | PrivateName) {
+export function InstantiateArrowFunctionExpression(ArrowFunction: ParseNode.ArrowFunction, name?: string | PropertyKeyValue | PrivateName) {
   const { ArrowParameters, ConciseBody } = ArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {

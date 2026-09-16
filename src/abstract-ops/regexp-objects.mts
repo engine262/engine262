@@ -1,5 +1,5 @@
 import {
-  Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
+  Descriptor, Value, ObjectValue,
   UndefinedValue,
 } from '../value.mts';
 import {
@@ -8,7 +8,7 @@ import {
 import { CompilePattern, CountLeftCapturingParensWithin, type RegExpRecord } from '../runtime-semantics/all.mts';
 import { ParsePattern } from '../parse.mts';
 import { isLineTerminator } from '../parser/Lexer.mts';
-import type { Mutable } from '../utils/language.mts';
+import { isArray, type Mutable } from '../utils/language.mts';
 import type { RegExpObject } from '../intrinsics/RegExp.mts';
 import {
   ArrayCreate,
@@ -24,36 +24,40 @@ import {
   F as toNumberValue,
   type FunctionObject,
 } from './all.mts';
-import { surroundingAgent, Throw } from '#self';
+import { surroundingAgent, Throw, type PlainCompletion } from '#self';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {
   const obj = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags'])) as Mutable<RegExpObject>;
   X(DefinePropertyOrThrow(obj, 'lastIndex', Descriptor({
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
   return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-regexpinitialize */
-export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, flags: Value) {
-  let P: JSStringValue;
+export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: string | Value, flags: string | Value) {
+  let P: string;
   // 1. If pattern is undefined, let P be the empty String.
   if (pattern === Value.undefined) {
-    P = Value('');
+    P = '';
+  } else if (typeof pattern === 'string') {
+    P = pattern;
   } else { // 2. Else, let P be ? ToString(pattern).
     P = Q(yield* ToString(pattern));
   }
-  let F;
+  let F: string;
   // 3. If flags is undefined, let F be the empty String.
   if (flags === Value.undefined) {
-    F = Value('');
+    F = '';
+  } else if (typeof flags === 'string') {
+    F = flags;
   } else { // 4. Else, let F be ? ToString(flags).
     F = Q(yield* ToString(flags));
   }
-  const f = F.stringValue();
+  const f = F;
   if (/^[dgimsuvy]*$/.test(f) === false) {
     return Throw.SyntaxError('RegExp has invalid flags ($1)', f);
   }
@@ -70,7 +74,7 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
   //   a. Let patternText be StringToCodePoints(P).
   // 12. Else,
   //   a. Let patternText be the result of interpreting each of P's 16-bit elements as a Unicode BMP code point. UTF-16 decoding is not applied to the elements.
-  const patternText = P.stringValue();
+  const patternText = P;
 
   const parseResult = ParsePattern(patternText, u, v);
   if (Array.isArray(parseResult)) {
@@ -90,7 +94,7 @@ export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fl
   obj.RegExpRecord = rer;
   obj.parsedPattern = parseResult;
   obj.RegExpMatcher = CompilePattern(parseResult, rer);
-  Q(yield* Set(obj, 'lastIndex', toNumberValue(+0), Value.true));
+  Q(yield* Set(obj, 'lastIndex', toNumberValue(+0), true));
   return obj;
 }
 
@@ -101,10 +105,10 @@ export function* RegExpCreate(P: Value, F: Value): ValueEvaluator<RegExpObject> 
 }
 
 /** https://tc39.es/ecma262/#sec-escaperegexppattern */
-export function EscapeRegExpPattern(P: JSStringValue, _F: Value) {
-  const source = P.stringValue();
+export function EscapeRegExpPattern(P: string, _F: string | Value): string {
+  const source = P;
   if (source === '') {
-    return Value('(?:)');
+    return '(?:)';
   }
   let index = 0;
   let escaped = '';
@@ -166,26 +170,26 @@ export function EscapeRegExpPattern(P: JSStringValue, _F: Value) {
       isEscape = false;
     }
   }
-  return Value(escaped);
+  return escaped;
 }
 
 /** https://tc39.es/ecma262/#sec-getstringindex */
-export function GetStringIndex(S: JSStringValue, Input: readonly string[], e: number) {
+export function GetStringIndex(S: string, Input: readonly string[], e: number) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(typeof S === 'string');
   // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
   Assert(Array.isArray(Input));
   // 3. Assert: e is an integer value ≥ 0.
   Assert(e >= 0);
   // 4. If S is the empty String, return 0.
-  if (S.stringValue() === '') {
+  if (S === '') {
     return 0;
   }
   // 5. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
   //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
   let eUTF = 0;
   if (e >= Input.length) {
-    eUTF = S.stringValue().length;
+    eUTF = S.length;
   } else {
     for (let i = 0; i < e; i += 1) {
       eUTF += Input[i].length;
@@ -200,29 +204,29 @@ export interface MatchRecord {
   readonly EndIndex: number;
 }
 /** https://tc39.es/ecma262/#sec-getmatchstring */
-export function GetMatchString(S: JSStringValue, match: MatchRecord) {
+export function GetMatchString(S: string, match: MatchRecord): string {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(typeof S === 'string');
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
-  Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
+  Assert(match.StartIndex >= 0 && match.StartIndex <= S.length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
-  Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
+  Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.length);
   // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
-  return Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+  return S.slice(match.StartIndex, match.EndIndex);
 }
 
 /** https://tc39.es/ecma262/#sec-getmatchindexpair */
-export function GetMatchIndexPair(S: JSStringValue, match: MatchRecord) {
+export function GetMatchIndexPair(S: string, match: MatchRecord) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(typeof S === 'string');
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
-  Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
+  Assert(match.StartIndex >= 0 && match.StartIndex <= S.length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
-  Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
+  Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.length);
   // 1. Return CreateArrayFromList(« 𝔽(match.[[StartIndex]]), 𝔽(match.[[EndIndex]]) »).
   return CreateArrayFromList([
     toNumberValue(match.StartIndex),
@@ -231,26 +235,26 @@ export function GetMatchIndexPair(S: JSStringValue, match: MatchRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
-export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readonly (MatchRecord | UndefinedValue)[], groupNames: readonly (JSStringValue | UndefinedValue)[], hasGroups: BooleanValue) {
+export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (MatchRecord | undefined)[], groupNames: readonly (string | undefined)[], hasGroups: boolean) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(typeof S === 'string');
   // 2. Assert: indices is a List.
-  Assert(Array.isArray(indices));
+  Assert(isArray(indices));
   // 3. Let n be the number of elements in indices.
   const n = indices.length;
   // 4. Assert: n < 2**32-1.
   Assert(n < (2 ** 32) - 1);
   // 5. Assert: groupNames is a List with _n_ - 1 elements.
-  Assert(Array.isArray(groupNames) && groupNames.length === n - 1);
+  Assert(isArray(groupNames) && groupNames.length === n - 1);
   // 6. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
   // 7. Assert: Type(hasGroups) is Boolean.
-  Assert(hasGroups instanceof BooleanValue);
+  Assert(typeof hasGroups === 'boolean');
   // 8. Set A to ! ArrayCreate(n).
   // 9. Assert: The value of A's "length" property is n.
   const array = X(ArrayCreate(n));
   // 10. If hasGroups is true, then
   let groups: ObjectValue | UndefinedValue;
-  if (hasGroups === Value.true) {
+  if (hasGroups) {
     // a. Let groups be ! ObjectCreate(null).
     groups = X(OrdinaryObjectCreate(Value.null));
   } else { // 9. Else,
@@ -265,7 +269,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
     const matchIndices = indices[i];
     // b. If matchIndices is not undefined, then
     let matchIndicesArray;
-    if (matchIndices !== Value.undefined) {
+    if (matchIndices !== undefined) {
       // i. Let matchIndicesArray be ! GetMatchIndexPair(S, matchIndices).
       matchIndicesArray = X(GetMatchIndexPair(S, matchIndices as MatchRecord));
     } else { // c. Else,
@@ -275,9 +279,9 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
     // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
     X(CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(i))), matchIndicesArray));
     // e. If i > 0 and groupNames[i - 1] is not undefined, then
-    if (i > 0 && groupNames[i - 1] !== Value.undefined) {
+    if (i > 0 && groupNames[i - 1] !== undefined) {
       // i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
-      X(CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as JSStringValue, matchIndicesArray));
+      X(CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as string, matchIndicesArray));
     }
   }
   // 13. Return A.
@@ -285,7 +289,7 @@ export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readon
 }
 
 /** https://tc39.es/ecma262/#sec-regexphasflag */
-export function RegExpHasFlag(R: Value, codeUnit: string) {
+export function RegExpHasFlag(R: Value, codeUnit: string): PlainCompletion<boolean | undefined> {
   // 1. If Type(R) is not Object, throw a TypeError exception.
   if (!(R instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a RegExp object', R);
@@ -294,17 +298,17 @@ export function RegExpHasFlag(R: Value, codeUnit: string) {
   if (!('OriginalFlags' in R)) {
     // a. If SameValue(R, %RegExp.prototype%) is true, return undefined.
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%'))) {
-      return Value.undefined;
+      return undefined;
     }
     // b. Otherwise, throw a TypeError exception.
     return Throw.TypeError('$1 is not a RegExp object', R);
   }
   // 3. Let flags be R.[[OriginalFlags]].
-  const flags = (R as RegExpObject).OriginalFlags.stringValue();
+  const flags = (R as RegExpObject).OriginalFlags;
   // 4. If flags contains codeUnit, return true.
   if (flags.includes(codeUnit)) {
-    return Value.true;
+    return true;
   }
   // 5. Return false.
-  return Value.false;
+  return false;
 }

@@ -550,7 +550,7 @@ function* Math_trunc([x = Value.undefined]: Arguments): ValueEvaluator {
 /** https://tc39.es/ecma262/#sec-math-object */
 export function bootstrapMath(realmRec: Realm) {
   /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
-  const readonly = { Writable: Value.false, Configurable: Value.false };
+  const readonly = { Writable: false, Configurable: false };
 
   // @@toStringTag is handled in the bootstrapPrototype() call.
   const mathObj = bootstrapPrototype(realmRec, [

@@ -174,7 +174,7 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
         });
       }
     });
-    realm.GlobalObject.properties.set(Value('$DONE'), Descriptor({ Value: $DONE }));
+    realm.GlobalObject.properties.set(Value('$DONE'), Descriptor({ Value: $DONE, Configurable: true, Enumerable: false, Writable: true }));
   }
 
   // sta.js
@@ -188,7 +188,12 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
       return result.promise;
     }
     const $DONOTEVALUATE = CreateBuiltinFunction.from(() => Throw.EvalError('Test262: This statement should not be evaluated.'));
-    realm.GlobalObject.properties.set(Value('$DONOTEVALUATE'), Descriptor({ Value: $DONOTEVALUATE }));
+    realm.GlobalObject.properties.set(Value('$DONOTEVALUATE'), Descriptor({
+      Value: $DONOTEVALUATE,
+      Configurable: true,
+      Enumerable: false,
+      Writable: true,
+    }));
   }
 
   for (const include of test.attrs.includes) {

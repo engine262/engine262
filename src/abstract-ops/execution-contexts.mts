@@ -1,4 +1,4 @@
-import { surroundingAgent, NullValue } from '#self';
+import { surroundingAgent } from '#self';
 
 /** Used in the inspector infrastructure to track the real source (or compiled) */
 export function getActiveScriptId(): string | undefined {
@@ -7,7 +7,7 @@ export function getActiveScriptId(): string | undefined {
     if (e.HostDefined?.scriptId) {
       return e.HostDefined.scriptId;
     }
-    if (!(e.ScriptOrModule instanceof NullValue)) {
+    if (e.ScriptOrModule) {
       const fromScript = e.ScriptOrModule.HostDefined?.scriptId;
       if (fromScript) {
         return fromScript;

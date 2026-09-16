@@ -56,8 +56,8 @@ export declare interface AbstractModuleInit {
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
 declare abstract class AbstractModuleRecord {
     abstract LoadRequestedModules(importedNames?: ImportedNamesValue, hostDefined?: ModuleRecordHostDefined): PromiseObject;
-    abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly JSStringValue[];
-    abstract ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[], deferNamespaceExportSet?: AbstractModuleRecord[]): 'ambiguous' | ResolvedBindingRecord | null;
+    abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly string[];
+    abstract ResolveExport(exportName: string, resolveSet?: ResolveSetItem[], deferNamespaceExportSet?: AbstractModuleRecord[]): 'ambiguous' | ResolvedBindingRecord | null;
     abstract Link(importedNames?: ImportedNamesValue): PlainCompletion<void>;
     abstract Evaluate(importedNames?: ImportedNamesValue): Evaluator<PromiseObject>;
     /** https://tc39.es/proposal-deferred-reexports/#abstract-getoptionalindirectexportsmodulerequests */
@@ -74,6 +74,20 @@ declare abstract class AbstractModuleRecord {
 }
 export { AbstractModuleRecord }
 export { AbstractModuleRecord as ModuleRecord }
+
+/** https://tc39.es/ecma262/#sec-isaccessordescriptor */
+export declare interface AccessorDescriptor extends Descriptor {
+    readonly Get: FunctionObject | UndefinedValue;
+    readonly Set: FunctionObject | UndefinedValue;
+}
+
+export declare type AccessorDescriptorInit = ({
+    readonly Get: FunctionObject | UndefinedValue;
+    readonly Set?: FunctionObject | UndefinedValue;
+} | {
+    readonly Get?: FunctionObject | UndefinedValue;
+    readonly Set: FunctionObject | UndefinedValue;
+}) & Partial<DescriptorWithEnumerableAndConfigurable>;
 
 /** https://tc39.es/ecma262/#active-function-object */
 export declare function activeFunctionObject(): NullValue | FunctionObject;
@@ -227,7 +241,7 @@ export declare function AllocateArrayBuffer(constructor: FunctionObject, byteLen
 export declare function ApplyDecoratorsAndDefineMethod(homeObject: ObjectValue, methodDefinition: ClassElementDefinitionRecord, extraInitializers: FunctionObject[], isStatic: boolean): PlainEvaluator<void>;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-applydecoratorstoclassdefinition */
-export declare function ApplyDecoratorsToClassDefinition(classDef: FunctionObject, decorators: readonly DecoratorDefinitionRecord[], className: PropertyKeyValue | PrivateName, extraInitializers: FunctionObject[]): PlainEvaluator<FunctionObject>;
+export declare function ApplyDecoratorsToClassDefinition(classDef: FunctionObject, decorators: readonly DecoratorDefinitionRecord[], className: string | PropertyKeyValue | PrivateName, extraInitializers: FunctionObject[]): PlainEvaluator<FunctionObject>;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-applydecoratorstoelementdefinition */
 export declare function ApplyDecoratorsToElementDefinition(_homeObject: ObjectValue, elementRecord: ClassElementDefinitionRecord, extraInitializers: FunctionObject[], isStatic: boolean): PlainEvaluator<void>;
@@ -251,7 +265,7 @@ export declare function ArrayBufferCopyAndDetach(_arrayBuffer: Value, newLength:
 export declare interface ArrayBufferObject extends OrdinaryObject {
     readonly ArrayBufferData: DataBlock | null;
     readonly ArrayBufferByteLength: number;
-    readonly ArrayBufferDetachKey: Value;
+    readonly ArrayBufferDetachKey: Value | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-arraycreate */
@@ -259,11 +273,11 @@ export declare function ArrayCreate(length: number, proto?: ObjectValue): ValueC
 
 export declare const ArrayExoticObjectInternalMethods: {
     /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
-    DefineOwnProperty(this: OrdinaryObject, P: string | PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue>;
+    DefineOwnProperty(this: OrdinaryObject, P: string | PropertyKeyValue, Desc: Descriptor): PlainEvaluator<boolean>;
 };
 
 /** https://tc39.es/ecma262/#sec-arraysetlength */
-export declare function ArraySetLength(array: OrdinaryObject, Desc: Descriptor): ValueEvaluator<BooleanValue>;
+export declare function ArraySetLength(array: OrdinaryObject, Desc: Descriptor): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-arrayspeciescreate */
 export declare function ArraySpeciesCreate(originalArray: ObjectValue, length: number): ValueEvaluator<ObjectValue>;
@@ -314,12 +328,12 @@ export declare interface AssignmentInfo {
 
 /** https://tc39.es/ecma262/#sec-async-function-objects */
 /** https://tc39.es/ecma262/#sec-asyncblockstart */
-export declare function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext): Generator<EvaluatorYieldType, UndefinedValue, EvaluatorNextType>;
+export declare function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext): PlainEvaluator<void>;
 
 export declare type AsyncBuiltinSteps = () => Evaluator<Value | NormalCompletion<Value> | ThrowCompletion | ReturnCompletion>;
 
 /** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
-export declare function AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseCapability: PromiseCapabilityRecord, syncIteratorRecord: IteratorRecord, closeOnRejection: BooleanValue): ValueEvaluator<PromiseObject>;
+export declare function AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseCapability: PromiseCapabilityRecord, syncIteratorRecord: IteratorRecord, closeOnRejection: boolean): ValueEvaluator<PromiseObject>;
 
 /** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
 export declare function AsyncFunctionStart(promiseCapability: PromiseCapabilityRecord, asyncFunctionBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | AsyncBuiltinSteps): Generator<EvaluatorYieldType, void, EvaluatorNextType>;
@@ -334,7 +348,7 @@ export declare interface AsyncGeneratorObject extends OrdinaryObject {
     AsyncGeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | 'draining-queue';
     AsyncGeneratorContext: ExecutionContext;
     AsyncGeneratorQueue: AsyncGeneratorRequestRecord[];
-    GeneratorBrand: JSStringValue | undefined;
+    GeneratorBrand: string | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
@@ -356,7 +370,7 @@ export declare function AsyncGeneratorResume(generator: AsyncGeneratorObject, co
 export declare function AsyncGeneratorStart(generator: AsyncGeneratorObject, generatorBody: ParseNode.AsyncGeneratorBody | (() => YieldEvaluator)): void;
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
-export declare function AsyncGeneratorValidate(generator: Value, generatorBrand: JSStringValue | undefined): ThrowCompletion | undefined;
+export declare function AsyncGeneratorValidate(generator: Value, generatorBrand: string | undefined): ThrowCompletion | undefined;
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratoryield */
 export declare function AsyncGeneratorYield(arg: Value): YieldEvaluator;
@@ -475,13 +489,9 @@ export declare class BigIntValue extends PrimitiveValue {
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
     static unsignedRightShift(_x: BigIntValue, _y: BigIntValue): ThrowCompletion;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
-    static lessThan(x: BigIntValue, y: BigIntValue): BooleanValue<false> | BooleanValue<true>;
+    static lessThan(x: BigIntValue, y: BigIntValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
-    static equal(x: BigIntValue, y: BigIntValue): BooleanValue<false> | BooleanValue<true>;
-    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-    static sameValue(x: BigIntValue, y: BigIntValue): BooleanValue<false> | BooleanValue<true>;
-    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-    static sameValueZero(x: BigIntValue, y: BigIntValue): BooleanValue<false> | BooleanValue<true>;
+    static equal(x: BigIntValue, y: BigIntValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
     static bitwiseAND(x: BigIntValue, y: BigIntValue): BigIntValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
@@ -489,7 +499,7 @@ export declare class BigIntValue extends PrimitiveValue {
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
     static bitwiseOR(x: BigIntValue, y: BigIntValue): BigIntValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-    static toString(x: BigIntValue, radix: Integer): JSStringValue;
+    static toString(x: BigIntValue, radix: Integer): string;
     static readonly unit: BigIntValue;
     static [Symbol.hasInstance]: (value: unknown) => value is BigIntValue;
 }
@@ -502,7 +512,7 @@ export declare function BindingClassDeclarationEvaluation(ClassDeclaration: Pars
 /** https://tc39.es/ecma262/#sec-bindingevaluation */
 export declare function BindingEvaluation(BindingList: ParseNode.BindingList, kind: 'normal' | DisposableResourceKind): Generator<EvaluatorYieldType, void | BigIntValue | BooleanValue<boolean> | BreakCompletion | ContinueCompletion | JSStringValue | NormalCompletion<void | Value> | NullValue | NumberValue | ObjectValue | ReturnCompletion_ | SymbolValue | ThrowCompletion<Value> | UndefinedValue, EvaluatorNextType>;
 
-export declare function BindingInitialization(node: ParseNode.ForBinding | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator;
+export declare function BindingInitialization(node: ParseNode.ForBinding | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
 export declare function BlockDeclarationInstantiation(code: ParseNode.StatementList | ParseNode.CaseBlock, env: DeclarativeEnvironmentRecord): Generator<never, void, unknown>;
@@ -536,7 +546,7 @@ export declare interface BoundFunctionObject extends ExoticObject, BaseFunctionO
     readonly BoundArguments: Arguments;
 }
 
-export declare function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValue[];
+export declare function BoundNames(node: ParseNode | readonly ParseNode[]): string[];
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export declare class BreakCompletion extends AbruptCompletion<void> {
@@ -689,7 +699,7 @@ export declare class CallSite {
     isConstructCall(): boolean;
     isAsync(): boolean;
     isNative(): boolean;
-    static getFunctionName(func: FunctionObject | NullValue): string | null;
+    static getFunctionName(func: FunctionObject): string | null;
     getFunctionName(): string | null;
     getSpecifier(): string | null | undefined;
     getScriptId(): string | undefined;
@@ -720,7 +730,7 @@ export declare function CanonicalizeCalendar(id: string): PlainCompletion<KnownC
 export declare function CanonicalizeKeyedCollectionKey(key: Value): Value;
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
-export declare function CanonicalNumericIndexString(argument: Value): NumberValue | UndefinedValue;
+export declare function CanonicalNumericIndexString(arg: string): NumberValue | undefined;
 
 export declare function captureStack(): {
     stack: CallSite[];
@@ -737,7 +747,7 @@ export declare type CharacterValueAcceptNode = ParseNode.RegExp.CharacterEscape 
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation */
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-runtime-semantics-classdefinitionevaluation */
-export declare function ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: JSStringValue | UndefinedValue, className: PropertyKeyValue | PrivateName, sourceText: string, decorators: readonly DecoratorDefinitionRecord[]): ValueEvaluator<FunctionObject>;
+export declare function ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: string | undefined, className: string | PropertyKeyValue | PrivateName, sourceText: string, decorators: readonly DecoratorDefinitionRecord[]): ValueEvaluator<FunctionObject>;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */
 export declare type ClassElementDefinitionRecord = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
@@ -749,7 +759,7 @@ export declare const ClassElementDefinitionRecord: {
 
 export declare interface ClassElementDefinitionRecord_Accessor {
     readonly Kind: 'accessor';
-    readonly Key: PrivateName | JSStringValue | SymbolValue;
+    readonly Key: PrivateName | PropertyKeyValue;
     Get: FunctionObject;
     Set: FunctionObject;
     readonly BackingStorageKey: PrivateName;
@@ -760,7 +770,7 @@ export declare interface ClassElementDefinitionRecord_Accessor {
 
 export declare interface ClassElementDefinitionRecord_Field {
     readonly Kind: 'field';
-    readonly Key: PrivateName | JSStringValue | SymbolValue;
+    readonly Key: PrivateName | PropertyKeyValue;
     Decorators: DecoratorDefinitionRecord[] | undefined;
     readonly Initializers: FunctionObject[];
     readonly ExtraInitializers: FunctionObject[];
@@ -768,21 +778,21 @@ export declare interface ClassElementDefinitionRecord_Field {
 
 export declare interface ClassElementDefinitionRecord_Getter {
     readonly Kind: 'getter';
-    readonly Key: PrivateName | JSStringValue | SymbolValue;
+    readonly Key: PrivateName | PropertyKeyValue;
     Get: FunctionObject;
     Decorators: readonly DecoratorDefinitionRecord[] | undefined;
 }
 
 export declare interface ClassElementDefinitionRecord_Method {
     readonly Kind: 'method';
-    readonly Key: PrivateName | JSStringValue | SymbolValue;
+    readonly Key: PrivateName | PropertyKeyValue;
     Value: FunctionObject;
     Decorators: DecoratorDefinitionRecord[] | undefined;
 }
 
 export declare interface ClassElementDefinitionRecord_Setter {
     readonly Kind: 'setter';
-    readonly Key: PrivateName | JSStringValue | SymbolValue;
+    readonly Key: PrivateName | PropertyKeyValue;
     Set: FunctionObject;
     Decorators: readonly DecoratorDefinitionRecord[] | undefined;
 }
@@ -817,7 +827,7 @@ export declare const ClassStaticBlockDefinitionRecord: {
 };
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
-export declare function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): ValueEvaluator<UndefinedValue>;
+export declare function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): PlainEvaluator<void>;
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export declare function ClearKeptObjects(): void;
@@ -872,7 +882,7 @@ export declare function CompareTimeRecord(xTime: TimeRecord, yTime: TimeRecord):
 export declare function CompilePattern(pattern: ParseNode.RegExp.Pattern, rer: RegExpRecord): RegExpMatcher;
 
 /** https://tc39.es/ecma262/#sec-completepropertydescriptor */
-export declare function CompletePropertyDescriptor(Desc: Descriptor): Descriptor;
+export declare function CompletePropertyDescriptor(propertyDesc: Descriptor): Descriptor;
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export declare type Completion<T> = NormalCompletion<T> | AbruptCompletion;
@@ -990,7 +1000,7 @@ export declare function CreateArrayIterator(array: ObjectValue, kind: 'key+value
 export declare function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord): IteratorRecord;
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export declare function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, async?: boolean): BuiltinFunctionObject;
+export declare function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, async?: boolean): BuiltinFunctionObject;
 
 export declare namespace CreateBuiltinFunction {
     var from: (steps: CanBeNativeSteps, name?: string, async?: boolean) => BuiltinFunctionObject;
@@ -1004,19 +1014,19 @@ export declare function CreateByteDataBlock(size: number, _notInSpecMaxByteLengt
 export declare function CreateBytesModule(arrayBuffer: ArrayBufferObject): SyntheticModuleRecord;
 
 /** https://tc39.es/ecma262/#sec-createdataproperty */
-export declare function CreateDataProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): ValueEvaluator<BooleanValue>;
+export declare function CreateDataProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
-export declare function CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, V: Value): Generator<EvaluatorYieldType, BooleanValue<boolean> | ThrowCompletion, EvaluatorNextType>;
+export declare function CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, V: Value): Generator<EvaluatorYieldType, true | ThrowCompletion, EvaluatorNextType>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createdatedurationrecord */
 export declare function CreateDateDurationRecord(years: Integer, months: Integer, weeks: Integer, days: Integer): PlainCompletion<DateDurationRecord>;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createdecoratoraccessobject */
-export declare function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['Kind'], name: PropertyKeyValue | PrivateName): ObjectValue;
+export declare function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['Kind'], name: string | PropertyKeyValue | PrivateName): ObjectValue;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createdecoratorcontextobject */
-export declare function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinitionRecord['Kind'], name: PropertyKeyValue | PrivateName, initializers: FunctionObject[], decorationState: {
+export declare function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinitionRecord['Kind'], name: string | PropertyKeyValue | PrivateName, initializers: FunctionObject[], decorationState: {
     Finished: boolean;
 }, isStatic?: boolean): ObjectValue;
 
@@ -1038,10 +1048,10 @@ export declare function CreateIntrinsics(realmRec: Realm): any;
 export declare function CreateISODateRecord(y: Integer, m: Integer, d: Integer): PlainCompletion<ISODateRecord>;
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject>;
+export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject>;
 
 /** https://tc39.es/ecma262/#sec-createiterresultobject */
-export declare function CreateIteratorResultObject(value: Value, done: BooleanValue): OrdinaryObject;
+export declare function CreateIteratorResultObject(value: Value, done: boolean): OrdinaryObject;
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
 export declare function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'all'): PlainEvaluator<Value[]>;
@@ -1055,7 +1065,7 @@ export declare function CreateListIteratorRecord(list: Iterable<Value>): Iterato
 export declare function CreateMappedArgumentsObject(func: ECMAScriptFunctionObject, formals: ParseNode.FormalParameters, argumentsList: Arguments, env: EnvironmentRecord): ObjectValue & Record<"Extensible" | "ParameterMap" | "Prototype", unknown>;
 
 /** https://tc39.es/ecma262/#sec-createmethodproperty */
-export declare function CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): ValueEvaluator<BooleanValue>;
+export declare function CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): PlainEvaluator<boolean>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createmonthcode */
 export declare function CreateMonthCode(monthNumber: Integer, isLeapMonth: boolean): MonthCode;
@@ -1101,7 +1111,7 @@ export declare function createTest262Intrinsics(realm: ManagedRealm, printCompat
 };
 
 /** https://tc39.es/proposal-import-text/#sec-create-text-module */
-export declare function CreateTextModule(source: JSStringValue): SyntheticModuleRecord;
+export declare function CreateTextModule(source: string): SyntheticModuleRecord;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtimerecord */
 export declare function CreateTimeRecord(hour: Integer, minute: Integer, second: Integer, millisecond: Integer, microsecond: Integer, nanosecond: Integer, deltaDays?: Integer): PlainCompletion<TimeRecord>;
@@ -1122,7 +1132,7 @@ export declare abstract class CyclicModuleRecord extends AbstractModuleRecord {
     DFSAncestorIndex: number | undefined;
     readonly RequestedModules: readonly ModuleRequestRecord[];
     readonly LoadedModules: LoadedModuleRequestRecord[];
-    readonly HasTLA: BooleanValue;
+    readonly HasTLA: boolean;
     AsyncEvaluationOrder: 'unset' | number | 'done';
     AsyncParentModules: CyclicModuleRecord[];
     CycleRoot: CyclicModuleRecord | undefined;
@@ -1145,6 +1155,20 @@ export declare type CyclicModuleRecordStatus = 'new' | 'unlinked' | 'linking' | 
 
 export declare class DataBlock extends Uint8Array {
 }
+
+/** https://tc39.es/ecma262/#sec-isdatadescriptor */
+export declare interface DataDescriptor extends Descriptor {
+    readonly Value: Value;
+    readonly Writable: boolean;
+}
+
+export declare type DataDescriptorInit = ({
+    readonly Value: Value;
+    readonly Writable?: boolean;
+} | {
+    readonly Value?: Value;
+    readonly Writable: boolean;
+}) & Partial<DescriptorWithEnumerableAndConfigurable>;
 
 /** https://tc39.es/ecma262/#sec-dataview-objects */
 export declare interface DataViewObject extends OrdinaryObject {
@@ -1243,27 +1267,27 @@ export declare interface DeclarativeEnvironmentBinding {
 
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
 export declare class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-    readonly bindings: JSStringMap<DeclarativeEnvironmentBinding>;
+    readonly bindings: Map<string, DeclarativeEnvironmentBinding>;
     /** https://tc39.es/ecma262/#table-additional-fields-of-declarative-environment-records */
     readonly DisposableResourceStack: DisposableResourceRecord[];
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
-    HasBinding(N: JSStringValue): Generator<never, BooleanValue<false> | BooleanValue<true>, unknown>;
+    HasBinding(name: string): Generator<never, boolean, unknown>;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
-    CreateMutableBinding(N: JSStringValue, D: BooleanValue): Generator<never, NormalCompletion<undefined>, unknown>;
+    CreateMutableBinding(name: string, deletable: boolean): Generator<never, NormalCompletion<undefined>, unknown>;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s */
-    CreateImmutableBinding(N: JSStringValue, S: BooleanValue): NormalCompletion<undefined>;
+    CreateImmutableBinding(name: string, strict: boolean): NormalCompletion<undefined>;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
-    InitializeBinding(N: JSStringValue, V: Value): Generator<never, NormalCompletion<undefined>, unknown>;
+    InitializeBinding(name: string, value: Value): Generator<never, NormalCompletion<undefined>, unknown>;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
-    SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator;
+    SetMutableBinding(name: string, value: Value, strict: boolean): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
-    GetBindingValue(N: JSStringValue, _S: BooleanValue): ValueEvaluator;
+    GetBindingValue(name: string, _strict: boolean): ValueEvaluator;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
-    DeleteBinding(N: JSStringValue): Generator<never, BooleanValue<false> | BooleanValue<true>, unknown>;
+    DeleteBinding(name: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
-    HasThisBinding(): BooleanValue;
+    HasThisBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
-    HasSuperBinding(): BooleanValue;
+    HasSuperBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
     WithBaseObject(): UndefinedValue;
     mark(m: GCMarker): void;
@@ -1314,26 +1338,41 @@ export declare interface DefineMethodRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
-export declare function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, desc: Descriptor): Generator<EvaluatorYieldType, BooleanValue<boolean> | ThrowCompletion, EvaluatorNextType>;
+export declare function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, desc: Descriptor): Generator<EvaluatorYieldType, true | ThrowCompletion, EvaluatorNextType>;
 
 /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
-export declare function DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string): Generator<EvaluatorYieldType, BooleanValue<boolean> | ThrowCompletion, EvaluatorNextType>;
+export declare function DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string): Generator<EvaluatorYieldType, true | ThrowCompletion, EvaluatorNextType>;
 
-export declare function Descriptor(O: DescriptorInit): Descriptor;
+export declare function Descriptor(init: Required<AccessorDescriptorInit>): FullyPopulatedAccessorDescriptor;
+
+export declare function Descriptor(init: Required<DataDescriptorInit>): FullyPopulatedDataDescriptor;
+
+export declare function Descriptor(init: AccessorDescriptorInit): AccessorDescriptor;
+
+export declare function Descriptor(init: DataDescriptorInit): DataDescriptor;
+
+export declare function Descriptor(init: Partial<AccessorDescriptorInit>): GenericDescriptor;
+
+export declare function Descriptor(init: Partial<DataDescriptorInit>): GenericDescriptor;
+
+export declare function Descriptor(init: Partial<GenericDescriptorInit>): GenericDescriptor;
 
 export declare class Descriptor {
     readonly Value?: Value;
-    readonly Getter?: FunctionObject | UndefinedValue;
-    readonly Setter?: FunctionObject | UndefinedValue;
-    readonly Writable?: BooleanValue;
-    readonly Enumerable?: BooleanValue;
-    readonly Configurable?: BooleanValue;
-    constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>);
-    everyFieldIsAbsent(): boolean;
+    readonly Get?: FunctionObject | UndefinedValue;
+    readonly Set?: FunctionObject | UndefinedValue;
+    readonly Writable?: boolean;
+    readonly Enumerable?: boolean;
+    readonly Configurable?: boolean;
+    private constructor();
+    static everyFieldIsAbsent(descriptor: Descriptor): boolean;
     mark(m: GCMarker): void;
 }
 
-export declare type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>;
+export declare interface DescriptorWithEnumerableAndConfigurable {
+    readonly Configurable: boolean;
+    readonly Enumerable: boolean;
+}
 
 export declare function DestructuringAssignmentEvaluation(node: ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern, value: Value): StatementEvaluator;
 
@@ -1473,15 +1512,15 @@ export declare function EnumerableOwnProperties(O: ObjectValue, kind: 'key' | 'v
 export declare abstract class EnvironmentRecord {
     readonly OuterEnv: EnvironmentRecord | null;
     constructor(outerEnv: EnvironmentRecord | null);
-    abstract HasBinding(N: JSStringValue): ValueEvaluator<BooleanValue>;
-    abstract CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator;
-    abstract CreateImmutableBinding(N: JSStringValue, S: BooleanValue): void;
-    abstract InitializeBinding(N: JSStringValue, V: Value): PlainEvaluator;
-    abstract SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator;
-    abstract GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator;
-    abstract DeleteBinding(N: JSStringValue): ValueEvaluator<BooleanValue>;
-    abstract HasThisBinding(): BooleanValue;
-    abstract HasSuperBinding(): BooleanValue;
+    abstract HasBinding(name: string): PlainEvaluator<boolean>;
+    abstract CreateMutableBinding(name: string, deletable: boolean): PlainEvaluator;
+    abstract CreateImmutableBinding(name: string, strict: boolean): void;
+    abstract InitializeBinding(name: string, value: Value): PlainEvaluator;
+    abstract SetMutableBinding(name: string, value: Value, strict: boolean): PlainEvaluator;
+    abstract GetBindingValue(name: string, strict: boolean): ValueEvaluator;
+    abstract DeleteBinding(name: string): PlainEvaluator<boolean>;
+    abstract HasThisBinding(): boolean;
+    abstract HasSuperBinding(): boolean;
     abstract WithBaseObject(): ObjectValue | UndefinedValue;
     mark(m: GCMarker): void;
 }
@@ -1498,15 +1537,15 @@ export declare type EpochNanoseconds = Integer & {
 export declare interface ErrorObject extends ObjectValue {
     ErrorData: never;
     /** Show a clickable stack in the devtools */
-    HostDefinedStack: readonly (CallSite | CallFrame)[] | UndefinedValue;
+    HostDefinedStack: readonly (CallSite | CallFrame)[] | undefined;
     /** Show an error message that allows ECMAScript values to be interleaved with host error messages in the devtools */
-    HostDefinedMessage: readonly (string | Value)[] | UndefinedValue;
-    HostDefinedFormattedStack: string | UndefinedValue;
-    HostDefinedMessageString: string | UndefinedValue;
+    HostDefinedMessage: readonly (string | Value)[] | undefined;
+    HostDefinedFormattedStack: string | undefined;
+    HostDefinedMessageString: string | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-escaperegexppattern */
-export declare function EscapeRegExpPattern(P: JSStringValue, _F: Value): JSStringValue;
+export declare function EscapeRegExpPattern(P: string, _F: string | Value): string;
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
 export declare function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null, strict: boolean): PlainEvaluator;
@@ -1696,7 +1735,7 @@ export declare function Evaluate_PropertyName(PropertyName: ParseNode.PropertyNa
 export declare function Evaluate_RegularExpressionLiteral(RegularExpressionLiteral: ParseNode.RegularExpressionLiteral): Generator<EvaluatorYieldType, ValueCompletion<RegExpObject>, EvaluatorNextType>;
 
 /** https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
-export declare function Evaluate_RelationalExpression(expr: ParseNode.RelationalExpression): Generator<EvaluatorYieldType, BooleanValue<boolean> | NormalCompletion<BooleanValue<boolean> | UndefinedValue> | ThrowCompletion | UndefinedValue, EvaluatorNextType>;
+export declare function Evaluate_RelationalExpression(expr: ParseNode.RelationalExpression): ValueEvaluator<BooleanValue | UndefinedValue>;
 
 export declare function Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdentifier, ShiftExpression }: ParseNode.RelationalExpression): Generator<EvaluatorYieldType, BooleanValue<false> | BooleanValue<true> | ThrowCompletion, EvaluatorNextType>;
 
@@ -1740,7 +1779,7 @@ export declare function Evaluate_ThrowStatement({ Expression }: ParseNode.ThrowS
 /** https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
 export declare function Evaluate_TryStatement(TryStatement: ParseNode.TryStatement): Generator<EvaluatorYieldType, BreakCompletion | ContinueCompletion | NormalCompletion<void | Value> | ReturnCompletion_ | ThrowCompletion<Value>, EvaluatorNextType>;
 
-export declare function Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpression): Generator<EvaluatorYieldType, BigIntValue | BooleanValue<boolean> | JSStringValue | NormalCompletion<Value> | NullValue | NumberValue | ObjectValue | SymbolValue | ThrowCompletion | UndefinedValue, EvaluatorNextType>;
+export declare function Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpression): ValueEvaluator;
 
 export declare function Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }: ParseNode.UpdateExpression): ValueEvaluator;
 
@@ -1878,7 +1917,7 @@ export declare function ExcludeImportedNames(a: ImportedNamesValue, b: ImportedN
 export declare class ExecutionContext {
     CodeEvaluationState?: YieldOrAwaitEvaluator;
     Function: NullValue | FunctionObject;
-    ScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
+    ScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
     Realm: Realm;
     LexicalEnvironment: EnvironmentRecord;
     VariableEnvironment: EnvironmentRecord;
@@ -1908,13 +1947,13 @@ export declare function ExpectedArgumentCount(FormalParameterList: ParseNode.For
 
 export declare function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEntry[];
 
-export declare function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: ModuleRequestRecord | NullValue): ExportEntry[];
+export declare function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: ModuleRequestRecord | null): ExportEntry[];
 
 export declare interface ExportEntry {
-    readonly ModuleRequest: ModuleRequestRecord | NullValue;
-    readonly ImportName: JSStringValue | NullValue | 'namespace' | 'filtered-namespace' | 'source' | 'all-but-default';
-    readonly LocalName: JSStringValue | NullValue;
-    readonly ExportName: JSStringValue | NullValue;
+    readonly ModuleRequest: ModuleRequestRecord | null;
+    readonly ImportName: JSStringValue | null | 'namespace' | 'filtered-namespace' | 'source' | 'all-but-default';
+    readonly LocalName: string | null;
+    readonly ExportName: string | null;
     readonly NamespaceNamesFilter?: readonly string[];
 }
 
@@ -2089,7 +2128,21 @@ export declare function FormatTimeString(hour: Integer, minute: Integer, second:
 export declare function FormatUTCOffsetNanoseconds(offsetNanoseconds: Integer): string;
 
 /** https://tc39.es/ecma262/#sec-frompropertydescriptor */
-export declare function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue): OrdinaryObject | UndefinedValue;
+export declare function FromPropertyDescriptor(propertyDesc: Descriptor | undefined): OrdinaryObject | UndefinedValue;
+
+export declare interface FullyPopulatedAccessorDescriptor extends AccessorDescriptor {
+    readonly Configurable: boolean;
+    readonly Enumerable: boolean;
+}
+
+export declare interface FullyPopulatedDataDescriptor extends DataDescriptor {
+    readonly Configurable: boolean;
+    readonly Enumerable: boolean;
+    readonly Writable: boolean;
+}
+
+/** https://tc39.es/ecma262/#sec-property-descriptor-specification-type */
+export declare type FullyPopulatedDescriptor = FullyPopulatedDataDescriptor | FullyPopulatedAccessorDescriptor;
 
 export declare interface FunctionCallContext {
     readonly thisValue: Value;
@@ -2114,9 +2167,9 @@ export declare class FunctionEnvironmentRecord extends DeclarativeEnvironmentRec
     /** https://tc39.es/ecma262/#sec-bindthisvalue */
     BindThisValue(V: Value): ThrowCompletion | Value;
     /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
-    HasThisBinding(): BooleanValue<false> | BooleanValue<true>;
+    HasThisBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
-    HasSuperBinding(): BooleanValue<false> | BooleanValue<true>;
+    HasSuperBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
     GetThisBinding(): ThrowCompletion | Value;
     /** https://tc39.es/ecma262/#sec-getsuperbase */
@@ -2164,31 +2217,47 @@ export { gc_2 as gc }
 
 export declare type GCMarker = (value: unknown) => void;
 
-export declare function generatorBrandToErrorMessageType(generatorBrand: JSStringValue | undefined): string | undefined;
+export declare function generatorBrandToErrorMessageType(generatorBrand: string | undefined): string | undefined;
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 export declare interface GeneratorObject extends OrdinaryObject {
     GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | undefined;
     GeneratorContext: ExecutionContext | null;
-    readonly GeneratorBrand: JSStringValue | undefined;
+    readonly GeneratorBrand: string | undefined;
     UnderlyingIterators?: IteratorRecord[];
     HostCapturedValues?: readonly Value[];
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresume */
-export declare function GeneratorResume(generator: Value, value: Value | undefined, generatorBrand: JSStringValue | undefined): ValueEvaluator;
+export declare function GeneratorResume(generator: Value, value: Value | undefined, generatorBrand: string | undefined): ValueEvaluator;
 
 /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
-export declare function GeneratorResumeAbrupt(generator: Value, abruptCompletion: ThrowCompletion | ReturnCompletion, generatorBrand: JSStringValue | undefined): ValueEvaluator;
+export declare function GeneratorResumeAbrupt(generator: Value, abruptCompletion: ThrowCompletion | ReturnCompletion, generatorBrand: string | undefined): ValueEvaluator;
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
 export declare function GeneratorStart(generator: GeneratorObject, generatorBody: ParseNode.GeneratorBody | (() => YieldEvaluator)): undefined;
 
 /** https://tc39.es/ecma262/#sec-generatorvalidate */
-export declare function GeneratorValidate(generator: Value, generatorBrand: JSStringValue | undefined): "completed" | "suspendedStart" | "suspendedYield" | ThrowCompletion | undefined;
+export declare function GeneratorValidate(generator: Value, generatorBrand: string | undefined): "completed" | "suspendedStart" | "suspendedYield" | ThrowCompletion | undefined;
 
 /** https://tc39.es/ecma262/#sec-generatoryield */
 export declare function GeneratorYield(iteratorResult: ObjectValue): YieldEvaluator;
+
+export declare interface GenericDescriptor extends Descriptor {
+    readonly Get?: never;
+    readonly Set?: never;
+    readonly Value?: never;
+    readonly Writable?: never;
+}
+
+export declare interface GenericDescriptorInit {
+    readonly Configurable?: boolean;
+    readonly Enumerable?: boolean;
+    readonly Value?: never;
+    readonly Writable?: never;
+    readonly Get?: never;
+    readonly Set?: never;
+}
 
 /** https://tc39.es/ecma262/#sec-get-o-p */
 export declare function Get(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator;
@@ -2197,7 +2266,7 @@ export declare function Get(O: ObjectValue, P: PropertyKeyValue | string): Value
 export declare function getActiveScriptId(): string | undefined;
 
 /** https://tc39.es/ecma262/#sec-getactivescriptormodule */
-export declare function GetActiveScriptOrModule(): AbstractModuleRecord | NullValue | ScriptRecord;
+export declare function GetActiveScriptOrModule(): AbstractModuleRecord | ScriptRecord | null;
 
 /** https://tc39.es/ecma262/#sec-getarraybuffermaxbytelengthoption */
 export declare function GetArrayBufferMaxByteLengthOption(options: Value): PlainEvaluator<number | undefined>;
@@ -2241,7 +2310,7 @@ export declare function getHostDefinedErrorDetails(O: Value): {
 };
 
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
-export declare function GetIdentifierReference(env: EnvironmentRecord | null, name: JSStringValue, strict: boolean): PlainEvaluator<ReferenceRecord>;
+export declare function GetIdentifierReference(env: EnvironmentRecord | null, name: string, strict: boolean): PlainEvaluator<ReferenceRecord>;
 
 /** https://tc39.es/ecma262/#sec-GetImportedModule */
 export declare function GetImportedModule(referrer: CyclicModuleRecord, request: ModuleRequestRecord): AbstractModuleRecord;
@@ -2260,10 +2329,10 @@ export declare function GetIteratorFlattenable(obj: Value, primitiveHandling: Pr
 export declare function GetIteratorFromMethod(obj: Value, method: FunctionObject): PlainEvaluator<IteratorRecord>;
 
 /** https://tc39.es/ecma262/#sec-getmatchindexpair */
-export declare function GetMatchIndexPair(S: JSStringValue, match: MatchRecord): OrdinaryObject;
+export declare function GetMatchIndexPair(S: string, match: MatchRecord): OrdinaryObject;
 
 /** https://tc39.es/ecma262/#sec-getmatchstring */
-export declare function GetMatchString(S: JSStringValue, match: MatchRecord): JSStringValue;
+export declare function GetMatchString(S: string, match: MatchRecord): string;
 
 /** https://tc39.es/ecma262/#sec-getmethod */
 export declare function GetMethod(V: Value, P: PropertyKeyValue | string): ValueEvaluator<UndefinedValue | FunctionObject>;
@@ -2309,10 +2378,10 @@ export declare function GetShadowRealmContext(shadowRealmRecord: Realm, strictEv
 export declare function GetStartOfDay(timeZone: TimeZoneIdentifier, isoDate: ISODateRecord): PlainCompletion<EpochNanoseconds>;
 
 /** https://tc39.es/ecma262/#sec-getstringindex */
-export declare function GetStringIndex(S: JSStringValue, Input: readonly string[], e: number): number;
+export declare function GetStringIndex(S: string, Input: readonly string[], e: number): number;
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export declare function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacementTemplate: JSStringValue): ValueEvaluator<JSStringValue>;
+export declare function GetSubstitution(matched: string, str: string, position: number, captures: readonly (string | undefined)[], namedCaptures: undefined | UndefinedValue | ObjectValue, replacementTemplate: string): PlainEvaluator<string>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendaridentifierwithisodefault */
 export declare function GetTemporalCalendarIdentifierWithISODefault(temporalObjectLike: ObjectValue): PlainEvaluator<KnownCalendarType>;
@@ -2372,7 +2441,7 @@ export declare function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteI
 export declare function GetViewByteLength(viewRecord: DataViewWithBufferWitnessRecord): number;
 
 /** https://tc39.es/ecma262/#sec-getviewvalue */
-export declare function GetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes): Generator<EvaluatorYieldType, BigIntValue | NumberValue | ThrowCompletion, EvaluatorNextType>;
+export declare function GetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes): Generator<EvaluatorYieldType, BigIntValue | NumberValue | ThrowCompletion, EvaluatorNextType>;
 
 /** https://tc39.es/proposal-shadowrealm/#sec-getwrappedvalue */
 export declare function GetWrappedValue(callerRealm: Realm, value: Value): ValueEvaluator;
@@ -2387,45 +2456,45 @@ export declare class GlobalEnvironmentRecord extends EnvironmentRecord {
     /** https://tc39.es/ecma262/#sec-newglobalenvironment */
     constructor(G: ObjectValue, thisValue: ObjectValue);
     /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
-    HasBinding(N: JSStringValue): Generator<EvaluatorYieldType, ValueCompletion<BooleanValue<boolean>>, EvaluatorNextType>;
+    HasBinding(name: string): Generator<EvaluatorYieldType, PlainCompletion<boolean>, EvaluatorNextType>;
     /** https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d */
-    CreateMutableBinding(N: JSStringValue, D: BooleanValue): Generator<never, NormalCompletion<undefined> | ThrowCompletion, unknown>;
+    CreateMutableBinding(name: string, strict: boolean): Generator<never, NormalCompletion<undefined> | ThrowCompletion, unknown>;
     /** https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s */
-    CreateImmutableBinding(N: JSStringValue, S: BooleanValue): NormalCompletion<undefined> | ThrowCompletion;
+    CreateImmutableBinding(name: string, strict: boolean): NormalCompletion<undefined> | ThrowCompletion;
     /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
-    InitializeBinding(N: JSStringValue, V: Value): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
+    InitializeBinding(name: string, value: Value): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
     /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
-    SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator;
+    SetMutableBinding(name: string, value: Value, strict: boolean): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s */
-    GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator;
+    GetBindingValue(name: string, strict: boolean): ValueEvaluator;
     /** https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
-    DeleteBinding(N: JSStringValue): PlainEvaluator<BooleanValue>;
+    DeleteBinding(name: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
-    HasThisBinding(): BooleanValue<true>;
+    HasThisBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
-    HasSuperBinding(): BooleanValue<false>;
+    HasSuperBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
     WithBaseObject(): UndefinedValue;
     /** https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding */
     GetThisBinding(): ObjectValue;
     /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
-    HasLexicalDeclaration(N: JSStringValue): Generator<never, BooleanValue<false> | BooleanValue<true>, unknown>;
+    HasLexicalDeclaration(name: string): Generator<never, boolean, unknown>;
     /** https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
-    HasRestrictedGlobalProperty(N: JSStringValue): ValueEvaluator<BooleanValue>;
+    HasRestrictedGlobalProperty(name: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
-    CanDeclareGlobalVar(N: JSStringValue): ValueEvaluator<BooleanValue>;
+    CanDeclareGlobalVar(N: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-candeclareglobalfunction */
-    CanDeclareGlobalFunction(N: JSStringValue): ValueEvaluator<BooleanValue>;
+    CanDeclareGlobalFunction(N: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
-    CreateGlobalVarBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator;
+    CreateGlobalVarBinding(name: string, deletable: boolean): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
-    CreateGlobalFunctionBinding(N: JSStringValue, V: FunctionObject, D: BooleanValue): PlainEvaluator;
+    CreateGlobalFunctionBinding(name: string, value: FunctionObject, deletable: boolean): PlainEvaluator;
     mark(m: GCMarker): void;
 }
 
 /** https://tc39.es/ecma262/#sec-globalsymbolregistry-records */
 export declare interface GlobalSymbolRegistryRecord {
-    readonly Key: JSStringValue;
+    readonly Key: string;
     readonly Symbol: SymbolValue;
 }
 
@@ -2451,10 +2520,10 @@ export declare function HasInitializer(node: ParseNode): node is ParseNode & {
 export declare function HasName(node: ParseNode): boolean;
 
 /** https://tc39.es/ecma262/#sec-hasownproperty */
-export declare function HasOwnProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+export declare function HasOwnProperty(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-hasproperty */
-export declare function HasProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+export declare function HasProperty(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects */
 /** https://tc39.es/ecma262/#sec-built-in-function-objects */
@@ -2475,7 +2544,7 @@ export declare function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: 
 export declare function HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
-export declare function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord): void | UndefinedValue;
+export declare function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord): void;
 
 /** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
 export declare function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord): readonly {
@@ -2488,7 +2557,7 @@ export declare function HostGetModuleSourceModuleRecord(specifier: ObjectValue):
 
 export declare function HostGetSupportedImportAttributes(): readonly string[];
 
-export declare function HostHasSourceTextAvailable(func: FunctionObject): boolean | BooleanValue<true>;
+export declare function HostHasSourceTextAvailable(func: FunctionObject): boolean;
 
 export declare interface HostHooks {
     /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
@@ -2556,7 +2625,7 @@ export declare interface ImportAttributeRecord {
 export declare function importBundledTest262Harness(realm: ManagedRealm, nameMapper?: (str: string) => string): void;
 
 /** https://tc39.es/ecma262/#sec-importedlocalnames */
-export declare function ImportedLocalNames(importEntries: readonly ImportEntry[]): JSStringValue[];
+export declare function ImportedLocalNames(importEntries: readonly ImportEntry[]): string[];
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-ImportedNames */
 export declare function ImportedNames(node: ParseNode.NamedImports | ParseNode.NamedExports): readonly string[];
@@ -2572,14 +2641,14 @@ export declare function ImportEntriesForModule(node: ParseNode, module: ModuleRe
 export declare interface ImportEntry {
     readonly ModuleRequest: ModuleRequestRecord;
     readonly ImportName: JSStringValue | 'namespace' | 'filtered-namespace-object' | 'source';
-    readonly LocalName: JSStringValue;
+    readonly LocalName: string;
     readonly NamespaceNamesFilter?: readonly string[];
 }
 
 export declare function IncrementModuleAsyncEvaluationCount(): number;
 
 /** https://tc39.es/ecma262/#sec-initializeboundname */
-export declare function InitializeBoundName(name: JSStringValue, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator;
+export declare function InitializeBoundName(name: string, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-initializefieldoraccessor */
 export declare function InitializeFieldOrAccessor(receiver: ObjectValue, elementRecord: ClassElementDefinitionRecord): PlainEvaluator<void>;
@@ -2611,19 +2680,19 @@ export declare function inspect(value: Value | ValueCompletion): string;
 export declare function InstallErrorCause(O: ObjectValue, options: Value): ValueEvaluator;
 
 /** https://tc39.es/ecma262/#sec-instanceofoperator */
-export declare function InstanceofOperator(V: Value, target: Value): Generator<EvaluatorYieldType, BooleanValue<boolean> | ThrowCompletion, EvaluatorNextType>;
+export declare function InstanceofOperator(V: Value, target: Value): Generator<EvaluatorYieldType, boolean | ThrowCompletion, EvaluatorNextType>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression */
-export declare function InstantiateArrowFunctionExpression(ArrowFunction: ParseNode.ArrowFunction, name?: PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+export declare function InstantiateArrowFunctionExpression(ArrowFunction: ParseNode.ArrowFunction, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
-export declare function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?: PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+export declare function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
-export declare function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+export declare function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
-export declare function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+export declare function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
 export declare function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
@@ -2640,10 +2709,10 @@ export declare function InstantiateFunctionObject_FunctionDeclaration(FunctionDe
 export declare function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
-export declare function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?: PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+export declare function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
-export declare function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?: PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+export declare function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#integer */
 export declare type Integer = bigint & {
@@ -2858,10 +2927,8 @@ export declare function IntrinsicsFunctionToString(F: FunctionObject): string;
 /** https://tc39.es/ecma262/#sec-invoke */
 export declare function Invoke(V: Value, P: PropertyKeyValue | string, argumentsList?: Arguments): ValueEvaluator;
 
-export declare function IsAccessorDescriptor(Desc: Descriptor): Desc is Descriptor & {
-    Getter: Value;
-    Setter: Value;
-};
+/** https://tc39.es/ecma262/#sec-isaccessordescriptor */
+export declare function IsAccessorDescriptor(propertyDesc: Descriptor): propertyDesc is AccessorDescriptor;
 
 /** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
 export declare function IsAnonymousFunctionDefinition(expr: ParseNode): boolean;
@@ -2869,7 +2936,7 @@ export declare function IsAnonymousFunctionDefinition(expr: ParseNode): boolean;
 export declare function isArgumentExoticObject(value: Value): value is MappedArgumentsObject | UnmappedArgumentsObject;
 
 /** https://tc39.es/ecma262/#sec-isarray */
-export declare function IsArray(argument: Value): BooleanValue<false> | BooleanValue<true> | ThrowCompletion;
+export declare function IsArray(argument: Value): boolean | ThrowCompletion;
 
 export declare function isArrayBufferObject(o: Value): o is ArrayBufferObject;
 
@@ -2878,7 +2945,7 @@ export declare function IsArrayBufferViewOutOfBounds(O: DataViewObject | TypedAr
 
 export declare function isArrayExoticObject(O: Value): boolean;
 
-export declare function isArrayIndex(V: Value): boolean;
+export declare function isArrayIndex(V: string | Value): boolean;
 
 export declare function IsAwaitUsingDeclaration(node: ParseNode): boolean;
 
@@ -2897,22 +2964,20 @@ export declare function IsCallable(argument: Value): argument is FunctionObject;
 export declare function IsCharacterClass(node: ParseNode.RegExp.ClassAtom): boolean;
 
 /** https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
-export declare function IsCompatiblePropertyDescriptor(Extensible: BooleanValue, Desc: Descriptor, Current: UndefinedValue | Descriptor): BooleanValue<false> | BooleanValue<true>;
+export declare function IsCompatiblePropertyDescriptor(extensible: boolean, propertyDesc: Descriptor, current: undefined | FullyPopulatedDescriptor): boolean;
 
 export declare function IsComputedPropertyKey(node: ParseNode.PropertyNameLike): node is ParseNode.PropertyName;
 
 /** https://tc39.es/ecma262/#sec-isconcatspreadable */
-export declare function IsConcatSpreadable(O: Value): ValueEvaluator<BooleanValue>;
+export declare function IsConcatSpreadable(O: Value): PlainEvaluator<boolean>;
 
 export declare function IsConstantDeclaration(node: ParseNode | ParseNode.LetOrConst): boolean;
 
 /** https://tc39.es/ecma262/#sec-isconstructor */
 export declare function IsConstructor(argument: Value): argument is FunctionObject;
 
-export declare function IsDataDescriptor(Desc: Descriptor): Desc is Descriptor & {
-    Value: Value;
-    Writable: BooleanValue;
-};
+/** https://tc39.es/ecma262/#sec-isdatadescriptor */
+export declare function IsDataDescriptor(propertyDesc: Descriptor): propertyDesc is DataDescriptor;
 
 export declare function isDataViewObject(V: Value): V is DataViewObject;
 
@@ -2935,7 +3000,7 @@ export { IsError as isErrorObject }
 export declare function isEvaluator(value: unknown): value is Evaluator<unknown>;
 
 /** https://tc39.es/ecma262/#sec-isextensible-o */
-export declare function IsExtensible(O: ObjectValue): Generator<EvaluatorYieldType, ValueCompletion<BooleanValue<boolean>>, EvaluatorNextType>;
+export declare function IsExtensible(O: ObjectValue): Generator<EvaluatorYieldType, PlainCompletion<boolean>, EvaluatorNextType>;
 
 export declare function isFinalizationRegistryObject(object: object): object is FinalizationRegistryObject;
 
@@ -2946,22 +3011,23 @@ export declare function IsFunctionDefinition(node: ParseNode): node is FunctionD
 
 export declare function isFunctionObject(O: Value): O is FunctionObject;
 
-export declare function IsGenericDescriptor(Desc: Descriptor): boolean;
+/** https://tc39.es/ecma262/#sec-isgenericdescriptor */
+export declare function IsGenericDescriptor(propertyDesc: Descriptor): propertyDesc is GenericDescriptor;
 
 export declare function IsIdentifierRef(node: ParseNode): node is ParseNode.IdentifierReference;
 
 export declare function IsInTailPosition(_node: ParseNode): boolean;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
-export declare function isIntegerIndex(V: Value): boolean;
+export declare function isIntegerIndex(V: string | Value): boolean;
 
 /** https://tc39.es/ecma262/#sec-isinteger */
-export declare function IsIntegralNumber(argument: Value): BooleanValue<false> | BooleanValue<true>;
+export declare function IsIntegralNumber(argument: Value): boolean;
 
 export declare const isLeadingSurrogate: (cp: number) => boolean;
 
 /** https://tc39.es/ecma262/#sec-islessthan */
-export declare function IsLessThan(x: Value, y: Value, LeftFirst?: boolean): ValueEvaluator<BooleanValue | UndefinedValue>;
+export declare function IsLessThan(x: Value, y: Value, LeftFirst?: boolean): PlainEvaluator<boolean | undefined>;
 
 /** https://tc39.es/ecma262/#sec-islooselyequal */
 export declare function IsLooselyEqual(x: Value, y: Value): PlainEvaluator<boolean>;
@@ -2971,7 +3037,7 @@ export declare function isMapObject(value: Value): value is MapObject;
 export declare function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject;
 
 /** https://tc39.es/proposal-defer-import-eval/#sec-ismodulesccevaluated */
-export declare function IsModuleSCCEvaluated(module: CyclicModuleRecord): BooleanValue;
+export declare function IsModuleSCCEvaluated(module: CyclicModuleRecord): boolean;
 
 export declare function isNonNegativeInteger(argument: number): boolean;
 
@@ -3042,7 +3108,7 @@ export declare function IsPrivateReference(V: ReferenceRecord): V is ReferenceRe
 };
 
 /** https://tc39.es/ecma262/#sec-ispromise */
-export declare function IsPromise(x: Value): BooleanValue;
+export declare function IsPromise(x: Value): boolean;
 
 export declare function isPromiseObject(value: Value): value is PromiseObject;
 
@@ -3050,12 +3116,12 @@ export declare function isPromiseObject(value: Value): value is PromiseObject;
 export declare function IsPropertyKey(argument: unknown): argument is PropertyKeyValue;
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
-export declare function IsPropertyReference(V: ReferenceRecord): BooleanValue<false> | BooleanValue<true>;
+export declare function IsPropertyReference(V: ReferenceRecord): boolean;
 
 export declare function isProxyExoticObject(O: Value): O is ProxyObject;
 
 /** https://tc39.es/ecma262/#sec-isregexp */
-export declare function IsRegExp(argument: Value): ValueEvaluator<BooleanValue>;
+export declare function IsRegExp(argument: Value): PlainEvaluator<boolean>;
 
 export declare function isRegExpObject(o: Value): o is RegExpObject;
 
@@ -3080,12 +3146,12 @@ export declare function IsStrictlyEqual(x: Value, y: Value): boolean;
 export declare function isStrictModeCode(node: ParseNode): boolean;
 
 /** https://tc39.es/ecma262/#sec-isstringprefix */
-export declare function IsStringPrefix(p: JSStringValue, q: JSStringValue): boolean;
+export declare function IsStringPrefix(p: string, q: string): boolean;
 
-export declare function IsStringWellFormedUnicode(string_: JSStringValue): boolean;
+export declare function IsStringWellFormedUnicode(string: string): boolean;
 
 /** https://tc39.es/ecma262/#sec-issuperreference */
-export declare function IsSuperReference(V: ReferenceRecord): BooleanValue<false> | BooleanValue<true>;
+export declare function IsSuperReference(V: ReferenceRecord): boolean;
 
 export declare function isTemporalDurationObject(item: Value): item is TemporalDurationObject;
 
@@ -3116,7 +3182,7 @@ export declare function isTypedArrayObject(value: Value): value is TypedArrayObj
 export declare function IsTypedArrayOutOfBounds(taRecord: TypedArrayWithBufferWitnessRecord): boolean;
 
 /** https://tc39.es/ecma262/#sec-isunresolvablereference */
-export declare function IsUnresolvableReference(V: ReferenceRecord): BooleanValue<false> | BooleanValue<true>;
+export declare function IsUnresolvableReference(V: ReferenceRecord): boolean;
 
 /** https://tc39.es/ecma262/#sec-isunsignedelementtype */
 export declare function IsUnsignedElementType(type: TypedArrayTypes): boolean;
@@ -3127,7 +3193,7 @@ export declare function IsUsingDeclaration(node: ParseNode): boolean;
 export declare function IsValidDuration(years: Integer, months: Integer, weeks: Integer, days: Integer, hours: Integer, minutes: Integer, seconds: Integer, milliseconds: Integer, microseconds: Integer, nanoseconds: Integer): boolean;
 
 /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
-export declare function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue): BooleanValue<false> | BooleanValue<true>;
+export declare function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue): boolean;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate */
 export declare function IsValidISODate(year: Integer, month: Integer, day: Integer): boolean;
@@ -3149,10 +3215,10 @@ export declare function IsWithinEpochNanosecondsInterval(epochNanoseconds: Integ
 
 export declare function isWrappedFunctionExoticObject(value: Value): value is WrappedFunctionExoticObject;
 
-export declare function IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator;
+export declare function IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization */
-export declare function IteratorBindingInitialization_FormalParameters(FormalParameters: ParseNode.FormalParameters, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
+export declare function IteratorBindingInitialization_FormalParameters(FormalParameters: ParseNode.FormalParameters, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | undefined): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
 
 /** https://tc39.es/ecma262/#sec-iteratorclose */
 export declare function IteratorClose<T, C extends Completion<T>>(iteratorRecord: IteratorRecord, completion: C): Evaluator<C | ThrowCompletion>;
@@ -3161,7 +3227,7 @@ export declare function IteratorClose<T, C extends Completion<T>>(iteratorRecord
 export declare function IteratorCloseAll<C>(iters: Iterable<IteratorRecord>, completion: Completion<C>): Evaluator<Completion<C>>;
 
 /** https://tc39.es/ecma262/#sec-iteratorcomplete */
-export declare function IteratorComplete(iteratorResult: ObjectValue): ValueEvaluator<BooleanValue>;
+export declare function IteratorComplete(iteratorResult: ObjectValue): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-iteratornext */
 export declare function IteratorNext(iteratorRecord: IteratorRecord, value?: Value): ValueEvaluator<ObjectValue>;
@@ -3201,7 +3267,7 @@ export declare interface Job {
     readonly queueName: string;
     readonly job: () => PlainEvaluator<unknown>;
     readonly callerRealm: Realm | undefined;
-    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
+    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
 }
 
 /** https://tc39.es/ecma262/#sec-jobcallback-records */
@@ -3226,42 +3292,6 @@ export declare interface JobQueue extends Markable {
     get length(): number;
 }
 
-export declare class JSStringMap<V> implements Map<JSStringValue, V> {
-    #private;
-    clear(): void;
-    delete(key: JSStringValue | string): boolean;
-    forEach(callbackfn: (value: V, key: JSStringValue, map: Map<JSStringValue, V>) => void, thisArg?: JSStringMap<V>): void;
-    get(key: JSStringValue | string): V | undefined;
-    has(key: JSStringValue | string): boolean;
-    set(key: JSStringValue | string, value: V): this;
-    get size(): number;
-    entries(): Generator<[JSStringValue, V], undefined, unknown>;
-    keys(): Generator<JSStringValue, undefined, unknown>;
-    values(): MapIterator<V>;
-    getOrInsert(key: JSStringValue | string, defaultValue: V): V;
-    getOrInsertComputed(key: JSStringValue | string, defaultValueFn: (key: JSStringValue) => V): V;
-    [Symbol.iterator]: () => MapIterator<[JSStringValue, V]>;
-    [Symbol.toStringTag]: string;
-    mark(m: GCMarker): void;
-}
-
-export declare class JSStringSet {
-    #private;
-    constructor(value?: Iterable<JSStringValue | string>);
-    add(value: JSStringValue | string): this;
-    clear(): void;
-    delete(value: JSStringValue | string): boolean;
-    forEach(callbackfn: (value: JSStringValue, value2: JSStringValue, set: Set<JSStringValue>) => void, thisArg?: JSStringSet): void;
-    has(value: JSStringValue | NullValue | string): boolean;
-    get size(): number;
-    entries(): SetIterator<[JSStringValue, JSStringValue]>;
-    keys: () => SetIterator<JSStringValue>;
-    values(): Generator<JSStringValue, undefined, unknown>;
-    [Symbol.iterator]: () => SetIterator<JSStringValue>;
-    [Symbol.toStringTag]: string;
-    mark(_m: GCMarker): void;
-}
-
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
 export declare class JSStringValue extends PrimitiveValue {
     readonly type: 'String';
@@ -3274,7 +3304,7 @@ export declare class JSStringValue extends PrimitiveValue {
 declare const kAsyncContext: unique symbol;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
-export declare function KeyedBindingInitialization(node: ParseNode.BindingElement | ParseNode.SingleNameBinding, value: Value, environment: EnvironmentRecord | UndefinedValue, propertyName: PropertyKeyValue): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
+export declare function KeyedBindingInitialization(node: ParseNode.BindingElement | ParseNode.SingleNameBinding, value: Value, environment: EnvironmentRecord | undefined, propertyName: string | PropertyKeyValue): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
 
 export declare type KeyedGroupRecord = {
     Key: PropertyKeyValue;
@@ -3282,7 +3312,7 @@ export declare type KeyedGroupRecord = {
 };
 
 /** https://tc39.es/ecma262/#sec-keyforsymbol */
-export declare function KeyForSymbol(sym: SymbolValue): JSStringValue | UndefinedValue;
+export declare function KeyForSymbol(sym: SymbolValue): string | undefined;
 
 export declare const kInternal: unique symbol;
 
@@ -3295,7 +3325,7 @@ export declare interface Label {
     readonly nextToken?: TokenData | null;
 }
 
-export declare function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode.BreakableStatement, labelSet: JSStringSet): StatementEvaluator;
+export declare function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode.BreakableStatement, labelSet: Set<string>): StatementEvaluator;
 
 export declare type LabelType = 'switch' | 'loop';
 
@@ -3361,7 +3391,7 @@ export declare abstract class Lexer {
     scanRegularExpressionFlags(): void;
 }
 
-export declare function LexicallyDeclaredNames(node: ParseNode): JSStringValue[];
+export declare function LexicallyDeclaredNames(node: ParseNode): string[];
 
 export declare type LexicallyScopedDeclaration = ParseNode.ClassDeclaration | ParseNode.LexicalDeclaration | ParseNode.UsingDeclaration | ParseNode.AwaitUsingDeclaration;
 
@@ -3408,7 +3438,7 @@ export declare function MakeBasicObject<const T extends string>(internalSlotsLis
 export declare function MakeClassConstructor(F: Mutable<FunctionObject>): void;
 
 /** https://tc39.es/ecma262/#sec-makeconstructor */
-export declare function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFunctionObject, writablePrototype?: BooleanValue, prototype?: ObjectValue): void;
+export declare function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFunctionObject, writablePrototype?: boolean, prototype?: ObjectValue): void;
 
 /** https://tc39.es/ecma262/#sec-makedataviewwithbufferwitnessrecord */
 export declare function MakeDataViewWithBufferWitnessRecord(obj: DataViewObject, order: 'seq-cst' | 'unordered'): DataViewWithBufferWitnessRecord;
@@ -3423,13 +3453,13 @@ export declare function MakeDay(year: Num, month: Num, day: Num): Num | NaN_2;
 export declare function MakeFullYear(year: NumberValue): IntegralNumber | NaN_2;
 
 /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
-export declare function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readonly (MatchRecord | UndefinedValue)[], groupNames: readonly (JSStringValue | UndefinedValue)[], hasGroups: BooleanValue): OrdinaryObject;
+export declare function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (MatchRecord | undefined)[], groupNames: readonly (string | undefined)[], hasGroups: boolean): OrdinaryObject;
 
 /** https://tc39.es/ecma262/#sec-makemethod */
 export declare function MakeMethod(F: Mutable<ECMAScriptFunctionObject>, homeObject: ObjectValue): void;
 
 /** https://tc39.es/ecma262/#sec-makeprivatereference */
-export declare function MakePrivateReference(baseValue: Value, privateIdentifier: JSStringValue): ReferenceRecord;
+export declare function MakePrivateReference(baseValue: Value, privateIdentifier: string): ReferenceRecord;
 
 /** https://tc39.es/ecma262/pr/3728/#sec-makerealm */
 export declare function MakeRealm(...args: ConstructorParameters<typeof ManagedRealm>): ExecutionContext;
@@ -3548,7 +3578,7 @@ export declare const maxTimeDuration = 9007199254740991999999999n;
 /** https://tc39.es/proposal-deferred-reexports/#sec-MergeImportedNames */
 export declare function MergeImportedNames(a: ImportedNamesValue, b: ImportedNamesValue): ImportedNamesValue;
 
-export declare function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void>;
+export declare function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable: boolean): PlainEvaluator<PrivateElementRecord | void>;
 
 export declare function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>;
 
@@ -3595,24 +3625,24 @@ export declare type ModuleCacheKeyObject = Pick<ModuleRequestRecord, 'Specifier'
 export declare type ModuleCacheLoader = (setCache: (value: PlainCompletion<AbstractModuleRecord>, cacheKey?: ModuleCacheKey) => void) => void;
 
 export declare interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
-    readonly target?: [AbstractModuleRecord, JSStringValue];
+    readonly target?: [AbstractModuleRecord, string];
 }
 
 /** https://tc39.es/ecma262/#sec-module-environment-records */
 export declare class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
-    readonly bindings: JSStringMap<ModuleEnvironmentBinding>;
+    readonly bindings: Map<string, ModuleEnvironmentBinding>;
     /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
-    GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator;
+    GetBindingValue(name: string, strict: boolean): ValueEvaluator;
     /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
     DeleteBinding(): never;
     /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
-    HasThisBinding(): BooleanValue<true>;
+    HasThisBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
     GetThisBinding(): UndefinedValue;
     /** https://tc39.es/ecma262/#sec-createimportbinding */
-    CreateImportBinding(N: JSStringValue, M: AbstractModuleRecord, N2: JSStringValue): NormalCompletion<undefined>;
+    CreateImportBinding(name: string, targetModule: AbstractModuleRecord, targetName: string): NormalCompletion<undefined>;
     /** https://tc39.es/proposal-deferred-reexports/#sec-createdeferredinitializationbinding */
-    CreateDeferredInitializationBinding(N: JSStringValue, initializationSteps: () => Value): void;
+    CreateDeferredInitializationBinding(name: string, initializationSteps: () => Value): void;
 }
 
 /**
@@ -3631,11 +3661,11 @@ export declare interface ModuleLoaderResultWithoutCacheKey {
 }
 
 /** https://tc39.es/ecma262/#sec-modulenamespacecreate */
-export declare function ModuleNamespaceCreate(module: AbstractModuleRecord, exports: readonly JSStringValue[], phase: 'defer' | 'evaluation'): ModuleNamespaceObject;
+export declare function ModuleNamespaceCreate(module: AbstractModuleRecord, exports: readonly string[], phase: 'defer' | 'evaluation'): ModuleNamespaceObject;
 
 export declare interface ModuleNamespaceObject extends ExoticObject {
     readonly Module: AbstractModuleRecord;
-    readonly Exports: JSStringSet;
+    readonly Exports: Set<string>;
     readonly Deferred: boolean;
 }
 
@@ -3694,7 +3724,7 @@ export declare type Mutable<T> = {
 /** https://tc39.es/ecma262/#sec-runtime-semantics-mv-s */
 export declare function MV_StringNumericLiteral(StringNumericLiteral: string): NumberValue;
 
-export declare function NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ValueEvaluator<FunctionObject>;
+export declare function NamedEvaluation(F: FunctionDeclaration, name: string | PropertyKeyValue | PrivateName): ValueEvaluator<FunctionObject>;
 
 declare type NaN_2 = Num & {
     integral?: false; /** @internal */
@@ -3852,13 +3882,13 @@ export declare class NumberValue extends PrimitiveValue {
     /** https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
     static unsignedRightShift(x: NumberValue, y: NumberValue): NumberValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
-    static lessThan(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true> | UndefinedValue;
+    static lessThan(x: NumberValue, y: NumberValue): boolean | undefined;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
-    static equal(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true>;
+    static equal(x: NumberValue, y: NumberValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
-    static sameValue(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true>;
+    static sameValue(x: NumberValue, y: NumberValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
-    static sameValueZero(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true>;
+    static sameValueZero(x: NumberValue, y: NumberValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
     static bitwiseAND(x: NumberValue, y: NumberValue): NumberValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
@@ -3866,7 +3896,7 @@ export declare class NumberValue extends PrimitiveValue {
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseOR */
     static bitwiseOR(x: NumberValue, y: NumberValue): NumberValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-    static toString(x: NumberValue, radix: Integer): JSStringValue;
+    static toString(x: NumberValue, radix: Integer): string;
     static readonly unit: NumberValue;
     static [Symbol.hasInstance]: (value: unknown) => value is NumberValue;
 }
@@ -3874,32 +3904,32 @@ export declare class NumberValue extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-numerictorawbytes */
 export declare function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | BigIntValue, isLittleEndian: boolean): number[];
 
-export declare function NumericValue(node: ParseNode.NumericLiteral): BigIntValue | NumberValue;
+export declare function NumericValue(node: ParseNode.NumericLiteral): bigint | number;
 
 /** https://tc39.es/ecma262/#sec-object-environment-records */
 export declare class ObjectEnvironmentRecord extends EnvironmentRecord {
     BindingObject: ObjectValue;
-    IsWithEnvironment: BooleanValue;
+    IsWithEnvironment: boolean;
     /** https://tc39.es/ecma262/#sec-newobjectenvironment */
-    constructor(O: ObjectValue, W: BooleanValue, E: EnvironmentRecord | null);
+    constructor(object: ObjectValue, IsWithEnvironment: boolean, Environment: EnvironmentRecord | null);
     /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
-    HasBinding(N: JSStringValue): ValueEvaluator<BooleanValue>;
+    HasBinding(name: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
-    CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator;
+    CreateMutableBinding(name: string, deletable: boolean): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s */
-    CreateImmutableBinding(_N: JSStringValue, _S: BooleanValue): void;
+    CreateImmutableBinding(_name: string, _strict: boolean): void;
     /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
-    InitializeBinding(N: JSStringValue, V: Value): PlainEvaluator;
+    InitializeBinding(name: string, value: Value): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
-    SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator;
+    SetMutableBinding(name: string, value: Value, strict: boolean): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s */
-    GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator;
+    GetBindingValue(name: string, strict: boolean): ValueEvaluator;
     /** https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
-    DeleteBinding(N: JSStringValue): ValueEvaluator<BooleanValue>;
+    DeleteBinding(name: string): PlainEvaluator<boolean>;
     /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
-    HasThisBinding(): BooleanValue<false>;
+    HasThisBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
-    HasSuperBinding(): BooleanValue<false>;
+    HasSuperBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
     WithBaseObject(): ObjectValue | UndefinedValue;
     mark(m: GCMarker): void;
@@ -3907,15 +3937,15 @@ export declare class ObjectEnvironmentRecord extends EnvironmentRecord {
 
 export declare interface ObjectInternalMethods<Self> {
     GetPrototypeOf(this: Self): ValueEvaluator<ObjectValue | NullValue>;
-    SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ValueEvaluator<BooleanValue>;
-    IsExtensible(this: Self): ValueEvaluator<BooleanValue>;
-    PreventExtensions(this: Self): ValueEvaluator<BooleanValue>;
-    GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<Descriptor | UndefinedValue>;
-    DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue>;
-    HasProperty(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+    SetPrototypeOf(this: Self, V: ObjectValue | NullValue): PlainEvaluator<boolean>;
+    IsExtensible(this: Self): PlainEvaluator<boolean>;
+    PreventExtensions(this: Self): PlainEvaluator<boolean>;
+    GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<FullyPopulatedDescriptor | undefined>;
+    DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): PlainEvaluator<boolean>;
+    HasProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
     Get(this: Self, P: PropertyKeyValue | string, Receiver: Value): ValueEvaluator;
-    Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): ValueEvaluator<BooleanValue>;
-    Delete(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+    Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): PlainEvaluator<boolean>;
+    Delete(this: Self, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
     OwnPropertyKeys(this: Self): PlainEvaluator<PropertyKeyValue[]>;
     Call?(this: Self, thisArg: Value, args: Arguments): ValueEvaluator;
     Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
@@ -3928,7 +3958,7 @@ export declare type ObjectSlotReturn = {
 /** https://tc39.es/ecma262/#sec-object-type */
 export declare class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
     readonly type: 'Object';
-    readonly properties: PropertyKeyMap<Descriptor>;
+    readonly properties: PropertyKeyMap<FullyPopulatedDescriptor>;
     readonly internalSlotsList: readonly string[];
     readonly PrivateElements: PrivateElementRecord[];
     readonly ConstructedBy: (ECMAScriptFunctionObject | DefaultConstructorBuiltinFunction)[];
@@ -3959,29 +3989,33 @@ export declare function OrdinaryCallEvaluateBody(F: ECMAScriptFunctionObject, ar
 
 export declare function OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics, internalSlotsList?: readonly T[]): ValueEvaluator<ObjectValue>;
 
-export declare function OrdinaryDefineOwnProperty(O: ObjectValue, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue>;
+/** https://tc39.es/ecma262/#sec-ordinarydefineownproperty */
+export declare function OrdinaryDefineOwnProperty(obj: ObjectValue, propertyKey: PropertyKeyValue | string, propertyDesc: Descriptor): PlainEvaluator<boolean>;
 
-export declare function OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+export declare function OrdinaryDelete(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-functionallocate */
 export declare function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceText: string, ParameterList: ParseNode.FormalParameters, Body: Body_2, thisMode: 'lexical-this' | 'non-lexical-this', Scope: EnvironmentRecord, PrivateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
 export declare function OrdinaryGet(O: ObjectValue, P: PropertyKeyValue | string, Receiver: Value): ValueEvaluator;
 
-export declare function OrdinaryGetOwnProperty(O: ObjectValue, P: PropertyKeyValue | string): Descriptor | UndefinedValue;
+/** https://tc39.es/ecma262/#sec-ordinarygetownproperty */
+export declare function OrdinaryGetOwnProperty(obj: ObjectValue, propertyKey: PropertyKeyValue | string): FullyPopulatedDescriptor | undefined;
 
-export declare function OrdinaryGetPrototypeOf(O: OrdinaryObject): NullValue | ObjectValue;
+/** https://tc39.es/ecma262/#sec-ordinarygetprototypeof */
+export declare function OrdinaryGetPrototypeOf(obj: OrdinaryObject): NullValue | ObjectValue;
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
-export declare function OrdinaryHasInstance(constructor: Value, O: Value): ValueEvaluator<BooleanValue>;
+export declare function OrdinaryHasInstance(constructor: Value, O: Value): PlainEvaluator<boolean>;
 
-export declare function OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+export declare function OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
 
-export declare function OrdinaryIsExtensible(O: OrdinaryObject): BooleanValue<boolean>;
+/** https://tc39.es/ecma262/#sec-ordinaryisextensible */
+export declare function OrdinaryIsExtensible(obj: OrdinaryObject): boolean;
 
 export declare interface OrdinaryObject extends ObjectValue {
     Prototype: ObjectValue | NullValue;
-    Extensible: BooleanValue;
+    Extensible: boolean;
 }
 
 /** https://tc39.es/ecma262/#sec-ordinaryobjectcreate */
@@ -3993,13 +4027,15 @@ export declare namespace OrdinaryObjectCreate {
 
 export declare function OrdinaryOwnPropertyKeys(O: ObjectValue): PropertyKeyValue[];
 
-export declare function OrdinaryPreventExtensions(O: OrdinaryObject): BooleanValue<true>;
+/** https://tc39.es/ecma262/#sec-ordinarypreventextensions */
+export declare function OrdinaryPreventExtensions(obj: OrdinaryObject): boolean;
 
-export declare function OrdinarySet(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value): Generator<EvaluatorYieldType, ValueCompletion<BooleanValue<boolean>>, EvaluatorNextType>;
+export declare function OrdinarySet(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value): Generator<EvaluatorYieldType, PlainCompletion<boolean>, EvaluatorNextType>;
 
-export declare function OrdinarySetPrototypeOf(O: OrdinaryObject, V: ObjectValue | NullValue): BooleanValue<false> | BooleanValue<true>;
+/** https://tc39.es/ecma262/#sec-ordinarysetprototypeof */
+export declare function OrdinarySetPrototypeOf(obj: OrdinaryObject, proto: ObjectValue | NullValue): boolean;
 
-export declare function OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ValueEvaluator<BooleanValue>;
+export declare function OrdinarySetWithOwnDescriptor(O: ObjectValue, P: PropertyKeyValue | string, V: Value, Receiver: Value, ownDesc: Descriptor | undefined): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-ordinarytoprimitive */
 export declare function OrdinaryToPrimitive(O: ObjectValue, hint: 'string' | 'number'): ValueEvaluator<PrimitiveValue>;
@@ -4029,7 +4065,7 @@ export declare type ParametersMap = {
 export declare function ParseDateTimeUTCOffset(offsetString: string): PlainCompletion<bigint>;
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export declare function ParseJSONModule(source: JSStringValue): PlainCompletion<SyntheticModuleRecord>;
+export declare function ParseJSONModule(source: string): PlainCompletion<SyntheticModuleRecord>;
 
 export declare function ParseModule(sourceText: string, realm: Realm, hostDefined?: ModuleRecordHostDefined): ObjectValue[] | SourceTextModuleRecord;
 
@@ -5430,9 +5466,9 @@ export declare function PerformEval(x: Value, strictCaller: boolean, direct: boo
 /** https://tc39.es/ecma262/#sec-performpromisethen */
 export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability: PromiseCapabilityRecord): PromiseObject;
 
-export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: UndefinedValue): UndefinedValue;
+export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: undefined): undefined;
 
-export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue;
+export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | undefined): PromiseObject | undefined;
 
 /** https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval */
 export declare function PerformShadowRealmEval(sourceText: string, callerRealm: Realm, evalRealm: Realm): ValueEvaluator;
@@ -5486,7 +5522,7 @@ export declare const PrimitiveValue: (abstract new () => {
 };
 
 /** https://tc39.es/ecma262/#sec-static-semantics-privateboundidentifiers */
-export declare function PrivateBoundIdentifiers(node: ParseNode | readonly ParseNode[]): JSStringValue[];
+export declare function PrivateBoundIdentifiers(node: ParseNode | readonly ParseNode[]): string[];
 
 /** https://tc39.es/ecma262/#sec-privateelementfind */
 export declare function PrivateElementFind(P: PrivateName, O: ObjectValue): PrivateElementRecord | undefined;
@@ -5502,8 +5538,8 @@ export declare interface PrivateElementRecord_Accessor {
     readonly Key: PrivateName;
     readonly Kind: 'accessor';
     Value?: Value;
-    readonly Getter?: FunctionObject | UndefinedValue;
-    readonly Setter?: FunctionObject | UndefinedValue;
+    readonly Get?: FunctionObject | UndefinedValue;
+    readonly Set?: FunctionObject | UndefinedValue;
 }
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
@@ -5511,8 +5547,8 @@ export declare interface PrivateElementRecord_Value {
     readonly Key: PrivateName;
     readonly Kind: 'method' | 'field';
     Value?: Value;
-    readonly Getter?: undefined;
-    readonly Setter?: undefined;
+    readonly Get?: undefined;
+    readonly Set?: undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-privateenvironment-records */
@@ -5537,7 +5573,7 @@ export declare function PrivateMethodOrAccessorAdd(O: ObjectValue, method: Priva
 export declare class PrivateName {
     private _;
     readonly Description: string;
-    constructor(description: JSStringValue);
+    constructor(description: string);
 }
 
 export declare interface PrivateScopeInfo {
@@ -5583,7 +5619,7 @@ export declare interface PromiseObject extends OrdinaryObject {
 
 /** https://tc39.es/ecma262/#sec-promisereaction-records */
 export declare class PromiseReactionRecord {
-    readonly Capability: PromiseCapabilityRecord | UndefinedValue;
+    readonly Capability: PromiseCapabilityRecord | undefined;
     readonly Type: 'Fulfill' | 'Reject';
     readonly Handler: JobCallbackRecord | undefined;
     constructor(O: PromiseReactionRecord);
@@ -5593,10 +5629,10 @@ export declare class PromiseReactionRecord {
 export declare function PromiseResolve(constructor: ObjectValue, resolution: Value): ValueEvaluator<PromiseObject>;
 
 /** https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
-export declare function PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator<PropertyKeyValue[]>;
+export declare function PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator<PropertyKeyValue[]>;
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
-export declare function PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): PlainEvaluator;
+export declare function PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: boolean): PlainEvaluator;
 
 export declare class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
     #private;
@@ -5658,7 +5694,7 @@ export declare function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: reado
 export declare const RawTokens: readonly [readonly ["TEMPLATE", "`"], readonly ["PERIOD", "."], readonly ["LBRACK", "["], readonly ["OPTIONAL", "?."], readonly ["LPAREN", "("], readonly ["RPAREN", ")"], readonly ["RBRACK", "]"], readonly ["LBRACE", "{"], readonly ["COLON", ":"], readonly ["ELLIPSIS", "..."], readonly ["CONDITIONAL", "?"], readonly ["SEMICOLON", ";"], readonly ["RBRACE", "}"], readonly ["EOS", "EOS"], readonly ["ARROW", "=>"], readonly ["ASSIGN", "="], readonly ["ASSIGN_NULLISH", "??="], readonly ["ASSIGN_OR", "||="], readonly ["ASSIGN_AND", "&&="], readonly ["ASSIGN_BIT_OR", "|="], readonly ["ASSIGN_BIT_XOR", "^="], readonly ["ASSIGN_BIT_AND", "&="], readonly ["ASSIGN_SHL", "<<="], readonly ["ASSIGN_SAR", ">>="], readonly ["ASSIGN_SHR", ">>>="], readonly ["ASSIGN_MUL", "*="], readonly ["ASSIGN_DIV", "/="], readonly ["ASSIGN_MOD", "%="], readonly ["ASSIGN_EXP", "**="], readonly ["ASSIGN_ADD", "+="], readonly ["ASSIGN_SUB", "-="], readonly ["COMMA", ","], readonly ["NULLISH", "??"], readonly ["OR", "||"], readonly ["AND", "&&"], readonly ["BIT_OR", "|"], readonly ["BIT_XOR", "^"], readonly ["BIT_AND", "&"], readonly ["SHL", "<<"], readonly ["SAR", ">>"], readonly ["SHR", ">>>"], readonly ["MUL", "*"], readonly ["DIV", "/"], readonly ["MOD", "%"], readonly ["EXP", "**"], readonly ["ADD", "+"], readonly ["SUB", "-"], readonly ["NOT", "!"], readonly ["BIT_NOT", "~"], readonly ["DELETE", "delete"], readonly ["TYPEOF", "typeof"], readonly ["VOID", "void"], readonly ["INC", "++"], readonly ["DEC", "--"], readonly ["EQ", "=="], readonly ["EQ_STRICT", "==="], readonly ["NE", "!="], readonly ["NE_STRICT", "!=="], readonly ["LT", "<"], readonly ["GT", ">"], readonly ["LTE", "<="], readonly ["GTE", ">="], readonly ["INSTANCEOF", "instanceof"], readonly ["IN", "in"], readonly ["BREAK", "break"], readonly ["CASE", "case"], readonly ["CATCH", "catch"], readonly ["CONTINUE", "continue"], readonly ["DEBUGGER", "debugger"], readonly ["DEFAULT", "default"], readonly ["DO", "do"], readonly ["ELSE", "else"], readonly ["FINALLY", "finally"], readonly ["FOR", "for"], readonly ["FUNCTION", "function"], readonly ["IF", "if"], readonly ["NEW", "new"], readonly ["RETURN", "return"], readonly ["SWITCH", "switch"], readonly ["THROW", "throw"], readonly ["TRY", "try"], readonly ["VAR", "var"], readonly ["WHILE", "while"], readonly ["WITH", "with"], readonly ["THIS", "this"], readonly ["NULL", "null"], readonly ["TRUE", "true"], readonly ["FALSE", "false"], readonly ["NUMBER", null], readonly ["STRING", null], readonly ["BIGINT", null], readonly ["SUPER", "super"], readonly ["IDENTIFIER", null], readonly ["AWAIT", "await"], readonly ["YIELD", "yield"], readonly ["CLASS", "class"], readonly ["CONST", "const"], readonly ["EXPORT", "export"], readonly ["EXTENDS", "extends"], readonly ["IMPORT", "import"], readonly ["PRIVATE_IDENTIFIER", null], readonly ["AT", "@"], readonly ["ENUM", "enum"], readonly ["ESCAPED_KEYWORD", null]];
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-ReadyForSyncExecution */
-export declare function ReadyForSyncExecution(module: AbstractModuleRecord, importedNames?: ImportedNamesValue, seen?: Set<CyclicModuleRecord>): BooleanValue;
+export declare function ReadyForSyncExecution(module: AbstractModuleRecord, importedNames?: ImportedNamesValue, seen?: Set<CyclicModuleRecord>): boolean;
 
 /** https://tc39.es/ecma262/#sec-code-realms */
 export declare abstract class Realm {
@@ -5697,10 +5733,10 @@ export declare function RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<R
 export declare function RegExpCreate(P: Value, F: Value): ValueEvaluator<RegExpObject>;
 
 /** https://tc39.es/ecma262/#sec-regexphasflag */
-export declare function RegExpHasFlag(R: Value, codeUnit: string): BooleanValue<false> | BooleanValue<true> | ThrowCompletion | UndefinedValue;
+export declare function RegExpHasFlag(R: Value, codeUnit: string): PlainCompletion<boolean | undefined>;
 
 /** https://tc39.es/ecma262/#sec-regexpinitialize */
-export declare function RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, flags: Value): Generator<EvaluatorYieldType, Mutable<RegExpObject> | ThrowCompletion, EvaluatorNextType>;
+export declare function RegExpInitialize(obj: Mutable<RegExpObject>, pattern: string | Value, flags: string | Value): Generator<EvaluatorYieldType, Mutable<RegExpObject> | ThrowCompletion, EvaluatorNextType>;
 
 export declare type RegExpMatcher = (input: RegExpMatchingSource, index: number) => MatcherResult;
 
@@ -5709,8 +5745,8 @@ export declare type RegExpMatchingSource = (readonly string[]) & {
 };
 
 export declare interface RegExpObject extends OrdinaryObject {
-    readonly OriginalSource: JSStringValue;
-    readonly OriginalFlags: JSStringValue;
+    readonly OriginalSource: string;
+    readonly OriginalFlags: string;
     readonly RegExpMatcher: RegExpMatcher;
     readonly RegExpRecord: RegExpRecord;
     readonly parsedPattern: ParseNode.RegExp.Pattern;
@@ -5816,7 +5852,7 @@ export declare interface ResizableArrayBufferObject extends ArrayBufferObject {
 }
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */
-export declare function ResolveBinding(name: JSStringValue, strict: boolean, env?: EnvironmentRecord | UndefinedValue | NullValue): PlainEvaluator<ReferenceRecord>;
+export declare function ResolveBinding(name: string, strict: boolean, env?: EnvironmentRecord | undefined | null): PlainEvaluator<ReferenceRecord>;
 
 export declare class ResolvedBindingRecord {
     readonly Module: AbstractModuleRecord;
@@ -5826,17 +5862,17 @@ export declare class ResolvedBindingRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-resolve-private-identifier */
-export declare function ResolvePrivateIdentifier(privEnv: PrivateEnvironmentRecord, identifier: JSStringValue): PrivateName;
+export declare function ResolvePrivateIdentifier(privEnv: PrivateEnvironmentRecord, identifier: string): PrivateName;
 
 export declare interface ResolveSetItem {
     readonly Module: AbstractModuleRecord;
-    readonly ExportName: JSStringValue;
+    readonly ExportName: string;
 }
 
 /** https://tc39.es/ecma262/#sec-resolvethisbinding */
 export declare function ResolveThisBinding(): ThrowCompletion | Value;
 
-export declare function RestBindingInitialization({ BindingIdentifier }: ParseNode.BindingRestProperty, value: Value, environment: EnvironmentRecord | UndefinedValue, excludedNames: readonly PropertyKeyValue[]): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
+export declare function RestBindingInitialization({ BindingIdentifier }: ParseNode.BindingRestProperty, value: Value, environment: EnvironmentRecord | undefined, excludedNames: readonly PropertyKeyValue[]): Generator<EvaluatorYieldType, PlainCompletion<void>, EvaluatorNextType>;
 
 export declare interface ResumeEvaluateOptions {
     noBreakpoint?: boolean;
@@ -6005,7 +6041,7 @@ export declare function SecondFromTime(t: FiniteTimeValue): Integer;
 export declare const SecondsPerMinute = 60n;
 
 /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
-declare function Set_2(O: ObjectValue, P: PropertyKeyValue | string, V: Value, throws: BooleanValue): Generator<EvaluatorYieldType, BooleanValue<boolean> | ThrowCompletion, EvaluatorNextType>;
+declare function Set_2(O: ObjectValue, P: PropertyKeyValue | string, V: Value, throws: boolean): Generator<EvaluatorYieldType, boolean | ThrowCompletion, EvaluatorNextType>;
 export { Set_2 as Set }
 
 /** https://tc39.es/ecma262/#sec-setdefaultglobalbindings */
@@ -6015,13 +6051,13 @@ export declare function SetDefaultGlobalBindings(realmRec: Realm): void;
 export declare function SetFunctionLength(F: FunctionObject, length: number): void;
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
-export declare function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void;
+export declare function SetFunctionName(func: FunctionObject, name: string | PropertyKeyValue | PrivateName, prefix?: string): void;
 
 /** https://tc39.es/ecma262/#sec-set-immutable-prototype */
-export declare function SetImmutablePrototype(O: ObjectValue, V: Value): ValueEvaluator<BooleanValue>;
+export declare function SetImmutablePrototype(O: ObjectValue, V: Value): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-setintegritylevel */
-export declare function SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ValueEvaluator<BooleanValue>;
+export declare function SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): PlainEvaluator<boolean>;
 
 export declare interface SetObject extends OrdinaryObject {
     readonly SetData: (Value | undefined)[];
@@ -6033,13 +6069,13 @@ export declare function setSurroundingAgent(a: Agent): void;
 export declare function SetterThatIgnoresPrototypeProperties(thisValue: Value, home: ObjectValue, propertyKey: PropertyKeyValue, value: Value): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
-export declare function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): ValueEvaluator<UndefinedValue>;
+export declare function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): PlainEvaluator<void>;
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
-export declare function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes, value: Value): Generator<EvaluatorYieldType, ThrowCompletion | UndefinedValue, EvaluatorNextType>;
+export declare function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes, value: Value): PlainEvaluator<void>;
 
 /** https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue */
-export declare function ShadowRealmImportValue(specifierString: JSStringValue, exportNameString: JSStringValue, callerRealm: Realm, evalRealm: Realm): Value;
+export declare function ShadowRealmImportValue(specifierString: string, exportNameString: string, callerRealm: Realm, evalRealm: Realm): Value;
 
 export declare interface ShadowRealmObject extends OrdinaryObject {
     readonly ShadowRealm: Realm;
@@ -6069,9 +6105,9 @@ export declare class SourceTextModuleRecord extends CyclicModuleRecord {
     readonly OptionalIndirectExportEntries: readonly ExportEntry[];
     constructor(init: SourceTextModuleRecordInit);
     /** https://tc39.es/ecma262/#sec-getexportednames */
-    GetExportedNames(exportStarSet: AbstractModuleRecord[]): JSStringValue[];
+    GetExportedNames(exportStarSet: AbstractModuleRecord[]): string[];
     /** https://tc39.es/ecma262/#sec-resolveexport */
-    ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[], deferNamespaceExportSet?: AbstractModuleRecord[]): "ambiguous" | ResolvedBindingRecord | null;
+    ResolveExport(exportName: string, resolveSet?: ResolveSetItem[], deferNamespaceExportSet?: AbstractModuleRecord[]): "ambiguous" | ResolvedBindingRecord | null;
     /** https://tc39.es/proposal-deferred-reexports/#sec-GetOptionalIndirectExportsModuleRequests */
     GetOptionalIndirectExportsModuleRequests(importedNames?: ImportedNamesValue): readonly ModuleRequestRecord[];
     /** https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
@@ -6141,21 +6177,21 @@ export declare abstract class StatementParser extends ExpressionParser {
 }
 
 /** https://tc39.es/ecma262/#sec-stringcreate */
-export declare function StringCreate(value: JSStringValue, prototype: ObjectValue): Mutable<StringObject>;
+export declare function StringCreate(value: string, prototype: ObjectValue): Mutable<StringObject>;
 
 /** https://tc39.es/ecma262/#sec-stringgetownproperty */
-export declare function StringGetOwnProperty(S: ObjectValue, P: PropertyKeyValue): Descriptor | UndefinedValue;
+export declare function StringGetOwnProperty(S: ObjectValue, P: string | PropertyKeyValue): FullyPopulatedDataDescriptor | undefined;
 
-export declare function StringIndexOf(string: JSStringValue, searchValue: JSStringValue, fromIndex: number): NumberValue;
+export declare function StringIndexOf(string: string, searchValue: string, fromIndex: number): NumberValue;
 
 export declare interface StringObject extends ExoticObject {
-    readonly StringData: JSStringValue;
+    readonly StringData: string;
     Prototype: ObjectValue | NullValue;
-    Extensible: BooleanValue;
+    Extensible: boolean;
 }
 
 /** https://tc39.es/ecma262/#sec-stringpad */
-export declare function StringPad(O: Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): ValueEvaluator<JSStringValue>;
+export declare function StringPad(_string: string | Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): PlainEvaluator<string>;
 
 /** https://tc39.es/ecma262/#sec-stringtobigint */
 export declare function StringToBigInt(argument: JSStringValue): BigIntValue | undefined;
@@ -6166,37 +6202,37 @@ export declare function StringToCodePoints(string: string): CodePoint[];
 /** https://tc39.es/ecma262/#sec-stringtonumber */
 export declare function StringToNumber(str: string): number;
 
-export declare function StringValue(node: ParseNode): JSStringValue;
+export declare function StringValue(node: ParseNode): string;
 
 /** https://tc39.es/ecma262/#surrounding-agent */
 export declare let surroundingAgent: Agent;
 
 /** https://tc39.es/ecma262/#sec-symboldescriptivestring */
-export declare function SymbolDescriptiveString(sym: SymbolValue): JSStringValue;
+export declare function SymbolDescriptiveString(sym: SymbolValue): string;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export declare class SymbolValue extends PrimitiveValue {
     readonly type: 'Symbol';
-    readonly Description: JSStringValue | UndefinedValue;
-    constructor(Description: JSStringValue | UndefinedValue);
+    readonly Description: string | undefined;
+    constructor(Description: string | undefined);
     static [Symbol.hasInstance]: (value: unknown) => value is SymbolValue;
 }
 
 /** https://tc39.es/ecma262/#sec-synthetic-module-records */
 export declare class SyntheticModuleRecord extends AbstractModuleRecord {
     LoadRequestedModules(): PromiseObject;
-    readonly ExportNames: readonly JSStringValue[];
+    readonly ExportNames: readonly string[];
     readonly EvaluationSteps: (module: SyntheticModuleRecord) => PlainEvaluator | Completion<unknown> | void;
     constructor(init: SyntheticModuleRecordInit);
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
-    GetExportedNames(): readonly JSStringValue[];
+    GetExportedNames(): readonly string[];
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
-    ResolveExport(exportName: JSStringValue): ResolvedBindingRecord | null;
+    ResolveExport(exportName: string): ResolvedBindingRecord | null;
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-link */
     Link(): undefined;
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
     Evaluate(): Evaluator<PromiseObject>;
-    SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator;
+    SetSyntheticExport(name: string, value: Value): PlainEvaluator;
 }
 
 export declare type SyntheticModuleRecordInit = AbstractModuleInit & Pick<SyntheticModuleRecord, 'ExportNames' | 'EvaluationSteps'>;
@@ -6433,7 +6469,7 @@ export declare interface TemporalZonedDateTimeObject extends OrdinaryObject {
 export declare function TemporalZonedDateTimeToString(zonedDateTime: TemporalZonedDateTimeObject, precision: Integer | 'minute' | 'auto', showCalendar: 'auto' | 'always' | 'never' | 'critical', showTimeZone: 'auto' | 'never' | 'critical', showOffset: 'auto' | 'never', increment?: Integer, unit?: Exclude<TimeUnit, 'hour'>, roundingMode?: RoundingMode): string;
 
 /** https://tc39.es/ecma262/#sec-testintegritylevel */
-export declare function TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ValueEvaluator<BooleanValue>;
+export declare function TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): PlainEvaluator<boolean>;
 
 /** https://tc39.es/ecma262/#sec-thisbigintvalue */
 export declare function ThisBigIntValue(value: Value): BigIntValue | ThrowCompletion;
@@ -6576,10 +6612,10 @@ export declare function ToBigInt(argument: Value): ValueEvaluator<BigIntValue>;
 export declare function ToBigInt64(argument: Value): ValueEvaluator<BigIntValue>;
 
 /** https://tc39.es/ecma262/#sec-tobiguint64 */
-export declare function ToBigUint64(argument: Value): ValueEvaluator<BigIntValue>;
+export declare function ToBigUint64(argument: Value): PlainEvaluator<bigint>;
 
 /** https://tc39.es/ecma262/#sec-toboolean */
-export declare function ToBoolean(argument: Value): BooleanValue;
+export declare function ToBoolean(argument: Value): boolean;
 
 /** https://tc39.es/ecma262/#sec-toclampedindex */
 export declare function ToClampedIndex(value: Value | number, length: number): PlainEvaluator<number>;
@@ -6657,11 +6693,11 @@ export declare function ToPartialDurationRecord(temporalDurationLike: Value): Pl
 /** https://tc39.es/proposal-temporal/#sec-topartialtimerecord */
 export declare function ToPartialTimeRecord(temporalTimeLike: ObjectValue, completeness: 'partial' | 'complete'): PlainEvaluator<PartialTimeRecord>;
 
-export declare function TopLevelLexicallyDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[];
+export declare function TopLevelLexicallyDeclaredNames(node: ParseNode | readonly ParseNode[]): string[];
 
 export declare function TopLevelLexicallyScopedDeclarations(node: ParseNode | readonly ParseNode[]): LexicallyScopedDeclaration[];
 
-export declare function TopLevelVarDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[];
+export declare function TopLevelVarDeclaredNames(node: ParseNode | readonly ParseNode[]): string[];
 
 export declare function TopLevelVarScopedDeclarations(node: ParseNode | readonly ParseNode[]): VarScopedDeclaration[];
 
@@ -6690,7 +6726,7 @@ export declare function ToSecondsStringPrecisionRecord(smallestUnit: Exclude<Tim
 };
 
 /** https://tc39.es/ecma262/#sec-tostring */
-export declare function ToString(argument: Value): ValueEvaluator<JSStringValue>;
+export declare function ToString(argument: Value): PlainEvaluator<string>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totalrelativeduration */
 export declare function TotalRelativeDuration(duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier | NoTimeZone, calendar: KnownCalendarType, unit: TemporalUnit): PlainCompletion<MathematicalValue>;
@@ -6734,7 +6770,7 @@ export declare function ToTimeRecordOrMidnight(item: Value): PlainEvaluator<Time
 export declare function ToUint16(argument: Value): ValueEvaluator<NumberValue>;
 
 /** https://tc39.es/ecma262/#sec-touint32 */
-export declare function ToUint32(argument: Value): ValueEvaluator<NumberValue>;
+export declare function ToUint32(argument: number | Value): ValueEvaluator<NumberValue>;
 
 /** https://tc39.es/ecma262/#sec-touint8 */
 export declare function ToUint8(argument: Value): ValueEvaluator<NumberValue>;
@@ -6746,7 +6782,7 @@ export declare function ToUint8Clamp(argument: Value): ValueEvaluator<NumberValu
 export declare function ToZeroPaddedDecimalString(n: Integer, minLength: Integer): string;
 
 /** https://tc39.es/ecma262/#sec-trimstring */
-export declare function TrimString(string: Value, where: 'start' | 'end' | 'start+end'): ValueEvaluator<JSStringValue>;
+export declare function TrimString(arg: string | Value, where: 'start' | 'end' | 'start+end'): PlainEvaluator<string>;
 
 /** https://tc39.es/ecma262/#sec-static-semantics-tv */
 export declare function TV(s: string): string | undefined;
@@ -6754,11 +6790,88 @@ export declare function TV(s: string): string | undefined;
 /** https://tc39.es/ecma262/#sec-typedarraybytelength */
 export declare function TypedArrayByteLength(taRecord: TypedArrayWithBufferWitnessRecord): number;
 
+export declare type TypedArrayConstructorNames = keyof typeof typedArrayInfoByName;
+
 /** https://tc39.es/ecma262/#sec-typedarraycreate */
 export declare function TypedArrayCreate(prototype: ObjectValue): ObjectValue & Record<"ArrayLength" | "ByteLength" | "ByteOffset" | "ContentType" | "Extensible" | "Prototype" | "TypedArrayName" | "ViewedArrayBuffer", unknown>;
 
 /** https://tc39.es/ecma262/#sec-typedarraygetelement */
 export declare function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue): BigIntValue | NumberValue | UndefinedValue;
+
+export declare const typedArrayInfoByName: {
+    readonly Int8Array: {
+        readonly IntrinsicName: '%Int8Array%';
+        readonly ElementType: 'Int8';
+        readonly ElementSize: 1;
+        readonly ConversionOperation: typeof ToInt8;
+    };
+    readonly Uint8Array: {
+        readonly IntrinsicName: '%Uint8Array%';
+        readonly ElementType: 'Uint8';
+        readonly ElementSize: 1;
+        readonly ConversionOperation: typeof ToUint8;
+    };
+    readonly Uint8ClampedArray: {
+        readonly IntrinsicName: '%Uint8ClampedArray%';
+        readonly ElementType: 'Uint8C';
+        readonly ElementSize: 1;
+        readonly ConversionOperation: typeof ToUint8Clamp;
+    };
+    readonly Int16Array: {
+        readonly IntrinsicName: '%Int16Array%';
+        readonly ElementType: 'Int16';
+        readonly ElementSize: 2;
+        readonly ConversionOperation: typeof ToInt16;
+    };
+    readonly Uint16Array: {
+        readonly IntrinsicName: '%Uint16Array%';
+        readonly ElementType: 'Uint16';
+        readonly ElementSize: 2;
+        readonly ConversionOperation: typeof ToUint16;
+    };
+    readonly Int32Array: {
+        readonly IntrinsicName: '%Int32Array%';
+        readonly ElementType: 'Int32';
+        readonly ElementSize: 4;
+        readonly ConversionOperation: typeof ToInt32;
+    };
+    readonly Uint32Array: {
+        readonly IntrinsicName: '%Uint32Array%';
+        readonly ElementType: 'Uint32';
+        readonly ElementSize: 4;
+        readonly ConversionOperation: typeof ToUint32;
+    };
+    readonly BigInt64Array: {
+        readonly IntrinsicName: '%BigInt64Array%';
+        readonly ElementType: 'BigInt64';
+        readonly ElementSize: 8;
+        readonly ConversionOperation: typeof ToBigInt64;
+    };
+    readonly BigUint64Array: {
+        readonly IntrinsicName: '%BigUint64Array%';
+        readonly ElementType: 'BigUint64';
+        readonly ElementSize: 8;
+        readonly ConversionOperation: typeof ToBigUint64;
+    };
+    readonly Float16Array: {
+        readonly IntrinsicName: '%Float16Array%';
+        readonly ElementType: 'Float16';
+        readonly ElementSize: 2;
+        readonly ConversionOperation: undefined;
+    };
+    readonly Float32Array: {
+        readonly IntrinsicName: '%Float32Array%';
+        readonly ElementType: 'Float32';
+        readonly ElementSize: 4;
+        readonly ConversionOperation: undefined;
+    };
+    readonly Float64Array: {
+        readonly IntrinsicName: '%Float64Array%';
+        readonly ElementType: 'Float64';
+        readonly ElementSize: 8;
+        readonly ConversionOperation: undefined;
+    };
+};
 
 export declare const typedArrayInfoByType: {
     readonly Int8: {
@@ -6840,17 +6953,17 @@ export declare function TypedArrayLength(taRecord: TypedArrayWithBufferWitnessRe
 
 export declare interface TypedArrayObject extends ExoticObject {
     readonly Prototype: ObjectValue | NullValue;
-    readonly Extensible: BooleanValue<false>;
-    ViewedArrayBuffer: ArrayBufferObject | UndefinedValue;
+    readonly Extensible: false;
+    ViewedArrayBuffer: ArrayBufferObject | undefined;
     readonly ArrayLength: number | 'auto';
     readonly ByteOffset: number;
     readonly ContentType: 'BigInt' | 'Number';
-    readonly TypedArrayName: JSStringValue;
+    readonly TypedArrayName: TypedArrayConstructorNames;
     readonly ByteLength: number | 'auto';
 }
 
 /** https://tc39.es/ecma262/#sec-integerindexedelementset */
-export declare function TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): ValueEvaluator<BooleanValue>;
+export declare function TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): PlainEvaluator<boolean>;
 
 export declare type TypedArrayTypes = keyof typeof typedArrayInfoByType;
 
@@ -6894,7 +7007,7 @@ export declare type UnicodeCharacter = string & {
 };
 
 export declare interface UnmappedArgumentsObject extends OrdinaryObject {
-    readonly ParameterMap: UndefinedValue;
+    readonly ParameterMap: undefined;
 }
 
 /** https://tc39.es/proposal-temporal/#table-unsigned-rounding-modes */
@@ -6915,7 +7028,8 @@ export declare function UTF16EncodeCodePoint(cp: CodePoint): string;
 /** https://tc39.es/ecma262/#sec-utf16decodesurrogatepair */
 export declare function UTF16SurrogatePairToCodePoint(lead: number, trail: number): CodePoint;
 
-export declare function ValidateAndApplyPropertyDescriptor(O: ObjectValue | UndefinedValue, P: PropertyKeyValue | string | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor): BooleanValue<false> | BooleanValue<true>;
+/** https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor */
+export declare function ValidateAndApplyPropertyDescriptor(obj: ObjectValue | undefined, propertyKey: PropertyKeyValue | string, extensible: boolean, propertyDesc: Descriptor, current: undefined | FullyPopulatedDescriptor): boolean;
 
 /** https://tc39.es/proposal-temporal/#sec-validateisodaysrange */
 export declare function ValidateISODaysRange(isoDate: ISODateRecord): PlainCompletion<void>;
@@ -6946,7 +7060,7 @@ export declare type ValueEvaluator<V extends Value = Value> = Evaluator<ValueCom
 
 export declare function ValueOfNormalCompletion<T>(value: NormalCompletion<T> | T): T;
 
-export declare function VarDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[];
+export declare function VarDeclaredNames(node: ParseNode | readonly ParseNode[]): string[];
 
 export declare type VarScopedDeclaration = ParseNode.ForBinding | ParseNode.VariableDeclaration | ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration | ParseNode.BindingIdentifier;
 

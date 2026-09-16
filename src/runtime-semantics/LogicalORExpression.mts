@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -14,8 +13,8 @@ export function* Evaluate_LogicalORExpression({ LogicalORExpression, LogicalANDE
   const lval = Q(yield* GetValue(lref));
   // 3. Let lbool be ! ToBoolean(lval).
   const lbool = X(ToBoolean(lval));
-  // 4. If lbool is false, return lval.
-  if (lbool === Value.true) {
+  // 4. If lbool is true, return lval.
+  if (lbool) {
     return lval;
   }
   // 5. Let rref be the result of evaluating LogicalANDExpression.

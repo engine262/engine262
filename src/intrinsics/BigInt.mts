@@ -1,5 +1,5 @@
 import {
-  BigIntValue, NumberValue, Value, type Arguments, type FunctionCallContext,
+  NumberValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { NumberToBigInt } from '../runtime-semantics/all.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
@@ -15,7 +15,7 @@ import {
 } from '#self';
 
 export interface BigIntObject extends OrdinaryObject {
-  readonly BigIntData: BigIntValue;
+  readonly BigIntData: bigint;
 }
 export function isBigIntObject(o: Value): o is BigIntObject {
   return 'BigIntData' in o;

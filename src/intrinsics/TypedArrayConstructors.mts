@@ -29,7 +29,7 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
       if (NewTarget instanceof UndefinedValue) {
         return Throw.TypeError('$1 cannot be invoked without new', TypedArray);
       }
-      const constructorName = Value(TypedArray);
+      const constructorName = TypedArray;
       const proto = `%${TypedArray}.prototype%` as const;
       const numberOfArgs = args.length;
       if (numberOfArgs === 0) {
@@ -75,8 +75,8 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
 
     const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray as TypedArrayConstructorNames}.prototype%`], [
       ['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
-        Writable: Value.false,
-        Configurable: Value.false,
+        Writable: false,
+        Configurable: false,
       }],
     ]);
     X(taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']));

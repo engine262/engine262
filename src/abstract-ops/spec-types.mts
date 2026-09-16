@@ -6,7 +6,6 @@ import {
   ObjectValue,
   UndefinedValue,
   Value,
-  BooleanValue,
 } from '../value.mts';
 import { Q, X } from '../completion.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
@@ -22,7 +21,7 @@ import {
   type FunctionObject,
 } from './all.mts';
 import { isNonNegativeInteger } from './data-types-and-values.mts';
-import { surroundingAgent, Throw } from '#self';
+import { surroundingAgent, Throw, type AccessorDescriptorInit, type DataDescriptorInit, type Mutable } from '#self';
 
 /** https://tc39.es/ecma262/#mathematical-value */
 export type MathematicalValue = Decimal;
@@ -67,56 +66,83 @@ export function R(x: unknown) {
   return number;
 }
 
-// 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc: Descriptor): Desc is Descriptor & { Getter: Value; Setter: Value } {
-  if (Desc.Getter === undefined && Desc.Setter === undefined) {
-    return false;
-  }
-
-  return true;
+/** https://tc39.es/ecma262/#sec-isaccessordescriptor */
+export interface AccessorDescriptor extends Descriptor {
+  readonly Get: FunctionObject | UndefinedValue;
+  readonly Set: FunctionObject | UndefinedValue;
 }
 
-// 6.2.5.2 IsDataDescriptor
-export function IsDataDescriptor(Desc: Descriptor): Desc is Descriptor & { Value: Value; Writable: BooleanValue } {
-  if (Desc.Value === undefined && Desc.Writable === undefined) {
-    return false;
-  }
-
-  return true;
-}
-
-// 6.2.5.3 IsGenericDescriptor
-export function IsGenericDescriptor(Desc: Descriptor) {
-  if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
-    return true;
-  }
-
+/** https://tc39.es/ecma262/#sec-isaccessordescriptor */
+export function IsAccessorDescriptor(propertyDesc: Descriptor): propertyDesc is AccessorDescriptor {
+  if (propertyDesc.Get !== undefined) return true;
+  if (propertyDesc.Set !== undefined) return true;
   return false;
 }
 
+/** https://tc39.es/ecma262/#sec-isdatadescriptor */
+export interface DataDescriptor extends Descriptor {
+  readonly Value: Value;
+  readonly Writable: boolean;
+}
+
+/** https://tc39.es/ecma262/#sec-isdatadescriptor */
+export function IsDataDescriptor(propertyDesc: Descriptor): propertyDesc is DataDescriptor {
+  if (propertyDesc.Value !== undefined) return true;
+  if (propertyDesc.Writable !== undefined) return true;
+  return false;
+}
+
+export interface GenericDescriptor extends Descriptor {
+  readonly Get?: never;
+  readonly Set?: never;
+  readonly Value?: never;
+  readonly Writable?: never;
+}
+
+/** https://tc39.es/ecma262/#sec-isgenericdescriptor */
+export function IsGenericDescriptor(propertyDesc: Descriptor): propertyDesc is GenericDescriptor {
+  if (IsDataDescriptor(propertyDesc)) return false;
+  if (IsAccessorDescriptor(propertyDesc)) return false;
+  return true;
+}
+
+export interface FullyPopulatedDataDescriptor extends DataDescriptor {
+  readonly Configurable: boolean;
+  readonly Enumerable: boolean;
+  readonly Writable: boolean;
+}
+
+export interface FullyPopulatedAccessorDescriptor extends AccessorDescriptor {
+  readonly Configurable: boolean;
+  readonly Enumerable: boolean;
+}
+
+/** https://tc39.es/ecma262/#sec-property-descriptor-specification-type */
+export type FullyPopulatedDescriptor = FullyPopulatedDataDescriptor | FullyPopulatedAccessorDescriptor;
+
 /** https://tc39.es/ecma262/#sec-frompropertydescriptor */
-export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
-  if (Desc instanceof UndefinedValue) {
+export function FromPropertyDescriptor(propertyDesc: Descriptor | undefined) {
+  if (propertyDesc === undefined) {
     return Value.undefined;
   }
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  if (Desc.Value !== undefined) {
-    X(CreateDataProperty(obj, 'value', Desc.Value));
+  if (propertyDesc.Value !== undefined) {
+    X(CreateDataProperty(obj, 'value', propertyDesc.Value));
   }
-  if (Desc.Writable !== undefined) {
-    X(CreateDataProperty(obj, 'writable', Desc.Writable));
+  if (propertyDesc.Writable !== undefined) {
+    X(CreateDataProperty(obj, 'writable', Value(propertyDesc.Writable)));
   }
-  if (Desc.Getter !== undefined) {
-    X(CreateDataProperty(obj, 'get', Desc.Getter));
+  if (propertyDesc.Get !== undefined) {
+    X(CreateDataProperty(obj, 'get', propertyDesc.Get));
   }
-  if (Desc.Setter !== undefined) {
-    X(CreateDataProperty(obj, 'set', Desc.Setter));
+  if (propertyDesc.Set !== undefined) {
+    X(CreateDataProperty(obj, 'set', propertyDesc.Set));
   }
-  if (Desc.Enumerable !== undefined) {
-    X(CreateDataProperty(obj, 'enumerable', Desc.Enumerable));
+  if (propertyDesc.Enumerable !== undefined) {
+    X(CreateDataProperty(obj, 'enumerable', Value(propertyDesc.Enumerable)));
   }
-  if (Desc.Configurable !== undefined) {
-    X(CreateDataProperty(obj, 'configurable', Desc.Configurable));
+  if (propertyDesc.Configurable !== undefined) {
+    X(CreateDataProperty(obj, 'configurable', Value(propertyDesc.Configurable)));
   }
   // Assert: All of the above CreateDataProperty operations return true.
   return obj;
@@ -128,84 +154,71 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
     return Throw.TypeError('$1 is not an object', Obj);
   }
 
-  let desc = Descriptor({});
+  const desc = {} as Mutable<AccessorDescriptorInit & DataDescriptorInit>;
   const hasEnumerable = Q(yield* HasProperty(Obj, 'enumerable'));
-  if (hasEnumerable === Value.true) {
+  if (hasEnumerable) {
     const enumerable = ToBoolean(Q(yield* Get(Obj, 'enumerable')));
-    desc = Descriptor({ ...desc, Enumerable: enumerable });
+    desc.Enumerable = enumerable;
   }
   const hasConfigurable = Q(yield* HasProperty(Obj, 'configurable'));
-  if (hasConfigurable === Value.true) {
+  if (hasConfigurable) {
     const conf = ToBoolean(Q(yield* Get(Obj, 'configurable')));
-    desc = Descriptor({ ...desc, Configurable: conf });
+    desc.Configurable = conf;
   }
   const hasValue = Q(yield* HasProperty(Obj, 'value'));
-  if (hasValue === Value.true) {
+  if (hasValue) {
     const value = Q(yield* Get(Obj, 'value'));
-    desc = Descriptor({ ...desc, Value: value });
+    desc.Value = value;
   }
   const hasWritable = Q(yield* HasProperty(Obj, 'writable'));
-  if (hasWritable === Value.true) {
+  if (hasWritable) {
     const writable = ToBoolean(Q(yield* Get(Obj, 'writable')));
-    desc = Descriptor({ ...desc, Writable: writable });
+    desc.Writable = writable;
   }
   const hasGet = Q(yield* HasProperty(Obj, 'get'));
-  if (hasGet === Value.true) {
+  if (hasGet) {
     const getter = Q(yield* Get(Obj, 'get'));
     if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
       return Throw.TypeError('getter ($1) in a property descriptor $2 must be a function', getter, Obj);
     }
-    desc = Descriptor({ ...desc, Getter: getter as FunctionObject });
+    desc.Get = getter as FunctionObject;
   }
   const hasSet = Q(yield* HasProperty(Obj, 'set'));
-  if (hasSet === Value.true) {
+  if (hasSet) {
     const setter = Q(yield* Get(Obj, 'set'));
     if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
       return Throw.TypeError('setter ($1) in a property descriptor $2 must be a function', setter, Obj);
     }
-    desc = Descriptor({ ...desc, Setter: setter as FunctionObject });
+    desc.Set = setter as FunctionObject;
   }
-  if (desc.Getter !== undefined || desc.Setter !== undefined) {
+  if (desc.Get !== undefined || desc.Set !== undefined) {
     if (desc.Value !== undefined || desc.Writable !== undefined) {
       return Throw.TypeError('Property descriptors must not specify both accessors and a value or writable attribute, but $1 does', Obj);
     }
   }
-  return desc;
+  return Descriptor(desc);
 }
 
 /** https://tc39.es/ecma262/#sec-completepropertydescriptor */
-export function CompletePropertyDescriptor(Desc: Descriptor) {
-  Assert(Desc instanceof Descriptor);
-  const like = Descriptor({
+export function CompletePropertyDescriptor(propertyDesc: Descriptor) {
+  const like = {
     Value: Value.undefined,
-    Writable: Value.false,
-    Getter: Value.undefined,
-    Setter: Value.undefined,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  });
-  if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-    if (Desc.Value === undefined) {
-      Desc = Descriptor({ ...Desc, Value: like.Value });
-    }
-    if (Desc.Writable === undefined) {
-      Desc = Descriptor({ ...Desc, Writable: like.Writable });
-    }
+    Writable: false,
+    Get: Value.undefined,
+    Set: Value.undefined,
+    Enumerable: false,
+    Configurable: false,
+  };
+  if (IsGenericDescriptor(propertyDesc) || IsDataDescriptor(propertyDesc)) {
+    if (propertyDesc.Value === undefined) propertyDesc = Descriptor({ ...propertyDesc, Value: like.Value });
+    if (propertyDesc.Writable === undefined) propertyDesc = Descriptor({ ...propertyDesc, Writable: like.Writable });
   } else {
-    if (Desc.Getter === undefined) {
-      Desc = Descriptor({ ...Desc, Getter: like.Getter });
-    }
-    if (Desc.Setter === undefined) {
-      Desc = Descriptor({ ...Desc, Setter: like.Setter });
-    }
+    if (propertyDesc.Get === undefined) propertyDesc = Descriptor({ ...propertyDesc, Get: like.Get });
+    if (propertyDesc.Set === undefined) propertyDesc = Descriptor({ ...propertyDesc, Set: like.Set });
   }
-  if (Desc.Enumerable === undefined) {
-    Desc = Descriptor({ ...Desc, Enumerable: like.Enumerable });
-  }
-  if (Desc.Configurable === undefined) {
-    Desc = Descriptor({ ...Desc, Configurable: like.Configurable });
-  }
-  return Desc;
+  if (propertyDesc.Enumerable === undefined) propertyDesc = Descriptor({ ...propertyDesc, Enumerable: like.Enumerable });
+  if (propertyDesc.Configurable === undefined) propertyDesc = Descriptor({ ...propertyDesc, Configurable: like.Configurable });
+  return propertyDesc;
 }
 
 /** @internal */

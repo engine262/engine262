@@ -3,7 +3,7 @@ import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mts';
 import {
-  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, NullValue, ObjectValue, Realm, Value, type ImportAttributeRecord, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
+  AbstractModuleRecord, AllImportAttributesSupported, Call, CyclicModuleRecord, EnumerableOwnProperties, Get, JSStringValue, ObjectValue, Realm, Value, type ImportAttributeRecord, type ModuleRequestRecord, type PromiseObject, type ScriptRecord,
 } from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../utils/language.mts';
@@ -30,9 +30,9 @@ function* EvaluateImportCall(
   optionsExpression: undefined | ParseNode.AssignmentExpressionOrHigher,
 ): ValueEvaluator<PromiseObject> {
   // 1. Let referrer be ! GetActiveScriptOrModule().
-  let referrer: NullValue | AbstractModuleRecord | ScriptRecord | Realm = X(GetActiveScriptOrModule());
+  let referrer: null | AbstractModuleRecord | ScriptRecord | Realm = GetActiveScriptOrModule();
   // 2. If referrer is null, set referrer to the current Realm Record.
-  if (referrer instanceof NullValue) {
+  if (referrer === null) {
     referrer = surroundingAgent.currentRealmRecord;
   }
   // 3. Let specifierRef be ? Evaluation of AssignmentExpression.
@@ -56,7 +56,7 @@ function* EvaluateImportCall(
   const specifierString = yield* ToString(specifier);
   // 9. IfAbruptRejectPromise(specifierString, promiseCapability).
   IfAbruptRejectPromise(specifierString, promiseCapability);
-  __ts_cast__<JSStringValue>(specifierString);
+  __ts_cast__<string>(specifierString);
   // 10. Let attributes nw a new empty List.
   const attributes: ImportAttributeRecord[] = [];
   // 11. If options is not undefined, then
@@ -128,7 +128,7 @@ function* EvaluateImportCall(
   }
   // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
   const moduleRequest: ModuleRequestRecord = {
-    Specifier: specifierString.value, Attributes: attributes, Phase: phase, ImportedNames: 'all',
+    Specifier: specifierString, Attributes: attributes, Phase: phase, ImportedNames: 'all',
   };
   // 10. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
   HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, moduleRequest, undefined, { data: promiseCapability });

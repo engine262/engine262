@@ -12,7 +12,6 @@ import {
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import {
-  BooleanValue,
   JSStringValue,
   NumberValue,
   ObjectValue,
@@ -108,7 +107,7 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -160,7 +159,7 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
   };
   const result: Mutable<GeneratorObject> = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -188,8 +187,8 @@ function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisVa
     }
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<BooleanValue>(result);
-    if (ToBoolean(result) === Value.false) {
+    __ts_cast__<Value>(result);
+    if (!ToBoolean(result)) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.false)));
     }
     // NOTE: The following step will not change counter once it reaches 2 ** 53.
@@ -218,8 +217,8 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
       }
       const selected: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
       IfAbruptCloseIterator(selected, iterated);
-      __ts_cast__<BooleanValue>(selected);
-      if (ToBoolean(selected) === Value.true) {
+      __ts_cast__<Value>(selected);
+      if (ToBoolean(selected)) {
         const completion = EnsureCompletion(yield* Yield(value));
         IfAbruptCloseIterator(completion, iterated);
       }
@@ -229,7 +228,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -257,8 +256,8 @@ function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisVal
     }
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<BooleanValue>(result);
-    if (ToBoolean(result) === Value.true) {
+    __ts_cast__<Value>(result);
+    if (ToBoolean(result)) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(value)));
     }
     // NOTE: The following step will not change counter once it reaches 2 ** 53.
@@ -314,7 +313,7 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
 
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -423,7 +422,7 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -490,8 +489,8 @@ function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisVal
     }
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<BooleanValue>(result);
-    if (ToBoolean(result) === Value.true) {
+    __ts_cast__<Value>(result);
+    if (ToBoolean(result)) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.true)));
     }
     // NOTE: The following step will not change counter once it reaches 2 ** 53.
@@ -540,7 +539,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
   };
   const result: Mutable<GeneratorObject> = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -596,7 +595,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -650,7 +649,7 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
   } else {
     const sepCompletion = yield* ToString(separator);
     IfAbruptCloseIterator(sepCompletion, iterated);
-    sep = X(sepCompletion).stringValue();
+    sep = X(sepCompletion);
   }
   iterated = Q(yield* GetIteratorDirect(obj));
   let result = '';
@@ -668,7 +667,7 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
     if (value !== Value.undefined && value !== Value.null) {
       const valueString = yield* ToString(value);
       IfAbruptCloseIterator(valueString, iterated);
-      result += X(valueString).stringValue();
+      result += X(valueString);
     }
   }
 }

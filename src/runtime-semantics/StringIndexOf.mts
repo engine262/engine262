@@ -1,16 +1,15 @@
-import { JSStringValue } from '../value.mts';
 import { Assert, F, isNonNegativeInteger } from '#self';
 
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
-export function StringIndexOf(string: JSStringValue, searchValue: JSStringValue, fromIndex: number) {
+export function StringIndexOf(string: string, searchValue: string, fromIndex: number) {
   // 1. Assert: Type(string) is String.
-  Assert(string instanceof JSStringValue);
+  Assert(typeof string === 'string');
   // 2. Assert: Type(searchValue) is String.
-  Assert(searchValue instanceof JSStringValue);
+  Assert(typeof searchValue === 'string');
   // 3. Assert: fromIndex is a non-negative integer.
   Assert(isNonNegativeInteger(fromIndex));
-  const stringStr = string.stringValue();
-  const searchStr = searchValue.stringValue();
+  const stringStr = string;
+  const searchStr = searchValue;
   // 4. Let len be the length of string.
   const len = stringStr.length;
   // 5. If searchValue is the empty string, and fromIndex <= len, return 𝔽(fromIndex).

@@ -1,9 +1,9 @@
-import { NullValue, Value } from '../value.mts';
+import { Value } from '../value.mts';
 import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ImportedNames, StringValue, type ExportEntry, type ModuleRequestRecord } from './all.mts';
 
-export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: ModuleRequestRecord | NullValue): ExportEntry[] {
+export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: ModuleRequestRecord | null): ExportEntry[] {
   if (isArray(node)) {
     const specs: ExportEntry[] = [];
     node.forEach((n) => {
@@ -21,7 +21,7 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
         const entry: ExportEntry = {
           ModuleRequest: module,
           ImportName: 'namespace',
-          LocalName: Value.null,
+          LocalName: null,
           ExportName: exportName,
           NamespaceNamesFilter: [],
         };
@@ -32,8 +32,8 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
         const entry: ExportEntry = {
           ModuleRequest: module,
           ImportName: 'all-but-default',
-          LocalName: Value.null,
-          ExportName: Value.null,
+          LocalName: null,
+          ExportName: null,
           NamespaceNamesFilter: [],
         };
         // 2. Return a new List containing entry.
@@ -42,18 +42,18 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
     case 'ExportSpecifier': {
       const sourceName = StringValue(node.localName);
       const exportName = StringValue(node.exportName);
-      let localName;
-      let importName;
-      if (module === Value.null) {
+      let localName: string | null;
+      let importName: string | null;
+      if (module === null) {
         localName = sourceName;
-        importName = Value.null;
+        importName = null;
       } else { // 4. Else,
-        localName = Value.null;
+        localName = null;
         importName = sourceName;
       }
       return [{
         ModuleRequest: module,
-        ImportName: importName,
+        ImportName: importName === null ? null : Value(importName),
         LocalName: localName,
         ExportName: exportName,
         NamespaceNamesFilter: [],
@@ -66,7 +66,7 @@ export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], m
         const entry: ExportEntry = {
           ModuleRequest: module,
           ImportName: 'filtered-namespace',
-          LocalName: Value.null,
+          LocalName: null,
           ExportName: exportName,
           NamespaceNamesFilter: importedNames,
         };

@@ -175,8 +175,7 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
   const func = thisValue;
   // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
   //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (hasSourceTextInternalSlot(func)
-    && X(HostHasSourceTextAvailable(func)) === Value.true) {
+  if (hasSourceTextInternalSlot(func) && X(HostHasSourceTextAvailable(func))) {
     // Return ! UTF16Encode(func.[[SourceText]]).
     return Value(func.SourceText);
   }
@@ -207,7 +206,7 @@ function* FunctionProto_hasInstance([V = Value.undefined]: Arguments, { thisValu
   // 1. Let F be this value.
   const F = thisValue;
   // 2. Return ? OrdinaryHasInstance(F, V).
-  return Q(yield* OrdinaryHasInstance(F, V));
+  return Value(Q(yield* OrdinaryHasInstance(F, V)));
 }
 
 export function bootstrapFunctionPrototype(realmRec: Realm) {
@@ -221,7 +220,7 @@ export function bootstrapFunctionPrototype(realmRec: Realm) {
   );
   realmRec.Intrinsics['%Function.prototype%'] = proto;
 
-  const readonly = { Writable: Value.false, Configurable: Value.false };
+  const readonly = { Writable: false, Configurable: false };
   assignProps(realmRec, proto, [
     ['apply', FunctionProto_apply, 2],
     ['bind', FunctionProto_bind, 1],

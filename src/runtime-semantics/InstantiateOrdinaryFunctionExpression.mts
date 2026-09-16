@@ -15,7 +15,7 @@ import {
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?: PropertyKeyValue | PrivateName) {
+export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?: string | PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -27,7 +27,7 @@ export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseN
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
     const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-    funcEnv.CreateImmutableBinding(name, Value.false);
+    funcEnv.CreateImmutableBinding(name, false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by FunctionExpression.

@@ -1,5 +1,5 @@
 import {
-  BooleanValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
+  UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import type { Mutable } from '../utils/language.mts';
@@ -12,7 +12,7 @@ import {
 } from '#self';
 
 export interface BooleanObject extends OrdinaryObject {
-  readonly BooleanData: BooleanValue;
+  readonly BooleanData: boolean;
 }
 export function isBooleanObject(o: Value): o is BooleanObject {
   return 'BooleanData' in o;
@@ -23,7 +23,7 @@ function* BooleanConstructor([value = Value.undefined]: Arguments, { NewTarget }
   const b = X(ToBoolean(value));
   // 2. If NewTarget is undefined, return b.
   if (NewTarget instanceof UndefinedValue) {
-    return b;
+    return Value(b);
   }
   // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
   const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData'])) as Mutable<BooleanObject>;

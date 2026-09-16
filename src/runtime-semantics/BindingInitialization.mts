@@ -1,7 +1,7 @@
-import { JSStringValue, Value } from '../value.mts';
+import { Value } from '../value.mts';
 import {
   EnsureCompletion,
-  EnvironmentRecord, StringValue, UndefinedValue,
+  EnvironmentRecord, StringValue,
 } from '../index.mts';
 import { NormalCompletion, Q } from '../completion.mts';
 import { OutOfRange } from '../utils/language.mts';
@@ -22,11 +22,11 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-initializeboundname */
-export function* InitializeBoundName(name: JSStringValue, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
+export function* InitializeBoundName(name: string, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator {
   // 1. Assert: Type(name) is String.
-  Assert(name instanceof JSStringValue);
+  Assert(typeof name === 'string');
   // 2. If environment is not undefined, then
-  if (!(environment instanceof UndefinedValue)) {
+  if (environment !== undefined) {
     // a. Perform environment.InitializeBinding(name, value).
     yield* environment.InitializeBinding(name, value);
     // b. Return NormalCompletion(undefined).
@@ -44,7 +44,7 @@ export function* InitializeBoundName(name: JSStringValue, value: Value, environm
 //   `{` BindingPropertyList `}`
 //   `{` BindingRestProperty `}`
 //   `{` BindingPropertyList `,` BindingRestProperty `}`
-function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }: ParseNode.ObjectBindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
+function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }: ParseNode.ObjectBindingPattern, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator {
   // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
   const excludedNames = Q(yield* PropertyBindingInitialization(BindingPropertyList, value, environment));
   if (BindingRestProperty) {
@@ -54,7 +54,7 @@ function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, Bind
   return NormalCompletion(undefined);
 }
 
-export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
+export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator {
   switch (node.type) {
     case 'ForBinding':
       if (node.BindingIdentifier) {

@@ -18,7 +18,7 @@ import {
   ArrayBufferByteLength,
   IsFixedLengthArrayBuffer,
 } from './all.mts';
-import { Throw } from '#self';
+import { Throw, type PlainEvaluator } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-dataview-objects */
@@ -78,7 +78,7 @@ export function IsViewOutOfBounds(viewRecord: DataViewWithBufferWitnessRecord): 
 }
 
 /** https://tc39.es/ecma262/#sec-getviewvalue */
-export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes) {
+export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   __ts_cast__<DataViewObject>(view);
@@ -87,7 +87,7 @@ export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   // 3. Let getIndex be ? ToIndex(requestIndex).
   const getIndex = Q(yield* ToIndex(requestIndex));
   // 4. Set isLittleEndian to ToBoolean(isLittleEndian).
-  isLittleEndian = ToBoolean(isLittleEndian);
+  if (typeof isLittleEndian !== 'boolean') isLittleEndian = ToBoolean(isLittleEndian);
   // 7. Let viewOffset be view.[[ByteOffset]].
   const viewOffset = view.ByteOffset;
   const viewRecord = MakeDataViewWithBufferWitnessRecord(view, 'unordered');
@@ -104,11 +104,11 @@ export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   // 11. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-  return GetValueFromBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, false, 'unordered', isLittleEndian.booleanValue());
+  return GetValueFromBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, false, 'unordered', isLittleEndian);
 }
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
-export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes, value: Value) {
+export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes, value: Value): PlainEvaluator<void> {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
@@ -125,7 +125,7 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
     numberValue = Q(yield* ToNumber(value));
   }
   // 6. Set isLittleEndian to ToBoolean(isLittleEndian).
-  isLittleEndian = ToBoolean(isLittleEndian);
+  if (typeof isLittleEndian !== 'boolean') isLittleEndian = ToBoolean(isLittleEndian);
   // 9. Let viewOffset be view.[[ByteOffset]].
   const viewOffset = view.ByteOffset;
   const viewRecord = MakeDataViewWithBufferWitnessRecord(view, 'unordered');
@@ -142,6 +142,5 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   // 13. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian.booleanValue()));
-  return Value.undefined;
+  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian));
 }

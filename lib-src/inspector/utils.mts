@@ -39,9 +39,9 @@ export function createConsole(
     realm.GlobalObject,
     'console',
     Descriptor({
-      Configurable: Value.true,
-      Enumerable: Value.false,
-      Writable: Value.true,
+      Configurable: true,
+      Enumerable: false,
+      Writable: true,
       Value: console,
     }),
   ));

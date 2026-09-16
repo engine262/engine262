@@ -1,6 +1,6 @@
 import {
   Descriptor,
-  JSStringValue, BooleanValue,
+  JSStringValue,
   Value,
   ObjectValue,
   wellKnownSymbols,
@@ -20,6 +20,7 @@ import { isBoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
   surroundingAgent,
+  type OrdinaryObject,
 } from '#self';
 import {
   ArrayCreate,
@@ -61,14 +62,14 @@ export function MakeBasicObject<const T extends string>(internalSlotsList: reado
   // 3.  Set obj's essential internal methods to the default ordinary object definitions specified in 9.1.
   const obj = new ObjectValue(internalSlotsList) as ObjectValue & Record<T, unknown>;
   Object.assign(obj, internalSlotsList.reduce((extraFields, currentField) => {
-    extraFields[currentField] = Value.undefined;
+    extraFields[currentField] = undefined;
     return extraFields;
   }, {} as Record<T, unknown>));
   // 4.  Assert: If the caller will not be overriding both obj's [[GetPrototypeOf]] and [[SetPrototypeOf]] essential internal methods, then internalSlotsList contains [[Prototype]].
   // 5.  Assert: If the caller will not be overriding all of obj's [[SetPrototypeOf]], [[IsExtensible]], and [[PreventExtensions]] essential internal methods, then internalSlotsList contains [[Extensible]].
   // 6.  If internalSlotsList contains [[Extensible]], then set obj.[[Extensible]] to true.
   if ((internalSlotsList as readonly string[]).includes('Extensible')) {
-    (obj as ObjectValue & { Extensible: BooleanValue }).Extensible = Value.true;
+    (obj as OrdinaryObject).Extensible = true;
   }
   // 7.  Return obj.
   return obj;
@@ -77,86 +78,86 @@ export function MakeBasicObject<const T extends string>(internalSlotsList: reado
 /** https://tc39.es/ecma262/#sec-get-o-p */
 export function* Get(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator {
   Assert(O instanceof ObjectValue);
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   return Q(yield* O.Get(P, O));
 }
 
 /** https://tc39.es/ecma262/#sec-getv */
 export function* GetV(V: Value, P: PropertyKeyValue | string): ValueEvaluator {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   const O = Q(ToObject(V));
   return Q(yield* O.Get(P, V));
 }
 
 /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
-export function* Set(O: ObjectValue, P: PropertyKeyValue | string, V: Value, throws: BooleanValue) {
+export function* Set(O: ObjectValue, P: PropertyKeyValue | string, V: Value, throws: boolean) {
   Assert(O instanceof ObjectValue);
-  P = typeof P === 'string' ? Value(P) : P;
-  Assert(throws instanceof BooleanValue);
+  if (P instanceof JSStringValue) P = P.stringValue();
+  Assert(typeof throws === 'boolean');
   const success = Q(yield* O.Set(P, V, O));
-  if (success === Value.false && throws === Value.true) {
+  if (!success && throws) {
     return Throw.TypeError('Cannot set property $1 on $2', P, O);
   }
   return success;
 }
 
 /** https://tc39.es/ecma262/#sec-createdataproperty */
-export function* CreateDataProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): ValueEvaluator<BooleanValue> {
+export function* CreateDataProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): PlainEvaluator<boolean> {
   Assert(O instanceof ObjectValue);
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
 
   const newDesc = Descriptor({
     Value: V,
-    Writable: Value.true,
-    Enumerable: Value.true,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: true,
+    Configurable: true,
   });
   return Q(yield* O.DefineOwnProperty(P, newDesc));
 }
 
 /** https://tc39.es/ecma262/#sec-createmethodproperty */
-export function* CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): ValueEvaluator<BooleanValue> {
+export function* CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue | string, V: Value): PlainEvaluator<boolean> {
   Assert(O instanceof ObjectValue);
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
 
   const newDesc = Descriptor({
     Value: V,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   });
   return Q(yield* O.DefineOwnProperty(P, newDesc));
 }
 
 /** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
 export function* CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, V: Value) {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   Assert(O instanceof ObjectValue);
   const success = Q(yield* CreateDataProperty(O, P, V));
-  if (success === Value.false) {
+  if (!success) {
     return Throw.TypeError('Cannot define property $1', P);
   }
   return success;
 }
 
 export function CreateNonEnumerableDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, V: Value) {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   Assert(O instanceof ObjectValue);
   const newDesc = Descriptor({
     Value: V,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   });
   X(DefinePropertyOrThrow(O, P, newDesc));
 }
 
 /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
 export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, desc: Descriptor) {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   Assert(O instanceof ObjectValue);
   const success = Q(yield* O.DefineOwnProperty(P, desc));
-  if (success === Value.false) {
+  if (!success) {
     return Throw.TypeError('Cannot define property $1', P);
   }
   return success;
@@ -164,10 +165,10 @@ export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | str
 
 /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
 export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string) {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   Assert(O instanceof ObjectValue);
   const success = Q(yield* O.Delete(P));
-  if (success === Value.false) {
+  if (!success) {
     return Throw.TypeError('Cannot delete property $1', P);
   }
   return success;
@@ -175,7 +176,7 @@ export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | str
 
 /** https://tc39.es/ecma262/#sec-getmethod */
 export function* GetMethod(V: Value, P: PropertyKeyValue | string): ValueEvaluator<UndefinedValue | FunctionObject> {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   const func = Q(yield* GetV(V, P));
   if (func === Value.null || func === Value.undefined) {
     return Value.undefined;
@@ -187,21 +188,21 @@ export function* GetMethod(V: Value, P: PropertyKeyValue | string): ValueEvaluat
 }
 
 /** https://tc39.es/ecma262/#sec-hasproperty */
-export function* HasProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
-  P = typeof P === 'string' ? Value(P) : P;
+export function* HasProperty(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean> {
+  if (P instanceof JSStringValue) P = P.stringValue();
   Assert(O instanceof ObjectValue);
   return Q(yield* O.HasProperty(P));
 }
 
 /** https://tc39.es/ecma262/#sec-hasownproperty */
-export function* HasOwnProperty(O: ObjectValue, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue> {
-  P = typeof P === 'string' ? Value(P) : P;
+export function* HasOwnProperty(O: ObjectValue, P: PropertyKeyValue | string): PlainEvaluator<boolean> {
+  if (P instanceof JSStringValue) P = P.stringValue();
   Assert(O instanceof ObjectValue);
   const desc = Q(yield* O.GetOwnProperty(P));
-  if (desc === Value.undefined) {
-    return Value.false;
+  if (!desc) {
+    return false;
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-call */
@@ -231,58 +232,58 @@ export function* Construct(F: FunctionObject, argumentsList: Arguments = [], new
 }
 
 /** https://tc39.es/ecma262/#sec-setintegritylevel */
-export function* SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ValueEvaluator<BooleanValue> {
+export function* SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): PlainEvaluator<boolean> {
   Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(yield* O.PreventExtensions());
-  if (status === Value.false) {
-    return Value.false;
+  if (!status) {
+    return false;
   }
   const keys = Q(yield* O.OwnPropertyKeys());
   if (level === 'sealed') {
     for (const k of keys) {
-      Q(yield* DefinePropertyOrThrow(O, k, Descriptor({ Configurable: Value.false })));
+      Q(yield* DefinePropertyOrThrow(O, k, Descriptor({ Configurable: false })));
     }
   } else if (level === 'frozen') {
     for (const k of keys) {
       const currentDesc = Q(yield* O.GetOwnProperty(k));
-      if (!(currentDesc instanceof UndefinedValue)) {
+      if (currentDesc) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
-          desc = Descriptor({ Configurable: Value.false });
+          desc = Descriptor({ Configurable: false });
         } else {
-          desc = Descriptor({ Configurable: Value.false, Writable: Value.false });
+          desc = Descriptor({ Configurable: false, Writable: false });
         }
         Q(yield* DefinePropertyOrThrow(O, k, desc));
       }
     }
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-testintegritylevel */
-export function* TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ValueEvaluator<BooleanValue> {
+export function* TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): PlainEvaluator<boolean> {
   Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
   const extensible = Q(yield* IsExtensible(O));
-  if (extensible === Value.true) {
-    return Value.false;
+  if (extensible) {
+    return false;
   }
   const keys = Q(yield* O.OwnPropertyKeys());
   for (const k of keys) {
     const currentDesc = Q(yield* O.GetOwnProperty(k));
-    if (!(currentDesc instanceof UndefinedValue)) {
-      if (currentDesc.Configurable === Value.true) {
-        return Value.false;
+    if (currentDesc) {
+      if (currentDesc.Configurable) {
+        return false;
       }
       if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
-        if (currentDesc.Writable === Value.true) {
-          return Value.false;
+        if (currentDesc.Writable) {
+          return false;
         }
       }
     }
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-createarrayfromlist */
@@ -347,22 +348,22 @@ export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'all' | 
 
 /** https://tc39.es/ecma262/#sec-invoke */
 export function* Invoke(V: Value, P: PropertyKeyValue | string, argumentsList: Arguments = []): ValueEvaluator {
-  P = typeof P === 'string' ? Value(P) : P;
+  if (P instanceof JSStringValue) P = P.stringValue();
   const func = Q(yield* GetV(V, P));
   return Q(yield* Call(func, V, argumentsList));
 }
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
-export function* OrdinaryHasInstance(constructor: Value, O: Value): ValueEvaluator<BooleanValue> {
+export function* OrdinaryHasInstance(constructor: Value, O: Value): PlainEvaluator<boolean> {
   if (!IsCallable(constructor)) {
-    return Value.false;
+    return false;
   }
   if (isBoundFunctionObject(constructor)) {
     const BC = constructor.BoundTargetFunction;
     return Q(yield* InstanceofOperator(O, BC));
   }
   if (!(O instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   const P = Q(yield* Get(constructor, 'prototype'));
   if (!(P instanceof ObjectValue)) {
@@ -371,10 +372,10 @@ export function* OrdinaryHasInstance(constructor: Value, O: Value): ValueEvaluat
   while (true) {
     O = Q(yield* O.GetPrototypeOf());
     if (O instanceof NullValue) {
-      return Value.false;
+      return false;
     }
     if (SameValue(P, O)) {
-      return Value.true;
+      return true;
     }
   }
 }
@@ -409,7 +410,7 @@ export function* EnumerableOwnProperties(O: ObjectValue, kind: 'key' | 'value' |
   for (const key of ownKeys) {
     if (key instanceof JSStringValue) {
       const desc = Q(yield* O.GetOwnProperty(key));
-      if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+      if (desc && desc.Enumerable) {
         if (kind === 'key') {
           results.push(key);
         } else {
@@ -469,7 +470,7 @@ export function* CopyDataProperties(target: ObjectValue, source: Value, excluded
     }
     if (excluded === false) {
       const desc = Q(yield* from.GetOwnProperty(nextKey));
-      if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+      if (desc && desc.Enumerable) {
         const propValue = Q(yield* Get(from, nextKey));
         X(CreateDataProperty(target, nextKey, propValue));
       }
@@ -615,10 +616,10 @@ export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: Ob
   // 3. Let desc be ? thisValue.[[GetOwnProperty]](p).
   const desc = Q(yield* thisValue.GetOwnProperty(propertyKey));
   // 4. If desc is undefined, then
-  if (desc === Value.undefined) {
+  if (!desc) {
     Q(yield* CreateDataPropertyOrThrow(thisValue, propertyKey, value));
   } else {
-    Q(yield* Set(thisValue, propertyKey, value, Value.true));
+    Q(yield* Set(thisValue, propertyKey, value, true));
   }
   return undefined;
 }

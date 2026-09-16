@@ -35,7 +35,7 @@ function* ShadowRealmPrototype_importValue([specifier = Value.undefined, exportN
   }
   const callerRealm = surroundingAgent.currentRealmRecord;
   const evalRealm = O.ShadowRealm;
-  return ShadowRealmImportValue(specifierString, exportName, callerRealm, evalRealm);
+  return ShadowRealmImportValue(specifierString, exportName.stringValue(), callerRealm, evalRealm);
 }
 
 export function bootstrapShadowRealmPrototype(realmRec: Realm) {

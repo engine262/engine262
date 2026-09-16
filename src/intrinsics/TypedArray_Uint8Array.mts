@@ -30,14 +30,14 @@ function* Uint8ArrayProto_toBase64([options = Value.undefined]: Arguments, { thi
   if (alphabet.stringValue() === 'base64') {
     // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64 encoding specified in section 4 of RFC 4648. Padding is included if and only if omitPadding is false.
     outAscii = btoa_polyfill(String.fromCharCode(...toEncode));
-    if (omitPadding !== Value.false) {
+    if (omitPadding) {
       outAscii = outAscii.replace(/=/g, '');
     }
   } else {
     Assert(alphabet.stringValue() === 'base64url');
     // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64url encoding specified in section 5 of RFC 4648. Padding is included if and only if omitPadding is false.
     outAscii = btoa_polyfill(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
-    if (omitPadding !== Value.false) {
+    if (omitPadding) {
       outAscii = outAscii.replace(/=/g, '');
     }
   }
@@ -54,7 +54,7 @@ function Uint8ArrayProto_toHex(_args: Arguments, { thisValue }: FunctionCallCont
   for (const byte of toEncode) {
     let hex = NumberValue.toString(F(byte), 16n);
     hex = X(StringPad(hex, Value(2), Value('0'), 'start'));
-    out += hex.stringValue();
+    out += hex;
   }
   return Value(out);
 }
@@ -92,7 +92,7 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
     Throw(result.Error);
   }
   const resultLength = result.Bytes.length;
-  const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
+  const ta = Q(yield* AllocateTypedArray('Uint8Array', surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
 
   // TODO: Assert: ta.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is the number of elements in result.[[Bytes]].
 
@@ -161,7 +161,7 @@ function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
     Throw(result.Error);
   }
   const resultLength = result.Bytes.length;
-  const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
+  const ta = Q(yield* AllocateTypedArray('Uint8Array', surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
   // TODO Assert: ta.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is the number of elements in result.[[Bytes]].
 
   // Set the value at each index of ta.[[ViewedArrayBuffer]].[[ArrayBufferData]] to the value at the corresponding index of result.[[Bytes]].
@@ -200,7 +200,7 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { th
 function ValidateUint8Array(ta: Value) {
   Q(RequireInternalSlot(ta, 'TypedArrayName'));
   __ts_cast__<TypedArrayObject>(ta);
-  if (ta.TypedArrayName.stringValue() !== 'Uint8Array') {
+  if (ta.TypedArrayName !== 'Uint8Array') {
     return Throw.TypeError('Not a Uint8Array');
   }
   return undefined;

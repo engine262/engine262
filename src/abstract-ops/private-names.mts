@@ -35,11 +35,11 @@ export function* PrivateGet(O: ObjectValue, P: PrivateName) {
   // 4. Assert: entry.[[Kind]] is accessor.
   Assert(entry.Kind === 'accessor');
   // 5. If entry.[[Get]] is undefined, throw a TypeError exception.
-  if (entry.Getter === Value.undefined) {
+  if (entry.Get === Value.undefined) {
     return Throw.TypeError('Private field $1 is not a getter', P);
   }
   // 6. Let getter be entry.[[Get]].
-  const getter = entry.Getter!;
+  const getter = entry.Get!;
   // 7. Return ? Call(getter, O).
   return Q(yield* Call(getter, O));
 }
@@ -62,11 +62,11 @@ export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
     // a. Assert: entry.[[Kind]] is accessor.
     Assert(entry.Kind === 'accessor');
     // b. If entry.[[Set]] is undefined, throw a TypeError exception.
-    if (entry.Setter === Value.undefined) {
+    if (entry.Set === Value.undefined) {
       return Throw.TypeError('Private field $1 is not a setter', P);
     }
     // c. Let setter be entry.[[Set]].
-    const setter = entry.Setter!;
+    const setter = entry.Set!;
     // d. Perform ? Call(setter, O, « value »).
     Q(yield* Call(setter, O, [value]));
   }
@@ -77,7 +77,7 @@ export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
 export function* PrivateMethodOrAccessorAdd(O: ObjectValue, method: PrivateElementRecord) {
   // 1. Assert: method.[[Kind]] is either method or accessor.
   Assert(method.Kind === 'method' || method.Kind === 'accessor');
-  if (Q(yield* IsExtensible(O)) === Value.false) {
+  if (!Q(yield* IsExtensible(O))) {
     return Throw.TypeError('Cannot define private element to a non-extensible object');
   }
   // 2. Let entry be ! PrivateElementFind(method.[[Key]], O).
@@ -97,7 +97,7 @@ export function* PrivateMethodOrAccessorAdd(O: ObjectValue, method: PrivateEleme
 export function* PrivateFieldAdd(O: ObjectValue, P: PrivateName, value: Value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
-  if (Q(yield* IsExtensible(O)) === Value.false) {
+  if (!Q(yield* IsExtensible(O))) {
     return Throw.TypeError('Cannot define private element to a non-extensible object');
   }
   // 2. If entry is not empty, throw a TypeError exception.
@@ -129,8 +129,8 @@ export function* InitializePrivateMethods(O: ObjectValue, elementDefinitions: re
         const privateElement = PrivateElementRecord({
           Key: element.Key,
           Kind: 'accessor',
-          Getter: element.Get,
-          Setter: element.Set,
+          Get: element.Get,
+          Set: element.Set,
         });
         privateMethods.push(privateElement);
       } else {
@@ -142,18 +142,18 @@ export function* InitializePrivateMethods(O: ObjectValue, elementDefinitions: re
         if (e) {
           Assert(e.Kind === 'accessor');
           existing = e;
-          if (e.Getter !== undefined && e.Getter !== Value.undefined) {
-            getter = e.Getter;
+          if (e.Get !== undefined && e.Get !== Value.undefined) {
+            getter = e.Get;
           }
-          if (e.Setter !== undefined && e.Setter !== Value.undefined) {
-            setter = e.Setter;
+          if (e.Set !== undefined && e.Set !== Value.undefined) {
+            setter = e.Set;
           }
         }
         const privateElement = PrivateElementRecord({
           Key: element.Key,
           Kind: 'accessor',
-          Getter: getter,
-          Setter: setter,
+          Get: getter,
+          Set: setter,
         });
         if (existing) {
           const index = privateMethods.indexOf(existing);

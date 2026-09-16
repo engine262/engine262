@@ -31,31 +31,33 @@ function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallConte
     return Throw.TypeError('this value $1 is not an object', O);
   }
   // 3. Let name be ? Get(O, "name").
-  let name = Q(yield* Get(O, 'name'));
+  const _name = Q(yield* Get(O, 'name'));
+  let name: string;
   // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
-  if (name === Value.undefined) {
-    name = Value('Error');
+  if (_name === Value.undefined) {
+    name = 'Error';
   } else {
-    name = Q(yield* ToString(name));
+    name = Q(yield* ToString(_name));
   }
   // 5. Let msg be ? Get(O, "message").
-  let msg = Q(yield* Get(O, 'message'));
+  const _msg = Q(yield* Get(O, 'message'));
+  let msg: string;
   // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
-  if (msg === Value.undefined) {
-    msg = Value('');
+  if (_msg === Value.undefined) {
+    msg = '';
   } else {
-    msg = Q(yield* ToString(msg));
+    msg = Q(yield* ToString(_msg));
   }
   // 7. If name is the empty String, return msg.
-  if (name.stringValue() === '') {
-    return msg;
+  if (name === '') {
+    return Value(msg);
   }
   // 8. If msg is the empty String, return name.
-  if (msg.stringValue() === '') {
-    return name;
+  if (msg === '') {
+    return Value(name);
   }
   // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-  return Value(`${name.stringValue()}: ${msg.stringValue()}`);
+  return Value(`${name}: ${msg}`);
 }
 
 /** https://tc39.es/proposal-error-stack-accessor/#sec-get-error.prototype.stack */

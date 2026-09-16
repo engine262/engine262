@@ -280,7 +280,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
   for (const key of allKeys) {
     // a. Let desc be ? promises.[[GetOwnProperty]](key).
     const desc = Q(yield* promises.GetOwnProperty(key));
-    if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+    if (desc && desc.Enumerable) {
       // i. Let value be ? Get(promises, key).
       const value = Q(yield* Get(promises, key));
 
@@ -572,9 +572,9 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
         const aggregateError = Throw.AggregateError('No promises passed to Promise.any were fulfilled').Value as ObjectValue;
         // 2. Perform ! DefinePropertyOrThrow(aggregateError, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
         X(DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({
-          Configurable: Value.true,
-          Enumerable: Value.false,
-          Writable: Value.true,
+          Configurable: true,
+          Enumerable: false,
+          Writable: true,
           Value: X(CreateArrayFromList(errors)),
         })));
         // 3. Perform ? Call(resultCapability.[[Reject]], *undefined*, « _aggregateError_ »).
@@ -600,9 +600,9 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
       if (remainingElementsCount.Value === 0) {
         const aggregateError = Throw.AggregateError('No promises passed to Promise.any were fulfilled').Value as ObjectValue;
         X(DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({
-          Configurable: Value.true,
-          Enumerable: Value.false,
-          Writable: Value.true,
+          Configurable: true,
+          Enumerable: false,
+          Writable: true,
           Value: X(CreateArrayFromList(errors)),
         })));
         return Q(yield* Call(resultCapability.Reject, Value.undefined, [aggregateError]));
@@ -792,9 +792,9 @@ export function bootstrapPromise(realmRec: Realm) {
   ]);
 
   X(promiseConstructor.DefineOwnProperty(Value('prototype'), Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   })));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
