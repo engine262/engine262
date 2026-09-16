@@ -136,7 +136,7 @@ export abstract class ModuleParser extends StatementParser {
       if (specifier.ModuleExportName) {
         this.addEarlyError(Throw.SyntaxError('Filtered namespace imports cannot contain aliased or string import specifiers'), specifier);
       }
-      const name = StringValue(specifier.ImportedBinding).stringValue();
+      const name = StringValue(specifier.ImportedBinding);
       if (names.has(name)) {
         this.addEarlyError(Throw.SyntaxError('Filtered namespace imports cannot contain duplicate names'), specifier);
       }
@@ -402,7 +402,7 @@ export abstract class ModuleParser extends StatementParser {
     while (!this.eat(Token.RBRACE)) {
       const entry = this.parseWithEntry();
 
-      const key = StringValue(entry.AttributeKey).value;
+      const key = StringValue(entry.AttributeKey);
       if (seenKeys.has(key)) {
         this.addEarlyError(Throw.SyntaxError('Duplicate import attribute $1', key), entry);
       }

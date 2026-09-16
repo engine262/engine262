@@ -88,7 +88,7 @@ export function format(arg: Formattable): string {
     case arg instanceof BigIntValue:
       return `${String(R(arg))}n`;
     case arg instanceof SymbolValue:
-      return `Symbol(${arg.Description instanceof UndefinedValue ? '' : arg.Description.stringValue()})`;
+      return `Symbol(${arg.Description || ''})`;
     case arg instanceof NullValue:
       return 'null';
     case arg instanceof UndefinedValue:
@@ -114,7 +114,7 @@ export function format(arg: Formattable): string {
       }
       if (isRegExpObject(arg)) {
         const P = EscapeRegExpPattern(arg.OriginalSource, arg.OriginalFlags).stringValue();
-        const F = arg.OriginalFlags.stringValue();
+        const F = arg.OriginalFlags;
         return `/${P}/${F}`;
       }
       if (isDateObject(arg)) {
@@ -125,19 +125,19 @@ export function format(arg: Formattable): string {
         return `[Date ${d.toISOString()}]`;
       }
       if (isBooleanObject(arg)) {
-        return `[Boolean ${format(arg.BooleanData)}]`;
+        return `[Boolean ${arg.BooleanData}]`;
       }
       if (isNumberObject(arg)) {
-        return `[Number ${format(arg.NumberData)}]`;
+        return `[Number ${arg.NumberData}]`;
       }
       if (isBigIntObject(arg)) {
-        return `[BigInt ${format(arg.BigIntData)}]`;
+        return `[BigInt ${arg.BigIntData}]`;
       }
       if (isStringObject(arg)) {
-        return `[String ${format(arg.StringData)}]`;
+        return `[String ${arg.StringData}]`;
       }
       if (isSymbolObject(arg)) {
-        return `[Symbol ${format(arg.SymbolData)}]`;
+        return `[Symbol ${arg.SymbolData}]`;
       }
       if (isArrayExoticObject(arg)) {
         return '[object Array]';

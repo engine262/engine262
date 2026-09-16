@@ -19,7 +19,7 @@ import {
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: PropertyKeyValue | PrivateName) {
+export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: string | PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -31,7 +31,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
     const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-    funcEnv.CreateImmutableBinding(name, Value.false);
+    funcEnv.CreateImmutableBinding(name, false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let source text be the source textmatched by AsyncGeneratorExpression.
@@ -48,9 +48,9 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
       Value('prototype'),
       Descriptor({
         Value: prototype,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.false,
+        Writable: true,
+        Enumerable: false,
+        Configurable: false,
       }),
     ));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
@@ -80,9 +80,9 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
     Value('prototype'),
     Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false,
+      Writable: true,
+      Enumerable: false,
+      Configurable: false,
     }),
   ));
   // 9. Return closure.

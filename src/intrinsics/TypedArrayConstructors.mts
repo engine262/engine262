@@ -75,8 +75,8 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
 
     const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray as TypedArrayConstructorNames}.prototype%`], [
       ['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
-        Writable: Value.false,
-        Configurable: Value.false,
+        Writable: false,
+        Configurable: false,
       }],
     ]);
     X(taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']));

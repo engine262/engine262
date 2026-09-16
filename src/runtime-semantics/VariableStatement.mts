@@ -4,7 +4,6 @@ import {
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { StringValue, IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
-import { Value } from '../value.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
   GetValue,
@@ -46,7 +45,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
   // 2. Let rval be ? GetValue(rhs).
   const rval = Q(yield* GetValue(rhs));
   // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
-  return yield* BindingInitialization(BindingPattern!, rval, Value.undefined);
+  return yield* BindingInitialization(BindingPattern!, rval, undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */

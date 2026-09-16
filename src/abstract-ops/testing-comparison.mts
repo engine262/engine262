@@ -24,6 +24,7 @@ import {
   type PropertyKeyValue,
   Throw,
   type PlainEvaluator,
+  ThrowCompletion,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -41,12 +42,12 @@ export function RequireObjectCoercible(argument: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-isarray */
-export function IsArray(argument: Value) {
+export function IsArray(argument: Value): boolean | ThrowCompletion {
   if (!(argument instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if (isArrayExoticObject(argument)) {
-    return Value.true;
+    return true;
   }
   if (isProxyExoticObject(argument)) {
     if (argument.ProxyHandler === Value.null) {
@@ -55,7 +56,7 @@ export function IsArray(argument: Value) {
     const target = argument.ProxyTarget;
     return IsArray(target);
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-iscallable */
@@ -87,17 +88,17 @@ export function* IsExtensible(O: ObjectValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-isinteger */
-export function IsIntegralNumber(argument: Value) {
+export function IsIntegralNumber(argument: Value): boolean {
   if (!(argument instanceof NumberValue)) {
-    return Value.false;
+    return false;
   }
   if (argument.isNaN() || argument.isInfinity()) {
-    return Value.false;
+    return false;
   }
   if (Math.floor(Math.abs(R(argument))) !== Math.abs(R(argument))) {
-    return Value.false;
+    return false;
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-ispropertykey */
@@ -112,18 +113,18 @@ export function IsPropertyKey(argument: unknown): argument is PropertyKeyValue {
 }
 
 /** https://tc39.es/ecma262/#sec-isregexp */
-export function* IsRegExp(argument: Value): ValueEvaluator<BooleanValue> {
+export function* IsRegExp(argument: Value): PlainEvaluator<boolean> {
   if (!(argument instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   const matcher = Q(yield* Get(argument, wellKnownSymbols.match));
   if (matcher !== Value.undefined) {
     return ToBoolean(matcher);
   }
   if ('RegExpMatcher' in argument) {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-isstringprefix */

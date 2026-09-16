@@ -6,8 +6,9 @@ import { CanonicalNumericIndexString, R } from './all.mts';
 /** https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
 
 // 6.1.7 #integer-index
-export function isIntegerIndex(V: Value) {
-  if (!(V instanceof JSStringValue)) {
+export function isIntegerIndex(V: string | Value) {
+  if (V instanceof JSStringValue) V = V.stringValue();
+  if (typeof V !== 'string') {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));
@@ -21,8 +22,9 @@ export function isIntegerIndex(V: Value) {
 }
 
 // 6.1.7 #array-index
-export function isArrayIndex(V: Value) {
-  if (!(V instanceof JSStringValue)) {
+export function isArrayIndex(V: string | Value) {
+  if (V instanceof JSStringValue) V = V.stringValue();
+  if (typeof V !== 'string') {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));

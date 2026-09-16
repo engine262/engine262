@@ -94,7 +94,7 @@ export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]).
-    return Q(yield* base.GetBindingValue(V.ReferencedName as JSStringValue, Value(V.Strict)));
+    return Q(yield* base.GetBindingValue((V.ReferencedName as JSStringValue).stringValue(), V.Strict));
   }
 }
 
@@ -113,7 +113,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // b. Let globalObj be GetGlobalObject().
     const globalObj = GetGlobalObject();
     // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
-    Q(yield* Set(globalObj, V.ReferencedName as JSStringValue, W, Value.false));
+    Q(yield* Set(globalObj, V.ReferencedName as JSStringValue, W, false));
     return undefined;
   }
   // 5. If IsPropertyReference(V) is true, then
@@ -131,7 +131,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // c. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
     const succeeded = Q(yield* baseObj.Set(V.ReferencedName, W, GetThisValue(V)));
     // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
-    if (succeeded === Value.false && V.Strict) {
+    if (!succeeded && V.Strict) {
       return Throw.TypeError('Cannot set property $1 on $2', V.ReferencedName, baseObj);
     }
     // e. Return.
@@ -142,7 +142,7 @@ export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator 
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
-    return Q(yield* base.SetMutableBinding(V.ReferencedName as JSStringValue, W, Value(V.Strict)));
+    return Q(yield* base.SetMutableBinding((V.ReferencedName as JSStringValue).stringValue(), W, V.Strict));
   }
 }
 
@@ -171,11 +171,11 @@ export function* InitializeReferencedBinding(V: PlainCompletion<ReferenceRecord>
   // 6. Assert: base is an Environment Record.
   Assert(base instanceof EnvironmentRecord);
   // 7. Return base.InitializeBinding(V.[[ReferencedName]], W).
-  return yield* base.InitializeBinding(V.ReferencedName as JSStringValue, W);
+  return yield* base.InitializeBinding((V.ReferencedName as JSStringValue).stringValue(), W);
 }
 
 /** https://tc39.es/ecma262/#sec-makeprivatereference */
-export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStringValue) {
+export function MakePrivateReference(baseValue: Value, privateIdentifier: string) {
   // 1. Let privEnv be the running execution context's PrivateEnvironment.
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 2. Assert: privEnv is not null.
@@ -186,7 +186,7 @@ export function MakePrivateReference(baseValue: Value, privateIdentifier: JSStri
     if (script instanceof DynamicParsedCodeRecord && script?.HostDefined?.isInspectorEval) {
       let privateName;
       if (baseValue instanceof ObjectValue) {
-        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description === privateIdentifier.stringValue())?.Key;
+        privateName = baseValue.PrivateElements.find((elem) => elem.Key.Description === privateIdentifier)?.Key;
       }
       privateName ??= new PrivateName(privateIdentifier);
       return new ReferenceRecord({

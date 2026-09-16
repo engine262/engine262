@@ -98,12 +98,12 @@ export function* ClassFieldDefinitionEvaluation_decorator(FieldDefinition: Parse
     if (name instanceof PrivateName) {
       readableName = name.Description;
     } else if (name instanceof SymbolValue) {
-      readableName = SymbolDescriptiveString(name).stringValue();
+      readableName = SymbolDescriptiveString(name);
     } else {
       readableName = name.stringValue();
     }
     const privateStateDesc = `${readableName} accessor storage`;
-    const privateStateName = new PrivateName(Value(privateStateDesc));
+    const privateStateName = new PrivateName(privateStateDesc);
     const getter = MakeAutoAccessorGetter(homeObject, name, privateStateName);
     const setter = MakeAutoAccessorSetter(homeObject, name, privateStateName);
     const initializers = [];
@@ -118,11 +118,11 @@ export function* ClassFieldDefinitionEvaluation_decorator(FieldDefinition: Parse
       }
     }
     if (!(name instanceof PrivateName)) {
-      const desc = new Descriptor({
-        Getter: getter,
-        Setter: setter,
-        Enumerable: Value.true,
-        Configurable: Value.true,
+      const desc = Descriptor({
+        Get: getter,
+        Set: setter,
+        Enumerable: true,
+        Configurable: true,
       });
       Q(yield* DefinePropertyOrThrow(homeObject, name, desc));
     }

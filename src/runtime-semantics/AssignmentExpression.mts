@@ -178,9 +178,9 @@ export function* Evaluate_AssignmentExpression({
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(yield* GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
-    const lbool = X(ToBoolean(lval));
+    const lbool = ToBoolean(lval);
     // 4. If lbool is false, return lval.
-    if (lbool === Value.false) {
+    if (!lbool) {
       return lval;
     }
     let rval;
@@ -206,7 +206,7 @@ export function* Evaluate_AssignmentExpression({
     // 3. Let lbool be ! ToBoolean(lval).
     const lbool = X(ToBoolean(lval));
     // 4. If lbool is true, return lval.
-    if (lbool === Value.true) {
+    if (lbool) {
       return lval;
     }
     let rval;

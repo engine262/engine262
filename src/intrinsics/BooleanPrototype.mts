@@ -50,7 +50,7 @@ export function bootstrapBooleanPrototype(realmRec: Realm) {
     ['valueOf', BooleanProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  (proto as Mutable<BooleanObject>).BooleanData = Value.false;
+  (proto as Mutable<BooleanObject>).BooleanData = false;
 
   realmRec.Intrinsics['%Boolean.prototype%'] = proto;
 }

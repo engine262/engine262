@@ -4,8 +4,9 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { isArray } from '../utils/language.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mts';
-import type {
-  EnvironmentRecord, PlainCompletion, PropertyKeyValue, UndefinedValue, Value,
+import {
+    Value,
+  type EnvironmentRecord, type PlainCompletion, type PropertyKeyValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
@@ -13,7 +14,7 @@ import type {
 // BindingProperty :
 //   SingleNameBinding
 //   PropertyName `:` BindingElement
-export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator<PropertyKeyValue[]> {
+export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value: Value, environment: EnvironmentRecord | undefined): PlainEvaluator<PropertyKeyValue[]> {
   if (isArray(node)) {
     // 1. Let boundNames be ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
     // 2. Let nextNames be ? PropertyBindingInitialization of BindingProperty with arguments value and environment.
@@ -40,6 +41,6 @@ export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyLi
     // 2. Perform ? KeyedBindingInitialization for SingleNameBinding using value, environment, and name as the arguments.
     Q(yield* KeyedBindingInitialization(node as ParseNode.SingleNameBinding, value, environment, name));
     // 3. Return a new List containing name.
-    return [name];
+    return [Value(name)];
   }
 }

@@ -19,7 +19,7 @@ test('Every built-in function should have a section property', { timeout: 10000 
       if (o.Type === 'throw') {
         return o;
       }
-      throw new Error(`${o.Value.stringValue()} did not have a section`);
+      throw new Error(`${o.Value} did not have a section`);
     }, 1, Value(''), []),
   ));
   const targets: Value[] = [];

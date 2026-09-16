@@ -263,7 +263,7 @@ interface JSONParseRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-internalizejsonproperty */
-function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, reviver: Value, parseRecord: JSONParseRecord | undefined): ValueEvaluator {
+function* InternalizeJSONProperty(holder: ObjectValue, name: string, reviver: Value, parseRecord: JSONParseRecord | undefined): ValueEvaluator {
   const val = Q(yield* Get(holder, name));
   const context = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   let elementRecords: readonly JSONParseRecord[];
@@ -283,7 +283,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
   }
   if (val instanceof ObjectValue) {
     const isArray = Q(IsArray(val));
-    if (isArray === Value.true) {
+    if (isArray) {
       // Let _elementRecordsLen_ be the number of elements in _elementRecords_.
       const elementRecordsLen = elementRecords.length;
       const len = Q(yield* LengthOfArrayLike(val));
@@ -303,7 +303,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
       const keys = Q(yield* EnumerableOwnProperties(val, 'key'));
       for (const P of keys) {
         const entryRecord = entryRecords.find((record) => SameValue(record.Key, P));
-        const newElement = Q(yield* InternalizeJSONProperty(val, P, reviver, entryRecord));
+        const newElement = Q(yield* InternalizeJSONProperty(val, P.stringValue(), reviver, entryRecord));
         if (newElement instanceof UndefinedValue) {
           Q(yield* val.Delete(P));
         } else {
@@ -312,7 +312,7 @@ function* InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, revi
       }
     }
   }
-  return Q(yield* Call(reviver, holder, [name, val, context]));
+  return Q(yield* Call(reviver, holder, [Value(name), val, context]));
 }
 
 /** https://tc39.es/ecma262/#sec-createjsonparserecord */
@@ -323,7 +323,7 @@ function CreateJSONParseRecord(parseNode: ParseNode, key: PropertyKeyValue, val:
   const entries = [];
   if (val instanceof ObjectValue) {
     const isArray = X(IsArray(val));
-    if (isArray === Value.true) {
+    if (isArray) {
       Assert(typedValNode.type === 'ArrayLiteral');
       const contentNodes = ArrayLiteralContentNodes(typedValNode);
       const len = contentNodes.length;
@@ -332,7 +332,7 @@ function CreateJSONParseRecord(parseNode: ParseNode, key: PropertyKeyValue, val:
       let index = 0;
       while (index < len) {
         const propName = X(ToString(F(index)));
-        const elementParseRecord = CreateJSONParseRecord(contentNodes[index], propName, X(Get(val, propName)));
+        const elementParseRecord = CreateJSONParseRecord(contentNodes[index], Value(propName), X(Get(val, propName)));
         elements.push(elementParseRecord);
         index += 1;
       }
@@ -376,7 +376,7 @@ export function ParseJSON(text: string): PlainCompletion<{ ParseNode: ParseNode,
 /** https://tc39.es/ecma262/#sec-json.parse */
 function* JSON_parse([text = Value.undefined, reviver = Value.undefined]: Arguments): ValueEvaluator {
   const jsonString = Q(yield* ToString(text));
-  const parseResult = Q(ParseJSON(jsonString.stringValue()));
+  const parseResult = Q(ParseJSON(jsonString));
   const unfiltered = parseResult.Value;
   Assert(unfiltered instanceof JSStringValue
     || unfiltered instanceof NumberValue
@@ -385,9 +385,9 @@ function* JSON_parse([text = Value.undefined, reviver = Value.undefined]: Argume
     || unfiltered instanceof ObjectValue);
   if (IsCallable(reviver)) {
     const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    const rootName = Value('');
+    const rootName = '';
     X(CreateDataPropertyOrThrow(root, rootName, unfiltered));
-    const snapshot = CreateJSONParseRecord(parseResult.ParseNode, rootName, unfiltered);
+    const snapshot = CreateJSONParseRecord(parseResult.ParseNode, Value(rootName), unfiltered);
     return Q(yield* InternalizeJSONProperty(root, rootName, reviver, snapshot));
   } else {
     return unfiltered;
@@ -430,11 +430,11 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
     if ('NumberData' in value) {
       value = Q(yield* ToNumber(value));
     } else if ('StringData' in value) {
-      value = Q(yield* ToString(value));
+      value = Value(Q(yield* ToString(value)));
     } else if (isBooleanObject(value)) {
-      value = value.BooleanData;
+      value = Value(value.BooleanData);
     } else if (isBigIntObject(value)) {
-      value = value.BigIntData;
+      value = Value(value.BigIntData);
     }
   }
   if (value === Value.null) {
@@ -451,7 +451,7 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
   }
   if (value instanceof NumberValue) {
     if (value.isFinite()) {
-      return X(ToString(value));
+      return Value(X(ToString(value)));
     }
     return Value('null');
   }
@@ -460,7 +460,7 @@ function* SerializeJSONProperty(state: State, key: JSStringValue, holder: Object
   }
   if (value instanceof ObjectValue && !IsCallable(value)) {
     const isArray = Q(IsArray(value));
-    if (isArray === Value.true) {
+    if (isArray) {
       return Q(yield* SerializeJSONArray(state, value));
     }
     return Q(yield* SerializeJSONObject(state, value));
@@ -551,7 +551,7 @@ function* SerializeJSONArray(state: State, value: ObjectValue): PlainEvaluator<J
   let index = 0;
   while (index < len) {
     const indexStr = X(ToString(F(index)));
-    const strP = Q(yield* SerializeJSONProperty(state, indexStr, value));
+    const strP = Q(yield* SerializeJSONProperty(state, Value(indexStr), value));
     if (strP instanceof UndefinedValue) {
       partial.push('null');
     } else {
@@ -588,16 +588,16 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
       ReplacerFunction = replacer;
     } else {
       const isArray = Q(IsArray(replacer));
-      if (isArray === Value.true) {
+      if (isArray) {
         PropertyList = new Set();
         const len = Q(yield* LengthOfArrayLike(replacer));
         let k = 0;
         while (k < len) {
           const vStr = X(ToString(F(k)));
           const v = Q(yield* Get(replacer, vStr));
-          let item: JSStringValue | UndefinedValue = Value.undefined;
+          let item: string | undefined = undefined;
           if (v instanceof JSStringValue) {
-            item = v;
+            item = v.stringValue();
           } else if (v instanceof NumberValue) {
             item = X(ToString(v));
           } else if (v instanceof ObjectValue) {
@@ -605,35 +605,35 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
               item = Q(yield* ToString(v));
             }
           }
-          if (!(item instanceof UndefinedValue) && !PropertyList.has(item.stringValue())) {
-            PropertyList.add(item.stringValue());
+          if (item !== undefined && !PropertyList.has(item)) {
+            PropertyList.add(item);
           }
           k += 1;
         }
       }
     }
   }
-  let space: Value | number = _space;
-  if (space instanceof ObjectValue) {
-    if ('NumberData' in space) {
-      space = Q(yield* ToNumber(space));
-    } else if ('StringData' in space) {
-      space = Q(yield* ToString(space));
+  let space: string | number;
+  if (_space instanceof ObjectValue) {
+    if ('NumberData' in _space) {
+      _space = Q(yield* ToNumber(_space));
+    } else if ('StringData' in _space) {
+      space = Q(yield* ToString(_space));
     }
   }
   let gap: string;
-  if (space instanceof NumberValue) {
-    space = Math.min(10, X(ToIntegerOrInfinity(space)));
+  if (_space instanceof NumberValue) {
+    space = Math.min(10, X(ToIntegerOrInfinity(_space)));
     if (space < 1) {
       gap = '';
     } else {
       gap = ' '.repeat(space);
     }
-  } else if (space instanceof JSStringValue) {
-    if (space.stringValue().length <= 10) {
-      gap = space.stringValue();
+  } else if (typeof space! === 'string') {
+    if (space.length <= 10) {
+      gap = space;
     } else {
-      gap = space.stringValue().slice(0, 10);
+      gap = space.slice(0, 10);
     }
   } else {
     gap = '';
@@ -649,7 +649,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
 /** https://tc39.es/ecma262/#sec-json.rawjson */
 function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
   const jsonString = Q(yield* ToString(text));
-  const str = jsonString.stringValue();
+  const str = jsonString;
   if (str === '') {
     return Throw.SyntaxError('Unexpected token in JSON');
   }
@@ -657,7 +657,7 @@ function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
   if (forbiddenChar.includes(str[0]) || forbiddenChar.includes(str[str.length - 1])) {
     return Throw.SyntaxError('Unexpected token in JSON');
   }
-  const parseResult = Q(ParseJSON(jsonString.stringValue()));
+  const parseResult = Q(ParseJSON(jsonString));
   const value = parseResult.Value;
   Assert(value instanceof JSStringValue || value instanceof NumberValue || value instanceof BooleanValue || value === Value.null);
   {
@@ -678,7 +678,7 @@ function* JSON_rawJSON([text = Value.undefined]: Arguments): ValueEvaluator {
     );
   }
   const obj = OrdinaryObjectCreate(Value.null, ['IsRawJSON']);
-  X(CreateDataPropertyOrThrow(obj, 'rawJSON', jsonString));
+  X(CreateDataPropertyOrThrow(obj, 'rawJSON', Value(jsonString)));
   X(SetIntegrityLevel(obj, 'frozen'));
   return obj;
 }

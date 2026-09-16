@@ -100,7 +100,7 @@ function* DateConstructor(values: Arguments, { NewTarget }: FunctionCallContext)
       const v = Q(yield* ToPrimitive(value!));
       if (v instanceof JSStringValue) {
         // Assert: The next step never returns an abrupt completion because Type(v) is String.
-        tv = parseDate(v);
+        tv = parseDate(v.stringValue());
       } else {
         tv = Q(yield* ToNumber(v));
       }
@@ -177,8 +177,8 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
 }
 
 /** https://tc39.es/ecma262/#sec-date-time-string-format */
-function parseDate(dateTimeString: JSStringValue): NumberValue {
-  const str = dateTimeString.stringValue();
+function parseDate(dateTimeString: string): NumberValue {
+  const str = dateTimeString;
   const result = EnsureCompletion(ParseISODateTime(str, 'non-spec-date'));
   if (result instanceof NormalCompletion) {
     const parsed = result.Value;

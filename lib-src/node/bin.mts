@@ -171,6 +171,9 @@ const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'repl',
 {
   const pop = realm.pushTopContext();
   realm.GlobalObject.properties.set('setTimeout', Descriptor({
+    Configurable: true,
+    Enumerable: false,
+    Writable: true,
     Value: CreateBuiltinFunction.from(function* timeout(f = Value.undefined, time = Value.undefined) {
       if (!isFunctionObject(f)) return Throw.TypeError('setTimeout($1, ...) should be a function', f);
       const delay = yield* ToNumber(time);

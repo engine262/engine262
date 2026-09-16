@@ -41,7 +41,7 @@ import {
   Yield,
   type GeneratorObject,
 } from './all.mts';
-import { surroundingAgent } from '#self';
+import { surroundingAgent, type PlainCompletion } from '#self';
 import {
   type ValueCompletion, type PromiseObject, type OrdinaryObject, Throw,
   ReturnCompletion,
@@ -150,7 +150,7 @@ export function* IteratorNext(iteratorRecord: IteratorRecord, value?: Value): Va
 }
 
 /** https://tc39.es/ecma262/#sec-iteratorcomplete */
-export function* IteratorComplete(iteratorResult: ObjectValue): ValueEvaluator<BooleanValue> {
+export function* IteratorComplete(iteratorResult: ObjectValue): PlainEvaluator<boolean> {
   return ToBoolean(Q(yield* Get(iteratorResult, 'done')));
 }
 
@@ -162,13 +162,13 @@ export function IteratorValue(iterResult: ObjectValue): ValueEvaluator {
 /** https://tc39.es/ecma262/#sec-iteratorstep */
 export function* IteratorStep(iteratorRecord: IteratorRecord): PlainEvaluator<ObjectValue | 'done'> {
   const result = Q(yield* IteratorNext(iteratorRecord));
-  let done: ValueCompletion = EnsureCompletion(yield* IteratorComplete(result));
+  let done: PlainCompletion<boolean> = EnsureCompletion(yield* IteratorComplete(result));
   if (done instanceof ThrowCompletion) {
     iteratorRecord.Done = true;
     return done;
   }
   done = X(done);
-  if (done === Value.true) {
+  if (done) {
     iteratorRecord.Done = true;
     return 'done';
   }

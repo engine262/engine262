@@ -1,6 +1,5 @@
 import {
   Descriptor,
-  Value,
 } from '../value.mts';
 import { X } from '../completion.mts';
 import {
@@ -195,15 +194,15 @@ export function AddRestrictedFunctionProperties(F: ObjectValue, realm: Realm) {
   Assert(!!realm.Intrinsics['%ThrowTypeError%']);
   const thrower = realm.Intrinsics['%ThrowTypeError%'];
   X(DefinePropertyOrThrow(F, 'caller', Descriptor({
-    Getter: thrower,
-    Setter: thrower,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Get: thrower,
+    Set: thrower,
+    Enumerable: false,
+    Configurable: true,
   })));
   X(DefinePropertyOrThrow(F, 'arguments', Descriptor({
-    Getter: thrower,
-    Setter: thrower,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Get: thrower,
+    Set: thrower,
+    Enumerable: false,
+    Configurable: true,
   })));
 }

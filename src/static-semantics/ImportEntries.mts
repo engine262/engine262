@@ -1,9 +1,9 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { JSStringValue } from '../value.mts';
 import {
   BoundNames,
   ImportEntriesForModule, ModuleRequests, type ModuleRequestRecord,
 } from './all.mts';
+import type { JSStringValue } from '#self';
 
 export function ImportEntries(node: ParseNode): ImportEntry[] {
   switch (node.type) {
@@ -44,6 +44,6 @@ export function ImportEntries(node: ParseNode): ImportEntry[] {
 export interface ImportEntry {
   readonly ModuleRequest: ModuleRequestRecord;
   readonly ImportName: JSStringValue | 'namespace' | 'filtered-namespace-object' | 'source';
-  readonly LocalName: JSStringValue;
+  readonly LocalName: string;
   readonly NamespaceNamesFilter?: readonly string[];
 }

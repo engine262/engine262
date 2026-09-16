@@ -44,7 +44,7 @@ function* BigIntProto_toString([radix = Value.undefined]: Arguments, { thisValue
   } else {
     radixMV = Q(yield* SnapToInteger(radix, 'truncate', 2n, 36n));
   }
-  return BigIntValue.toString(x, radixMV);
+  return Value(BigIntValue.toString(x, radixMV));
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */

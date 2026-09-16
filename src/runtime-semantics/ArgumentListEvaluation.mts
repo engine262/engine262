@@ -55,18 +55,18 @@ function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
     // c. Call template.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
     X(template.DefineOwnProperty(prop, Descriptor({
       Value: cookedValue,
-      Writable: Value.false,
-      Enumerable: Value.true,
-      Configurable: Value.false,
+      Writable: false,
+      Enumerable: true,
+      Configurable: false,
     })));
     // d. Let rawValue be the String value rawStrings[index].
     const rawValue = rawStrings[index];
     // e. Call rawObj.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
     X(rawObj.DefineOwnProperty(prop, Descriptor({
       Value: rawValue,
-      Writable: Value.false,
-      Enumerable: Value.true,
-      Configurable: Value.false,
+      Writable: false,
+      Enumerable: true,
+      Configurable: false,
     })));
     // f. Call rawObj.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
     index += 1;
@@ -76,9 +76,9 @@ function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
   // 13. Perform SetIntegrityLevel(rawObj, frozen).
   X(template.DefineOwnProperty(Value('raw'), Descriptor({
     Value: rawObj,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   })));
   // 14. Perform SetIntegrityLevel(template, frozen).
   X(SetIntegrityLevel(template, 'frozen'));

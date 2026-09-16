@@ -1,7 +1,6 @@
 import {
   Value, JSStringValue, ObjectValue, type Arguments,
   type FunctionCallContext,
-  UndefinedValue,
   NullValue,
 } from '../value.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
@@ -87,11 +86,11 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
         const desc = Q(yield* object.GetOwnProperty(Value(r)));
         // 2. If desc is not undefined, then,
-        if (!(desc instanceof UndefinedValue)) {
+        if (desc) {
           // a. Append r to visited.
           visited.push(r);
           // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
-          if (desc.Enumerable === Value.true) {
+          if (desc.Enumerable) {
             return CreateIteratorResultObject(Value(r), Value.false);
           }
         }

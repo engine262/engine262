@@ -3,7 +3,6 @@ import {
 } from '../completion.mts';
 import {
   BigIntValue,
-  BooleanValue,
   JSStringValue,
   NullValue,
   NumberValue,
@@ -161,7 +160,7 @@ export type TypedArrayTypes = keyof typeof typedArrayInfoByType;
 
 export interface TypedArrayObject extends ExoticObject {
   readonly Prototype: ObjectValue | NullValue;
-  readonly Extensible: BooleanValue<false>;
+  readonly Extensible: false;
 
   ViewedArrayBuffer: ArrayBufferObject | UndefinedValue;
   readonly ArrayLength: number | 'auto';
@@ -415,7 +414,7 @@ export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, valu
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = value[k];
-    Q(yield* Set(O, Pk, kValue, Value.true));
+    Q(yield* Set(O, Pk, kValue, true));
     k += 1;
   }
 }
@@ -428,7 +427,7 @@ export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>,
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = Q(yield* Get(arrayLike, Pk));
-    Q(yield* Set(O, Pk, kValue, Value.true));
+    Q(yield* Set(O, Pk, kValue, true));
     k += 1;
   }
 }
@@ -499,7 +498,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       } else {
         mappedValue = kValue;
       }
-      Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
+      Q(yield* Set(targetObj, Pk, mappedValue, true));
       k += 1;
     }
     return targetObj;
@@ -529,7 +528,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       mappedValue = kValue;
     }
     // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-    Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
+    Q(yield* Set(targetObj, Pk, mappedValue, true));
     // f. Set k to k + 1.
     k += 1;
   }
@@ -559,7 +558,7 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
     // b. Let Pk be ! ToString(𝔽(k)).
     const Pk = X(ToString(F(k)));
     // c. Perform ? Set(newObj, Pk, kValue, true).
-    Q(yield* Set(newObj, Pk, kValue!, Value.true));
+    Q(yield* Set(newObj, Pk, kValue!, true));
     // d. Set k to k + 1.
     k += 1;
   }

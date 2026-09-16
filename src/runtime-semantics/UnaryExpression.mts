@@ -58,9 +58,9 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
       ref.ReferencedName = Q(yield* ToPropertyKey(ref.ReferencedName as Value));
     }
     // e. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-    const deleteStatus = Q(yield* baseObj.Delete(ref.ReferencedName as JSStringValue));
+    const deleteStatus = Q(yield* baseObj.Delete((ref.ReferencedName as JSStringValue).stringValue()));
     // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
-    if (deleteStatus === Value.false && ref.Strict) {
+    if (!deleteStatus && ref.Strict) {
       return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);
     }
     // g. Return deleteStatus.
@@ -71,7 +71,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
-    return Q(yield* base.DeleteBinding(ref.ReferencedName as JSStringValue));
+    return Q(yield* base.DeleteBinding((ref.ReferencedName as JSStringValue).stringValue()));
   }
 }
 
@@ -179,7 +179,7 @@ function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpr
   // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
   const oldValue = ToBoolean(Q(yield* GetValue(expr)));
   // 3. If oldValue is true, return false.
-  if (oldValue === Value.true) {
+  if (oldValue) {
     return Value.false;
   }
   // 4. Return true.

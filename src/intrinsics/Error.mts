@@ -74,10 +74,10 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
     const msg = Q(yield* ToString(message));
     // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     const msgDesc = Descriptor({
-      Value: msg,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
+      Value: Value(msg),
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
     });
     // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
     X(DefinePropertyOrThrow(O, 'message', msgDesc));

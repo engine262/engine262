@@ -62,9 +62,9 @@ export function bootstrapShadowRealm(realmRec: Realm) {
 
   X(shadowRealmConstructor.DefineOwnProperty(Value('prototype'), Descriptor({
     Value: realmRec.Intrinsics['%ShadowRealm.prototype%'],
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   realmRec.Intrinsics['%ShadowRealm%'] = shadowRealmConstructor;

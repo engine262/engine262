@@ -15,7 +15,7 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
-            result.push([key.stringValue(), completion.Value!]);
+            result.push([key, completion.Value!]);
           }
         }
         return Value.undefined;
@@ -30,7 +30,7 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
         const completion = EnsureCompletion(skipDebugger(Get(module, key)));
         if (completion instanceof NormalCompletion) {
           result.push({
-            name: key.stringValue(),
+            name: key,
             value: getInspector(completion.Value!).toRemoteObject(completion.Value!, getObjectId, context, generatePreview),
             writable: false,
             configurable: false,
@@ -43,7 +43,7 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
             return yield* (Get(module, key));
           }, 0, 'Module.evaluate', [], realm);
           result.push({
-            name: key.stringValue(),
+            name: key,
             get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
             set: { type: 'undefined' },
             writable: false,

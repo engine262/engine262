@@ -148,13 +148,13 @@ export function* PerformShadowRealmEval(sourceText: string, callerRealm: Realm, 
 }
 
 /** https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue */
-export function ShadowRealmImportValue(specifierString: JSStringValue, exportNameString: JSStringValue, callerRealm: Realm, evalRealm: Realm): Value {
+export function ShadowRealmImportValue(specifierString: string, exportNameString: string, callerRealm: Realm, evalRealm: Realm): Value {
   const evalContext = GetShadowRealmContext(evalRealm, true);
   const innerCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   surroundingAgent.executionContextStack.push(evalContext);
   const referrer = evalContext.Realm;
   HostLoadImportedModule(referrer, {
-    Specifier: specifierString.value,
+    Specifier: specifierString,
     Phase: 'evaluation',
     Attributes: [],
     ImportedNames: 'all',
@@ -165,7 +165,7 @@ export function ShadowRealmImportValue(specifierString: JSStringValue, exportNam
     const f = surroundingAgent.activeFunctionObject as FunctionObject;
     const string = exportNameString;
     const hasOwn = Q(yield* HasOwnProperty(exports, string));
-    if (hasOwn === Value.false) {
+    if (!hasOwn) {
       return Throw.TypeError('Module $1 does not have an export named $2', specifierString, string);
     }
     const value = Q(yield* Get(exports, string));

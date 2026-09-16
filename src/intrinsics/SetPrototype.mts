@@ -145,7 +145,7 @@ function* SetProto_difference([other = Value.undefined]: Arguments, { thisValue 
       const e = resultSetData[index];
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther === Value.true) {
+        if (inOther) {
           resultSetData[index] = undefined;
         }
       }
@@ -288,7 +288,7 @@ function* SetProto_intersection([other = Value.undefined]: Arguments, { thisValu
       index += 1;
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther === Value.true && !SetDataHas(resultSetData, e)) {
+        if (inOther && !SetDataHas(resultSetData, e)) {
           resultSetData.push(e);
         }
       }
@@ -364,7 +364,7 @@ function* SetProto_isDisjointFrom([other = Value.undefined]: Arguments, { thisVa
       index += 1;
       if (e !== undefined) {
         const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-        if (inOther === Value.true) {
+        if (inOther) {
           return BooleanValue.false;
         }
         thisSize = O.SetData.length;
@@ -423,7 +423,7 @@ function* SetProto_isSubsetOf([other = Value.undefined]: Arguments, { thisValue 
     index += 1;
     if (e !== undefined) {
       const inOther = ToBoolean(Q(yield* Call(otherRec.Has, otherRec.SetObject, [e])));
-      if (inOther === Value.false) {
+      if (!inOther) {
         return Value.false;
       }
       thisSize = O.SetData.length;

@@ -172,8 +172,8 @@ export class InspectorContext {
           name: value.Key.Description,
         };
         if (value.Value) desc.value = wrap(value.Value);
-        if (value.Getter) desc.get = wrap(value.Getter);
-        if (value.Setter) desc.set = wrap(value.Setter);
+        if (value.Get) desc.get = wrap(value.Get);
+        if (value.Set) desc.set = wrap(value.Set);
         privateProperties.push(desc);
       });
 
@@ -190,7 +190,7 @@ export class InspectorContext {
           if (nonIndexedPropertiesOnly && isIntegerIndex(key)) {
             continue;
           }
-          const desc = (p.properties.get(key));
+          const desc = p.properties.get(key);
           if (!desc) {
             return;
           }
@@ -200,15 +200,15 @@ export class InspectorContext {
           const descriptor: Protocol.Runtime.PropertyDescriptor = {
             name: key instanceof JSStringValue
               ? key.stringValue()
-              : SymbolDescriptiveString(key).stringValue(),
-            writable: desc.Writable === Value.true,
-            configurable: desc.Configurable === Value.true,
-            enumerable: desc.Enumerable === Value.true,
+              : SymbolDescriptiveString(key),
+            writable: desc.Writable,
+            configurable: desc.Configurable,
+            enumerable: desc.Enumerable,
             isOwn: p === object,
           };
           if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
-          if (desc.Getter) descriptor.get = wrap(desc.Getter);
-          if (desc.Setter) descriptor.set = wrap(desc.Setter);
+          if (desc.Get) descriptor.get = wrap(desc.Get);
+          if (desc.Set) descriptor.set = wrap(desc.Set);
           if (key instanceof SymbolValue) descriptor.symbol = wrap(key);
           properties.push(descriptor);
         }
@@ -337,9 +337,10 @@ export function getDisplayObjectFromEnvironmentRecord(record: EnvironmentRecord)
         continue;
       }
       object.properties.set(key, Descriptor({
-        Enumerable: isArgumentExoticObject(value) ? Value.false : Value.true,
+        Enumerable: isArgumentExoticObject(value) ? false : true,
         Value: value,
-        Writable: binding.mutable ? Value.true : Value.false,
+        Writable: binding.mutable || false,
+        Configurable: true,
       }));
     }
     let type: Protocol.Debugger.Scope['type'] = 'block';

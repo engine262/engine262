@@ -102,7 +102,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: Pars
       // 5. Perform ? PutValue(lref, v).
       Q(yield* PutValue(lref, v));
       // 6. Return a new List containing P.
-      propertyNames.push(P);
+      propertyNames.push(Value(P));
     } else {
       Assert('PropertyName' in AssignmentProperty);
       // 1. Let name be the result of evaluating PropertyName.

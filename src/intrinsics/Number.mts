@@ -61,7 +61,7 @@ function Number_isFinite([number = Value.undefined]: Arguments) {
 
 /** https://tc39.es/ecma262/#sec-number.isinteger */
 function Number_isInteger([number = Value.undefined]: Arguments) {
-  return X(IsIntegralNumber(number));
+  return Value(IsIntegralNumber(number));
 }
 
 /** https://tc39.es/ecma262/#sec-number.isnan */
@@ -82,7 +82,7 @@ function Number_isSafeInteger([number = Value.undefined]: Arguments) {
     return Value.false;
   }
 
-  if (X(IsIntegralNumber(number)) === Value.true) {
+  if (IsIntegralNumber(number)) {
     if (Math.abs(R(number)) <= (2 ** 53) - 1) {
       return Value.true;
     }
@@ -93,9 +93,9 @@ function Number_isSafeInteger([number = Value.undefined]: Arguments) {
 
 export function bootstrapNumber(realmRec: Realm) {
   const override = {
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   };
   const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
     ['EPSILON', F(Number.EPSILON), undefined, override],
@@ -117,18 +117,18 @@ export function bootstrapNumber(realmRec: Realm) {
   // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
   X(numberConstructor.DefineOwnProperty(Value('parseFloat'), Descriptor({
     Value: realmRec.Intrinsics['%parseFloat%'],
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   /** https://tc39.es/ecma262/#sec-number.parseint */
   // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
   X(numberConstructor.DefineOwnProperty(Value('parseInt'), Descriptor({
     Value: realmRec.Intrinsics['%parseInt%'],
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   })));
 
   realmRec.Intrinsics['%Number%'] = numberConstructor;

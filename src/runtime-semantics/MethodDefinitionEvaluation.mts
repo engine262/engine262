@@ -1,5 +1,5 @@
 import {
-  Value, Descriptor, PrivateName, UndefinedValue, type PropertyKeyValue, ObjectValue, BooleanValue,
+  Value, Descriptor, PrivateName, UndefinedValue, type PropertyKeyValue, ObjectValue,
 } from '../value.mts';
 import {
   Q, X,
@@ -25,15 +25,15 @@ export interface PrivateElementRecord_Value {
   readonly Key: PrivateName;
   readonly Kind: 'method' | 'field';
   Value?: Value;
-  readonly Getter?: undefined;
-  readonly Setter?: undefined;
+  readonly Get?: undefined;
+  readonly Set?: undefined;
 }
 export interface PrivateElementRecord_Accessor {
   readonly Key: PrivateName;
   readonly Kind: 'accessor';
   Value?: Value;
-  readonly Getter?: FunctionObject | UndefinedValue;
-  readonly Setter?: FunctionObject | UndefinedValue;
+  readonly Get?: FunctionObject | UndefinedValue;
+  readonly Set?: FunctionObject | UndefinedValue;
 }
 export type PrivateElementRecord = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
 export const PrivateElementRecord = function PrivateElementRecord(value: PrivateElementRecord) {
@@ -54,7 +54,7 @@ PrivateElementRecord.prototype.mark = function mark(m: GCMarker): void {
 // -decorator
 // +decorator: remove this function
 /** https://tc39.es/ecma262/#sec-definemethodproperty */
-function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: ObjectValue, closure: FunctionObject, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | undefined> {
+function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: ObjectValue, closure: FunctionObject, enumerable: boolean): PlainEvaluator<PrivateElementRecord | undefined> {
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
     // a. Return PrivateElement { [[Key]]: key, [[Kind]]: method, [[Value]]: closure }.
@@ -67,9 +67,9 @@ function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: 
     // a. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
     const desc = Descriptor({
       Value: closure,
-      Writable: Value.true,
+      Writable: true,
       Enumerable: enumerable,
-      Configurable: Value.true,
+      Configurable: true,
     });
     // b. Perform ? DefinePropertyOrThrow(homeObject, key, desc).
     Q(yield* DefinePropertyOrThrow(homeObject, key, desc));
@@ -83,10 +83,10 @@ function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: 
 //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
 //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
 // -decorator signature
-function MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord>
+function MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable: boolean): PlainEvaluator<ClassElementDefinitionRecord>
 // +decorator signature
 function MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
-function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable?: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
+function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
   switch (true) {
     case !!MethodDefinition.UniqueFormalParameters: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
@@ -128,15 +128,15 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
           return PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
-            Getter: Value.undefined,
-            Setter: closure,
+            Get: Value.undefined,
+            Set: closure,
           });
         } else { // 10. Else,
         // a. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
           const desc = Descriptor({
-            Setter: closure,
+            Set: closure,
             Enumerable: enumerable,
-            Configurable: Value.true,
+            Configurable: true,
           });
           // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
           Q(yield* DefinePropertyOrThrow(object, propKey, desc));
@@ -176,15 +176,15 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
           return PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
-            Getter: closure,
-            Setter: Value.undefined,
+            Get: closure,
+            Set: Value.undefined,
           });
         } else { // 11. Else,
           // a. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
           const desc = Descriptor({
-            Getter: closure,
+            Get: closure,
             Enumerable: enumerable,
-            Configurable: Value.true,
+            Configurable: true,
           });
           // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
           Q(yield* DefinePropertyOrThrow(object, propKey, desc));
@@ -209,10 +209,10 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
 //   AsyncMethod :
 //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
 // -decorator signature
-function MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void>
+function MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable: boolean): PlainEvaluator<PrivateElementRecord | void>
 // +decorator signature
 function MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
-function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable?: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
+function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
   const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = Q(yield* Evaluate_PropertyName(ClassElementName));
@@ -244,9 +244,9 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMet
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-function MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void>
+function MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable: boolean): PlainEvaluator<PrivateElementRecord | void>
 function MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
-function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable?: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
+function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
   const { ClassElementName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -268,9 +268,9 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(closure, 'prototype', Descriptor({
     Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
   if (enumerable) {
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
@@ -288,9 +288,9 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-function MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void>
+function MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable: boolean): PlainEvaluator<PrivateElementRecord | void>
 function MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
-function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable?: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
+function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
   const { ClassElementName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -312,9 +312,9 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(closure, 'prototype', Descriptor({
     Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
   if (enumerable) {
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
@@ -330,10 +330,10 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
 }
 
 // -decorator
-export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void>
+export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable: boolean): PlainEvaluator<PrivateElementRecord | void>
 // +decorator
 export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
-export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable?: BooleanValue): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
+export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
   if (enumerable) {
     switch (node.type) {
       case 'MethodDefinition':

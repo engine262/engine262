@@ -15,7 +15,6 @@ import {
 } from './static-semantics/all.mts';
 import { kInternal } from './utils/internal.mts';
 import { type Mutable } from './utils/language.mts';
-import { JSStringSet } from './utils/container.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';
@@ -158,7 +157,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
   // 5. Let importEntries be ImportEntries of body.
   const importEntries = ImportEntries(body);
   // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
-  const importedBoundNames = new JSStringSet(ImportedLocalNames(importEntries));
+  const importedBoundNames = new Set(ImportedLocalNames(importEntries));
   // 7. Let indirectExportEntries be a new empty List.
   const indirectExportEntries: ExportEntry[] = [];
   // 8. Let localExportEntries be a new empty List.
@@ -170,19 +169,19 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
   // 11. For each ExportEntry Record ee in exportEntries, do
   for (const ee of exportEntries) {
     // a. If ee.[[ModuleRequest]] is null, then
-    if (ee.ModuleRequest === Value.null) {
+    if (!ee.ModuleRequest) {
       // i. If ee.[[LocalName]] is not an element of importedBoundNames, then
-      if (!importedBoundNames.has(ee.LocalName)) {
+      if (!importedBoundNames.has(ee.LocalName!)) {
         // 1. Append ee to localExportEntries.
         localExportEntries.push(ee);
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-        const ie = importEntries.find((e) => e.LocalName.stringValue() === (ee.LocalName as JSStringValue).stringValue());
+        const ie = importEntries.find((e) => e.LocalName === ee.LocalName);
         if (ie!.ImportName === 'namespace') {
           indirectExportEntries.push({
             ModuleRequest: ie!.ModuleRequest,
             ImportName: 'namespace',
-            LocalName: Value.null,
+            LocalName: null,
             ExportName: ee.ExportName,
             NamespaceNamesFilter: [],
           });
@@ -190,7 +189,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
           indirectExportEntries.push({
             ModuleRequest: ie!.ModuleRequest,
             ImportName: 'filtered-namespace',
-            LocalName: Value.null,
+            LocalName: null,
             ExportName: ee.ExportName,
             NamespaceNamesFilter: ie!.NamespaceNamesFilter,
           });
@@ -200,13 +199,13 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
           indirectExportEntries.push({
             ModuleRequest: ie!.ModuleRequest,
             ImportName: ie!.ImportName,
-            LocalName: Value.null,
+            LocalName: null,
             ExportName: ee.ExportName,
             NamespaceNamesFilter: [],
           });
         }
       }
-    } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
+    } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === null) { // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
       starExportEntries.push(ee);
     } else { // c. Else,

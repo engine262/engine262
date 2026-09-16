@@ -77,7 +77,7 @@ export function CanBeHeldWeakly(v: Value): v is ObjectValue | SymbolValue {
   }
 
   // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
-  if (v instanceof SymbolValue && KeyForSymbol(v) === Value.undefined) {
+  if (v instanceof SymbolValue && KeyForSymbol(v) === undefined) {
     return true;
   }
 

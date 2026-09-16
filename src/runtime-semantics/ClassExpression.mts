@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import { Q } from '../completion.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -15,7 +14,7 @@ export function* Evaluate_ClassExpression(ClassExpression: ParseNode.ClassExpres
   const decorators = Decorators ? Q(yield* DecoratorListEvaluation(Decorators)) : [];
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and ''
-    return Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value(''), sourceText, decorators));
+    return Q(yield* ClassDefinitionEvaluation(ClassTail, undefined, '', sourceText, decorators));
   }
   // 1. Let className be StringValue of BindingIdentifier.
   const className = StringValue(BindingIdentifier);

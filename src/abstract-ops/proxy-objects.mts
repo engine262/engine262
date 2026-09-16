@@ -30,7 +30,7 @@ import {
   IsDataDescriptor,
   IsAccessorDescriptor,
 } from './all.mts';
-import { Throw } from '#self';
+import { Throw, type FullyPopulatedDescriptor, type PlainEvaluator } from '#self';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
@@ -52,7 +52,7 @@ const InternalMethods = {
       return Throw.TypeError("'getPrototypeOf' on proxy: trap returned neither object nor null");
     }
     const extensibleTarget = Q(yield* IsExtensible(target));
-    if (extensibleTarget === Value.true) {
+    if (extensibleTarget) {
       return handlerProto;
     }
     const targetProto = Q(yield* target.GetPrototypeOf());
@@ -62,7 +62,7 @@ const InternalMethods = {
     return handlerProto;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v */
-  * SetPrototypeOf(V) {
+  * SetPrototypeOf(V): PlainEvaluator<boolean> {
     const O = this;
 
     Assert(V instanceof ObjectValue || V instanceof NullValue);
@@ -77,18 +77,18 @@ const InternalMethods = {
       return Q(yield* target.SetPrototypeOf(V));
     }
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, V])));
-    if (booleanTrapResult === Value.false) {
-      return Value.false;
+    if (!booleanTrapResult) {
+      return false;
     }
     const extensibleTarget = Q(yield* IsExtensible(target));
-    if (extensibleTarget === Value.true) {
-      return Value.true;
+    if (extensibleTarget) {
+      return true;
     }
     const targetProto = Q(yield* target.GetPrototypeOf());
     if (!SameValue(V, targetProto)) {
       return Throw.TypeError("'setPrototypeOf' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target");
     }
-    return Value.true;
+    return true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible */
   * IsExtensible() {
@@ -106,8 +106,8 @@ const InternalMethods = {
     }
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target])));
     const targetResult = Q(yield* IsExtensible(target as ObjectValue));
-    if (!SameValue(booleanTrapResult, targetResult)) {
-      return Throw.TypeError("'isExtensible' on proxy: trap result does not reflect extensibility of proxy target (which is $1)", targetResult);
+    if (booleanTrapResult !== targetResult) {
+      return Throw.TypeError("'isExtensible' on proxy: trap result does not reflect extensibility of proxy target (which is $1)", Value(targetResult));
     }
     return booleanTrapResult;
   },
@@ -126,16 +126,16 @@ const InternalMethods = {
       return Q(yield* target.PreventExtensions());
     }
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target])));
-    if (booleanTrapResult === Value.true) {
+    if (booleanTrapResult) {
       const extensibleTarget = Q(yield* IsExtensible(target));
-      if (extensibleTarget === Value.true) {
+      if (extensibleTarget) {
         return Throw.TypeError("'preventExtensions' on proxy: trap returned truthy but the proxy target is extensible");
       }
     }
     return booleanTrapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p */
-  * GetOwnProperty(P) {
+  * GetOwnProperty(P): PlainEvaluator<FullyPopulatedDescriptor | undefined> {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -168,54 +168,54 @@ const InternalMethods = {
     // 11. If trapResultObj is undefined, then
     if (trapResultObj === Value.undefined) {
     // a. If targetDesc is undefined, return undefined.
-      if (targetDesc instanceof UndefinedValue) {
-        return Value.undefined;
+      if (!targetDesc) {
+        return undefined;
       }
       // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-      if (targetDesc.Configurable === Value.false) {
+      if (!targetDesc.Configurable) {
         return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap returned undefined for property $1 which is non-configurable in the proxy target", P);
       }
       // c. Let extensibleTarget be ? IsExtensible(target).
       const extensibleTarget = Q(yield* IsExtensible(target));
       // d. If extensibleTarget is false, throw a TypeError exception.
-      if (extensibleTarget === Value.false) {
+      if (!extensibleTarget) {
         return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap returned undefined for property $1 which exists in the non-extensible target", P);
       }
       // e. Return undefined.
-      return Value.undefined;
+      return undefined;
     }
     // 12. Let extensibleTarget be ? IsExtensible(target).
     const extensibleTarget = Q(yield* IsExtensible(target));
     // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
-    const resultDesc = Q(yield* ToPropertyDescriptor(trapResultObj));
+    let resultDesc = Q(yield* ToPropertyDescriptor(trapResultObj));
     // 14. Call CompletePropertyDescriptor(resultDesc).
-    CompletePropertyDescriptor(resultDesc);
+    resultDesc = CompletePropertyDescriptor(resultDesc);
     // 15. Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
     const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
     // 16. If valid is false, throw a TypeError exception.
-    if (valid === Value.false) {
+    if (!valid) {
       return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap returned descriptor for property $1 that is incompatible with the existing property in the proxy target", P);
     }
     // 17. If resultDesc.[[Configurable]] is false, then
-    if (resultDesc.Configurable === Value.false) {
+    if (!resultDesc.Configurable) {
     // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
-      if (targetDesc instanceof UndefinedValue || targetDesc.Configurable === Value.true) {
+      if (!targetDesc || targetDesc.Configurable) {
         // i. Throw a TypeError exception.
         return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap reported non-configurability for property $1 which is either non-existent or configurable in the proxy target", P);
       }
       // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
-      if ('Writable' in resultDesc && resultDesc.Writable === Value.false) {
+      if ('Writable' in resultDesc && !resultDesc.Writable) {
         // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
-        if (targetDesc.Writable === Value.true) {
+        if (targetDesc.Writable) {
           return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap reported non-configurability for property $1 which is writable or configurable in the proxy target", P);
         }
       }
     }
     // 18. Return resultDesc.
-    return resultDesc;
+    return resultDesc as FullyPopulatedDescriptor;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc */
-  * DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc): PlainEvaluator<boolean> {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -242,8 +242,8 @@ const InternalMethods = {
     // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P, descObj])));
     // 10. If booleanTrapResult is false, return false.
-    if (booleanTrapResult === Value.false) {
-      return Value.false;
+    if (!booleanTrapResult) {
+      return false;
     }
     // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
     const targetDesc = Q(yield* target.GetOwnProperty(P));
@@ -251,7 +251,7 @@ const InternalMethods = {
     const extensibleTarget = Q(yield* IsExtensible(target));
     let settingConfigFalse;
     // 13. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, then
-    if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
+    if (Desc.Configurable !== undefined && !Desc.Configurable) {
       // a. Let settingConfigFalse be true.
       settingConfigFalse = true;
     } else {
@@ -259,38 +259,36 @@ const InternalMethods = {
       settingConfigFalse = false;
     }
     // 15. If targetDesc is undefined, then
-    if (targetDesc instanceof UndefinedValue) {
+    if (!targetDesc) {
       // a. If extensibleTarget is false, throw a TypeError exception.
-      if (extensibleTarget === Value.false) {
+      if (!extensibleTarget) {
         return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for adding property $1 to the non-extensible proxy target", P);
       }
       // b. If settingConfigFalse is true, throw a TypeError exception.
-      if (settingConfigFalse === true) {
+      if (settingConfigFalse) {
         return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which is either non-existent or configurable in the proxy target", P);
       }
     } else {
       // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
-      if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
+      if (!IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc)) {
         return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for adding property $1 that is incompatible with the existing property in the proxy target", P);
       }
       // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
-      if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
+      if (settingConfigFalse && targetDesc.Configurable) {
         return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which is either non-existent or configurable in the proxy target", P);
       }
       // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
-      if (IsDataDescriptor(targetDesc)
-        && targetDesc.Configurable === Value.false
-        && targetDesc.Writable === Value.true) {
+      if (IsDataDescriptor(targetDesc) && !targetDesc.Configurable && targetDesc.Writable) {
         // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
-        if ('Writable' in Desc && Desc.Writable === Value.false) {
+        if ('Writable' in Desc && !Desc.Writable) {
           return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which cannot be non-writable, unless there exists a corresponding non-configurable, non-writable own property of the target object", P);
         }
       }
     }
-    return Value.true;
+    return true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
-  * HasProperty(P) {
+  * HasProperty(P): PlainEvaluator<boolean> {
     const O = this;
 
     Assert(IsPropertyKey(P));
@@ -305,14 +303,14 @@ const InternalMethods = {
       return Q(yield* target.HasProperty(P));
     }
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P])));
-    if (booleanTrapResult === Value.false) {
+    if (!booleanTrapResult) {
       const targetDesc = Q(yield* target.GetOwnProperty(P));
-      if (!(targetDesc instanceof UndefinedValue)) {
-        if (targetDesc.Configurable === Value.false) {
+      if (targetDesc) {
+        if (!targetDesc.Configurable) {
           return Throw.TypeError("'has' on proxy: trap returned falsy for property $1 which exists in the proxy target as non-configurable", P);
         }
         const extensibleTarget = Q(yield* IsExtensible(target));
-        if (extensibleTarget === Value.false) {
+        if (!extensibleTarget) {
           return Throw.TypeError("'has' on proxy: trap returned falsy for property $1 but the proxy target is not extensible", P);
         }
       }
@@ -336,13 +334,13 @@ const InternalMethods = {
     }
     const trapResult = Q(yield* Call(trap, handler, [target, P, Receiver]));
     const targetDesc = Q(yield* target.GetOwnProperty(P));
-    if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
-      if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
+    if (targetDesc && !targetDesc.Configurable) {
+      if (IsDataDescriptor(targetDesc) === true && !targetDesc.Writable) {
         if (!SameValue(trapResult, targetDesc.Value)) {
           return Throw.TypeError("'get' on proxy: property $1 is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value", P);
         }
       }
-      if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Getter === Value.undefined) {
+      if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === Value.undefined) {
         if (trapResult !== Value.undefined) {
           return Throw.TypeError("'get' on proxy: property $1 is a non-configurable accessor property on the proxy target and does not have a getter function, but the trap did not return 'undefined'", P);
         }
@@ -351,7 +349,7 @@ const InternalMethods = {
     return trapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver */
-  * Set(P, V, Receiver) {
+  * Set(P, V, Receiver): PlainEvaluator<boolean> {
     const O = this;
 
     Assert(IsPropertyKey(P));
@@ -366,26 +364,26 @@ const InternalMethods = {
       return Q(yield* target.Set(P, V, Receiver));
     }
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P, V, Receiver])));
-    if (booleanTrapResult === Value.false) {
-      return Value.false;
+    if (!booleanTrapResult) {
+      return false;
     }
     const targetDesc = Q(yield* target.GetOwnProperty(P));
-    if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
-      if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
+    if (targetDesc && !targetDesc.Configurable) {
+      if (IsDataDescriptor(targetDesc) === true && !targetDesc.Writable) {
         if (!SameValue(V, targetDesc.Value)) {
           return Throw.TypeError("'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable data property with a different value", P);
         }
       }
       if (IsAccessorDescriptor(targetDesc) === true) {
-        if (targetDesc.Setter === Value.undefined) {
+        if (targetDesc.Set === Value.undefined) {
           return Throw.TypeError("'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable accessor property without a setter", P);
         }
       }
     }
-    return Value.true;
+    return true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
-  * Delete(P) {
+  * Delete(P): PlainEvaluator<boolean> {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -410,27 +408,27 @@ const InternalMethods = {
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
     const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P])));
     // 9. If booleanTrapResult is false, return false.
-    if (booleanTrapResult === Value.false) {
-      return Value.false;
+    if (!booleanTrapResult) {
+      return false;
     }
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
     const targetDesc = Q(yield* target.GetOwnProperty(P));
     // 11. If targetDesc is undefined, return true.
-    if (targetDesc instanceof UndefinedValue) {
-      return Value.true;
+    if (!targetDesc) {
+      return true;
     }
     // 12. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-    if (targetDesc.Configurable === Value.false) {
+    if (!targetDesc.Configurable) {
       return Throw.TypeError("'deleteProperty' on proxy: trap returned truthy for property $1 which is non-configurable in the proxy target", P);
     }
     // 13. Let extensibleTarget be ? IsExtensible(target).
     const extensibleTarget = Q(yield* IsExtensible(target));
     // 14. If extensibleTarget is false, throw a TypeError exception.
-    if (extensibleTarget === Value.false) {
+    if (!extensibleTarget) {
       return Throw.TypeError("'deleteProperty' on proxy: trap returned truthy for property $1 but the proxy target is non-extensible", P);
     }
     // 15. Return true.
-    return Value.true;
+    return true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys */
   * OwnPropertyKeys() {
@@ -463,13 +461,13 @@ const InternalMethods = {
     const targetNonconfigurableKeys = [];
     for (const key of targetKeys) {
       const desc = Q(yield* target.GetOwnProperty(key));
-      if (!(desc instanceof UndefinedValue) && desc.Configurable === Value.false) {
+      if (desc && !desc.Configurable) {
         targetNonconfigurableKeys.push(key);
       } else {
         targetConfigurableKeys.push(key);
       }
     }
-    if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
+    if (extensibleTarget && targetNonconfigurableKeys.length === 0) {
       return trapResult;
     }
     const uncheckedResultKeys = new PropertyKeyMap();
@@ -482,7 +480,7 @@ const InternalMethods = {
       }
       uncheckedResultKeys.delete(key);
     }
-    if (extensibleTarget === Value.true) {
+    if (extensibleTarget) {
       return trapResult;
     }
     for (const key of targetConfigurableKeys) {

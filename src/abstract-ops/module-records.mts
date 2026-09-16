@@ -991,8 +991,8 @@ export function GetModuleNamespace(
     const exportedNames = module.GetExportedNames();
     const unambiguousNames = [];
     for (const name of exportedNames) {
-      if (importedNames === 'all' || importedNames.includes(name.stringValue())) {
-        if (phase !== 'defer' || name.stringValue() !== 'then') {
+      if (importedNames === 'all' || importedNames.includes(name)) {
+        if (phase !== 'defer' || name !== 'then') {
           const resolution = module.ResolveExport(name);
           if (resolution instanceof ResolvedBindingRecord) {
             unambiguousNames.push(name);
@@ -1017,7 +1017,7 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
   const closure = function* closure(module: SyntheticModuleRecord): PlainEvaluator {
     // a. Return module.SetSyntheticExport("default", defaultExport).
-    Q(yield* module.SetSyntheticExport(Value('default'), defaultExport));
+    Q(yield* module.SetSyntheticExport('default', defaultExport));
     return NormalCompletion(undefined);
   };
   return new SyntheticModuleRecord({
@@ -1026,7 +1026,7 @@ export function CreateDefaultExportSyntheticModule(defaultExport: Value) {
     Namespace: undefined,
     ModuleSource: undefined,
     HostDefined: undefined,
-    ExportNames: [Value('default')],
+    ExportNames: ['default'],
     EvaluationSteps: closure,
   });
 }

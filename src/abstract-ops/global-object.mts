@@ -21,7 +21,6 @@ import {
 import { Parser, wrappedParse } from '../parse.mts';
 import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import { __ts_cast__ } from '../utils/language.mts';
-import { JSStringSet } from '../utils/container.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Assert } from './all.mts';
 import {
@@ -212,7 +211,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
       // i. For each name in varNames, do
       for (const name of varNames) {
         // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-        if ((yield* varEnv.HasLexicalDeclaration(name)) === Value.true) {
+        if (yield* varEnv.HasLexicalDeclaration(name)) {
           return Throw.SyntaxError('$1 is already declared', name);
         }
         // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
@@ -230,7 +229,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
         // 2. For each name in varNames, do
         for (const name of varNames) {
           // a. If thisEnv.HasBinding(name) is true, then
-          if ((yield* thisEnv.HasBinding(name)) === Value.true) {
+          if (yield* thisEnv.HasBinding(name)) {
             // i. Throw a SyntaxError exception.
             return Throw.SyntaxError('$1 is already declared', name);
             // ii. NOTE: Annex B.3.5 defines alternate semantics for the above step.
@@ -261,7 +260,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
   // 8. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
   // 9. Let declaredFunctionNames be a new empty List.
-  const declaredFunctionNames = new JSStringSet();
+  const declaredFunctionNames = new Set<string>();
   // 10. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
     // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
@@ -283,7 +282,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
           // a. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
           const fnDefinable = Q(yield* varEnv.CanDeclareGlobalFunction(fn));
           // b. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
-          if (fnDefinable === Value.false) {
+          if (!fnDefinable) {
             return Throw.TypeError('$1 is already declared', fn);
           }
         }
@@ -296,7 +295,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
   }
   // 11. NOTE: Annex B.3.3.3 adds additional steps at this point.
   // 12. Let declaredVarNames be a new empty List.
-  const declaredVarNames = new JSStringSet();
+  const declaredVarNames = new Set<string>();
   // 13. For each d in varDeclarations, do
   for (const d of varDeclarations) {
     // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
@@ -312,7 +311,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
             // i. Let vnDefinable be ? varEnv.CanDeclareGlobalVar(vn).
             const vnDefinable = Q(yield* varEnv.CanDeclareGlobalVar(vn));
             // ii. If vnDefinable is false, throw a TypeError exception.
-            if (vnDefinable === Value.false) {
+            if (!vnDefinable) {
               return Throw.TypeError('$1 is already declared', vn);
             }
           }
@@ -337,10 +336,10 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
         // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).
-        Q(lexEnv.CreateImmutableBinding(dn, Value.true));
+        Q(lexEnv.CreateImmutableBinding(dn, true));
       } else { // ii. Else,
         // 1. Perform ? lexEnv.CreateMutableBinding(dn, false).
-        Q(yield* lexEnv.CreateMutableBinding(dn, Value.false));
+        Q(yield* lexEnv.CreateMutableBinding(dn, false));
       }
     }
   }
@@ -353,20 +352,20 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
     // c. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. Perform ? varEnv.CreateGlobalFunctionBinding(fn, fo, true).
-      Q(yield* varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true));
+      Q(yield* varEnv.CreateGlobalFunctionBinding(fn, fo, true));
     } else { // d. Else,
       // i. Let bindingExists be varEnv.HasBinding(fn).
       const bindingExists = yield* varEnv.HasBinding(fn);
       // ii. If bindingExists is false, then
-      if (bindingExists === Value.false) {
+      if (!bindingExists) {
         // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
-        X(varEnv.CreateMutableBinding(fn, Value.true));
+        X(varEnv.CreateMutableBinding(fn, true));
         // 3. Perform ! varEnv.InitializeBinding(fn, fo).
         X(varEnv.InitializeBinding(fn, fo));
       } else { // iii. Else,
         // 1. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-        X(varEnv.SetMutableBinding(fn, fo, Value.false));
+        X(varEnv.SetMutableBinding(fn, fo, false));
       }
     }
   }
@@ -375,15 +374,15 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
     // a. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. Perform ? varEnv.CreateGlobalVarBinding(vn, true).
-      Q(yield* varEnv.CreateGlobalVarBinding(vn, Value.true));
+      Q(yield* varEnv.CreateGlobalVarBinding(vn, true));
     } else { // b. Else,
       // i. Let bindingExists be varEnv.HasBinding(vn).
       const bindingExists = yield* varEnv.HasBinding(vn);
       // ii. If bindingExists is false, then
-      if (bindingExists === Value.false) {
+      if (!bindingExists) {
         // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
-        X(varEnv.CreateMutableBinding(vn, Value.true));
+        X(varEnv.CreateMutableBinding(vn, true));
         // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
         X(varEnv.InitializeBinding(vn, Value.undefined));
       }

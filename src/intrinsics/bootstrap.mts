@@ -7,7 +7,6 @@ import {
   UndefinedValue,
   Value,
   wellKnownSymbols,
-  type DescriptorInit,
   type NativeSteps,
 } from '../value.mts';
 import { X } from '../completion.mts';
@@ -17,6 +16,8 @@ import {
   markBuiltinFunctionAsConstructor,
   OrdinaryObjectCreate,
   Realm,
+  type AccessorDescriptorInit,
+  type DataDescriptorInit,
   type FunctionObject,
 } from '#self';
 
@@ -29,7 +30,7 @@ type Props = [
   name: string | JSStringValue | SymbolValue,
   value: Accessor | NativeSteps | Value,
   fnLength?: number,
-  desc?: DescriptorInit,
+  desc?: DataDescriptorInit | AccessorDescriptorInit,
   async?: boolean
 ];
 /** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
@@ -76,10 +77,10 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
-        Getter: getter,
-        Setter: setter,
-        Enumerable: Value.false,
-        Configurable: Value.true,
+        Get: getter,
+        Set: setter,
+        Enumerable: false,
+        Configurable: true,
         ...descriptor,
       })));
     } else {
@@ -95,9 +96,9 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
       }
       obj.properties.set(name, Descriptor({
         Value: value,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true,
+        Writable: true,
+        Enumerable: false,
+        Configurable: true,
         ...descriptor,
       }));
     }
@@ -113,9 +114,9 @@ export function bootstrapPrototype(realmRec: Realm, props: readonly (Props | und
   if (stringTag !== undefined) {
     X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
       Value: Value(stringTag),
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true,
+      Writable: false,
+      Enumerable: false,
+      Configurable: true,
     })));
   }
 
@@ -131,19 +132,19 @@ export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, 
     realmRec,
   );
 
-  X(cons.DefineOwnProperty(Value('prototype'), Descriptor({
+  X(cons.DefineOwnProperty('prototype', Descriptor({
     Value: Prototype,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
   })));
 
   if (!Prototype.properties.has('constructor')) {
-    X(Prototype.DefineOwnProperty(Value('constructor'), Descriptor({
+    X(Prototype.DefineOwnProperty('constructor', Descriptor({
       Value: cons,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
     })));
   }
 

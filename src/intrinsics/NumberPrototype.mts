@@ -40,7 +40,7 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined]: Argument
   const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (!x.isFinite()) {
-    return NumberValue.toString(x, 10n);
+    return Value(NumberValue.toString(x, 10n));
   }
   if (f < 0 || f > 100) {
     return Throw.RangeError('Invalid format range for $1', 'toExponential');
@@ -57,7 +57,7 @@ function* NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { t
     return Throw.RangeError('Invalid format range for $1', 'toFixed');
   }
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x, 10n));
+    return Value(NumberValue.toString(x, 10n));
   }
   return Value(R(x).toFixed(f));
 }
@@ -71,11 +71,11 @@ function NumberProto_toLocaleString(_args: Arguments, context: FunctionCallConte
 function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(ThisNumberValue(thisValue));
   if (precision === Value.undefined) {
-    return X(ToString(x));
+    return Value(X(ToString(x)));
   }
   const p = Q(yield* ToIntegerOrInfinity(precision));
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x, 10n));
+    return Value(NumberValue.toString(x, 10n));
   }
   if (p < 1 || p > 100) {
     return Throw.RangeError('Invalid format range for $1', 'toPrecision');
@@ -92,7 +92,7 @@ function* NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue
   } else {
     radixMV = Q(yield* SnapToInteger(radix, 'truncate', 2n, 36n));
   }
-  return NumberValue.toString(x, radixMV);
+  return Value(NumberValue.toString(x, radixMV));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.valueof */

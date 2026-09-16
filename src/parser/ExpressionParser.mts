@@ -940,7 +940,7 @@ export abstract class ExpressionParser extends FunctionParser {
           && PropertyDefinition.PropertyName
           && !IsComputedPropertyKey(PropertyDefinition.PropertyName)
           && PropertyDefinition.PropertyName.type !== 'NumericLiteral'
-          && StringValue(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
+          && StringValue(PropertyDefinition.PropertyName) === '__proto__') {
         if (hasProto) {
           this.scope.registerObjectLiteralEarlyError(this.addEarlyError(Throw.SyntaxError('Duplicate __proto__ property'), PropertyDefinition.PropertyName));
         } else {

@@ -1,5 +1,5 @@
 import {
-  JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue, UndefinedValue,
+  JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue,
 } from '../value.mts';
 import { Completion, X } from '../completion.mts';
 import { isRegExpObject } from '../intrinsics/RegExp.mts';
@@ -11,7 +11,7 @@ import type { StringObject } from '../intrinsics/String.mts';
 import type { SymbolObject } from '../intrinsics/Symbol.mts';
 import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
 import { isShadowRealmObject } from '../intrinsics/ShadowRealm.mts';
-import { surroundingAgent } from '#self';
+import { IsDataDescriptor, surroundingAgent } from '#self';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern, R, type BuiltinFunctionObject,
@@ -89,7 +89,7 @@ const INSPECTORS = {
     const s = JSON.stringify(v.stringValue()).slice(1, -1);
     return `'${s}'`;
   },
-  Symbol: (v: SymbolValue) => `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
+  Symbol: (v: SymbolValue) => `Symbol(${v.Description || ''})`,
   Object: (v: ObjectValue, ctx, i) => {
     if (ctx.inspected.includes(v)) {
       return '[Circular]';
@@ -132,7 +132,7 @@ const INSPECTORS = {
 
     if (isRegExpObject(v)) {
       const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags).stringValue();
-      const F = v.OriginalFlags.stringValue();
+      const F = v.OriginalFlags;
       return `/${P}/${F}`;
     }
 
@@ -145,19 +145,19 @@ const INSPECTORS = {
     }
 
     if ('BooleanData' in v) {
-      return `[Boolean ${i((v as BooleanObject).BooleanData)}]`;
+      return `[Boolean ${(v as BooleanObject).BooleanData}]`;
     }
     if ('NumberData' in v) {
-      return `[Number ${i((v as NumberObject).NumberData)}]`;
+      return `[Number ${(v as NumberObject).NumberData}]`;
     }
     if ('BigIntData' in v) {
-      return `[BigInt ${i((v as BigIntObject).BigIntData)}]`;
+      return `[BigInt ${(v as BigIntObject).BigIntData}]`;
     }
     if ('StringData' in v) {
-      return `[String ${i((v as StringObject).StringData)}]`;
+      return `[String ${(v as StringObject).StringData}]`;
     }
     if ('SymbolData' in v) {
-      return `[Symbol ${i((v as SymbolObject).SymbolData)}]`;
+      return `[Symbol ${(v as SymbolObject).SymbolData}]`;
     }
     if (isShadowRealmObject(v)) {
       return '[ShadowRealm]';
@@ -167,7 +167,7 @@ const INSPECTORS = {
     ctx.inspected.push(v);
 
     try {
-      const isArray = IsArray(v) === Value.true;
+      const isArray = IsArray(v);
       const isTypedArray = isTypedArrayObject(v);
       if (isArray || isTypedArray) {
         const length = X(LengthOfArrayLike(v));
@@ -181,11 +181,11 @@ const INSPECTORS = {
         const out = [];
         for (let j = 0; j < length; j += 1) {
           const elem = X(v.GetOwnProperty(Value(j.toString())));
-          if (elem instanceof UndefinedValue) {
+          if (!elem) {
             holes += 1;
           } else {
             flushHoles();
-            if (elem.Value) {
+            if (IsDataDescriptor(elem)) {
               out.push(i(elem.Value));
             } else {
               out.push('<accessor>');
@@ -200,7 +200,7 @@ const INSPECTORS = {
       const cache = [];
       for (const key of keys) {
         const C = X(v.GetOwnProperty(key)) as Descriptor;
-        if (C.Enumerable === Value.true) {
+        if (C.Enumerable) {
           cache.push([
             key instanceof JSStringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key),
             C.Value ? i(C.Value) : '<accessor>',

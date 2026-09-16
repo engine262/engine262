@@ -28,6 +28,12 @@ import {
   Throw,
   surroundingAgent,
   type Integer,
+  type FullyPopulatedDescriptor,
+  type AccessorDescriptor,
+  type FullyPopulatedDataDescriptor,
+  type GenericDescriptor,
+  type DataDescriptor,
+  type FullyPopulatedAccessorDescriptor,
 } from '#self';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
@@ -218,9 +224,9 @@ export class JSStringValue extends PrimitiveValue {
 export class SymbolValue extends PrimitiveValue {
   declare readonly type: 'Symbol'; // defined on prototype by static block
 
-  readonly Description: JSStringValue | UndefinedValue;
+  readonly Description: string | undefined;
 
-  constructor(Description: JSStringValue | UndefinedValue) {
+  constructor(Description: string | undefined) {
     super();
     this.Description = Description;
   }
@@ -234,21 +240,21 @@ export class SymbolValue extends PrimitiveValue {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export const wellKnownSymbols = {
-  asyncDispose: new SymbolValue(Value('Symbol.asyncDispose')),
-  asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
-  dispose: new SymbolValue(Value('Symbol.dispose')),
-  hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
-  isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
-  iterator: new SymbolValue(Value('Symbol.iterator')),
-  match: new SymbolValue(Value('Symbol.match')),
-  matchAll: new SymbolValue(Value('Symbol.matchAll')),
-  replace: new SymbolValue(Value('Symbol.replace')),
-  search: new SymbolValue(Value('Symbol.search')),
-  species: new SymbolValue(Value('Symbol.species')),
-  split: new SymbolValue(Value('Symbol.split')),
-  toPrimitive: new SymbolValue(Value('Symbol.toPrimitive')),
-  toStringTag: new SymbolValue(Value('Symbol.toStringTag')),
-  unscopables: new SymbolValue(Value('Symbol.unscopables')),
+  asyncDispose: new SymbolValue('Symbol.asyncDispose'),
+  asyncIterator: new SymbolValue('Symbol.asyncIterator'),
+  dispose: new SymbolValue('Symbol.dispose'),
+  hasInstance: new SymbolValue('Symbol.hasInstance'),
+  isConcatSpreadable: new SymbolValue('Symbol.isConcatSpreadable'),
+  iterator: new SymbolValue('Symbol.iterator'),
+  match: new SymbolValue('Symbol.match'),
+  matchAll: new SymbolValue('Symbol.matchAll'),
+  replace: new SymbolValue('Symbol.replace'),
+  search: new SymbolValue('Symbol.search'),
+  species: new SymbolValue('Symbol.species'),
+  split: new SymbolValue('Symbol.split'),
+  toPrimitive: new SymbolValue('Symbol.toPrimitive'),
+  toStringTag: new SymbolValue('Symbol.toStringTag'),
+  unscopables: new SymbolValue('Symbol.unscopables'),
 } as const;
 Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
@@ -466,12 +472,12 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static override toString(x: NumberValue, radix: Integer): JSStringValue {
-    if (x.isNaN()) return Value('NaN');
-    if (Object.is(x.value, -0) || Object.is(x.value, 0)) return Value('0');
-    if (x.value < 0) return Value(`-${NumberValue.toString(F(-x.value), radix).stringValue()}`);
-    if (x.isInfinity()) return Value('Infinity');
-    return Value(`${x.value.toString(Number(radix))}`);
+  static override toString(x: NumberValue, radix: Integer): string {
+    if (x.isNaN()) return 'NaN';
+    if (Object.is(x.value, -0) || Object.is(x.value, 0)) return '0';
+    if (x.value < 0) return `-${NumberValue.toString(F(-x.value), radix)}`;
+    if (x.isInfinity()) return 'Infinity';
+    return `${x.value.toString(Number(radix))}`;
   }
 
   static readonly unit = new NumberValue(1);
@@ -657,14 +663,14 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static override toString(x: BigIntValue, radix: Integer): JSStringValue {
+  static override toString(x: BigIntValue, radix: Integer): string {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (R(x) < 0n) {
-      const str = X(BigIntValue.toString(Z(-R(x)), radix)).stringValue();
-      return Value(`-${str}`);
+      const str = X(BigIntValue.toString(Z(-R(x)), radix));
+      return `-${str}`;
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return Value(`${R(x).toString(Number(radix))}`);
+    return `${R(x).toString(Number(radix))}`;
   }
 
   static readonly unit = new BigIntValue(1n);
@@ -747,15 +753,15 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
 
 export interface ObjectInternalMethods<Self> {
   GetPrototypeOf(this: Self): ValueEvaluator<ObjectValue | NullValue>;
-  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ValueEvaluator<BooleanValue>;
-  IsExtensible(this: Self): ValueEvaluator<BooleanValue>;
-  PreventExtensions(this: Self): ValueEvaluator<BooleanValue>;
-  GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<Descriptor | UndefinedValue>;
-  DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): ValueEvaluator<BooleanValue>;
-  HasProperty(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): PlainEvaluator<boolean>;
+  IsExtensible(this: Self): PlainEvaluator<boolean>;
+  PreventExtensions(this: Self): PlainEvaluator<boolean>;
+  GetOwnProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<FullyPopulatedDescriptor | undefined>;
+  DefineOwnProperty(this: Self, P: PropertyKeyValue | string, Desc: Descriptor): PlainEvaluator<boolean>;
+  HasProperty(this: Self, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
   Get(this: Self, P: PropertyKeyValue | string, Receiver: Value): ValueEvaluator;
-  Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): ValueEvaluator<BooleanValue>;
-  Delete(this: Self, P: PropertyKeyValue | string): ValueEvaluator<BooleanValue>;
+  Set(this: Self, P: PropertyKeyValue | string, V: Value, Receiver: Value): PlainEvaluator<boolean>;
+  Delete(this: Self, P: PropertyKeyValue | string): PlainEvaluator<boolean>;
   OwnPropertyKeys(this: Self): PlainEvaluator<PropertyKeyValue[]>;
   Call?(this: Self, thisArg: Value, args: Arguments): ValueEvaluator;
   Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
@@ -768,7 +774,7 @@ export type ObjectSlotReturn = {
 export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
   declare readonly type: 'Object'; // defined on prototype by static block
 
-  readonly properties: PropertyKeyMap<Descriptor>;
+  readonly properties: PropertyKeyMap<FullyPopulatedDescriptor>;
 
   readonly internalSlotsList: readonly string[];
 
@@ -876,8 +882,8 @@ export class PrivateName {
 
   readonly Description: string;
 
-  constructor(description: JSStringValue) {
-    this.Description = description.stringValue();
+  constructor(description: string) {
+    this.Description = description;
   }
 }
 
@@ -910,45 +916,80 @@ export class ReferenceRecord {
   }
 }
 
-export type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>;
+export interface DescriptorWithEnumerableAndConfigurable {
+  readonly Configurable: boolean;
+  readonly Enumerable: boolean;
+}
+
+export type AccessorDescriptorInit = ({
+  readonly Get: FunctionObject | UndefinedValue;
+  readonly Set?: FunctionObject | UndefinedValue;
+} | {
+  readonly Get?: FunctionObject | UndefinedValue;
+  readonly Set: FunctionObject | UndefinedValue;
+}) & Partial<DescriptorWithEnumerableAndConfigurable>
+
+export type DataDescriptorInit = ({
+  readonly Value: Value;
+  readonly Writable?: boolean;
+} | {
+  readonly Value?: Value;
+  readonly Writable: boolean;
+}) & Partial<DescriptorWithEnumerableAndConfigurable>
+
+export interface GenericDescriptorInit {
+  readonly Configurable?: boolean;
+  readonly Enumerable?: boolean;
+  readonly Value?: never;
+  readonly Writable?: never;
+  readonly Get?: never;
+  readonly Set?: never;
+}
+
 // @ts-expect-error
-export function Descriptor(O: DescriptorInit): Descriptor // @ts-expect-error
+export function Descriptor(init: Required<AccessorDescriptorInit>): FullyPopulatedAccessorDescriptor // @ts-expect-error
+export function Descriptor(init: Required<DataDescriptorInit>): FullyPopulatedDataDescriptor // @ts-expect-error
+export function Descriptor(init: AccessorDescriptorInit): AccessorDescriptor // @ts-expect-error
+export function Descriptor(init: DataDescriptorInit): DataDescriptor // @ts-expect-error
+export function Descriptor(init: Partial<AccessorDescriptorInit>): GenericDescriptor // @ts-expect-error
+export function Descriptor(init: Partial<DataDescriptorInit>): GenericDescriptor // @ts-expect-error
+export function Descriptor(init: Partial<GenericDescriptorInit>): GenericDescriptor // @ts-expect-error
 export @callable() class Descriptor {
   readonly Value?: Value;
 
-  readonly Getter?: FunctionObject | UndefinedValue;
+  readonly Get?: FunctionObject | UndefinedValue;
 
-  readonly Setter?: FunctionObject | UndefinedValue;
+  readonly Set?: FunctionObject | UndefinedValue;
 
-  readonly Writable?: BooleanValue;
+  readonly Writable?: boolean;
 
-  readonly Enumerable?: BooleanValue;
+  readonly Enumerable?: boolean;
 
-  readonly Configurable?: BooleanValue;
+  readonly Configurable?: boolean;
 
-  constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Getter' | 'Setter' | 'Value' | 'Writable'>) {
+  private constructor(O: AccessorDescriptorInit & DataDescriptorInit) {
     this.Value = O.Value;
-    this.Getter = O.Getter;
-    this.Setter = O.Setter;
+    this.Get = O.Get;
+    this.Set = O.Set;
     this.Writable = O.Writable;
     this.Enumerable = O.Enumerable;
     this.Configurable = O.Configurable;
   }
 
-  everyFieldIsAbsent() {
-    return this.Value === undefined
-      && this.Getter === undefined
-      && this.Setter === undefined
-      && this.Writable === undefined
-      && this.Enumerable === undefined
-      && this.Configurable === undefined;
+  static everyFieldIsAbsent(descriptor: Descriptor) {
+    return descriptor.Value === undefined
+      && descriptor.Get === undefined
+      && descriptor.Set === undefined
+      && descriptor.Writable === undefined
+      && descriptor.Enumerable === undefined
+      && descriptor.Configurable === undefined;
   }
 
   // NON-SPEC
   mark(m: GCMarker) {
     m(this.Value);
-    m(this.Getter);
-    m(this.Setter);
+    m(this.Get);
+    m(this.Set);
   }
 }
 

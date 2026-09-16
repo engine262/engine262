@@ -53,6 +53,6 @@ export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }: 
     const propertyKey = StringValue(IdentifierName!);
     // 4. const strict = SuperProperty.strict;
     // 5. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-    return Q(MakeSuperPropertyReference(actualThis, propertyKey, strict));
+    return Q(MakeSuperPropertyReference(actualThis, Value(propertyKey), strict));
   }
 }

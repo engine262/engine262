@@ -1,10 +1,9 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { JSStringValue } from '../value.mts';
 import {
   TopLevelLexicallyDeclaredNames,
 } from './all.mts';
 
-export function LexicallyDeclaredNames(node: ParseNode): JSStringValue[] {
+export function LexicallyDeclaredNames(node: ParseNode): string[] {
   switch (node.type) {
     case 'Script':
       if (node.ScriptBody) {

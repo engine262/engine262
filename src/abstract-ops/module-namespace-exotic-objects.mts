@@ -14,7 +14,6 @@ import {
   ObjectValue,
 } from '../value.mts';
 import { type Mutable } from '../utils/language.mts';
-import { JSStringSet } from '../utils/container.mts';
 import {
   Assert,
   CompareArrayElements,
@@ -33,11 +32,11 @@ import {
   type ExoticObject,
   EvaluateModuleSync,
 } from './all.mts';
-import { Throw } from '#self';
+import { Throw, type FullyPopulatedDescriptor } from '#self';
 
 export interface ModuleNamespaceObject extends ExoticObject {
   readonly Module: AbstractModuleRecord;
-  readonly Exports: JSStringSet;
+  readonly Exports: Set<string>;
   readonly Deferred: boolean;
 }
 
@@ -53,30 +52,31 @@ const InternalMethods = {
     return Q(yield* SetImmutablePrototype(this, V));
   },
   * IsExtensible() {
-    return Value.false;
+    return false;
   },
   * PreventExtensions() {
-    return Value.true;
+    return true;
   },
-  * GetOwnProperty(P) {
-    const O = this;
+  * GetOwnProperty(propertyKey: string | PropertyKeyValue): PlainEvaluator<FullyPopulatedDescriptor | undefined> {
+    const obj = this;
 
-    if (IsSymbolLikeNamespaceKey(P, O)) {
-      return OrdinaryGetOwnProperty(O, P);
+    if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
+      return OrdinaryGetOwnProperty(obj, propertyKey);
     }
-    const exports = Q(yield* GetModuleExportsList(O));
-    if (!exports.has(P as JSStringValue)) {
-      return Value.undefined;
+    if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
+    const exports = Q(yield* GetModuleExportsList(obj));
+    if (!exports.has(propertyKey)) {
+      return undefined;
     }
-    const value = Q(yield* O.Get(P, O));
+    const value = Q(yield* obj.Get(propertyKey, obj));
     return Descriptor({
       Value: value,
-      Writable: Value.true,
-      Enumerable: Value.true,
-      Configurable: Value.false,
+      Writable: true,
+      Enumerable: true,
+      Configurable: false,
     });
   },
-  * DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc): PlainEvaluator<boolean> {
     const O = this;
 
     if (IsSymbolLikeNamespaceKey(P, O)) {
@@ -84,65 +84,67 @@ const InternalMethods = {
     }
 
     const current = Q(yield* O.GetOwnProperty(P));
-    if (current instanceof UndefinedValue) {
-      return Value.false;
+    if (current === undefined) {
+      return false;
     }
     if (IsAccessorDescriptor(Desc)) {
-      return Value.false;
+      return false;
     }
-    if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
-      return Value.false;
+    if (Desc.Writable !== undefined && !Desc.Writable) {
+      return false;
     }
-    if (Desc.Enumerable !== undefined && Desc.Enumerable === Value.false) {
-      return Value.false;
+    if (Desc.Enumerable !== undefined && !Desc.Enumerable) {
+      return false;
     }
-    if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
-      return Value.false;
+    if (Desc.Configurable !== undefined && Desc.Configurable) {
+      return false;
     }
     if (Desc.Value !== undefined) {
-      return Value(SameValue(Desc.Value, current.Value!));
+      return SameValue(Desc.Value, current.Value!);
     }
-    return Value.true;
+    return true;
   },
-  * HasProperty(P) {
-    const O = this;
+  * HasProperty(propertyKey): PlainEvaluator<boolean> {
+    const obj = this;
 
-    if (IsSymbolLikeNamespaceKey(P, O)) {
-      return yield* OrdinaryHasProperty(O, P);
+    if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
+      return yield* OrdinaryHasProperty(obj, propertyKey);
     }
-    const exports = Q(yield* GetModuleExportsList(O));
-    if (exports.has(P as JSStringValue)) {
-      return Value.true;
+    if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
+    const exports = Q(yield* GetModuleExportsList(obj));
+    if (exports.has(propertyKey)) {
+      return true;
     }
-    return Value.false;
+    return false;
   },
   /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
-  * Get(P, Receiver) {
+  * Get(propertyKey, Receiver) {
     const O = this;
 
-    Assert(IsPropertyKey(P));
+    Assert(IsPropertyKey(propertyKey));
     // 1. If IsSymbolLikeNamespaceKey(P, O), return ! OrdinaryGet(O, P, Receiver).
-    if (IsSymbolLikeNamespaceKey(P, O)) {
-      return X(yield* OrdinaryGet(O, P, Receiver));
+    if (IsSymbolLikeNamespaceKey(propertyKey, O)) {
+      return X(yield* OrdinaryGet(O, propertyKey, Receiver));
     }
     // 2. Let exports be ? GetModuleExportsList(O).
     const exports = Q(yield* GetModuleExportsList(O));
     // 3. If exports does not contain P, return undefined.
-    if (!exports.has(P as JSStringValue)) {
+    if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
+    if (!exports.has(propertyKey)) {
       return Value.undefined;
     }
     // 4. Let m be O.[[Module]].
     const m = O.Module;
     // 5. If m is a Cyclic Module Record and m.GetOptionalIndirectExportsModuleRequests(« P ») is not empty, then
     if (m instanceof CyclicModuleRecord) {
-      const importedNames: ImportedNamesValue = [P.stringValue()];
+      const importedNames: ImportedNamesValue = [propertyKey];
       if (m.GetOptionalIndirectExportsModuleRequests(importedNames).length > 0) {
         // a. Perform ? EvaluateModuleSync(m, « P »).
         Q(yield* EvaluateModuleSync(m, importedNames));
       }
     }
     // 6. Let binding be m.ResolveExport(P).
-    const binding = m.ResolveExport(P as JSStringValue);
+    const binding = m.ResolveExport(propertyKey);
     // 7. Assert: binding is a ResolvedBinding Record.
     Assert(binding instanceof ResolvedBindingRecord);
     // 8. Let targetModule be binding.[[Module]].
@@ -165,45 +167,46 @@ const InternalMethods = {
     const targetEnv = targetModule.Environment;
     // 13. If targetEnv is empty, throw a ReferenceError exception.
     if (!targetEnv) {
-      return Throw.ReferenceError('$1 is not defined', P);
+      return Throw.ReferenceError('$1 is not defined', propertyKey);
     }
     // 14. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
-    return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
+    return Q(yield* targetEnv.GetBindingValue(binding.BindingName.stringValue(), true));
   },
   * Set() {
-    return Value.false;
+    return false;
   },
-  * Delete(P) {
-    const O = this;
+  * Delete(propertyKey): PlainEvaluator<boolean> {
+    const obj = this;
 
-    Assert(IsPropertyKey(P));
-    if (IsSymbolLikeNamespaceKey(P, O)) {
-      return Q(yield* OrdinaryDelete(O, P));
+    Assert(IsPropertyKey(propertyKey));
+    if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
+      return Q(yield* OrdinaryDelete(obj, propertyKey));
     }
-    const exports = Q(yield* GetModuleExportsList(O));
-    if (exports.has(P as JSStringValue)) {
-      return Value.false;
+    const exports = Q(yield* GetModuleExportsList(obj));
+    if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
+    if (exports.has(propertyKey)) {
+      return false;
     }
-    return Value.true;
+    return true;
   },
-  * OwnPropertyKeys() {
+  * OwnPropertyKeys(): PlainEvaluator<PropertyKeyValue[]> {
     const O = this;
 
     let exports;
     exports = Q(yield* GetModuleExportsList(O));
     if (O.Deferred && exports.has('then')) {
-      exports = [...exports].filter((x) => x.stringValue() !== 'then');
+      exports = [...exports].filter((x) => x !== 'then');
     }
 
     const symbolKeys = X(OrdinaryOwnPropertyKeys(O));
-    return [...exports, ...symbolKeys];
+    return [...[...exports].map(Value) as PropertyKeyValue[], ...symbolKeys];
   },
 } satisfies Partial<ObjectInternalMethods<ModuleNamespaceObject>>;
 
 /** https://tc39.es/ecma262/#sec-modulenamespacecreate */
 export function ModuleNamespaceCreate(
   module: AbstractModuleRecord,
-  exports: readonly JSStringValue[],
+  exports: readonly string[],
   phase: 'defer' | 'evaluation',
 ): ModuleNamespaceObject {
   // 2. Let internalSlotsList be the internal slots listed in Table 31.
@@ -226,27 +229,27 @@ export function ModuleNamespaceCreate(
   // 5. Set M.[[Module]] to module.
   M.Module = module;
   // 6. Let sortedExports be a List whose elements are the elements of exports, sorted according to lexicographic code unit order.
-  const sortedExports = [...exports].sort((x, y) => {
-    const result = X(CompareArrayElements(x, y, Value.undefined));
+  const sortedExports: string[] = [...exports].sort((x, y) => {
+    const result = X(CompareArrayElements(Value(x), Value(y), Value.undefined));
     return R(result);
   });
   // 7. Set M.[[Exports]] to sortedExports.
-  M.Exports = new JSStringSet(sortedExports);
-  let toStringTag: JSStringValue;
+  M.Exports = new Set(sortedExports);
+  let toStringTag: string;
   // 9. If phase is defer, then
   if (phase === 'defer') {
     M.Deferred = true;
-    toStringTag = Value('Deferred Module');
+    toStringTag = 'Deferred Module';
   } else { // 10. Else,
     M.Deferred = false;
-    toStringTag = Value('Module');
+    toStringTag = 'Module';
   }
   // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.
   M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-    Value: toStringTag,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
+    Value: Value(toStringTag),
   }));
   // 10. Return M.
   return M;
@@ -264,7 +267,7 @@ function IsSymbolLikeNamespaceKey(P: PropertyKeyValue | string, ns: ModuleNamesp
 }
 
 /** https://tc39.es/proposal-defer-import-eval/#sec-GetModuleExportsList */
-function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<JSStringSet> {
+function* GetModuleExportsList(O: ModuleNamespaceObject): PlainEvaluator<Set<string>> {
   // 1. If O.[[Deferred]] is true, then
   if (O.Deferred) {
     // a. Let m be O.[[Module]].

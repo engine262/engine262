@@ -70,7 +70,7 @@ function* ArrayConstructor(values: Arguments, { NewTarget }: FunctionCallContext
         return Throw.RangeError('$1 is not a valid array length', len);
       }
     }
-    X(yield* Set(array, 'length', intLen, Value.true));
+    X(yield* Set(array, 'length', intLen, true));
     return array;
   }
 
@@ -116,7 +116,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       const Pk = X(ToString(F(k)));
       const next = Q(yield* IteratorStepValue(iteratorRecord));
       if (next === 'done') {
-        Q(yield* Set(array, 'length', F(k), Value.true));
+        Q(yield* Set(array, 'length', F(k), true));
         return array;
       }
       let mappedValue;
@@ -152,7 +152,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     Q(yield* CreateDataPropertyOrThrow(array, Pk, mappedValue));
     k += 1;
   }
-  Q(yield* Set(array, 'length', F(len), Value.true));
+  Q(yield* Set(array, 'length', F(len), true));
   return array;
 }
 
@@ -201,8 +201,8 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
         return Throw.TypeError('The return value ($1) of the next() on an iterator ($2) must be an object', nextResult, iteratorRecord.Iterator);
       }
       const done = Q(yield* IteratorComplete(nextResult));
-      if (done === Value.true) {
-        Q(yield* Set(array, 'length', F(k), Value.true));
+      if (done) {
+        Q(yield* Set(array, 'length', F(k), true));
         return array;
       }
 
@@ -250,14 +250,14 @@ function* Array_fromAsync([items = Value.undefined, mapper = Value.undefined, th
       k += 1;
     }
 
-    Q(yield* Set(array, 'length', F(len), Value.true));
+    Q(yield* Set(array, 'length', F(len), true));
     return array;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-array.isarray */
 function Array_isArray([arg = Value.undefined]: Arguments): ValueCompletion {
-  return Q(IsArray(arg));
+  return Value(Q(IsArray(arg)));
 }
 
 /** https://tc39.es/ecma262/#sec-array.of */
@@ -278,7 +278,7 @@ function* Array_of(items: Arguments, { thisValue }: FunctionCallContext): ValueE
     Q(yield* CreateDataPropertyOrThrow(array, Pk, kValue));
     k += 1;
   }
-  Q(yield* Set(array, 'length', F(len), Value.true));
+  Q(yield* Set(array, 'length', F(len), true));
   return array;
 }
 

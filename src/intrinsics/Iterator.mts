@@ -11,7 +11,6 @@ import {
   JSStringValue,
   ObjectValue,
   type PropertyKeyValue,
-  type BooleanValue,
   UndefinedValue,
   Value,
   type Arguments,
@@ -72,9 +71,9 @@ function* Iterator_from([O = Value.undefined]: Arguments): ValueEvaluator {
   const iteratorRecord = Q(yield* GetIteratorFlattenable(O, 'iterate-string-primitives'));
 
   // 2. Let hasInstance be ? OrdinaryHasInstance(%Iterator%, iteratorRecord.[[Iterator]]).
-  const hasInstance: BooleanValue = Q(yield* OrdinaryHasInstance(surroundingAgent.intrinsic('%Iterator%'), iteratorRecord.Iterator));
+  const hasInstance: boolean = Q(yield* OrdinaryHasInstance(surroundingAgent.intrinsic('%Iterator%'), iteratorRecord.Iterator));
   // 3. If hasInstance is true, then
-  if (hasInstance === Value.true) {
+  if (hasInstance) {
     // a. Return iteratorRecord.[[Iterator]].
     return iteratorRecord.Iterator;
   }
@@ -249,7 +248,7 @@ function* Iterator_zipKeyed([iterables = Value.undefined, _options = Value.undef
     const _propertyDesc = yield* iterables.GetOwnProperty(key);
     IfAbruptCloseIterators(_propertyDesc, iters);
     const propertyDesc = X(_propertyDesc);
-    if (!(propertyDesc instanceof UndefinedValue) && propertyDesc.Enumerable === Value.true) {
+    if (propertyDesc && propertyDesc.Enumerable) {
       const _value = yield* Get(iterables, key);
       IfAbruptCloseIterators(_value, iters);
       const value = X(_value);

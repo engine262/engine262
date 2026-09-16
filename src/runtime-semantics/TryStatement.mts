@@ -97,7 +97,7 @@ function* CatchClauseEvaluation({ CatchParameter, Block }: ParseNode.Catch, thro
   // 3. For each element argName of the BoundNames of CatchParameter, do
   for (const argName of BoundNames(CatchParameter)) {
     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
-    X(catchEnv.CreateMutableBinding(argName, Value.false));
+    X(catchEnv.CreateMutableBinding(argName, false));
   }
   // 4. Set the running execution context's LexicalEnvironment to catchEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;

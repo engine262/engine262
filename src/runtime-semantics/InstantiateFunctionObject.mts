@@ -53,9 +53,9 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
     Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
   // 7. Return F.
   return F;
@@ -98,9 +98,9 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
     Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
   })));
   // 7. Return F.
   return F;

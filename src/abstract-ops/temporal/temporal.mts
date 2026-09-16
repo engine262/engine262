@@ -118,7 +118,7 @@ export function TemporalUnitLength(unit: TimeUnit | 'day'): Integer {
 export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator<'constrain' | 'reject'> {
   const value = Q(yield* Get(options, 'overflow'));
   if (value instanceof UndefinedValue) return 'constrain';
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   if (stringValue !== 'constrain' && stringValue !== 'reject') {
     return Throw.RangeError('overflow option is invalid ($1), only "constrain" and "reject" are accepted', stringValue);
   }
@@ -129,7 +129,7 @@ export function* GetTemporalOverflowOption(options: ObjectValue): PlainEvaluator
 export function* GetTemporalDisambiguationOption(options: ObjectValue): PlainEvaluator<'compatible' | 'earlier' | 'later' | 'reject'> {
   const value = Q(yield* Get(options, 'disambiguation'));
   if (value instanceof UndefinedValue) return 'compatible';
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   const acceptedValues = ['compatible', 'earlier', 'later', 'reject'] as const;
   if (!(acceptedValues as readonly string[]).includes(stringValue)) {
     return Throw.RangeError('disambiguation option is invalid ($1), only "compatible", "earlier", "later" and "reject" are accepted', stringValue);
@@ -153,7 +153,7 @@ export type TemporalOffsetOption = 'prefer' | 'use' | 'ignore' | 'reject';
 export function* GetTemporalOffsetOption(options: ObjectValue, fallback: TemporalOffsetOption): PlainEvaluator<TemporalOffsetOption> {
   const value = Q(yield* Get(options, 'offset'));
   if (value instanceof UndefinedValue) return fallback;
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   const acceptedValues = ['prefer', 'use', 'ignore', 'reject'] as const;
   if (!(acceptedValues as readonly string[]).includes(stringValue)) {
     return Throw.RangeError('offset option is invalid ($1), only "prefer", "use", "ignore" and "reject" are accepted', stringValue);
@@ -166,7 +166,7 @@ export type ShowCalendarNameOption = 'auto' | 'always' | 'never' | 'critical';
 export function* GetTemporalShowCalendarNameOption(options: ObjectValue): PlainEvaluator<ShowCalendarNameOption> {
   const value = Q(yield* Get(options, 'calendarName'));
   if (value instanceof UndefinedValue) return 'auto';
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   const acceptedValues = ['auto', 'always', 'never', 'critical'] as const;
   if (!(acceptedValues as readonly string[]).includes(stringValue)) {
     return Throw.RangeError('calendarName option is invalid ($1), only "auto", "always", "never" and "critical" are accepted', stringValue);
@@ -179,7 +179,7 @@ export type ShowTimeZoneNameOption = 'auto' | 'never' | 'critical';
 export function* GetTemporalShowTimeZoneNameOption(options: ObjectValue): PlainEvaluator<ShowTimeZoneNameOption> {
   const value = Q(yield* Get(options, 'timeZoneName'));
   if (value instanceof UndefinedValue) return 'auto';
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   const acceptedValues = ['auto', 'never', 'critical'] as const;
   if (!(acceptedValues as readonly string[]).includes(stringValue)) {
     return Throw.RangeError('timeZoneName option is invalid ($1), only "auto", "never" and "critical" are accepted', stringValue);
@@ -191,7 +191,7 @@ export function* GetTemporalShowTimeZoneNameOption(options: ObjectValue): PlainE
 export function* GetTemporalShowOffsetOption(options: ObjectValue): PlainEvaluator<'auto' | 'never'> {
   const value = Q(yield* Get(options, 'offset'));
   if (value instanceof UndefinedValue) return 'auto';
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   if (stringValue !== 'never' && stringValue !== 'auto') return Throw.RangeError('offset option is invalid ($1), only "auto" and "never" are accepted', stringValue);
   return stringValue as 'auto' | 'never';
 }
@@ -201,7 +201,7 @@ export type DirectionOption = 'next' | 'previous';
 export function* GetDirectionOption(options: ObjectValue): PlainEvaluator<DirectionOption> {
   const value = Q(yield* Get(options, 'direction'));
   if (value instanceof UndefinedValue) return Throw.RangeError('direction option is required');
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   if (stringValue !== 'next' && stringValue !== 'previous') return Throw.RangeError('direction option is not valid ($1), only "next" and "previous" are accepted', stringValue);
   return stringValue;
 }
@@ -231,7 +231,7 @@ export function* GetTemporalFractionalSecondDigitsOption(options: ObjectValue): 
     return 'auto';
   }
   if (!(digitsValue instanceof NumberValue)) {
-    if (Q(yield* ToString(digitsValue)).stringValue() !== 'auto') {
+    if (Q(yield* ToString(digitsValue)) !== 'auto') {
       return Throw.RangeError('$1 is out of range', digitsValue);
     }
     return 'auto';
@@ -294,7 +294,7 @@ export function* GetTemporalUnitValuedOption(
     if (defaultV === 'required') return Throw.RangeError('option $1 is required', key);
     return 'no-unit';
   }
-  const stringValue = Q(yield* ToString(value)).stringValue();
+  const stringValue = Q(yield* ToString(value));
   switch (stringValue) {
     case 'auto': return 'auto';
     case 'year':

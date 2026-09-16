@@ -51,19 +51,19 @@ export const Boolean: Inspector<BooleanValue> = {
 export const Symbol: Inspector<SymbolValue> = {
   toRemoteObject: (value, getObjectId) => ({
     type: 'symbol',
-    description: SymbolDescriptiveString(value).stringValue(),
+    description: SymbolDescriptiveString(value),
     objectId: getObjectId(value),
   }),
   toPropertyPreview: (name, value) => ({
-    name, type: 'symbol', value: SymbolDescriptiveString(value).stringValue(),
+    name, type: 'symbol', value: SymbolDescriptiveString(value),
   }),
   toObjectPreview: (value) => ({
     type: 'symbol',
-    description: SymbolDescriptiveString(value).stringValue(),
+    description: SymbolDescriptiveString(value),
     overflow: false,
     properties: [],
   }),
-  toDescription: (value) => SymbolDescriptiveString(value).stringValue(),
+  toDescription: (value) => SymbolDescriptiveString(value),
 };
 
 export const String: Inspector<JSStringValue> = {

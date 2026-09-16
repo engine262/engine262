@@ -635,7 +635,7 @@ function DateString(tv: NumberValue) {
   const yv = YearFromTime(_tv);
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(abs(yv)));
-  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
+  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start'));
   return Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
 
@@ -701,7 +701,7 @@ function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallCont
   const yv = YearFromTime(R(tv));
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(abs(yv)));
-  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
+  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start'));
   return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(R(tv))}`);
 }
 
@@ -773,7 +773,7 @@ export function bootstrapDatePrototype(realmRec: Realm) {
     ['toTemporalInstant', DateProto_toTemporalInstant, 0],
     ['toUTCString', DateProto_toUTCString, 0],
     ['valueOf', DateProto_valueOf, 0],
-    [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, { Writable: Value.false, Enumerable: Value.false, Configurable: Value.true }],
+    [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, { Writable: false, Enumerable: false, Configurable: true }],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Date.prototype%'] = proto;

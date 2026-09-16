@@ -28,7 +28,7 @@ export type { RegExpParserContext } from './parser/RegExpParser.mts';
 export { createTest262Intrinsics, boostTest262Harness, importBundledTest262Harness } from './host-defined/test262-intrinsics.mts';
 export { type Mutable, OutOfRange } from './utils/language.mts';
 export { kInternal } from './utils/internal.mts';
-export { JSStringMap, JSStringSet, PropertyKeyMap } from './utils/container.mts';
+export { PropertyKeyMap } from './utils/container.mts';
 export {
   CallSite, CallFrame, captureStack, getHostDefinedErrorDetails, getCurrentStack,
 } from './utils/stack.mts';

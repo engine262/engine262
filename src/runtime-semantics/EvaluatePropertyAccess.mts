@@ -32,7 +32,7 @@ export function EvaluatePropertyAccessWithIdentifierKey(baseValue: Value, identi
   // 4. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyNameString, [[Strict]]: strict, [[ThisValue]]: empty }.
   return new ReferenceRecord({
     Base: baseValue,
-    ReferencedName: propertyNameString,
+    ReferencedName: Value(propertyNameString),
     Strict: strict,
     ThisValue: undefined,
   });

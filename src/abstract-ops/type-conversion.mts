@@ -28,7 +28,6 @@ import {
   GetMethod,
   IsCallable,
   OrdinaryObjectCreate,
-  SameValue,
   StringCreate,
   Z,
   F, R, type Integer,
@@ -115,33 +114,33 @@ export function* OrdinaryToPrimitive(O: ObjectValue, hint: 'string' | 'number'):
 }
 
 /** https://tc39.es/ecma262/#sec-toboolean */
-export function ToBoolean(argument: Value): BooleanValue {
+export function ToBoolean(argument: Value): boolean {
   if (argument instanceof UndefinedValue) {
     // Return false.
-    return Value.false;
+    return false;
   } else if (argument instanceof NullValue) {
     // Return false.
-    return Value.false;
+    return false;
   } else if (argument instanceof BooleanValue) {
     // Return argument.
-    return argument;
+    return argument === Value.true;
   } else if (argument instanceof NumberValue) {
     // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
     if (R(argument) === 0 || argument.isNaN()) {
-      return Value.false;
+      return false;
     }
   } else if (argument instanceof JSStringValue) {
     // If argument is the empty String, return false; otherwise return true.
     if (argument.stringValue().length === 0) {
-      return Value.false;
+      return false;
     }
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
     if (R(argument) === 0n) {
-      return Value.false;
+      return false;
     }
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-tonumeric */
@@ -398,23 +397,23 @@ export function* ToBigInt64(argument: Value): ValueEvaluator<BigIntValue> {
 }
 
 /** https://tc39.es/ecma262/#sec-tobiguint64 */
-export function* ToBigUint64(argument: Value): ValueEvaluator<BigIntValue> {
+export function* ToBigUint64(argument: Value): PlainEvaluator<bigint> {
   const int = R(Q(yield* ToBigInt(argument)));
-  return Z(ToFixedSizeInteger(int, 'unsigned', 64n));
+  return ToFixedSizeInteger(int, 'unsigned', 64n);
 }
 
 /** https://tc39.es/ecma262/#sec-tostring */
-export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
+export function* ToString(argument: Value): PlainEvaluator<string> {
   if (argument instanceof UndefinedValue) {
-    return Value('undefined');
+    return 'undefined';
   } else if (argument instanceof NullValue) {
-    return Value('null');
+    return 'null';
   } else if (argument instanceof BooleanValue) {
-    return Value(argument === Value.true ? 'true' : 'false');
+    return argument === Value.true ? 'true' : 'false';
   } else if (argument instanceof NumberValue) {
     return X(NumberValue.toString(argument, 10n));
   } else if (argument instanceof JSStringValue) {
-    return argument;
+    return argument.stringValue();
   } else if (argument instanceof SymbolValue) {
     return Throw.TypeError('Cannot convert a Symbol value to a $1', 'string');
   } else if (argument instanceof BigIntValue) {
@@ -437,7 +436,7 @@ export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
   } else if (argument instanceof BooleanValue) {
     // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument.
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']) as Mutable<BooleanObject>;
-    obj.BooleanData = argument;
+    obj.BooleanData = argument.booleanValue();
     return obj;
   } else if (argument instanceof NumberValue) {
     // Return a new Number object whose [[NumberData]] internal slot is set to argument.
@@ -446,7 +445,7 @@ export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
     return obj;
   } else if (argument instanceof JSStringValue) {
     // Return a new String object whose [[StringData]] internal slot is set to argument.
-    return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
+    return StringCreate(argument.stringValue(), surroundingAgent.intrinsic('%String.prototype%'));
   } else if (argument instanceof SymbolValue) {
     // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument.
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'), ['SymbolData']) as Mutable<SymbolObject>;
@@ -455,7 +454,8 @@ export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
   } else if (argument instanceof BigIntValue) {
     // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument.
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']) as Mutable<BigIntObject>;
-    obj.BigIntData = argument;
+    // eslint-disable-next-line @engine262/mathematical-value
+    obj.BigIntData = argument.bigintValue();
     return obj;
   }
   Assert(argument instanceof ObjectValue);
@@ -472,7 +472,7 @@ export function* ToPropertyKey(argument: Value): ValueEvaluator<PropertyKeyValue
     return key;
   }
   // 3. Return ! ToString(key).
-  return X(ToString(key));
+  return Value(X(ToString(key)));
 }
 
 /** https://tc39.es/ecma262/#sec-tolength */
@@ -483,20 +483,10 @@ export function* ToLength(arg: Value): ValueEvaluator<NumberValue> {
 }
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
-export function CanonicalNumericIndexString(argument: Value) {
-  // 1. Assert: Type(argument) is String.
-  Assert(argument instanceof JSStringValue);
-  // 2. If argument is "-0", return -0𝔽.
-  if (argument.stringValue() === '-0') {
-    return F(-0);
-  }
-  // 3. Let n be ! ToNumber(argument).
-  const n = X(ToNumber(argument));
-  // 4. If SameValue(! ToString(n), argument) is false, return undefined.
-  if (!SameValue(X(ToString(n)), argument)) {
-    return Value.undefined;
-  }
-  // 4. Return n.
+export function CanonicalNumericIndexString(arg: string): NumberValue {
+  if (arg === '-0') return F(-0);
+  const n = X(ToNumber(Value(arg)));
+  if (X(ToString(n)) === arg) return n;
   return n;
 }
 

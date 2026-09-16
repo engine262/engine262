@@ -1,4 +1,4 @@
-import { JSStringValue, NullValue, Value } from '../value.mts';
+import { JSStringValue } from '../value.mts';
 import { OutOfRange, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
@@ -41,20 +41,20 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
         case !!node.NamedExports: {
           // `export` NamedExports `;`
           // 1. Return ExportEntriesForModule(NamedExports, null).
-          return ExportEntriesForModule(node.NamedExports, Value.null);
+          return ExportEntriesForModule(node.NamedExports, null);
         }
         case !!node.VariableStatement: {
           // `export` VariableStatement
           // 1. Let entries be a new empty List.
-          const entries = [];
+          const entries: ExportEntry[] = [];
           // 2. Let names be the BoundNames of VariableStatement.
           const names = BoundNames(node.VariableStatement);
           // 3. For each name in names, do
           for (const name of names) {
             // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
             entries.push({
-              ModuleRequest: Value.null,
-              ImportName: Value.null,
+              ModuleRequest: null,
+              ImportName: null,
               LocalName: name,
               ExportName: name,
             });
@@ -72,8 +72,8 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
           for (const name of names) {
             // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
             entries.push({
-              ModuleRequest: Value.null,
-              ImportName: Value.null,
+              ModuleRequest: null,
+              ImportName: null,
               LocalName: name,
               ExportName: name,
             });
@@ -89,11 +89,11 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
           const localName = names[0];
           // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
           return [{
-            ModuleRequest: Value.null,
-            ImportName: Value.null,
+            ModuleRequest: null,
+            ImportName: null,
             LocalName: localName,
-            ExportName: Value('default'),
-          }];
+            ExportName: 'default',
+          } satisfies ExportEntry];
         }
         case node.default && !!node.ClassDeclaration: {
           // `export` `default` ClassDeclaration
@@ -103,20 +103,20 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
           const localName = names[0];
           // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
           return [{
-            ModuleRequest: Value.null,
-            ImportName: Value.null,
+            ModuleRequest: null,
+            ImportName: null,
             LocalName: localName,
-            ExportName: Value('default'),
-          }];
+            ExportName: 'default',
+          } satisfies ExportEntry];
         }
         case node.default && !!node.AssignmentExpression: {
           // `export` `default` AssignmentExpression `;`
           // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: "*default*", [[ExportName]]: "default" }.
-          const entry = {
-            ModuleRequest: Value.null,
-            ImportName: Value.null,
-            LocalName: Value('*default*'),
-            ExportName: Value('default'),
+          const entry: ExportEntry = {
+            ModuleRequest: null,
+            ImportName: null,
+            LocalName: '*default*',
+            ExportName: 'default',
           };
           // 2. Return a new List containing entry.
           return [entry];
@@ -130,10 +130,10 @@ export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEnt
 }
 
 export interface ExportEntry {
-  readonly ModuleRequest: ModuleRequestRecord | NullValue;
-  readonly ImportName: JSStringValue | NullValue | 'namespace' | 'filtered-namespace' | 'source' | 'all-but-default';
-  readonly LocalName: JSStringValue | NullValue;
-  readonly ExportName: JSStringValue | NullValue;
+  readonly ModuleRequest: ModuleRequestRecord | null;
+  readonly ImportName: JSStringValue | null | 'namespace' | 'filtered-namespace' | 'source' | 'all-but-default';
+  readonly LocalName: string | null;
+  readonly ExportName: string | null;
   readonly NamespaceNamesFilter?: readonly string[];
 }
 

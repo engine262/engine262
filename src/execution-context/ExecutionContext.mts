@@ -5,7 +5,6 @@ import {
   surroundingAgent,
   Assert,
   GetIdentifierReference,
-  JSStringValue,
   UndefinedValue,
   type EnvironmentRecordWithThisBinding,
   ObjectValue,
@@ -135,9 +134,9 @@ export function GetActiveScriptOrModule() {
 }
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */
-export function ResolveBinding(name: JSStringValue, strict: boolean, env?: EnvironmentRecord | UndefinedValue | NullValue) {
+export function ResolveBinding(name: string, strict: boolean, env?: EnvironmentRecord | undefined | null) {
   // 1. If env is not present or if env is undefined, then
-  if (env === undefined || env === Value.undefined) {
+  if (!env) {
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
   Assert(env instanceof EnvironmentRecord);

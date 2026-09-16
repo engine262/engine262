@@ -18,10 +18,13 @@ test('code in eval', async () => {
   inspector.attachAgent(agent, [realm]);
   const messages: unknown[] = [];
   const pop = realm.pushTopContext();
-  realm.GlobalObject.properties.set('e', new Descriptor({
+  realm.GlobalObject.properties.set('e', Descriptor({
     Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
       messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
     }),
+    Configurable: true,
+    Enumerable: false,
+    Writable: true,
   }));
   pop?.();
 
@@ -43,7 +46,10 @@ test('code in new Function', async () => {
   inspector.attachAgent(agent, [realm]);
   const messages: unknown[] = [];
   const pop = realm.pushTopContext();
-  realm.GlobalObject.properties.set('e', new Descriptor({
+  realm.GlobalObject.properties.set('e', Descriptor({
+    Configurable: true,
+    Enumerable: false,
+    Writable: true,
     Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
       messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
     }),
@@ -72,13 +78,19 @@ test('code in ShadowRealm', async () => {
   const messages: unknown[] = [];
   const pop = realm.pushTopContext();
   const shadowRealm = X(Construct(surroundingAgent.intrinsic('%ShadowRealm%'))) as ShadowRealmObject;
-  realm.GlobalObject.properties.set('r', new Descriptor({
+  realm.GlobalObject.properties.set('r', Descriptor({
     Value: shadowRealm,
+    Configurable: true,
+    Enumerable: false,
+    Writable: true,
   }));
-  shadowRealm.ShadowRealm.GlobalObject.properties.set('e', new Descriptor({
+  shadowRealm.ShadowRealm.GlobalObject.properties.set('e', Descriptor({
     Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
       messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
     }),
+    Configurable: true,
+    Enumerable: false,
+    Writable: true,
   }));
   pop?.();
 

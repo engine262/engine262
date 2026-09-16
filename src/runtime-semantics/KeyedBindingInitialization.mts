@@ -15,11 +15,11 @@ import {
   InitializeReferencedBinding,
 } from '#self';
 import type {
-  EnvironmentRecord, FunctionDeclaration, PropertyKeyValue, UndefinedValue,
+  EnvironmentRecord, FunctionDeclaration, PropertyKeyValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
-export function* KeyedBindingInitialization(node: ParseNode.BindingElement | ParseNode.SingleNameBinding, value: Value, environment: EnvironmentRecord | UndefinedValue, propertyName: PropertyKeyValue) {
+export function* KeyedBindingInitialization(node: ParseNode.BindingElement | ParseNode.SingleNameBinding, value: Value, environment: EnvironmentRecord | undefined, propertyName: string | PropertyKeyValue) {
   if (node.type === 'BindingElement') {
     // 1. Let v be ? GetV(value, propertyName).
     let v = Q(yield* GetV(value, propertyName));
@@ -52,7 +52,7 @@ export function* KeyedBindingInitialization(node: ParseNode.BindingElement | Par
       }
     }
     // 5. If environment is undefined, return ? PutValue(lhs, v).
-    if (environment === Value.undefined) {
+    if (!environment) {
       return Q(yield* PutValue(lhs, v));
     }
     // 6. Return InitializeReferencedBinding(lhs, v).

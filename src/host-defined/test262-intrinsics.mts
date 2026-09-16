@@ -34,7 +34,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
         if (s.Type === 'throw') {
           return s;
         }
-        str.push(s.Value.stringValue());
+        str.push(s.Value);
       }
       log(...str);
       return Value.undefined;
@@ -127,8 +127,8 @@ export function boostTest262Harness(realm: ManagedRealm) {
   // test262/harness/regExpUtils.js
   const key = Value('buildString');
   const pop = realm.pushTopContext();
-  if (X(HasProperty(realm.GlobalObject, key)) === Value.true) {
-    X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), Value.true));
+  if (X(HasProperty(realm.GlobalObject, key))) {
+    X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), true));
   }
   pop?.();
 }

@@ -52,7 +52,7 @@ class CustomSourceModuleRecord extends AbstractModuleRecord {
     return pc.Promise;
   }
 
-  override GetExportedNames(): readonly JSStringValue[] {
+  override GetExportedNames(): readonly string[] {
     return [];
   }
 
@@ -141,7 +141,7 @@ test('Custom module records', () => {
       return evaluationPromise;
     }
 
-    override GetExportedNames(): readonly JSStringValue[] {
+    override GetExportedNames(): readonly string[] {
       return [];
     }
 

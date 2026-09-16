@@ -27,14 +27,14 @@ import type {
 export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike | ParseNode.PrivateIdentifier): PlainEvaluator<PropertyKeyValue | PrivateName> {
   switch (PropertyName.type) {
     case 'IdentifierName':
-      return StringValue(PropertyName);
+      return Value(StringValue(PropertyName));
     case 'StringLiteral':
       return Value(PropertyName.value);
     case 'NumericLiteral': {
       // 1. Let nbr be the NumericValue of NumericLiteral.
       const nbr = NumericValue(PropertyName);
       // 2. Return ! ToString(nbr).
-      return X(ToString(nbr));
+      return Value(X(ToString(Value(nbr))));
     }
     case 'PrivateIdentifier': {
       // 1. Let privateIdentifier be StringValue of PrivateIdentifier.
@@ -45,7 +45,7 @@ export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike 
       const names = (privateEnvRec as PrivateEnvironmentRecord).Names;
       // 4. Assert: Exactly one element of names is a Private Name whose [[Description]] is privateIdentifier.
       // 5. Let privateName be the Private Name in names whose [[Description]] is privateIdentifier.
-      const privateName = names.find((n) => n.Description === privateIdentifier.stringValue());
+      const privateName = names.find((n) => n.Description === privateIdentifier);
       Assert(!!privateName);
       // 6. Return privateName.
       return privateName;

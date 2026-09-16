@@ -12,7 +12,7 @@ export function Evaluate_ContinueStatement({ LabelIdentifier }: ParseNode.Contin
     return new Completion({ Type: 'continue', Value: undefined, Target: undefined });
   }
   // 1. Let label be the StringValue of LabelIdentifier.
-  const label = StringValue(LabelIdentifier).stringValue();
+  const label = StringValue(LabelIdentifier);
   // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
   return new Completion({ Type: 'continue', Value: undefined, Target: label });
 }

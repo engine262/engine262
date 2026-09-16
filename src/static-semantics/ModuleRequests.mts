@@ -1,5 +1,4 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { JSStringValue } from '../value.mts';
 import { OutOfRange, isArray, type Mutable } from '../utils/language.mts';
 import { StringValue } from './all.mts';
 import { MergeImportedNames, type LoadedModuleRequestRecord } from '#self';
@@ -55,8 +54,8 @@ function WithClauseToAttributes(node: ParseNode.WithClause): ImportAttributeReco
   const attributes: ImportAttributeRecord[] = [];
   for (const attribute of node.WithEntries) {
     attributes.push({
-      Key: StringValue(attribute.AttributeKey).value,
-      Value: StringValue(attribute.AttributeValue).value,
+      Key: StringValue(attribute.AttributeKey),
+      Value: StringValue(attribute.AttributeValue),
     });
   }
   attributes.sort((a, b) => (a.Key < b.Key ? -1 : 1));
@@ -107,7 +106,7 @@ export function ImportedNames(node: ParseNode | readonly ParseNode[]): ImportedN
     case 'NamedImports':
       return ImportedNames(node.ImportsList);
     case 'ImportSpecifier':
-      return [StringValue(node.ModuleExportName ?? node.ImportedBinding).stringValue()];
+      return [StringValue(node.ModuleExportName ?? node.ImportedBinding)];
     case 'ExportFromClause':
       if (node.ModuleExportName) {
         return 'all';
@@ -116,7 +115,7 @@ export function ImportedNames(node: ParseNode | readonly ParseNode[]): ImportedN
     case 'NamedExports':
       return ImportedNames(node.ExportsList);
     case 'ExportSpecifier':
-      return [StringValue(node.localName).stringValue()];
+      return [StringValue(node.localName)];
     default:
       throw OutOfRange.nonExhaustive(node);
   }
@@ -128,7 +127,7 @@ export function ExportFromDeclarationModuleRequest(node: ParseNode.ExportDeclara
   const specifier = StringValue(node.FromClause);
   const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
   return {
-    Specifier: specifier.value, Attributes: attributes, Phase: 'evaluation', ImportedNames: importedNames,
+    Specifier: specifier, Attributes: attributes, Phase: 'evaluation', ImportedNames: importedNames,
   };
 }
 
@@ -155,7 +154,7 @@ export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
       return requests;
     }
     case 'ImportDeclaration': {
-      let specifier: JSStringValue;
+      let specifier: string;
       if (node.FromClause) {
         specifier = StringValue(node.FromClause);
       } else if (node.ModuleSpecifier) {
@@ -166,7 +165,7 @@ export function ModuleRequests(node: ParseNode): ModuleRequestRecord[] {
       const importedNames = node.ImportClause ? ImportedNames(node.ImportClause) : [];
       const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
       return [{
-        Specifier: specifier.value, Attributes: attributes, Phase: node.Phase, ImportedNames: importedNames,
+        Specifier: specifier, Attributes: attributes, Phase: node.Phase, ImportedNames: importedNames,
       }];
     }
     case 'ExportDeclaration':

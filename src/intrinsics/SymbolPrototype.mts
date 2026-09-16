@@ -41,7 +41,7 @@ function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: Funct
   // 2. Let sym be ? thisSymbolValue(s).
   const sym = Q(ThisSymbolValue(s));
   // 3. Return sym.[[Description]].
-  return sym.Description;
+  return Value(sym.Description);
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.tostring */
@@ -49,7 +49,7 @@ function SymbolProto_toString(_argList: Arguments, { thisValue }: FunctionCallCo
   // 1. Let sym be ? thisSymbolValue(this value).
   const sym = Q(ThisSymbolValue(thisValue));
   // 2. Return SymbolDescriptiveString(sym).
-  return SymbolDescriptiveString(sym);
+  return Value(SymbolDescriptiveString(sym));
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.valueof */
@@ -66,9 +66,9 @@ function SymbolProto_toPrimitive(_argList: Arguments, { thisValue }: FunctionCal
 
 export function bootstrapSymbolPrototype(realmRec: Realm) {
   const override = {
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: false,
+    Enumerable: false,
+    Configurable: true,
   };
   const proto = bootstrapPrototype(realmRec, [
     ['toString', SymbolProto_toString, 0],

@@ -70,9 +70,9 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   const argCount = parameterArgs.length;
   const parameterStrings: string[] = [];
   for (const arg of parameterArgs) {
-    parameterStrings.push(Q(yield* ToString(arg!)).stringValue());
+    parameterStrings.push(Q(yield* ToString(arg!)));
   }
-  const bodyString = Q(yield* ToString(bodyArg)).stringValue();
+  const bodyString = Q(yield* ToString(bodyArg));
   const currentRealm = surroundingAgent.currentRealmRecord;
   Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, false));
   let P = '';
@@ -141,17 +141,17 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
     X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false,
+      Writable: true,
+      Enumerable: false,
+      Configurable: false,
     })));
   } else if (kind === 'asyncGenerator') {
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false,
+      Writable: true,
+      Enumerable: false,
+      Configurable: false,
     })));
   } else if (kind === 'normal') {
     MakeConstructor(F);

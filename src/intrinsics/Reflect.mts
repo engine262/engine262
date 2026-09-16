@@ -60,7 +60,7 @@ function* Reflect_defineProperty([target = Value.undefined, propertyKey = Value.
   // 3. Let desc be ? ToPropertyDescriptor(attributes).
   const desc = Q(yield* ToPropertyDescriptor(attributes));
   // 4. Return ? target.[[DefineOwnProperty]](key, desc).
-  return Q(yield* target.DefineOwnProperty(key, desc));
+  return Value(Q(yield* target.DefineOwnProperty(key, desc)));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.deleteproperty */
@@ -72,7 +72,7 @@ function* Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
   // 3. Return ? target.[[Delete]](key).
-  return Q(yield* target.Delete(key));
+  return Value(Q(yield* target.Delete(key)));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.get */
@@ -125,7 +125,7 @@ function* Reflect_has([target = Value.undefined, propertyKey = Value.undefined]:
   // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(yield* ToPropertyKey(propertyKey));
   // 3. Return ? target.[[HasProperty]](key).
-  return Q(yield* target.HasProperty(key));
+  return Value(Q(yield* target.HasProperty(key)));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.isextensible */
@@ -135,7 +135,7 @@ function* Reflect_isExtensible([target = Value.undefined]: Arguments) {
     return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Return ? target.[[IsExtensible]]().
-  return Q(yield* target.IsExtensible());
+  return Value(Q(yield* target.IsExtensible()));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.ownkeys */
@@ -157,7 +157,7 @@ function* Reflect_preventExtensions([target = Value.undefined]: Arguments) {
     return Throw.TypeError('$1 is not an object', target);
   }
   // 2. Return ? target.[[PreventExtensions]]().
-  return Q(yield* target.PreventExtensions());
+  return Value(Q(yield* target.PreventExtensions()));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.set */
@@ -173,7 +173,7 @@ function* Reflect_set([target = Value.undefined, propertyKey = Value.undefined, 
     receiver = target;
   }
   // 4. Return ? target.[[Set]](key, V, receiver).
-  return Q(yield* target.Set(key, V, receiver));
+  return Value(Q(yield* target.Set(key, V, receiver)));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.setprototypeof */
@@ -187,7 +187,7 @@ function* Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefi
     return Throw.TypeError('Object prototype must be an object or null');
   }
   // 3. Return ? target.[[SetPrototypeOf]](proto).
-  return Q(yield* target.SetPrototypeOf(proto));
+  return Value(Q(yield* target.SetPrototypeOf(proto)));
 }
 
 export function bootstrapReflect(realmRec: Realm) {

@@ -7,7 +7,7 @@ import {
   Value,
   PrivateName,
   type Arguments,
-  BooleanValue, type PropertyKeyValue, NullValue, JSStringValue,
+  type PropertyKeyValue, NullValue, JSStringValue,
   type NativeSteps,
   NumberValue,
 } from '../value.mts';
@@ -62,10 +62,12 @@ import {
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   ClassElementDefinitionRecord,
-  type AbstractModuleRecord, type CanBeNativeSteps, type DefaultConstructorBuiltinFunction, type DescriptorInit, type FunctionCallContext, type ModuleRecord, type PrivateEnvironmentRecord, type ScriptRecord,
+  type AbstractModuleRecord, type CanBeNativeSteps, type DefaultConstructorBuiltinFunction, type FunctionCallContext, type ModuleRecord, type PrivateEnvironmentRecord, type ScriptRecord,
   Throw,
   isEvaluator,
   surroundingAgent,
+  type AccessorDescriptorInit,
+  type DataDescriptorInit,
 } from '#self';
 
 export interface BaseFunctionObject extends OrdinaryObject {
@@ -463,32 +465,32 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
 }
 
 /** https://tc39.es/ecma262/#sec-makeconstructor */
-export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFunctionObject, writablePrototype?: BooleanValue, prototype?: ObjectValue): void {
+export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFunctionObject, writablePrototype?: boolean, prototype?: ObjectValue): void {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
   if (isECMAScriptFunctionObject(F)) {
     // Assert(!IsConstructor(F)); but not applying type assertion
     Assert(![IsConstructor(F)][0]);
-    Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, 'prototype')) === Value.false);
+    Assert(X(IsExtensible(F)) && !X(HasOwnProperty(F, 'prototype')));
     F.Construct = FunctionConstructSlot;
   }
   (F as Mutable<ECMAScriptFunctionObject>).ConstructorKind = 'base';
   if (writablePrototype === undefined) {
-    writablePrototype = Value.true;
+    writablePrototype = true;
   }
   if (prototype === undefined) {
     prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     X(DefinePropertyOrThrow(prototype, 'constructor', Descriptor({
       Value: F,
       Writable: writablePrototype,
-      Enumerable: Value.false,
-      Configurable: Value.true,
+      Enumerable: false,
+      Configurable: true,
     })));
   }
   X(DefinePropertyOrThrow(F, 'prototype', Descriptor({
     Value: prototype,
     Writable: writablePrototype,
-    Enumerable: Value.false,
-    Configurable: Value.false,
+    Enumerable: false,
+    Configurable: false,
   })));
 }
 
@@ -512,54 +514,55 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
   Assert(methodDefinition.Kind === 'method' || methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor');
   const key = methodDefinition.Key;
   if (!(key instanceof PrivateName)) {
-    const desc: Mutable<DescriptorInit> = { Enumerable: Value(enumerable), Configurable: Value.true };
+    let desc: AccessorDescriptorInit | DataDescriptorInit;
     if (methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'accessor') {
-      desc.Getter = methodDefinition.Get;
+      desc = { Enumerable: enumerable, Configurable: true, Get: methodDefinition.Get };
     }
     if (methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor') {
-      desc.Setter = methodDefinition.Set;
+      desc = { Enumerable: enumerable, Configurable: true, Set: methodDefinition.Set };
     }
     if (methodDefinition.Kind === 'method') {
-      desc.Value = methodDefinition.Value;
-      desc.Writable = Value.true;
+      desc = { Enumerable: enumerable, Configurable: true, Writable: true, Value: methodDefinition.Value };
     }
-    Q(yield* DefinePropertyOrThrow(homeObject, key, new Descriptor(desc)));
+    Assert(desc! !== undefined);
+    Q(yield* DefinePropertyOrThrow(homeObject, key, Descriptor(desc)));
   }
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
-export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
-  Assert(X(IsExtensible(func)) === Value.true && X(HasOwnProperty(func, 'name')) === Value.false);
+export function SetFunctionName(func: FunctionObject, name: string | PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
+  Assert(X(IsExtensible(func)) && !X(HasOwnProperty(func, 'name')));
   if (name instanceof SymbolValue) {
     const description = name.Description;
-    if (description === Value.undefined) {
-      name = Value('');
+    if (description === undefined) {
+      name = '';
     } else {
-      name = Value(`[${(description as JSStringValue).stringValue()}]`);
+      name = `[${description}]`;
     }
   } else if (name instanceof PrivateName) {
     name = Value(name.Description) as JSStringValue;
   }
   let initialName = name instanceof JSStringValue ? name.stringValue() : null;
+  if (name instanceof JSStringValue) name = name.stringValue();
   // non-spec
   if ('HostInitialName' in func) {
-    func.HostInitialName = name;
+    func.HostInitialName = Value(name);
   }
 
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-    const prefixedName = `${prefix.stringValue()} ${name.stringValue()}`;
+    const prefixedName = `${prefix.stringValue()} ${name}`;
     initialName = prefixedName;
-    name = Value(prefixedName) as JSStringValue;
+    name = prefixedName;
   }
   if ('InitialName' in func) {
     func.InitialName = initialName;
   }
   X(DefinePropertyOrThrow(func, 'name', Descriptor({
-    Value: name,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Value: Value(name),
+    Writable: false,
+    Enumerable: false,
+    Configurable: true,
   })));
 }
 
@@ -567,13 +570,13 @@ export function SetFunctionName(func: FunctionObject, name: PropertyKeyValue | P
 export function SetFunctionLength(F: FunctionObject, length: number): void {
   Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
-  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, 'length')) === Value.false);
+  Assert(X(IsExtensible(F)) && !X(HasOwnProperty(F, 'length')));
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
   X(DefinePropertyOrThrow(F, 'length', Descriptor({
     Value: toNumberValue(length),
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
+    Writable: false,
+    Enumerable: false,
+    Configurable: true,
   })));
 }
 
@@ -664,7 +667,7 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
   // 7. Set func.[[Prototype]] to prototype.
   func.Prototype = prototype;
   // 8. Set func.[[Extensible]] to true.
-  func.Extensible = Value.true;
+  func.Extensible = true;
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = null;
   // https://github.com/tc39/ecma262/pull/3212/
@@ -706,7 +709,7 @@ export function PrepareForTailCall() {
 export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, prefix?: string, argCount = 0): PlainEvaluator {
   let length = 0;
   const targetHasLength = Q(yield* HasOwnProperty(Target, 'length'));
-  if (targetHasLength === Value.true) {
+  if (targetHasLength) {
     const targetLength = Q(yield* Get(Target, 'length'));
     if (targetLength instanceof NumberValue) {
       const targetLengthAsInt = X(ToIntegerOrInfinity(targetLength));

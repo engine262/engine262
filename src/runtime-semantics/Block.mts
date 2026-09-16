@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import {
   LexicallyScopedDeclarations,
   IsConstantDeclaration,
@@ -25,10 +24,10 @@ export function* BlockDeclarationInstantiation(code: ParseNode.StatementList | P
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
         // 1. Perform ! env.CreateImmutableBinding(dn, true).
-        X(env.CreateImmutableBinding(dn, Value.true));
+        X(env.CreateImmutableBinding(dn, true));
       } else { // ii. Else,
         // 1. Perform ! env.CreateMutableBinding(dn, false).
-        X(env.CreateMutableBinding(dn, Value.false));
+        X(env.CreateMutableBinding(dn, false));
       }
       // b. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
       if (d.type === 'FunctionDeclaration'
