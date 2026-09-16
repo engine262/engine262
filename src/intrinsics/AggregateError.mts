@@ -35,6 +35,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
     'ErrorData',
     ...ErrorHostInternalSlots,
   ])) as ErrorObject;
+  O.ErrorData = 'AggregateError';
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).

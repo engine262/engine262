@@ -419,7 +419,20 @@ export abstract class ExpressionParser extends FunctionParser {
     let result: ParseNode.RelationalExpressionOrHigher = this.parseShiftExpression();
     const operators: Token[] = [Token.LT, Token.GT, Token.LTE, Token.GTE, Token.INSTANCEOF];
     if (this.scope.hasIn()) operators.push(Token.IN);
-    while (operators.includes(this.peek().type)) {
+    while (operators.includes(this.peek().type)
+        || (surroundingAgent.feature('pattern-matching')
+          && this.matches('is', this.peek())
+          && !this.peek().hadLineTerminatorBefore)) {
+      if (surroundingAgent.feature('pattern-matching')
+          && this.matches('is', this.peek())
+          && !this.peek().hadLineTerminatorBefore) {
+        this.next();
+        const node: ParseNode.Unfinished<ParseNode.IsExpression> = this.startNode(result);
+        node.RelationalExpression = result;
+        node.MatchPattern = this.parseMatchPattern();
+        result = this.finishNode(node, 'IsExpression');
+        continue;
+      }
       const node: ParseNode.Unfinished<ParseNode.RelationalExpression> = this.startNode(result);
       node.RelationalExpression = result;
       node.operator = this.next().value as ParseNode.RelationalExpression['operator'];
@@ -477,6 +490,328 @@ export abstract class ExpressionParser extends FunctionParser {
     node.ExponentiationExpression = this.parseExponentiationExpression();
     return this.finishNode(node, 'ExponentiationExpression');
   }
+
+  private parseMatchExpression(call: ParseNode.CallExpression): ParseNode.MatchExpression {
+    const node = this.startNode<ParseNode.MatchExpression>(call);
+    if (call.Arguments.length === 0 || call.Arguments.some((argument) => argument.type === 'AssignmentRestElement')) {
+      this.unexpected();
+    }
+    node.SubjectExpressions = call.Arguments as readonly ParseNode.AssignmentExpressionOrHigher[];
+    this.expect(Token.LBRACE);
+    const Clauses: ParseNode.MatchExpressionClause[] = [];
+    node.Clauses = Clauses;
+    while (!this.test(Token.RBRACE)) {
+      const clause = this.startNode<ParseNode.MatchExpressionClause>();
+      if (this.eat(Token.DEFAULT)) {
+        clause.MatchPattern = null;
+      } else {
+        clause.MatchPattern = this.parseMatchPattern();
+      }
+      this.expect(Token.COLON);
+      clause.Expression = this.parseExpression();
+      Clauses.push(this.finishNode(clause, 'MatchExpressionClause'));
+      this.expect(Token.SEMICOLON);
+      if (clause.MatchPattern === null && !this.test(Token.RBRACE)) {
+        this.unexpected();
+      }
+    }
+    if (Clauses.length === 0) {
+      this.unexpected();
+    }
+    this.expect(Token.RBRACE);
+    return this.finishNode(node, 'MatchExpression');
+  }
+
+  private parseMatchPattern(): ParseNode.MatchPattern {
+    let left: ParseNode.MatchPattern = this.parseMatchPatternAtom();
+    if (!this.test('and') && !this.test('or')) {
+      return left;
+    }
+    if (left.kind === 'not') {
+      this.unexpected();
+    }
+    const operator = this.next().valueAsString() as 'and' | 'or';
+    do {
+      const node: ParseNode.Unfinished<ParseNode.CombinedMatchPattern> = this.startNode<ParseNode.CombinedMatchPattern>(left);
+      node.kind = operator;
+      node.Left = left;
+      node.Right = this.parseMatchPatternAtom();
+      if (node.Right.kind === 'not' && (this.test('and') || this.test('or'))) {
+        this.unexpected();
+      }
+      left = this.finishNode(node, 'MatchPattern');
+      if ((operator === 'and' && this.test('or')) || (operator === 'or' && this.test('and'))) {
+        this.unexpected();
+      }
+    } while (this.eat(operator));
+    return left;
+  }
+
+  private parseMatchPatternAtom(): ParseNode.MatchPattern {
+    if (this.eat('not')) {
+      const node = this.startNode<ParseNode.NotMatchPattern>();
+      node.kind = 'not';
+      const pattern = this.parseMatchPatternAtom();
+      if (pattern.kind === 'not' || pattern.kind === 'and' || pattern.kind === 'or') {
+        this.unexpected();
+      }
+      node.MatchPattern = pattern;
+      return this.finishNode(node, 'MatchPattern');
+    }
+    if (this.eat(Token.LPAREN)) {
+      const node = this.startNode<ParseNode.ParenthesizedMatchPattern>();
+      node.kind = 'parenthesized';
+      node.MatchPattern = this.parseMatchPattern();
+      this.expect(Token.RPAREN);
+      return this.finishNode(node, 'MatchPattern');
+    }
+    if (this.test(Token.LBRACE)) {
+      return this.parseObjectMatchPattern();
+    }
+    if (this.test(Token.LBRACK)) {
+      return this.parseArrayMatchPattern();
+    }
+    if (this.test(Token.IF)) {
+      const node = this.startNode<ParseNode.IfMatchPattern>();
+      node.kind = 'if';
+      this.next();
+      this.expect(Token.LPAREN);
+      node.Expression = this.scope.with({ in: true }, () => this.parseExpression());
+      this.expect(Token.RPAREN);
+      return this.finishNode(node, 'MatchPattern');
+    }
+    if (this.isPatternDeclarationStart()) {
+      return this.parseVariableMatchPattern();
+    }
+    if (this.test(Token.LT) || this.test(Token.GT) || this.test(Token.LTE) || this.test(Token.GTE)
+        || this.test(Token.INSTANCEOF) || this.test(Token.IN) || this.test(Token.EQ)
+        || this.test(Token.NE) || this.test(Token.EQ_STRICT) || this.test(Token.NE_STRICT)) {
+      return this.parseRelationalMatchPattern();
+    }
+    if (this.test(Token.ADD) || this.test(Token.SUB)) {
+      return this.parseUnaryMatchPattern();
+    }
+    if (this.test(Token.NULL) || this.test(Token.TRUE) || this.test(Token.FALSE)
+        || this.test(Token.NUMBER) || this.test(Token.BIGINT) || this.test(Token.STRING)
+        || this.test(Token.TEMPLATE)) {
+      const node = this.startNode<ParseNode.PrimitiveMatchPattern>();
+      node.kind = 'primitive';
+      switch (this.peek().type) {
+        case Token.NULL: {
+          const literal = this.startNode<ParseNode.NullLiteral>();
+          this.next();
+          node.Expression = this.finishNode(literal, 'NullLiteral');
+          break;
+        }
+        case Token.TRUE:
+        case Token.FALSE:
+          node.Expression = this.parseBooleanLiteral();
+          break;
+        case Token.NUMBER:
+        case Token.BIGINT:
+          node.Expression = this.parseNumericLiteral();
+          break;
+        case Token.STRING:
+          node.Expression = this.parseStringLiteral();
+          break;
+        case Token.TEMPLATE: {
+          const template = this.parseTemplateLiteral();
+          if (template.ExpressionList.length !== 0) {
+            this.unexpected(template);
+          }
+          node.Expression = template;
+          break;
+        }
+        default:
+          return this.unexpected();
+      }
+      return this.finishNode(node, 'MatchPattern');
+    }
+    return this.parseMemberMatchPattern();
+  }
+
+  private isPatternDeclarationStart() {
+    const declarationToken = this.test(Token.VAR) || this.test(Token.CONST) || this.test('let');
+    if (!declarationToken) {
+      return false;
+    }
+    const next = this.peekAhead().type;
+    return next === Token.IDENTIFIER || next === Token.ESCAPED_KEYWORD
+      || next === Token.YIELD || next === Token.AWAIT;
+  }
+
+  private parsePatternDeclarationKind(): ParseNode.PatternDeclarationKind {
+    if (this.eat(Token.VAR)) return 'var';
+    if (this.eat(Token.CONST)) return 'const';
+    this.expect('let');
+    return 'let';
+  }
+
+  private parseVariableMatchPattern(): ParseNode.VariableMatchPattern {
+    const node = this.startNode<ParseNode.VariableMatchPattern>();
+    node.kind = 'variable';
+    node.DeclarationKind = this.parsePatternDeclarationKind();
+    node.BindingIdentifier = this.parseBindingIdentifier();
+    if (node.DeclarationKind !== 'var' && node.BindingIdentifier.name === 'let') {
+      this.addEarlyError(Throw.SyntaxError('Let in lexical binding'), node.BindingIdentifier);
+    }
+    return this.finishNode(node, 'MatchPattern') as ParseNode.VariableMatchPattern;
+  }
+
+  private parsePatternMatchingMemberExpression(): ParseNode.LeftHandSideExpression {
+    const expression = this.parseLeftHandSideExpression(false);
+    let current: ParseNode.LeftHandSideExpression = expression;
+    while (current.type === 'MemberExpression') {
+      current = current.MemberExpression;
+    }
+    switch (current.type) {
+      case 'ThisExpression':
+      case 'IdentifierReference':
+      case 'RegularExpressionLiteral':
+      case 'SuperProperty':
+      case 'NewTarget':
+      case 'ImportMeta':
+        return expression;
+      default:
+        return this.unexpected(current);
+    }
+  }
+
+  private parseMemberMatchPattern(): ParseNode.MemberMatchPattern {
+    const node = this.startNode<ParseNode.MemberMatchPattern>();
+    node.kind = 'member';
+    node.Expression = this.parsePatternMatchingMemberExpression();
+    node.hasArguments = this.test(Token.LPAREN);
+    node.MatchList = node.hasArguments ? this.parseMatchList(Token.RPAREN) : null;
+    return this.finishNode(node, 'MatchPattern') as ParseNode.MemberMatchPattern;
+  }
+
+  private parseUnaryMatchPattern(): ParseNode.UnaryMatchPattern {
+    const node = this.startNode<ParseNode.UnaryMatchPattern>();
+    node.kind = 'unary';
+    node.operator = this.next().valueAsString() as '+' | '-';
+    if (this.test(Token.NUMBER) || this.test(Token.BIGINT)) {
+      node.Expression = this.parseNumericLiteral();
+      node.literal = true;
+    } else {
+      node.Expression = this.parsePatternMatchingMemberExpression();
+      node.literal = false;
+    }
+    return this.finishNode(node, 'MatchPattern') as ParseNode.UnaryMatchPattern;
+  }
+
+  private parseRelationalMatchPattern(): ParseNode.RelationalMatchPattern {
+    const node = this.startNode<ParseNode.RelationalMatchPattern>();
+    node.kind = 'relational';
+    node.operator = this.next().valueAsString() as ParseNode.RelationalMatchPattern['operator'];
+    if (node.operator === 'instanceof' || node.operator === 'in') {
+      node.Expression = this.parsePatternMatchingMemberExpression();
+    } else if (this.test(Token.ADD) || this.test(Token.SUB)) {
+      node.Expression = this.parseUnaryMatchPattern();
+    } else if (this.test(Token.NULL) || this.test(Token.TRUE) || this.test(Token.FALSE)
+        || this.test(Token.NUMBER) || this.test(Token.BIGINT) || this.test(Token.STRING)
+        || this.test(Token.TEMPLATE)) {
+      const primitive = this.parseMatchPatternAtom();
+      if (primitive.kind !== 'primitive') {
+        return this.unexpected(primitive);
+      }
+      node.Expression = primitive.Expression;
+    } else {
+      node.Expression = this.parsePatternMatchingMemberExpression();
+    }
+    return this.finishNode(node, 'MatchPattern') as ParseNode.RelationalMatchPattern;
+  }
+
+  private parseObjectMatchPattern(): ParseNode.ObjectMatchPattern {
+    const node = this.startNode<ParseNode.ObjectMatchPattern>();
+    node.kind = 'object';
+    const Properties: ParseNode.MatchProperty[] = [];
+    node.Properties = Properties;
+    node.Rest = null;
+    this.expect(Token.LBRACE);
+    while (!this.test(Token.RBRACE)) {
+      if (this.eat(Token.ELLIPSIS)) {
+        node.Rest = this.parseMatchPattern();
+        if (this.eat(Token.COMMA) || !this.test(Token.RBRACE)) {
+          this.unexpected();
+        }
+        break;
+      }
+      const property = this.startNode<ParseNode.MatchProperty>();
+      property.DeclarationKind = null;
+      property.BindingIdentifier = null;
+      property.PropertyName = null;
+      if (this.isPatternDeclarationStart()) {
+        property.DeclarationKind = this.parsePatternDeclarationKind();
+        property.BindingIdentifier = this.parseBindingIdentifier();
+      } else {
+        property.PropertyName = this.parsePropertyName();
+        if (PropName(property.PropertyName) === '__proto__') {
+          this.addEarlyError(Throw.SyntaxError('Duplicate __proto__ property'), property.PropertyName);
+        }
+      }
+      property.optional = this.eat(Token.CONDITIONAL);
+      property.MatchPattern = this.eat(Token.COLON) ? this.parseMatchPattern() : null;
+      if (!property.BindingIdentifier && !property.MatchPattern && property.PropertyName?.type === 'IdentifierName') {
+        this.unexpected(property.PropertyName);
+      }
+      Properties.push(this.finishNode(property, 'MatchProperty'));
+      if (!this.eat(Token.COMMA)) {
+        break;
+      }
+    }
+    this.expect(Token.RBRACE);
+    return this.finishNode(node, 'MatchPattern') as ParseNode.ObjectMatchPattern;
+  }
+
+  private parseArrayMatchPattern(): ParseNode.ArrayMatchPattern {
+    const node = this.startNode<ParseNode.ArrayMatchPattern>();
+    node.kind = 'array';
+    this.expect(Token.LBRACK);
+    node.MatchList = this.parseMatchListContents(Token.RBRACK);
+    this.expect(Token.RBRACK);
+    return this.finishNode(node, 'MatchPattern') as ParseNode.ArrayMatchPattern;
+  }
+
+  private parseMatchList(end: Token): ParseNode.MatchList {
+    this.expect(Token.LPAREN);
+    const list = this.parseMatchListContents(end);
+    this.expect(end);
+    return list;
+  }
+
+  private parseMatchListContents(end: Token): ParseNode.MatchList {
+    const elements: ParseNode.MatchElement[] = [];
+    let optionalSeen = false;
+    while (!this.test(end)) {
+      const element = this.startNode<ParseNode.MatchElement>();
+      element.optional = false;
+      element.rest = false;
+      if (this.eat(Token.COMMA)) {
+        element.MatchPattern = null;
+        if (optionalSeen) this.unexpected();
+        elements.push(this.finishNode(element, 'MatchElement'));
+        continue;
+      }
+      if (this.eat(Token.ELLIPSIS)) {
+        element.rest = true;
+        element.MatchPattern = this.test(end) ? null : this.parseMatchPattern();
+        elements.push(this.finishNode(element, 'MatchElement'));
+        if (!this.test(end)) this.unexpected();
+        break;
+      }
+      element.MatchPattern = this.parseMatchPattern();
+      element.optional = this.eat(Token.CONDITIONAL);
+      optionalSeen ||= element.optional;
+      if (optionalSeen && !element.optional) this.unexpected();
+      elements.push(this.finishNode(element, 'MatchElement'));
+      if (!this.eat(Token.COMMA)) {
+        break;
+      }
+    }
+    return elements;
+  }
+
 
   // UnaryExpression :
   //   UpdateExpression
@@ -690,6 +1025,14 @@ export abstract class ExpressionParser extends FunctionParser {
             node.arrowInfo.hasTrailingComma = trailingComma;
           }
           finished = this.finishNode(node, 'CallExpression');
+          if (surroundingAgent.feature('pattern-matching')
+              && finished.CallExpression.type === 'IdentifierReference'
+              && finished.CallExpression.name === 'match'
+              && !finished.CallExpression.escaped
+              && !this.peek().hadLineTerminatorBefore
+              && this.test(Token.LBRACE)) {
+            finished = this.parseMatchExpression(finished);
+          }
           break;
         }
         case Token.OPTIONAL: {

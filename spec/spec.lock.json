@@ -12,5 +12,6 @@
   "source-phase-imports": "55c6439f62b519d35602d73705386ff27cce99e469926c1b95493499cff8edc2",
   "error-stack-accessor": "eba2751fac2ee1331b8b6fb937cc8095868bc8fb7c1f5cba298dc53c42096160",
   "pr3212-IsClassConstructor": "ba5a89515572cbc586c9264b192e7787e19ec4b35b08cad7ff8791a3cb3b1d84",
-  "defer-import-eval": "2024e977fb083d35a05c38b86b96eb8cc5b0b7a38eca3502a8644811ab4e0974"
+  "defer-import-eval": "2024e977fb083d35a05c38b86b96eb8cc5b0b7a38eca3502a8644811ab4e0974",
+  "pattern-matching": "b3a236e33f6135310a95f7e599efdad05b2bcba1d5a9a08e832c2f36e2a72b6e"
 }

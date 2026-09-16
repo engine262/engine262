@@ -79,6 +79,9 @@ export function bootstrapSymbol(realmRec: Realm) {
   ]);
 
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
+    if (name === 'customMatcher' && !surroundingAgent.feature('pattern-matching')) {
+      continue;
+    }
     X(symbolConstructor.DefineOwnProperty(Value(name), Descriptor({
       Value: sym,
       Writable: false,

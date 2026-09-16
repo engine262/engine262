@@ -27,7 +27,7 @@ import {
 } from '#self';
 
 export interface ErrorObject extends ObjectValue {
-  ErrorData: never;
+  ErrorData: string;
   /** Show a clickable stack in the devtools */
   HostDefinedStack: readonly (CallSite | CallFrame)[] | undefined;
   /** Show an error message that allows ECMAScript values to be interleaved with host error messages in the devtools */
@@ -67,6 +67,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
     'ErrorData',
     ...ErrorHostInternalSlots,
   ])) as ErrorObject;
+  O.ErrorData = 'Error';
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).

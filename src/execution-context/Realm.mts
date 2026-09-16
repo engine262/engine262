@@ -80,6 +80,7 @@ import { bootstrapTypedArrayConstructors } from '../intrinsics/TypedArrayConstru
 import { bootstrapTypedArrayPrototype } from '../intrinsics/TypedArrayPrototype.mts';
 import { bootstrapTypedArrayPrototypes } from '../intrinsics/TypedArrayPrototypes.mts';
 import { bootstrapURIHandling } from '../intrinsics/URIHandling.mts';
+import { installPatternMatchingIntrinsics } from '../intrinsics/PatternMatching.mts';
 import { bootstrapWeakMap } from '../intrinsics/WeakMap.mts';
 import { bootstrapWeakMapPrototype } from '../intrinsics/WeakMapPrototype.mts';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mts';
@@ -97,6 +98,7 @@ import {
   F as toNumberValue,
   Value,
   X,
+  surroundingAgent,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-code-realms */
@@ -264,6 +266,10 @@ export function CreateIntrinsics(realmRec: Realm) {
 
   bootstrapShadowRealmPrototype(realmRec);
   bootstrapShadowRealm(realmRec);
+
+  if (surroundingAgent.feature('pattern-matching')) {
+    installPatternMatchingIntrinsics(realmRec);
+  }
 
   bootstrapTemporal(realmRec);
 

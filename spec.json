@@ -103,6 +103,13 @@
       "source": "https://github.com/tc39/proposal-defer-import-eval",
       "commit": "d317e5bb5167269978ee5dca9845276db5e6d7ce",
       "path": ["spec.emu"]
+    },
+    {
+      "name": "pattern-matching",
+      "description": "Pattern Matching",
+      "source": "https://github.com/tc39/proposal-pattern-matching",
+      "commit": "ba73ffe42f30f0cf56ece28bebdc28f955f2a52e",
+      "path": ["spec.emu"]
     }
   ]
 }

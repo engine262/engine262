@@ -55,6 +55,7 @@ export * from './BindingInitialization.mts';
 export * from './ForDeclarationBindingInitialization.mts';
 export * from './AsyncFunctionExpression.mts';
 export * from './RelationalExpression.mts';
+export * from './PatternMatching.mts';
 export * from './BreakableStatement.mts';
 export * from './LabelledEvaluation.mts';
 export * from './TemplateLiteral.mts';

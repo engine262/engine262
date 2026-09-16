@@ -152,6 +152,7 @@ export namespace ParseNode {
     | AsyncGeneratorExpression
     | RegularExpressionLiteral
     | TemplateLiteral
+    | MatchExpression
     | CoverParenthesizedExpressionAndArrowParameterList
     | ParenthesizedExpression;
 
@@ -719,7 +720,15 @@ export namespace ParseNode {
   //   RelationalExpression `in` ShiftExpression
   export type RelationalExpressionOrHigher =
     | ShiftExpressionOrHigher
-    | RelationalExpression;
+    | RelationalExpression
+    | IsExpression;
+
+  // RelationalExpression : RelationalExpression `is` MatchPattern
+  export interface IsExpression extends BaseParseNode {
+    readonly type: 'IsExpression';
+    readonly RelationalExpression: RelationalExpressionOrHigher;
+    readonly MatchPattern: MatchPattern;
+  }
 
   // RelationalExpression (partial) :
   //   RelationalExpression `<` ShiftExpression
@@ -735,6 +744,127 @@ export namespace ParseNode {
     readonly PrivateIdentifier?: PrivateIdentifier;
     readonly RelationalExpression?: RelationalExpressionOrHigher;
     readonly ShiftExpression: ShiftExpressionOrHigher;
+  }
+
+  // MatchExpression : MatchHead `{` MatchExpressionClauses `;` `}`
+  export interface MatchExpression extends BaseParseNode {
+    readonly type: 'MatchExpression';
+    readonly SubjectExpressions: readonly AssignmentExpressionOrHigher[];
+    readonly Clauses: readonly MatchExpressionClause[];
+  }
+
+  export interface MatchExpressionClause extends BaseParseNode {
+    readonly type: 'MatchExpressionClause';
+    readonly MatchPattern: MatchPattern | null;
+    readonly Expression: Expression;
+  }
+
+  export type PatternDeclarationKind = 'var' | 'let' | 'const';
+
+  export type MatchPattern =
+    | ParenthesizedMatchPattern
+    | PrimitiveMatchPattern
+    | VariableMatchPattern
+    | MemberMatchPattern
+    | ObjectMatchPattern
+    | ArrayMatchPattern
+    | UnaryMatchPattern
+    | RelationalMatchPattern
+    | IfMatchPattern
+    | CombinedMatchPattern
+    | NotMatchPattern;
+
+  export interface ParenthesizedMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'parenthesized';
+    readonly MatchPattern: MatchPattern;
+  }
+
+  export interface PrimitiveMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'primitive';
+    readonly Expression: Literal | TemplateLiteral;
+  }
+
+  export interface VariableMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'variable';
+    readonly DeclarationKind: PatternDeclarationKind;
+    readonly BindingIdentifier: BindingIdentifier;
+  }
+
+  export interface MemberMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'member';
+    readonly Expression: LeftHandSideExpression;
+    readonly MatchList: MatchList | null;
+    readonly hasArguments: boolean;
+  }
+
+  export interface ObjectMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'object';
+    readonly Properties: readonly MatchProperty[];
+    readonly Rest: MatchPattern | null;
+  }
+
+  export interface ArrayMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'array';
+    readonly MatchList: MatchList;
+  }
+
+  export interface UnaryMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'unary';
+    readonly operator: '+' | '-';
+    readonly Expression: NumericLiteral | LeftHandSideExpression;
+    readonly literal: boolean;
+  }
+
+  export interface RelationalMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'relational';
+    readonly operator: '<' | '>' | '<=' | '>=' | 'instanceof' | 'in' | '==' | '!=' | '===' | '!==';
+    readonly Expression: Literal | TemplateLiteral | LeftHandSideExpression | UnaryMatchPattern;
+  }
+
+  export interface IfMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'if';
+    readonly Expression: Expression;
+  }
+
+  export interface CombinedMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'and' | 'or';
+    readonly Left: MatchPattern;
+    readonly Right: MatchPattern;
+  }
+
+  export interface NotMatchPattern extends BaseParseNode {
+    readonly type: 'MatchPattern';
+    readonly kind: 'not';
+    readonly MatchPattern: MatchPattern;
+  }
+
+  // NON-SPEC: flattened representation of MatchList.
+  export type MatchList = readonly MatchElement[];
+
+  export interface MatchElement extends BaseParseNode {
+    readonly type: 'MatchElement';
+    readonly MatchPattern: MatchPattern | null;
+    readonly optional: boolean;
+    readonly rest: boolean;
+  }
+
+  export interface MatchProperty extends BaseParseNode {
+    readonly type: 'MatchProperty';
+    readonly PropertyName: PropertyNameLike | null;
+    readonly DeclarationKind: PatternDeclarationKind | null;
+    readonly BindingIdentifier: BindingIdentifier | null;
+    readonly optional: boolean;
+    readonly MatchPattern: MatchPattern | null;
   }
 
   // EqualityExpression :
@@ -931,6 +1061,7 @@ export namespace ParseNode {
     | BitwiseORExpression
     | BitwiseXORExpression
     | BitwiseANDExpression
+    | IsExpression
     | RelationalExpression
     | EqualityExpression
     | ShiftExpression
@@ -2847,6 +2978,12 @@ export type ParseNode =
   | ParseNode.AdditiveExpression
   | ParseNode.ShiftExpression
   | ParseNode.RelationalExpression
+  | ParseNode.IsExpression
+  | ParseNode.MatchExpression
+  | ParseNode.MatchExpressionClause
+  | ParseNode.MatchPattern
+  | ParseNode.MatchElement
+  | ParseNode.MatchProperty
   | ParseNode.EqualityExpression
   | ParseNode.BitwiseANDExpression
   | ParseNode.BitwiseXORExpression

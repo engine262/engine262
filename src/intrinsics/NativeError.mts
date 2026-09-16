@@ -52,6 +52,7 @@ export function bootstrapNativeError(realmRec: Realm) {
         'ErrorData',
         ...ErrorHostInternalSlots,
       ])) as ErrorObject;
+      O.ErrorData = name;
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
         // a. Let msg be ? ToString(message).

@@ -80,6 +80,13 @@ export const FEATURES = ([
     url: 'https://github.com/tc39/proposal-deferred-reexports',
     enableInPlayground: true,
   },
+  // stage 1
+  {
+    name: 'Pattern Matching',
+    flag: 'pattern-matching',
+    url: 'https://github.com/tc39/proposal-pattern-matching',
+    enableInPlayground: true,
+  },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);

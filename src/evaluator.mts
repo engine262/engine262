@@ -51,6 +51,8 @@ import {
   Evaluate_LogicalANDExpression,
   Evaluate_BinaryBitwiseExpression,
   Evaluate_RelationalExpression,
+  Evaluate_IsExpression,
+  Evaluate_MatchExpression,
   Evaluate_CoalesceExpression,
   Evaluate_EqualityExpression,
   Evaluate_CallExpression,
@@ -231,6 +233,10 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
       return yield* Evaluate_BinaryBitwiseExpression(node);
     case 'RelationalExpression':
       return yield* Evaluate_RelationalExpression(node);
+    case 'IsExpression':
+      return yield* Evaluate_IsExpression(node);
+    case 'MatchExpression':
+      return yield* Evaluate_MatchExpression(node);
     case 'CoalesceExpression':
       return yield* Evaluate_CoalesceExpression(node);
     case 'EqualityExpression':

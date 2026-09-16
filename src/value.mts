@@ -242,6 +242,7 @@ export class SymbolValue extends PrimitiveValue {
 export const wellKnownSymbols = {
   asyncDispose: new SymbolValue('Symbol.asyncDispose'),
   asyncIterator: new SymbolValue('Symbol.asyncIterator'),
+  customMatcher: new SymbolValue('Symbol.customMatcher'),
   dispose: new SymbolValue('Symbol.dispose'),
   hasInstance: new SymbolValue('Symbol.hasInstance'),
   isConcatSpreadable: new SymbolValue('Symbol.isConcatSpreadable'),
