@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 bf86ab02e64eddc938519c6c81b2aefdbe4397c0
+ * engine262 0.0.1 15d4a8a3913351c829d0410c025e714c974565fb
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1882,6 +1882,7 @@
   }
 
   exports.Inspector = Inspector;
+  exports.consoleMethods = consoleMethods;
   exports.createConsole = createConsole;
 
 }));

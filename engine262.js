@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 bf86ab02e64eddc938519c6c81b2aefdbe4397c0
+ * engine262 0.0.1 15d4a8a3913351c829d0410c025e714c974565fb
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2008,7 +2008,7 @@
     return errorString;
   }
 
-  /** Coerces a property key into a numeric index */
+  /** Coerces a property key into a numeric index. */
 
   const MaybeAssignTokens = [
   // Logical
@@ -9087,10 +9087,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     constructor(length = 0) {
       super(+length);
     }
-
-    // @ts-expect-error
     pop(ctx) {
-      if (!ctx.poppedForTailCall) {
+      if (!ctx) {
+        // TODO: add a eslint plugin for it.
+        throw new Error("ExecutionContextStack.pop() must be called with a context for the sanity check");
+      }
+      if (!ctx?.poppedForTailCall) {
         const popped = super.pop();
         /* Assert */ /* node:coverage ignore next */if (!(popped === ctx)) throw new Assert.Error("popped === ctx");
       }
@@ -29170,11 +29172,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   let createContinueCompletion;
   let createReturnCompletion;
   let createThrowCompletion;
-  let _CompletionImpl;
+  exports.CompletionImpl = void 0;
   new class extends _identity {
     static [class CompletionImpl {
       static {
-        [_CompletionImpl, _initClass$1] = _applyDecs$1(this, [callable((_target, _thisArg, [completionRecord]) => {
+        [exports.CompletionImpl, _initClass$1] = _applyDecs$1(this, [callable((_target, _thisArg, [completionRecord]) => {
           /* Assert */ /* node:coverage ignore next */ // 1. Assert: completionRecord is a Completion Record.
           if (!(completionRecord instanceof Completion)) throw new Assert.Error("completionRecord instanceof Completion");
           // 2. Return completionRecord as the Completion Record of this abstract operation.
@@ -29184,7 +29186,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Value;
       Target;
       constructor(init) {
-        if (new.target === _CompletionImpl) {
+        if (new.target === exports.CompletionImpl) {
           switch (init.Type) {
             case 'normal':
               return createNormalCompletion(init);
@@ -29217,14 +29219,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }];
     constructor() {
-      super(_CompletionImpl), (() => {
+      super(exports.CompletionImpl), (() => {
         Object.defineProperty(this, 'name', {
           value: 'Completion'
         });
       })(), _initClass$1();
     }
   }();
-  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   /**
    * A NON-SPEC shorthand to notate "returns either a normal completion containing an ECMAScript language value or a throw completion".
    */
@@ -29235,12 +29236,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
    * If the T is an ECMAScript language value, use ExpressionCompletion<T>.
    */
   /** https://tc39.es/ecma262/#sec-completion-ao */
-  const Completion = _CompletionImpl;
-  let _NormalCompletionImpl;
+  const Completion = exports.CompletionImpl;
+  exports.NormalCompletionImpl = void 0;
   new class extends _identity {
-    static [class NormalCompletionImpl extends (_CompletionImpl2 = _CompletionImpl) {
+    static [class NormalCompletionImpl extends (_CompletionImpl2 = exports.CompletionImpl) {
       static {
-        [_NormalCompletionImpl, _initClass2] = _applyDecs$1(this, [callable((_target, _thisArg, [value]) => {
+        [exports.NormalCompletionImpl, _initClass2] = _applyDecs$1(this, [callable((_target, _thisArg, [value]) => {
           // eslint-disable-line arrow-body-style -- Preserve algorithm steps comments
           // 1. Return Completion { [[Type]]: normal, [[Value]]: value, [[Target]]: empty }.
           return new Completion({
@@ -29256,26 +29257,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }];
     constructor() {
-      super(_NormalCompletionImpl), (() => {
+      super(exports.NormalCompletionImpl), (() => {
         Object.defineProperty(this, 'name', {
           value: 'NormalCompletion'
         });
         Object.defineProperty(this.prototype, 'Type', {
           value: 'normal'
         });
-        createNormalCompletion = init => new _NormalCompletionImpl(init);
+        createNormalCompletion = init => new exports.NormalCompletionImpl(init);
       })(), _initClass2();
     }
   }();
-  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   /** https://tc39.es/ecma262/#sec-normalcompletion */
-  const NormalCompletion = _NormalCompletionImpl;
+  const NormalCompletion = exports.NormalCompletionImpl;
 
   /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 
   /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   const AbruptCompletion = (() => {
-    class AbruptCompletion extends _CompletionImpl {
+    class AbruptCompletion extends exports.CompletionImpl {
       constructor(init) {
         // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
         super(init);
@@ -29322,11 +29322,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       createContinueCompletion = init => new ContinueCompletion(init);
     }
   }
-  let _ReturnCompletion_;
+  exports.ReturnCompletion_ = void 0;
   new class extends _identity {
     static [class ReturnCompletion_ extends AbruptCompletion {
       static {
-        [_ReturnCompletion_, _initClass3] = _applyDecs$1(this, [callable((_target, _thisArg, [value]) => {
+        [exports.ReturnCompletion_, _initClass3] = _applyDecs$1(this, [callable((_target, _thisArg, [value]) => {
           /* Assert */ /* node:coverage ignore next */if (!(value instanceof Value)) throw new Assert.Error("value instanceof Value");
           // 1. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
           return new Completion({
@@ -29342,7 +29342,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }];
     constructor() {
-      super(_ReturnCompletion_), (() => {
+      super(exports.ReturnCompletion_), (() => {
         Object.defineProperty(this, 'name', {
           value: 'ReturnCompletion'
         });
@@ -29353,14 +29353,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       })(), _initClass3();
     }
   }();
-  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   /** https://tc39.es/ecma262/#sec-throwcompletion */
-  const ReturnCompletion = _ReturnCompletion_;
-  let _ThrowCompletion_;
+  const ReturnCompletion = exports.ReturnCompletion_;
+  exports.ThrowCompletion_ = void 0;
   new class extends _identity {
     static [class ThrowCompletion_ extends AbruptCompletion {
       static {
-        [_ThrowCompletion_, _initClass4] = _applyDecs$1(this, [callable((_target, _thisArg, [value]) => {
+        [exports.ThrowCompletion_, _initClass4] = _applyDecs$1(this, [callable((_target, _thisArg, [value]) => {
           /* Assert */ /* node:coverage ignore next */if (!(value instanceof Value)) throw new Assert.Error("value instanceof Value");
           // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
           return new Completion({
@@ -29377,20 +29376,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }];
     constructor() {
-      super(_ThrowCompletion_), (() => {
+      super(exports.ThrowCompletion_), (() => {
         Object.defineProperty(this, 'name', {
           value: 'ThrowCompletion'
         });
         Object.defineProperty(this.prototype, 'Type', {
           value: 'throw'
         });
-        createThrowCompletion = init => new _ThrowCompletion_(init);
+        createThrowCompletion = init => new exports.ThrowCompletion_(init);
       })(), _initClass4();
     }
   }();
-  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   /** https://tc39.es/ecma262/#sec-throwcompletion */
-  const ThrowCompletion = _ThrowCompletion_;
+  const ThrowCompletion = exports.ThrowCompletion_;
 
   /** https://tc39.es/ecma262/#sec-updateempty */
 
@@ -29404,7 +29402,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Completion(completionRecord);
     }
     // 3. Return Completion { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
-    return new _CompletionImpl({
+    return new exports.CompletionImpl({
       Type: completionRecord.Type,
       Value: value,
       Target: completionRecord.Target
@@ -32386,60 +32384,60 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } = a.default || a;
 
   // @ts-expect-error
-  let _Decimal;
+  exports.Decimal = void 0;
   class Decimal {
     static {
-      [_Decimal, _initClass] = _applyDecs(this, [callable((_, _t, args) => new _Decimal(args[0]))], []).c;
+      [exports.Decimal, _initClass] = _applyDecs(this, [callable((_, _t, args) => new exports.Decimal(args[0]))], []).c;
     }
     value;
     constructor(value) {
-      if (value instanceof _Decimal) {
+      if (value instanceof exports.Decimal) {
         this.value = value.value;
       } else {
         this.value = BigDecimal(value);
       }
     }
     add(other, option) {
-      return new _Decimal(d_add(this.value, new _Decimal(other).value, option));
+      return new exports.Decimal(d_add(this.value, new exports.Decimal(other).value, option));
     }
     subtract(other, option) {
-      return new _Decimal(d_subtract(this.value, new _Decimal(other).value, option));
+      return new exports.Decimal(d_subtract(this.value, new exports.Decimal(other).value, option));
     }
     multiply(other, option) {
-      return new _Decimal(d_multiply(this.value, new _Decimal(other).value, option));
+      return new exports.Decimal(d_multiply(this.value, new exports.Decimal(other).value, option));
     }
     divide(other, option) {
-      return new _Decimal(d_divide(this.value, new _Decimal(other).value, option));
+      return new exports.Decimal(d_divide(this.value, new exports.Decimal(other).value, option));
     }
     remainder(other, option) {
-      return new _Decimal(d_remainder(this.value, new _Decimal(other).value, option));
+      return new exports.Decimal(d_remainder(this.value, new exports.Decimal(other).value, option));
     }
     equals(other) {
-      return d_equal(this.value, new _Decimal(other).value);
+      return d_equal(this.value, new exports.Decimal(other).value);
     }
     notEqual(other) {
-      return d_notEqual(this.value, new _Decimal(other).value);
+      return d_notEqual(this.value, new exports.Decimal(other).value);
     }
     lessThan(other) {
-      return d_lessThan(this.value, new _Decimal(other).value);
+      return d_lessThan(this.value, new exports.Decimal(other).value);
     }
     lessThanOrEqual(other) {
-      return d_lessThanOrEqual(this.value, new _Decimal(other).value);
+      return d_lessThanOrEqual(this.value, new exports.Decimal(other).value);
     }
     greaterThan(other) {
-      return d_greaterThan(this.value, new _Decimal(other).value);
+      return d_greaterThan(this.value, new exports.Decimal(other).value);
     }
     greaterThanOrEqual(other) {
-      return d_greaterThanOrEqual(this.value, new _Decimal(other).value);
+      return d_greaterThanOrEqual(this.value, new exports.Decimal(other).value);
     }
     abs() {
       if (this.lessThan(0)) {
-        return new _Decimal(this.multiply(-1));
+        return new exports.Decimal(this.multiply(-1));
       }
       return this;
     }
     negate() {
-      return new _Decimal(this.multiply(-1));
+      return new exports.Decimal(this.multiply(-1));
     }
     toBigInt() {
       return BigInt(this.value.toString());
@@ -32449,25 +32447,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     modulo(y) {
       // (x % y + y) % y
-      const yDecimal = new _Decimal(y).value;
-      return new _Decimal(d_remainder(d_add(d_remainder(this.value, yDecimal), yDecimal), yDecimal));
+      const yDecimal = new exports.Decimal(y).value;
+      return new exports.Decimal(d_remainder(d_add(d_remainder(this.value, yDecimal), yDecimal), yDecimal));
     }
     truncate() {
-      return new _Decimal(this.value.toString().split('.')[0]);
+      return new exports.Decimal(this.value.toString().split('.')[0]);
     }
     floor() {
       const [integerPart, fractionalPart] = this.value.toString().split('.');
       if (fractionalPart && this.lessThan(0)) {
-        return new _Decimal(integerPart).subtract(1);
+        return new exports.Decimal(integerPart).subtract(1);
       }
-      return new _Decimal(integerPart);
+      return new exports.Decimal(integerPart);
     }
     ceil() {
       const [integerPart, fractionalPart] = this.value.toString().split('.');
       if (fractionalPart && this.greaterThan(0)) {
-        return new _Decimal(integerPart).add(1);
+        return new exports.Decimal(integerPart).add(1);
       }
-      return new _Decimal(integerPart);
+      return new exports.Decimal(integerPart);
     }
     static {
       _initClass();
@@ -33477,14 +33475,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         _temp2 = _temp2.Value;
       }
-      minutesMV = _Decimal(_temp2).divide(10 ** fHoursScale).multiply(60);
+      minutesMV = exports.Decimal(_temp2).divide(10 ** fHoursScale).multiply(60);
     } else {
       /* ReturnIfAbrupt */let _temp3 = yield* SnapToInteger(Value(minutes), 'truncate');
       /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         _temp3 = _temp3.Value;
       }
-      minutesMV = _Decimal(_temp3);
+      minutesMV = exports.Decimal(_temp3);
     }
     let secondsMV;
     if (fMinutes) {
@@ -33496,14 +33494,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         _temp4 = _temp4.Value;
       }
-      secondsMV = _Decimal(_temp4).divide(10 ** fMinutesScale).multiply(60);
+      secondsMV = exports.Decimal(_temp4).divide(10 ** fMinutesScale).multiply(60);
     } else if (seconds) {
       /* ReturnIfAbrupt */let _temp5 = yield* SnapToInteger(Value(seconds), 'truncate');
       /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         _temp5 = _temp5.Value;
       }
-      secondsMV = _Decimal(_temp5);
+      secondsMV = exports.Decimal(_temp5);
     } else {
       secondsMV = minutesMV.remainder(1).multiply(60);
     }
@@ -33516,7 +33514,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         _temp6 = _temp6.Value;
       }
-      millisecondsMV = _Decimal(_temp6).divide(10 ** fSecondsScale).multiply(1000);
+      millisecondsMV = exports.Decimal(_temp6).divide(10 ** fSecondsScale).multiply(1000);
     } else {
       millisecondsMV = secondsMV.remainder(1).multiply(1000);
     }
@@ -35576,7 +35574,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return candidate;
       }
       if (matchBehaviour === 'match-minutes') {
-        const roundedCandidateNanoseconds = RoundNumberToIncrement(_Decimal(candidateOffset), NanosecondsPerMinute, 'halfExpand');
+        const roundedCandidateNanoseconds = RoundNumberToIncrement(exports.Decimal(candidateOffset), NanosecondsPerMinute, 'halfExpand');
         if (roundedCandidateNanoseconds === offsetNanoseconds) {
           return candidate;
         }
@@ -37481,7 +37479,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     quantity += time.Nanosecond;
     const unitLength = TemporalUnitLength(unit);
-    const result = RoundNumberToIncrement(_Decimal(quantity), increment * unitLength, roundingMode) / unitLength;
+    const result = RoundNumberToIncrement(exports.Decimal(quantity), increment * unitLength, roundingMode) / unitLength;
     if (unit === 'day') {
       /* X */let _temp16 = CreateTimeRecord(0n, 0n, 0n, 0n, 0n, 0n, result);
       /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
@@ -37912,14 +37910,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/proposal-temporal/#sec-temporal-differenceplaindatetimewithtotal */
   function DifferencePlainDateTimeWithTotal(isoDateTimeFrom, isoDateTimeTo, calendar, unit) {
     if (CompareISODateTime(isoDateTimeFrom, isoDateTimeTo) === 0n) {
-      return _Decimal(0);
+      return exports.Decimal(0);
     }
     if (!ISODateTimeWithinLimits(isoDateTimeFrom) || !ISODateTimeWithinLimits(isoDateTimeTo)) {
       return Throw.RangeError('PlainDateTime outside of range');
     }
     const diff = DifferenceISODateTime(isoDateTimeFrom, isoDateTimeTo, calendar, unit);
     if (unit === 'nanosecond') {
-      return _Decimal(diff.Time);
+      return exports.Decimal(diff.Time);
     }
     const originEpochNanoseconds = GetUTCEpochNanoseconds(isoDateTimeFrom);
     const destEpochNanoseconds = GetUTCEpochNanoseconds(isoDateTimeTo);
@@ -38613,7 +38611,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/pr/3759/#sec-roundepochnanoseconds */
   function RoundEpochNanoseconds(epochNanoseconds, increment, unit, roundingMode) {
     const incrementNanoseconds = increment * TemporalUnitLength(unit);
-    return BigInt(RoundNumberToIncrementAsIfPositive(_Decimal(epochNanoseconds), incrementNanoseconds, roundingMode));
+    return BigInt(RoundNumberToIncrementAsIfPositive(exports.Decimal(epochNanoseconds), incrementNanoseconds, roundingMode));
   }
   RoundEpochNanoseconds.section = 'https://tc39.es/ecma262/pr/3759/#sec-roundepochnanoseconds';
 
@@ -40034,7 +40032,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // https://tc39.es/proposal-temporal/#sec-temporal-formatdatetimeutcoffsetrounded
   function FormatDateTimeUTCOffsetRounded(offsetNanoseconds) {
-    offsetNanoseconds = RoundNumberToIncrement(_Decimal(offsetNanoseconds), NanosecondsPerMinute, 'halfExpand');
+    offsetNanoseconds = RoundNumberToIncrement(exports.Decimal(offsetNanoseconds), NanosecondsPerMinute, 'halfExpand');
     const offsetMinutes = offsetNanoseconds / NanosecondsPerMinute;
     return FormatOffsetTimeZoneIdentifier(offsetMinutes);
   }
@@ -54343,7 +54341,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/proposal-temporal/#sec-temporal-roundtimedurationtoincrement */
   function RoundTimeDurationToIncrement(timeDuration, increment, roundingMode) {
-    const rounded = RoundNumberToIncrement(_Decimal(timeDuration), increment, roundingMode);
+    const rounded = RoundNumberToIncrement(exports.Decimal(timeDuration), increment, roundingMode);
     // If _rounded_ is not a time duration
     if (abs(rounded) > maxTimeDuration) {
       return Throw.RangeError('Invalid duration');
@@ -54399,7 +54397,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/proposal-temporal/#sec-temporal-totaltimeduration */
   function TotalTimeDuration(timeDuration, unit) {
-    return _Decimal(timeDuration).divide(TemporalUnitLength(unit));
+    return exports.Decimal(timeDuration).divide(TemporalUnitLength(unit));
   }
   TotalTimeDuration.section = 'https://tc39.es/proposal-temporal/#sec-temporal-totaltimeduration';
 
@@ -54412,11 +54410,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let startDateDuration;
     let endDateDuration;
     if (unit === 'year') {
-      const years = RoundNumberToIncrement(_Decimal(duration.Date.Years), increment, 'trunc');
+      const years = RoundNumberToIncrement(exports.Decimal(duration.Date.Years), increment, 'trunc');
       if (!additionalShift) {
-        innerBound = _Decimal(years);
+        innerBound = exports.Decimal(years);
       } else {
-        innerBound = _Decimal(years + increment * sign);
+        innerBound = exports.Decimal(years + increment * sign);
       }
       outerBound = innerBound.add(increment * sign);
       /* ReturnIfAbrupt */let _temp13 = CreateDateDurationRecord(innerBound.toBigInt(), 0n, 0n, 0n);
@@ -54432,11 +54430,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       endDateDuration = _temp14;
     } else if (unit === 'month') {
-      const months = RoundNumberToIncrement(_Decimal(duration.Date.Months), increment, 'trunc');
+      const months = RoundNumberToIncrement(exports.Decimal(duration.Date.Months), increment, 'trunc');
       if (!additionalShift) {
-        innerBound = _Decimal(months);
+        innerBound = exports.Decimal(months);
       } else {
-        innerBound = _Decimal(months + increment * sign);
+        innerBound = exports.Decimal(months + increment * sign);
       }
       outerBound = innerBound.add(increment * sign);
       /* ReturnIfAbrupt */let _temp15 = AdjustDateDurationRecord(duration.Date, 0n, 0n, innerBound.toBigInt());
@@ -54469,8 +54467,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const weeksStart = _weeksStart;
       const weeksEnd = AddDaysToISODate(weeksStart, BigInt(duration.Date.Days));
       const untilResult = CalendarDateUntil(calendar, weeksStart, weeksEnd, 'week');
-      const weeks = RoundNumberToIncrement(_Decimal(duration.Date.Weeks + untilResult.Weeks), increment, 'trunc');
-      innerBound = _Decimal(weeks);
+      const weeks = RoundNumberToIncrement(exports.Decimal(duration.Date.Weeks + untilResult.Weeks), increment, 'trunc');
+      innerBound = exports.Decimal(weeks);
       outerBound = innerBound.add(increment * sign);
       /* ReturnIfAbrupt */let _temp17 = AdjustDateDurationRecord(duration.Date, 0n, innerBound.toBigInt());
       /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
@@ -54486,8 +54484,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       endDateDuration = _temp18;
     } else {
       /* Assert */ /* node:coverage ignore next */if (!(unit === 'day')) throw new Assert.Error("unit === 'day'");
-      const days = RoundNumberToIncrement(_Decimal(duration.Date.Days), increment, 'trunc');
-      innerBound = _Decimal(days);
+      const days = RoundNumberToIncrement(exports.Decimal(duration.Date.Days), increment, 'trunc');
+      innerBound = exports.Decimal(days);
       outerBound = innerBound.add(increment * sign);
       /* ReturnIfAbrupt */let _temp19 = AdjustDateDurationRecord(duration.Date, innerBound.toBigInt());
       /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
@@ -54604,7 +54602,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const startDuration = nudgeWindow.StartDuration;
     const endDuration = nudgeWindow.EndDuration;
     /* Assert */ /* node:coverage ignore next */if (!(startEpochNanoseconds !== endEpochNanoseconds)) throw new Assert.Error("startEpochNanoseconds !== endEpochNanoseconds");
-    const progress = _Decimal(destEpochNanoseconds - startEpochNanoseconds).divide(endEpochNanoseconds - startEpochNanoseconds);
+    const progress = exports.Decimal(destEpochNanoseconds - startEpochNanoseconds).divide(endEpochNanoseconds - startEpochNanoseconds);
     const total = innerBound.add(progress.multiply(increment * sign));
     // 16. NOTE: The above two steps cannot be implemented directly using floating-point arithmetic. This division can be implemented as if expressing total as the quotient of two time durations (which may not be safe integers), performing all other calculations before the division, and finally performing one division operation with a floating-point result for total. The division can be implemented in C++ with the __float128 type if the compiler supports it, or with software emulation such as in the SoftFP library.
     /* Assert */ /* node:coverage ignore next */if (!(progress.greaterThanOrEqual(0) && progress.lessThanOrEqual(1))) throw new Assert.Error("progress.greaterThanOrEqual(0) && progress.lessThanOrEqual(1)");
@@ -68041,13 +68039,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_a instanceof AbruptCompletion) return _a;
       _a = _a.Value;
     }
-    const a = _Decimal(R(_a));
+    const a = exports.Decimal(R(_a));
     /* ReturnIfAbrupt */let _b = yield* ToUint32(y);
     /* ReturnIfAbrupt */if (_b instanceof Completion) {
       if (_b instanceof AbruptCompletion) return _b;
       _b = _b.Value;
     }
-    const b = _Decimal(R(_b));
+    const b = exports.Decimal(R(_b));
     const product = a.multiply(b).modulo(2 ** 32);
     if (product.greaterThanOrEqual(2 ** 31)) return F(product.subtract(2 ** 32).toNumber());
     return F(product.toNumber());
@@ -79597,10 +79595,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.AsyncGeneratorYield = AsyncGeneratorYield;
   exports.AsyncIteratorClose = AsyncIteratorClose;
   exports.AvailableCalendars = AvailableCalendars;
+  exports.AvailableNamedTimeZoneIdentifiers = AvailableNamedTimeZoneIdentifiers;
   exports.Await = Await;
   exports.BalanceISODateTime = BalanceISODateTime;
   exports.BalanceISOYearMonth = BalanceISOYearMonth;
   exports.BalanceTime = BalanceTime;
+  exports.BaseValue = BaseValue;
   exports.BasicJobQueue = BasicJobQueue;
   exports.BigIntValue = BigIntValue;
   exports.BindingClassDeclarationEvaluation = BindingClassDeclarationEvaluation;
@@ -79856,6 +79856,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.F = F;
   exports.FEATURES = FEATURES;
   exports.FinishLoadingImportedModule = FinishLoadingImportedModule;
+  exports.Flag = Flag;
   exports.FlagText = FlagText;
   exports.ForDeclarationBindingInitialization = ForDeclarationBindingInitialization;
   exports.FormatCalendarAnnotation = FormatCalendarAnnotation;
@@ -79868,6 +79869,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.FromPropertyDescriptor = FromPropertyDescriptor;
   exports.FunctionDeclarationInstantiation = FunctionDeclarationInstantiation;
   exports.FunctionEnvironmentRecord = FunctionEnvironmentRecord;
+  exports.FunctionKind = FunctionKind;
   exports.GatherAsynchronousTransitiveDependencies = GatherAsynchronousTransitiveDependencies;
   exports.GatherAsynchronousTransitiveDependenciesForRequests = GatherAsynchronousTransitiveDependenciesForRequests;
   exports.GeneratorResume = GeneratorResume;
@@ -79897,7 +79899,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetMatchString = GetMatchString;
   exports.GetMethod = GetMethod;
   exports.GetModuleNamespace = GetModuleNamespace;
+  exports.GetNamedTimeZoneEpochNanoseconds = GetNamedTimeZoneEpochNanoseconds;
   exports.GetNamedTimeZoneNextTransition = GetNamedTimeZoneNextTransition;
+  exports.GetNamedTimeZoneOffsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds;
   exports.GetNamedTimeZonePreviousTransition = GetNamedTimeZonePreviousTransition;
   exports.GetNewOptionalIndirectExportsModuleRequests = GetNewOptionalIndirectExportsModuleRequests;
   exports.GetNewTarget = GetNewTarget;
@@ -79905,6 +79909,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetOptionsObject = GetOptionsObject$1;
   exports.GetPossibleEpochNanoseconds = GetPossibleEpochNanoseconds;
   exports.GetPrototypeFromConstructor = GetPrototypeFromConstructor;
+  exports.GetRoundingIncrementOption = GetRoundingIncrementOption;
+  exports.GetRoundingModeOption = GetRoundingModeOption;
   exports.GetShadowRealmContext = GetShadowRealmContext;
   exports.GetStartOfDay = GetStartOfDay;
   exports.GetStringIndex = GetStringIndex;
@@ -80122,6 +80128,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.NanosecondsPerSecond = NanosecondsPerSecond;
   exports.NegateRoundingMode = NegateRoundingMode;
   exports.NewPromiseCapability = NewPromiseCapability;
+  exports.NoTimeZone = NoTimeZone;
   exports.NodeJSLikeEventLoop = NodeJSLikeEventLoop;
   exports.NonConstructorElements = NonConstructorElements;
   exports.NonISOCalendarDateToISO = NonISOCalendarDateToISO;
@@ -80201,6 +80208,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.Q = Q;
   exports.R = R;
   exports.RawBytesToNumeric = RawBytesToNumeric;
+  exports.RawTokens = RawTokens;
   exports.ReadyForSyncExecution = ReadyForSyncExecution;
   exports.Realm = Realm;
   exports.ReferenceRecord = ReferenceRecord;
@@ -80264,6 +80272,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.SymbolValue = SymbolValue;
   exports.SyntheticModuleRecord = SyntheticModuleRecord;
   exports.SystemDateTime = SystemDateTime;
+  exports.SystemTimeZoneIdentifier = SystemTimeZoneIdentifier;
   exports.SystemUTCEpochMilliseconds = SystemUTCEpochMilliseconds;
   exports.SystemUTCEpochNanoseconds = SystemUTCEpochNanoseconds;
   exports.TV = TV;
@@ -80337,6 +80346,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ToUint32 = ToUint32;
   exports.ToUint8 = ToUint8;
   exports.ToUint8Clamp = ToUint8Clamp;
+  exports.ToZeroPaddedDecimalString = ToZeroPaddedDecimalString;
+  exports.Token = Token;
+  exports.TokenData = TokenData;
   exports.TopLevelLexicallyDeclaredNames = TopLevelLexicallyDeclaredNames;
   exports.TopLevelLexicallyScopedDeclarations = TopLevelLexicallyScopedDeclarations;
   exports.TopLevelVarDeclaredNames = TopLevelVarDeclaredNames;
@@ -80444,6 +80456,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.setSurroundingAgent = setSurroundingAgent;
   exports.skipDebugger = skipDebugger;
   exports.sourceTextMatchedBy = sourceTextMatchedBy;
+  exports.typedArrayInfoByType = typedArrayInfoByType;
   exports.unwrapCompletion = X;
   exports.wellKnownSymbols = wellKnownSymbols;
   exports.wrappedParse = wrappedParse;
