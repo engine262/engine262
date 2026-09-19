@@ -81,7 +81,7 @@ export class PromiseReactionRecord {
 
   constructor(O: PromiseReactionRecord) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
-        || O.Capability === Value.undefined);
+        || O.Capability === undefined);
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject');
     Assert(O.Handler === undefined
            || isFunctionObject(O.Handler.Callback));

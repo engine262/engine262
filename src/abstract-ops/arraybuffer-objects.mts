@@ -34,7 +34,7 @@ import {
 export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferData: DataBlock | null;
   readonly ArrayBufferByteLength: number;
-  readonly ArrayBufferDetachKey: Value;
+  readonly ArrayBufferDetachKey: Value | undefined;
 }
 
 export interface ResizableArrayBufferObject extends ArrayBufferObject {
@@ -116,7 +116,7 @@ export function* ArrayBufferCopyAndDetach(
     newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
   }
 
-  if (arrayBuffer.ArrayBufferDetachKey !== Value.undefined) {
+  if (arrayBuffer.ArrayBufferDetachKey !== undefined) {
     return Throw.TypeError('Cannot transfer ArrayBuffer with custom detach key');
   }
 
@@ -141,13 +141,11 @@ export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
 export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(!IsSharedArrayBuffer(arrayBuffer));
-  // 3. If key is not present, set key to undefined.
-  if (key === undefined) {
-    key = Value.undefined;
-  }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (!SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
-    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
+  if (arrayBuffer.ArrayBufferDetachKey === undefined
+      ? key !== undefined
+      : key === undefined || !SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
+    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key ?? Value.undefined);
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
