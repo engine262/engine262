@@ -1,10 +1,10 @@
 import {
   ObjectValue, Value, NumberValue,
   JSStringValue,
+  UndefinedValue,
   type ObjectInternalMethods,
   SymbolValue,
   Descriptor,
-  UndefinedValue,
 } from '../value.mts';
 import {
   Q, X,
@@ -63,11 +63,11 @@ const InternalMethods = {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // i. Let value be TypedArrayGetElement(O, numericIndex).
         const value = TypedArrayGetElement(O, numericIndex);
         // ii. If value is undefined, return undefined.
-        if (value === undefined) {
+        if (value instanceof UndefinedValue) {
           return undefined;
         }
         // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
@@ -90,7 +90,7 @@ const InternalMethods = {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         return IsValidIntegerIndex(O, numericIndex);
       }
     }
@@ -105,17 +105,17 @@ const InternalMethods = {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
         if (!IsValidIntegerIndex(O, numericIndex)) {
           return false;
         }
         // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-        if (!Desc.Configurable) {
+        if (Desc.Configurable === false) {
           return false;
         }
         // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
-        if (!Desc.Enumerable) {
+        if (Desc.Enumerable === false) {
           return false;
         }
         // ii. If IsAccessorDescriptor(Desc) is true, return false.
@@ -123,7 +123,7 @@ const InternalMethods = {
           return false;
         }
         // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
-        if (!Desc.Writable) {
+        if (Desc.Writable === false) {
           return false;
         }
         // vi. If Desc has a [[Value]] field, then
@@ -145,7 +145,7 @@ const InternalMethods = {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // i. Return ! IntegerIndexedElementGet(O, numericIndex).
         return X(TypedArrayGetElement(O, numericIndex));
       }
@@ -161,7 +161,7 @@ const InternalMethods = {
       // a. Let numericIndex be CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         if (SameValue(O, Receiver)) {
           // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
           Q(yield* TypedArraySetElement(O, numericIndex, V));
@@ -184,7 +184,7 @@ const InternalMethods = {
       // a. Let numericIndex be ! CanonicalNumericIndexString(P).
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
-      if (!(numericIndex instanceof UndefinedValue)) {
+      if (numericIndex !== undefined) {
         // ii. If IsValidIntegerIndex(O, numericIndex) is false, return true.
         if (!IsValidIntegerIndex(O, numericIndex)) {
           return true;

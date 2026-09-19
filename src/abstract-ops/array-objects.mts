@@ -44,8 +44,9 @@ const InternalMethods = {
   * DefineOwnProperty(P, Desc): PlainEvaluator<boolean> {
     const array = this;
 
-    Assert(IsPropertyKey(P));
-    if (P instanceof JSStringValue && P.stringValue() === 'length') {
+    if (P instanceof JSStringValue) P = P.stringValue();
+    Assert(typeof P === 'string' || IsPropertyKey(P));
+    if (P === 'length') {
       return Q(yield* ArraySetLength(array, Desc));
     } else if (isArrayIndex(P)) {
       let lengthDesc = OrdinaryGetOwnProperty(array, Value('length'));
@@ -54,7 +55,7 @@ const InternalMethods = {
       Assert(lengthDesc.Configurable === false);
       const length = lengthDesc.Value;
       Assert(length instanceof NumberValue && isNonNegativeInteger(R(length)));
-      const index = X(ToUint32(P));
+      const index = X(ToUint32(typeof P === 'string' ? Value(P) : P));
       if (R(index) >= R(length) && !lengthDesc.Writable) {
         return false;
       }

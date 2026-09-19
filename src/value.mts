@@ -404,53 +404,53 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
-  static equal(x: NumberValue, y: NumberValue) {
+  static equal(x: NumberValue, y: NumberValue): boolean {
     if (x.isNaN()) {
-      return Value.false;
+      return false;
     }
     if (y.isNaN()) {
-      return Value.false;
+      return false;
     }
     const xVal = R(x);
     const yVal = R(y);
     if (xVal === yVal) {
-      return Value.true;
+      return true;
     }
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return Value.true;
+      return true;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
-  static sameValue(x: NumberValue, y: NumberValue) {
+  static sameValue(x: NumberValue, y: NumberValue): boolean {
     if (x.isNaN() && y.isNaN()) {
-      return Value.true;
+      return true;
     }
     const xVal = x.value;
     const yVal = y.value;
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return Value.false;
+      return false;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return Value.false;
+      return false;
     }
     if (xVal === yVal) {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
-  static sameValueZero(x: NumberValue, y: NumberValue) {
-    if (x.isNaN() && y.isNaN()) return Value.true;
-    if (Object.is(x.value, 0) && Object.is(y.value, -0)) return Value.true;
-    if (Object.is(x.value, -0) && Object.is(y.value, 0)) return Value.true;
-    if (x.value === y.value) return Value.true;
-    return Value.false;
+  static sameValueZero(x: NumberValue, y: NumberValue): boolean {
+    if (x.isNaN() && y.isNaN()) return true;
+    if (Object.is(x.value, 0) && Object.is(y.value, -0)) return true;
+    if (Object.is(x.value, -0) && Object.is(y.value, 0)) return true;
+    if (x.value === y.value) return true;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
@@ -632,18 +632,6 @@ export class BigIntValue extends PrimitiveValue {
     return R(x) === R(y);
   }
 
-  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-  static sameValue(x: BigIntValue, y: BigIntValue): boolean {
-    // 1. Return BigInt::equal(x, y).
-    return BigIntValue.equal(x, y);
-  }
-
-  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-  static sameValueZero(x: BigIntValue, y: BigIntValue): boolean {
-    // 1. Return BigInt::equal(x, y).
-    return BigIntValue.equal(x, y);
-  }
-
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
   static bitwiseAND(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(&, x, y).
@@ -685,60 +673,6 @@ export class BigIntValue extends PrimitiveValue {
 
 /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
 function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
-  // TODO: figure out why this doesn't work, probably the modulo.
-  /*
-  // 1. Assert: op is "&", "|", or "^".
-  Assert(['&', '|', '^'].includes(op));
-  // 2. Let result be 0n.
-  let result = 0n;
-  // 3. Let shift be 0.
-  let shift = 0n;
-  // 4. Repeat, until (x = 0 or x = -1) and (y = 0 or y = -1),
-  while (!((x === 0n || x === -1n) && (y === 0n || y === -1n))) {
-    // a. Let xDigit be x modulo 2.
-    const xDigit = x % 2n;
-    // b. Let yDigit be y modulo 2.
-    const yDigit = y % 2n;
-    // c. If op is "&", set result to result + 2^shift × BinaryAnd(xDigit, yDigit).
-    if (op === '&') {
-      result += (2n ** shift) * BinaryAnd(xDigit, yDigit);
-    } else if (op === '|') {
-      // d. Else if op is "|", set result to result + 2shift × BinaryOr(xDigit, yDigit).
-      result += (2n ** shift) * BinaryXor(xDigit, yDigit);
-    } else {
-      // i. Assert: op is "^".
-      Assert(op === '^');
-      // ii. Set result to result + 2^shift × BinaryXor(xDigit, yDigit).
-      result += (2n ** shift) * BinaryXor(xDigit, yDigit);
-    }
-    // f. Set shift to shift + 1.
-    shift += 1n;
-    // g. Set x to (x - xDigit) / 2.
-    x = (x - xDigit) / 2n;
-    // h. Set y to (y - yDigit) / 2.
-    y = (y - yDigit) / 2n;
-  }
-  let tmp;
-  // 5. If op is "&", let tmp be BinaryAnd(x modulo 2, y modulo 2).
-  if (op === '&') {
-    tmp = BinaryAnd(x % 2n, y % 2n);
-  } else if (op === '|') {
-    // 6. Else if op is "|", let tmp be BinaryOr(x modulo 2, y modulo 2).
-    tmp = BinaryOr(x % 2n, y % 2n);
-  } else {
-    // a. Assert: op is "^".
-    Assert(op === '^');
-    // b. Let tmp be BinaryXor(x modulo 2, y modulo 2).
-    tmp = BinaryXor(x % 2n, y % 2n);
-  }
-  // 8. If tmp ≠ 0, then
-  if (tmp !== 0n) {
-    // a. Set result to result - 2^shift. NOTE: This extends the sign.
-    result -= 2n ** shift;
-  }
-  // 9. Return result.
-  return Z(result);
- */
   switch (op) {
     case '&':
       return Z(R(x) & R(y));
@@ -819,29 +753,35 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
 
   // eslint-disable-next-line require-yield
   * GetOwnProperty(P: PropertyKeyValue | string): ObjectSlotReturn['GetOwnProperty'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     return OrdinaryGetOwnProperty(this as unknown as OrdinaryObject, P);
   }
 
   * DefineOwnProperty(P: PropertyKeyValue | string, Desc: Descriptor): ObjectSlotReturn['DefineOwnProperty'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return yield* OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
   }
 
   * HasProperty(P: PropertyKeyValue | string): ObjectSlotReturn['HasProperty'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     return yield* OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
   }
 
   * Get(P: PropertyKeyValue | string, Receiver: Value): ObjectSlotReturn['Get'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     return yield* OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
   }
 
   * Set(P: PropertyKeyValue | string, V: Value, Receiver: Value): ObjectSlotReturn['Set'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     // TODO:
     Q(surroundingAgent.debugger_tryTouchDuringPreview(Receiver as ObjectValue));
     return yield* OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
   }
 
   * Delete(P: PropertyKeyValue | string): ObjectSlotReturn['Delete'] {
+    if (P instanceof JSStringValue) P = P.stringValue();
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return yield* OrdinaryDelete(this as unknown as OrdinaryObject, P);
   }

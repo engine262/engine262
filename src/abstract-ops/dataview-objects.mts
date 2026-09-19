@@ -18,7 +18,7 @@ import {
   ArrayBufferByteLength,
   IsFixedLengthArrayBuffer,
 } from './all.mts';
-import { Throw } from '#self';
+import { Throw, type PlainEvaluator } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-dataview-objects */
@@ -108,7 +108,7 @@ export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
 }
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
-export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes, value: Value) {
+export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes, value: Value): PlainEvaluator<void> {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
@@ -143,5 +143,4 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   const bufferIndex = getIndex + viewOffset;
   // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
   Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian));
-  return Value.undefined;
 }

@@ -48,7 +48,7 @@ export class ExecutionContext {
 
   Function: NullValue | FunctionObject = Value.null;
 
-  ScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue = Value.null;
+  ScriptOrModule: AbstractModuleRecord | ScriptRecord | null = null;
 
   Realm!: Realm;
 
@@ -123,14 +123,14 @@ export class ExecutionContextStack extends Array<ExecutionContext> {
 }
 
 /** https://tc39.es/ecma262/#sec-getactivescriptormodule */
-export function GetActiveScriptOrModule() {
+export function GetActiveScriptOrModule(): AbstractModuleRecord | ScriptRecord | null {
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
-    if (e.ScriptOrModule !== Value.null) {
+    if (e.ScriptOrModule !== null) {
       return e.ScriptOrModule;
     }
   }
-  return Value.null;
+  return null;
 }
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */

@@ -22,9 +22,9 @@ export function ThisBigIntValue(value: Value) {
   // 2. If Type(value) is Object and value has a [[BigIntData]] internal slot, then
   if (value instanceof ObjectValue && 'BigIntData' in value) {
     // a. Assert: Type(value.[[BigIntData]]) is BigInt.
-    Assert(value.BigIntData instanceof BigIntValue);
+    Assert(typeof value.BigIntData === 'bigint');
     // b. Return value.[[BigIntData]].
-    return value.BigIntData;
+    return Value(value.BigIntData);
   }
   // 3. Throw a TypeError exception.
   return Throw.TypeError('$1 is not a $2 object', value, 'BigInt');

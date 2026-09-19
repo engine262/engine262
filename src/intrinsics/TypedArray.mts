@@ -161,7 +161,7 @@ export interface TypedArrayObject extends ExoticObject {
   readonly Prototype: ObjectValue | NullValue;
   readonly Extensible: false;
 
-  ViewedArrayBuffer: ArrayBufferObject | UndefinedValue;
+  ViewedArrayBuffer: ArrayBufferObject | undefined;
   readonly ArrayLength: number | 'auto';
   readonly ByteOffset: number;
   readonly ContentType: 'BigInt' | 'Number';
@@ -297,7 +297,7 @@ export function* AllocateTypedArray(constructorName: TypedArrayConstructorNames,
   // 2. Let obj be TypedArrayCreate(proto).
   const obj = TypedArrayCreate(proto) as Mutable<TypedArrayObject>;
   // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
-  Assert(obj.ViewedArrayBuffer === Value.undefined);
+  Assert(obj.ViewedArrayBuffer === undefined);
   // 4. Set obj.[[TypedArrayName]] to constructorName.
   obj.TypedArrayName = constructorName;
   // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
@@ -436,7 +436,7 @@ export function* AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): 
   // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
   Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
   // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
-  Assert(O.ViewedArrayBuffer === Value.undefined);
+  Assert(O.ViewedArrayBuffer === undefined);
   // 3. Assert: length is a non-negative integer.
   Assert(isNonNegativeInteger(length));
   // 4. Let constructorName be the String value of O.[[TypedArrayName]].

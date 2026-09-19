@@ -4,7 +4,6 @@ import {
   type Arguments,
   type FunctionCallContext,
   type ObjectValue,
-  type UndefinedValue,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import {
@@ -30,11 +29,11 @@ import {
 export interface ErrorObject extends ObjectValue {
   ErrorData: never;
   /** Show a clickable stack in the devtools */
-  HostDefinedStack: readonly (CallSite | CallFrame)[] | UndefinedValue;
+  HostDefinedStack: readonly (CallSite | CallFrame)[] | undefined;
   /** Show an error message that allows ECMAScript values to be interleaved with host error messages in the devtools */
-  HostDefinedMessage: readonly (string | Value)[] | UndefinedValue;
-  HostDefinedFormattedStack: string | UndefinedValue;
-  HostDefinedMessageString: string | UndefinedValue;
+  HostDefinedMessage: readonly (string | Value)[] | undefined;
+  HostDefinedFormattedStack: string | undefined;
+  HostDefinedMessageString: string | undefined;
 }
 
 export const ErrorHostInternalSlots = Object.freeze([

@@ -44,7 +44,6 @@ import {
   MergeImportedNames,
   ModuleRequestsKeyEqual,
   SafePerformPromiseAll,
-  SameValue,
   AsyncBlockStart,
   PromiseCapabilityRecord,
   GraphLoadingState,
@@ -1005,14 +1004,13 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
-  ResolveExport(exportName: string | JSStringValue): ResolvedBindingRecord | null {
+  ResolveExport(exportName: string): ResolvedBindingRecord | null {
     const module = this;
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
     // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
-    if (typeof exportName === 'string') exportName = Value(exportName);
     for (const e of module.ExportNames) {
-      if (SameValue(Value(e), exportName)) {
-        return new ResolvedBindingRecord({ Module: module, BindingName: exportName });
+      if (e === exportName) {
+        return new ResolvedBindingRecord({ Module: module, BindingName: Value(exportName) });
       }
     }
     return null;

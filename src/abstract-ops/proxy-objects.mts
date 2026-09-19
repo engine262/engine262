@@ -137,6 +137,7 @@ const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p */
   * GetOwnProperty(P): PlainEvaluator<FullyPopulatedDescriptor | undefined> {
     const O = this;
+    if (typeof P === 'string') P = Value(P);
 
     // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
@@ -217,6 +218,7 @@ const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc */
   * DefineOwnProperty(P, Desc): PlainEvaluator<boolean> {
     const O = this;
+    if (typeof P === 'string') P = Value(P);
 
     // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
@@ -280,7 +282,7 @@ const InternalMethods = {
       // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
       if (IsDataDescriptor(targetDesc) && !targetDesc.Configurable && targetDesc.Writable) {
         // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
-        if ('Writable' in Desc && !Desc.Writable) {
+        if (Desc.Writable === false) {
           return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which cannot be non-writable, unless there exists a corresponding non-configurable, non-writable own property of the target object", P);
         }
       }
@@ -290,6 +292,7 @@ const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
   * HasProperty(P): PlainEvaluator<boolean> {
     const O = this;
+    if (typeof P === 'string') P = Value(P);
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
@@ -320,6 +323,7 @@ const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver */
   * Get(P, Receiver) {
     const O = this;
+    if (typeof P === 'string') P = Value(P);
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
@@ -351,6 +355,7 @@ const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver */
   * Set(P, V, Receiver): PlainEvaluator<boolean> {
     const O = this;
+    if (typeof P === 'string') P = Value(P);
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
@@ -385,6 +390,7 @@ const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
   * Delete(P): PlainEvaluator<boolean> {
     const O = this;
+    if (typeof P === 'string') P = Value(P);
 
     // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));

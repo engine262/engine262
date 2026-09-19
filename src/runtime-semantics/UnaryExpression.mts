@@ -58,7 +58,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
       ref.ReferencedName = Q(yield* ToPropertyKey(ref.ReferencedName as Value));
     }
     // e. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-    const deleteStatus = Q(yield* baseObj.Delete((ref.ReferencedName as JSStringValue).stringValue()));
+    const deleteStatus = Q(yield* baseObj.Delete(ref.ReferencedName));
     // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
     if (!deleteStatus && ref.Strict) {
       return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);

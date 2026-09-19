@@ -328,7 +328,7 @@ export declare interface AssignmentInfo {
 
 /** https://tc39.es/ecma262/#sec-async-function-objects */
 /** https://tc39.es/ecma262/#sec-asyncblockstart */
-export declare function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext): Generator<EvaluatorYieldType, UndefinedValue, EvaluatorNextType>;
+export declare function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext): PlainEvaluator<void>;
 
 export declare type AsyncBuiltinSteps = () => Evaluator<Value | NormalCompletion<Value> | ThrowCompletion | ReturnCompletion>;
 
@@ -492,10 +492,6 @@ export declare class BigIntValue extends PrimitiveValue {
     static lessThan(x: BigIntValue, y: BigIntValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
     static equal(x: BigIntValue, y: BigIntValue): boolean;
-    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-    static sameValue(x: BigIntValue, y: BigIntValue): boolean;
-    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-    static sameValueZero(x: BigIntValue, y: BigIntValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
     static bitwiseAND(x: BigIntValue, y: BigIntValue): BigIntValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
@@ -703,7 +699,7 @@ export declare class CallSite {
     isConstructCall(): boolean;
     isAsync(): boolean;
     isNative(): boolean;
-    static getFunctionName(func: FunctionObject | NullValue): string | null;
+    static getFunctionName(func: FunctionObject): string | null;
     getFunctionName(): string | null;
     getSpecifier(): string | null | undefined;
     getScriptId(): string | undefined;
@@ -734,7 +730,7 @@ export declare function CanonicalizeCalendar(id: string): PlainCompletion<KnownC
 export declare function CanonicalizeKeyedCollectionKey(key: Value): Value;
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
-export declare function CanonicalNumericIndexString(arg: string): NumberValue;
+export declare function CanonicalNumericIndexString(arg: string): NumberValue | undefined;
 
 export declare function captureStack(): {
     stack: CallSite[];
@@ -831,7 +827,7 @@ export declare const ClassStaticBlockDefinitionRecord: {
 };
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
-export declare function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): ValueEvaluator<UndefinedValue>;
+export declare function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): PlainEvaluator<void>;
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export declare function ClearKeptObjects(): void;
@@ -1541,11 +1537,11 @@ export declare type EpochNanoseconds = Integer & {
 export declare interface ErrorObject extends ObjectValue {
     ErrorData: never;
     /** Show a clickable stack in the devtools */
-    HostDefinedStack: readonly (CallSite | CallFrame)[] | UndefinedValue;
+    HostDefinedStack: readonly (CallSite | CallFrame)[] | undefined;
     /** Show an error message that allows ECMAScript values to be interleaved with host error messages in the devtools */
-    HostDefinedMessage: readonly (string | Value)[] | UndefinedValue;
-    HostDefinedFormattedStack: string | UndefinedValue;
-    HostDefinedMessageString: string | UndefinedValue;
+    HostDefinedMessage: readonly (string | Value)[] | undefined;
+    HostDefinedFormattedStack: string | undefined;
+    HostDefinedMessageString: string | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-escaperegexppattern */
@@ -1921,7 +1917,7 @@ export declare function ExcludeImportedNames(a: ImportedNamesValue, b: ImportedN
 export declare class ExecutionContext {
     CodeEvaluationState?: YieldOrAwaitEvaluator;
     Function: NullValue | FunctionObject;
-    ScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
+    ScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
     Realm: Realm;
     LexicalEnvironment: EnvironmentRecord;
     VariableEnvironment: EnvironmentRecord;
@@ -2270,7 +2266,7 @@ export declare function Get(O: ObjectValue, P: PropertyKeyValue | string): Value
 export declare function getActiveScriptId(): string | undefined;
 
 /** https://tc39.es/ecma262/#sec-getactivescriptormodule */
-export declare function GetActiveScriptOrModule(): AbstractModuleRecord | NullValue | ScriptRecord;
+export declare function GetActiveScriptOrModule(): AbstractModuleRecord | ScriptRecord | null;
 
 /** https://tc39.es/ecma262/#sec-getarraybuffermaxbytelengthoption */
 export declare function GetArrayBufferMaxByteLengthOption(options: Value): PlainEvaluator<number | undefined>;
@@ -2548,7 +2544,7 @@ export declare function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: 
 export declare function HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
-export declare function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord): void | UndefinedValue;
+export declare function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord): void;
 
 /** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
 export declare function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord): readonly {
@@ -3271,7 +3267,7 @@ export declare interface Job {
     readonly queueName: string;
     readonly job: () => PlainEvaluator<unknown>;
     readonly callerRealm: Realm | undefined;
-    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
+    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
 }
 
 /** https://tc39.es/ecma262/#sec-jobcallback-records */
@@ -3888,11 +3884,11 @@ export declare class NumberValue extends PrimitiveValue {
     /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
     static lessThan(x: NumberValue, y: NumberValue): boolean | undefined;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
-    static equal(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true>;
+    static equal(x: NumberValue, y: NumberValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
-    static sameValue(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true>;
+    static sameValue(x: NumberValue, y: NumberValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
-    static sameValueZero(x: NumberValue, y: NumberValue): BooleanValue<false> | BooleanValue<true>;
+    static sameValueZero(x: NumberValue, y: NumberValue): boolean;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
     static bitwiseAND(x: NumberValue, y: NumberValue): NumberValue;
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
@@ -5470,9 +5466,9 @@ export declare function PerformEval(x: Value, strictCaller: boolean, direct: boo
 /** https://tc39.es/ecma262/#sec-performpromisethen */
 export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability: PromiseCapabilityRecord): PromiseObject;
 
-export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: UndefinedValue): UndefinedValue;
+export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: undefined): undefined;
 
-export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue;
+export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | undefined): PromiseObject | undefined;
 
 /** https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval */
 export declare function PerformShadowRealmEval(sourceText: string, callerRealm: Realm, evalRealm: Realm): ValueEvaluator;
@@ -5623,7 +5619,7 @@ export declare interface PromiseObject extends OrdinaryObject {
 
 /** https://tc39.es/ecma262/#sec-promisereaction-records */
 export declare class PromiseReactionRecord {
-    readonly Capability: PromiseCapabilityRecord | UndefinedValue;
+    readonly Capability: PromiseCapabilityRecord | undefined;
     readonly Type: 'Fulfill' | 'Reject';
     readonly Handler: JobCallbackRecord | undefined;
     constructor(O: PromiseReactionRecord);
@@ -6073,10 +6069,10 @@ export declare function setSurroundingAgent(a: Agent): void;
 export declare function SetterThatIgnoresPrototypeProperties(thisValue: Value, home: ObjectValue, propertyKey: PropertyKeyValue, value: Value): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
-export declare function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): ValueEvaluator<UndefinedValue>;
+export declare function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): PlainEvaluator<void>;
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
-export declare function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes, value: Value): Generator<EvaluatorYieldType, ThrowCompletion | UndefinedValue, EvaluatorNextType>;
+export declare function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: boolean | Value, type: TypedArrayTypes, value: Value): PlainEvaluator<void>;
 
 /** https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue */
 export declare function ShadowRealmImportValue(specifierString: string, exportNameString: string, callerRealm: Realm, evalRealm: Realm): Value;
@@ -6231,7 +6227,7 @@ export declare class SyntheticModuleRecord extends AbstractModuleRecord {
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
     GetExportedNames(): readonly string[];
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
-    ResolveExport(exportName: string | JSStringValue): ResolvedBindingRecord | null;
+    ResolveExport(exportName: string): ResolvedBindingRecord | null;
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-link */
     Link(): undefined;
     /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
@@ -6774,7 +6770,7 @@ export declare function ToTimeRecordOrMidnight(item: Value): PlainEvaluator<Time
 export declare function ToUint16(argument: Value): ValueEvaluator<NumberValue>;
 
 /** https://tc39.es/ecma262/#sec-touint32 */
-export declare function ToUint32(argument: Value): ValueEvaluator<NumberValue>;
+export declare function ToUint32(argument: number | Value): ValueEvaluator<NumberValue>;
 
 /** https://tc39.es/ecma262/#sec-touint8 */
 export declare function ToUint8(argument: Value): ValueEvaluator<NumberValue>;
@@ -6794,7 +6790,7 @@ export declare function TV(s: string): string | undefined;
 /** https://tc39.es/ecma262/#sec-typedarraybytelength */
 export declare function TypedArrayByteLength(taRecord: TypedArrayWithBufferWitnessRecord): number;
 
-declare type TypedArrayConstructorNames = keyof typeof typedArrayInfoByName;
+export declare type TypedArrayConstructorNames = keyof typeof typedArrayInfoByName;
 
 /** https://tc39.es/ecma262/#sec-typedarraycreate */
 export declare function TypedArrayCreate(prototype: ObjectValue): ObjectValue & Record<"ArrayLength" | "ByteLength" | "ByteOffset" | "ContentType" | "Extensible" | "Prototype" | "TypedArrayName" | "ViewedArrayBuffer", unknown>;
@@ -6958,7 +6954,7 @@ export declare function TypedArrayLength(taRecord: TypedArrayWithBufferWitnessRe
 export declare interface TypedArrayObject extends ExoticObject {
     readonly Prototype: ObjectValue | NullValue;
     readonly Extensible: false;
-    ViewedArrayBuffer: ArrayBufferObject | UndefinedValue;
+    ViewedArrayBuffer: ArrayBufferObject | undefined;
     readonly ArrayLength: number | 'auto';
     readonly ByteOffset: number;
     readonly ContentType: 'BigInt' | 'Number';
@@ -7011,7 +7007,7 @@ export declare type UnicodeCharacter = string & {
 };
 
 export declare interface UnmappedArgumentsObject extends OrdinaryObject {
-    readonly ParameterMap: UndefinedValue;
+    readonly ParameterMap: undefined;
 }
 
 /** https://tc39.es/proposal-temporal/#table-unsigned-rounding-modes */

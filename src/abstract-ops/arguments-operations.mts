@@ -23,7 +23,6 @@ import {
   type OrdinaryObject,
   Descriptor,
   ObjectValue,
-  UndefinedValue,
   Value,
   wellKnownSymbols,
   type Arguments,
@@ -41,7 +40,7 @@ export interface MappedArgumentsObject extends OrdinaryObject {
   readonly ParameterMap: ObjectValue;
 }
 export interface UnmappedArgumentsObject extends OrdinaryObject {
-  readonly ParameterMap: UndefinedValue;
+  readonly ParameterMap: undefined;
 }
 
 export function isArgumentExoticObject(value: Value): value is MappedArgumentsObject | UnmappedArgumentsObject {
@@ -133,7 +132,7 @@ const ArgumentExoticObject = {
 export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
   const len = argumentsList.length;
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']) as Mutable<UnmappedArgumentsObject>;
-  obj.ParameterMap = Value.undefined;
+  obj.ParameterMap = undefined;
   X(DefinePropertyOrThrow(obj, 'length', Descriptor({
     Value: F(len),
     Writable: true,

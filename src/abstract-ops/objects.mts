@@ -196,7 +196,22 @@ export function ValidateAndApplyPropertyDescriptor(obj: ObjectValue | undefined,
         Configurable: configurable,
       }));
     } else {
-      // TODO: i. For each field name fieldName of propertyDesc, set the attribute named fieldName of the property named propertyKey of object obj to the value of propertyDesc's fieldName field.
+      const existing = obj.properties.get(propertyKey)!;
+      if (IsAccessorDescriptor(existing)) {
+        obj.properties.set(propertyKey, Descriptor({
+          Get: propertyDesc.Get ?? existing.Get,
+          Set: propertyDesc.Set ?? existing.Set,
+          Enumerable: propertyDesc.Enumerable ?? existing.Enumerable,
+          Configurable: propertyDesc.Configurable ?? existing.Configurable,
+        } as Required<AccessorDescriptorInit>));
+      } else {
+        obj.properties.set(propertyKey, Descriptor({
+          Value: propertyDesc.Value ?? existing.Value,
+          Writable: propertyDesc.Writable ?? existing.Writable,
+          Enumerable: propertyDesc.Enumerable ?? existing.Enumerable,
+          Configurable: propertyDesc.Configurable ?? existing.Configurable,
+        } as Required<DataDescriptorInit>));
+      }
     }
   }
   return true;
@@ -207,7 +222,7 @@ export function* OrdinaryHasProperty(O: ObjectValue, P: PropertyKeyValue | strin
   Assert(typeof P === 'string' || IsPropertyKey(P));
 
   const hasOwn = Q(yield* O.GetOwnProperty(P));
-  if (!(hasOwn instanceof UndefinedValue)) {
+  if (hasOwn) {
     return true;
   }
   const parent = Q(yield* O.GetPrototypeOf());

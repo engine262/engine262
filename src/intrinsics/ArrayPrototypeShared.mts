@@ -41,14 +41,14 @@ export function* SortIndexedProperties(obj: ObjectValue, len: number, SortCompar
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
-    let kRead;
+    let kRead: boolean;
     if (holes === 'skip-holes') {
       kRead = Q(yield* HasProperty(obj, Pk));
     } else {
       Assert(holes === 'read-through-holes');
-      kRead = Value.true;
+      kRead = true;
     }
-    if (kRead === Value.true) {
+    if (kRead) {
       const kValue = Q(yield* Get(obj, Pk));
       items.push(kValue);
     }

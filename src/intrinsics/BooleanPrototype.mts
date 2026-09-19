@@ -20,8 +20,8 @@ export function ThisBooleanValue(value: Value) {
 
   if (value instanceof ObjectValue && 'BooleanData' in value) {
     const b = value.BooleanData;
-    Assert(b instanceof BooleanValue);
-    return b;
+    Assert(typeof b === 'boolean');
+    return Value(b);
   }
 
   return Throw.TypeError('$1 is not a $2 object', value, 'Boolean');

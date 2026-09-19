@@ -620,6 +620,8 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
     } else if ('StringData' in _space) {
       space = Q(yield* ToString(_space));
     }
+  } else if (_space instanceof JSStringValue) {
+    space = _space.stringValue();
   }
   let gap: string;
   if (_space instanceof NumberValue) {

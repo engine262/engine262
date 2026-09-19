@@ -121,7 +121,8 @@ const InternalMethods = {
   * Get(propertyKey, Receiver) {
     const O = this;
 
-    Assert(IsPropertyKey(propertyKey));
+    if (propertyKey instanceof JSStringValue) propertyKey = propertyKey.stringValue();
+    Assert(typeof propertyKey === 'string' || IsPropertyKey(propertyKey));
     // 1. If IsSymbolLikeNamespaceKey(P, O), return ! OrdinaryGet(O, P, Receiver).
     if (IsSymbolLikeNamespaceKey(propertyKey, O)) {
       return X(yield* OrdinaryGet(O, propertyKey, Receiver));
@@ -129,7 +130,6 @@ const InternalMethods = {
     // 2. Let exports be ? GetModuleExportsList(O).
     const exports = Q(yield* GetModuleExportsList(O));
     // 3. If exports does not contain P, return undefined.
-    if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
     if (!exports.has(propertyKey)) {
       return Value.undefined;
     }
@@ -178,12 +178,12 @@ const InternalMethods = {
   * Delete(propertyKey): PlainEvaluator<boolean> {
     const obj = this;
 
-    Assert(IsPropertyKey(propertyKey));
+    if (propertyKey instanceof JSStringValue) propertyKey = propertyKey.stringValue();
+    Assert(typeof propertyKey === 'string' || IsPropertyKey(propertyKey));
     if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
       return Q(yield* OrdinaryDelete(obj, propertyKey));
     }
     const exports = Q(yield* GetModuleExportsList(obj));
-    if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
     if (exports.has(propertyKey)) {
       return false;
     }

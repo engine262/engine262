@@ -201,7 +201,7 @@ export class InspectorContext {
             name: key instanceof JSStringValue
               ? key.stringValue()
               : SymbolDescriptiveString(key),
-            writable: desc.Writable,
+            writable: desc.Writable ?? false,
             configurable: desc.Configurable,
             enumerable: desc.Enumerable,
             isOwn: p === object,

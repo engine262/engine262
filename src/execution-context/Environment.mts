@@ -22,7 +22,6 @@ import {
   HasProperty,
   IsDataDescriptor,
   IsExtensible,
-  IsPropertyKey,
   Set,
   ToBoolean,
   isECMAScriptFunctionObject,
@@ -175,7 +174,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
   * SetMutableBinding(name: string, value: Value, strict: boolean): PlainEvaluator {
-    Assert(IsPropertyKey(name));
+    Assert(typeof name === 'string');
     // 1. Let envRec be the declarative Environment Record for which the method was invoked.
     const envRec = this;
     // 2. If envRec does not have a binding for N, then

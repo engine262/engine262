@@ -56,8 +56,8 @@ export function ThisStringValue(value: Value) {
   }
   if (value instanceof ObjectValue && 'StringData' in value) {
     const s = value.StringData;
-    Assert(s instanceof JSStringValue);
-    return s;
+    Assert(typeof s === 'string');
+    return Value(s);
   }
   return Throw.TypeError('$1 is not a $2 object', value, 'String');
 }
@@ -369,8 +369,9 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   const string = Q(yield* ToString(O));
   const searchString = Q(yield* ToString(searchValue));
   const functionalReplace = IsCallable(replaceValue);
+  let replacementValue: string | undefined;
   if (!functionalReplace) {
-    replaceValue = Value(Q(yield* ToString(replaceValue)));
+    replacementValue = Q(yield* ToString(replaceValue));
   }
   const searchLength = searchString.length;
   const position = string.indexOf(searchString, 0);
@@ -383,9 +384,9 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   if (functionalReplace) {
     replacement = Q(yield* ToString(Q(yield* Call(replaceValue, Value.undefined, [Value(searchString), F(position), Value(string)]))));
   } else {
-    Assert(typeof replaceValue === 'string');
+    Assert(typeof replacementValue === 'string');
     const captures: readonly (string | undefined)[] = [];
-    replacement = X(GetSubstitution(searchString, string, position, captures, undefined, replaceValue));
+    replacement = X(GetSubstitution(searchString, string, position, captures, undefined, replacementValue));
   }
   return Value(preceding + replacement + following);
 }

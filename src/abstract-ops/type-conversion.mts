@@ -279,7 +279,7 @@ export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
 }
 
 /** https://tc39.es/ecma262/#sec-touint32 */
-export function* ToUint32(argument: Value): ValueEvaluator<NumberValue> {
+export function* ToUint32(argument: number | Value): ValueEvaluator<NumberValue> {
   const int = Q(yield* ToIntegerOrInfinity(argument));
   return F(ToFixedSizeInteger(int, 'unsigned', 32));
 }
@@ -483,11 +483,11 @@ export function* ToLength(arg: Value): ValueEvaluator<NumberValue> {
 }
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
-export function CanonicalNumericIndexString(arg: string): NumberValue {
+export function CanonicalNumericIndexString(arg: string): NumberValue | undefined {
   if (arg === '-0') return F(-0);
   const n = X(ToNumber(Value(arg)));
   if (X(ToString(n)) === arg) return n;
-  return n;
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-toindex */

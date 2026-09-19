@@ -3,7 +3,6 @@ import {
   ObjectValue,
   SymbolValue,
   JSStringValue,
-  UndefinedValue,
   Value,
   type PropertyKeyValue,
   type ObjectInternalMethods,
@@ -32,16 +31,18 @@ import type { PlainEvaluator } from '#self';
 const InternalMethods = {
   * GetOwnProperty(P) {
     const S = this;
-    Assert(IsPropertyKey(P));
+    if (P instanceof JSStringValue) P = P.stringValue();
+    Assert(typeof P === 'string' || IsPropertyKey(P));
     const desc = OrdinaryGetOwnProperty(S, P);
     if (desc) return desc;
     return StringGetOwnProperty(S, P);
   },
   * DefineOwnProperty(P, Desc) {
     const S = this;
-    Assert(IsPropertyKey(P));
+    if (P instanceof JSStringValue) P = P.stringValue();
+    Assert(typeof P === 'string' || IsPropertyKey(P));
     const stringDesc = X(StringGetOwnProperty(S, P));
-    if (!(stringDesc instanceof UndefinedValue)) {
+    if (stringDesc) {
       const extensible = S.Extensible;
       return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
     }
@@ -127,12 +128,10 @@ export function StringCreate(value: string, prototype: ObjectValue) {
 export function StringGetOwnProperty(S: ObjectValue, P: string | PropertyKeyValue): FullyPopulatedDataDescriptor | undefined {
   Assert(S instanceof ObjectValue && 'StringData' in S);
   Assert(IsPropertyKey(P) || typeof P === 'string');
-  if (!(P instanceof JSStringValue)) {
-    return undefined;
-  }
   if (P instanceof JSStringValue) P = P.stringValue();
+  if (typeof P !== 'string') return undefined;
   const index = X(CanonicalNumericIndexString(P));
-  if (index instanceof UndefinedValue) {
+  if (index === undefined) {
     return undefined;
   }
   if (!IsIntegralNumber(index)) {

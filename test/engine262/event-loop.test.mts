@@ -26,7 +26,7 @@ function createTrackedJob(
       return Value.undefined;
     },
     callerRealm: undefined,
-    callerScriptOrModule: Value.null,
+    callerScriptOrModule: null,
   };
 }
 

@@ -82,7 +82,7 @@ export function PrepareForWrappedFunctionCall(F: WrappedFunctionExoticObject) {
   calleeContext.Function = F;
   const calleeRealm = F.Realm;
   calleeContext.Realm = calleeRealm;
-  calleeContext.ScriptOrModule = Value.null;
+  calleeContext.ScriptOrModule = null;
   surroundingAgent.executionContextStack.push(calleeContext);
   // 9. NOTE: Any exception objects produced after this point are associated with calleeRealm.
   return calleeContext;
@@ -208,7 +208,7 @@ export function GetShadowRealmContext(shadowRealmRecord: Realm, strictEval: bool
   const context = new ExecutionContext();
   context.Function = Value.null;
   context.Realm = shadowRealmRecord;
-  context.ScriptOrModule = Value.null;
+  context.ScriptOrModule = null;
   context.VariableEnvironment = varEnv;
   context.LexicalEnvironment = lexEnv;
   context.PrivateEnvironment = null;

@@ -74,8 +74,8 @@ export interface AccessorDescriptor extends Descriptor {
 
 /** https://tc39.es/ecma262/#sec-isaccessordescriptor */
 export function IsAccessorDescriptor(propertyDesc: Descriptor): propertyDesc is AccessorDescriptor {
-  if (propertyDesc.Get) return true;
-  if (propertyDesc.Set) return true;
+  if (propertyDesc.Get !== undefined) return true;
+  if (propertyDesc.Set !== undefined) return true;
   return false;
 }
 
@@ -87,8 +87,8 @@ export interface DataDescriptor extends Descriptor {
 
 /** https://tc39.es/ecma262/#sec-isdatadescriptor */
 export function IsDataDescriptor(propertyDesc: Descriptor): propertyDesc is DataDescriptor {
-  if (propertyDesc.Value) return true;
-  if (propertyDesc.Writable) return true;
+  if (propertyDesc.Value !== undefined) return true;
+  if (propertyDesc.Writable !== undefined) return true;
   return false;
 }
 

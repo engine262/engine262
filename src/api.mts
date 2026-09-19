@@ -228,7 +228,7 @@ export class ManagedRealm extends Realm {
     const newContext = new ExecutionContext();
     newContext.Function = Value.null;
     newContext.Realm = this;
-    newContext.ScriptOrModule = Value.null;
+    newContext.ScriptOrModule = null;
     this.HostDefined = HostDefined;
     this.topContext = newContext;
 

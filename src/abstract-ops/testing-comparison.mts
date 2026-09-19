@@ -141,7 +141,7 @@ export function SameValue(x: Value, y: Value): boolean {
   // If x is a Number, then
   if (x instanceof NumberValue) {
     // a. Return Number::sameValue(x, y).
-    return NumberValue.sameValue(x, y as NumberValue) === Value.true;
+    return NumberValue.sameValue(x, y as NumberValue);
   }
   // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);
@@ -156,7 +156,7 @@ export function SameValueZero(x: Value, y: Value): boolean {
   // 2. If x is a Number, then
   if (x instanceof NumberValue) {
     // a. Return Number::sameValueZero(x, y).
-    return NumberValue.sameValueZero(x, y as NumberValue) === Value.true;
+    return NumberValue.sameValueZero(x, y as NumberValue);
   }
   // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);
@@ -368,7 +368,7 @@ export function IsStrictlyEqual(x: Value, y: Value): boolean {
   // 2. If x is a Number, then
   if (x instanceof NumberValue) {
     // a. Return Number::equal(x, y).
-    return NumberValue.equal(x, y as NumberValue) === Value.true;
+    return NumberValue.equal(x, y as NumberValue);
   }
   // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);

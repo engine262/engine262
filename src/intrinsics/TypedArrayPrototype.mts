@@ -63,7 +63,7 @@ function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallCon
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. Return buffer.
-  return buffer;
+  return buffer || Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */

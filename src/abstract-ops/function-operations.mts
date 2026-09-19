@@ -515,10 +515,11 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
   const key = methodDefinition.Key;
   if (!(key instanceof PrivateName)) {
     let desc: AccessorDescriptorInit | DataDescriptorInit;
-    if (methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'accessor') {
+    if (methodDefinition.Kind === 'accessor') {
+      desc = { Enumerable: enumerable, Configurable: true, Get: methodDefinition.Get, Set: methodDefinition.Set };
+    } else if (methodDefinition.Kind === 'getter') {
       desc = { Enumerable: enumerable, Configurable: true, Get: methodDefinition.Get };
-    }
-    if (methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor') {
+    } else if (methodDefinition.Kind === 'setter') {
       desc = { Enumerable: enumerable, Configurable: true, Set: methodDefinition.Set };
     }
     if (methodDefinition.Kind === 'method') {
@@ -596,7 +597,7 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
   calleeContext.Function = F;
   const calleeRealm = F.Realm;
   calleeContext.Realm = calleeRealm;
-  calleeContext.ScriptOrModule = Value.null;
+  calleeContext.ScriptOrModule = null;
   surroundingAgent.executionContextStack.push(calleeContext);
 
   const isNew = thisArgument === 'uninitialized';

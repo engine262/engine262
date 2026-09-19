@@ -1,4 +1,4 @@
-import { JSStringValue, UndefinedValue, Value } from '../value.mts';
+import { JSStringValue, Value } from '../value.mts';
 import { X } from '../completion.mts';
 import { CanonicalNumericIndexString, R } from './all.mts';
 
@@ -12,7 +12,7 @@ export function isIntegerIndex(V: string | Value) {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));
-  if (numeric instanceof UndefinedValue) {
+  if (numeric === undefined) {
     return false;
   }
   if (Object.is(R(numeric), +0)) {
@@ -28,7 +28,7 @@ export function isArrayIndex(V: string | Value) {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));
-  if (numeric instanceof UndefinedValue) {
+  if (numeric === undefined) {
     return false;
   }
   if (!Number.isInteger(R(numeric))) {

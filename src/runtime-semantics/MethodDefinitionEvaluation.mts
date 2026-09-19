@@ -94,7 +94,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       // 2. Perform ! SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
       X(SetFunctionName(methodDef.Closure, methodDef.Key));
       // 3. Return ? DefineMethodProperty(methodDef.[[Key]], object, methodDef.[[Closure]], enumerable).
-      if (enumerable) {
+      if (enumerable !== undefined) {
         return Q(yield* DefineMethodProperty(methodDef.Key, object, methodDef.Closure, enumerable));
       } else {
         return ClassElementDefinitionRecord({
@@ -121,7 +121,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       MakeMethod(closure, object);
       // 8. Perform SetFunctionName(closure, propKey, "set").
       SetFunctionName(closure, propKey, 'set');
-      if (enumerable) {
+      if (enumerable !== undefined) {
         // 9. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
         // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
@@ -170,7 +170,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       MakeMethod(closure, object);
       // 9. Perform SetFunctionName(closure, propKey, "get").
       SetFunctionName(closure, propKey, 'get');
-      if (enumerable) {
+      if (enumerable !== undefined) {
         // 10. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
           return PrivateElementRecord({
@@ -228,7 +228,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMet
   X(MakeMethod(closure, object));
   // 8. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  if (enumerable) {
+  if (enumerable !== undefined) {
     // 9. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
   } else {
@@ -272,7 +272,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
     Enumerable: false,
     Configurable: false,
   })));
-  if (enumerable) {
+  if (enumerable !== undefined) {
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
   } else {
@@ -316,7 +316,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
     Enumerable: false,
     Configurable: false,
   })));
-  if (enumerable) {
+  if (enumerable !== undefined) {
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
   } else {
@@ -334,7 +334,7 @@ export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike,
 // +decorator
 export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
 export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
-  if (enumerable) {
+  if (enumerable !== undefined) {
     switch (node.type) {
       case 'MethodDefinition':
         return MethodDefinitionEvaluation_MethodDefinition(node, object, enumerable);

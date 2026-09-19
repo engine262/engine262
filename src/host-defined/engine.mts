@@ -274,7 +274,6 @@ export function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: Ab
   if (realm.HostDefined.finalizeImportMeta) {
     return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined?.public));
   }
-  return Value.undefined;
 }
 
 export type GCMarker = (value: unknown) => void;

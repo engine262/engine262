@@ -239,7 +239,7 @@ export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (Mat
   // 1. Assert: Type(S) is String.
   Assert(typeof S === 'string');
   // 2. Assert: indices is a List.
-  Assert(Array.isArray(indices));
+  Assert(isArray(indices));
   // 3. Let n be the number of elements in indices.
   const n = indices.length;
   // 4. Assert: n < 2**32-1.
@@ -269,7 +269,7 @@ export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (Mat
     const matchIndices = indices[i];
     // b. If matchIndices is not undefined, then
     let matchIndicesArray;
-    if (matchIndices !== Value.undefined) {
+    if (matchIndices !== undefined) {
       // i. Let matchIndicesArray be ! GetMatchIndexPair(S, matchIndices).
       matchIndicesArray = X(GetMatchIndexPair(S, matchIndices as MatchRecord));
     } else { // c. Else,

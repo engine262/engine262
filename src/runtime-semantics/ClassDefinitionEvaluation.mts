@@ -35,6 +35,7 @@ import {
   PrivateEnvironmentRecord,
 
   CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
+  type PlainCompletion,
 } from '#self';
 import {
   Assert,
@@ -414,26 +415,26 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     const staticElements: (ClassFieldDefinitionRecord | ClassStaticBlockDefinitionRecord)[] = [];
     // 25. For each ClassElement e of elements, do
     for (const e of elements) {
-      let field;
+      let _field: PlainCompletion<ClassFieldDefinitionRecord | PrivateElementRecord | ClassStaticBlockDefinitionRecord | void>;
       // a. If IsStatic of e is false, then
       if (IsStatic(e) === false) {
         // i. Let field be ClassElementEvaluation of e with arguments proto and false.
-        field = (yield* ClassElementEvaluation(e, proto, false))!;
+        _field = (yield* ClassElementEvaluation(e, proto, false))!;
       } else { // b. Else,
         // i. Let field be ClassElementEvaluation of e with arguments F and false.
-        field = (yield* ClassElementEvaluation(e, F, false))!;
+        _field = (yield* ClassElementEvaluation(e, F, false))!;
       }
       // c. If field is an abrupt completion, then
-      if (field instanceof AbruptCompletion) {
+      if (_field instanceof AbruptCompletion) {
         // i. Set the running execution context's LexicalEnvironment to env.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
         // ii. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
         surroundingAgent.runningExecutionContext.PrivateEnvironment = outerPrivateEnvironment;
         // iii. Return Completion(field).
-        return field;
+        return _field;
       }
       // d. Set field to field.[[Value]].
-      Q(field);
+      const field = Q(_field);
       // e. If field is a PrivateElement, then
       if (field instanceof PrivateElementRecord) {
         // i. Assert: field.[[Kind]] is either method or accessor.
@@ -482,7 +483,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
         } else { // ii. Else, append field to staticElements.
           staticElements.push(field);
         }
-      } else if (field instanceof ClassStaticBlockDefinitionRecord) { // g. Else if element is a ClassStaticBlockDefinition Record, then
+      } else if (field && field instanceof ClassStaticBlockDefinitionRecord) { // g. Else if element is a ClassStaticBlockDefinition Record, then
         // i. Append element to staticElements.
         staticElements.push(field);
       } else {
