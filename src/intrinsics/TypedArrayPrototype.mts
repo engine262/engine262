@@ -4,7 +4,7 @@ import {
 } from '../completion.mts';
 import {
   BigIntValue,
-  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
+  Descriptor, NumberValue, ObjectValue, Value, wellKnownSymbols,
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
@@ -489,9 +489,9 @@ function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCa
   // 4. Let name be O.[[TypedArrayName]].
   const name = O.TypedArrayName;
   // 5. Assert: Type(name) is String.
-  Assert(name instanceof JSStringValue);
+  Assert(typeof name === 'string');
   // 6. Return name.
-  return name;
+  return Value(name);
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */

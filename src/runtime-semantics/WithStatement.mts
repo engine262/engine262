@@ -21,7 +21,7 @@ export function* Evaluate_WithStatement({ Expression, Statement }: ParseNode.Wit
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-  const newEnv = new ObjectEnvironmentRecord(obj, Value.true, oldEnv);
+  const newEnv = new ObjectEnvironmentRecord(obj, true, oldEnv);
   // 5. Set the running execution context's LexicalEnvironment to newEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   // 6. Let C be the result of evaluating Statement.

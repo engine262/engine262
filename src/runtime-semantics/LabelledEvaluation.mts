@@ -658,7 +658,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
         const lhsName = boundNames[0];
         lhsRef = X(ResolveBinding(lhsName, lhs.strict));
         if (declarationKind !== 'normal') {
-          Assert(IsUnresolvableReference(lhsRef) === Value.false);
+          Assert(!IsUnresolvableReference(lhsRef));
           const base = lhsRef.Base;
           Assert(base instanceof DeclarativeEnvironmentRecord);
           status = EnsureCompletion(yield* AddDisposableResource(

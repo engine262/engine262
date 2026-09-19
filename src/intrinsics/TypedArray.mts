@@ -3,7 +3,6 @@ import {
 } from '../completion.mts';
 import {
   BigIntValue,
-  JSStringValue,
   NullValue,
   NumberValue,
   ObjectValue,
@@ -166,7 +165,7 @@ export interface TypedArrayObject extends ExoticObject {
   readonly ArrayLength: number | 'auto';
   readonly ByteOffset: number;
   readonly ContentType: 'BigInt' | 'Number';
-  readonly TypedArrayName: JSStringValue;
+  readonly TypedArrayName: TypedArrayConstructorNames;
   readonly ByteLength: number | 'auto';
 }
 export function isTypedArrayObject(value: Value): value is TypedArrayObject {
@@ -180,7 +179,7 @@ export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentLis
     && 'TypedArrayName' in exemplar
     && 'ContentType' in exemplar);
   // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
-  const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
+  const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName].IntrinsicName);
   // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
   const constructor = Q(yield* SpeciesConstructor(exemplar, defaultConstructor));
   // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
@@ -213,7 +212,7 @@ export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, ar
 
 /** https://tc39.es/ecma262/#sec-typedarray-create-same-type */
 export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, length: number): ValueEvaluator<TypedArrayObject> {
-  const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
+  const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName].IntrinsicName);
   const result = Q(yield* TypedArrayCreateFromConstructor(constructor, [Value(length)]));
   Assert('TypedArrayName' in result && 'ContentType' in result);
   Assert(result.ContentType === exemplar.ContentType);
@@ -238,13 +237,13 @@ export function ValidateTypedArrayBounds(ta: TypedArrayObject, order: 'seq-cst' 
 
 /** https://tc39.es/ecma262/#sec-typedarrayelementsize */
 export function TypedArrayElementSize(O: TypedArrayObject): number {
-  const type = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
+  const type = O.TypedArrayName;
   return typedArrayInfoByName[type].ElementSize;
 }
 
 /** https://tc39.es/ecma262/#sec-typedarrayelementtype */
 export function TypedArrayElementType(O: TypedArrayObject): TypedArrayTypes {
-  const type = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
+  const type = O.TypedArrayName;
   return typedArrayInfoByName[type].ElementType;
 }
 
@@ -292,7 +291,7 @@ function TypedArrayConstructor(this: BuiltinFunctionObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-allocatetypedarray */
-export function* AllocateTypedArray(constructorName: JSStringValue, newTarget: FunctionObject, defaultProto: keyof Intrinsics, length?: number): ValueEvaluator<Mutable<TypedArrayObject>> {
+export function* AllocateTypedArray(constructorName: TypedArrayConstructorNames, newTarget: FunctionObject, defaultProto: keyof Intrinsics, length?: number): ValueEvaluator<Mutable<TypedArrayObject>> {
   // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
   const proto = Q(yield* GetPrototypeFromConstructor(newTarget, defaultProto));
   // 2. Let obj be TypedArrayCreate(proto).
@@ -303,7 +302,7 @@ export function* AllocateTypedArray(constructorName: JSStringValue, newTarget: F
   obj.TypedArrayName = constructorName;
   // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
   // 6. Otherwise, set obj.[[ContentType]] to Number.
-  if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
+  if (constructorName === 'BigInt64Array' || constructorName === 'BigUint64Array') {
     obj.ContentType = 'BigInt';
   } else {
     obj.ContentType = 'Number';
@@ -441,7 +440,7 @@ export function* AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): 
   // 3. Assert: length is a non-negative integer.
   Assert(isNonNegativeInteger(length));
   // 4. Let constructorName be the String value of O.[[TypedArrayName]].
-  const constructorName = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
+  const constructorName = O.TypedArrayName;
   // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
   const elementSize = typedArrayInfoByName[constructorName].ElementSize;
   // 6. Let byteLength be elementSize × length.

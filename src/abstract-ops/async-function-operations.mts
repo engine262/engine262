@@ -1,13 +1,14 @@
 import {
   EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord, RunSuspendedContext,
   type AsyncBuiltinSteps,
+  type PlainEvaluator,
 } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-async-function-objects */
 
 /** https://tc39.es/ecma262/#sec-asyncblockstart */
-export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext) {
+export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module | AsyncBuiltinSteps, asyncContext: ExecutionContext): PlainEvaluator<void> {
   asyncContext.promiseCapability = promiseCapability;
 
   asyncContext.CodeEvaluationState = (function* closure() {
@@ -35,7 +36,6 @@ export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asy
   }());
   const result = X(yield* RunSuspendedContext(asyncContext, { resume: 'async-yield', value: undefined }));
   Assert(result === undefined);
-  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */

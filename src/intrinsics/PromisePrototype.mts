@@ -101,7 +101,7 @@ function* PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.u
   // 1. Let promise be the this value.
   const promise = thisValue as PromiseObject;
   // 2. If IsPromise(promise) is false, throw a TypeError exception.
-  if (IsPromise(promise) === Value.false) {
+  if (!IsPromise(promise)) {
     return Throw.TypeError('$1 is not a $2 object', promise, 'Promise');
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).

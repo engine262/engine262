@@ -1,8 +1,9 @@
 import {
-  type FinalizationRegistryObject, Q, NormalCompletion, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, UndefinedValue, Value, type ValueEvaluator, KeyForSymbol,
+  type FinalizationRegistryObject, Q, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, Value, KeyForSymbol,
   GetActiveScriptOrModule,
   surroundingAgent,
   type Job,
+  type PlainEvaluator,
 } from '#self';
 
 
@@ -44,7 +45,7 @@ export function AddToKeptObjects(object: ObjectValue | SymbolValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
-export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): ValueEvaluator<UndefinedValue> {
+export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): PlainEvaluator<void> {
   Q(surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry));
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
@@ -65,8 +66,6 @@ export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationR
     // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
     Q(yield* HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
   }
-  // 4. Return NormalCompletion(undefined).
-  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-canbeheldweakly */

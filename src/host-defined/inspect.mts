@@ -131,7 +131,7 @@ const INSPECTORS = {
     }
 
     if (isRegExpObject(v)) {
-      const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags).stringValue();
+      const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags);
       const F = v.OriginalFlags;
       return `/${P}/${F}`;
     }
@@ -193,7 +193,7 @@ const INSPECTORS = {
           }
         }
         flushHoles();
-        return `${isTypedArray ? `${v.TypedArrayName.stringValue()} ` : ''}[${out.join(', ')}]`;
+        return `${isTypedArray ? `${v.TypedArrayName} ` : ''}[${out.join(', ')}]`;
       }
 
       const keys = X(v.OwnPropertyKeys());

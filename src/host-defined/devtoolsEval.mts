@@ -39,7 +39,7 @@ export function* performDevtoolsEval(source: string, evalRealm: ManagedRealm, st
   if (thisEnv instanceof FunctionEnvironmentRecord) {
     const F = thisEnv.FunctionObject;
     inFunction = true;
-    inMethod = thisEnv.HasSuperBinding() === Value.true;
+    inMethod = thisEnv.HasSuperBinding();
     if (F.ConstructorKind === 'derived') {
       inDerivedConstructor = true;
     }

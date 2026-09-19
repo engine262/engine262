@@ -113,7 +113,7 @@ export function format(arg: Formattable): string {
         return '[object Error]';
       }
       if (isRegExpObject(arg)) {
-        const P = EscapeRegExpPattern(arg.OriginalSource, arg.OriginalFlags).stringValue();
+        const P = EscapeRegExpPattern(arg.OriginalSource, arg.OriginalFlags);
         const F = arg.OriginalFlags;
         return `/${P}/${F}`;
       }

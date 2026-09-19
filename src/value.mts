@@ -375,32 +375,32 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
-  static lessThan(x: NumberValue, y: NumberValue) {
+  static lessThan(x: NumberValue, y: NumberValue): boolean | undefined {
     if (x.isNaN()) {
-      return Value.undefined;
+      return undefined;
     }
     if (y.isNaN()) {
-      return Value.undefined;
+      return undefined;
     }
     // If nx and ny are the same Number value, return false.
     // If nx is +0 and ny is -0, return false.
     // If nx is -0 and ny is +0, return false.
     if (R(x) === R(y)) {
-      return Value.false;
+      return false;
     }
     if (R(x) === +Infinity) {
-      return Value.false;
+      return false;
     }
     if (R(y) === +Infinity) {
-      return Value.true;
+      return true;
     }
     if (R(y) === -Infinity) {
-      return Value.false;
+      return false;
     }
     if (R(x) === -Infinity) {
-      return Value.true;
+      return true;
     }
-    return R(x) < R(y) ? Value.true : Value.false;
+    return R(x) < R(y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
@@ -622,24 +622,24 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
-  static lessThan(x: BigIntValue, y: BigIntValue) {
-    return R(x) < R(y) ? Value.true : Value.false;
+  static lessThan(x: BigIntValue, y: BigIntValue): boolean {
+    return R(x) < R(y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
-  static equal(x: BigIntValue, y: BigIntValue) {
+  static equal(x: BigIntValue, y: BigIntValue): boolean {
     // Return true if x and y have the same mathematical integer value and false otherwise.
-    return R(x) === R(y) ? Value.true : Value.false;
+    return R(x) === R(y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-  static sameValue(x: BigIntValue, y: BigIntValue) {
+  static sameValue(x: BigIntValue, y: BigIntValue): boolean {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-  static sameValueZero(x: BigIntValue, y: BigIntValue) {
+  static sameValueZero(x: BigIntValue, y: BigIntValue): boolean {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }

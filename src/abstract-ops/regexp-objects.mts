@@ -1,5 +1,5 @@
 import {
-  Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
+  Descriptor, Value, ObjectValue,
   UndefinedValue,
 } from '../value.mts';
 import {
@@ -8,7 +8,7 @@ import {
 import { CompilePattern, CountLeftCapturingParensWithin, type RegExpRecord } from '../runtime-semantics/all.mts';
 import { ParsePattern } from '../parse.mts';
 import { isLineTerminator } from '../parser/Lexer.mts';
-import type { Mutable } from '../utils/language.mts';
+import { isArray, type Mutable } from '../utils/language.mts';
 import type { RegExpObject } from '../intrinsics/RegExp.mts';
 import {
   ArrayCreate,
@@ -24,7 +24,7 @@ import {
   F as toNumberValue,
   type FunctionObject,
 } from './all.mts';
-import { surroundingAgent, Throw } from '#self';
+import { surroundingAgent, Throw, type PlainCompletion } from '#self';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {
@@ -105,10 +105,10 @@ export function* RegExpCreate(P: Value, F: Value): ValueEvaluator<RegExpObject> 
 }
 
 /** https://tc39.es/ecma262/#sec-escaperegexppattern */
-export function EscapeRegExpPattern(P: string, _F: string | Value) {
+export function EscapeRegExpPattern(P: string, _F: string | Value): string {
   const source = P;
   if (source === '') {
-    return Value('(?:)');
+    return '(?:)';
   }
   let index = 0;
   let escaped = '';
@@ -170,7 +170,7 @@ export function EscapeRegExpPattern(P: string, _F: string | Value) {
       isEscape = false;
     }
   }
-  return Value(escaped);
+  return escaped;
 }
 
 /** https://tc39.es/ecma262/#sec-getstringindex */
@@ -204,7 +204,7 @@ export interface MatchRecord {
   readonly EndIndex: number;
 }
 /** https://tc39.es/ecma262/#sec-getmatchstring */
-export function GetMatchString(S: string, match: MatchRecord) {
+export function GetMatchString(S: string, match: MatchRecord): string {
   // 1. Assert: Type(S) is String.
   Assert(typeof S === 'string');
   // 2. Assert: match is a Match Record.
@@ -214,7 +214,7 @@ export function GetMatchString(S: string, match: MatchRecord) {
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.length);
   // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
-  return Value(S.slice(match.StartIndex, match.EndIndex));
+  return S.slice(match.StartIndex, match.EndIndex);
 }
 
 /** https://tc39.es/ecma262/#sec-getmatchindexpair */
@@ -235,7 +235,7 @@ export function GetMatchIndexPair(S: string, match: MatchRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
-export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (MatchRecord | undefined)[], groupNames: readonly (string | undefined)[], hasGroups: BooleanValue) {
+export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (MatchRecord | undefined)[], groupNames: readonly (string | undefined)[], hasGroups: boolean) {
   // 1. Assert: Type(S) is String.
   Assert(typeof S === 'string');
   // 2. Assert: indices is a List.
@@ -245,16 +245,16 @@ export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (Mat
   // 4. Assert: n < 2**32-1.
   Assert(n < (2 ** 32) - 1);
   // 5. Assert: groupNames is a List with _n_ - 1 elements.
-  Assert(Array.isArray(groupNames) && groupNames.length === n - 1);
+  Assert(isArray(groupNames) && groupNames.length === n - 1);
   // 6. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
   // 7. Assert: Type(hasGroups) is Boolean.
-  Assert(hasGroups instanceof BooleanValue);
+  Assert(typeof hasGroups === 'boolean');
   // 8. Set A to ! ArrayCreate(n).
   // 9. Assert: The value of A's "length" property is n.
   const array = X(ArrayCreate(n));
   // 10. If hasGroups is true, then
   let groups: ObjectValue | UndefinedValue;
-  if (hasGroups === Value.true) {
+  if (hasGroups) {
     // a. Let groups be ! ObjectCreate(null).
     groups = X(OrdinaryObjectCreate(Value.null));
   } else { // 9. Else,
@@ -279,9 +279,9 @@ export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (Mat
     // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
     X(CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(i))), matchIndicesArray));
     // e. If i > 0 and groupNames[i - 1] is not undefined, then
-    if (i > 0 && groupNames[i - 1] !== Value.undefined) {
+    if (i > 0 && groupNames[i - 1] !== undefined) {
       // i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
-      X(CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as JSStringValue, matchIndicesArray));
+      X(CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as string, matchIndicesArray));
     }
   }
   // 13. Return A.
@@ -289,7 +289,7 @@ export function MakeMatchIndicesIndexPairArray(S: string, indices: readonly (Mat
 }
 
 /** https://tc39.es/ecma262/#sec-regexphasflag */
-export function RegExpHasFlag(R: Value, codeUnit: string) {
+export function RegExpHasFlag(R: Value, codeUnit: string): PlainCompletion<boolean | undefined> {
   // 1. If Type(R) is not Object, throw a TypeError exception.
   if (!(R instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not a RegExp object', R);
@@ -298,7 +298,7 @@ export function RegExpHasFlag(R: Value, codeUnit: string) {
   if (!('OriginalFlags' in R)) {
     // a. If SameValue(R, %RegExp.prototype%) is true, return undefined.
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%'))) {
-      return Value.undefined;
+      return undefined;
     }
     // b. Otherwise, throw a TypeError exception.
     return Throw.TypeError('$1 is not a RegExp object', R);
@@ -307,8 +307,8 @@ export function RegExpHasFlag(R: Value, codeUnit: string) {
   const flags = (R as RegExpObject).OriginalFlags;
   // 4. If flags contains codeUnit, return true.
   if (flags.includes(codeUnit)) {
-    return Value.true;
+    return true;
   }
   // 5. Return false.
-  return Value.false;
+  return false;
 }

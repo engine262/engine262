@@ -315,7 +315,7 @@ export class InspectorContext {
 function HostGetThisEnvironment(env: EnvironmentRecord | null): Value {
   while (env !== null) {
     const exists = env.HasThisBinding();
-    if (exists === Value.true) {
+    if (exists) {
       const value = (env as EnvironmentRecordWithThisBinding).GetThisBinding();
       if (value instanceof ThrowCompletion) {
         return Value.undefined;
@@ -354,7 +354,7 @@ export function getDisplayObjectFromEnvironmentRecord(record: EnvironmentRecord)
     }
     return { type, object };
   } else if (record instanceof ObjectEnvironmentRecord) {
-    return { type: record.IsWithEnvironment === Value.true ? 'with' : 'global', object: record.BindingObject };
+    return { type: record.IsWithEnvironment ? 'with' : 'global', object: record.BindingObject };
   } else if (record instanceof GlobalEnvironmentRecord) {
     return { type: 'global', object: record.GlobalThisValue };
   }

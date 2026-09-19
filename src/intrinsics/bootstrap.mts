@@ -60,7 +60,7 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
           [],
           realmRec,
           undefined,
-          Value('get'),
+          'get',
           async,
         );
       }
@@ -72,7 +72,7 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
           [],
           realmRec,
           undefined,
-          Value('set'),
+          'set',
           async,
         );
       }

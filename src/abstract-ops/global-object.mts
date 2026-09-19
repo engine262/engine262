@@ -71,7 +71,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
       // ii. Let inFunction be true.
       inFunction = true;
       // iii. Let inMethod be thisEnv.HasSuperBinding().
-      inMethod = thisEnv.HasSuperBinding() === Value.true;
+      inMethod = thisEnv.HasSuperBinding();
       // iv. If F.[[ConstructorKind]] is derived, set inDerivedConstructor to true.
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;

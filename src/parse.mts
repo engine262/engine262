@@ -3,7 +3,7 @@ import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mt
 import {
   SourceTextModuleRecord, SyntheticModuleRecord, type LoadedModuleRequestRecord, type ModuleRecordHostDefined,
 } from './modules.mts';
-import { JSStringValue, ObjectValue, Value } from './value.mts';
+import { ObjectValue } from './value.mts';
 import { Q, type PlainCompletion } from './completion.mts';
 import {
   ModuleRequests,
@@ -235,7 +235,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     StarExportEntries: starExportEntries,
     OptionalIndirectExportEntries: optionalIndirectExportEntries,
     CycleRoot: undefined,
-    HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
+    HasTLA: body.hasTopLevelAwait,
     AsyncEvaluationOrder: 'unset',
     TopLevelCapability: undefined,
     AsyncParentModules: [],
@@ -250,8 +250,8 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(source: JSStringValue): PlainCompletion<SyntheticModuleRecord> {
-  const parseResult = Q(ParseJSON(source.stringValue()));
+export function ParseJSONModule(source: string): PlainCompletion<SyntheticModuleRecord> {
+  const parseResult = Q(ParseJSON(source));
   return CreateDefaultExportSyntheticModule(parseResult.Value);
 }
 

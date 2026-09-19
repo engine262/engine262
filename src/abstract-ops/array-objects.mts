@@ -243,13 +243,13 @@ export function* CompareArrayElements(x: Value, y: Value, comparefn: FunctionObj
   // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
   const xSmaller = yield* IsLessThan(Value(xString), Value(yString));
   // 8. If xSmaller is true, return -1𝔽.
-  if (xSmaller === Value.true) {
+  if (xSmaller) {
     return F(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
   const ySmaller = yield* IsLessThan(Value(yString), Value(xString));
   // 10. If ySmaller is true, return 1𝔽.
-  if (ySmaller === Value.true) {
+  if (ySmaller) {
     return F(1);
   }
   // 11. Return +0𝔽.
@@ -300,12 +300,12 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
           result = CreateArrayFromList([indexNumber, elementValue]);
         }
       }
-      Q(yield* GeneratorYield(CreateIteratorResultObject(result, Value.false)));
+      Q(yield* GeneratorYield(CreateIteratorResultObject(result, false)));
       // vi. Set index to index + 1.
       index += 1;
     }
   };
   // 4. Return CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-  const generator = CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), ['HostCapturedValues'], [array]);
+  const generator = CreateIteratorFromClosure(closure, '%ArrayIteratorPrototype%', surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), ['HostCapturedValues'], [array]);
   return generator;
 }

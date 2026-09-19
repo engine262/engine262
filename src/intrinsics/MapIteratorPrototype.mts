@@ -62,14 +62,14 @@ export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value
     return Value.undefined;
   };
   // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]));
+  const generator = X(CreateIteratorFromClosure(closure, '%MapIteratorPrototype%', surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]));
   return generator;
 }
 
 /** https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next */
 function* MapIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
-  return Q(yield* GeneratorResume(thisValue, undefined, Value('%MapIteratorPrototype%')));
+  return Q(yield* GeneratorResume(thisValue, undefined, '%MapIteratorPrototype%'));
 }
 
 export function bootstrapMapIteratorPrototype(realmRec: Realm) {

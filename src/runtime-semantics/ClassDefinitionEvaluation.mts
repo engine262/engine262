@@ -1,12 +1,10 @@
 import {
   Value, NullValue, ObjectValue, PrivateName,
-  JSStringValue,
   type Arguments,
   type FunctionCallContext,
   UndefinedValue,
   type PropertyKeyValue,
   ReferenceRecord,
-  SymbolValue,
 } from '../value.mts';
 import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
@@ -761,21 +759,21 @@ export interface DecoratorDefinitionRecord {
 export type ClassElementDefinitionRecord = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
 export interface ClassElementDefinitionRecord_Method {
   readonly Kind: 'method';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // TODO(decorator): spec bug, spec is ECMAScriptFunctionObject
   Value: FunctionObject;
   Decorators: DecoratorDefinitionRecord[] | undefined;
 }
 export interface ClassElementDefinitionRecord_Field {
   readonly Kind: 'field';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   Decorators: DecoratorDefinitionRecord[] | undefined;
   readonly Initializers: FunctionObject[];
   readonly ExtraInitializers: FunctionObject[];
 }
 export interface ClassElementDefinitionRecord_Accessor {
   readonly Kind: 'accessor';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // https://github.com/tc39/proposal-decorators/issues/572
   Get: FunctionObject;
   // https://github.com/tc39/proposal-decorators/issues/572
@@ -787,14 +785,14 @@ export interface ClassElementDefinitionRecord_Accessor {
 }
 export interface ClassElementDefinitionRecord_Getter {
   readonly Kind: 'getter';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // https://github.com/tc39/proposal-decorators/issues/572
   Get: FunctionObject;
   Decorators: readonly DecoratorDefinitionRecord[] | undefined;
 }
 export interface ClassElementDefinitionRecord_Setter {
   readonly Kind: 'setter';
-  readonly Key: PrivateName | JSStringValue | SymbolValue;
+  readonly Key: PrivateName | PropertyKeyValue;
   // https://github.com/tc39/proposal-decorators/issues/572
   Set: FunctionObject;
   Decorators: readonly DecoratorDefinitionRecord[] | undefined;

@@ -175,8 +175,7 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
   const func = thisValue;
   // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
   //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (hasSourceTextInternalSlot(func)
-    && X(HostHasSourceTextAvailable(func)) === Value.true) {
+  if (hasSourceTextInternalSlot(func) && X(HostHasSourceTextAvailable(func))) {
     // Return ! UTF16Encode(func.[[SourceText]]).
     return Value(func.SourceText);
   }

@@ -6,7 +6,6 @@ import {
   ObjectValue,
   Value,
   wellKnownSymbols,
-  BooleanValue,
 } from '../value.mts';
 import { type GCMarker } from '../host-defined/engine.mts';
 import type { DisposableResourceRecord } from '../abstract-ops/disposable-operations.mts';
@@ -54,9 +53,9 @@ export abstract class EnvironmentRecord {
 
   abstract DeleteBinding(name: string): PlainEvaluator<boolean>;
 
-  abstract HasThisBinding(): BooleanValue;
+  abstract HasThisBinding(): boolean;
 
-  abstract HasSuperBinding(): BooleanValue;
+  abstract HasSuperBinding(): boolean;
 
   abstract WithBaseObject(): ObjectValue | UndefinedValue;
 
@@ -248,15 +247,15 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
-  HasThisBinding(): BooleanValue {
+  HasThisBinding(): boolean {
     // 1. Return false.
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
-  HasSuperBinding(): BooleanValue {
+  HasSuperBinding(): boolean {
     // 1. Return false.
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
@@ -328,29 +327,29 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
-  override HasThisBinding() {
+  override HasThisBinding(): boolean {
     // 1. Let envRec be the function Environment Record for which the method was invoked.
     const envRec = this;
     // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
     if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
+      return false;
     } else {
-      return Value.true;
+      return true;
     }
   }
 
   /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
-  override HasSuperBinding() {
+  override HasSuperBinding(): boolean {
     const envRec = this;
     // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
     if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
+      return false;
     }
     // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
     if (envRec.FunctionObject.HomeObject === Value.undefined) {
-      return Value.false;
+      return false;
     } else {
-      return Value.true;
+      return true;
     }
   }
 
@@ -436,9 +435,9 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
-  override HasThisBinding() {
+  override HasThisBinding(): boolean {
     // Return true.
-    return Value.true;
+    return true;
   }
 
   /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
@@ -493,13 +492,13 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
   BindingObject: ObjectValue;
 
-  IsWithEnvironment: BooleanValue;
+  IsWithEnvironment: boolean;
 
   /** https://tc39.es/ecma262/#sec-newobjectenvironment */
-  constructor(O: ObjectValue, W: BooleanValue, E: EnvironmentRecord | null) {
-    super(E);
-    this.BindingObject = O;
-    this.IsWithEnvironment = W;
+  constructor(object: ObjectValue, IsWithEnvironment: boolean, Environment: EnvironmentRecord | null) {
+    super(Environment);
+    this.BindingObject = object;
+    this.IsWithEnvironment = IsWithEnvironment;
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
@@ -612,15 +611,15 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
-  HasThisBinding() {
+  HasThisBinding(): boolean {
     // 1. Return false.
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
-  HasSuperBinding() {
+  HasSuperBinding(): boolean {
     // 1. Return false.
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
@@ -628,7 +627,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. If the IsWithEnvironment flag of envRec is true, return the binding object for envRec.
-    if (envRec.IsWithEnvironment === Value.true) {
+    if (envRec.IsWithEnvironment) {
       return envRec.BindingObject;
     }
     // 3. Otherwise, return undefined.
@@ -653,7 +652,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   /** https://tc39.es/ecma262/#sec-newglobalenvironment */
   constructor(G: ObjectValue, thisValue: ObjectValue) {
     // 1. Let objRec be NewObjectEnvironment(G, false, null).
-    const objRec = new ObjectEnvironmentRecord(G, Value.false, null);
+    const objRec = new ObjectEnvironmentRecord(G, false, null);
     // 2. Let dclRec be a new declarative Environment Record containing no bindings.
     const dclRec = new DeclarativeEnvironmentRecord(null);
     // 3. Let env be a new global Environment Record.
@@ -790,13 +789,13 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
   HasThisBinding() {
     // Return true.
-    return Value.true;
+    return true;
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
   HasSuperBinding() {
     // 1. Return false.
-    return Value.false;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */

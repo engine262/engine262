@@ -158,7 +158,7 @@ export function GetThisEnvironment(): EnvironmentRecordWithThisBinding {
     // a. Let exists be env.HasThisBinding().
     const exists = env.HasThisBinding();
     // b. If exists is true, return envRec.
-    if (exists === Value.true) {
+    if (exists) {
       return env as EnvironmentRecordWithThisBinding;
     }
     // c. Let outer be env.[[OuterEnv]].

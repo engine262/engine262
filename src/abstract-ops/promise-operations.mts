@@ -4,7 +4,7 @@ import {
   HostCallJobCallback,
 } from '../execution-context/Job.mts';
 import {
-  ObjectValue, Value, UndefinedValue, BooleanValue, type Arguments,
+  ObjectValue, Value, UndefinedValue, type Arguments,
 } from '../value.mts';
 import {
   AbruptCompletion,
@@ -242,14 +242,14 @@ export function* NewPromiseCapability(constructor: Value): PlainEvaluator<Promis
 }
 
 /** https://tc39.es/ecma262/#sec-ispromise */
-export function IsPromise(x: Value): BooleanValue {
+export function IsPromise(x: Value): boolean {
   if (!(x instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if (!('PromiseState' in x)) {
-    return Value.false;
+    return false;
   }
-  return Value.true;
+  return true;
 }
 
 /** https://tc39.es/ecma262/#sec-rejectpromise */
@@ -282,7 +282,7 @@ function TriggerPromiseReactions(reactions: readonly PromiseReactionRecord[], ar
 /** https://tc39.es/ecma262/#sec-promise-resolve */
 export function* PromiseResolve(constructor: ObjectValue, resolution: Value): ValueEvaluator<PromiseObject> {
   Assert(constructor instanceof ObjectValue);
-  if (IsPromise(resolution) === Value.true) {
+  if (IsPromise(resolution)) {
     const xConstructor = Q(yield* Get(resolution as PromiseObject, 'constructor'));
     if (SameValue(xConstructor, constructor)) {
       return resolution as PromiseObject;
@@ -368,7 +368,7 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
 export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue
 export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue): PromiseObject | UndefinedValue {
   // 1. Assert: IsPromise(promise) is true.
-  Assert(IsPromise(promise) === Value.true);
+  Assert(IsPromise(promise));
   // 2. If resultCapability is not present, then
   if (resultCapability === undefined) {
     // a. Set resultCapability to undefined.

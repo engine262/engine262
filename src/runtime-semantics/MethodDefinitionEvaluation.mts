@@ -120,7 +120,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       // 7. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
       // 8. Perform SetFunctionName(closure, propKey, "set").
-      SetFunctionName(closure, propKey, Value('set'));
+      SetFunctionName(closure, propKey, 'set');
       if (enumerable) {
         // 9. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
@@ -169,7 +169,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       // 8. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
       // 9. Perform SetFunctionName(closure, propKey, "get").
-      SetFunctionName(closure, propKey, Value('get'));
+      SetFunctionName(closure, propKey, 'get');
       if (enumerable) {
         // 10. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {

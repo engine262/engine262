@@ -530,7 +530,7 @@ export function* DefineMethodProperty(homeObject: ObjectValue, methodDefinition:
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
-export function SetFunctionName(func: FunctionObject, name: string | PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
+export function SetFunctionName(func: FunctionObject, name: string | PropertyKeyValue | PrivateName, prefix?: string): void {
   Assert(X(IsExtensible(func)) && !X(HasOwnProperty(func, 'name')));
   if (name instanceof SymbolValue) {
     const description = name.Description;
@@ -551,7 +551,7 @@ export function SetFunctionName(func: FunctionObject, name: string | PropertyKey
 
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-    const prefixedName = `${prefix.stringValue()} ${name}`;
+    const prefixedName = `${prefix} ${name}`;
     initialName = prefixedName;
     name = prefixedName;
   }
@@ -638,7 +638,7 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
 }
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, async = false): BuiltinFunctionObject {
+export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, async = false): BuiltinFunctionObject {
   if (typeof name === 'string') {
     name = Value(name);
   }
@@ -728,7 +728,7 @@ export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, pr
     targetName = Value('');
   }
   if (prefix !== undefined) {
-    SetFunctionName(F, targetName, Value(prefix));
+    SetFunctionName(F, targetName, prefix);
   } else {
     SetFunctionName(F, targetName);
   }

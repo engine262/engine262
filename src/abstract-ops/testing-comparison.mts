@@ -1,6 +1,6 @@
 import {
   BigIntValue,
-  BooleanValue, UndefinedValue,
+  BooleanValue,
   SymbolValue,
   JSStringValue,
   NumberValue,
@@ -8,7 +8,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mts';
-import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { Q, X } from '../completion.mts';
 import {
   Assert,
   Get,
@@ -128,10 +128,8 @@ export function* IsRegExp(argument: Value): PlainEvaluator<boolean> {
 }
 
 /** https://tc39.es/ecma262/#sec-isstringprefix */
-export function IsStringPrefix(p: JSStringValue, q: JSStringValue) {
-  Assert(p instanceof JSStringValue);
-  Assert(q instanceof JSStringValue);
-  return q.stringValue().startsWith(p.stringValue());
+export function IsStringPrefix(p: string, q: string) {
+  return q.startsWith(p);
 }
 
 /** https://tc39.es/ecma262/#sec-samevalue */
@@ -173,7 +171,7 @@ export function SameValueNonNumber(x: Value, y: Value): boolean {
   }
 
   if (x instanceof BigIntValue) {
-    return BigIntValue.equal(x, y as BigIntValue) === Value.true;
+    return BigIntValue.equal(x, y as BigIntValue);
   }
 
   if (x instanceof JSStringValue) {
@@ -189,7 +187,7 @@ export function SameValueNonNumber(x: Value, y: Value): boolean {
 }
 
 /** https://tc39.es/ecma262/#sec-islessthan */
-export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluator<BooleanValue | UndefinedValue> {
+export function* IsLessThan(x: Value, y: Value, LeftFirst = true): PlainEvaluator<boolean | undefined> {
   let px;
   let py;
   // 1. If the LeftFirst flag is true, then
@@ -208,12 +206,12 @@ export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluato
   // 3. If Type(px) is String and Type(py) is String, then
   if (px instanceof JSStringValue && py instanceof JSStringValue) {
     // a. If IsStringPrefix(py, px) is true, return false.
-    if (IsStringPrefix(py, px)) {
-      return Value.false;
+    if (IsStringPrefix(py.stringValue(), px.stringValue())) {
+      return false;
     }
     // b. If IsStringPrefix(px, py) is true, return true.
-    if (IsStringPrefix(px, py)) {
-      return Value.true;
+    if (IsStringPrefix(px.stringValue(), py.stringValue())) {
+      return true;
     }
     // c. Let k be the smallest nonnegative integer such that the code unit at index k within px
     //    is different from the code unit at index k within py. (There must be such a k, for
@@ -231,9 +229,9 @@ export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluato
     const n = py.stringValue().charCodeAt(k);
     // f. If m < n, return true. Otherwise, return false.
     if (m < n) {
-      return Value.true;
+      return true;
     } else {
-      return Value.false;
+      return false;
     }
   } else {
     // a. If Type(px) is BigInt and Type(py) is String, then
@@ -242,7 +240,7 @@ export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluato
       const ny = StringToBigInt(py);
       // ii. If ny is undefined, return undefined.
       if (ny === undefined) {
-        return Value.undefined;
+        return undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
       return BigIntValue.lessThan(px, ny);
@@ -253,7 +251,7 @@ export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluato
       const nx = StringToBigInt(px);
       // ii. If ny is undefined, return undefined.
       if (nx === undefined) {
-        return Value.undefined;
+        return undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
       return BigIntValue.lessThan(nx, py);
@@ -275,20 +273,20 @@ export function* IsLessThan(x: Value, y: Value, LeftFirst = true): ValueEvaluato
     Assert((nx instanceof BigIntValue && ny instanceof NumberValue) || (nx instanceof NumberValue && ny instanceof BigIntValue));
     // g. If nx or ny is NaN, return undefined.
     if ((nx.isNaN && nx.isNaN()) || (ny.isNaN && ny.isNaN())) {
-      return Value.undefined;
+      return undefined;
     }
     // h. If nx is -∞ or ny is +∞, return true.
     if ((nx instanceof NumberValue && R(nx) === -Infinity) || (ny instanceof NumberValue && R(ny) === +Infinity)) {
-      return Value.true;
+      return true;
     }
     // i. If nx is +∞ or ny is -∞, return false.
     if ((nx instanceof NumberValue && R(nx) === +Infinity) || (ny instanceof NumberValue && R(ny) === -Infinity)) {
-      return Value.false;
+      return false;
     }
     // j. If the mathematical value of nx is less than the mathematical value of ny, return true; otherwise return false.
     const a = R(nx);
     const b = R(ny);
-    return a < b ? Value.true : Value.false;
+    return a < b;
   }
 }
 

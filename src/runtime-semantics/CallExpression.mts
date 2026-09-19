@@ -29,7 +29,7 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
   const func = Q(yield* GetValue(ref));
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
   if (ref instanceof ReferenceRecord
-      && IsPropertyReference(ref) === Value.false
+      && !IsPropertyReference(ref)
       && (ref.ReferencedName instanceof JSStringValue
       && ref.ReferencedName.stringValue() === 'eval')) {
     // a. If SameValue(func, %eval%) is true, then

@@ -92,7 +92,7 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
     Throw(result.Error);
   }
   const resultLength = result.Bytes.length;
-  const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
+  const ta = Q(yield* AllocateTypedArray('Uint8Array', surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
 
   // TODO: Assert: ta.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is the number of elements in result.[[Bytes]].
 
@@ -161,7 +161,7 @@ function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
     Throw(result.Error);
   }
   const resultLength = result.Bytes.length;
-  const ta = Q(yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
+  const ta = Q(yield* AllocateTypedArray('Uint8Array', surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength));
   // TODO Assert: ta.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is the number of elements in result.[[Bytes]].
 
   // Set the value at each index of ta.[[ViewedArrayBuffer]].[[ArrayBufferData]] to the value at the corresponding index of result.[[Bytes]].
@@ -200,7 +200,7 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { th
 function ValidateUint8Array(ta: Value) {
   Q(RequireInternalSlot(ta, 'TypedArrayName'));
   __ts_cast__<TypedArrayObject>(ta);
-  if (ta.TypedArrayName.stringValue() !== 'Uint8Array') {
+  if (ta.TypedArrayName !== 'Uint8Array') {
     return Throw.TypeError('Not a Uint8Array');
   }
   return undefined;

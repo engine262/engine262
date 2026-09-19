@@ -55,13 +55,13 @@ export function CreateRegExpStringIterator(R: ObjectValue, S: string, global: bo
     }
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%RegExpStringIteratorPrototype%", %RegExpStringIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, Value('%RegExpStringIteratorPrototype%'), surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, '%RegExpStringIteratorPrototype%', surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')));
 }
 
 /** https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
 function* RegExpStringIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
-  return Q(yield* GeneratorResume(thisValue, undefined, Value('%RegExpStringIteratorPrototype%')));
+  return Q(yield* GeneratorResume(thisValue, undefined, '%RegExpStringIteratorPrototype%'));
 }
 
 export function bootstrapRegExpStringIteratorPrototype(realmRec: Realm) {

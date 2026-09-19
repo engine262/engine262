@@ -26,7 +26,7 @@ import {
 
 /** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `delete` UnaryExpression
-function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryExpression) {
+function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let ref be the result of evaluating UnaryExpression.
   const ref = Q(yield* Evaluate(UnaryExpression));
   Q(ref);
@@ -35,19 +35,19 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     return Value.true;
   }
   // 4. If IsUnresolvableReference(ref) is true, then
-  if (IsUnresolvableReference(ref) === Value.true) {
+  if (IsUnresolvableReference(ref)) {
     // a. Assert: ref.[[Strict]] is false.
     Assert(!ref.Strict);
     // b. Return true.
     return Value.true;
   }
   // 5. If IsPropertyReference(ref) is true, then
-  if (IsPropertyReference(ref) === Value.true) {
+  if (IsPropertyReference(ref)) {
     __ts_cast__<PropertyReference>(ref);
     // a. Assert: IsPrivateReference(ref) is false.
     Assert(!IsPrivateReference(ref));
     // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
-    if (IsSuperReference(ref) === Value.true) {
+    if (IsSuperReference(ref)) {
       return Throw.ReferenceError('Cannot delete a super property');
     }
     // c. Let baseObj be ? ToObject(ref.[[Base]]).
@@ -64,14 +64,14 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
       return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);
     }
     // g. Return deleteStatus.
-    return deleteStatus;
+    return Value(deleteStatus);
   } else { // 6. Else,
     // a. Let base be ref.[[Base]].
     const base = ref.Base;
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
-    return Q(yield* base.DeleteBinding((ref.ReferencedName as JSStringValue).stringValue()));
+    return Value(Q(yield* base.DeleteBinding((ref.ReferencedName as JSStringValue).stringValue())));
   }
 }
 
@@ -94,7 +94,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
   // 2. If Type(val) is Reference, then
   if (_val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
-    if (IsUnresolvableReference(_val) === Value.true) {
+    if (IsUnresolvableReference(_val)) {
       return Value('undefined');
     }
   }
@@ -194,7 +194,7 @@ function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpr
 //  `-` UnaryExpression
 //  `~` UnaryExpression
 //  `!` UnaryExpression
-export function* Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpression) {
+export function* Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpression): ValueEvaluator {
   switch (UnaryExpression.operator) {
     case 'delete':
       Q(surroundingAgent.debugger_cannotPreview);

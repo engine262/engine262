@@ -29,7 +29,7 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
       if (NewTarget instanceof UndefinedValue) {
         return Throw.TypeError('$1 cannot be invoked without new', TypedArray);
       }
-      const constructorName = Value(TypedArray);
+      const constructorName = TypedArray;
       const proto = `%${TypedArray}.prototype%` as const;
       const numberOfArgs = args.length;
       if (numberOfArgs === 0) {

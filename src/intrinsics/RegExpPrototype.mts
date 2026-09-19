@@ -158,21 +158,21 @@ export function* RegExpBuiltinExec(R: RegExpObject, S: string): ValueEvaluator<N
   const groupNames: (string | undefined)[] = [];
   indices.push(match);
   const matchedSubStr = GetMatchString(S, match);
-  X(CreateDataPropertyOrThrow(A, '0', matchedSubStr));
+  X(CreateDataPropertyOrThrow(A, '0', Value(matchedSubStr)));
   let groups;
-  let hasGroups;
+  let hasGroups: boolean;
   if (R.parsedPattern.capturingGroups.filter((x) => x.GroupName).length > 0) {
     groups = OrdinaryObjectCreate(Value.null);
-    hasGroups = Value.true;
+    hasGroups = true;
   } else {
     groups = Value.undefined;
-    hasGroups = Value.false;
+    hasGroups = false;
   }
   X(CreateDataPropertyOrThrow(A, 'groups', groups));
   const matchedGroupNames: string[] = [];
   for (let i = 1; i <= n; i += 1) {
     const captureI = r.captures[i];
-    let capturedValue;
+    let capturedValue: Value;
     if (!captureI) {
       capturedValue = Value.undefined;
       indices.push(undefined);
@@ -184,7 +184,7 @@ export function* RegExpBuiltinExec(R: RegExpObject, S: string): ValueEvaluator<N
         captureEnd = GetStringIndex(S, input, captureEnd);
       }
       const capture: MatchRecord = { StartIndex: captureStart, EndIndex: captureEnd };
-      capturedValue = GetMatchString(S, capture);
+      capturedValue = Value(GetMatchString(S, capture));
       indices.push(capture);
     }
     X(CreateDataPropertyOrThrow(A, X(ToString(F(i))), capturedValue));
@@ -233,7 +233,7 @@ function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallC
   // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER S).
   const cu = 's';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
@@ -304,7 +304,7 @@ function RegExpProto_hasIndicesGetter(_args: Arguments, { thisValue }: FunctionC
   // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER D).
   const cu = 'd';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
@@ -314,7 +314,7 @@ function RegExpProto_ignoreCaseGetter(_args: Arguments, { thisValue }: FunctionC
   // 2. Let cu be the code unit 0x0069 (LATIN SMALL LETTER I).
   const cu = 'i';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@match */
@@ -399,7 +399,7 @@ function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCa
   // 2. Let cu be the code unit 0x006D (LATIN SMALL LETTER M).
   const cu = 'm';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
@@ -589,7 +589,7 @@ function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallC
   Assert(isRegExpObject(R));
   const src = R.OriginalSource;
   const flags = R.OriginalFlags;
-  return EscapeRegExpPattern(src, flags);
+  return Value(EscapeRegExpPattern(src, flags));
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@split */
@@ -682,7 +682,7 @@ function RegExpProto_stickyGetter(_args: Arguments, { thisValue }: FunctionCallC
   // 2. Let cu be the code unit 0x0097 (LATIN SMALL LETTER Y).
   const cu = 'y';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.test */
@@ -718,7 +718,7 @@ function RegExpProto_unicodeGetter(_args: Arguments, { thisValue }: FunctionCall
   // 2. Let cu be the code unit 0x0075 (LATIN SMALL LETTER U).
   const cu = 'u';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicodeSets */
@@ -728,7 +728,7 @@ function RegExpProto_unicodeSetsGetter(_args: Arguments, { thisValue }: Function
   // 2. Let cu be the code unit 0x0076 (LATIN SMALL LETTER V).
   const cu = 'v';
   // 3. Return ? RegExpHasFlag(R, cu).
-  return Q(RegExpHasFlag(R, cu));
+  return Value(Q(RegExpHasFlag(R, cu)));
 }
 
 export function bootstrapRegExpPrototype(realmRec: Realm) {

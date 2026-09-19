@@ -1,5 +1,4 @@
 import {
-  BooleanValue,
   JSStringValue,
   ObjectValue,
   UndefinedValue,
@@ -248,10 +247,10 @@ export function* AsyncIteratorClose<T, C extends Completion<T>>(iteratorRecord: 
 }
 
 /** https://tc39.es/ecma262/#sec-createiterresultobject */
-export function CreateIteratorResultObject(value: Value, done: BooleanValue) {
+export function CreateIteratorResultObject(value: Value, done: boolean) {
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataPropertyOrThrow(obj, 'value', value));
-  X(CreateDataPropertyOrThrow(obj, 'done', done));
+  X(CreateDataPropertyOrThrow(obj, 'done', Value(done)));
   return obj;
 }
 
@@ -259,7 +258,7 @@ export function CreateIteratorResultObject(value: Value, done: BooleanValue) {
 export function CreateListIteratorRecord(list: Iterable<Value>): IteratorRecord {
   const closure = function* closure(): YieldEvaluator {
     for (const E of list) {
-      Q(yield* GeneratorYield(CreateIteratorResultObject(E, Value.false)));
+      Q(yield* GeneratorYield(CreateIteratorResultObject(E, false)));
     }
     return NormalCompletion(Value.undefined);
   };
@@ -298,15 +297,15 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord):
 }
 
 /** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
-export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseCapability: PromiseCapabilityRecord, syncIteratorRecord: IteratorRecord, closeOnRejection: BooleanValue): ValueEvaluator<PromiseObject> {
+export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseCapability: PromiseCapabilityRecord, syncIteratorRecord: IteratorRecord, closeOnRejection: boolean): ValueEvaluator<PromiseObject> {
   const done = yield* IteratorComplete(result);
   IfAbruptRejectPromise(done, promiseCapability);
-  __ts_cast__<BooleanValue>(done);
+  __ts_cast__<boolean>(done);
   const value = yield* IteratorValue(result);
   IfAbruptRejectPromise(value, promiseCapability);
   __ts_cast__<Value>(value);
   let valueWrapper = yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
-  if (valueWrapper instanceof AbruptCompletion && done === Value.false && closeOnRejection === Value.true) {
+  if (valueWrapper instanceof AbruptCompletion && !done && closeOnRejection) {
     valueWrapper = yield* IteratorClose(syncIteratorRecord, valueWrapper);
   }
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
@@ -314,7 +313,7 @@ export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseC
   const unwrap = ([v = Value.undefined]: Arguments) => CreateIteratorResultObject(v, done);
   const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
   let onRejected;
-  if (done === Value.true || closeOnRejection === Value.false) {
+  if (done || !closeOnRejection) {
     onRejected = Value.undefined;
   } else {
     const closeIterator = ([error = Value.undefined]: Arguments) => IteratorClose(syncIteratorRecord, ThrowCompletion(error));
@@ -400,7 +399,7 @@ export function IteratorZip(
   };
   const gen = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.intrinsic('%IteratorHelperPrototype%'),
     ['UnderlyingIterators'],
   ) as GeneratorObject;

@@ -91,7 +91,7 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
           visited.push(r);
           // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
           if (desc.Enumerable) {
-            return CreateIteratorResultObject(Value(r), Value.false);
+            return CreateIteratorResultObject(Value(r), false);
           }
         }
       }
@@ -104,7 +104,7 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
     O.ObjectWasVisited = Value.false;
     // f. If object is null, return CreateIteratorResultObject(undefined, true).
     if (object === Value.null) {
-      return CreateIteratorResultObject(Value.undefined, Value.true);
+      return CreateIteratorResultObject(Value.undefined, true);
     }
   }
 }

@@ -75,4 +75,4 @@ export const ArrayBuffer = new ObjectInspector<ArrayBufferObject>('ArrayBuffer',
 
 export const DataView = new ObjectInspector<DataViewObject>('DataView', 'dataview', (value) => `DataView(${value.ByteLength})`);
 
-export const TypedArray = new ObjectInspector<TypedArrayObject>('TypedArray', 'typedarray', (value) => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
+export const TypedArray = new ObjectInspector<TypedArrayObject>('TypedArray', 'typedarray', (value) => `${value.TypedArrayName}(${value.ArrayLength})`);

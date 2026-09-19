@@ -59,14 +59,14 @@ export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): Valu
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]));
+  const generator = X(CreateIteratorFromClosure(closure, '%SetIteratorPrototype%', surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]));
   return generator;
 }
 
 /** https://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
 function* SetIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
-  return Q(yield* GeneratorResume(thisValue, undefined, Value('%SetIteratorPrototype%')));
+  return Q(yield* GeneratorResume(thisValue, undefined, '%SetIteratorPrototype%'));
 }
 
 export function bootstrapSetIteratorPrototype(realmRec: Realm) {

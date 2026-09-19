@@ -12,7 +12,6 @@ import {
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import {
-  BooleanValue,
   JSStringValue,
   NumberValue,
   ObjectValue,
@@ -108,7 +107,7 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -160,7 +159,7 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
   };
   const result: Mutable<GeneratorObject> = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -188,7 +187,7 @@ function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisVa
     }
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<BooleanValue>(result);
+    __ts_cast__<Value>(result);
     if (!ToBoolean(result)) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.false)));
     }
@@ -218,7 +217,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
       }
       const selected: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
       IfAbruptCloseIterator(selected, iterated);
-      __ts_cast__<BooleanValue>(selected);
+      __ts_cast__<Value>(selected);
       if (ToBoolean(selected)) {
         const completion = EnsureCompletion(yield* Yield(value));
         IfAbruptCloseIterator(completion, iterated);
@@ -229,7 +228,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -257,7 +256,7 @@ function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisVal
     }
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<BooleanValue>(result);
+    __ts_cast__<Value>(result);
     if (ToBoolean(result)) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(value)));
     }
@@ -314,7 +313,7 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
 
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -423,7 +422,7 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -490,7 +489,7 @@ function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisVal
     }
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<BooleanValue>(result);
+    __ts_cast__<Value>(result);
     if (ToBoolean(result)) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.true)));
     }
@@ -540,7 +539,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
   };
   const result: Mutable<GeneratorObject> = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
@@ -596,7 +595,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
   };
   const result = CreateIteratorFromClosure(
     closure,
-    Value('Iterator Helper'),
+    'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );

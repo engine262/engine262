@@ -331,7 +331,7 @@ export class ManagedRealm extends Realm {
       throw new TypeError('sourceText must be a string');
     }
     const pop = this.pushTopContext();
-    const module = ParseJSONModule(Value(sourceText));
+    const module = ParseJSONModule(sourceText);
     pop?.();
     return module;
   }
@@ -341,7 +341,7 @@ export class ManagedRealm extends Realm {
       throw new TypeError('sourceText must be a string');
     }
     const pop = this.pushTopContext();
-    const module = CreateTextModule(Value(sourceText));
+    const module = CreateTextModule(sourceText);
     pop?.();
     return module;
   }

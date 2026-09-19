@@ -696,19 +696,19 @@ function* StringProto_toWellFormed(_args: Arguments, { thisValue }: FunctionCall
 /** https://tc39.es/ecma262/#sec-string.prototype.trim */
 function* StringProto_trim(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const S = thisValue;
-  return Q(yield* TrimString(S, 'start+end'));
+  return Value(Q(yield* TrimString(S, 'start+end')));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.trimend */
 function* StringProto_trimEnd(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const S = thisValue;
-  return Q(yield* TrimString(S, 'end'));
+  return Value(Q(yield* TrimString(S, 'end')));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.trimstart */
 function* StringProto_trimStart(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const S = thisValue;
-  return Q(yield* TrimString(S, 'start'));
+  return Value(Q(yield* TrimString(S, 'start')));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.valueof */
@@ -747,7 +747,7 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-  const generator = X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]));
+  const generator = X(CreateIteratorFromClosure(closure, '%StringIteratorPrototype%', surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]));
   return generator;
 }
 

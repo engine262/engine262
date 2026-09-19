@@ -1,5 +1,5 @@
 import {
-  Value, JSStringValue, ObjectValue, UndefinedValue, BooleanValue,
+  Value, JSStringValue, ObjectValue, UndefinedValue,
 } from './value.mts';
 import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
@@ -194,7 +194,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
 
   readonly LoadedModules: LoadedModuleRequestRecord[];
 
-  readonly HasTLA: BooleanValue;
+  readonly HasTLA: boolean;
 
   AsyncEvaluationOrder: 'unset' | number | 'done';
 
@@ -906,7 +906,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context!;
     const env = module.Environment!;
-    if (module.HasTLA === Value.false) {
+    if (!module.HasTLA) {
       Assert(capability === undefined);
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
