@@ -6180,7 +6180,7 @@ export declare abstract class StatementParser extends ExpressionParser {
 export declare function StringCreate(value: string, prototype: ObjectValue): Mutable<StringObject>;
 
 /** https://tc39.es/ecma262/#sec-stringgetownproperty */
-export declare function StringGetOwnProperty(S: ObjectValue, P: string | PropertyKeyValue): FullyPopulatedDataDescriptor | undefined;
+export declare function StringGetOwnProperty(string: StringObject, propertyKey: string | PropertyKeyValue): FullyPopulatedDataDescriptor | undefined;
 
 export declare function StringIndexOf(string: string, searchValue: string, fromIndex: number): NumberValue;
 
