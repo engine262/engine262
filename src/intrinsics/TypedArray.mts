@@ -12,7 +12,7 @@ import {
 import { type Mutable, __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
-import { surroundingAgent } from '#self';
+import { surroundingAgent, TypedArraySetElement } from '#self';
 import {
   Assert,
   Call,
@@ -21,7 +21,6 @@ import {
   IsCallable,
   IsConstructor,
   IteratorToList,
-  Set,
   LengthOfArrayLike,
   ToObject,
   ToString,
@@ -411,9 +410,8 @@ export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, valu
   Q(yield* AllocateTypedArrayBuffer(O, len));
   let k = 0;
   while (k < len) {
-    const Pk = X(ToString(F(k)));
     const kValue = value[k];
-    Q(yield* Set(O, Pk, kValue, true));
+    Q(yield* TypedArraySetElement(O, F(k), kValue));
     k += 1;
   }
 }
@@ -424,9 +422,9 @@ export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>,
   Q(yield* AllocateTypedArrayBuffer(O, len));
   let k = 0;
   while (k < len) {
-    const Pk = X(ToString(F(k)));
-    const kValue = Q(yield* Get(arrayLike, Pk));
-    Q(yield* Set(O, Pk, kValue, true));
+    const propertyKey = X(ToString(F(k)));
+    const kValue = Q(yield* Get(arrayLike, propertyKey));
+    Q(yield* TypedArraySetElement(O, F(k), kValue));
     k += 1;
   }
 }
@@ -489,7 +487,6 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(F(k)));
       const kValue = values[k];
       let mappedValue;
       if (mapping) {
@@ -497,7 +494,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       } else {
         mappedValue = kValue;
       }
-      Q(yield* Set(targetObj, Pk, mappedValue, true));
+      Q(yield* TypedArraySetElement(targetObj, F(k), mappedValue));
       k += 1;
     }
     return targetObj;
@@ -513,55 +510,34 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   let k = 0;
   // 12. Repeat, while k < len
   while (k < len) {
-    // a. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(F(k)));
-    // b. Let kValue be ? Get(arrayLike, Pk).
-    const kValue = Q(yield* Get(arrayLike, Pk));
+    const propertyKey = X(ToString(F(k)));
+    const kValue = Q(yield* Get(arrayLike, propertyKey));
     let mappedValue;
-    // c. If mapping is true, then
     if (mapping) {
-      // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
       mappedValue = Q(yield* Call(mapper, thisArg, [kValue, F(k)]));
     } else {
-      // d. Else, let mappedValue be kValue.
       mappedValue = kValue;
     }
-    // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-    Q(yield* Set(targetObj, Pk, mappedValue, true));
-    // f. Set k to k + 1.
+    Q(yield* TypedArraySetElement(targetObj, F(k), mappedValue));
     k += 1;
   }
-  // 13. Return targetObj.
   return targetObj;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.of */
 function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
-  // 1. Let len be the actual number of arguments passed to this function.
-  // 2. Let items be the List of arguments passed to this function.
   const len = items.length;
-  // 3. Let C be the this value.
   const C = thisValue;
-  // 4. If IsConstructor(C) is false, throw a TypeError exception.
   if (!IsConstructor(C)) {
     return Throw.TypeError('$1 is not a constructor', C);
   }
-  // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
   const newObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
-  // 6. Let k be 0.
   let k = 0;
-  // 7. Repeat, while k < len
   while (k < len) {
-    // a. Let kValue be items[k].
-    const kValue = items[k];
-    // b. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(F(k)));
-    // c. Perform ? Set(newObj, Pk, kValue, true).
-    Q(yield* Set(newObj, Pk, kValue!, true));
-    // d. Set k to k + 1.
+    const kValue = items[k]!;
+    Q(yield* TypedArraySetElement(newObj, F(k), kValue));
     k += 1;
   }
-  // 8. Return newObj.
   return newObj;
 }
 

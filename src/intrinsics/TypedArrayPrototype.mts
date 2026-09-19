@@ -10,7 +10,7 @@ import {
 } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
-import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
+import { FindViaPredicate, SortIndexedProperties } from './ArrayPrototype.mts';
 import {
   CompareTypedArrayElements,
   TypedArrayCreateSameType,
@@ -25,11 +25,14 @@ import {
   CreateArrayIterator,
   Get,
   GetValueFromBuffer,
+  HasProperty,
+  Invoke,
   TypedArraySetElement,
   IsCallable,
   IsSharedArrayBuffer,
+  IsStrictlyEqual,
   SameValue,
-  Set,
+  SameValueZero,
   SetValueInBuffer,
   LengthOfArrayLike,
   ToBoolean,
@@ -50,31 +53,36 @@ import {
   TypedArrayLength,
   IsValidIntegerIndex,
   Throw,
+  TypedArrayGetElement,
 } from '#self';
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
+function* TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const k = Q(yield* ToAbsoluteIndex(index, length));
+  if (k < 0 || k >= length) {
+    return Value.undefined;
+  }
+  return TypedArrayGetElement(obj, F(k));
+}
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
 function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let O be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
-  Q(RequireInternalSlot(O, 'TypedArrayName'));
-  // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-  Assert('ViewedArrayBuffer' in O);
-  // 4. Let buffer be O.[[ViewedArrayBuffer]].
-  const buffer = O.ViewedArrayBuffer;
-  // 5. Return buffer.
+  const obj = thisValue as TypedArrayObject;
+  Q(RequireInternalSlot(obj, 'TypedArrayName'));
+  Assert('ViewedArrayBuffer' in obj);
+  const buffer = obj.ViewedArrayBuffer;
   return buffer || Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */
 function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let O be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
-  Q(RequireInternalSlot(O, 'TypedArrayName'));
-  // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-  Assert('ViewedArrayBuffer' in O);
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  const obj = thisValue as TypedArrayObject;
+  Q(RequireInternalSlot(obj, 'TypedArrayName'));
+  Assert('ViewedArrayBuffer' in obj);
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
     return F(0);
   }
@@ -84,17 +92,14 @@ function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCal
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset */
 function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let O be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
-  Q(RequireInternalSlot(O, 'TypedArrayName'));
-  // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-  Assert('ViewedArrayBuffer' in O);
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  const obj = thisValue as TypedArrayObject;
+  Q(RequireInternalSlot(obj, 'TypedArrayName'));
+  Assert('ViewedArrayBuffer' in obj);
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
     return F(0);
   }
-  const offset = O.ByteOffset;
+  const offset = obj.ByteOffset;
   return F(offset);
 }
 
@@ -139,12 +144,27 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries */
 function TypedArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let O be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. Perform ? ValidateTypedArray(O).
-  Q(ValidateTypedArray(O, 'seq-cst'));
-  // 3. Return CreateArrayIterator(O, key+value).
-  return CreateArrayIterator(O, 'key+value');
+  const obj = thisValue as TypedArrayObject;
+  Q(ValidateTypedArray(obj, 'seq-cst'));
+  return CreateArrayIterator(obj, 'key+value');
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
+function* TypedArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (!IsCallable(callbackFn)) {
+    return Throw.TypeError('$1 is not a function', callbackFn);
+  }
+  let k = 0;
+  while (k < length) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    const testResult = ToBoolean(Q(yield* Call(callbackFn, thisArg, [kValue, F(k), obj])));
+    if (!testResult) return Value.false;
+    k += 1;
+  }
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
@@ -164,8 +184,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   endIndex = Math.min(endIndex, length);
   let k = startIndex;
   while (k < endIndex) {
-    const Pk = X(ToString(F(k)));
-    X(Set(obj, Pk, value, true));
+    X(TypedArraySetElement(obj, F(k), value));
     k += 1;
   }
   return obj;
@@ -173,50 +192,179 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
 function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  const O = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const len = TypedArrayLength(taRecord);
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
   if (!IsCallable(callbackfn)) {
     return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
   const kept = [];
   let captured = 0;
   let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(F(k)));
-    const kValue = X(Get(O, Pk));
-    const selected = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O])));
+  while (k < length) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    const selected = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), obj])));
     if (selected) {
       kept.push(kValue);
       captured += 1;
     }
     k += 1;
   }
-  const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(captured)]));
+  const result = Q(yield* TypedArraySpeciesCreate(obj, [F(captured)]));
   let n = 0;
-  for (const e of kept) {
-    X(Set(resultArray, X(ToString(F(n))), e, true));
+  for (const element of kept) {
+    X(TypedArraySetElement(result, F(n), element));
     n += 1;
   }
-  return resultArray;
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
+function* TypedArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const findRecord = Q(yield* FindViaPredicate(obj, BigInt(length), 'ascending', predicate, thisArg));
+  return findRecord.Value;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
+function* TypedArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const findRecord = Q(yield* FindViaPredicate(obj, BigInt(length), 'ascending', predicate, thisArg));
+  return findRecord.Index;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
+function* TypedArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const findRecord = Q(yield* FindViaPredicate(obj, BigInt(length), 'descending', predicate, thisArg));
+  return findRecord.Value;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
+function* TypedArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const findRecord = Q(yield* FindViaPredicate(obj, BigInt(length), 'descending', predicate, thisArg));
+  return findRecord.Index;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
+function* TypedArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (!IsCallable(callbackfn)) return Throw.TypeError('$1 is not a function', callbackfn);
+  let k = 0;
+  while (k < length) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    Q(yield* Call(callbackfn, thisArg, [kValue, F(k), obj]));
+    k += 1;
+  }
+  return Value.undefined;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
+function* TypedArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (length === 0) return Value.false;
+  let k = Q(yield* ToClampedIndex(fromIndex, length));
+  while (k < length) {
+    const elementK = TypedArrayGetElement(obj, F(k));
+    if (SameValueZero(searchElement, elementK)) return Value.true;
+    k += 1;
+  }
+  return Value.false;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
+function* TypedArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (length === 0) {
+    return F(-1);
+  }
+  let k = Q(yield* ToClampedIndex(fromIndex, length));
+  while (k < length) {
+    const propertyKey = X(ToString(F(k)));
+    const kPresent = X(HasProperty(obj, propertyKey));
+    if (kPresent) {
+      const elementK = TypedArrayGetElement(obj, F(k));
+      if (IsStrictlyEqual(searchElement, elementK)) return F(k);
+    }
+    k += 1;
+  }
+  return F(-1);
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
+function* TypedArrayProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  let separatorString: string;
+  if (separator === Value.undefined) separatorString = ',';
+  else separatorString = Q(yield* ToString(separator));
+  let result = '';
+  let k = 0;
+  while (k < length) {
+    if (k > 0) result = `${result}${separatorString}`;
+    const element = TypedArrayGetElement(obj, F(k));
+    if (element !== Value.undefined) {
+      const elementString = X(ToString(element));
+      result += elementString;
+    }
+    k += 1;
+  }
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
 function TypedArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let O be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. Perform ? ValidateTypedArray(O).
-  Q(ValidateTypedArray(O, 'seq-cst'));
-  // 3. Return CreateArrayIterator(O, key).
-  return CreateArrayIterator(O, 'key');
+  const obj = thisValue as TypedArrayObject;
+  Q(ValidateTypedArray(obj, 'seq-cst'));
+  return CreateArrayIterator(obj, 'key');
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
+function* TypedArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (length === 0) return F(-1);
+  let k: number;
+  if (fromIndex === undefined) {
+    k = length - 1;
+  } else {
+    k = Math.min(Q(yield* ToAbsoluteIndex(fromIndex, length)), length - 1);
+  }
+  while (k >= 0) {
+    const propertyKey = X(ToString(F(k)));
+    const kPresent = Q(yield* HasProperty(obj, propertyKey));
+    if (kPresent) {
+      const elementK = TypedArrayGetElement(obj, F(k));
+      if (IsStrictlyEqual(searchElement, elementK)) return F(k);
+    }
+    k -= 1;
+  }
+  return F(-1);
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length */
 function TypedArrayProto_length(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  const O = thisValue as TypedArrayObject;
-  Q(RequireInternalSlot(O, 'TypedArrayName'));
-  Assert('ViewedArrayBuffer' in O);
-  const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  const obj = thisValue as TypedArrayObject;
+  Q(RequireInternalSlot(obj, 'TypedArrayName'));
+  Assert('ViewedArrayBuffer' in obj);
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(obj, 'seq-cst');
   if (IsTypedArrayOutOfBounds(taRecord)) {
     return F(0);
   }
@@ -226,22 +374,67 @@ function TypedArrayProto_length(_args: Arguments, { thisValue }: FunctionCallCon
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.map */
 function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  const O = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const len = TypedArrayLength(taRecord);
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
   if (!IsCallable(callbackfn)) {
     return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
-  const resultArray = Q(yield* TypedArraySpeciesCreate(O, [F(len)]));
+  const result = Q(yield* TypedArraySpeciesCreate(obj, [F(length)]));
   let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(F(k)));
-    const kValue = X(Get(O, Pk));
-    const mappedValue = Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O]));
-    X(Set(resultArray, Pk, mappedValue, true));
+  while (k < length) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    const mappedValue = Q(yield* Call(callbackfn, thisArg, [kValue, F(k), obj]));
+    Q(yield* TypedArraySetElement(result, F(k), mappedValue));
     k += 1;
   }
-  return resultArray;
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
+function* TypedArrayProto_reduce([callbackfn = Value.undefined, initialValue]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (!IsCallable(callbackfn)) return Throw.TypeError('$1 is not a function', callbackfn);
+  if (length === 0 && initialValue === undefined) return Throw.TypeError('Cannot reduce an empty array with no initial value');
+  let k = 0;
+  let accumulator: Value = Value.undefined;
+  if (initialValue !== undefined) {
+    accumulator = initialValue;
+  } else {
+    accumulator = TypedArrayGetElement(obj, F(k));
+    k += 1;
+  }
+  while (k < length) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    accumulator = Q(yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]));
+    k += 1;
+  }
+  return accumulator;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
+function* TypedArrayProto_reduceRight([callbackfn = Value.undefined, initialValue]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (!IsCallable(callbackfn)) return Throw.TypeError('$1 is not a function', callbackfn);
+  if (length === 0 && initialValue === undefined) return Throw.TypeError('Cannot reduce an empty array with no initial value');
+  let k = length - 1;
+  let accumulator: Value = Value.undefined;
+  if (initialValue !== undefined) {
+    accumulator = initialValue;
+  } else {
+    accumulator = TypedArrayGetElement(obj, F(k));
+    k -= 1;
+  }
+  while (k >= 0) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    accumulator = Q(yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]));
+    k -= 1;
+  }
+  return accumulator;
 }
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
@@ -324,6 +517,24 @@ function* SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: num
   return undefined;
 }
 
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
+function* TypedArrayProto_reverse(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const middle = Math.floor(length / 2);
+  let lower = 0;
+  while (lower !== middle) {
+    const upper = length - lower - 1;
+    const lowerValue = TypedArrayGetElement(obj, F(lower));
+    const upperValue = TypedArrayGetElement(obj, F(upper));
+    X(TypedArraySetElement(obj, F(lower), upperValue));
+    X(TypedArraySetElement(obj, F(upper), lowerValue));
+    lower += 1;
+  }
+  return obj;
+}
+
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset */
 function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let target be the this value.
@@ -383,15 +594,30 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
       let n = 0;
       let k = startIndex;
       while (k < endIndex) {
-        const Pk = X(ToString(F(k)));
-        const kValue = X(Get(obj, Pk));
-        X(Set(resultArray, X(ToString(F(n))), kValue, true));
+        const kValue = X(TypedArrayGetElement(obj, F(k)));
+        X(TypedArraySetElement(resultArray, F(n), kValue));
         k += 1;
         n += 1;
       }
     }
   }
   return resultArray;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
+function* TypedArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  if (!IsCallable(callbackfn)) return Throw.TypeError('$1 is not a function', callbackfn);
+  let k = 0;
+  while (k < length) {
+    const kValue = TypedArrayGetElement(obj, F(k));
+    const testResult = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), obj])));
+    if (testResult) return Value.true;
+    k += 1;
+  }
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
@@ -410,33 +636,10 @@ function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { this
   const sortedList = Q(yield* SortIndexedProperties(obj, len, SortCompare, 'read-through-holes'));
   let j = 0;
   while (j < len) {
-    X(Set(obj, X(ToString(F(j))), sortedList[j], true));
+    X(TypedArraySetElement(obj, F(j), sortedList[j]));
     j += 1;
   }
   return obj;
-}
-
-/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tosorted */
-function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  if (comparator !== Value.undefined && !IsCallable(comparator)) {
-    return Throw.TypeError('comparator ($1) is not a function', comparator);
-  }
-  const O = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const len = TypedArrayLength(taRecord);
-  const resultArray = Q(yield* TypedArrayCreateSameType(O, len));
-  const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
-    Assert(x instanceof NumberValue || x instanceof BigIntValue);
-    Assert(y instanceof NumberValue || y instanceof BigIntValue);
-    return yield* CompareTypedArrayElements(x, y, comparator);
-  };
-  const sortedList = Q(yield* SortIndexedProperties(O, len, SortCompare, 'read-through-holes'));
-  let j = 0;
-  while (j < len) {
-    X(Set(resultArray, X(ToString(F(j))), sortedList[j], true));
-    j += 1;
-  }
-  return resultArray;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
@@ -464,46 +667,70 @@ function* TypedArrayProto_subarray([start = Value.undefined, end = Value.undefin
   return Q(yield* TypedArraySpeciesCreate(obj, [buffer, F(beginByteOffset), F(newLength)]));
 }
 
-/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
-function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let o be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. Perform ? ValidateTypedArray(O).
-  Q(ValidateTypedArray(O, 'seq-cst'));
-  // Return CreateArrayIterator(O, value).
-  return CreateArrayIterator(O, 'value');
-}
-
-/** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
-function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
-  // 1. Let O be the this value.
-  const O = thisValue as TypedArrayObject;
-  // 2. If Type(O) is not Object, return undefined.
-  if (!(O instanceof ObjectValue)) {
-    return Value.undefined;
-  }
-  // 3. If O does not have a [[TypedArrayName]] internal slot, return undefined.
-  if (!('TypedArrayName' in O)) {
-    return Value.undefined;
-  }
-  // 4. Let name be O.[[TypedArrayName]].
-  const name = O.TypedArrayName;
-  // 5. Assert: Type(name) is String.
-  Assert(typeof name === 'string');
-  // 6. Return name.
-  return Value(name);
-}
-
-/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
-function* TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
+function* TypedArrayProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
   const length = TypedArrayLength(taRecord);
-  const k = Q(yield* ToAbsoluteIndex(index, length));
-  if (k < 0 || k >= length) {
-    return Value.undefined;
+  const separator = ',';
+  let result = '';
+  let k = 0;
+  while (k < length) {
+    if (k > 0) result = `${result}${separator}`;
+    const element = TypedArrayGetElement(obj, F(k));
+    if (element !== Value.undefined) {
+      const elementString = Q(yield* ToString(Q(yield* Invoke(element, 'toLocaleString'))));
+      result += elementString;
+    }
+    k += 1;
   }
-  return X(Get(obj, X(ToString(F(k)))));
+  return Value(result);
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed */
+function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const resultArray = Q(yield* TypedArrayCreateSameType(obj, length));
+  let k = 0;
+  while (k < length) {
+    const from = length - k - 1;
+    const fromValue = TypedArrayGetElement(obj, F(from));
+    X(TypedArraySetElement(resultArray, F(k), fromValue));
+    k += 1;
+  }
+  return resultArray;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tosorted */
+function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  if (comparator !== Value.undefined && !IsCallable(comparator)) {
+    return Throw.TypeError('comparator ($1) is not a function', comparator);
+  }
+  const obj = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const len = TypedArrayLength(taRecord);
+  const resultArray = Q(yield* TypedArrayCreateSameType(obj, len));
+  const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
+    Assert(x instanceof NumberValue || x instanceof BigIntValue);
+    Assert(y instanceof NumberValue || y instanceof BigIntValue);
+    return yield* CompareTypedArrayElements(x, y, comparator);
+  };
+  const sortedList = Q(yield* SortIndexedProperties(obj, len, SortCompare, 'read-through-holes'));
+  let j = 0;
+  while (j < len) {
+    X(TypedArraySetElement(resultArray, F(j), sortedList[j]));
+    j += 1;
+  }
+  return resultArray;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
+function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+  const obj = thisValue as TypedArrayObject;
+  Q(ValidateTypedArray(obj, 'seq-cst'));
+  return CreateArrayIterator(obj, 'value');
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.with */
@@ -525,34 +752,30 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
   const resultArray = Q(yield* TypedArrayCreateSameType(obj, length));
   let k = 0;
   while (k < length) {
-    const Pk = X(ToString(F(k)));
     let fromValue;
     if (k === actualIndex) {
       fromValue = numericValue;
     } else {
-      fromValue = X(Get(obj, Pk));
+      fromValue = TypedArrayGetElement(obj, F(k));
     }
-    X(Set(resultArray, Pk, fromValue, true));
+    X(TypedArraySetElement(resultArray, F(k), fromValue));
     k += 1;
   }
   return resultArray;
 }
 
-/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed */
-function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
-  const len = TypedArrayLength(taRecord);
-  const resultArray = Q(yield* TypedArrayCreateSameType(O, len));
-  let k = 0;
-  while (k < len) {
-    const from = X(ToString(F(len - k - 1)));
-    const Pk = X(ToString(F(k)));
-    const fromValue = X(Get(O, from));
-    X(Set(resultArray, Pk, fromValue, true));
-    k += 1;
+/** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
+function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+  const obj = thisValue as TypedArrayObject;
+  if (!(obj instanceof ObjectValue)) {
+    return Value.undefined;
   }
-  return resultArray;
+  if (!('TypedArrayName' in obj)) {
+    return Value.undefined;
+  }
+  const name = obj.TypedArrayName;
+  Assert(typeof name === 'string');
+  return Value(name);
 }
 
 export function bootstrapTypedArrayPrototype(realmRec: Realm) {
@@ -560,30 +783,43 @@ export function bootstrapTypedArrayPrototype(realmRec: Realm) {
   Assert(ArrayProto_toString instanceof ObjectValue);
 
   const proto = bootstrapPrototype(realmRec, [
+    ['at', TypedArrayProto_at, 1],
     ['buffer', [TypedArrayProto_buffer]],
     ['byteLength', [TypedArrayProto_byteLength]],
     ['byteOffset', [TypedArrayProto_byteOffset]],
     ['copyWithin', TypedArrayProto_copyWithin, 2],
     ['entries', TypedArrayProto_entries, 0],
+    ['every', TypedArrayProto_every, 1],
     ['fill', TypedArrayProto_fill, 1],
     ['filter', TypedArrayProto_filter, 1],
-    ['at', TypedArrayProto_at, 1],
+    ['find', TypedArrayProto_find, 1],
+    ['findIndex', TypedArrayProto_findIndex, 1],
+    ['findLast', TypedArrayProto_findLast, 1],
+    ['findLastIndex', TypedArrayProto_findLastIndex, 1],
+    ['forEach', TypedArrayProto_forEach, 1],
+    ['includes', TypedArrayProto_includes, 1],
+    ['indexOf', TypedArrayProto_indexOf, 1],
+    ['join', TypedArrayProto_join, 1],
     ['keys', TypedArrayProto_keys, 0],
+    ['lastIndexOf', TypedArrayProto_lastIndexOf, 1],
     ['length', [TypedArrayProto_length]],
     ['map', TypedArrayProto_map, 1],
+    ['reduce', TypedArrayProto_reduce, 1],
+    ['reduceRight', TypedArrayProto_reduceRight, 1],
+    ['reverse', TypedArrayProto_reverse, 0],
     ['set', TypedArrayProto_set, 1],
     ['slice', TypedArrayProto_slice, 2],
+    ['some', TypedArrayProto_some, 1],
     ['sort', TypedArrayProto_sort, 1],
-    ['toSorted', TypedArrayProto_toSorted, 1],
     ['subarray', TypedArrayProto_subarray, 2],
+    ['toLocaleString', TypedArrayProto_toLocaleString, 0],
+    ['toReversed', TypedArrayProto_toReversed, 0],
+    ['toSorted', TypedArrayProto_toSorted, 1],
+    ['toString', ArrayProto_toString],
     ['values', TypedArrayProto_values, 0],
     ['with', TypedArrayProto_with, 2],
-    ['toReversed', TypedArrayProto_toReversed, 0],
-    ['toString', ArrayProto_toString],
     [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]],
   ], realmRec.Intrinsics['%Object.prototype%']);
-
-  bootstrapArrayPrototypeShared(realmRec, proto, 'TypedArray');
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
   {

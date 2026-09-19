@@ -40,7 +40,7 @@ exports[`array > [,,,] non-indexed owned properties 1`] = `
 ]
 `;
 
-exports[`array > [,,,] non-indexed properties (prototype) 1`] = `"length, concat, copyWithin, entries, fill, filter, flat, flatMap, at, keys, map, pop, push, shift, slice, sort, toSorted, splice, toSpliced, toString, unshift, values, with, toReversed, every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array > [,,,] non-indexed properties (prototype) 1`] = `"length, at, concat, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, flat, flatMap, forEach, includes, indexOf, join, keys, lastIndexOf, map, pop, push, reduce, reduceRight, reverse, shift, slice, some, sort, splice, toLocaleString, toReversed, toSorted, toSpliced, toString, unshift, values, with, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array > [,,,] properties 1`] = `
 {
@@ -103,7 +103,7 @@ exports[`array > [] non-indexed owned properties 1`] = `
 ]
 `;
 
-exports[`array > [] non-indexed properties (prototype) 1`] = `"length, concat, copyWithin, entries, fill, filter, flat, flatMap, at, keys, map, pop, push, shift, slice, sort, toSorted, splice, toSpliced, toString, unshift, values, with, toReversed, every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array > [] non-indexed properties (prototype) 1`] = `"length, at, concat, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, flat, flatMap, forEach, includes, indexOf, join, keys, lastIndexOf, map, pop, push, reduce, reduceRight, reverse, shift, slice, some, sort, splice, toLocaleString, toReversed, toSorted, toSpliced, toString, unshift, values, with, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array > [] properties 1`] = `
 {
@@ -172,7 +172,7 @@ exports[`array > [1] non-indexed owned properties 1`] = `
 ]
 `;
 
-exports[`array > [1] non-indexed properties (prototype) 1`] = `"length, concat, copyWithin, entries, fill, filter, flat, flatMap, at, keys, map, pop, push, shift, slice, sort, toSorted, splice, toSpliced, toString, unshift, values, with, toReversed, every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array > [1] non-indexed properties (prototype) 1`] = `"length, at, concat, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, flat, flatMap, forEach, includes, indexOf, join, keys, lastIndexOf, map, pop, push, reduce, reduceRight, reverse, shift, slice, some, sort, splice, toLocaleString, toReversed, toSorted, toSpliced, toString, unshift, values, with, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array > [1] properties 1`] = `
 {
@@ -247,7 +247,7 @@ exports[`array > Array(10) non-indexed owned properties 1`] = `
 ]
 `;
 
-exports[`array > Array(10) non-indexed properties (prototype) 1`] = `"length, concat, copyWithin, entries, fill, filter, flat, flatMap, at, keys, map, pop, push, shift, slice, sort, toSorted, splice, toSpliced, toString, unshift, values, with, toReversed, every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array > Array(10) non-indexed properties (prototype) 1`] = `"length, at, concat, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, flat, flatMap, forEach, includes, indexOf, join, keys, lastIndexOf, map, pop, push, reduce, reduceRight, reverse, shift, slice, some, sort, splice, toLocaleString, toReversed, toSorted, toSpliced, toString, unshift, values, with, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array > Array(10) properties 1`] = `
 {
@@ -338,7 +338,7 @@ exports[`array > var a = [1,,2]; a.x = 1; a non-indexed owned properties 1`] = `
 ]
 `;
 
-exports[`array > var a = [1,,2]; a.x = 1; a non-indexed properties (prototype) 1`] = `"length, concat, copyWithin, entries, fill, filter, flat, flatMap, at, keys, map, pop, push, shift, slice, sort, toSorted, splice, toSpliced, toString, unshift, values, with, toReversed, every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`array > var a = [1,,2]; a.x = 1; a non-indexed properties (prototype) 1`] = `"length, at, concat, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, flat, flatMap, forEach, includes, indexOf, join, keys, lastIndexOf, map, pop, push, reduce, reduceRight, reverse, shift, slice, some, sort, splice, toLocaleString, toReversed, toSorted, toSpliced, toString, unshift, values, with, Symbol(Symbol.iterator), Symbol(Symbol.unscopables), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`array > var a = [1,,2]; a.x = 1; a properties 1`] = `
 {
@@ -8375,7 +8375,7 @@ exports[`typed array > new Int32Array() non-indexed owned properties (private) 1
 
 exports[`typed array > new Int32Array() non-indexed owned properties 1`] = `[]`;
 
-exports[`typed array > new Int32Array() non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > new Int32Array() non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > new Int32Array() properties 1`] = `
 {
@@ -8447,7 +8447,7 @@ exports[`typed array > new Int32Array([1, 2, 3]) non-indexed owned properties (p
 
 exports[`typed array > new Int32Array([1, 2, 3]) non-indexed owned properties 1`] = `[]`;
 
-exports[`typed array > new Int32Array([1, 2, 3]) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > new Int32Array([1, 2, 3]) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > new Int32Array([1, 2, 3]) properties 1`] = `
 {
@@ -8554,7 +8554,7 @@ exports[`typed array > new Int32Array(10) non-indexed owned properties (private)
 
 exports[`typed array > new Int32Array(10) non-indexed owned properties 1`] = `[]`;
 
-exports[`typed array > new Int32Array(10) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > new Int32Array(10) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > new Int32Array(10) properties 1`] = `
 {
@@ -8611,7 +8611,7 @@ exports[`typed array > new Uint8Array() non-indexed owned properties (private) 1
 
 exports[`typed array > new Uint8Array() non-indexed owned properties 1`] = `[]`;
 
-exports[`typed array > new Uint8Array() non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > new Uint8Array() non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > new Uint8Array() properties 1`] = `
 {
@@ -8683,7 +8683,7 @@ exports[`typed array > new Uint8Array([1, 2, 3]) non-indexed owned properties (p
 
 exports[`typed array > new Uint8Array([1, 2, 3]) non-indexed owned properties 1`] = `[]`;
 
-exports[`typed array > new Uint8Array([1, 2, 3]) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > new Uint8Array([1, 2, 3]) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > new Uint8Array([1, 2, 3]) properties 1`] = `
 {
@@ -8790,7 +8790,7 @@ exports[`typed array > new Uint8Array(10) non-indexed owned properties (private)
 
 exports[`typed array > new Uint8Array(10) non-indexed owned properties 1`] = `[]`;
 
-exports[`typed array > new Uint8Array(10) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > new Uint8Array(10) non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > new Uint8Array(10) properties 1`] = `
 {
@@ -8912,7 +8912,7 @@ exports[`typed array > var x = new Uint8Array(10); x.a = 1; x non-indexed owned 
 ]
 `;
 
-exports[`typed array > var x = new Uint8Array(10); x.a = 1; x non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, buffer, byteLength, byteOffset, copyWithin, entries, fill, filter, at, keys, length, map, set, slice, sort, toSorted, subarray, values, with, toReversed, toString, Symbol(Symbol.toStringTag), every, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, lastIndexOf, reduce, reduceRight, reverse, some, toLocaleString, Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
+exports[`typed array > var x = new Uint8Array(10); x.a = 1; x non-indexed properties (prototype) 1`] = `"BYTES_PER_ELEMENT, constructor, toBase64, setFromBase64, toHex, setFromHex, at, buffer, byteLength, byteOffset, copyWithin, entries, every, fill, filter, find, findIndex, findLast, findLastIndex, forEach, includes, indexOf, join, keys, lastIndexOf, length, map, reduce, reduceRight, reverse, set, slice, some, sort, subarray, toLocaleString, toReversed, toSorted, toString, values, with, Symbol(Symbol.toStringTag), Symbol(Symbol.iterator), constructor, hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, toString, valueOf, __defineGetter__, __defineSetter__, __lookupGetter__, __lookupSetter__, __proto__, constructor"`;
 
 exports[`typed array > var x = new Uint8Array(10); x.a = 1; x properties 1`] = `
 {
