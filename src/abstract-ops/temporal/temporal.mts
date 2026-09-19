@@ -7,10 +7,11 @@ import { isTemporalPlainDateTimeObject } from '../../intrinsics/Temporal/PlainDa
 import { type TemporalZonedDateTimeObject, isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import {
   floorDiv, modulo,
+  truncateDiv,
 } from '../math.mts';
-import { GetUTCEpochNanoseconds, ParseDateTimeUTCOffset } from '../date-objects.mts';
+import { ParseDateTimeUTCOffset } from '../date-objects.mts';
 import {
-  GetRoundingIncrementOption, GetRoundingModeOption, ToZeroPaddedDecimalString, type UnsignedRoundingMode, type TimeZoneIdentifier,
+  GetRoundingIncrementOption, GetRoundingModeOption, ToZeroPaddedDecimalString, type UnsignedRoundingMode
 } from './addition.mts';
 import type { RoundingMode } from './addition.mts';
 import {
@@ -21,35 +22,43 @@ import {
   ToPrimitive, Throw, CreateISODateRecord, CreateTemporalDate, CreateTemporalZonedDateTime, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, NanosecondsPerDay, type ISODateTimeMatchBehaviour, type ISODateTimeOffsetBehaviour,
   Value, ObjectValue, JSStringValue, NumberValue, UndefinedValue, Q, Get, ToString, type PlainCompletion, type PlainEvaluator, Assert, type PropertyKeyValue, X,
   MillisecondsPerDay,
-  Day,
   NanosecondsPerHour,
   NanosecondsPerMinute,
   NanosecondsPerSecond,
   NanosecondsPerMillisecond,
   NanosecondsPerMicrosecond,
+  ISODaysInMonth,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 export type EpochNanoseconds = Integer & { /** @internal */ specName?: 'EpochNanoseconds' };
 export type Float64RepresentableInteger = IntegralNumber;
 
 /** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
-export function ISODateToEpochDays(year: Integer, month: Integer, date: Integer): Integer {
-  const resolvedYear = year + floorDiv(month, 12n);
-  const resolvedMonth = modulo(month, 12n);
-  // Find an integer _epochMilliseconds_ such that YearFromTime(𝔽(_epochMilliseconds_)) = _resolvedYear_, MonthFromTime(𝔽(_epochMilliseconds_)) = _resolvedMonth_, and DateFromTime(𝔽(_epochMilliseconds_)) = 1.
-
-  // epochMilliseconds = GetUTCEpochNanoseconds(resolvedYear, resolvedMonth + 1, date) / 1e6 - (date - 1) * MillisecondsPerDay
-  const epochMilliseconds = (
-    GetUTCEpochNanoseconds({
-      ISODate: { Year: resolvedYear, Month: resolvedMonth + 1n, Day: date },
-      Time: {
-        Days: 0n, Hour: 0n, Microsecond: 0n, Millisecond: 0n, Minute: 0n, Nanosecond: 0n, Second: 0n,
-      },
-    }) / NanosecondsPerMillisecond
-    - (date - 1n) * MillisecondsPerDay
-  );
-
-  return Day(Number(epochMilliseconds)) + date - 1n;
+export function ISODateToEpochDays(year: Integer, month: Integer, day: Integer): Integer {
+  const resolvedYear = year + floorDiv(month - 1n, 12n);
+  const resolvedMonth = modulo(month - 1n, 12n) + 1n;
+  let shiftedYear = resolvedYear;
+  let shiftedMonth = resolvedMonth - 3n;
+  if (shiftedMonth < 0) {
+    shiftedYear -= 1n;
+    shiftedMonth += 12n;
+  }
+  Assert(shiftedMonth >= 0 && shiftedMonth <= 11);
+  const cycle = floorDiv(shiftedYear, 400n);
+  const yearOfCycle = modulo(shiftedYear, 400n);
+  Assert(yearOfCycle >= 0n && yearOfCycle <= 399n);
+  const dayOfYear = truncateDiv((153n * shiftedMonth + 2n), 5n) + day - 1n;
+  Assert(dayOfYear >= 0);
+  if (day >= 1 && day <= ISODaysInMonth(resolvedYear, resolvedMonth)) {
+    Assert(dayOfYear <= 365);
+  }
+  const dayOfCycle = yearOfCycle * 365n + truncateDiv(yearOfCycle, 4n) - truncateDiv(yearOfCycle, 100n) + dayOfYear;
+  Assert(dayOfCycle >= 0);
+  if (day >= 1 && day <= ISODaysInMonth(resolvedYear, resolvedMonth)) {
+    Assert(dayOfCycle <= 146096);
+  }
+  return cycle * 146097n + dayOfCycle - 719468n;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-epochdaystoepochmilliseconds */
@@ -59,7 +68,7 @@ export function EpochDaysToEpochMilliseconds(day: Integer, time: Integer): Integ
 
 /** https://tc39.es/proposal-temporal/#sec-validateisodaysrange */
 export function ValidateISODaysRange(isoDate: ISODateRecord): PlainCompletion<void> {
-  const days = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1n, isoDate.Day);
+  const days = ISODateToEpochDays(isoDate.Year, isoDate.Month, isoDate.Day);
   if (days > 1e8 || days < -1e8) {
     return Throw.RangeError('ISODate is out of range');
   }
@@ -352,7 +361,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
   }
   let offsetBehaviour: ISODateTimeOffsetBehaviour = 'option';
   let matchBehaviour: ISODateTimeMatchBehaviour = 'match-exactly';
-  let timeZone: TimeZoneIdentifier | undefined;
+  let timeZone: AvailableTimeZoneIdentifier | undefined;
   let isoDate;
   let time;
   let calendar: KnownCalendarType | undefined;
@@ -371,7 +380,7 @@ export function* GetTemporalRelativeToOption(options: ObjectValue): PlainEvaluat
     calendar = Q(yield* GetTemporalCalendarIdentifierWithISODefault(value));
     const fields = Q(yield* PrepareCalendarFields(calendar, value, 'date-fields', 'time-fields-with-time-zone-and-offset', 'no-required-fields'));
     const result = Q(yield* InterpretTemporalDateTimeFields(calendar, fields, 'constrain'));
-    timeZone = fields.TimeZone as TimeZoneIdentifier;
+    timeZone = fields.TimeZone;
     offsetString = fields.OffsetString;
     if (offsetString === undefined) {
       offsetBehaviour = 'wall';

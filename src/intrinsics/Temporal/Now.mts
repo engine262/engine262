@@ -10,6 +10,7 @@ import {
   CreateTemporalZonedDateTime,
   CreateTemporalDateTime,
   CreateTemporalTime,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.timezoneid */
@@ -31,7 +32,7 @@ function TemporalNow_plainDateTimeISO([temporalTimeZoneLike = Value.undefined]: 
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetimeiso */
 function TemporalNow_zonedDateTimeISO([temporalTimeZoneLike = Value.undefined]: Arguments): PlainCompletion<Value> {
-  let timeZone;
+  let timeZone: AvailableTimeZoneIdentifier;
   if (temporalTimeZoneLike === Value.undefined) {
     timeZone = SystemTimeZoneIdentifier();
   } else {

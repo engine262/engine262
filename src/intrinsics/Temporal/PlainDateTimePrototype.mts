@@ -36,7 +36,6 @@ import { ToTimeRecordOrMidnight, CreateTemporalTime } from '../../abstract-ops/t
 import { CreateTemporalDate } from '../../abstract-ops/temporal/plain-date.mts';
 import { CreateTemporalZonedDateTime } from '../../abstract-ops/temporal/zoned-datetime.mts';
 import { GetEpochNanosecondsFor, ToTemporalTimeZoneIdentifier } from '../../abstract-ops/temporal/time-zone.mts';
-import type { TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { ISODateTimeRecord, TemporalPlainDateTimeObject } from './PlainDateTime.mts';
 import {
   Assert,
@@ -356,7 +355,7 @@ function PlainDateTimeProto_valueOf(_args: Arguments, { thisValue }: FunctionCal
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime */
 function* PlainDateTimeProto_toZonedDateTime([temporalTimeZoneLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
-  const timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike)) as TimeZoneIdentifier;
+  const timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike));
   const resolvedOptions = Q(GetOptionsObject(options));
   const disambiguation = Q(yield* GetTemporalDisambiguationOption(resolvedOptions));
   const epochNanoseconds = Q(GetEpochNanosecondsFor(timeZone, plainDateTime.ISODateTime, disambiguation));

@@ -10,7 +10,7 @@ import { SnapToInteger } from '../type-conversion.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import { GetUTCEpochNanoseconds } from '../date-objects.mts';
 import {
-  type TimeZoneIdentifier, NoTimeZone, type RoundingMode,
+  NoTimeZone, type RoundingMode,
 } from './addition.mts';
 import { CalendarDateAdd, type KnownCalendarType, CalendarDateUntil } from './calendar.mts';
 import {
@@ -26,6 +26,7 @@ import {
   Throw,
   type Integer,
   type MathematicalValue,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-date-duration-records */
@@ -544,8 +545,8 @@ export function DateDurationDays(dateDuration: DateDurationRecord, plainRelative
     return BigInt(dateDuration.Days);
   }
   const isoDateTo = Q(CalendarDateAdd(plainRelativeTo.Calendar, plainRelativeTo.ISODate, yearsMonthsWeeksDuration, 'constrain'));
-  const epochDaysFrom = ISODateToEpochDays(plainRelativeTo.ISODate.Year, plainRelativeTo.ISODate.Month - 1n, plainRelativeTo.ISODate.Day);
-  const epochDaysTo = ISODateToEpochDays(isoDateTo.Year, isoDateTo.Month - 1n, isoDateTo.Day);
+  const epochDaysFrom = ISODateToEpochDays(plainRelativeTo.ISODate.Year, plainRelativeTo.ISODate.Month, plainRelativeTo.ISODate.Day);
+  const epochDaysTo = ISODateToEpochDays(isoDateTo.Year, isoDateTo.Month, isoDateTo.Day);
   const yearsMonthsWeeksInDays = epochDaysTo - epochDaysFrom;
   return BigInt(dateDuration.Days) + yearsMonthsWeeksInDays;
 }
@@ -578,7 +579,7 @@ export function ComputeNudgeWindow(
   duration: InternalDurationRecord,
   originEpochNanoseconds: EpochNanoseconds,
   isoDateTime: ISODateTimeRecord,
-  timeZone: TimeZoneIdentifier | undefined,
+  timeZone: AvailableTimeZoneIdentifier | undefined,
   calendar: KnownCalendarType,
   increment: Integer,
   unit: DateUnit,
@@ -674,7 +675,7 @@ export function NudgeToCalendarUnit(
   originEpochNanoseconds: EpochNanoseconds,
   destEpochNanoseconds: EpochNanoseconds,
   isoDateTime: ISODateTimeRecord,
-  timeZone: TimeZoneIdentifier | undefined,
+  timeZone: AvailableTimeZoneIdentifier | undefined,
   calendar: KnownCalendarType,
   increment: Integer,
   unit: DateUnit,
@@ -740,7 +741,7 @@ export function NudgeToZonedTime(
   sign: -1n | 1n,
   duration: InternalDurationRecord,
   isoDateTime: ISODateTimeRecord,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   calendar: KnownCalendarType,
   increment: Integer,
   unit: TimeUnit,
@@ -821,7 +822,7 @@ export function BubbleRelativeDuration(
   duration: InternalDurationRecord,
   nudgedEpochNanoseconds: EpochNanoseconds,
   isoDateTime: ISODateTimeRecord,
-  timeZone: TimeZoneIdentifier | undefined,
+  timeZone: AvailableTimeZoneIdentifier | undefined,
   calendar: KnownCalendarType,
   largestUnit: TemporalUnit,
   startUnit: 'month' | 'day',
@@ -871,7 +872,7 @@ export function RoundRelativeDuration(
   originEpochNanoseconds: EpochNanoseconds,
   destEpochNanoseconds: EpochNanoseconds,
   isoDateTime: ISODateTimeRecord,
-  timeZone: TimeZoneIdentifier | NoTimeZone,
+  timeZone: AvailableTimeZoneIdentifier | NoTimeZone,
   calendar: KnownCalendarType,
   largestUnit: TemporalUnit,
   increment: Integer,
@@ -917,7 +918,7 @@ export function TotalRelativeDuration(
   originEpochNanoseconds: EpochNanoseconds,
   destEpochNanoseconds: EpochNanoseconds,
   isoDateTime: ISODateTimeRecord,
-  timeZone: TimeZoneIdentifier | NoTimeZone,
+  timeZone: AvailableTimeZoneIdentifier | NoTimeZone,
   calendar: KnownCalendarType,
   unit: TemporalUnit,
 ): PlainCompletion<MathematicalValue> {

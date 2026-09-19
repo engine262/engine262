@@ -54,14 +54,26 @@ export function* GetRoundingIncrementOption(
 }
 
 /** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
-export type TimeZoneIdentifier = string & { specName: 'TimeZoneIdentifier'; };
+export type NamedTimeZoneIdentifier = string & { specName: 'TimeZoneIdentifier'; named: true; };
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export type AvailableNamedTimeZoneIdentifier = NamedTimeZoneIdentifier & { available: true; };
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export type OffsetTimeZoneIdentifier = string & { specName: 'TimeZoneIdentifier'; offset: true; };
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export type PrimaryTimeZoneIdentifier = AvailableNamedTimeZoneIdentifier;
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export type AvailableTimeZoneIdentifier = OffsetTimeZoneIdentifier | AvailableNamedTimeZoneIdentifier;
 
 export const NoTimeZone = undefined;
 export type NoTimeZone = undefined;
 
 /** https://tc39.es/proposal-temporal/#sec-getnamedtimezoneepochnanoseconds */
 export function GetNamedTimeZoneEpochNanoseconds(
-  timeZoneIdentifier: TimeZoneIdentifier,
+  timeZoneIdentifier: AvailableNamedTimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
 ): EpochNanoseconds[] {
   mark_TimeZoneAwareNotImplemented();
@@ -71,17 +83,17 @@ export function GetNamedTimeZoneEpochNanoseconds(
 }
 
 /** https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds */
-export function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier: string, _epochNanoseconds: EpochNanoseconds): Integer {
+export function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): Integer {
   mark_TimeZoneAwareNotImplemented();
   Assert(timeZoneIdentifier === 'UTC');
   return 0n;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier */
-export function SystemTimeZoneIdentifier(): TimeZoneIdentifier {
+export function SystemTimeZoneIdentifier(): PrimaryTimeZoneIdentifier | OffsetTimeZoneIdentifier {
   mark_TimeZoneAwareNotImplemented();
   // 1. If the implementation only supports the UTC time zone, return "UTC".
-  return 'UTC' as TimeZoneIdentifier;
+  return 'UTC' as PrimaryTimeZoneIdentifier;
   // 2. Let systemTimeZoneString be the String representing the host environment's current time zone as a time zone identifier in normalized format, either a primary time zone identifier or an offset time zone identifier.
   // 3. Return systemTimeZoneString.
 }
@@ -96,7 +108,7 @@ export function ToZeroPaddedDecimalString(n: Integer, minLength: Integer) {
 export function AvailableNamedTimeZoneIdentifiers(): TimeZoneIdentifierRecord[] {
   mark_TimeZoneAwareNotImplemented();
   return [{
-    Identifier: 'UTC' as TimeZoneIdentifier,
-    PrimaryIdentifier: 'UTC' as TimeZoneIdentifier,
+    Identifier: 'UTC' as AvailableNamedTimeZoneIdentifier,
+    PrimaryIdentifier: 'UTC' as AvailableNamedTimeZoneIdentifier,
   }];
 }

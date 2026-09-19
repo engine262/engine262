@@ -5,7 +5,7 @@ import { ParseISODateTime } from '../../parser/TemporalParser.mts';
 import { GetUTCEpochNanoseconds, ParseDateTimeUTCOffset } from '../date-objects.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  type RoundingMode, type TimeZoneIdentifier,
+  type RoundingMode,
 } from './addition.mts';
 import {
   type FunctionObject, type ValueEvaluator, Assert, surroundingAgent, Q, OrdinaryCreateFromConstructor, type Mutable, Value, ObjectValue, X, ToPrimitive, JSStringValue, Throw, ValidateISODaysRange, type TimeDuration, type PlainCompletion, AddTimeDurationToEpochNanoseconds, type TimeUnit, type InternalDurationRecord, TimeDurationFromEpochNanosecondsDifference, RoundTimeDuration, CombineDateAndTimeDuration, ZeroDateDuration, TemporalUnitLength, RoundNumberToIncrementAsIfPositive, GetISODateTimeFor, GetOffsetNanosecondsFor, FormatDateTimeUTCOffsetRounded, GetDifferenceSettings, TemporalDurationFromInternal, CreateNegatedTemporalDuration, ToTemporalDuration, DefaultTemporalLargestUnit, isDateUnit, ToInternalDurationRecordWith24HourDays, MinEpochNanoseconds, MaxEpochNanoseconds,
@@ -14,6 +14,7 @@ import {
   type EpochNanoseconds,
   type Integer,
   GetOptionsObject,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-iswithinepochnanosecondsinterval */
@@ -112,12 +113,12 @@ export function RoundEpochNanoseconds(
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalinstant-tostring */
 export function TemporalInstantToString(
   instant: TemporalInstantObject,
-  timeZone: TimeZoneIdentifier | undefined,
+  timeZone: AvailableTimeZoneIdentifier | undefined,
   precision: Integer | 'minute' | 'auto',
 ): string {
   let outputTimeZone = timeZone;
   if (outputTimeZone === undefined) {
-    outputTimeZone = 'UTC' as TimeZoneIdentifier;
+    outputTimeZone = 'UTC' as AvailableTimeZoneIdentifier;
   }
   const epochNanoseconds = instant.EpochNanoseconds;
   const isoDateTime = GetISODateTimeFor(outputTimeZone, epochNanoseconds);

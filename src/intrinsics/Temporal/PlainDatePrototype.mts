@@ -1,5 +1,4 @@
 import { bootstrapPrototype } from '../bootstrap.mts';
-import type { TimeZoneIdentifier } from '../../abstract-ops/temporal/addition.mts';
 import type { TemporalPlainDateObject } from './PlainDate.mts';
 import type { ISODateTimeRecord } from './PlainDateTime.mts';
 import {
@@ -44,6 +43,7 @@ import {
   ObjectValue,
   TemporalDateToString,
   GetOptionsObject,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 function thisTemporalDateValue(value: Value): PlainCompletion<TemporalPlainDateObject> {
@@ -239,7 +239,7 @@ function* PlainDateProto_toPlainDateTime([temporalTime = Value.undefined]: Argum
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tozoneddatetime */
 function* PlainDateProto_toZonedDateTime([item = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDate = Q(thisTemporalDateValue(thisValue));
-  let timeZone: TimeZoneIdentifier;
+  let timeZone: AvailableTimeZoneIdentifier;
   let temporalTime: Value;
   if (item instanceof ObjectValue) {
     const timeZoneLike = Q(yield* Get(item, 'timeZone'));

@@ -2,7 +2,6 @@ import { bootstrapPrototype } from '../bootstrap.mts';
 import {
   GetRoundingIncrementOption,
   GetRoundingModeOption,
-  type TimeZoneIdentifier,
 } from '../../abstract-ops/temporal/addition.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
@@ -50,6 +49,7 @@ import {
   type Realm,
   type ValueEvaluator,
   NanosecondsPerMillisecond,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 function thisTemporalInstantValue(value: Value): PlainCompletion<TemporalInstantObject> {
@@ -150,7 +150,7 @@ function* InstantProto_toString([options = Value.undefined]: Arguments, { thisVa
   if (smallestUnit === 'hour') {
     return Throw.RangeError('smallestUnit cannot be hour');
   }
-  let timeZone: TimeZoneIdentifier | undefined;
+  let timeZone: AvailableTimeZoneIdentifier | undefined;
   if (!(_timeZone instanceof UndefinedValue)) {
     timeZone = Q(ToTemporalTimeZoneIdentifier(_timeZone));
   }

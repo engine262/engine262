@@ -51,7 +51,7 @@ import {
   NanosecondsPerMillisecond,
   NanosecondsPerMinute,
 } from '#self';
-import type { Realm } from '#self';
+import type { AvailableNamedTimeZoneIdentifier, Realm } from '#self';
 
 
 export function thisTimeValue(value: Value): ValueCompletion<NumberValue> {
@@ -644,7 +644,7 @@ export function TimeZoneString(tv: number): string {
   const systemTimeZoneIdentifier = SystemTimeZoneIdentifier();
   let offsetMinutes = X(ParseTimeZoneIdentifier(systemTimeZoneIdentifier)).OffsetMinutes;
   if (offsetMinutes === undefined) {
-    const offsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, BigInt(tv) * NanosecondsPerMillisecond);
+    const offsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier as AvailableNamedTimeZoneIdentifier, BigInt(tv) * NanosecondsPerMillisecond);
     offsetMinutes = truncateDiv(offsetNanoseconds, NanosecondsPerMinute);
   }
   const offsetString = FormatOffsetTimeZoneIdentifier(offsetMinutes, 'unseparated');

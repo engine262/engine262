@@ -1,5 +1,5 @@
 diff --git a/spec.html b/spec.html
-index 555985b..c91259c 100644
+index 555985b..06edd29 100644
 --- a/spec.html
 +++ b/spec.html
 @@ -263,6 +263,10 @@
@@ -13,7 +13,18 @@ index 555985b..c91259c 100644
    <p>ISO/IEC 10646, <i>Information Technology — Universal Multiple-Octet Coded Character Set (UCS)</i> plus Amendment 1:2005, Amendment 2:2006, Amendment 3:2008, Amendment 4:2008, and additional amendments and corrigenda, or successor.</p>
    <p>
      ECMA-402, <i>ECMAScript Internationalization API Specification</i>, specifically the annual edition corresponding to this edition of this specification.<br>
-@@ -643,9 +647,13 @@
+@@ -272,6 +276,10 @@
+     ECMA-404, <i>The JSON Data Interchange Format</i>.<br>
+     <a href="https://www.ecma-international.org/publications-and-standards/standards/ecma-404/">https://www.ecma-international.org/publications-and-standards/standards/ecma-404/</a>
+   </p>
++  <p>
++    IANA Time Zone Database, any version.<br>
++    <a href="https://www.iana.org/time-zones">https://www.iana.org/time-zones</a>
++  </p>
+ </emu-clause>
+ 
+ <emu-clause id="sec-overview">
+@@ -643,9 +651,13 @@
      </emu-clause>
  
      <emu-clause id="sec-numeric-string-grammar">
@@ -29,7 +40,7 @@ index 555985b..c91259c 100644
      </emu-clause>
  
      <emu-clause id="sec-syntactic-grammar">
-@@ -1172,13 +1180,15 @@
+@@ -1172,13 +1184,15 @@
        <p>The mathematical function <emu-eqn id="eqn-ln" aoid="ln">ln(_x_)</emu-eqn> produces the natural logarithm of _x_. The mathematical function <emu-eqn id="eqn-log10" aoid="log10">log10(_x_)</emu-eqn> produces the base 10 logarithm of _x_. The mathematical function <emu-eqn id="eqn-log2" aoid="log2">log2(_x_)</emu-eqn> produces the base 2 logarithm of _x_.</p>
        <p>The mathematical function <emu-eqn id="eqn-min" aoid="min">min(_x1_, _x2_, … , _xN_)</emu-eqn> produces the mathematically smallest of <emu-eqn>_x1_</emu-eqn> through <emu-eqn>_xN_</emu-eqn>. The mathematical function <emu-eqn id="eqn-max" aoid="max">max(_x1_, _x2_, ..., _xN_)</emu-eqn> produces the mathematically largest of <emu-eqn>_x1_</emu-eqn> through <emu-eqn>_xN_</emu-eqn>. The domain and range of these mathematical functions are the extended mathematical values.</p>
        <p>The notation “<emu-eqn id="eqn-modulo" aoid="modulo">_x_ modulo _y_</emu-eqn>” (_y_ must be finite and non-zero) computes a value _k_ of the same sign as _y_ (or zero) such that <emu-eqn>abs(_k_) &lt; abs(_y_) and _x_ - _k_ = _q_ × _y_</emu-eqn> for some integer _q_.</p>
@@ -46,7 +57,7 @@ index 555985b..c91259c 100644
        <p>An <dfn id="interval">interval</dfn> from lower bound _a_ to upper bound _b_ is a possibly-infinite, possibly-empty set of numeric values of the same numeric type. Each bound will be described as either inclusive or exclusive, but not both. There are four kinds of intervals, as follows:</p>
        <ul>
          <li>An interval from _a_ (inclusive) to _b_ (inclusive), also called an <dfn id="inclusive-interval">inclusive interval</dfn> from _a_ to _b_, includes all values _x_ of the same numeric type such that _a_ ≤ _x_ ≤ _b_, and no others.</li>
-@@ -1254,6 +1264,9 @@
+@@ -1254,6 +1268,9 @@
          *"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"*.<br>
          For historical reasons, it has significance to various algorithms.
        </p>
@@ -56,7 +67,7 @@ index 555985b..c91259c 100644
  
        <emu-clause id="sec-stringindexof" type="abstract operation">
          <h1>
-@@ -4106,6 +4119,17 @@
+@@ -4106,6 +4123,17 @@
                  The `SyntaxError` <emu-not-ref>constructor</emu-not-ref> (<emu-xref href="#sec-native-error-types-used-in-this-standard-syntaxerror"></emu-xref>)
                </td>
              </tr>
@@ -74,7 +85,7 @@ index 555985b..c91259c 100644
              <tr>
                <td>
                  %ThrowTypeError%
-@@ -4268,7 +4292,7 @@
+@@ -4268,7 +4296,7 @@
  
      <emu-clause id="sec-set-and-relation-specification-type">
        <h1>The Set and Relation Specification Types</h1>
@@ -83,7 +94,7 @@ index 555985b..c91259c 100644
        <p>The <dfn variants="Relations">Relation</dfn> type is used to explain constraints on Sets. Values of the Relation type are Sets of ordered pairs of values from its value domain. For example, a Relation on Memory events is a set of ordered pairs of Memory events. For a Relation _R_ and two values _a_ and _b_ in the value domain of _R_, _a_ _R_ _b_ is shorthand for saying the ordered pair (_a_, _b_) is a member of _R_. A Relation is the <dfn id="least-relation">least Relation</dfn> with respect to some conditions when it is the smallest Relation that satisfies those conditions.</p>
        <p>A <dfn variants="strict partial orders">strict partial order</dfn> is a Relation value _R_ that satisfies the following.</p>
        <ul>
-@@ -12736,6 +12760,11 @@
+@@ -12736,6 +12764,11 @@
            <td>a List of GlobalSymbolRegistry Records</td>
            <td>Initially a new empty List, representing the list of Symbol values produced by <emu-xref href="#sec-symbol.for">Symbol.for</emu-xref>.</td>
          </tr>
@@ -95,7 +106,7 @@ index 555985b..c91259c 100644
        </table>
      </emu-table>
  
-@@ -32871,8 +32900,8 @@
+@@ -32871,8 +32904,8 @@
    </emu-clause>
  </emu-clause>
  
@@ -106,7 +117,7 @@ index 555985b..c91259c 100644
  
    <emu-clause id="sec-number-objects">
      <h1>Number Objects</h1>
-@@ -34061,6 +34090,10 @@
+@@ -34061,6 +34094,10 @@
        </emu-clause>
      </emu-clause>
    </emu-clause>
@@ -117,7 +128,7 @@ index 555985b..c91259c 100644
  
    <emu-clause id="sec-date-objects">
      <h1>Date Objects</h1>
-@@ -34093,6 +34126,8 @@
+@@ -34093,6 +34130,8 @@
          <emu-eqn id="eqn-MillisecondsPerHour" oldids="eqn-msPerHour" aoid="MillisecondsPerHour">MillisecondsPerHour = 3600000 = MillisecondsPerMinute × MinutesPerHour</emu-eqn>
          <emu-eqn id="eqn-MillisecondsPerDay" oldids="eqn-msPerDay" aoid="MillisecondsPerDay">MillisecondsPerDay = 86400000 = MillisecondsPerHour × HoursPerDay</emu-eqn>
          <emu-eqn id="eqn-NanosecondsPerDay" aoid="NanosecondsPerDay">NanosecondsPerDay = 10<sup>6</sup> × MillisecondsPerDay = 8.64 × 10<sup>13</sup></emu-eqn>
@@ -126,7 +137,7 @@ index 555985b..c91259c 100644
          <emu-eqn id="eqn-NanosecondsPerSecond" oldids="eqn-nsPerSecond" aoid="NanosecondsPerSecond">NanosecondsPerSecond = 10<sup>6</sup> × MillisecondsPerSecond = 10<sup>9</sup></emu-eqn>
          <emu-eqn id="eqn-NanosecondsPerMillisecond" oldids="eqn-nsPerMillisecond" aoid="NanosecondsPerMillisecond">NanosecondsPerMillisecond = 10<sup>6</sup></emu-eqn>
          <emu-eqn id="eqn-NanosecondsPerMicrosecond" oldids="eqn-nsPerMicrosecond" aoid="NanosecondsPerMicrosecond">NanosecondsPerMicrosecond = 10<sup>3</sup></emu-eqn>
-@@ -34346,26 +34381,10 @@
+@@ -34346,26 +34385,10 @@
          </emu-alg>
        </emu-clause>
  
@@ -154,7 +165,7 @@ index 555985b..c91259c 100644
            ): an epoch nanoseconds count
          </h1>
          <dl class="header">
-@@ -34373,181 +34392,12 @@
+@@ -34373,183 +34396,14 @@
            <dd>The returned value is the epoch nanoseconds count that corresponds to the given ISO 8601 calendar date and wall-clock time in UTC.</dd>
          </dl>
          <emu-alg>
@@ -165,9 +176,10 @@ index 555985b..c91259c 100644
            1. Let _epochMilliseconds_ be MakeDate(_date_, _time_).
            1. Assert: _epochMilliseconds_ is an integral Number.
 -          1. Return ℝ(_epochMilliseconds_) × NanosecondsPerMillisecond + _microsecond_ × NanosecondsPerMicrosecond + _nanosecond_.
--        </emu-alg>
--      </emu-clause>
--
++          1. Return ℝ(_epochMilliseconds_) × NanosecondsPerMillisecond + _isoDateTime_.[[Time]].[[Microsecond]] × NanosecondsPerMicrosecond + _isoDateTime_.[[Time]].[[Nanosecond]].
+         </emu-alg>
+       </emu-clause>
+ 
 -      <emu-clause id="sec-time-zone-identifiers">
 -        <h1>Time Zone Identifiers</h1>
 -
@@ -247,8 +259,7 @@ index 555985b..c91259c 100644
 -        <emu-alg>
 -          1. Assert: _timeZoneIdentifier_ is *"UTC"*.
 -          1. Return 0.
-+          1. Return ℝ(_epochMilliseconds_) × NanosecondsPerMillisecond + _isoDateTime_.[[Time]].[[Microsecond]] × NanosecondsPerMicrosecond + _isoDateTime_.[[Time]].[[Nanosecond]].
-         </emu-alg>
+-        </emu-alg>
 -        <emu-note>
 -          <p>Time zone offset values may be positive or negative.</p>
 -        </emu-note>
@@ -336,10 +347,12 @@ index 555985b..c91259c 100644
 -          </p>
 -          <p>For example, if the host environment is a browser on a system where the user has chosen US Eastern Time as their time zone, SystemTimeZoneIdentifier returns *"America/New_York"*.</p>
 -        </emu-note>
-       </emu-clause>
- 
+-      </emu-clause>
+-
        <emu-clause id="sec-localtime" type="abstract operation">
-@@ -34565,8 +34415,9 @@
+         <h1>
+           LocalTime (
+@@ -34565,8 +34419,9 @@
          </dl>
          <emu-alg>
            1. Let _systemTimeZoneIdentifier_ be SystemTimeZoneIdentifier().
@@ -351,7 +364,7 @@ index 555985b..c91259c 100644
            1. Else,
              1. Let _offsetNanoseconds_ be GetNamedTimeZoneOffsetNanoseconds(_systemTimeZoneIdentifier_, ℝ(_tv_) × NanosecondsPerMillisecond).
            1. Let _offsetMilliseconds_ be truncate(_offsetNanoseconds_ / NanosecondsPerMillisecond).
-@@ -34576,7 +34427,7 @@
+@@ -34576,7 +34431,7 @@
            <p>If political rules for the local time _tv_ are not available within the implementation, the result is _tv_ because SystemTimeZoneIdentifier returns *"UTC"* and GetNamedTimeZoneOffsetNanoseconds returns 0.</p>
          </emu-note>
          <emu-note>
@@ -360,7 +373,7 @@ index 555985b..c91259c 100644
          </emu-note>
          <emu-note>
            <p>Two different input time values <emu-eqn>_tv_<sub>UTC</sub></emu-eqn> are converted to the same local time <emu-eqn>t<sub>local</sub></emu-eqn> at a negative time zone transition when there are repeated times (e.g. the daylight saving time ends or the time zone adjustment is decreased.).</p>
-@@ -34600,16 +34451,18 @@
+@@ -34600,16 +34455,18 @@
          <emu-alg>
            1. If _t_ is not finite, return *NaN*.
            1. Let _systemTimeZoneIdentifier_ be SystemTimeZoneIdentifier().
@@ -383,7 +396,7 @@ index 555985b..c91259c 100644
                1. Let _disambiguatedInstant_ be the last element of _possibleInstantsBefore_.
              1. Let _offsetNanoseconds_ be GetNamedTimeZoneOffsetNanoseconds(_systemTimeZoneIdentifier_, _disambiguatedInstant_).
            1. Let _offsetMilliseconds_ be truncate(_offsetNanoseconds_ / NanosecondsPerMillisecond).
-@@ -34864,7 +34717,7 @@ THH:mm:ss.sss
+@@ -34864,7 +34721,7 @@ THH:mm:ss.sss
            <p>As every day both starts and ends with midnight, the two notations `00:00` and `24:00` are available to distinguish the two midnights that can be associated with one date. This means that the following two notations refer to exactly the same point in time: `1995-02-04T24:00` and `1995-02-05T00:00`.</p>
          </emu-note>
          <emu-note>
@@ -392,7 +405,7 @@ index 555985b..c91259c 100644
          </emu-note>
  
          <emu-clause id="sec-expanded-years" oldids="sec-extended-years">
-@@ -34912,89 +34765,43 @@ THH:mm:ss.sss
+@@ -34912,89 +34769,26 @@ THH:mm:ss.sss
          <h1>Time Zone Offset String Format</h1>
  
          <p>
@@ -454,42 +467,38 @@ index 555985b..c91259c 100644
 -        </emu-grammar>
 -
 -        <emu-clause id="sec-istimezoneoffsetstring" type="abstract operation">
-+        <emu-clause id="sec-isoffsettimezoneidentifier" oldids="sec-istimezoneoffsetstring" type="abstract operation">
-           <h1>
--            IsTimeZoneOffsetString (
-+            IsOffsetTimeZoneIdentifier (
-               _offsetString_: a String,
-             ): a Boolean
-           </h1>
-           <dl class="header">
-             <dt>description</dt>
--            <dd>The return value indicates whether _offsetString_ conforms to the grammar given by |UTCOffset|.</dd>
-+            <dd>The return value indicates whether _offsetString_ conforms to the grammar given by |UTCOffset[~SubMinutePrecision]|.</dd>
-           </dl>
-           <emu-alg>
--            1. Let _parseResult_ be ParseText(_offsetString_, |UTCOffset|).
-+            1. Let _parseResult_ be ParseText(_offsetString_, |UTCOffset[~SubMinutePrecision]|).
-             1. If _parseResult_ is a List of errors, return *false*.
-             1. Return *true*.
-           </emu-alg>
-         </emu-clause>
- 
--        <emu-clause id="sec-parsetimezoneoffsetstring" type="abstract operation">
 +        <emu-clause id="sec-parsedatetimeutcoffset" oldids="sec-parsetimezoneoffsetstring" type="abstract operation">
            <h1>
--            ParseTimeZoneOffsetString (
+-            IsTimeZoneOffsetString (
 +            ParseDateTimeUTCOffset (
                _offsetString_: a String,
--            ): an integer
+-            ): a Boolean
 +            ): either a normal completion containing an integer in the interval from -NanosecondsPerDay (exclusive) to NanosecondsPerDay (exclusive), or a throw completion
            </h1>
            <dl class="header">
              <dt>description</dt>
--            <dd>The return value is the UTC offset, as a number of nanoseconds, that corresponds to the String _offsetString_.</dd>
+-            <dd>The return value indicates whether _offsetString_ conforms to the grammar given by |UTCOffset|.</dd>
 +            <dd>It returns the UTC offset, as a number of nanoseconds, that corresponds to the String _offsetString_.
 +              If _offsetString_ is invalid, a *RangeError* is thrown.</dd>
            </dl>
            <emu-alg>
+-            1. Let _parseResult_ be ParseText(_offsetString_, |UTCOffset|).
+-            1. If _parseResult_ is a List of errors, return *false*.
+-            1. Return *true*.
+-          </emu-alg>
+-        </emu-clause>
+-
+-        <emu-clause id="sec-parsetimezoneoffsetstring" type="abstract operation">
+-          <h1>
+-            ParseTimeZoneOffsetString (
+-              _offsetString_: a String,
+-            ): an integer
+-          </h1>
+-          <dl class="header">
+-            <dt>description</dt>
+-            <dd>The return value is the UTC offset, as a number of nanoseconds, that corresponds to the String _offsetString_.</dd>
+-          </dl>
+-          <emu-alg>
 -            1. Let _parseResult_ be ParseText(_offsetString_, |UTCOffset|).
 -            1. Assert: _parseResult_ is not a List of errors.
 +            1. Let _parseResult_ be ParseText(_offsetString_, |UTCOffset[+SubMinutePrecision]|).
@@ -497,7 +506,7 @@ index 555985b..c91259c 100644
              1. Assert: _parseResult_ contains a |ASCIISign| Parse Node.
              1. Let _parsedSign_ be the source text matched by the |ASCIISign| Parse Node contained within _parseResult_.
              1. If _parsedSign_ is the single code point U+002D (HYPHEN-MINUS), then
-@@ -35005,15 +34812,15 @@ THH:mm:ss.sss
+@@ -35005,15 +34799,15 @@ THH:mm:ss.sss
              1. Assert: _parseResult_ contains an |Hour| Parse Node.
              1. Let _parsedHours_ be the source text matched by the |Hour| Parse Node contained within _parseResult_.
              1. Let _hours_ be ℝ(StringToNumber(CodePointsToString(_parsedHours_))).
@@ -517,7 +526,7 @@ index 555985b..c91259c 100644
                1. Let _seconds_ be ℝ(StringToNumber(CodePointsToString(_parsedSeconds_))).
              1. If _parseResult_ does not contain a |TemporalDecimalFraction| Parse Node, then
                1. Let _nanoseconds_ be 0.
-@@ -35026,6 +34833,52 @@ THH:mm:ss.sss
+@@ -35026,6 +34820,52 @@ THH:mm:ss.sss
            </emu-alg>
          </emu-clause>
        </emu-clause>
@@ -570,7 +579,7 @@ index 555985b..c91259c 100644
      </emu-clause>
  
      <emu-clause id="sec-date-constructor" oldids="this-time-value,sec-thistimevalue,thistimevalue,this-Date-object">
-@@ -35044,12 +34897,10 @@ THH:mm:ss.sss
+@@ -35044,12 +34884,10 @@ THH:mm:ss.sss
          <h1>Date ( ..._values_ )</h1>
          <p>This function performs the following steps when called:</p>
          <emu-alg>
@@ -585,7 +594,7 @@ index 555985b..c91259c 100644
            1. Else if _numberOfArgs_ = 1, then
              1. Let _value_ be _values_[0].
              1. If _value_ is an Object and _value_ has a [[DateValue]] internal slot, then
-@@ -35092,7 +34943,10 @@ THH:mm:ss.sss
+@@ -35092,7 +34930,10 @@ THH:mm:ss.sss
  
        <emu-clause id="sec-date.now" type="built-in function">
          <h1>Date.now ( )</h1>
@@ -597,7 +606,7 @@ index 555985b..c91259c 100644
        </emu-clause>
  
        <emu-clause id="sec-date.parse" type="built-in function">
-@@ -35776,10 +35630,8 @@ THH:mm:ss.sss
+@@ -35776,10 +35617,8 @@ THH:mm:ss.sss
            <dl class="header">
            </dl>
            <emu-alg>
@@ -610,7 +619,7 @@ index 555985b..c91259c 100644
            </emu-alg>
          </emu-clause>
  
-@@ -35992,21 +35844,13 @@ THH:mm:ss.sss
+@@ -35992,21 +35831,13 @@ THH:mm:ss.sss
            </dl>
            <emu-alg>
              1. Let _systemTimeZoneIdentifier_ be SystemTimeZoneIdentifier().
@@ -637,7 +646,7 @@ index 555985b..c91259c 100644
            </emu-alg>
          </emu-clause>
  
-@@ -36026,6 +35870,19 @@ THH:mm:ss.sss
+@@ -36026,6 +35857,19 @@ THH:mm:ss.sss
          </emu-clause>
        </emu-clause>
  
@@ -657,7 +666,7 @@ index 555985b..c91259c 100644
        <emu-clause id="sec-date.prototype.totimestring" type="built-in function">
          <h1>Date.prototype.toTimeString ( )</h1>
          <p>This method performs the following steps when called:</p>
-@@ -36093,6 +35950,22 @@ THH:mm:ss.sss
+@@ -36093,6 +35937,22 @@ THH:mm:ss.sss
        <p>Date instances are ordinary objects that inherit properties from the Date prototype object. Date instances also have a [[DateValue]] internal slot. The [[DateValue]] internal slot is the time value represented by this Date.</p>
      </emu-clause>
    </emu-clause>
@@ -680,7 +689,7 @@ index 555985b..c91259c 100644
  </emu-clause>
  
  <emu-clause id="sec-text-processing">
-@@ -36620,7 +36493,7 @@ THH:mm:ss.sss
+@@ -36620,7 +36480,7 @@ THH:mm:ss.sss
            <dl class="header">
            </dl>
            <emu-alg>
@@ -689,7 +698,7 @@ index 555985b..c91259c 100644
              1. Return StringPad(_string_, _minLength_, *"0"*, ~start~).
            </emu-alg>
          </emu-clause>
-@@ -53889,16 +53762,75 @@ THH:mm:ss.sss
+@@ -53889,16 +53749,75 @@ THH:mm:ss.sss
      <emu-prodref name="StrIntegerLiteral"></emu-prodref>
    </emu-annex>
  
@@ -768,7 +777,7 @@ index 555985b..c91259c 100644
    </emu-annex>
  
    <emu-annex id="sec-regular-expressions">
-@@ -54969,6 +54901,7 @@ THH:mm:ss.sss
+@@ -54969,6 +54888,7 @@ THH:mm:ss.sss
      <p><b>HostMakeJobCallback(...)</b></p>
      <p><b>HostPromiseRejectionTracker(...)</b></p>
      <p><b>HostResizeArrayBuffer(...)</b></p>
@@ -776,7 +785,7 @@ index 555985b..c91259c 100644
      <p><b>InitializeHostDefinedRealm(...)</b></p>
    </emu-annex>
  
-@@ -55092,12 +55025,18 @@ THH:mm:ss.sss
+@@ -55092,12 +55012,18 @@ THH:mm:ss.sss
      <li>
        <i>Unicode Standard Annex #31, Unicode Identifiers and Pattern Syntax</i>, available at &lt;<a href="https://unicode.org/reports/tr31/">https://unicode.org/reports/tr31/</a>>
      </li>
@@ -795,7 +804,7 @@ index 555985b..c91259c 100644
      <li>
        <i>IANA Time Zone Database</i>, available at &lt;<a href="https://www.iana.org/time-zones">https://www.iana.org/time-zones</a>>
      </li>
-@@ -55110,6 +55049,9 @@ THH:mm:ss.sss
+@@ -55110,6 +55036,9 @@ THH:mm:ss.sss
      <li>
        <i>RFC 2396 “Uniform Resource Identifiers (URI): Generic Syntax”</i>, available at &lt;<a href="https://rfc-editor.org/info/rfc2396">https://rfc-editor.org/info/rfc2396</a>>
      </li>

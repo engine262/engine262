@@ -3,7 +3,7 @@ import type { ISODateTimeRecord } from '../../intrinsics/Temporal/PlainDateTime.
 import { ParseTemporalTimeZoneString, ParseTimeZoneIdentifier } from '../../parser/TemporalParser.mts';
 import {
   DateFromTime, HourFromTime, MinuteFromTime, MonthFromTime, SecondFromTime, MillisecondFromTime, YearFromTime,
-  GetUTCEpochNanoseconds, IsOffsetTimeZoneIdentifier,
+  GetUTCEpochNanoseconds, isOffsetTimeZoneIdentifier,
 } from '../date-objects.mts';
 import { isTemporalZonedDateTimeObject } from '../../intrinsics/Temporal/ZonedDateTime.mts';
 import { abs, floorDiv, modulo } from '../math.mts';
@@ -13,12 +13,12 @@ import {
   AvailableNamedTimeZoneIdentifiers,
   GetNamedTimeZoneOffsetNanoseconds,
 } from './addition.mts';
-import type { TimeZoneIdentifier } from './addition.mts';
 import {
   RoundNumberToIncrement, ValidateISODaysRange,
   FormatTimeString,
   type EpochNanoseconds,
 } from './temporal.mts';
+import { mark_TimeZoneAwareNotImplemented } from './not-implemented.mts';
 import {
   Assert, JSStringValue, ObjectValue, Value, type PlainCompletion, Q,
   Throw,
@@ -38,16 +38,21 @@ import {
   CompareISODateTime,
   NanosecondsPerHour,
   NanosecondsPerSecond,
+  type AvailableNamedTimeZoneIdentifier,
+  type NamedTimeZoneIdentifier,
+  type AvailableTimeZoneIdentifier,
+  type OffsetTimeZoneIdentifier,
+  isNamedTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-available-named-time-zone-identifier-return-record */
 export interface AvailableNamedTimeZoneIdentifierReturnRecord {
-  readonly Identifier: TimeZoneIdentifier;
+  readonly Identifier: NamedTimeZoneIdentifier;
   readonly Result: TimeZoneIdentifierRecord | undefined;
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getavailablenamedtimezoneidentifier
-export function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: TimeZoneIdentifier): TimeZoneIdentifierRecord | undefined {
+export function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: NamedTimeZoneIdentifier): TimeZoneIdentifierRecord | undefined {
   const agentRecord = surroundingAgent.AgentRecord;
   const previousReturns = agentRecord.GetAvailableNamedTimeZoneIdentifierReturns;
   for (const previousReturn of previousReturns) {
@@ -56,8 +61,8 @@ export function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: TimeZone
     }
     if (previousReturn.Result !== undefined && previousReturn.Result.PrimaryIdentifier.toLowerCase() === timeZoneIdentifier.toLowerCase()) {
       const record: TimeZoneIdentifierRecord = {
-        Identifier: timeZoneIdentifier,
-        PrimaryIdentifier: timeZoneIdentifier,
+        Identifier: timeZoneIdentifier as AvailableNamedTimeZoneIdentifier,
+        PrimaryIdentifier: timeZoneIdentifier as AvailableNamedTimeZoneIdentifier,
       };
       previousReturns.push({ Identifier: timeZoneIdentifier, Result: record });
       return record;
@@ -75,30 +80,32 @@ export function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: TimeZone
 
 /** https://tc39.es/ecma262/#sec-time-zone-identifier-record */
 export interface TimeZoneIdentifierRecord {
-  readonly Identifier: TimeZoneIdentifier;
-  readonly PrimaryIdentifier: TimeZoneIdentifier;
+  readonly Identifier: AvailableNamedTimeZoneIdentifier;
+  readonly PrimaryIdentifier: AvailableNamedTimeZoneIdentifier;
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getnamedtimezonenexttransition
-export function GetNamedTimeZoneNextTransition(timeZoneIdentifier: TimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null {
+export function GetNamedTimeZoneNextTransition(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null {
+  mark_TimeZoneAwareNotImplemented();
   Assert(timeZoneIdentifier === 'UTC');
   return null;
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getnamedtimezoneprevioustransition
-export function GetNamedTimeZonePreviousTransition(timeZoneIdentifier: TimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null {
+export function GetNamedTimeZonePreviousTransition(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null {
+  mark_TimeZoneAwareNotImplemented();
   Assert(timeZoneIdentifier === 'UTC');
   return null;
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-formatoffsettimezoneidentifier
-export function FormatOffsetTimeZoneIdentifier(offsetMinutes: Integer, style: 'separated' | 'unseparated' = 'separated'): TimeZoneIdentifier {
+export function FormatOffsetTimeZoneIdentifier(offsetMinutes: Integer, style: 'separated' | 'unseparated' = 'separated'): OffsetTimeZoneIdentifier {
   const sign = offsetMinutes >= 0 ? '+' : '-';
   const absoluteMinutes = abs(offsetMinutes);
   const hour = floorDiv(absoluteMinutes, 60n);
   const minute = modulo(absoluteMinutes, 60n);
   const timeString = FormatTimeString(hour, minute, 0n, 0n, 'minute', style);
-  return sign + timeString as TimeZoneIdentifier;
+  return sign + timeString as OffsetTimeZoneIdentifier;
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-formatutcoffsetnanoseconds
@@ -122,7 +129,7 @@ export function FormatDateTimeUTCOffsetRounded(offsetNanoseconds: Integer): stri
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezoneidentifier
-export function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | string): PlainCompletion<TimeZoneIdentifier> {
+export function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | string): PlainCompletion<AvailableTimeZoneIdentifier> {
   if (temporalTimeZoneLike instanceof ObjectValue && isTemporalZonedDateTimeObject(temporalTimeZoneLike)) {
     return temporalTimeZoneLike.TimeZone;
   }
@@ -137,7 +144,7 @@ export function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | strin
   }
   const name = parseResult.Name;
   Assert(name !== undefined);
-  const timeZoneIdentifierRecord = GetAvailableNamedTimeZoneIdentifier(name as TimeZoneIdentifier);
+  const timeZoneIdentifierRecord = GetAvailableNamedTimeZoneIdentifier(name);
   if (timeZoneIdentifierRecord === undefined) {
     return Throw.RangeError('Invalid time zone identifier: $1', temporalTimeZoneLikeString);
   }
@@ -145,15 +152,15 @@ export function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | strin
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
-export function GetOffsetNanosecondsFor(timeZone: TimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): Integer {
+export function GetOffsetNanosecondsFor(timeZone: AvailableTimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): Integer {
   const parseResult = X(ParseTimeZoneIdentifier(timeZone));
   if (parseResult.OffsetMinutes !== undefined) return parseResult.OffsetMinutes * NanosecondsPerMinute;
   Assert(parseResult.Name !== undefined);
-  return GetNamedTimeZoneOffsetNanoseconds(parseResult.Name, epochNanoseconds);
+  return GetNamedTimeZoneOffsetNanoseconds(parseResult.Name as AvailableNamedTimeZoneIdentifier, epochNanoseconds);
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getisodatetimefor
-export function GetISODateTimeFor(timeZone: TimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): ISODateTimeRecord {
+export function GetISODateTimeFor(timeZone: AvailableTimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): ISODateTimeRecord {
   Assert(IsWithinEpochNanosecondsInterval(epochNanoseconds));
   const offsetNanoseconds = GetOffsetNanosecondsFor(timeZone, epochNanoseconds);
   const remainderNanoseconds = modulo(epochNanoseconds, NanosecondsPerMillisecond);
@@ -173,7 +180,7 @@ export function GetISODateTimeFor(timeZone: TimeZoneIdentifier, epochNanoseconds
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getepochnanosecondsfor
 export function GetEpochNanosecondsFor(
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
   disambiguation: 'compatible' | 'earlier' | 'later' | 'reject',
 ): PlainCompletion<EpochNanoseconds> {
@@ -184,7 +191,7 @@ export function GetEpochNanosecondsFor(
 // https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleepochnanoseconds
 export function DisambiguatePossibleEpochNanoseconds(
   possibleEpochNanoseconds: readonly EpochNanoseconds[],
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
   disambiguation: 'compatible' | 'earlier' | 'later' | 'reject',
 ): PlainCompletion<EpochNanoseconds> {
@@ -256,7 +263,7 @@ export function DisambiguatePossibleEpochNanoseconds(
 
 // https://tc39.es/proposal-temporal/#sec-temporal-getpossibleepochnanoseconds
 export function GetPossibleEpochNanoseconds(
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   isoDateTime: ISODateTimeRecord,
 ): PlainCompletion<EpochNanoseconds[]> {
   const parseResult = X(ParseTimeZoneIdentifier(timeZone));
@@ -278,7 +285,7 @@ export function GetPossibleEpochNanoseconds(
     possibleEpochNanoseconds = [epochNanoseconds];
   } else {
     Assert(parseResult.Name !== undefined);
-    possibleEpochNanoseconds = GetNamedTimeZoneEpochNanoseconds(parseResult.Name as TimeZoneIdentifier, isoDateTime);
+    possibleEpochNanoseconds = GetNamedTimeZoneEpochNanoseconds(parseResult.Name as AvailableNamedTimeZoneIdentifier, isoDateTime);
   }
   for (const epochNanoseconds of possibleEpochNanoseconds) {
     if (!IsWithinEpochNanosecondsInterval(epochNanoseconds)) {
@@ -290,7 +297,7 @@ export function GetPossibleEpochNanoseconds(
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-getstartofday */
 export function GetStartOfDay(
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   isoDate: ISODateRecord,
 ): PlainCompletion<EpochNanoseconds> {
   const isoDateTime: ISODateTimeRecord = { ISODate: isoDate, Time: MidnightTimeRecord() };
@@ -298,7 +305,7 @@ export function GetStartOfDay(
   if (possibleEpochNanoseconds.length) {
     return possibleEpochNanoseconds[0];
   }
-  Assert(!IsOffsetTimeZoneIdentifier(timeZone));
+  Assert(!isOffsetTimeZoneIdentifier(timeZone));
 
   let wallClockAdvance = 1n;
   while (true) {
@@ -319,11 +326,11 @@ export function GetStartOfDay(
 }
 
 // https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
-export function TimeZoneEquals(xTimeZone: TimeZoneIdentifier, yTimeZone: TimeZoneIdentifier): boolean {
+export function TimeZoneEquals(xTimeZone: AvailableTimeZoneIdentifier, yTimeZone: AvailableTimeZoneIdentifier): boolean {
   if (xTimeZone === yTimeZone) {
     return true;
   }
-  if (!IsOffsetTimeZoneIdentifier(xTimeZone) && !IsOffsetTimeZoneIdentifier(yTimeZone)) {
+  if (isNamedTimeZoneIdentifier(xTimeZone) && isNamedTimeZoneIdentifier(yTimeZone)) {
     const xRecord = GetAvailableNamedTimeZoneIdentifier(xTimeZone);
     const yRecord = GetAvailableNamedTimeZoneIdentifier(yTimeZone);
     Assert(xRecord !== undefined);
@@ -333,7 +340,7 @@ export function TimeZoneEquals(xTimeZone: TimeZoneIdentifier, yTimeZone: TimeZon
     }
   }
   // 3. Assert: If one and two are both offset time zone identifiers, they do not represent the same number of offset minutes.
-  if (IsOffsetTimeZoneIdentifier(xTimeZone) && IsOffsetTimeZoneIdentifier(yTimeZone)) {
+  if (isOffsetTimeZoneIdentifier(xTimeZone) && isOffsetTimeZoneIdentifier(yTimeZone)) {
     const oneOffsetMinutes = X(ParseTimeZoneIdentifier(xTimeZone)).OffsetMinutes;
     const twoOffsetMinutes = X(ParseTimeZoneIdentifier(yTimeZone)).OffsetMinutes;
     Assert(oneOffsetMinutes !== twoOffsetMinutes);

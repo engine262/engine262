@@ -6,6 +6,7 @@ import { ThrowCompletion, X } from '../completion.mts';
 import { GetGlobalObject } from '../execution-context/ExecutionContext.mts';
 import { surroundingAgent } from '../execution-context/Agent.mts';
 import { DateParser, ParseTimeZoneIdentifier } from '../parser/TemporalParser.mts';
+import { __ts_cast__ } from '../utils/language.mts';
 import {
   ToIntegerOrInfinity,
   Assert,
@@ -13,6 +14,7 @@ import {
   type IntegralNumber,
   type NaN,
   type Num,
+  type AvailableNamedTimeZoneIdentifier,
 } from './all.mts';
 import { clamp, floorDiv, modulo, truncateDiv } from './math.mts';
 import {
@@ -22,7 +24,7 @@ import {
 } from './temporal/addition.mts';
 import { TimeValueToISODateTimeRecord } from './temporal/plain-date-time.mts';
 import type { EpochNanoseconds } from './temporal/temporal.mts';
-import { NumberValue, ObjectValue, Value, type PlainCompletion } from '#self';
+import { AvailableNamedTimeZoneIdentifiers, NumberValue, ObjectValue, Value, type NamedTimeZoneIdentifier, type OffsetTimeZoneIdentifier, type PlainCompletion } from '#self';
 
 /** https://tc39.es/ecma262/pr/3759/#sec-time-values-and-time-range */
 export type FiniteTimeValue = IntegralNumber;
@@ -171,7 +173,7 @@ export function LocalTime(tv: FiniteTimeValue): IntegralNumber {
   if (parseResult.OffsetMinutes !== undefined) {
     offsetNanoseconds = parseResult.OffsetMinutes * NanosecondsPerMinute;
   } else {
-    offsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, BigInt(tv) * NanosecondsPerMillisecond);
+    offsetNanoseconds = GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier as AvailableNamedTimeZoneIdentifier, BigInt(tv) * NanosecondsPerMillisecond);
   }
   const offsetMilliseconds = truncateDiv(offsetNanoseconds, NanosecondsPerMillisecond);
   return tv + Number(offsetMilliseconds);
@@ -186,6 +188,7 @@ export function UTC(t: Num): TimeValue {
   if (parseResult.OffsetMinutes !== undefined) {
     offsetNanoseconds = parseResult.OffsetMinutes * NanosecondsPerMinute;
   } else {
+    __ts_cast__<AvailableNamedTimeZoneIdentifier>(systemTimeZoneIdentifier);
     const isoDateTime = TimeValueToISODateTimeRecord(t);
     const possibleInstants = GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, isoDateTime);
     let disambiguatedInstant: EpochNanoseconds;
@@ -275,11 +278,14 @@ export function TimeClip(time: Num): TimeValue {
   return X(ToIntegerOrInfinity(time));
 }
 
-/** https://tc39.es/ecma262/#sec-isoffsettimezoneidentifier */
-export function IsOffsetTimeZoneIdentifier(offsetString: string): boolean {
+export function isOffsetTimeZoneIdentifier(offsetString: string): offsetString is OffsetTimeZoneIdentifier {
   const parseResult = DateParser.parse(offsetString, (parser) => parser.parseUTCOffset());
   if (Array.isArray(parseResult)) return false;
   return true;
+}
+
+export function isNamedTimeZoneIdentifier(timeZoneString: string): timeZoneString is NamedTimeZoneIdentifier {
+  return AvailableNamedTimeZoneIdentifiers().some((record) => record.Identifier === timeZoneString || record.PrimaryIdentifier === timeZoneString);
 }
 
 /** https://tc39.es/ecma262/#sec-parsedatetimeutcoffset */

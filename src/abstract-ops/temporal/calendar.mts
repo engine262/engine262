@@ -50,6 +50,7 @@ import {
   type TemporalPlainMonthDayObject,
   type TemporalPlainYearMonthObject,
   type TemporalZonedDateTimeObject,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-known-calendar-types */
@@ -114,7 +115,7 @@ export interface CalendarFieldsRecord {
   Microsecond: Integer | undefined;
   Nanosecond: Integer | undefined;
   OffsetString: string | undefined;
-  readonly TimeZone: string | undefined;
+  readonly TimeZone: AvailableTimeZoneIdentifier | undefined;
 }
 
 export type CalendarPropertyKey = 'era' | 'eraYear' | 'year' | 'month' | 'monthCode' | 'day' | 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond' | 'offset' | 'timeZone';
@@ -503,13 +504,13 @@ export function ISOWeekOfYear(isoDate: ISODateRecord): YearWeekRecord {
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodayofyear */
 export function ISODayOfYear(isoDate: ISODateRecord): Integer {
-  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1n, isoDate.Day);
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month, isoDate.Day);
   return DayWithinYear(Number(EpochDaysToEpochMilliseconds(epochDays, 0n)) as FiniteTimeValue) + 1n;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodayofweek */
 export function ISODayOfWeek(isoDate: ISODateRecord): Integer {
-  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1n, isoDate.Day);
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month, isoDate.Day);
   const dayOfWeek = WeekDay(Number(EpochDaysToEpochMilliseconds(epochDays, 0n)) as FiniteTimeValue);
   if (dayOfWeek === 0n) {
     return 7n;

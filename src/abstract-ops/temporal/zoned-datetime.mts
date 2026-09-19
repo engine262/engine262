@@ -6,7 +6,7 @@ import { ParseISODateTime, DateParser } from '../../parser/TemporalParser.mts';
 import { GetUTCEpochNanoseconds, ParseDateTimeUTCOffset } from '../date-objects.mts';
 import { Decimal } from '../../host-defined/decimal.mts';
 import {
-  type TimeZoneIdentifier, type RoundingMode,
+  type RoundingMode,
 } from './addition.mts';
 import {
   type PlainCompletion, Assert, Q, GetStartOfDay, GetEpochNanosecondsFor, ValidateISODaysRange, IsWithinEpochNanosecondsInterval, Throw, GetPossibleEpochNanoseconds, RoundNumberToIncrement, DisambiguatePossibleEpochNanoseconds, Value, type ValueEvaluator, type KnownCalendarType, ObjectValue, GetTemporalDisambiguationOption, GetTemporalOffsetOption, GetTemporalOverflowOption, X, GetTemporalCalendarIdentifierWithISODefault, PrepareCalendarFields, JSStringValue, ToTemporalTimeZoneIdentifier, CanonicalizeCalendar, CreateISODateRecord, type FunctionObject, surroundingAgent, OrdinaryCreateFromConstructor, type Mutable, RoundEpochNanoseconds, type TemporalUnit, GetOffsetNanosecondsFor, GetISODateTimeFor, FormatDateTimeUTCOffsetRounded, FormatCalendarAnnotation, type InternalDurationRecord, DateDurationSign, AddEpochNanoseconds, CalendarDateAdd, CombineDateAndTimeDuration, ZeroDateDuration, CompareISODate, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, AddDaysToISODate, LargerOfTwoTemporalUnits, CalendarDateUntil, type DateUnit, isTimeUnit, DifferenceEpochNanoseconds, type TimeUnit, RoundRelativeDuration, TotalTimeDuration, TotalRelativeDuration, GetDifferenceSettings, TemporalDurationFromInternal, CreateNegatedTemporalDuration, TimeZoneEquals, CreateTemporalDuration, ToTemporalDuration, ToInternalDurationRecord,
@@ -21,6 +21,7 @@ import {
   type MathematicalValue,
   GetOptionsObject,
   NanosecondsPerMinute,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 export type ISODateTimeOffsetBehaviour = 'option' | 'exact' | 'wall';
@@ -32,7 +33,7 @@ export function InterpretISODateTimeOffset(
   time: TimeRecord | 'start-of-day',
   offsetBehaviour: ISODateTimeOffsetBehaviour,
   offsetNanoseconds: Integer,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   disambiguation: 'earlier' | 'later' | 'compatible' | 'reject',
   offsetOption: 'ignore' | 'use' | 'prefer' | 'reject',
   matchBehaviour: ISODateTimeMatchBehaviour,
@@ -88,7 +89,7 @@ export function* ToTemporalZonedDateTime(
   let calendar: KnownCalendarType;
   let isoDate: ISODateRecord;
   let time: TimeRecord | 'start-of-day';
-  let timeZone: TimeZoneIdentifier;
+  let timeZone: AvailableTimeZoneIdentifier;
   let offsetString: string | undefined;
   let disambiguation: 'earlier' | 'later' | 'compatible' | 'reject';
   let offsetOption: 'ignore' | 'use' | 'prefer' | 'reject';
@@ -102,7 +103,7 @@ export function* ToTemporalZonedDateTime(
     }
     calendar = Q(yield* GetTemporalCalendarIdentifierWithISODefault(item));
     const fields = Q(yield* PrepareCalendarFields(calendar, item, 'date-fields', 'time-fields-with-time-zone-and-offset', 'time-zone'));
-    timeZone = fields.TimeZone! as TimeZoneIdentifier;
+    timeZone = fields.TimeZone!;
     offsetString = fields.OffsetString;
     const resolvedOptions = Q(GetOptionsObject(options));
     disambiguation = Q(yield* GetTemporalDisambiguationOption(resolvedOptions));
@@ -159,7 +160,7 @@ export function* ToTemporalZonedDateTime(
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime */
 export function* CreateTemporalZonedDateTime(
   epochNanoseconds: EpochNanoseconds,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   calendar: KnownCalendarType,
   newTarget?: FunctionObject,
 ): ValueEvaluator<TemporalZonedDateTimeObject> {
@@ -211,7 +212,7 @@ export function TemporalZonedDateTimeToString(
 /** https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime */
 export function AddZonedDateTime(
   epochNanoseconds: EpochNanoseconds,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   calendar: KnownCalendarType,
   duration: InternalDurationRecord,
   overflow: 'constrain' | 'reject',
@@ -233,7 +234,7 @@ export function AddZonedDateTime(
 export function DifferenceZonedDateTime(
   epochNanosecondsFrom: EpochNanoseconds,
   epochNanosecondsTo: EpochNanoseconds,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   calendar: KnownCalendarType,
   largestUnit: TemporalUnit,
 ): PlainCompletion<InternalDurationRecord> {
@@ -274,7 +275,7 @@ export function DifferenceZonedDateTime(
 export function DifferenceZonedDateTimeWithRounding(
   epochNanosecondsFrom: EpochNanoseconds,
   epochNanosecondsTo: EpochNanoseconds,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   calendar: KnownCalendarType,
   largestUnit: TemporalUnit,
   roundingIncrement: Integer,
@@ -296,7 +297,7 @@ export function DifferenceZonedDateTimeWithRounding(
 export function DifferenceZonedDateTimeWithTotal(
   epochNanosecondsFrom: EpochNanoseconds,
   epochNanosecondsTo: EpochNanoseconds,
-  timeZone: TimeZoneIdentifier,
+  timeZone: AvailableTimeZoneIdentifier,
   calendar: KnownCalendarType,
   unit: TemporalUnit,
 ): PlainCompletion<MathematicalValue> {

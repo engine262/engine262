@@ -29,6 +29,7 @@ import {
   type PlainCompletion, type PlainEvaluator, type TimeRecord,
   type ValueEvaluator,
   ParseDateTimeUTCOffset,
+  type NamedTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-string-time-zone-parse-records */
@@ -399,7 +400,7 @@ export function ParseTemporalTimeZoneString(timeZoneString: string): PlainComple
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-time-zone-identifier-parse-records */
 export interface TimeZoneIdentifierParseRecord {
-  Name: string | undefined;
+  Name: NamedTimeZoneIdentifier | undefined;
   OffsetMinutes: bigint | undefined;
 }
 
@@ -476,7 +477,7 @@ export declare namespace RFC9557ParseNode {
 
   export interface TimeZoneIdentifier {
     readonly UTCOffset?: UTCOffset;
-    readonly TimeZoneIANAName?: string;
+    readonly TimeZoneIANAName?: NamedTimeZoneIdentifier;
     readonly sourceText: string;
   }
 
@@ -1114,7 +1115,7 @@ export class DateParser {
 
   // TimeZoneIANAName ::: TimeZoneIANANameComponent separated by "/"
   // TimeZoneIANANameComponent ::: [._a-zA-Z] followed by zero or more [._a-zA-Z\d\-+]
-  parseTimeZoneIANAName(): string {
+  parseTimeZoneIANAName(): NamedTimeZoneIdentifier {
     const parseComponent = (): string => {
       const name = this.parse(/[._a-zA-Z][._a-zA-Z\d\-+]*/, () => this.raise('Expected TimeZoneIANANameComponent'));
       return name;
@@ -1124,7 +1125,7 @@ export class DateParser {
     while (this.eat('/')) {
       name += `/${parseComponent()}`;
     }
-    return name;
+    return name as NamedTimeZoneIdentifier;
   }
 
   //  Hour :: number 00 to 23

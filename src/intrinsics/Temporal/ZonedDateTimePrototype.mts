@@ -3,7 +3,7 @@ import {
   GetRoundingIncrementOption,
   GetRoundingModeOption,
 } from '../../abstract-ops/temporal/addition.mts';
-import { IsOffsetTimeZoneIdentifier, ParseDateTimeUTCOffset } from '../../abstract-ops/date-objects.mts';
+import { isOffsetTimeZoneIdentifier, ParseDateTimeUTCOffset } from '../../abstract-ops/date-objects.mts';
 import {
   GetTemporalFractionalSecondDigitsOption,
   GetDirectionOption,
@@ -506,7 +506,7 @@ function* ZonedDateTimeProto_getTimeZoneTransition([directionParam = Value.undef
     directionParam = Q(GetOptionsObject(directionParam));
   }
   const direction = Q(yield* GetDirectionOption(directionParam));
-  if (IsOffsetTimeZoneIdentifier(timeZone)) {
+  if (isOffsetTimeZoneIdentifier(timeZone)) {
     return Value.null;
   }
   let transition;

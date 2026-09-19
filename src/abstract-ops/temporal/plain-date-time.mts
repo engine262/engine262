@@ -28,7 +28,7 @@ export function TimeValueToISODateTimeRecord(tv: FiniteTimeValue): ISODateTimeRe
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits */
 export function ISODateTimeWithinLimits(isoDateTime: ISODateTimeRecord): boolean {
-  const epochDays = ISODateToEpochDays(isoDateTime.ISODate.Year, isoDateTime.ISODate.Month - 1n, isoDateTime.ISODate.Day);
+  const epochDays = ISODateToEpochDays(isoDateTime.ISODate.Year, isoDateTime.ISODate.Month, isoDateTime.ISODate.Day);
   if (epochDays < -100_000_001n || epochDays > 100_000_000n) {
     return false;
   }
@@ -90,7 +90,7 @@ export function* ToTemporalDateTime(item: Value, options: Value = Value.undefine
 /** https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime */
 export function BalanceISODateTime(year: Integer, month: Integer, day: Integer, hour: Integer, minute: Integer, second: Integer, millisecond: Integer, microsecond: Integer, nanosecond: Integer): ISODateTimeRecord {
   const balancedTime = BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
-  const epochDays = ISODateToEpochDays(year, month - 1n, day) + balancedTime.Days;
+  const epochDays = ISODateToEpochDays(year, month, day) + balancedTime.Days;
   const epochMilliseconds = EpochDaysToEpochMilliseconds(epochDays, 0n);
   const balancedDate = X(CreateISODateRecord(YearFromTime(Number(epochMilliseconds)), MonthFromTime(Number(epochMilliseconds)) + 1n, DateFromTime(Number(epochMilliseconds))));
   return { ISODate: balancedDate, Time: balancedTime };

@@ -143,7 +143,7 @@ export declare function AddToKeptObjects(object: ObjectValue | SymbolValue): voi
 export declare function AddValueToKeyedGroup(groups: KeyedGroupRecord[], key: PropertyKeyValue, value: Value): void;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime */
-export declare function AddZonedDateTime(epochNanoseconds: EpochNanoseconds, timeZone: TimeZoneIdentifier, calendar: KnownCalendarType, duration: InternalDurationRecord, overflow: 'constrain' | 'reject'): PlainCompletion<EpochNanoseconds>;
+export declare function AddZonedDateTime(epochNanoseconds: EpochNanoseconds, timeZone: AvailableTimeZoneIdentifier, calendar: KnownCalendarType, duration: InternalDurationRecord, overflow: 'constrain' | 'reject'): PlainCompletion<EpochNanoseconds>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-adjustdatedurationrecord */
 export declare function AdjustDateDurationRecord(dateDuration: DateDurationRecord, days: Integer, weeks?: Integer, months?: Integer): PlainCompletion<DateDurationRecord>;
@@ -381,14 +381,22 @@ export declare function AsyncIteratorClose<T, C extends Completion<T>>(iteratorR
 /** https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars */
 export declare function AvailableCalendars(): KnownCalendarType[];
 
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export declare type AvailableNamedTimeZoneIdentifier = NamedTimeZoneIdentifier & {
+    available: true;
+};
+
 /** https://tc39.es/proposal-temporal/#sec-available-named-time-zone-identifier-return-record */
 export declare interface AvailableNamedTimeZoneIdentifierReturnRecord {
-    readonly Identifier: TimeZoneIdentifier;
+    readonly Identifier: NamedTimeZoneIdentifier;
     readonly Result: TimeZoneIdentifierRecord | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-availablenamedtimezoneidentifiers */
 export declare function AvailableNamedTimeZoneIdentifiers(): TimeZoneIdentifierRecord[];
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export declare type AvailableTimeZoneIdentifier = OffsetTimeZoneIdentifier | AvailableNamedTimeZoneIdentifier;
 
 export declare function Await(arg: Value): ValueEvaluator;
 
@@ -574,7 +582,7 @@ export declare type BreakpointRequest = Partial<Protocol.Debugger.SetBreakpointR
 } & Partial<Protocol.Debugger.SetInstrumentationBreakpointRequest>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-bubblerelativeduration */
-export declare function BubbleRelativeDuration(sign: -1n | 1n, duration: InternalDurationRecord, nudgedEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier | undefined, calendar: KnownCalendarType, largestUnit: TemporalUnit, startUnit: 'month' | 'day'): PlainCompletion<InternalDurationRecord>;
+export declare function BubbleRelativeDuration(sign: -1n | 1n, duration: InternalDurationRecord, nudgedEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: AvailableTimeZoneIdentifier | undefined, calendar: KnownCalendarType, largestUnit: TemporalUnit, startUnit: 'month' | 'day'): PlainCompletion<InternalDurationRecord>;
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-BuildEvaluationList */
 export declare function BuildEvaluationList(evaluationList: AbstractModuleRecord[], referrer: CyclicModuleRecord, moduleRequests: readonly ModuleRequestRecord[]): void;
@@ -651,7 +659,7 @@ export declare interface CalendarFieldsRecord {
     Microsecond: Integer | undefined;
     Nanosecond: Integer | undefined;
     OffsetString: string | undefined;
-    readonly TimeZone: string | undefined;
+    readonly TimeZone: AvailableTimeZoneIdentifier | undefined;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-calendarisotodate */
@@ -933,7 +941,7 @@ export declare type CompletionInit<T> = NormalCompletionInit<T> | AbruptCompleti
 export declare function composeModuleLoaders(loaders: readonly ModuleLoader[]): NonNullable<HostHooks['HostLoadImportedModule']>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-computenudgewindow */
-export declare function ComputeNudgeWindow(sign: -1n | 1n, duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier | undefined, calendar: KnownCalendarType, increment: Integer, unit: DateUnit, additionalShift: boolean): PlainCompletion<{
+export declare function ComputeNudgeWindow(sign: -1n | 1n, duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: AvailableTimeZoneIdentifier | undefined, calendar: KnownCalendarType, increment: Integer, unit: DateUnit, additionalShift: boolean): PlainCompletion<{
     InnerBound: MathematicalValue;
     OuterBound: MathematicalValue;
     StartEpochNanoseconds: EpochNanoseconds;
@@ -1103,7 +1111,7 @@ export declare function CreateTemporalTime(time: TimeRecord, newTarget?: Functio
 export declare function CreateTemporalYearMonth(isoDate: ISODateRecord, calendar: KnownCalendarType, newTarget?: FunctionObject): ValueEvaluator<TemporalPlainYearMonthObject>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime */
-export declare function CreateTemporalZonedDateTime(epochNanoseconds: EpochNanoseconds, timeZone: TimeZoneIdentifier, calendar: KnownCalendarType, newTarget?: FunctionObject): ValueEvaluator<TemporalZonedDateTimeObject>;
+export declare function CreateTemporalZonedDateTime(epochNanoseconds: EpochNanoseconds, timeZone: AvailableTimeZoneIdentifier, calendar: KnownCalendarType, newTarget?: FunctionObject): ValueEvaluator<TemporalZonedDateTimeObject>;
 
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
 export declare function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: boolean, log?: (...args: unknown[]) => void): {
@@ -1415,17 +1423,17 @@ export declare function DifferenceTemporalZonedDateTime(operation: 'until' | 'si
 export declare function DifferenceTime(timeFrom: TimeRecord, timeTo: TimeRecord): TimeDuration;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime */
-export declare function DifferenceZonedDateTime(epochNanosecondsFrom: EpochNanoseconds, epochNanosecondsTo: EpochNanoseconds, timeZone: TimeZoneIdentifier, calendar: KnownCalendarType, largestUnit: TemporalUnit): PlainCompletion<InternalDurationRecord>;
+export declare function DifferenceZonedDateTime(epochNanosecondsFrom: EpochNanoseconds, epochNanosecondsTo: EpochNanoseconds, timeZone: AvailableTimeZoneIdentifier, calendar: KnownCalendarType, largestUnit: TemporalUnit): PlainCompletion<InternalDurationRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetimewithrounding */
-export declare function DifferenceZonedDateTimeWithRounding(epochNanosecondsFrom: EpochNanoseconds, epochNanosecondsTo: EpochNanoseconds, timeZone: TimeZoneIdentifier, calendar: KnownCalendarType, largestUnit: TemporalUnit, roundingIncrement: Integer, smallestUnit: TemporalUnit, roundingMode: RoundingMode): PlainCompletion<InternalDurationRecord>;
+export declare function DifferenceZonedDateTimeWithRounding(epochNanosecondsFrom: EpochNanoseconds, epochNanosecondsTo: EpochNanoseconds, timeZone: AvailableTimeZoneIdentifier, calendar: KnownCalendarType, largestUnit: TemporalUnit, roundingIncrement: Integer, smallestUnit: TemporalUnit, roundingMode: RoundingMode): PlainCompletion<InternalDurationRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetimewithtotal */
-export declare function DifferenceZonedDateTimeWithTotal(epochNanosecondsFrom: EpochNanoseconds, epochNanosecondsTo: EpochNanoseconds, timeZone: TimeZoneIdentifier, calendar: KnownCalendarType, unit: TemporalUnit): PlainCompletion<MathematicalValue>;
+export declare function DifferenceZonedDateTimeWithTotal(epochNanosecondsFrom: EpochNanoseconds, epochNanosecondsTo: EpochNanoseconds, timeZone: AvailableTimeZoneIdentifier, calendar: KnownCalendarType, unit: TemporalUnit): PlainCompletion<MathematicalValue>;
 
 export declare type DirectionOption = 'next' | 'previous';
 
-export declare function DisambiguatePossibleEpochNanoseconds(possibleEpochNanoseconds: readonly EpochNanoseconds[], timeZone: TimeZoneIdentifier, isoDateTime: ISODateTimeRecord, disambiguation: 'compatible' | 'earlier' | 'later' | 'reject'): PlainCompletion<EpochNanoseconds>;
+export declare function DisambiguatePossibleEpochNanoseconds(possibleEpochNanoseconds: readonly EpochNanoseconds[], timeZone: AvailableTimeZoneIdentifier, isoDateTime: ISODateTimeRecord, disambiguation: 'compatible' | 'earlier' | 'later' | 'reject'): PlainCompletion<EpochNanoseconds>;
 
 export declare type DisposableResourceKind = 'sync-dispose' | 'async-dispose';
 
@@ -2118,7 +2126,7 @@ export declare function FormatFractionalSeconds(subSecondNanoseconds: Integer, p
 /** https://tc39.es/proposal-temporal/#sec-formatisodatetime */
 export declare function FormatISODateTime(isoDateTime: ISODateTimeRecord, calendar: KnownCalendarType, precision: Integer | 'minute' | 'auto', showCalendar: 'auto' | 'always' | 'never' | 'critical'): string;
 
-export declare function FormatOffsetTimeZoneIdentifier(offsetMinutes: Integer, style?: 'separated' | 'unseparated'): TimeZoneIdentifier;
+export declare function FormatOffsetTimeZoneIdentifier(offsetMinutes: Integer, style?: 'separated' | 'unseparated'): OffsetTimeZoneIdentifier;
 
 export declare type Formattable = string | number | bigint | Value | PrivateName | readonly Formattable[];
 
@@ -2271,7 +2279,7 @@ export declare function GetActiveScriptOrModule(): AbstractModuleRecord | Script
 /** https://tc39.es/ecma262/#sec-getarraybuffermaxbytelengthoption */
 export declare function GetArrayBufferMaxByteLengthOption(options: Value): PlainEvaluator<number | undefined>;
 
-export declare function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: TimeZoneIdentifier): TimeZoneIdentifierRecord | undefined;
+export declare function GetAvailableNamedTimeZoneIdentifier(timeZoneIdentifier: NamedTimeZoneIdentifier): TimeZoneIdentifierRecord | undefined;
 
 export declare function getBreakpointCandidateNodes(from: BreakpointLocation, to?: BreakpointLocation, _restrictToFunction?: boolean): Generator<ParseNode>;
 
@@ -2291,7 +2299,7 @@ export declare function GetDirectionOption(options: ObjectValue): PlainEvaluator
 /** https://tc39.es/ecma262/#sec-getdisposemethod */
 export declare function GetDisposeMethod(value: Value, kind: DisposableResourceKind): ValueEvaluator<FunctionObject | UndefinedValue>;
 
-export declare function GetEpochNanosecondsFor(timeZone: TimeZoneIdentifier, isoDateTime: ISODateTimeRecord, disambiguation: 'compatible' | 'earlier' | 'later' | 'reject'): PlainCompletion<EpochNanoseconds>;
+export declare function GetEpochNanosecondsFor(timeZone: AvailableTimeZoneIdentifier, isoDateTime: ISODateTimeRecord, disambiguation: 'compatible' | 'earlier' | 'later' | 'reject'): PlainCompletion<EpochNanoseconds>;
 
 /** https://tc39.es/ecma262/#sec-getfunctionrealm */
 export declare function GetFunctionRealm(obj: FunctionObject): PlainCompletion<Realm>;
@@ -2315,7 +2323,7 @@ export declare function GetIdentifierReference(env: EnvironmentRecord | null, na
 /** https://tc39.es/ecma262/#sec-GetImportedModule */
 export declare function GetImportedModule(referrer: CyclicModuleRecord, request: ModuleRequestRecord): AbstractModuleRecord;
 
-export declare function GetISODateTimeFor(timeZone: TimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): ISODateTimeRecord;
+export declare function GetISODateTimeFor(timeZone: AvailableTimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): ISODateTimeRecord;
 
 /** https://tc39.es/ecma262/#sec-getiterator */
 export declare function GetIterator(obj: Value, kind: 'sync' | 'async'): PlainEvaluator<IteratorRecord>;
@@ -2341,14 +2349,14 @@ export declare function GetMethod(V: Value, P: PropertyKeyValue | string): Value
 export declare function GetModuleNamespace(module: AbstractModuleRecord, phase: 'defer' | 'evaluation', importedNames?: 'all' | readonly string[]): ObjectValue;
 
 /** https://tc39.es/proposal-temporal/#sec-getnamedtimezoneepochnanoseconds */
-export declare function GetNamedTimeZoneEpochNanoseconds(timeZoneIdentifier: TimeZoneIdentifier, isoDateTime: ISODateTimeRecord): EpochNanoseconds[];
+export declare function GetNamedTimeZoneEpochNanoseconds(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, isoDateTime: ISODateTimeRecord): EpochNanoseconds[];
 
-export declare function GetNamedTimeZoneNextTransition(timeZoneIdentifier: TimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null;
+export declare function GetNamedTimeZoneNextTransition(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null;
 
 /** https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds */
-export declare function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier: string, _epochNanoseconds: EpochNanoseconds): Integer;
+export declare function GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): Integer;
 
-export declare function GetNamedTimeZonePreviousTransition(timeZoneIdentifier: TimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null;
+export declare function GetNamedTimeZonePreviousTransition(timeZoneIdentifier: AvailableNamedTimeZoneIdentifier, _epochNanoseconds: EpochNanoseconds): bigint | null;
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-GetNewOptionalIndirectExportsModuleRequests */
 export declare function GetNewOptionalIndirectExportsModuleRequests(module: AbstractModuleRecord, importedNames: ImportedNamesValue, previouslyImportedNames: PreviouslyImportedNamesEntry[]): readonly ModuleRequestRecord[];
@@ -2356,12 +2364,12 @@ export declare function GetNewOptionalIndirectExportsModuleRequests(module: Abst
 /** https://tc39.es/ecma262/#sec-getnewtarget */
 export declare function GetNewTarget(): ObjectValue | UndefinedValue;
 
-export declare function GetOffsetNanosecondsFor(timeZone: TimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): Integer;
+export declare function GetOffsetNanosecondsFor(timeZone: AvailableTimeZoneIdentifier, epochNanoseconds: EpochNanoseconds): Integer;
 
 /** https://tc39.es/proposal-temporal/#sec-getoptionsobject */
 export declare function GetOptionsObject(options: Value): ObjectValue | ThrowCompletion;
 
-export declare function GetPossibleEpochNanoseconds(timeZone: TimeZoneIdentifier, isoDateTime: ISODateTimeRecord): PlainCompletion<EpochNanoseconds[]>;
+export declare function GetPossibleEpochNanoseconds(timeZone: AvailableTimeZoneIdentifier, isoDateTime: ISODateTimeRecord): PlainCompletion<EpochNanoseconds[]>;
 
 export declare function GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue>;
 
@@ -2375,7 +2383,7 @@ export declare function GetRoundingModeOption(options: ObjectValue, fallback: Ro
 export declare function GetShadowRealmContext(shadowRealmRecord: Realm, strictEval: boolean): ExecutionContext;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-getstartofday */
-export declare function GetStartOfDay(timeZone: TimeZoneIdentifier, isoDate: ISODateRecord): PlainCompletion<EpochNanoseconds>;
+export declare function GetStartOfDay(timeZone: AvailableTimeZoneIdentifier, isoDate: ISODateRecord): PlainCompletion<EpochNanoseconds>;
 
 /** https://tc39.es/ecma262/#sec-getstringindex */
 export declare function GetStringIndex(S: string, Input: readonly string[], e: number): number;
@@ -2735,7 +2743,7 @@ export declare interface InternalDurationRecord {
 export declare function InternalDurationSign(internalDuration: InternalDurationRecord): -1n | 0n | 1n;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset */
-export declare function InterpretISODateTimeOffset(isoDate: ISODateRecord, time: TimeRecord | 'start-of-day', offsetBehaviour: ISODateTimeOffsetBehaviour, offsetNanoseconds: Integer, timeZone: TimeZoneIdentifier, disambiguation: 'earlier' | 'later' | 'compatible' | 'reject', offsetOption: 'ignore' | 'use' | 'prefer' | 'reject', matchBehaviour: ISODateTimeMatchBehaviour): PlainCompletion<EpochNanoseconds>;
+export declare function InterpretISODateTimeOffset(isoDate: ISODateRecord, time: TimeRecord | 'start-of-day', offsetBehaviour: ISODateTimeOffsetBehaviour, offsetNanoseconds: Integer, timeZone: AvailableTimeZoneIdentifier, disambiguation: 'earlier' | 'later' | 'compatible' | 'reject', offsetOption: 'ignore' | 'use' | 'prefer' | 'reject', matchBehaviour: ISODateTimeMatchBehaviour): PlainCompletion<EpochNanoseconds>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields */
 export declare function InterpretTemporalDateTimeFields(calendar: KnownCalendarType, fields: CalendarFieldsRecord, overflow: 'constrain' | 'reject'): PlainEvaluator<ISODateTimeRecord>;
@@ -3039,6 +3047,8 @@ export declare function isModuleNamespaceObject(V: Value): V is ModuleNamespaceO
 /** https://tc39.es/proposal-defer-import-eval/#sec-ismodulesccevaluated */
 export declare function IsModuleSCCEvaluated(module: CyclicModuleRecord): boolean;
 
+export declare function isNamedTimeZoneIdentifier(timeZoneString: string): timeZoneString is NamedTimeZoneIdentifier;
+
 export declare function isNonNegativeInteger(argument: number): boolean;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-iso-date-records */
@@ -3065,7 +3075,7 @@ export declare interface ISODateTimeRecord {
 export declare function ISODateTimeWithinLimits(isoDateTime: ISODateTimeRecord): boolean;
 
 /** https://tc39.es/proposal-temporal/#sec-isodatetoepochdays */
-export declare function ISODateToEpochDays(year: Integer, month: Integer, date: Integer): Integer;
+export declare function ISODateToEpochDays(year: Integer, month: Integer, day: Integer): Integer;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodatetofields */
 export declare function ISODateToFields(calendar: KnownCalendarType, isoDate: ISODateRecord, type: 'date' | 'year-month' | 'month-day'): CalendarFieldsRecord;
@@ -3082,8 +3092,7 @@ export declare function ISODayOfYear(isoDate: ISODateRecord): Integer;
 /** https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth */
 export declare function ISODaysInMonth(year: Integer, month: Integer): Integer;
 
-/** https://tc39.es/ecma262/#sec-isoffsettimezoneidentifier */
-export declare function IsOffsetTimeZoneIdentifier(offsetString: string): boolean;
+export declare function isOffsetTimeZoneIdentifier(offsetString: string): offsetString is OffsetTimeZoneIdentifier;
 
 export declare function isOrdinaryObject(value: Value): value is OrdinaryObject;
 
@@ -3726,6 +3735,12 @@ export declare function MV_StringNumericLiteral(StringNumericLiteral: string): N
 
 export declare function NamedEvaluation(F: FunctionDeclaration, name: string | PropertyKeyValue | PrivateName): ValueEvaluator<FunctionObject>;
 
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export declare type NamedTimeZoneIdentifier = string & {
+    specName: 'TimeZoneIdentifier';
+    named: true;
+};
+
 declare type NaN_2 = Num & {
     integral?: false; /** @internal */
     finite?: false; /** @internal */
@@ -3824,7 +3839,7 @@ export declare const NoTimeZone: undefined;
 export declare type NoTimeZone = undefined;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-nudgetocalendarunit */
-export declare function NudgeToCalendarUnit(sign: -1n | 1n, duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier | undefined, calendar: KnownCalendarType, increment: Integer, unit: DateUnit, roundingMode: RoundingMode): PlainCompletion<{
+export declare function NudgeToCalendarUnit(sign: -1n | 1n, duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: AvailableTimeZoneIdentifier | undefined, calendar: KnownCalendarType, increment: Integer, unit: DateUnit, roundingMode: RoundingMode): PlainCompletion<{
     NudgeResult: DurationNudgeResultRecord;
     Total: MathematicalValue;
 }>;
@@ -3833,7 +3848,7 @@ export declare function NudgeToCalendarUnit(sign: -1n | 1n, duration: InternalDu
 export declare function NudgeToDayOrTime(duration: InternalDurationRecord, destEpochNanoseconds: EpochNanoseconds, largestUnit: TemporalUnit, increment: Integer, smallestUnit: TimeUnit | 'day', roundingMode: RoundingMode): PlainCompletion<DurationNudgeResultRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-nudgetozonedtime */
-export declare function NudgeToZonedTime(sign: -1n | 1n, duration: InternalDurationRecord, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier, calendar: KnownCalendarType, increment: Integer, unit: TimeUnit, roundingMode: RoundingMode): PlainCompletion<DurationNudgeResultRecord>;
+export declare function NudgeToZonedTime(sign: -1n | 1n, duration: InternalDurationRecord, isoDateTime: ISODateTimeRecord, timeZone: AvailableTimeZoneIdentifier, calendar: KnownCalendarType, increment: Integer, unit: TimeUnit, roundingMode: RoundingMode): PlainCompletion<DurationNudgeResultRecord>;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
 export declare class NullValue extends PrimitiveValue {
@@ -3977,6 +3992,12 @@ export declare class ObjectValue extends Value implements ObjectInternalMethods<
     mark(m: GCMarker): void;
     static [Symbol.hasInstance]: (value: unknown) => value is ObjectValue;
 }
+
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export declare type OffsetTimeZoneIdentifier = string & {
+    specName: 'TimeZoneIdentifier';
+    offset: true;
+};
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-static-semantics-optionalindirectexportentries */
 export declare function OptionalIndirectExportEntries(node: ParseNode | readonly ParseNode[]): ExportEntry[];
@@ -5505,6 +5526,9 @@ export declare interface PreviouslyImportedNamesEntry {
     ImportedNames: ImportedNamesValue;
 }
 
+/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
+export declare type PrimaryTimeZoneIdentifier = AvailableNamedTimeZoneIdentifier;
+
 export declare type PrimitiveHanding = 'iterate-string-primitives' | 'reject-primitives';
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -5914,7 +5938,7 @@ export declare function RoundNumberToIncrement(quantity: MathematicalValue, incr
 export declare function RoundNumberToIncrementAsIfPositive(quantity: MathematicalValue, increment: Integer, roundingMode: RoundingMode): Integer;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-roundrelativeduration */
-export declare function RoundRelativeDuration(duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier | NoTimeZone, calendar: KnownCalendarType, largestUnit: TemporalUnit, increment: Integer, smallestUnit: TemporalUnit, roundingMode: RoundingMode): PlainCompletion<InternalDurationRecord>;
+export declare function RoundRelativeDuration(duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: AvailableTimeZoneIdentifier | NoTimeZone, calendar: KnownCalendarType, largestUnit: TemporalUnit, increment: Integer, smallestUnit: TemporalUnit, roundingMode: RoundingMode): PlainCompletion<InternalDurationRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-roundtime */
 export declare function RoundTime(time: TimeRecord, increment: Integer, unit: TimeUnit | 'day', roundingMode: RoundingMode): TimeRecord;
@@ -6241,7 +6265,7 @@ export declare type SyntheticModuleRecordInit = AbstractModuleInit & Pick<Synthe
 export declare function SystemDateTime(temporalTimeZoneLike: Value): PlainCompletion<ISODateTimeRecord>;
 
 /** https://tc39.es/proposal-temporal/#sec-systemtimezoneidentifier */
-export declare function SystemTimeZoneIdentifier(): TimeZoneIdentifier;
+export declare function SystemTimeZoneIdentifier(): PrimaryTimeZoneIdentifier | OffsetTimeZoneIdentifier;
 
 /** https://tc39.es/ecma262/#sec-systemutcepochmilliseconds */
 export declare function SystemUTCEpochMilliseconds(): IntegralNumber;
@@ -6407,7 +6431,7 @@ export declare interface TemporalInstantObject extends OrdinaryObject {
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalinstant-tostring */
-export declare function TemporalInstantToString(instant: TemporalInstantObject, timeZone: TimeZoneIdentifier | undefined, precision: Integer | 'minute' | 'auto'): string;
+export declare function TemporalInstantToString(instant: TemporalInstantObject, timeZone: AvailableTimeZoneIdentifier | undefined, precision: Integer | 'minute' | 'auto'): string;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring */
 export declare function TemporalMonthDayToString(monthDay: TemporalPlainMonthDayObject, showCalendar: 'auto' | 'always' | 'never' | 'critical'): string;
@@ -6461,7 +6485,7 @@ export declare function TemporalYearMonthToString(yearMonth: TemporalPlainYearMo
 export declare interface TemporalZonedDateTimeObject extends OrdinaryObject {
     readonly InitializedTemporalZonedDateTime: never;
     readonly EpochNanoseconds: bigint;
-    readonly TimeZone: TimeZoneIdentifier;
+    readonly TimeZone: AvailableTimeZoneIdentifier;
     readonly Calendar: KnownCalendarType;
 }
 
@@ -6589,17 +6613,12 @@ export declare function TimeValueToISODateTimeRecord(tv: FiniteTimeValue): ISODa
 
 export declare function TimeWithinDay(t: FiniteTimeValue): Integer;
 
-export declare function TimeZoneEquals(xTimeZone: TimeZoneIdentifier, yTimeZone: TimeZoneIdentifier): boolean;
-
-/** https://tc39.es/proposal-temporal/#sec-time-zone-identifiers */
-export declare type TimeZoneIdentifier = string & {
-    specName: 'TimeZoneIdentifier';
-};
+export declare function TimeZoneEquals(xTimeZone: AvailableTimeZoneIdentifier, yTimeZone: AvailableTimeZoneIdentifier): boolean;
 
 /** https://tc39.es/ecma262/#sec-time-zone-identifier-record */
 export declare interface TimeZoneIdentifierRecord {
-    readonly Identifier: TimeZoneIdentifier;
-    readonly PrimaryIdentifier: TimeZoneIdentifier;
+    readonly Identifier: AvailableNamedTimeZoneIdentifier;
+    readonly PrimaryIdentifier: AvailableNamedTimeZoneIdentifier;
 }
 
 /** https://tc39.es/ecma262/#sec-toabsoluteindex */
@@ -6729,7 +6748,7 @@ export declare function ToSecondsStringPrecisionRecord(smallestUnit: Exclude<Tim
 export declare function ToString(argument: Value): PlainEvaluator<string>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totalrelativeduration */
-export declare function TotalRelativeDuration(duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: TimeZoneIdentifier | NoTimeZone, calendar: KnownCalendarType, unit: TemporalUnit): PlainCompletion<MathematicalValue>;
+export declare function TotalRelativeDuration(duration: InternalDurationRecord, originEpochNanoseconds: EpochNanoseconds, destEpochNanoseconds: EpochNanoseconds, isoDateTime: ISODateTimeRecord, timeZone: AvailableTimeZoneIdentifier | NoTimeZone, calendar: KnownCalendarType, unit: TemporalUnit): PlainCompletion<MathematicalValue>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totaltimeduration */
 export declare function TotalTimeDuration(timeDuration: TimeDuration, unit: TimeUnit | 'day'): MathematicalValue;
@@ -6755,7 +6774,7 @@ export declare function ToTemporalMonthDay(item: Value, options?: Value): ValueE
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime */
 export declare function ToTemporalTime(item: Value, options?: Value): ValueEvaluator<TemporalPlainTimeObject>;
 
-export declare function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | string): PlainCompletion<TimeZoneIdentifier>;
+export declare function ToTemporalTimeZoneIdentifier(temporalTimeZoneLike: Value | string): PlainCompletion<AvailableTimeZoneIdentifier>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth */
 export declare function ToTemporalYearMonth(item: Value, options?: Value): ValueEvaluator<TemporalPlainYearMonthObject>;

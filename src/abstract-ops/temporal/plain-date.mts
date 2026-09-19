@@ -160,7 +160,7 @@ export function IsValidISODate(year: Integer, month: Integer, day: Integer): boo
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-adddaystoisodate */
 export function AddDaysToISODate(isoDate: ISODateRecord, days: Integer): ISODateRecord {
-  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month - 1n, isoDate.Day) + days;
+  const epochDays = ISODateToEpochDays(isoDate.Year, isoDate.Month, isoDate.Day) + days;
   const epochMilliseconds = EpochDaysToEpochMilliseconds(epochDays, 0n);
   return X(CreateISODateRecord(YearFromTime(Number(epochMilliseconds) as FiniteTimeValue), MonthFromTime(Number(epochMilliseconds) as FiniteTimeValue) + 1n, DateFromTime(Number(epochMilliseconds) as FiniteTimeValue)));
 }

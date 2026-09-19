@@ -1,8 +1,5 @@
 import { bootstrapConstructor } from '../bootstrap.mts';
 import {
-  type TimeZoneIdentifier,
-} from '../../abstract-ops/temporal/addition.mts';
-import {
   FormatOffsetTimeZoneIdentifier,
   GetAvailableNamedTimeZoneIdentifier,
 } from '../../abstract-ops/temporal/time-zone.mts';
@@ -30,13 +27,14 @@ import {
   R,
   CompareEpochNanoseconds,
   IsWithinEpochNanosecondsInterval,
+  type AvailableTimeZoneIdentifier,
 } from '#self';
 
 /** https://tc39.es/proposal-temporal/#sec-properties-of-temporal-zoneddatetime-instances */
 export interface TemporalZonedDateTimeObject extends OrdinaryObject {
   readonly InitializedTemporalZonedDateTime: never;
   readonly EpochNanoseconds: bigint;
-  readonly TimeZone: TimeZoneIdentifier;
+  readonly TimeZone: AvailableTimeZoneIdentifier;
   readonly Calendar: KnownCalendarType;
 }
 export function isTemporalZonedDateTimeObject(o: Value): o is TemporalZonedDateTimeObject {
@@ -63,9 +61,9 @@ function* ZonedDateTimeConstructor([
   let timeZone;
   if (timeZoneParse.OffsetMinutes === undefined) {
     Assert(timeZoneParse.Name !== undefined);
-    const identifierRecord = GetAvailableNamedTimeZoneIdentifier(timeZoneParse.Name as TimeZoneIdentifier);
+    const identifierRecord = GetAvailableNamedTimeZoneIdentifier(timeZoneParse.Name);
     if (identifierRecord === undefined) {
-      return Throw.RangeError('invalid time zone identifier: $1', timeZoneParse.Name as string);
+      return Throw.RangeError('invalid time zone identifier: $1', timeZoneParse.Name);
     }
     timeZone = identifierRecord.Identifier;
   } else {
