@@ -265,7 +265,7 @@ export declare function ArrayBufferCopyAndDetach(_arrayBuffer: Value, newLength:
 export declare interface ArrayBufferObject extends OrdinaryObject {
     readonly ArrayBufferData: DataBlock | null;
     readonly ArrayBufferByteLength: number;
-    readonly ArrayBufferDetachKey: Value;
+    readonly ArrayBufferDetachKey: Value | undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-arraycreate */
@@ -6798,7 +6798,7 @@ export declare function TypedArrayCreate(prototype: ObjectValue): ObjectValue & 
 /** https://tc39.es/ecma262/#sec-typedarraygetelement */
 export declare function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue): BigIntValue | NumberValue | UndefinedValue;
 
-declare const typedArrayInfoByName: {
+export declare const typedArrayInfoByName: {
     readonly Int8Array: {
         readonly IntrinsicName: '%Int8Array%';
         readonly ElementType: 'Int8';

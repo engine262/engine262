@@ -59,7 +59,7 @@ export { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 export { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 export type { FinalizationRegistryCell } from './intrinsics/FinalizationRegistry.mts';
 export type { StringObject } from './intrinsics/String.mts';
-export { typedArrayInfoByType, type TypedArrayTypes, type TypedArrayConstructorNames } from './intrinsics/TypedArray.mts';
+export { typedArrayInfoByName, typedArrayInfoByType, type TypedArrayTypes, type TypedArrayConstructorNames } from './intrinsics/TypedArray.mts';
 export type { ISODateRecord } from './intrinsics/Temporal/PlainDate.mts';
 export type { ISODateTimeRecord } from './intrinsics/Temporal/PlainDateTime.mts';
 export type { ISOYearMonthRecord } from './intrinsics/Temporal/PlainYearMonth.mts';
