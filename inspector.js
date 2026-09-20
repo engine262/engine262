@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 15d4a8a3913351c829d0410c025e714c974565fb
+ * engine262 0.0.1 f78bd24736daba0b2a69ea0bb4b7cffd3dedd54a
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -88,21 +88,21 @@
   const Symbol$1 = {
     toRemoteObject: (value, getObjectId) => ({
       type: 'symbol',
-      description: engine262_mjs.SymbolDescriptiveString(value).stringValue(),
+      description: engine262_mjs.SymbolDescriptiveString(value),
       objectId: getObjectId(value)
     }),
     toPropertyPreview: (name, value) => ({
       name,
       type: 'symbol',
-      value: engine262_mjs.SymbolDescriptiveString(value).stringValue()
+      value: engine262_mjs.SymbolDescriptiveString(value)
     }),
     toObjectPreview: value => ({
       type: 'symbol',
-      description: engine262_mjs.SymbolDescriptiveString(value).stringValue(),
+      description: engine262_mjs.SymbolDescriptiveString(value),
       overflow: false,
       properties: []
     }),
-    toDescription: value => engine262_mjs.SymbolDescriptiveString(value).stringValue()
+    toDescription: value => engine262_mjs.SymbolDescriptiveString(value)
   };
   const String$1 = {
     toRemoteObject: value => ({
@@ -385,7 +385,10 @@
           const array = new engine262_mjs.ObjectValue([]);
           array.DefineOwnProperty = engine262_mjs.ArrayExoticObjectInternalMethods.DefineOwnProperty;
           array.properties.set('length', engine262_mjs.Descriptor({
-            Value: engine262_mjs.F(val.length)
+            Value: engine262_mjs.F(val.length),
+            Configurable: true,
+            Enumerable: false,
+            Writable: true
           }));
           for (const [index, item] of val.entries()) {
             let value;
@@ -397,14 +400,23 @@
               }
               value = new engine262_mjs.ObjectValue(['InspectorEntry']);
               value.properties.set('key', engine262_mjs.Descriptor({
-                Value: item.Key
+                Value: item.Key,
+                Configurable: true,
+                Enumerable: false,
+                Writable: true
               }));
               value.properties.set('value', engine262_mjs.Descriptor({
-                Value: item.Value
+                Value: item.Value,
+                Configurable: true,
+                Enumerable: false,
+                Writable: true
               }));
             }
             array.properties.set(engine262_mjs.Value(index.toString()), engine262_mjs.Descriptor({
-              Value: value
+              Value: value,
+              Configurable: true,
+              Enumerable: false,
+              Writable: true
             }));
           }
           value = getInspector(array).toRemoteObject(array, getObjectId, context, generatePreview);
@@ -444,12 +456,12 @@
     } else if (value instanceof engine262_mjs.PrivateName) {
       return value.Description;
     } else {
-      return engine262_mjs.SymbolDescriptiveString(value).stringValue();
+      return engine262_mjs.SymbolDescriptiveString(value);
     }
   }
   function propertyToPropertyPreview(key, desc, context) {
     const name = propertyNameToString(key);
-    if (desc.Getter || desc.Setter) {
+    if (desc.Get || desc.Set) {
       return {
         name,
         type: 'accessor'
@@ -534,7 +546,7 @@
           for (const key of module.Exports) {
             const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
             if (completion instanceof engine262_mjs.NormalCompletion) {
-              result.push([key.stringValue(), completion.Value]);
+              result.push([key, completion.Value]);
             }
           }
           return engine262_mjs.Value.undefined;
@@ -549,7 +561,7 @@
           const completion = engine262_mjs.EnsureCompletion(engine262_mjs.skipDebugger(engine262_mjs.Get(module, key)));
           if (completion instanceof engine262_mjs.NormalCompletion) {
             result.push({
-              name: key.stringValue(),
+              name: key,
               value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
               writable: false,
               configurable: false,
@@ -562,7 +574,7 @@
               return yield* engine262_mjs.Get(module, key);
             }, 0, 'Module.evaluate', [], realm);
             result.push({
-              name: key.stringValue(),
+              name: key,
               get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
               set: {
                 type: 'undefined'
@@ -580,7 +592,7 @@
     }
   });
 
-  const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
+  const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource}/${value.OriginalFlags}`);
 
   const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
     if (engine262_mjs.IsCallable(value.ProxyTarget)) {
@@ -661,7 +673,7 @@
     }
   });
   const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(${value.ByteLength})`);
-  const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
+  const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName}(${value.ArrayLength})`);
 
   const Date$1 = new ObjectInspector('Date', 'date', value => {
     if (!globalThis.Number.isFinite(value.DateValue)) {
@@ -966,8 +978,8 @@
             name: value.Key.Description
           };
           if (value.Value) desc.value = wrap(value.Value);
-          if (value.Getter) desc.get = wrap(value.Getter);
-          if (value.Setter) desc.set = wrap(value.Setter);
+          if (value.Get) desc.get = wrap(value.Get);
+          if (value.Set) desc.set = wrap(value.Set);
           privateProperties.push(desc);
         });
         const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
@@ -990,15 +1002,15 @@
               continue;
             }
             const descriptor = {
-              name: key instanceof engine262_mjs.JSStringValue ? key.stringValue() : engine262_mjs.SymbolDescriptiveString(key).stringValue(),
-              writable: desc.Writable === engine262_mjs.Value.true,
-              configurable: desc.Configurable === engine262_mjs.Value.true,
-              enumerable: desc.Enumerable === engine262_mjs.Value.true,
+              name: key instanceof engine262_mjs.JSStringValue ? key.stringValue() : engine262_mjs.SymbolDescriptiveString(key),
+              writable: desc.Writable ?? false,
+              configurable: desc.Configurable,
+              enumerable: desc.Enumerable,
               isOwn: p === object
             };
             if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
-            if (desc.Getter) descriptor.get = wrap(desc.Getter);
-            if (desc.Setter) descriptor.set = wrap(desc.Setter);
+            if (desc.Get) descriptor.get = wrap(desc.Get);
+            if (desc.Set) descriptor.set = wrap(desc.Set);
             if (key instanceof engine262_mjs.SymbolValue) descriptor.symbol = wrap(key);
             properties.push(descriptor);
           }
@@ -1106,7 +1118,7 @@
   function HostGetThisEnvironment(env) {
     while (env !== null) {
       const exists = env.HasThisBinding();
-      if (exists === engine262_mjs.Value.true) {
+      if (exists) {
         const value = env.GetThisBinding();
         if (value instanceof engine262_mjs.ThrowCompletion) {
           return engine262_mjs.Value.undefined;
@@ -1127,9 +1139,10 @@
           continue;
         }
         object.properties.set(key, engine262_mjs.Descriptor({
-          Enumerable: engine262_mjs.isArgumentExoticObject(value) ? engine262_mjs.Value.false : engine262_mjs.Value.true,
+          Enumerable: engine262_mjs.isArgumentExoticObject(value) ? false : true,
           Value: value,
-          Writable: binding.mutable ? engine262_mjs.Value.true : engine262_mjs.Value.false
+          Writable: binding.mutable || false,
+          Configurable: true
         }));
       }
       let type = 'block';
@@ -1147,7 +1160,7 @@
       };
     } else if (record instanceof engine262_mjs.ObjectEnvironmentRecord) {
       return {
-        type: record.IsWithEnvironment === engine262_mjs.Value.true ? 'with' : 'global',
+        type: record.IsWithEnvironment ? 'with' : 'global',
         object: record.BindingObject
       };
     } else if (record instanceof engine262_mjs.GlobalEnvironmentRecord) {
@@ -1659,9 +1672,9 @@
     const pop = realm.pushTopContext();
     const console = engine262_mjs.OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
     engine262_mjs.X(engine262_mjs.DefinePropertyOrThrow(realm.GlobalObject, 'console', engine262_mjs.Descriptor({
-      Configurable: engine262_mjs.Value.true,
-      Enumerable: engine262_mjs.Value.false,
-      Writable: engine262_mjs.Value.true,
+      Configurable: true,
+      Enumerable: false,
+      Writable: true,
       Value: console
     })));
     consoleMethods.forEach(method => {

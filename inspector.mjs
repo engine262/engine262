@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 15d4a8a3913351c829d0410c025e714c974565fb
+ * engine262 0.0.1 f78bd24736daba0b2a69ea0bb4b7cffd3dedd54a
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -84,21 +84,21 @@ const Boolean$1 = {
 const Symbol$1 = {
   toRemoteObject: (value, getObjectId) => ({
     type: 'symbol',
-    description: SymbolDescriptiveString(value).stringValue(),
+    description: SymbolDescriptiveString(value),
     objectId: getObjectId(value)
   }),
   toPropertyPreview: (name, value) => ({
     name,
     type: 'symbol',
-    value: SymbolDescriptiveString(value).stringValue()
+    value: SymbolDescriptiveString(value)
   }),
   toObjectPreview: value => ({
     type: 'symbol',
-    description: SymbolDescriptiveString(value).stringValue(),
+    description: SymbolDescriptiveString(value),
     overflow: false,
     properties: []
   }),
-  toDescription: value => SymbolDescriptiveString(value).stringValue()
+  toDescription: value => SymbolDescriptiveString(value)
 };
 const String$1 = {
   toRemoteObject: value => ({
@@ -381,7 +381,10 @@ class ObjectInspector {
         const array = new ObjectValue([]);
         array.DefineOwnProperty = ArrayExoticObjectInternalMethods.DefineOwnProperty;
         array.properties.set('length', Descriptor({
-          Value: F(val.length)
+          Value: F(val.length),
+          Configurable: true,
+          Enumerable: false,
+          Writable: true
         }));
         for (const [index, item] of val.entries()) {
           let value;
@@ -393,14 +396,23 @@ class ObjectInspector {
             }
             value = new ObjectValue(['InspectorEntry']);
             value.properties.set('key', Descriptor({
-              Value: item.Key
+              Value: item.Key,
+              Configurable: true,
+              Enumerable: false,
+              Writable: true
             }));
             value.properties.set('value', Descriptor({
-              Value: item.Value
+              Value: item.Value,
+              Configurable: true,
+              Enumerable: false,
+              Writable: true
             }));
           }
           array.properties.set(Value(index.toString()), Descriptor({
-            Value: value
+            Value: value,
+            Configurable: true,
+            Enumerable: false,
+            Writable: true
           }));
         }
         value = getInspector(array).toRemoteObject(array, getObjectId, context, generatePreview);
@@ -440,12 +452,12 @@ function propertyNameToString(value) {
   } else if (value instanceof PrivateName) {
     return value.Description;
   } else {
-    return SymbolDescriptiveString(value).stringValue();
+    return SymbolDescriptiveString(value);
   }
 }
 function propertyToPropertyPreview(key, desc, context) {
   const name = propertyNameToString(key);
-  if (desc.Getter || desc.Setter) {
+  if (desc.Get || desc.Set) {
     return {
       name,
       type: 'accessor'
@@ -530,7 +542,7 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
         for (const key of module.Exports) {
           const completion = EnsureCompletion(skipDebugger(Get(module, key)));
           if (completion instanceof NormalCompletion) {
-            result.push([key.stringValue(), completion.Value]);
+            result.push([key, completion.Value]);
           }
         }
         return Value.undefined;
@@ -545,7 +557,7 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
         const completion = EnsureCompletion(skipDebugger(Get(module, key)));
         if (completion instanceof NormalCompletion) {
           result.push({
-            name: key.stringValue(),
+            name: key,
             value: getInspector(completion.Value).toRemoteObject(completion.Value, getObjectId, context, generatePreview),
             writable: false,
             configurable: false,
@@ -558,7 +570,7 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
             return yield* Get(module, key);
           }, 0, 'Module.evaluate', [], realm);
           result.push({
-            name: key.stringValue(),
+            name: key,
             get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),
             set: {
               type: 'undefined'
@@ -576,7 +588,7 @@ const Module = new ObjectInspector('Module', undefined, () => 'Module', {
   }
 });
 
-const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
+const RegExp = new ObjectInspector('RegExp', 'regexp', value => `/${value.OriginalSource}/${value.OriginalFlags}`);
 
 const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
   if (IsCallable(value.ProxyTarget)) {
@@ -657,7 +669,7 @@ const ArrayBuffer = new ObjectInspector('ArrayBuffer', 'arraybuffer', value => `
   }
 });
 const DataView = new ObjectInspector('DataView', 'dataview', value => `DataView(${value.ByteLength})`);
-const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
+const TypedArray = new ObjectInspector('TypedArray', 'typedarray', value => `${value.TypedArrayName}(${value.ArrayLength})`);
 
 const Date$1 = new ObjectInspector('Date', 'date', value => {
   if (!globalThis.Number.isFinite(value.DateValue)) {
@@ -962,8 +974,8 @@ class InspectorContext {
           name: value.Key.Description
         };
         if (value.Value) desc.value = wrap(value.Value);
-        if (value.Getter) desc.get = wrap(value.Getter);
-        if (value.Setter) desc.set = wrap(value.Setter);
+        if (value.Get) desc.get = wrap(value.Get);
+        if (value.Set) desc.set = wrap(value.Set);
         privateProperties.push(desc);
       });
       const exoticProperties = getInspector(object).exoticProperties?.(object, val => this.#internObject(val), this, generatePreview);
@@ -986,15 +998,15 @@ class InspectorContext {
             continue;
           }
           const descriptor = {
-            name: key instanceof JSStringValue ? key.stringValue() : SymbolDescriptiveString(key).stringValue(),
-            writable: desc.Writable === Value.true,
-            configurable: desc.Configurable === Value.true,
-            enumerable: desc.Enumerable === Value.true,
+            name: key instanceof JSStringValue ? key.stringValue() : SymbolDescriptiveString(key),
+            writable: desc.Writable ?? false,
+            configurable: desc.Configurable,
+            enumerable: desc.Enumerable,
             isOwn: p === object
           };
           if (desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value)) descriptor.value = wrap(desc.Value);
-          if (desc.Getter) descriptor.get = wrap(desc.Getter);
-          if (desc.Setter) descriptor.set = wrap(desc.Setter);
+          if (desc.Get) descriptor.get = wrap(desc.Get);
+          if (desc.Set) descriptor.set = wrap(desc.Set);
           if (key instanceof SymbolValue) descriptor.symbol = wrap(key);
           properties.push(descriptor);
         }
@@ -1102,7 +1114,7 @@ class InspectorContext {
 function HostGetThisEnvironment(env) {
   while (env !== null) {
     const exists = env.HasThisBinding();
-    if (exists === Value.true) {
+    if (exists) {
       const value = env.GetThisBinding();
       if (value instanceof ThrowCompletion) {
         return Value.undefined;
@@ -1123,9 +1135,10 @@ function getDisplayObjectFromEnvironmentRecord(record) {
         continue;
       }
       object.properties.set(key, Descriptor({
-        Enumerable: isArgumentExoticObject(value) ? Value.false : Value.true,
+        Enumerable: isArgumentExoticObject(value) ? false : true,
         Value: value,
-        Writable: binding.mutable ? Value.true : Value.false
+        Writable: binding.mutable || false,
+        Configurable: true
       }));
     }
     let type = 'block';
@@ -1143,7 +1156,7 @@ function getDisplayObjectFromEnvironmentRecord(record) {
     };
   } else if (record instanceof ObjectEnvironmentRecord) {
     return {
-      type: record.IsWithEnvironment === Value.true ? 'with' : 'global',
+      type: record.IsWithEnvironment ? 'with' : 'global',
       object: record.BindingObject
     };
   } else if (record instanceof GlobalEnvironmentRecord) {
@@ -1655,9 +1668,9 @@ function createConsole(realm, defaultBehaviour) {
   const pop = realm.pushTopContext();
   const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
   X(DefinePropertyOrThrow(realm.GlobalObject, 'console', Descriptor({
-    Configurable: Value.true,
-    Enumerable: Value.false,
-    Writable: Value.true,
+    Configurable: true,
+    Enumerable: false,
+    Writable: true,
     Value: console
   })));
   consoleMethods.forEach(method => {

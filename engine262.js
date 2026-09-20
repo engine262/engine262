@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 15d4a8a3913351c829d0410c025e714c974565fb
+ * engine262 0.0.1 f78bd24736daba0b2a69ea0bb4b7cffd3dedd54a
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -38,7 +38,7 @@
     *GetOwnProperty(P) {
       const args = this;
       const desc = OrdinaryGetOwnProperty(args, P);
-      if (desc === Value.undefined) {
+      if (desc === undefined) {
         return desc;
       }
       const map = args.ParameterMap;
@@ -51,7 +51,7 @@
         _isMapped = _isMapped.Value;
       }
       const isMapped = _isMapped;
-      if (isMapped === Value.true) {
+      if (isMapped) {
         /* ReturnIfAbrupt */let _ArgumentExoticObject = yield* Get(map, P);
         /* ReturnIfAbrupt */if (_ArgumentExoticObject instanceof Completion) {
           if (_ArgumentExoticObject instanceof AbruptCompletion) return _ArgumentExoticObject;
@@ -77,8 +77,8 @@
       }
       const isMapped = _isMapped2;
       let newArgDesc = Desc;
-      if (isMapped === Value.true && IsDataDescriptor(Desc) === true) {
-        if (Desc.Value === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
+      if (isMapped && IsDataDescriptor(Desc) === true) {
+        if (Desc.Value === undefined && Desc.Writable !== undefined && !Desc.Writable) {
           /* X */let _ArgumentExoticObject2 = Get(map, P);
           /* node:coverage ignore next */if (_ArgumentExoticObject2 && typeof _ArgumentExoticObject2 === 'object' && 'next' in _ArgumentExoticObject2) _ArgumentExoticObject2 = skipDebugger(_ArgumentExoticObject2);
           /* node:coverage ignore next */if (_ArgumentExoticObject2 instanceof Completion) {
@@ -99,23 +99,30 @@
         _allowed = _allowed.Value;
       }
       const allowed = _allowed;
-      if (allowed === Value.false) {
-        return Value.false;
+      if (!allowed) {
+        return false;
       }
-      if (isMapped === Value.true) {
+      if (isMapped) {
         if (IsAccessorDescriptor(Desc) === true) {
           yield* map.Delete(P);
         } else {
           if (Desc.Value !== undefined) {
-            const setStatus = yield* Set$1(map, P, Desc.Value, Value.false);
-            /* Assert */ /* node:coverage ignore next */if (!(setStatus === Value.true)) throw new Assert.Error("setStatus === Value.true");
+            /* X */let _setStatus = yield* Set$1(map, P, Desc.Value, false);
+            /* node:coverage ignore next */if (_setStatus instanceof Completion) {
+              /* node:coverage ignore next */if (_setStatus instanceof AbruptCompletion) throw new Assert.Error("! yield* Set(map, P, Desc.Value, false) returned an abrupt completion", {
+                cause: _setStatus
+              });
+              _setStatus = _setStatus.Value;
+            }
+            const setStatus = _setStatus;
+            /* Assert */ /* node:coverage ignore next */if (!setStatus) throw new Assert.Error("setStatus");
           }
-          if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
+          if (Desc.Writable !== undefined && !Desc.Writable) {
             yield* map.Delete(P);
           }
         }
       }
-      return Value.true;
+      return true;
     },
     *Get(P, Receiver) {
       const args = this;
@@ -129,7 +136,7 @@
         _isMapped3 = _isMapped3.Value;
       }
       const isMapped = _isMapped3;
-      if (isMapped === Value.false) {
+      if (!isMapped) {
         return yield* OrdinaryGet(args, P, Receiver);
       } else {
         return yield* Get(map, P);
@@ -151,11 +158,18 @@
           });
           _ArgumentExoticObject3 = _ArgumentExoticObject3.Value;
         }
-        isMapped = _ArgumentExoticObject3 === Value.true;
+        isMapped = _ArgumentExoticObject3;
       }
       if (isMapped) {
-        const setStatus = yield* Set$1(map, P, V, Value.false);
-        /* Assert */ /* node:coverage ignore next */if (!(setStatus === Value.true)) throw new Assert.Error("setStatus === Value.true");
+        /* X */let _setStatus2 = yield* Set$1(map, P, V, false);
+        /* node:coverage ignore next */if (_setStatus2 instanceof Completion) {
+          /* node:coverage ignore next */if (_setStatus2 instanceof AbruptCompletion) throw new Assert.Error("! yield* Set(map!, P, V, false) returned an abrupt completion", {
+            cause: _setStatus2
+          });
+          _setStatus2 = _setStatus2.Value;
+        }
+        const setStatus = _setStatus2;
+        /* Assert */ /* node:coverage ignore next */if (!setStatus) throw new Assert.Error("setStatus");
       }
       return yield* OrdinarySet(args, P, V, Receiver);
     },
@@ -177,7 +191,7 @@
         _result = _result.Value;
       }
       const result = _result;
-      if (result === Value.true && isMapped === Value.true) {
+      if (result && isMapped) {
         yield* map.Delete(P);
       }
       return result;
@@ -188,16 +202,16 @@
   function CreateUnmappedArgumentsObject(argumentsList) {
     const len = argumentsList.length;
     const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
-    obj.ParameterMap = Value.undefined;
+    obj.ParameterMap = undefined;
     /* X */let _temp = DefinePropertyOrThrow(obj, 'length', exports.Descriptor({
       Value: F(len),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'length', Descriptor({\n    Value: F(len),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'length', Descriptor({\n    Value: F(len),\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -225,26 +239,26 @@
     }
     /* X */let _temp4 = DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, exports.Descriptor({
       Value: exports.surroundingAgent.intrinsic('%Array.prototype.values%'),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
     /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({\n    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({\n    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp4
       });
       _temp4 = _temp4.Value;
     }
     /* X */let _temp5 = DefinePropertyOrThrow(obj, 'callee', exports.Descriptor({
-      Getter: exports.surroundingAgent.intrinsic('%ThrowTypeError%'),
-      Setter: exports.surroundingAgent.intrinsic('%ThrowTypeError%'),
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Get: exports.surroundingAgent.intrinsic('%ThrowTypeError%'),
+      Set: exports.surroundingAgent.intrinsic('%ThrowTypeError%'),
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
     /* node:coverage ignore next */if (_temp5 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'callee', Descriptor({\n    Getter: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Setter: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'callee', Descriptor({\n    Get: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Set: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp5
       });
       _temp5 = _temp5.Value;
@@ -257,7 +271,7 @@
   function MakeArgGetter(name, env) {
     // 1. Let getterClosure be a new Abstract Closure with no parameters that captures name and env and performs the following steps when called:
     //   a. Return env.GetBindingValue(name, false).
-    const getterClosure = () => env.GetBindingValue(name, Value.false);
+    const getterClosure = () => env.GetBindingValue(name, false);
     // 2. Let getter be ! CreateBuiltinFunction(getterClosure, 0, "", « »).
     /* X */let _getter = CreateBuiltinFunction(getterClosure, 0, Value(''), ['Name', 'Env']);
     /* node:coverage ignore next */if (_getter && typeof _getter === 'object' && 'next' in _getter) _getter = skipDebugger(_getter);
@@ -278,7 +292,7 @@
   function MakeArgSetter(name, env) {
     // 1. Let setterClosure be a new Abstract Closure with parameters (value) that captures name and env and performs the following steps when called:
     //   a. Return env.SetMutableBinding(name, value, false).
-    const setterClosure = ([value = Value.undefined]) => env.SetMutableBinding(name, value, Value.false);
+    const setterClosure = ([value = Value.undefined]) => env.SetMutableBinding(name, value, false);
     // 2. Let setter be ! CreateBuiltinFunction(setterClosure, 1, "", « »).
     /* X */let _setter = CreateBuiltinFunction(setterClosure, 1, Value(''), ['Name', 'Env']);
     /* node:coverage ignore next */if (_setter && typeof _setter === 'object' && 'next' in _setter) _setter = skipDebugger(_setter);
@@ -342,18 +356,18 @@
     }
     /* X */let _temp8 = DefinePropertyOrThrow(obj, 'length', exports.Descriptor({
       Value: F(len),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
     /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'length', Descriptor({\n    Value: F(len),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'length', Descriptor({\n    Value: F(len),\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp8
       });
       _temp8 = _temp8.Value;
     }
-    const mappedNames = new JSStringSet();
+    const mappedNames = new globalThis.Set();
     index = numberOfParameters - 1;
     while (index >= 0) {
       const name = parameterNames[index];
@@ -371,14 +385,14 @@
             _temp0 = _temp0.Value;
           }
           /* X */let _temp9 = map.DefineOwnProperty(_temp0, exports.Descriptor({
-            Setter: p,
-            Getter: g,
-            Enumerable: Value.false,
-            Configurable: Value.true
+            Set: p,
+            Get: g,
+            Enumerable: false,
+            Configurable: true
           }));
           /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
           /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! map.DefineOwnProperty(X(ToString(F(index))), Descriptor({\n          Setter: p,\n          Getter: g,\n          Enumerable: Value.false,\n          Configurable: Value.true,\n        })) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! map.DefineOwnProperty(X(ToString(F(index))), Descriptor({\n          Set: p,\n          Get: g,\n          Enumerable: false,\n          Configurable: true,\n        })) returned an abrupt completion", {
               cause: _temp9
             });
             _temp9 = _temp9.Value;
@@ -389,26 +403,26 @@
     }
     /* X */let _temp1 = DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, exports.Descriptor({
       Value: exports.surroundingAgent.intrinsic('%Array.prototype.values%'),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
     /* node:coverage ignore next */if (_temp1 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({\n    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({\n    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp1
       });
       _temp1 = _temp1.Value;
     }
     /* X */let _temp10 = DefinePropertyOrThrow(obj, 'callee', exports.Descriptor({
       Value: func,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
     /* node:coverage ignore next */if (_temp10 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'callee', Descriptor({\n    Value: func,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'callee', Descriptor({\n    Value: func,\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp10
       });
       _temp10 = _temp10.Value;
@@ -451,11 +465,11 @@
       case 'BindingIdentifier':
       case 'IdentifierReference':
       case 'LabelIdentifier':
-        return Value(node.name);
+        return node.name;
       case 'PrivateIdentifier':
-        return Value(`#${node.name}`);
+        return `#${node.name}`;
       case 'StringLiteral':
-        return Value(node.value);
+        return node.value;
       /* node:coverage ignore next */default:
         /* node:coverage ignore next */
         throw OutOfRange.nonExhaustive(node);
@@ -519,8 +533,9 @@
   /** https://tc39.es/ecma262/#sec-numericvalue */
 
   function NumericValue(node) {
-    return Value(node.value);
+    return node.value;
   }
+  NumericValue.section = 'https://tc39.es/ecma262/#sec-numericvalue';
 
   /** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
   function IsAnonymousFunctionDefinition(expr) {
@@ -639,7 +654,7 @@
         if (node.BindingIdentifier) {
           return BoundNames(node.BindingIdentifier);
         }
-        return [Value('*default*')];
+        return ['*default*'];
       case 'ImportDeclaration':
         if (node.ImportedBinding) {
           return BoundNames(node.ImportedBinding);
@@ -666,7 +681,7 @@
           return declarationNames;
         }
         if (node.AssignmentExpression) {
-          return [Value('*default*')];
+          return ['*default*'];
         }
         /* node:coverage ignore next */
         throw OutOfRange.exhaustive(node);
@@ -1297,8 +1312,8 @@
     const attributes = [];
     for (const attribute of node.WithEntries) {
       attributes.push({
-        Key: StringValue(attribute.AttributeKey).value,
-        Value: StringValue(attribute.AttributeValue).value
+        Key: StringValue(attribute.AttributeKey),
+        Value: StringValue(attribute.AttributeValue)
       });
     }
     attributes.sort((a, b) => a.Key < b.Key ? -1 : 1);
@@ -1350,7 +1365,7 @@
       case 'NamedImports':
         return ImportedNames(node.ImportsList);
       case 'ImportSpecifier':
-        return [StringValue(node.ModuleExportName ?? node.ImportedBinding).stringValue()];
+        return [StringValue(node.ModuleExportName ?? node.ImportedBinding)];
       case 'ExportFromClause':
         if (node.ModuleExportName) {
           return 'all';
@@ -1359,7 +1374,7 @@
       case 'NamedExports':
         return ImportedNames(node.ExportsList);
       case 'ExportSpecifier':
-        return [StringValue(node.localName).stringValue()];
+        return [StringValue(node.localName)];
       /* node:coverage ignore next */default:
         /* node:coverage ignore next */
         throw OutOfRange.nonExhaustive(node);
@@ -1372,7 +1387,7 @@
     const specifier = StringValue(node.FromClause);
     const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
     return {
-      Specifier: specifier.value,
+      Specifier: specifier,
       Attributes: attributes,
       Phase: 'evaluation',
       ImportedNames: importedNames
@@ -1415,7 +1430,7 @@
           const importedNames = node.ImportClause ? ImportedNames(node.ImportClause) : [];
           const attributes = node.WithClause ? WithClauseToAttributes(node.WithClause) : [];
           return [{
-            Specifier: specifier.value,
+            Specifier: specifier,
             Attributes: attributes,
             Phase: node.Phase,
             ImportedNames: importedNames
@@ -1511,7 +1526,7 @@
             {
               // `export` NamedExports `;`
               // 1. Return ExportEntriesForModule(NamedExports, null).
-              return ExportEntriesForModule(node.NamedExports, Value.null);
+              return ExportEntriesForModule(node.NamedExports, null);
             }
           case !!node.VariableStatement:
             {
@@ -1524,8 +1539,8 @@
               for (const name of names) {
                 // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
                 entries.push({
-                  ModuleRequest: Value.null,
-                  ImportName: Value.null,
+                  ModuleRequest: null,
+                  ImportName: null,
                   LocalName: name,
                   ExportName: name
                 });
@@ -1544,8 +1559,8 @@
               for (const name of names) {
                 // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
                 entries.push({
-                  ModuleRequest: Value.null,
-                  ImportName: Value.null,
+                  ModuleRequest: null,
+                  ImportName: null,
                   LocalName: name,
                   ExportName: name
                 });
@@ -1562,10 +1577,10 @@
               const localName = names[0];
               // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
               return [{
-                ModuleRequest: Value.null,
-                ImportName: Value.null,
+                ModuleRequest: null,
+                ImportName: null,
                 LocalName: localName,
-                ExportName: Value('default')
+                ExportName: 'default'
               }];
             }
           case node.default && !!node.ClassDeclaration:
@@ -1577,10 +1592,10 @@
               const localName = names[0];
               // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
               return [{
-                ModuleRequest: Value.null,
-                ImportName: Value.null,
+                ModuleRequest: null,
+                ImportName: null,
                 LocalName: localName,
-                ExportName: Value('default')
+                ExportName: 'default'
               }];
             }
           case node.default && !!node.AssignmentExpression:
@@ -1588,10 +1603,10 @@
               // `export` `default` AssignmentExpression `;`
               // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: "*default*", [[ExportName]]: "default" }.
               const entry = {
-                ModuleRequest: Value.null,
-                ImportName: Value.null,
-                LocalName: Value('*default*'),
-                ExportName: Value('default')
+                ModuleRequest: null,
+                ImportName: null,
+                LocalName: '*default*',
+                ExportName: 'default'
               };
               // 2. Return a new List containing entry.
               return [entry];
@@ -1783,13 +1798,14 @@
       return null;
     }
     getFunctionName() {
+      if (this.context.Function instanceof NullValue) return null;
       return CallSite.getFunctionName(this.context.Function);
     }
     getSpecifier() {
       if (this.context.HostDefined?.scriptId && exports.surroundingAgent.parsedSources.get(this.context.HostDefined.scriptId) instanceof DynamicParsedCodeRecord) {
         return null;
       }
-      if (!(this.context.ScriptOrModule instanceof NullValue)) {
+      if (this.context.ScriptOrModule) {
         return this.context.ScriptOrModule.HostDefined?.specifier;
       }
       return null;
@@ -1799,7 +1815,7 @@
       if (context) {
         return context;
       }
-      if (!(this.context.ScriptOrModule instanceof NullValue)) {
+      if (this.context.ScriptOrModule) {
         return this.context.ScriptOrModule.HostDefined?.scriptId;
       }
       return undefined;
@@ -1949,7 +1965,7 @@
         } else {
           return;
         }
-      } else if (!(reaction.Capability instanceof UndefinedValue)) {
+      } else if (reaction.Capability) {
         if ('PromiseState' in reaction.Capability.Promise) {
           promise = reaction.Capability.Promise;
         } else {
@@ -3363,7 +3379,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
           const entry = {
             ModuleRequest: module,
-            ImportName: importName,
+            ImportName: Value(importName),
             LocalName: localName,
             NamespaceNamesFilter: []
           };
@@ -3375,7 +3391,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: localName, [[LocalName]]: localName }.
           const entry = {
             ModuleRequest: module,
-            ImportName: localName,
+            ImportName: Value(localName),
             LocalName: localName,
             NamespaceNamesFilter: []
           };
@@ -3406,7 +3422,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const entry = {
             ModuleRequest: module,
             ImportName: 'namespace',
-            LocalName: Value.null,
+            LocalName: null,
             ExportName: exportName,
             NamespaceNamesFilter: []
           };
@@ -3417,8 +3433,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const entry = {
             ModuleRequest: module,
             ImportName: 'all-but-default',
-            LocalName: Value.null,
-            ExportName: Value.null,
+            LocalName: null,
+            ExportName: null,
             NamespaceNamesFilter: []
           };
           // 2. Return a new List containing entry.
@@ -3430,17 +3446,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const exportName = StringValue(node.exportName);
           let localName;
           let importName;
-          if (module === Value.null) {
+          if (module === null) {
             localName = sourceName;
-            importName = Value.null;
+            importName = null;
           } else {
             // 4. Else,
-            localName = Value.null;
+            localName = null;
             importName = sourceName;
           }
           return [{
             ModuleRequest: module,
-            ImportName: importName,
+            ImportName: importName === null ? null : Value(importName),
             LocalName: localName,
             ExportName: exportName,
             NamespaceNamesFilter: []
@@ -3453,7 +3469,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const entry = {
             ModuleRequest: module,
             ImportName: 'filtered-namespace',
-            LocalName: Value.null,
+            LocalName: null,
             ExportName: exportName,
             NamespaceNamesFilter: importedNames
           };
@@ -3684,8 +3700,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   CodePointsToString.section = 'https://tc39.es/ecma262/#sec-codepointstostring';
 
-  function IsStringWellFormedUnicode(string_) {
-    const string = string_.stringValue();
+  function IsStringWellFormedUnicode(string) {
     // 1. Let _strLen_ be the number of code units in string.
     const strLen = string.length;
     // 2. Let k be 0.
@@ -3907,12 +3922,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
         return {
           __proto__: NormalCompletion.prototype,
-          Value: NumericValue(Literal)
+          Value: Value(NumericValue(Literal))
         };
       case 'StringLiteral':
         return {
           __proto__: NormalCompletion.prototype,
-          Value: StringValue(Literal)
+          Value: Value(StringValue(Literal))
         };
       /* node:coverage ignore next */default:
         /* node:coverage ignore next */
@@ -3945,7 +3960,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     if (!BindingIdentifier) {
       // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and ''
-      return yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value(''), sourceText, decorators);
+      return yield* ClassDefinitionEvaluation(ClassTail, undefined, '', sourceText, decorators);
     }
     // 1. Let className be StringValue of BindingIdentifier.
     const className = StringValue(BindingIdentifier);
@@ -4418,9 +4433,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let classScope be NewDeclarativeEnvironment(env).
     const classScope = new DeclarativeEnvironmentRecord(env);
     // 3. If classBinding is not undefined, then
-    if (!(classBinding instanceof UndefinedValue)) {
+    if (classBinding !== undefined) {
       // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
-      classScope.CreateImmutableBinding(classBinding, Value.true);
+      classScope.CreateImmutableBinding(classBinding, true);
     }
     // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
     const outerPrivateEnvironment = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
@@ -4431,7 +4446,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do
       for (const dn of PrivateBoundIdentifiers(ClassBody)) {
         // i. If classPrivateEnvironment.[[Names]] contains a Private Name whose [[Description]] is dn, then
-        const existing = classPrivateEnvironment.Names.find(n => n.Description === dn.stringValue());
+        const existing = classPrivateEnvironment.Names.find(n => n.Description === dn);
         if (existing) ; else {
           // ii. Else,
           // 1. Let name be a new Private Name whose [[Description]] value is dn.
@@ -4594,10 +4609,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // c. Perform SetFunctionName(F, className).
       SetFunctionName(F, className);
     }
-    F.HostInitialName = className;
+    F.HostInitialName = typeof className === 'string' ? Value(className) : className;
     F.SourceText = sourceText;
     // 16. Perform MakeConstructor(F, false, proto).
-    MakeConstructor(F, Value.false, proto);
+    MakeConstructor(F, false, proto);
     // https://github.com/tc39/ecma262/pull/3212/
     // 17. Perform MakeClassConstructor(F).
     MakeClassConstructor(F);
@@ -4732,7 +4747,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       F = newF;
       // 27. If classBinding is not undefined, then
-      if (!(classBinding instanceof UndefinedValue)) {
+      if (classBinding !== undefined) {
         // a. Perform classScope.InitializeBinding(classBinding, F).
         yield* classScope.InitializeBinding(classBinding, F);
       }
@@ -4783,30 +4798,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const staticElements = [];
       // 25. For each ClassElement e of elements, do
       for (const e of elements) {
-        let field;
+        let _field;
         // a. If IsStatic of e is false, then
         if (IsStatic(e) === false) {
           // i. Let field be ClassElementEvaluation of e with arguments proto and false.
-          field = yield* ClassElementEvaluation(e, proto, Value.false);
+          _field = yield* ClassElementEvaluation(e, proto, false);
         } else {
           // b. Else,
           // i. Let field be ClassElementEvaluation of e with arguments F and false.
-          field = yield* ClassElementEvaluation(e, F, Value.false);
+          _field = yield* ClassElementEvaluation(e, F, false);
         }
         // c. If field is an abrupt completion, then
-        if (field instanceof AbruptCompletion) {
+        if (_field instanceof AbruptCompletion) {
           // i. Set the running execution context's LexicalEnvironment to env.
           exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
           // ii. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
           exports.surroundingAgent.runningExecutionContext.PrivateEnvironment = outerPrivateEnvironment;
           // iii. Return Completion(field).
-          return field;
+          return _field;
         }
         // d. Set field to field.[[Value]].
-        /* ReturnIfAbrupt */if (field instanceof Completion) {
-          if (field instanceof AbruptCompletion) return field;
-          field = field.Value;
+        /* ReturnIfAbrupt */if (_field instanceof Completion) {
+          if (_field instanceof AbruptCompletion) return _field;
+          _field = _field.Value;
         }
+        const field = _field;
         // e. If field is a PrivateElement, then
         if (field instanceof PrivateElementRecord) {
           /* Assert */ /* node:coverage ignore next */ // i. Assert: field.[[Kind]] is either method or accessor.
@@ -4828,13 +4844,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             /* Assert */ /* node:coverage ignore next */if (!(field.Kind === 'accessor' && existing.Kind === 'accessor')) throw new Assert.Error("field.Kind === 'accessor' && existing.Kind === 'accessor'");
             // 3. If field.[[Get]] is undefined, then
             let combined;
-            if (field.Getter === Value.undefined) {
+            if (field.Get === Value.undefined) {
               combined = {
                 __proto__: PrivateElementRecord.prototype,
                 Key: field.Key,
                 Kind: 'accessor',
-                Getter: existing.Getter,
-                Setter: field.Setter
+                Get: existing.Get,
+                Set: field.Set
               };
             } else {
               // 4. Else
@@ -4842,8 +4858,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
                 __proto__: PrivateElementRecord.prototype,
                 Key: field.Key,
                 Kind: 'accessor',
-                Getter: field.Getter,
-                Setter: existing.Setter
+                Get: field.Get,
+                Set: existing.Set
               };
             }
             // 5. Replace existing in container with combined.
@@ -4862,7 +4878,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // ii. Else, append field to staticElements.
             staticElements.push(field);
           }
-        } else if (field instanceof ClassStaticBlockDefinitionRecord) {
+        } else if (field && field instanceof ClassStaticBlockDefinitionRecord) {
           // g. Else if element is a ClassStaticBlockDefinition Record, then
           // i. Append element to staticElements.
           staticElements.push(field);
@@ -4874,7 +4890,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 26. Set the running execution context's LexicalEnvironment to env.
       exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
       // 27. If classBinding is not undefined, then
-      if (!(classBinding instanceof UndefinedValue)) {
+      if (classBinding !== undefined) {
         // a. Perform classScope.InitializeBinding(classBinding, F).
         yield* classScope.InitializeBinding(classBinding, F);
       }
@@ -4966,7 +4982,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (!(obj instanceof ObjectValue)) {
           return Throw.TypeError('Invalid receiver');
         }
-        if (IsPropertyKey(name)) {
+        if (IsPropertyKey(name) || typeof name === 'string') {
           return yield* Get(obj, name);
         } else {
           return yield* PrivateGet(obj, name);
@@ -4987,10 +5003,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (!(obj instanceof ObjectValue)) {
           return Throw.TypeError('Invalid receiver');
         }
-        if (IsPropertyKey(name)) {
-          return yield* Set$1(obj, name, value, Value.true);
+        if (IsPropertyKey(name) || typeof name === 'string') {
+          /* ReturnIfAbrupt */let _setterClosure = yield* Set$1(obj, name, value, true);
+          /* ReturnIfAbrupt */if (_setterClosure instanceof Completion) {
+            if (_setterClosure instanceof AbruptCompletion) return _setterClosure;
+            _setterClosure = _setterClosure.Value;
+          }
+          return Value(_setterClosure);
         } else {
-          return yield* PrivateSet(obj, name, value);
+          /* ReturnIfAbrupt */let _setterClosure2 = yield* PrivateSet(obj, name, value);
+          /* ReturnIfAbrupt */if (_setterClosure2 instanceof Completion) {
+            if (_setterClosure2 instanceof AbruptCompletion) return _setterClosure2;
+            _setterClosure2 = _setterClosure2.Value;
+          }
+          return Value(_setterClosure2);
         }
       };
       const setter = CreateBuiltinFunction(setterClosure, 2, Value(''), []);
@@ -5007,8 +5033,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (!(obj instanceof ObjectValue)) {
         return Throw.TypeError('Invalid receiver');
       }
-      if (IsPropertyKey(name)) {
-        return yield* HasProperty(obj, name);
+      if (IsPropertyKey(name) || typeof name === 'string') {
+        /* ReturnIfAbrupt */let _hasClosure = yield* HasProperty(obj, name);
+        /* ReturnIfAbrupt */if (_hasClosure instanceof Completion) {
+          if (_hasClosure instanceof AbruptCompletion) return _hasClosure;
+          _hasClosure = _hasClosure.Value;
+        }
+        return Value(_hasClosure);
       }
       if (PrivateElementFind(name, obj)) {
         return Value.true;
@@ -5102,10 +5133,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           });
           _temp14 = _temp14.Value;
         }
-        /* X */let _temp15 = CreateDataPropertyOrThrow(contextObj, 'name', name);
+        /* X */let _temp15 = CreateDataPropertyOrThrow(contextObj, 'name', typeof name === 'string' ? Value(name) : name);
         /* node:coverage ignore next */if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
         /* node:coverage ignore next */if (_temp15 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(contextObj, 'name', name) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(contextObj, 'name', typeof name === 'string' ? Value(name) : name) returned an abrupt completion", {
             cause: _temp15
           });
           _temp15 = _temp15.Value;
@@ -5369,7 +5400,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* Evaluate_PropertyName(PropertyName) {
     switch (PropertyName.type) {
       case 'IdentifierName':
-        return StringValue(PropertyName);
+        return Value(StringValue(PropertyName));
       case 'StringLiteral':
         return Value(PropertyName.value);
       case 'NumericLiteral':
@@ -5377,15 +5408,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let nbr be the NumericValue of NumericLiteral.
           const nbr = NumericValue(PropertyName);
           // 2. Return ! ToString(nbr).
-          /* X */let _temp = ToString(nbr);
+          /* X */let _temp = ToString(Value(nbr));
           /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
           /* node:coverage ignore next */if (_temp instanceof Completion) {
-            /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToString(nbr) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToString(Value(nbr)) returned an abrupt completion", {
               cause: _temp
             });
             _temp = _temp.Value;
           }
-          return _temp;
+          return Value(_temp);
         }
       case 'PrivateIdentifier':
         {
@@ -5397,7 +5428,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const names = privateEnvRec.Names;
           // 4. Assert: Exactly one element of names is a Private Name whose [[Description]] is privateIdentifier.
           // 5. Let privateName be the Private Name in names whose [[Description]] is privateIdentifier.
-          const privateName = names.find(n => n.Description === privateIdentifier.stringValue());
+          const privateName = names.find(n => n.Description === privateIdentifier);
           /* Assert */ /* node:coverage ignore next */if (!!!privateName) throw new Assert.Error("!!privateName");
           // 6. Return privateName.
           return privateName;
@@ -5670,17 +5701,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const lval = _lval;
       // 3. Let lbool be ! ToBoolean(lval).
-      /* X */let _lbool = ToBoolean(lval);
-      /* node:coverage ignore next */if (_lbool && typeof _lbool === 'object' && 'next' in _lbool) _lbool = skipDebugger(_lbool);
-      /* node:coverage ignore next */if (_lbool instanceof Completion) {
-        /* node:coverage ignore next */if (_lbool instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(lval) returned an abrupt completion", {
-          cause: _lbool
-        });
-        _lbool = _lbool.Value;
-      }
-      const lbool = _lbool;
+      const lbool = ToBoolean(lval);
       // 4. If lbool is false, return lval.
-      if (lbool === Value.false) {
+      if (!lbool) {
         return lval;
       }
       let rval;
@@ -5734,17 +5757,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const lval = _lval2;
       // 3. Let lbool be ! ToBoolean(lval).
-      /* X */let _lbool2 = ToBoolean(lval);
-      /* node:coverage ignore next */if (_lbool2 && typeof _lbool2 === 'object' && 'next' in _lbool2) _lbool2 = skipDebugger(_lbool2);
-      /* node:coverage ignore next */if (_lbool2 instanceof Completion) {
-        /* node:coverage ignore next */if (_lbool2 instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(lval) returned an abrupt completion", {
-          cause: _lbool2
+      /* X */let _lbool = ToBoolean(lval);
+      /* node:coverage ignore next */if (_lbool && typeof _lbool === 'object' && 'next' in _lbool) _lbool = skipDebugger(_lbool);
+      /* node:coverage ignore next */if (_lbool instanceof Completion) {
+        /* node:coverage ignore next */if (_lbool instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(lval) returned an abrupt completion", {
+          cause: _lbool
         });
-        _lbool2 = _lbool2.Value;
+        _lbool = _lbool.Value;
       }
-      const lbool = _lbool2;
+      const lbool = _lbool;
       // 4. If lbool is true, return lval.
-      if (lbool === Value.true) {
+      if (lbool) {
         return lval;
       }
       let rval;
@@ -6002,7 +6025,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (Statement_b) {
       let stmtCompletion;
       // 3. If exprValue is true, then
-      if (exprValue === Value.true) {
+      if (exprValue) {
         // a. Let stmtCompletion be the result of evaluating the first Statement.
         stmtCompletion = yield* Evaluate(Statement_a);
       } else {
@@ -6014,7 +6037,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
     } else {
       // 3. If exprValue is false, then
-      if (exprValue === Value.false) {
+      if (!exprValue) {
         // a. Return NormalCompletion(undefined).
         return {
           __proto__: NormalCompletion.prototype,
@@ -6045,18 +6068,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-evaluate-import-call */
   function* EvaluateImportCall(specifiersExpression, phase, optionsExpression) {
-    /* X */let _referrer = GetActiveScriptOrModule();
-    /* node:coverage ignore next */if (_referrer && typeof _referrer === 'object' && 'next' in _referrer) _referrer = skipDebugger(_referrer);
-    /* node:coverage ignore next */if (_referrer instanceof Completion) {
-      /* node:coverage ignore next */if (_referrer instanceof AbruptCompletion) throw new Assert.Error("! GetActiveScriptOrModule() returned an abrupt completion", {
-        cause: _referrer
-      });
-      _referrer = _referrer.Value;
-    }
     // 1. Let referrer be ! GetActiveScriptOrModule().
-    let referrer = _referrer;
+    let referrer = GetActiveScriptOrModule();
     // 2. If referrer is null, set referrer to the current Realm Record.
-    if (referrer instanceof NullValue) {
+    if (referrer === null) {
       referrer = exports.surroundingAgent.currentRealmRecord;
     }
     // 3. Let specifierRef be ? Evaluation of AssignmentExpression.
@@ -6226,7 +6241,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 12. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Attributes]]: attributes }.
     const moduleRequest = {
-      Specifier: specifierString.value,
+      Specifier: specifierString,
       Attributes: attributes,
       Phase: phase,
       ImportedNames: 'all'
@@ -6478,231 +6493,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  class JSStringMap {
-    #map = new Map();
-    clear() {
-      this.#map.clear();
-    }
-    delete(key) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      return this.#map.delete(key);
-    }
-    forEach(callbackfn, thisArg) {
-      this.#map.forEach((value, key) => Reflect.apply(callbackfn, thisArg, [value, typeof key === 'string' ? Value(key) : key, this]));
-    }
-    get(key) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      return this.#map.get(key);
-    }
-    has(key) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      return this.#map.has(key);
-    }
-    set(key, value) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      this.#map.set(key, value);
-      return this;
-    }
-    get size() {
-      return this.#map.size;
-    }
-    *entries() {
-      for (const [key, value] of this.#map.entries()) {
-        yield [Value(key), value];
-      }
-      return undefined;
-    }
-    *keys() {
-      for (const key of this.#map.keys()) {
-        yield Value(key);
-      }
-      return undefined;
-    }
-    values() {
-      return this.#map.values();
-    }
-    getOrInsert(key, defaultValue) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      if (this.#map.getOrInsert) return this.#map.getOrInsert(key, defaultValue);
-      if (!this.#map.has(key)) {
-        this.#map.set(key, defaultValue);
-      }
-      return this.#map.get(key);
-    }
-    getOrInsertComputed(key, defaultValueFn) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      if (this.#map.getOrInsertComputed) return this.#map.getOrInsertComputed(key, k => defaultValueFn(Value(k)));
-      if (!this.#map.has(key)) {
-        this.#map.set(key, defaultValueFn(Value(key)));
-      }
-      return this.#map.get(key);
-    }
-    static {
-      JSStringMap.prototype[Symbol.toStringTag] = 'JSStringMap';
-      JSStringMap.prototype[Symbol.iterator] = JSStringMap.prototype.entries;
-    }
-    mark(m) {
-      for (const [k, v] of this.#map.entries()) {
-        m(k);
-        m(v);
-      }
-    }
-  }
-  class PropertyKeyMap {
-    #map = new Map();
-    clear() {
-      this.#map.clear();
-    }
-    delete(key) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      return this.#map.delete(key);
-    }
-    forEach(callbackfn, thisArg) {
-      this.#map.forEach((value, key) => Reflect.apply(callbackfn, thisArg, [value, typeof key === 'string' ? Value(key) : key, this]));
-    }
-    get(key) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      return this.#map.get(key);
-    }
-    has(key) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      return this.#map.has(key);
-    }
-    set(key, value) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      this.#map.set(key, value);
-      return this;
-    }
-    get size() {
-      return this.#map.size;
-    }
-    *entries() {
-      for (const [key, value] of this.#map.entries()) {
-        if (typeof key === 'string') {
-          yield [Value(key), value];
-        } else {
-          yield [key, value];
-        }
-      }
-      return undefined;
-    }
-    *keys() {
-      for (const key of this.#map.keys()) {
-        if (typeof key === 'string') {
-          yield Value(key);
-        } else {
-          yield key;
-        }
-      }
-      return undefined;
-    }
-    *values() {
-      for (const value of this.#map.values()) {
-        yield value;
-      }
-      return undefined;
-    }
-    getOrInsert(key, defaultValue) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      if (this.#map.getOrInsert) return this.#map.getOrInsert(key, defaultValue);
-      if (!this.#map.has(key)) {
-        this.#map.set(key, defaultValue);
-      }
-      return this.#map.get(key);
-    }
-    getOrInsertComputed(key, defaultValueFn) {
-      if (key instanceof JSStringValue) {
-        key = key.stringValue();
-      }
-      const value = typeof key === 'string' ? Value(key) : key;
-      return this.#map.getOrInsertComputed(key, () => defaultValueFn(value));
-    }
-    static {
-      PropertyKeyMap.prototype[Symbol.toStringTag] = 'PropertyKeyMap';
-      PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.entries;
-    }
-    mark(m) {
-      for (const [k, v] of this.#map.entries()) {
-        m(k);
-        m(v);
-      }
-    }
-  }
-  class JSStringSet {
-    #set = new Set();
-    constructor(value) {
-      if (value) {
-        for (const item of value) {
-          this.add(item);
-        }
-      }
-    }
-    add(value) {
-      this.#set.add(typeof value === 'string' ? value : value.stringValue());
-      return this;
-    }
-    clear() {
-      this.#set.clear();
-    }
-    delete(value) {
-      return this.#set.delete(typeof value === 'string' ? value : value.stringValue());
-    }
-    forEach(callbackfn, thisArg) {
-      for (const value of this.#set) {
-        Reflect.apply(callbackfn, thisArg, [Value(value), Value(value), this]);
-      }
-    }
-    has(value) {
-      if (value instanceof NullValue) {
-        return false;
-      }
-      return this.#set.has(typeof value === 'string' ? value : value.stringValue());
-    }
-    get size() {
-      return this.#set.size;
-    }
-    *entries() {
-      for (const value of this.#set) {
-        yield [Value(value), Value(value)];
-      }
-      return undefined;
-    }
-    *values() {
-      for (const value of this.#set) {
-        yield Value(value);
-      }
-      return undefined;
-    }
-    static {
-      JSStringSet.prototype[Symbol.toStringTag] = 'JSStringSet';
-      JSStringSet.prototype[Symbol.iterator] = JSStringSet.prototype.values;
-      JSStringSet.prototype.keys = JSStringSet.prototype.values;
-    }
-    mark(_m) {}
-  }
-
   function* GlobalDeclarationInstantiation(script, env) {
     // 2. Let lexNames be the LexicallyDeclaredNames of script.
     const lexNames = LexicallyDeclaredNames(script);
@@ -6711,7 +6501,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. For each name in lexNames, do
     for (const name of lexNames) {
       // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-      if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
+      if (yield* env.HasLexicalDeclaration(name)) {
         return Throw.SyntaxError('$1 is already declared', name);
       }
       // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
@@ -6722,14 +6512,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const hasRestrictedGlobal = _hasRestrictedGlobal;
       // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
-      if (hasRestrictedGlobal === Value.true) {
+      if (hasRestrictedGlobal) {
         return Throw.SyntaxError('$1 is already declared', name);
       }
     }
     // 5. For each name in varNames, do
     for (const name of varNames) {
       // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-      if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
+      if (yield* env.HasLexicalDeclaration(name)) {
         return Throw.SyntaxError('$1 is already declared', name);
       }
     }
@@ -6738,7 +6528,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Let functionsToInitialize be a new empty List.
     const functionsToInitialize = [];
     // 8. Let declaredFunctionNames be a new empty List.
-    const declaredFunctionNames = new JSStringSet();
+    const declaredFunctionNames = new Set();
     // 9. For each d in varDeclarations, in reverse list order, do
     for (const d of [...varDeclarations].reverse()) {
       // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
@@ -6759,7 +6549,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
           const fnDefinable = _fnDefinable;
           // 2. If fnDefinable is false, throw a TypeError exception.
-          if (fnDefinable === Value.false) {
+          if (!fnDefinable) {
             return Throw.TypeError('$1 is already declared', fn);
           }
           // 3. Append fn to declaredFunctionNames.
@@ -6770,7 +6560,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
     // 10. Let declaredVarNames be a new empty List.
-    const declaredVarNames = new JSStringSet();
+    const declaredVarNames = new Set();
     // 11. For each d in varDeclarations, do
     for (const d of varDeclarations) {
       // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
@@ -6787,7 +6577,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
             const vnDefinable = _vnDefinable;
             // b. If vnDefinable is false, throw a TypeError exception.
-            if (vnDefinable === Value.false) {
+            if (!vnDefinable) {
               return Throw.TypeError('$1 is already declared', vn);
             }
             // c. If vn is not an element of declaredVarNames, then
@@ -6812,13 +6602,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const dn of BoundNames(d)) {
         // 1. If IsConstantDeclaration of d is true, then
         if (IsConstantDeclaration(d)) {
-          /* ReturnIfAbrupt */let _temp = env.CreateImmutableBinding(dn, Value.true);
+          /* ReturnIfAbrupt */let _temp = env.CreateImmutableBinding(dn, true);
           /* ReturnIfAbrupt */if (_temp instanceof Completion) {
             if (_temp instanceof AbruptCompletion) return _temp;
             _temp = _temp.Value;
           } // 1. Perform ? env.CreateImmutableBinding(dn, true).
         } else {
-          /* ReturnIfAbrupt */let _temp2 = yield* env.CreateMutableBinding(dn, Value.false);
+          /* ReturnIfAbrupt */let _temp2 = yield* env.CreateMutableBinding(dn, false);
           /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
             if (_temp2 instanceof AbruptCompletion) return _temp2;
             _temp2 = _temp2.Value;
@@ -6834,7 +6624,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
       const fo = InstantiateFunctionObject(f, env, privateEnv);
       // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
-      /* ReturnIfAbrupt */let _temp3 = yield* env.CreateGlobalFunctionBinding(fn, fo, Value.false);
+      /* ReturnIfAbrupt */let _temp3 = yield* env.CreateGlobalFunctionBinding(fn, fo, false);
       /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         _temp3 = _temp3.Value;
@@ -6842,7 +6632,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 18. For each String vn in declaredVarNames, in list order, do
     for (const vn of declaredVarNames) {
-      /* ReturnIfAbrupt */let _temp4 = yield* env.CreateGlobalVarBinding(vn, Value.false);
+      /* ReturnIfAbrupt */let _temp4 = yield* env.CreateGlobalVarBinding(vn, false);
       /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         _temp4 = _temp4.Value;
@@ -6927,13 +6717,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     /* X */let _temp = DefinePropertyOrThrow(F, 'prototype', exports.Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -7013,13 +6803,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     /* X */let _temp2 = DefinePropertyOrThrow(F, 'prototype', exports.Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
     /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp2
       });
       _temp2 = _temp2.Value;
@@ -7185,7 +6975,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const rval = _rval;
     // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
-    return yield* BindingInitialization(BindingPattern, rval, Value.undefined);
+    return yield* BindingInitialization(BindingPattern, rval, undefined);
   }
   Evaluate_VariableDeclaration.section = 'https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation';
 
@@ -7262,7 +7052,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const func = _func;
     // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
-    if (ref instanceof ReferenceRecord && IsPropertyReference(ref) === Value.false && ref.ReferencedName instanceof JSStringValue && ref.ReferencedName.stringValue() === 'eval') {
+    if (ref instanceof ReferenceRecord && !IsPropertyReference(ref) && ref.ReferencedName instanceof JSStringValue && ref.ReferencedName.stringValue() === 'eval') {
       // a. If SameValue(func, %eval%) is true, then
       if (SameValue(func, exports.surroundingAgent.intrinsic('%eval%'))) {
         /* ReturnIfAbrupt */let _argList = yield* ArgumentListEvaluation(args);
@@ -7297,7 +7087,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let thisValue;
     if (ref instanceof ReferenceRecord) {
       // a. If IsPropertyReference(ref) is true, then
-      if (IsPropertyReference(ref) === Value.true) {
+      if (IsPropertyReference(ref)) {
         // i. Let thisValue be GetThisValue(ref).
         thisValue = GetThisValue(ref);
       } else {
@@ -7409,13 +7199,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // c. Call template.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
       /* X */let _temp = template.DefineOwnProperty(prop, exports.Descriptor({
         Value: cookedValue,
-        Writable: Value.false,
-        Enumerable: Value.true,
-        Configurable: Value.false
+        Writable: false,
+        Enumerable: true,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! template.DefineOwnProperty(prop, Descriptor({\n      Value: cookedValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! template.DefineOwnProperty(prop, Descriptor({\n      Value: cookedValue,\n      Writable: false,\n      Enumerable: true,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -7425,13 +7215,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // e. Call rawObj.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
       /* X */let _temp2 = rawObj.DefineOwnProperty(prop, exports.Descriptor({
         Value: rawValue,
-        Writable: Value.false,
-        Enumerable: Value.true,
-        Configurable: Value.false
+        Writable: false,
+        Enumerable: true,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! rawObj.DefineOwnProperty(prop, Descriptor({\n      Value: rawValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! rawObj.DefineOwnProperty(prop, Descriptor({\n      Value: rawValue,\n      Writable: false,\n      Enumerable: true,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp2
         });
         _temp2 = _temp2.Value;
@@ -7450,13 +7240,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     /* X */let _temp4 = template.DefineOwnProperty(Value('raw'), exports.Descriptor({
       Value: rawObj,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
     /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! template.DefineOwnProperty(Value('raw'), Descriptor({\n    Value: rawObj,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! template.DefineOwnProperty(Value('raw'), Descriptor({\n    Value: rawObj,\n    Writable: false,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp4
       });
       _temp4 = _temp4.Value;
@@ -7953,7 +7743,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Let parameterNames be BoundNames of formals.
     const parameterNames = BoundNames(formals);
     // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
-    const hasDuplicates = new JSStringSet(parameterNames).size !== parameterNames.length;
+    const hasDuplicates = new Set(parameterNames).size !== parameterNames.length;
     // 7. Let simpleParameterList be IsSimpleParameterList of formals.
     const simpleParameterList = IsSimpleParameterList(formals);
     // 8. Let hasParameterExpressions be ContainsExpression of formals.
@@ -7963,9 +7753,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 10. Let varDeclarations be the VarScopedDeclarations of code.
     const varDeclarations = VarScopedDeclarations(code);
     // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
-    const lexicalNames = new JSStringSet(LexicallyDeclaredNames(code));
+    const lexicalNames = new Set(LexicallyDeclaredNames(code));
     // 12. Let functionNames be a new empty List.
-    const functionNames = new JSStringSet();
+    const functionNames = new Set();
     // 13. Let functionNames be a new empty List.
     const functionsToInitialize = [];
     // 14. For each d in varDeclarations, in reverse list order, do
@@ -7994,7 +7784,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. NOTE: Arrow functions never have an arguments objects.
       // b. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
-    } else if (new JSStringSet(parameterNames).has('arguments')) {
+    } else if (new Set(parameterNames).has('arguments')) {
       // a. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
     } else if (hasParameterExpressions === false) {
@@ -8029,11 +7819,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
       //    non-strict functions that do not have parameter default values or rest parameters.
       // c. If alreadyDeclared is false, then
-      if (alreadyDeclared === Value.false) {
-        /* X */let _temp = env.CreateMutableBinding(paramName, Value.false);
+      if (!alreadyDeclared) {
+        /* X */let _temp = env.CreateMutableBinding(paramName, false);
         /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
         /* node:coverage ignore next */if (_temp instanceof Completion) {
-          /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(paramName, Value.false) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(paramName, false) returned an abrupt completion", {
             cause: _temp
           });
           _temp = _temp.Value;
@@ -8069,39 +7859,39 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       // c. If strict is true, then
       if (strict) {
-        /* X */let _temp3 = env.CreateImmutableBinding(Value('arguments'), Value.false);
+        /* X */let _temp3 = env.CreateImmutableBinding('arguments', false);
         /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
         /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(Value('arguments'), Value.false) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding('arguments', false) returned an abrupt completion", {
             cause: _temp3
           });
           _temp3 = _temp3.Value;
         } // i. Perform ! env.CreateImmutableBinding("arguments", false).
       } else {
-        /* X */let _temp4 = env.CreateMutableBinding(Value('arguments'), Value.false);
+        /* X */let _temp4 = env.CreateMutableBinding('arguments', false);
         /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
         /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(Value('arguments'), Value.false) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding('arguments', false) returned an abrupt completion", {
             cause: _temp4
           });
           _temp4 = _temp4.Value;
         } // i. Perform ! env.CreateMutableBinding("arguments", false).
       }
       // e. Call env.InitializeBinding("arguments", ao).
-      yield* env.InitializeBinding(Value('arguments'), ao);
+      yield* env.InitializeBinding('arguments', ao);
       // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-      parameterBindings = new JSStringSet(parameterNames);
+      parameterBindings = new Set(parameterNames);
       parameterBindings.add('arguments');
     } else {
       // a. Let parameterBindings be parameterNames.
-      parameterBindings = new JSStringSet(parameterNames);
+      parameterBindings = new Set(parameterNames);
     }
     // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
     const iteratorRecord = CreateListIteratorRecord(argumentsList.values());
     let usedEnv;
     // 25. If hasDuplicates is true, then
     if (hasDuplicates) {
-      usedEnv = Value.undefined;
+      usedEnv = undefined;
     } else {
       usedEnv = env;
     }
@@ -8117,7 +7907,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (hasParameterExpressions === false) {
       // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
       // b. Let instantiatedVarNames be a copy of the List parameterBindings.
-      const instantiatedVarNames = new JSStringSet(parameterBindings);
+      const instantiatedVarNames = new Set(parameterBindings);
       // c. For each n in varNames, do
       for (const n of varNames) {
         // i. If n is not an element of instantiatedVarNames, then
@@ -8125,10 +7915,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Append n to instantiatedVarNames.
           instantiatedVarNames.add(n);
           // 2. Perform ! env.CreateMutableBinding(n, false).
-          /* X */let _temp6 = env.CreateMutableBinding(n, Value.false);
+          /* X */let _temp6 = env.CreateMutableBinding(n, false);
           /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
           /* node:coverage ignore next */if (_temp6 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(n, Value.false) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(n, false) returned an abrupt completion", {
               cause: _temp6
             });
             _temp6 = _temp6.Value;
@@ -8147,7 +7937,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // c. Set the VariableEnvironment of calleeContext to varEnv.
       calleeContext.VariableEnvironment = varEnv;
       // d. Let instantiatedVarNames be a new empty List.
-      const instantiatedVarNames = new JSStringSet();
+      const instantiatedVarNames = new Set();
       // e. For each n in varNames, do
       for (const n of varNames) {
         // If n is not an element of instantiatedVarNames, then
@@ -8155,10 +7945,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Append n to instantiatedVarNames.
           instantiatedVarNames.add(n);
           // 2. Perform ! varEnv.CreateMutableBinding(n, false).
-          /* X */let _temp7 = varEnv.CreateMutableBinding(n, Value.false);
+          /* X */let _temp7 = varEnv.CreateMutableBinding(n, false);
           /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
           /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.CreateMutableBinding(n, Value.false) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.CreateMutableBinding(n, false) returned an abrupt completion", {
               cause: _temp7
             });
             _temp7 = _temp7.Value;
@@ -8168,10 +7958,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (!parameterBindings.has(n) || functionNames.has(n)) {
             initialValue = Value.undefined;
           } else {
-            /* X */let _temp8 = env.GetBindingValue(n, Value.false);
+            /* X */let _temp8 = env.GetBindingValue(n, false);
             /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
             /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! env.GetBindingValue(n, Value.false) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! env.GetBindingValue(n, false) returned an abrupt completion", {
                 cause: _temp8
               });
               _temp8 = _temp8.Value;
@@ -8211,19 +8001,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const dn of BoundNames(d)) {
         // i. If IsConstantDeclaration of d is true, then
         if (IsConstantDeclaration(d)) {
-          /* X */let _temp9 = lexEnv.CreateImmutableBinding(dn, Value.true);
+          /* X */let _temp9 = lexEnv.CreateImmutableBinding(dn, true);
           /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
           /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! lexEnv.CreateImmutableBinding(dn, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! lexEnv.CreateImmutableBinding(dn, true) returned an abrupt completion", {
               cause: _temp9
             });
             _temp9 = _temp9.Value;
           } // 1. Perform ! lexEnv.CreateImmutableBinding(dn, true).
         } else {
-          /* X */let _temp0 = lexEnv.CreateMutableBinding(dn, Value.false);
+          /* X */let _temp0 = lexEnv.CreateMutableBinding(dn, false);
           /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
           /* node:coverage ignore next */if (_temp0 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! lexEnv.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! lexEnv.CreateMutableBinding(dn, false) returned an abrupt completion", {
               cause: _temp0
             });
             _temp0 = _temp0.Value;
@@ -8240,10 +8030,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Let fo be InstantiateFunctionObject of f with argument lexEnv and privateEnv.
       const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
       // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-      /* X */let _temp1 = varEnv.SetMutableBinding(fn, fo, Value.false);
+      /* X */let _temp1 = varEnv.SetMutableBinding(fn, fo, false);
       /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
       /* node:coverage ignore next */if (_temp1 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.SetMutableBinding(fn, fo, Value.false) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.SetMutableBinding(fn, fo, false) returned an abrupt completion", {
           cause: _temp1
         });
         _temp1 = _temp1.Value;
@@ -8564,7 +8354,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
     // 6. If environment is undefined, return ? PutValue(lhs, v).
-    if (environment === Value.undefined) {
+    if (!environment) {
       return yield* PutValue(lhs, v);
     }
     // 7. Return InitializeReferencedBinding(lhs, v).
@@ -8617,7 +8407,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         if (next === 'done') {
           // i. If environment is undefined, return ? PutValue(lhs, A).
-          if (environment === Value.undefined) {
+          if (!environment) {
             return yield* PutValue(lhs, array);
           }
           // ii. Return InitializeReferencedBinding(lhs, A).
@@ -9008,7 +8798,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyNameString, [[Strict]]: strict, [[ThisValue]]: empty }.
     return new ReferenceRecord({
       Base: baseValue,
-      ReferencedName: propertyNameString,
+      ReferencedName: Value(propertyNameString),
       Strict: strict,
       ThisValue: undefined
     });
@@ -9036,7 +8826,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // https://tc39.es/ecma262/#table-state-components-for-all-execution-contexts
     CodeEvaluationState;
     Function = Value.null;
-    ScriptOrModule = Value.null;
+    ScriptOrModule = null;
     Realm;
 
     // Table 21: Additional State Components for ECMAScript Code Execution Contexts
@@ -9103,18 +8893,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function GetActiveScriptOrModule() {
     for (let i = exports.surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
       const e = exports.surroundingAgent.executionContextStack[i];
-      if (e.ScriptOrModule !== Value.null) {
+      if (e.ScriptOrModule !== null) {
         return e.ScriptOrModule;
       }
     }
-    return Value.null;
+    return null;
   }
   GetActiveScriptOrModule.section = 'https://tc39.es/ecma262/#sec-getactivescriptormodule';
 
   /** https://tc39.es/ecma262/#sec-resolvebinding */
   function ResolveBinding(name, strict, env) {
     // 1. If env is not present or if env is undefined, then
-    if (env === undefined || env === Value.undefined) {
+    if (!env) {
       env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     }
     /* Assert */ /* node:coverage ignore next */if (!(env instanceof EnvironmentRecord)) throw new Assert.Error("env instanceof EnvironmentRecord");
@@ -9136,7 +8926,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let exists be env.HasThisBinding().
       const exists = env.HasThisBinding();
       // b. If exists is true, return envRec.
-      if (exists === Value.true) {
+      if (exists) {
         return env;
       }
       // c. Let outer be env.[[OuterEnv]].
@@ -9258,7 +9048,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (r instanceof AbstractModuleRecord && r === module) {
         return true;
       }
-      if (!(r instanceof AbstractModuleRecord) && r.Module === module && SameValue(r.ExportName, exportName)) {
+      if (!(r instanceof AbstractModuleRecord) && r.Module === module && r.ExportName === exportName) {
         return true;
       }
     }
@@ -9267,9 +9057,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   ResolveSetContains.section = 'https://tc39.es/proposal-deferred-reexports/#sec-ResolveSetContains';
   function importedNamesContains(importedNames, exportName) {
     if (importedNames === 'all-but-default') {
-      return exportName instanceof JSStringValue && exportName.stringValue() !== 'default';
+      return exportName !== 'default';
     }
-    return exportName instanceof JSStringValue && importedNames.includes(exportName.stringValue());
+    return exportName !== null && importedNames.includes(exportName);
   }
 
   /** https://tc39.es/ecma262/#sec-abstract-module-records */
@@ -9607,7 +9397,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const e of module.LocalExportEntries) {
         /* Assert */ /* node:coverage ignore next */ // a. Assert: module provides the direct binding for this export.
         // b. Assert: e.[[ExportName]] is not null.
-        if (!!(e.ExportName instanceof NullValue)) throw new Assert.Error("!(e.ExportName instanceof NullValue)");
+        if (!(e.ExportName !== null)) throw new Assert.Error("e.ExportName !== null");
         // c. Append e.[[ExportName]] to exportedNames.
         exportedNames.push(e.ExportName);
       }
@@ -9618,7 +9408,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const e of allNamedExportEntries) {
         /* Assert */ /* node:coverage ignore next */ // a. Assert: module imports a specific binding for this export.
         // b. Assert: e.[[ExportName]] is not null.
-        if (!!(e.ExportName instanceof NullValue)) throw new Assert.Error("!(e.ExportName instanceof NullValue)");
+        if (!(e.ExportName !== null)) throw new Assert.Error("e.ExportName !== null");
         // c. Append e.[[ExportName]] to exportedNames.
         exportedNames.push(e.ExportName);
       }
@@ -9631,7 +9421,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // c. For each element n of starNames, do
         for (const n of starNames) {
           // i. If SameValue(n, "default") is false, then
-          if (!SameValue(n, Value('default'))) {
+          if (n !== 'default') {
             // 1. If n is not an element of exportedNames, then
             if (!exportedNames.includes(n)) {
               // a. Append n to exportedNames.
@@ -9667,12 +9457,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
       for (const e of module.LocalExportEntries) {
         // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-        if (SameValue(exportName, e.ExportName)) {
+        if (exportName === e.ExportName) {
           // i. Assert: module provides the direct binding for this export.
           // ii. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: e.[[LocalName]] }.
           return new ResolvedBindingRecord({
             Module: module,
-            BindingName: e.LocalName
+            BindingName: Value(e.LocalName)
           });
         }
       }
@@ -9682,14 +9472,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       //    https://tc39.es/proposal-deferred-reexports/#sec-resolveexport
       for (const e of allIndirectEntries) {
         // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-        if (SameValue(exportName, e.ExportName)) {
-          /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest !== Value.null)) throw new Assert.Error("e.ModuleRequest !== Value.null");
+        if (exportName === e.ExportName) {
+          /* Assert */ /* node:coverage ignore next */if (!!!e.ModuleRequest) throw new Assert.Error("!!e.ModuleRequest");
           // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
           const importedModule = GetImportedModule(module, e.ModuleRequest);
           // ii. If e.[[ImportName]] is ~namespace~, then
           if (e.ImportName === 'namespace') {
             /* Assert */ /* node:coverage ignore next */ // 1. Assert: module does not provide the direct binding for this export
-            if (!!module.LocalExportEntries.some(entry => SameValue(entry.ExportName, exportName))) throw new Assert.Error("!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName))");
+            if (!!module.LocalExportEntries.some(entry => entry.ExportName === exportName)) throw new Assert.Error("!module.LocalExportEntries.some((entry) => entry.ExportName === exportName)");
             /* Assert */ /* node:coverage ignore next */if (!(e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0)) throw new Assert.Error("e.NamespaceNamesFilter !== undefined && e.NamespaceNamesFilter.length === 0");
             if (module.OptionalIndirectExportEntries.includes(e) && NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, module, exportName, importedModule, importedModule.GetExportedNames(), 'allow-ambiguous')) {
               return null;
@@ -9713,7 +9503,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (module.OptionalIndirectExportEntries.includes(e) && NamespaceMemberIsUnresolvableOptional(deferNamespaceExportSet, module, exportName, importedModule, e.NamespaceNamesFilter, 'disallow-ambiguous')) {
               return null;
             }
-            const localName = `*${exportName.stringValue()}*`;
+            const localName = `*${exportName}*`;
             return new ResolvedBindingRecord({
               Module: module,
               BindingName: Value(localName)
@@ -9729,14 +9519,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // 1. Assert: module imports a specific binding for this export.
             if (!(e.ImportName instanceof JSStringValue)) throw new Assert.Error("e.ImportName instanceof JSStringValue");
             // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
-            return importedModule.ResolveExport(e.ImportName, resolveSet, deferNamespaceExportSet);
+            return importedModule.ResolveExport(e.ImportName.stringValue(), resolveSet, deferNamespaceExportSet);
           }
         }
       }
       // 7. If SameValue(exportName, "default") is true, then
-      if (SameValue(exportName, Value('default'))) {
+      if (exportName === 'default') {
         /* Assert */ /* node:coverage ignore next */ // a. Assert: A default export was not explicitly defined by this module.
-        if (!!module.LocalExportEntries.some(entry => SameValue(entry.ExportName, exportName))) throw new Assert.Error("!module.LocalExportEntries.some((entry) => SameValue(entry.ExportName, exportName))");
+        if (!!module.LocalExportEntries.some(entry => entry.ExportName === exportName)) throw new Assert.Error("!module.LocalExportEntries.some((entry) => entry.ExportName === exportName)");
         // b. Return null.
         return null;
         // c. NOTE: A default export cannot be provided by an export * or export * from "mod" declaration.
@@ -9745,7 +9535,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let starResolution = null;
       // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
       for (const e of module.StarExportEntries) {
-        /* Assert */ /* node:coverage ignore next */if (!(e.ModuleRequest !== Value.null)) throw new Assert.Error("e.ModuleRequest !== Value.null");
+        /* Assert */ /* node:coverage ignore next */if (!!!e.ModuleRequest) throw new Assert.Error("!!e.ModuleRequest");
         // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = GetImportedModule(module, e.ModuleRequest);
         // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
@@ -9841,7 +9631,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const e of module.StarExportEntries) {
         const importedModule = GetImportedModule(module, e.ModuleRequest);
         for (const name of importedModule.GetExportedNames()) {
-          if (name.stringValue() !== 'default') {
+          if (name !== 'default') {
             /* ReturnIfAbrupt */let _temp5 = EnsureResolvableBinding(importedModule, name, 'disallow-ambiguous');
             /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
               if (_temp5 instanceof AbruptCompletion) return _temp5;
@@ -9876,10 +9666,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           const namespace = GetModuleNamespace(importedModule, namespacePhase, 'all');
           // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-          /* X */let _temp7 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+          /* X */let _temp7 = env.CreateImmutableBinding(ie.LocalName, true);
           /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
           /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, true) returned an abrupt completion", {
               cause: _temp7
             });
             _temp7 = _temp7.Value;
@@ -9894,7 +9684,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           } // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
         } else if (ie.ImportName === 'filtered-namespace-object') {
           for (const name of ie.NamespaceNamesFilter) {
-            /* ReturnIfAbrupt */let _temp9 = EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous');
+            /* ReturnIfAbrupt */let _temp9 = EnsureResolvableBinding(importedModule, name, 'disallow-ambiguous');
             /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
               if (_temp9 instanceof AbruptCompletion) return _temp9;
               _temp9 = _temp9.Value;
@@ -9902,10 +9692,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           /* Assert */ /* node:coverage ignore next */if (!(ie.ModuleRequest.Phase !== 'source')) throw new Assert.Error("ie.ModuleRequest.Phase !== 'source'");
           const namespace = GetModuleNamespace(importedModule, ie.ModuleRequest.Phase, ie.NamespaceNamesFilter);
-          /* X */let _temp0 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+          /* X */let _temp0 = env.CreateImmutableBinding(ie.LocalName, true);
           /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
           /* node:coverage ignore next */if (_temp0 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, true) returned an abrupt completion", {
               cause: _temp0
             });
             _temp0 = _temp0.Value;
@@ -9923,10 +9713,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (moduleSourceObject === undefined) {
             return Throw.SyntaxError('Module source is not available');
           }
-          /* X */let _temp10 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+          /* X */let _temp10 = env.CreateImmutableBinding(ie.LocalName, true);
           /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
           /* node:coverage ignore next */if (_temp10 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, true) returned an abrupt completion", {
               cause: _temp10
             });
             _temp10 = _temp10.Value;
@@ -9942,7 +9732,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         } else {
           // c. Else,
           // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
-          const resolution = importedModule.ResolveExport(ie.ImportName);
+          const resolution = importedModule.ResolveExport(ie.ImportName.stringValue());
           // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.
           if (resolution === null || resolution === 'ambiguous') {
             const moduleName = importedModule.HostDefined?.specifier || '<anonymous module>';
@@ -9958,10 +9748,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // 1. Let namespace be GetModuleNamespace(resolution.[[Module]], phase, all).
             const namespace = GetModuleNamespace(resolution.Module, phase, 'all');
             // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-            /* X */let _temp12 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+            /* X */let _temp12 = env.CreateImmutableBinding(ie.LocalName, true);
             /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
             /* node:coverage ignore next */if (_temp12 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, true) returned an abrupt completion", {
                 cause: _temp12
               });
               _temp12 = _temp12.Value;
@@ -9979,10 +9769,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (moduleSourceObject === undefined) {
               return Throw.SyntaxError('Module source is not available');
             }
-            /* X */let _temp14 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+            /* X */let _temp14 = env.CreateImmutableBinding(ie.LocalName, true);
             /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
             /* node:coverage ignore next */if (_temp14 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, Value.true) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(ie.LocalName, true) returned an abrupt completion", {
                 cause: _temp14
               });
               _temp14 = _temp14.Value;
@@ -9996,10 +9786,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               _temp15 = _temp15.Value;
             }
           } else {
-            /* X */let _temp16 = env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
+            /* X */let _temp16 = env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName.stringValue());
             /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
             /* node:coverage ignore next */if (_temp16 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName.stringValue()) returned an abrupt completion", {
                 cause: _temp16
               });
               _temp16 = _temp16.Value;
@@ -10010,10 +9800,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       for (const ie of module.IndirectExportEntries) {
         if (ie.ImportName === 'filtered-namespace') {
-          const localName = Value(`*${ie.ExportName.stringValue()}*`);
+          const localName = `*${ie.ExportName}*`;
           const importedModule = GetImportedModule(module, ie.ModuleRequest);
           for (const name of ie.NamespaceNamesFilter) {
-            /* ReturnIfAbrupt */let _temp17 = EnsureResolvableBinding(importedModule, Value(name), 'disallow-ambiguous');
+            /* ReturnIfAbrupt */let _temp17 = EnsureResolvableBinding(importedModule, name, 'disallow-ambiguous');
             /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
               if (_temp17 instanceof AbruptCompletion) return _temp17;
               _temp17 = _temp17.Value;
@@ -10022,10 +9812,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const requestPhase = ie.ModuleRequest.Phase;
           /* Assert */ /* node:coverage ignore next */if (!(requestPhase !== 'source')) throw new Assert.Error("requestPhase !== 'source'");
           const filteredNamespace = GetModuleNamespace(importedModule, requestPhase === 'defer' ? 'defer' : 'evaluation', ie.NamespaceNamesFilter);
-          /* X */let _temp18 = env.CreateImmutableBinding(localName, Value.true);
+          /* X */let _temp18 = env.CreateImmutableBinding(localName, true);
           /* node:coverage ignore next */if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
           /* node:coverage ignore next */if (_temp18 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(localName, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(localName, true) returned an abrupt completion", {
               cause: _temp18
             });
             _temp18 = _temp18.Value;
@@ -10042,7 +9832,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       for (const oie of module.OptionalIndirectExportEntries) {
         if (oie.ImportName === 'filtered-namespace') {
-          const localName = Value(`*${oie.ExportName.stringValue()}*`);
+          const localName = `*${oie.ExportName}*`;
           const initializationSteps = () => {
             const importedModule = GetImportedModule(module, oie.ModuleRequest);
             return GetModuleNamespace(importedModule, oie.ModuleRequest.Phase, oie.NamespaceNamesFilter);
@@ -10082,17 +9872,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 19. Let varDeclarations be the VarScopedDeclarations of code.
       const varDeclarations = VarScopedDeclarations(code);
       // 20. Let declaredVarNames be a new empty List.
-      const declaredVarNames = new JSStringSet();
+      const declaredVarNames = new Set();
       // 21. For each element d in varDeclarations, do
       for (const d of varDeclarations) {
         // a. For each element dn of the BoundNames of d, do
         for (const dn of BoundNames(d)) {
           // i. If dn is not an element of declaredVarNames, then
           if (!declaredVarNames.has(dn)) {
-            /* X */let _temp21 = env.CreateMutableBinding(dn, Value.false);
+            /* X */let _temp21 = env.CreateMutableBinding(dn, false);
             /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
             /* node:coverage ignore next */if (_temp21 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, false) returned an abrupt completion", {
                 cause: _temp21
               });
               _temp21 = _temp21.Value;
@@ -10120,19 +9910,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         for (const dn of BoundNames(d)) {
           // i. If IsConstantDeclaration of d is true, then
           if (IsConstantDeclaration(d)) {
-            /* X */let _temp23 = env.CreateImmutableBinding(dn, Value.true);
+            /* X */let _temp23 = env.CreateImmutableBinding(dn, true);
             /* node:coverage ignore next */if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
             /* node:coverage ignore next */if (_temp23 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(dn, Value.true) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(dn, true) returned an abrupt completion", {
                 cause: _temp23
               });
               _temp23 = _temp23.Value;
             } // 1. Perform ! env.CreateImmutableBinding(dn, true).
           } else {
-            /* X */let _temp24 = env.CreateMutableBinding(dn, Value.false);
+            /* X */let _temp24 = env.CreateMutableBinding(dn, false);
             /* node:coverage ignore next */if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
             /* node:coverage ignore next */if (_temp24 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
+              /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, false) returned an abrupt completion", {
                 cause: _temp24
               });
               _temp24 = _temp24.Value;
@@ -10172,7 +9962,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let moduleContext be module.[[Context]].
       const moduleContext = module.Context;
       const env = module.Environment;
-      if (module.HasTLA === Value.false) {
+      if (!module.HasTLA) {
         /* Assert */ /* node:coverage ignore next */if (!(capability === undefined)) throw new Assert.Error("capability === undefined");
         // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
         exports.surroundingAgent.executionContextStack.push(moduleContext);
@@ -10229,7 +10019,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     deferNamespaceExportSet.push(reexporterModule);
     /* Assert */ /* node:coverage ignore next */if (!ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)) throw new Assert.Error("ResolveSetContains(deferNamespaceExportSet, reexporterModule, exportName)");
     for (const name of namespaceNames) {
-      const resolution = namespaceModule.ResolveExport(name instanceof JSStringValue ? name : Value(name), [], deferNamespaceExportSet);
+      const resolution = namespaceModule.ResolveExport(name, [], deferNamespaceExportSet);
       if (resolution === null) return true;
       if (resolution === 'ambiguous' && onAmbiguous === 'disallow-ambiguous') return true;
     }
@@ -10278,10 +10068,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. If module.[[ExportNames]] does not contain exportName, return null.
       // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
       for (const e of module.ExportNames) {
-        if (SameValue(e, exportName)) {
+        if (e === exportName) {
           return new ResolvedBindingRecord({
             Module: module,
-            BindingName: exportName
+            BindingName: Value(exportName)
           });
         }
       }
@@ -10301,10 +10091,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       module.Environment = env;
       // 5. For each exportName in module.[[ExportNames]],
       for (const exportName of module.ExportNames) {
-        /* X */let _temp28 = env.CreateMutableBinding(exportName, Value.false);
+        /* X */let _temp28 = env.CreateMutableBinding(exportName, false);
         /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
         /* node:coverage ignore next */if (_temp28 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(exportName, Value.false) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(exportName, false) returned an abrupt completion", {
             cause: _temp28
           });
           _temp28 = _temp28.Value;
@@ -10384,7 +10174,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     *SetSyntheticExport(name, value) {
       const module = this;
       // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
-      return yield* module.Environment.SetMutableBinding(name, value, Value.true);
+      return yield* module.Environment.SetMutableBinding(name, value, true);
     }
   }
 
@@ -10411,38 +10201,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records */
   class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-    bindings = new JSStringMap();
+    bindings = new Map();
 
     /** https://tc39.es/ecma262/#table-additional-fields-of-declarative-environment-records */
     DisposableResourceStack = [];
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
-    *HasBinding(N) {
+    *HasBinding(name) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. If envRec has a binding for the name that is the value of N, return true.
-      if (envRec.bindings.has(N)) {
-        return Value.true;
+      if (envRec.bindings.has(name)) {
+        return true;
       }
       // 3. Return false.
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
-    *CreateMutableBinding(N, D) {
+    *CreateMutableBinding(name, deletable) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec does not already have a binding for N.
-      /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(N)) throw new Assert.Error("!envRec.bindings.has(N)");
+      /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(name)) throw new Assert.Error("!envRec.bindings.has(name)");
       // 3. Create a mutable binding in envRec for N and record that it is uninitialized. If D
       //    is true, record that the newly created binding may be deleted by a subsequent
       //    DeleteBinding call.
-      this.bindings.set(N, {
+      this.bindings.set(name, {
         indirect: false,
         initialized: false,
         mutable: true,
         strict: undefined,
-        deletable: D === Value.true,
+        deletable: deletable,
         value: undefined,
         mark(m) {
           m(this.value);
@@ -10456,18 +10246,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s */
-    CreateImmutableBinding(N, S) {
+    CreateImmutableBinding(name, strict) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec does not already have a binding for N.
-      /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(N)) throw new Assert.Error("!envRec.bindings.has(N)");
+      /* Assert */ /* node:coverage ignore next */if (!!envRec.bindings.has(name)) throw new Assert.Error("!envRec.bindings.has(name)");
       // 3. Create an immutable binding in envRec for N and record that it is uninitialized. If
       //    S is true, record that the newly created binding is a strict binding.
-      this.bindings.set(N, {
+      this.bindings.set(name, {
         indirect: false,
         initialized: false,
         mutable: false,
-        strict: S === Value.true,
+        strict: strict,
         deletable: false,
         value: undefined,
         mark(m) {
@@ -10482,14 +10272,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
-    *InitializeBinding(N, V) {
+    *InitializeBinding(name, value) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec must have an uninitialized binding for N.
-      const binding = envRec.bindings.get(N);
+      const binding = envRec.bindings.get(name);
       /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined && binding.initialized === false)) throw new Assert.Error("binding !== undefined && binding.initialized === false");
       // 3. Set the bound value for N in envRec to V.
-      binding.value = V;
+      binding.value = value;
       // 4. Record that the binding for N in envRec has been initialized.
       binding.initialized = true;
       // 5. Return NormalCompletion(empty).
@@ -10500,43 +10290,43 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
-    *SetMutableBinding(N, V, S) {
-      /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(N)) throw new Assert.Error("IsPropertyKey(N)");
+    *SetMutableBinding(name, value, strict) {
+      /* Assert */ /* node:coverage ignore next */if (!(typeof name === 'string')) throw new Assert.Error("typeof name === 'string'");
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. If envRec does not have a binding for N, then
-      if (!envRec.bindings.has(N)) {
+      if (!envRec.bindings.has(name)) {
         // a. If S is true, throw a ReferenceError exception.
-        if (S === Value.true) {
-          return Throw.ReferenceError('$1 is not defined', N);
+        if (strict) {
+          return Throw.ReferenceError('$1 is not defined', name);
         }
         // b. Perform envRec.CreateMutableBinding(N, true).
-        yield* envRec.CreateMutableBinding(N, Value.true);
+        yield* envRec.CreateMutableBinding(name, true);
         // c. Perform envRec.InitializeBinding(N, V).
-        yield* envRec.InitializeBinding(N, V);
+        yield* envRec.InitializeBinding(name, value);
         // d. Return NormalCompletion(empty).
         return {
           __proto__: NormalCompletion.prototype,
           Value: undefined
         };
       }
-      const binding = this.bindings.get(N);
+      const binding = this.bindings.get(name);
       // 3. If the binding for N in envRec is a strict binding, set S to true.
       if (binding.strict === true) {
-        S = Value.true;
+        strict = true;
       }
       // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
       if (binding.initialized === false) {
-        return Throw.ReferenceError('$1 cannot be used before initialization', N);
+        return Throw.ReferenceError('$1 cannot be used before initialization', name);
       }
       // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
       if (binding.mutable === true) {
-        binding.value = V;
+        binding.value = value;
       } else {
         // a. Assert: This is an attempt to change the value of an immutable binding.
         // b. If S is true, throw a TypeError exception.
-        if (S === Value.true) {
-          return Throw.TypeError('Assignment to constant variable $1', N);
+        if (strict) {
+          return Throw.TypeError('Assignment to constant variable $1', name);
         }
       }
       // 7. Return NormalCompletion(empty).
@@ -10547,15 +10337,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
-    *GetBindingValue(N, _S) {
+    *GetBindingValue(name, _strict) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec has a binding for N.
-      const binding = envRec.bindings.get(N);
+      const binding = envRec.bindings.get(name);
       /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
       // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
       if (binding.initialized === false) {
-        return Throw.ReferenceError('$1 cannot be used before initialization', N);
+        return Throw.ReferenceError('$1 cannot be used before initialization', name);
       }
       // 4. Return the value currently bound to N in envRec.
       return {
@@ -10565,32 +10355,32 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
-    *DeleteBinding(N) {
+    *DeleteBinding(name) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec has a binding for the name that is the value of N.
-      const binding = envRec.bindings.get(N);
+      const binding = envRec.bindings.get(name);
       /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
       // 3. If the binding for N in envRec cannot be deleted, return false.
       if (binding.deletable === false) {
-        return Value.false;
+        return false;
       }
       // 4. Remove the binding for N from envRec.
-      envRec.bindings.delete(N);
+      envRec.bindings.delete(name);
       // 5. Return true.
-      return Value.true;
+      return true;
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
     HasThisBinding() {
       // 1. Return false.
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
     HasSuperBinding() {
       // 1. Return false.
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
@@ -10664,9 +10454,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const envRec = this;
       // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
       if (envRec.ThisBindingStatus === 'lexical') {
-        return Value.false;
+        return false;
       } else {
-        return Value.true;
+        return true;
       }
     }
 
@@ -10675,13 +10465,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const envRec = this;
       // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
       if (envRec.ThisBindingStatus === 'lexical') {
-        return Value.false;
+        return false;
       }
       // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
       if (envRec.FunctionObject.HomeObject === Value.undefined) {
-        return Value.false;
+        return false;
       } else {
-        return Value.true;
+        return true;
       }
     }
 
@@ -10732,37 +10522,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-module-environment-records */
   class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
     /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
-    *GetBindingValue(N, S) {
-      /* Assert */ /* node:coverage ignore next */ // 1. Assert: S is true.
-      if (!(S === Value.true)) throw new Assert.Error("S === Value.true");
+    *GetBindingValue(name, strict) {
+      /* Assert */ /* node:coverage ignore next */ // 1. Assert: strict is true.
+      if (!strict) throw new Assert.Error("strict");
       // 2. Let envRec be the module Environment Record for which the method was invoked.
       const envRec = this;
       // 3. Assert: envRec has a binding for N.
-      const binding = envRec.bindings.get(N);
+      const binding = envRec.bindings.get(name);
       /* Assert */ /* node:coverage ignore next */if (!(binding !== undefined)) throw new Assert.Error("binding !== undefined");
       // 4. If the binding for N is an indirect binding, then
       if (binding.indirect === true) {
         // a. Let M and N2 be the indirection values provided when this binding for N was created.
-        const [M, N2] = binding.target;
+        const [module, targetName] = binding.target;
         // b.Let targetEnv be M.[[Environment]].
-        const targetEnv = M.Environment;
+        const targetEnv = module.Environment;
         // c. If targetEnv is undefined, throw a ReferenceError exception.
         if (!targetEnv) {
-          return Throw.ReferenceError('$1 is not defined', N);
+          return Throw.ReferenceError('$1 is not defined', name);
         }
         // d. Return ? targetEnv.GetBindingValue(N2, true).
-        return yield* targetEnv.GetBindingValue(N2, Value.true);
+        return yield* targetEnv.GetBindingValue(targetName, true);
       }
-      // 5. If the binding for N is an uninitialized deferred initialization binding, initialize it.
+      // 5. If the binding for name is an uninitialized deferred initialization binding, initialize it.
       if (binding.initialized === false) {
         if (isDeferredInitializationBinding(binding)) {
           const value = binding.initializationSteps();
-          yield* envRec.InitializeBinding(N, value);
+          yield* envRec.InitializeBinding(name, value);
         } else {
-          return Throw.ReferenceError('$1 cannot be used before initialization', N);
+          return Throw.ReferenceError('$1 cannot be used before initialization', name);
         }
       }
-      // 6. Return the value currently bound to N in envRec.
+      // 6. Return the value currently bound to name in envRec.
       return {
         __proto__: NormalCompletion.prototype,
         Value: binding.value
@@ -10777,7 +10567,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
     HasThisBinding() {
       // Return true.
-      return Value.true;
+      return true;
     }
 
     /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
@@ -10787,26 +10577,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-createimportbinding */
-    CreateImportBinding(N, M, N2) {
+    CreateImportBinding(name, targetModule, targetName) {
       // 1. Let envRec be the module Environment Record for which the method was invoked.
       const envRec = this;
-      // 2. Assert: envRec does not already have a binding for N.
-      /* X */let _temp2 = envRec.HasBinding(N);
+      // 2. Assert: envRec does not already have a binding for name.
+      /* X */let _temp2 = envRec.HasBinding(name);
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! envRec.HasBinding(N) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! envRec.HasBinding(name) returned an abrupt completion", {
           cause: _temp2
         });
         _temp2 = _temp2.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp2 === Value.false)) throw new Assert.Error("X(envRec.HasBinding(N)) === Value.false");
+      /* Assert */ /* node:coverage ignore next */if (!!_temp2) throw new Assert.Error("!X(envRec.HasBinding(name))");
       // 3. Assert: M is a Module Record.
-      /* Assert */ /* node:coverage ignore next */if (!(M instanceof AbstractModuleRecord)) throw new Assert.Error("M instanceof AbstractModuleRecord");
+      /* Assert */ /* node:coverage ignore next */if (!(targetModule instanceof AbstractModuleRecord)) throw new Assert.Error("targetModule instanceof AbstractModuleRecord");
       // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
       // 5. Create an immutable indirect binding in envRec for N that references M and N2 as its target binding and record that the binding is initialized.
-      envRec.bindings.set(N, {
+      envRec.bindings.set(name, {
         indirect: true,
-        target: [M, N2],
+        target: [targetModule, targetName],
         initialized: true,
         mark(m) {
           m(this.target?.[0]);
@@ -10821,16 +10611,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/proposal-deferred-reexports/#sec-createdeferredinitializationbinding */
-    CreateDeferredInitializationBinding(N, initializationSteps) {
-      /* X */let _temp3 = this.HasBinding(N);
+    CreateDeferredInitializationBinding(name, initializationSteps) {
+      /* X */let _temp3 = this.HasBinding(name);
       /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
       /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! this.HasBinding(N) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! this.HasBinding(name) returned an abrupt completion", {
           cause: _temp3
         });
         _temp3 = _temp3.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp3 === Value.false)) throw new Assert.Error("X(this.HasBinding(N)) === Value.false");
+      /* Assert */ /* node:coverage ignore next */if (!!_temp3) throw new Assert.Error("!X(this.HasBinding(name))");
       // 2. Create an immutable deferred initialization binding in envRec for name whose deferred initialization steps is initializationSteps, and record that the binding is uninitialized and that it is a strict binding.
       const binding = {
         indirect: false,
@@ -10843,7 +10633,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           m(this.value);
         }
       };
-      this.bindings.set(N, binding);
+      this.bindings.set(name, binding);
     }
   }
 
@@ -10853,32 +10643,32 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     IsWithEnvironment;
 
     /** https://tc39.es/ecma262/#sec-newobjectenvironment */
-    constructor(O, W, E) {
-      super(E);
-      this.BindingObject = O;
-      this.IsWithEnvironment = W;
+    constructor(object, IsWithEnvironment, Environment) {
+      super(Environment);
+      this.BindingObject = object;
+      this.IsWithEnvironment = IsWithEnvironment;
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
-    *HasBinding(N) {
+    *HasBinding(name) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let bindings be the binding object for envRec.
       const bindings = envRec.BindingObject;
       // 3. Let foundBinding be ? HasProperty(bindings, N).
-      /* ReturnIfAbrupt */let _foundBinding = yield* HasProperty(bindings, N);
+      /* ReturnIfAbrupt */let _foundBinding = yield* HasProperty(bindings, name);
       /* ReturnIfAbrupt */if (_foundBinding instanceof Completion) {
         if (_foundBinding instanceof AbruptCompletion) return _foundBinding;
         _foundBinding = _foundBinding.Value;
       }
       const foundBinding = _foundBinding;
       // 4. If foundBinding is false, return false.
-      if (foundBinding === Value.false) {
-        return Value.false;
+      if (!foundBinding) {
+        return false;
       }
       // 5. If the IsWithEnvironment flag of envRec i s false, return true.
-      if (envRec.IsWithEnvironment === Value.false) {
-        return Value.true;
+      if (!envRec.IsWithEnvironment) {
+        return true;
       }
       // 6. Let unscopables be ? Get(bindings, @@unscopables).
       /* ReturnIfAbrupt */let _unscopables = yield* Get(bindings, wellKnownSymbols.unscopables);
@@ -10889,7 +10679,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const unscopables = _unscopables;
       // 7. If Type(unscopables) is Object, then
       if (unscopables instanceof ObjectValue) {
-        /* ReturnIfAbrupt */let _blocked2 = yield* Get(unscopables, N);
+        /* ReturnIfAbrupt */let _blocked2 = yield* Get(unscopables, name);
         /* ReturnIfAbrupt */if (_blocked2 instanceof Completion) {
           if (_blocked2 instanceof AbruptCompletion) return _blocked2;
           _blocked2 = _blocked2.Value;
@@ -10897,7 +10687,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         /* X */let _blocked = ToBoolean(_blocked2);
         /* node:coverage ignore next */if (_blocked && typeof _blocked === 'object' && 'next' in _blocked) _blocked = skipDebugger(_blocked);
         /* node:coverage ignore next */if (_blocked instanceof Completion) {
-          /* node:coverage ignore next */if (_blocked instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(Q(yield* Get(unscopables, N))) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_blocked instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(Q(yield* Get(unscopables, name))) returned an abrupt completion", {
             cause: _blocked
           });
           _blocked = _blocked.Value;
@@ -10905,26 +10695,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
         const blocked = _blocked;
         // b. If blocked is true, return false.
-        if (blocked === Value.true) {
-          return Value.false;
+        if (blocked) {
+          return false;
         }
       }
       // 8. Return true.
-      return Value.true;
+      return true;
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
-    *CreateMutableBinding(N, D) {
+    *CreateMutableBinding(name, deletable) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let envRec be the object Environment Record for which the method was invoked.
       const bindings = envRec.BindingObject;
-      // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
-      /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(bindings, N, exports.Descriptor({
+      // 3. Return ? DefinePropertyOrThrow(bindings, name, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
+      /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(bindings, name, exports.Descriptor({
         Value: Value.undefined,
-        Writable: Value.true,
-        Enumerable: Value.true,
-        Configurable: D
+        Writable: true,
+        Enumerable: true,
+        Configurable: deletable
       }));
       /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
         if (_temp4 instanceof AbruptCompletion) return _temp4;
@@ -10933,18 +10723,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s */
-    CreateImmutableBinding(_N, _S) {
+    CreateImmutableBinding(_name, _strict) {
       /* Assert */ /* node:coverage ignore next */throw new Assert.Error('CreateImmutableBinding called on an Object Environment Record');
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
-    *InitializeBinding(N, V) {
+    *InitializeBinding(name, value) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec must have an uninitialized binding for N.
       // 3. Record that the binding for N in envRec has been initialized.
       // 4. Return ? envRec.SetMutableBinding(N, V, false).
-      /* ReturnIfAbrupt */let _temp5 = yield* envRec.SetMutableBinding(N, V, Value.false);
+      /* ReturnIfAbrupt */let _temp5 = yield* envRec.SetMutableBinding(name, value, false);
       /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         _temp5 = _temp5.Value;
@@ -10952,24 +10742,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
-    *SetMutableBinding(N, V, S) {
+    *SetMutableBinding(name, value, strict) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let bindings be the binding object for envRec.
       const bindings = envRec.BindingObject;
       // 3. Let stillExists be ? HasProperty(bindings, N).
-      /* ReturnIfAbrupt */let _stillExists = yield* HasProperty(bindings, N);
+      /* ReturnIfAbrupt */let _stillExists = yield* HasProperty(bindings, name);
       /* ReturnIfAbrupt */if (_stillExists instanceof Completion) {
         if (_stillExists instanceof AbruptCompletion) return _stillExists;
         _stillExists = _stillExists.Value;
       }
       const stillExists = _stillExists;
       // 4. If stillExists is false and S is true, throw a ReferenceError exception.
-      if (stillExists === Value.false && S === Value.true) {
-        return Throw.ReferenceError('$1 is not defined', N);
+      if (!stillExists && strict) {
+        return Throw.ReferenceError('$1 is not defined', name);
       }
-      // 5. Return ? Set(bindings, N, V, S).
-      /* ReturnIfAbrupt */let _temp6 = yield* Set$1(bindings, N, V, S);
+      // 5. Return ? Set(bindings, name, value, strict).
+      /* ReturnIfAbrupt */let _temp6 = yield* Set$1(bindings, name, value, strict);
       /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         _temp6 = _temp6.Value;
@@ -10978,54 +10768,54 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s */
-    *GetBindingValue(N, S) {
+    *GetBindingValue(name, strict) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let bindings be the binding object for envRec.
       const bindings = envRec.BindingObject;
-      // 3. Let value be ? HasProperty(bindings, N).
-      /* ReturnIfAbrupt */let _value = yield* HasProperty(bindings, N);
+      // 3. Let value be ? HasProperty(bindings, name).
+      /* ReturnIfAbrupt */let _value = yield* HasProperty(bindings, name);
       /* ReturnIfAbrupt */if (_value instanceof Completion) {
         if (_value instanceof AbruptCompletion) return _value;
         _value = _value.Value;
       }
       const value = _value;
       // 4. If value is false, then
-      if (value === Value.false) {
-        // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
-        if (S === Value.false) {
+      if (!value) {
+        // a. If strict is false, return the value undefined; otherwise throw a ReferenceError exception.
+        if (!strict) {
           return {
             __proto__: NormalCompletion.prototype,
             Value: Value.undefined
           };
         } else {
-          return Throw.ReferenceError('$1 is not defined', N);
+          return Throw.ReferenceError('$1 is not defined', name);
         }
       }
-      // 5. Return Get(bindings, N).
-      return yield* Get(bindings, N);
+      // 5. Return Get(bindings, name).
+      return yield* Get(bindings, name);
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
-    *DeleteBinding(N) {
+    *DeleteBinding(name) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let bindings be the binding object for envRec.
       const bindings = envRec.BindingObject;
       // 3. Return ? bindings.[[Delete]](N).
-      return yield* bindings.Delete(N);
+      return yield* bindings.Delete(name);
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
     HasThisBinding() {
       // 1. Return false.
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
     HasSuperBinding() {
-      // 1. Return falase.
-      return Value.false;
+      // 1. Return false.
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
@@ -11033,7 +10823,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
       // 2. If the IsWithEnvironment flag of envRec is true, return the binding object for envRec.
-      if (envRec.IsWithEnvironment === Value.true) {
+      if (envRec.IsWithEnvironment) {
         return envRec.BindingObject;
       }
       // 3. Otherwise, return undefined.
@@ -11056,7 +10846,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-newglobalenvironment */
     constructor(G, thisValue) {
       // 1. Let objRec be NewObjectEnvironment(G, false, null).
-      const objRec = new ObjectEnvironmentRecord(G, Value.false, null);
+      const objRec = new ObjectEnvironmentRecord(G, false, null);
       // 2. Let dclRec be a new declarative Environment Record containing no bindings.
       const dclRec = new DeclarativeEnvironmentRecord(null);
       // 3. Let env be a new global Environment Record.
@@ -11072,74 +10862,74 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
-    *HasBinding(N) {
+    *HasBinding(name) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let DclRec be envRec.[[DeclarativeRecord]].
       const DclRec = envRec.DeclarativeRecord;
-      // 3. If DclRec.HasBinding(N) is true, return true.
-      if ((yield* DclRec.HasBinding(N)) === Value.true) {
-        return Value.true;
+      // 3. If DclRec.HasBinding(name) is true, return true.
+      if (yield* DclRec.HasBinding(name)) {
+        return true;
       }
-      // 4. If DclRec.HasBinding(N) is true, return true.
+      // 4. If DclRec.HasBinding(name) is true, return true.
       const ObjRec = envRec.ObjectRecord;
       // 5. Let ObjRec be envRec.[[ObjectRecord]].
-      return yield* ObjRec.HasBinding(N);
+      return yield* ObjRec.HasBinding(name);
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d */
-    *CreateMutableBinding(N, D) {
+    *CreateMutableBinding(name, strict) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let DclRec be envRec.[[DeclarativeRecord]].
       const DclRec = envRec.DeclarativeRecord;
-      // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-      if ((yield* DclRec.HasBinding(N)) === Value.true) {
-        return Throw.TypeError('$1 is already declared', N);
+      // 3. If DclRec.HasBinding(name) is true, throw a TypeError exception.
+      if (yield* DclRec.HasBinding(name)) {
+        return Throw.TypeError('$1 is already declared', name);
       }
-      // 4. Return DclRec.CreateMutableBinding(N, D).
-      return yield* DclRec.CreateMutableBinding(N, D);
+      // 4. Return DclRec.CreateMutableBinding(name, strict).
+      return yield* DclRec.CreateMutableBinding(name, strict);
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s */
-    CreateImmutableBinding(N, S) {
+    CreateImmutableBinding(name, strict) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let DclRec be envRec.[[DeclarativeRecord]].
       const DclRec = envRec.DeclarativeRecord;
-      // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-      /* X */let _temp7 = DclRec.HasBinding(N);
+      // 3. If DclRec.HasBinding(name) is true, throw a TypeError exception.
+      /* X */let _temp7 = DclRec.HasBinding(name);
       /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
       /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(N) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(name) returned an abrupt completion", {
           cause: _temp7
         });
         _temp7 = _temp7.Value;
       }
-      if (_temp7 === Value.true) {
-        return Throw.TypeError('$1 is already declared', N);
+      if (_temp7) {
+        return Throw.TypeError('$1 is already declared', name);
       }
-      // Return DclRec.CreateImmutableBinding(N, S).
-      return DclRec.CreateImmutableBinding(N, S);
+      // Return DclRec.CreateImmutableBinding(name, strict).
+      return DclRec.CreateImmutableBinding(name, strict);
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
-    *InitializeBinding(N, V) {
+    *InitializeBinding(name, value) {
       const envRec = this;
       const DclRec = envRec.DeclarativeRecord;
-      /* X */let _temp8 = DclRec.HasBinding(N);
+      /* X */let _temp8 = DclRec.HasBinding(name);
       /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
       /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(N) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.HasBinding(name) returned an abrupt completion", {
           cause: _temp8
         });
         _temp8 = _temp8.Value;
       }
-      if (_temp8 === Value.true) {
-        /* X */let _temp9 = DclRec.InitializeBinding(N, V);
+      if (_temp8) {
+        /* X */let _temp9 = DclRec.InitializeBinding(name, value);
         /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
         /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.InitializeBinding(N, V) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! DclRec.InitializeBinding(name, value) returned an abrupt completion", {
             cause: _temp9
           });
           _temp9 = _temp9.Value;
@@ -11149,25 +10939,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 4. Assert: If the binding exists, it must be in the object Environment Record.
       // 5. Let ObjRec be envRec.[[ObjectRecord]].
       const ObjRec = envRec.ObjectRecord;
-      // 6. Return ? ObjRec.InitializeBinding(N, V).
-      return yield* ObjRec.InitializeBinding(N, V);
+      // 6. Return ? ObjRec.InitializeBinding(name, V).
+      return yield* ObjRec.InitializeBinding(name, value);
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
-    *SetMutableBinding(N, V, S) {
+    *SetMutableBinding(name, value, strict) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let DclRec be envRec.[[DeclarativeRecord]].
       const DclRec = envRec.DeclarativeRecord;
-      // 3. If DclRec.HasBinding(N) is true, then
-      if ((yield* DclRec.HasBinding(N)) === Value.true) {
-        // a. Return DclRec.SetMutableBinding(N, V, S).
-        return yield* DclRec.SetMutableBinding(N, V, S);
+      // 3. If DclRec.HasBinding(name) is true, then
+      if (yield* DclRec.HasBinding(name)) {
+        // a. Return DclRec.SetMutableBinding(name, value, strict).
+        return yield* DclRec.SetMutableBinding(name, value, strict);
       }
       // 4. Let ObjRec be envRec.[[ObjectRecord]].
       const ObjRec = envRec.ObjectRecord;
-      // 5. Return ? ObjRec.SetMutableBinding(N, V, S).
-      /* ReturnIfAbrupt */let _temp0 = yield* ObjRec.SetMutableBinding(N, V, S);
+      // 5. Return ? ObjRec.SetMutableBinding(name, value, strict).
+      /* ReturnIfAbrupt */let _temp0 = yield* ObjRec.SetMutableBinding(name, value, strict);
       /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
         if (_temp0 instanceof AbruptCompletion) return _temp0;
         _temp0 = _temp0.Value;
@@ -11176,63 +10966,63 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s */
-    *GetBindingValue(N, S) {
+    *GetBindingValue(name, strict) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let DclRec be envRec.[[DeclarativeRecord]].
       const DclRec = envRec.DeclarativeRecord;
-      // 3. If DclRec.HasBinding(N) is true, then
-      if ((yield* DclRec.HasBinding(N)) === Value.true) {
-        // a. Return DclRec.GetBindingValue(N, S).
-        return yield* DclRec.GetBindingValue(N, S);
+      // 3. If DclRec.HasBinding(name) is true, then
+      if (yield* DclRec.HasBinding(name)) {
+        // a. Return DclRec.GetBindingValue(name, strict).
+        return yield* DclRec.GetBindingValue(name, strict);
       }
       // 4. Let ObjRec be envRec.[[ObjectRecord]].
       const ObjRec = envRec.ObjectRecord;
-      // 5. Return ObjRec.GetBindingValue(N, S).
-      return yield* ObjRec.GetBindingValue(N, S);
+      // 5. Return ObjRec.GetBindingValue(name, strict).
+      return yield* ObjRec.GetBindingValue(name, strict);
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
-    *DeleteBinding(N) {
+    *DeleteBinding(name) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let DclRec be envRec.[[DeclarativeRecord]].
       const DclRec = this.DeclarativeRecord;
       // 3. Let DclRec be envRec.[[DeclarativeRecord]].
-      if ((yield* DclRec.HasBinding(N)) === Value.true) {
+      if (yield* DclRec.HasBinding(name)) {
         // a. Return DclRec.DeleteBinding(N).
-        return yield* DclRec.DeleteBinding(N);
+        return yield* DclRec.DeleteBinding(name);
       }
       // 4. Let ObjRec be envRec.[[ObjectRecord]].
       const ObjRec = envRec.ObjectRecord;
       // 5. Let globalObject be the binding object for ObjRec.
       const globalObject = ObjRec.BindingObject;
       // 6. Let existingProp be ? HasOwnProperty(globalObject, N).
-      /* ReturnIfAbrupt */let _existingProp = yield* HasOwnProperty(globalObject, N);
+      /* ReturnIfAbrupt */let _existingProp = yield* HasOwnProperty(globalObject, name);
       /* ReturnIfAbrupt */if (_existingProp instanceof Completion) {
         if (_existingProp instanceof AbruptCompletion) return _existingProp;
         _existingProp = _existingProp.Value;
       }
       const existingProp = _existingProp;
       // 7. If existingProp is true, then
-      if (existingProp === Value.true) {
+      if (existingProp) {
         // a. Return ? ObjRec.DeleteBinding(N).
-        return yield* ObjRec.DeleteBinding(N);
+        return yield* ObjRec.DeleteBinding(name);
       }
       // 8. Return true.
-      return Value.true;
+      return true;
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
     HasThisBinding() {
       // Return true.
-      return Value.true;
+      return true;
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
     HasSuperBinding() {
       // 1. Return false.
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
@@ -11250,40 +11040,40 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
-    *HasLexicalDeclaration(N) {
+    *HasLexicalDeclaration(name) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let envRec be the global Environment Record for which the method was invoked.
       const DclRec = envRec.DeclarativeRecord;
       // 3. Let DclRec be envRec.[[DeclarativeRecord]].
-      return yield* DclRec.HasBinding(N);
+      return yield* DclRec.HasBinding(name);
     }
 
     /** https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
-    *HasRestrictedGlobalProperty(N) {
+    *HasRestrictedGlobalProperty(name) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let ObjRec be envRec.[[ObjectRecord]].
       const ObjRec = envRec.ObjectRecord;
       // 3. Let globalObject be the binding object for ObjRec.
       const globalObject = ObjRec.BindingObject;
-      // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-      /* ReturnIfAbrupt */let _existingProp2 = yield* globalObject.GetOwnProperty(N);
+      // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](name).
+      /* ReturnIfAbrupt */let _existingProp2 = yield* globalObject.GetOwnProperty(name);
       /* ReturnIfAbrupt */if (_existingProp2 instanceof Completion) {
         if (_existingProp2 instanceof AbruptCompletion) return _existingProp2;
         _existingProp2 = _existingProp2.Value;
       }
       const existingProp = _existingProp2;
       // 5. If existingProp is undefined, return false.
-      if (existingProp instanceof UndefinedValue) {
-        return Value.false;
+      if (!existingProp) {
+        return false;
       }
       // 6. If existingProp.[[Configurable]] is true, return false.
-      if (existingProp.Configurable === Value.true) {
-        return Value.false;
+      if (existingProp.Configurable) {
+        return false;
       }
       // Return true.
-      return Value.true;
+      return true;
     }
 
     /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
@@ -11302,8 +11092,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const hasProperty = _hasProperty;
       // 5. If hasProperty is true, return true.
-      if (hasProperty === Value.true) {
-        return Value.true;
+      if (hasProperty) {
+        return true;
       }
       // 6. Return ? IsExtensible(globalObject).
       return yield* IsExtensible(globalObject);
@@ -11325,24 +11115,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const existingProp = _existingProp3;
       // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
-      if (existingProp instanceof UndefinedValue) {
+      if (!existingProp) {
         return yield* IsExtensible(globalObject);
       }
       // 6. If existingProp.[[Configurable]] is true, return true.
-      if (existingProp.Configurable === Value.true) {
-        return Value.true;
+      if (existingProp.Configurable) {
+        return true;
       }
       // 7. If IsDataDescriptor(existingProp) is true and existingProp has attribute values
       //    { [[Writable]]: true, [[Enumerable]]: true }, return true.
-      if (IsDataDescriptor(existingProp) === true && existingProp.Writable === Value.true && existingProp.Enumerable === Value.true) {
-        return Value.true;
+      if (IsDataDescriptor(existingProp) === true && existingProp.Writable && existingProp.Enumerable) {
+        return true;
       }
       // 8. Return false.
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
-    *CreateGlobalVarBinding(N, D) {
+    *CreateGlobalVarBinding(name, deletable) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -11350,7 +11140,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let globalObject be the binding object for ObjRec.
       const globalObject = ObjRec.BindingObject;
       // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
-      /* ReturnIfAbrupt */let _hasProperty2 = yield* HasOwnProperty(globalObject, N);
+      /* ReturnIfAbrupt */let _hasProperty2 = yield* HasOwnProperty(globalObject, name);
       /* ReturnIfAbrupt */if (_hasProperty2 instanceof Completion) {
         if (_hasProperty2 instanceof AbruptCompletion) return _hasProperty2;
         _hasProperty2 = _hasProperty2.Value;
@@ -11364,14 +11154,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const extensible = _extensible;
       // 6. If hasProperty is false and extensible is true, then
-      if (hasProperty === Value.false && extensible === Value.true) {
-        /* ReturnIfAbrupt */let _temp1 = yield* ObjRec.CreateMutableBinding(N, D);
+      if (!hasProperty && extensible) {
+        /* ReturnIfAbrupt */let _temp1 = yield* ObjRec.CreateMutableBinding(name, deletable);
         /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
           if (_temp1 instanceof AbruptCompletion) return _temp1;
           _temp1 = _temp1.Value;
         } // a. Perform ? ObjRec.CreateMutableBinding(N, D).
 
-        /* ReturnIfAbrupt */let _temp10 = yield* ObjRec.InitializeBinding(N, Value.undefined);
+        /* ReturnIfAbrupt */let _temp10 = yield* ObjRec.InitializeBinding(name, Value.undefined);
         /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
           if (_temp10 instanceof AbruptCompletion) return _temp10;
           _temp10 = _temp10.Value;
@@ -11385,7 +11175,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
-    *CreateGlobalFunctionBinding(N, V, D) {
+    *CreateGlobalFunctionBinding(name, value, deletable) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -11393,7 +11183,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let globalObject be the binding object for ObjRec.
       const globalObject = ObjRec.BindingObject;
       // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-      /* ReturnIfAbrupt */let _existingProp4 = yield* globalObject.GetOwnProperty(N);
+      /* ReturnIfAbrupt */let _existingProp4 = yield* globalObject.GetOwnProperty(name);
       /* ReturnIfAbrupt */if (_existingProp4 instanceof Completion) {
         if (_existingProp4 instanceof AbruptCompletion) return _existingProp4;
         _existingProp4 = _existingProp4.Value;
@@ -11401,27 +11191,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const existingProp = _existingProp4;
       // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
       let desc;
-      if (existingProp instanceof UndefinedValue || existingProp.Configurable === Value.true) {
+      if (!existingProp || existingProp.Configurable) {
         // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
         desc = exports.Descriptor({
-          Value: V,
-          Writable: Value.true,
-          Enumerable: Value.true,
-          Configurable: D
+          Value: value,
+          Writable: true,
+          Enumerable: true,
+          Configurable: deletable
         });
       } else {
         // a. Let desc be the PropertyDescriptor { [[Value]]: V }.
         desc = exports.Descriptor({
-          Value: V
+          Value: value
         });
       }
       // 7. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
-      /* ReturnIfAbrupt */let _temp11 = yield* DefinePropertyOrThrow(globalObject, N, desc);
+      /* ReturnIfAbrupt */let _temp11 = yield* DefinePropertyOrThrow(globalObject, name, desc);
       /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
         if (_temp11 instanceof AbruptCompletion) return _temp11;
         _temp11 = _temp11.Value;
       }
-      /* ReturnIfAbrupt */let _temp12 = yield* Set$1(globalObject, N, V, Value.false);
+      /* ReturnIfAbrupt */let _temp12 = yield* Set$1(globalObject, name, value, false);
       /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
         if (_temp12 instanceof AbruptCompletion) return _temp12;
         _temp12 = _temp12.Value;
@@ -11450,7 +11240,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         __proto__: NormalCompletion.prototype,
         Value: new ReferenceRecord({
           Base: 'unresolvable',
-          ReferencedName: name,
+          ReferencedName: Value(name),
           Strict: strict,
           ThisValue: undefined
         })
@@ -11464,13 +11254,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const exists = _exists;
     // 3. If exists is true, then
-    if (exists === Value.true) {
+    if (exists) {
       // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
       return {
         __proto__: NormalCompletion.prototype,
         Value: new ReferenceRecord({
           Base: env,
-          ReferencedName: name,
+          ReferencedName: Value(name),
           Strict: strict,
           ThisValue: undefined
         })
@@ -11528,7 +11318,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               value = _temp2;
             }
             if (kind !== 'normal') {
-              /* Assert */ /* node:coverage ignore next */if (!(IsUnresolvableReference(lhs) === Value.false)) throw new Assert.Error("IsUnresolvableReference(lhs) === Value.false");
+              /* Assert */ /* node:coverage ignore next */if (!!IsUnresolvableReference(lhs)) throw new Assert.Error("!IsUnresolvableReference(lhs)");
               const base = lhs.Base;
               /* Assert */ /* node:coverage ignore next */if (!(base instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("base instanceof DeclarativeEnvironmentRecord");
               /* ReturnIfAbrupt */let _temp3 = yield* AddDisposableResource(base.DisposableResourceStack, value, kind);
@@ -11670,7 +11460,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return obj;
     }
     // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with arguments obj and true.
-    /* ReturnIfAbrupt */let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true);
+    /* ReturnIfAbrupt */let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, true);
     /* ReturnIfAbrupt */if (_temp instanceof Completion) {
       if (_temp instanceof AbruptCompletion) return _temp;
       _temp = _temp.Value;
@@ -11820,7 +11610,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       };
     }
     // 8. Assert: enumerable is true.
-    /* Assert */ /* node:coverage ignore next */if (!(enumerable === Value.true)) throw new Assert.Error("enumerable === Value.true");
+    /* Assert */ /* node:coverage ignore next */if (!enumerable) throw new Assert.Error("enumerable");
     // 9. Assert: object is an ordinary, extensible object with no non-configurable properties.
     // 10. Return ! CreateDataPropertyOrThrow(object, propKey, propValue).
     /* ReturnIfAbrupt */if (propValue instanceof Completion) {
@@ -11857,7 +11647,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const propValue = _propValue;
     // 4. Assert: enumerable is true.
-    /* Assert */ /* node:coverage ignore next */if (!(enumerable === Value.true)) throw new Assert.Error("enumerable === Value.true");
+    /* Assert */ /* node:coverage ignore next */if (!enumerable) throw new Assert.Error("enumerable");
     // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.
     // 6. Return ! CreateDataPropertyOrThrow(object, propName, propValue).
     /* X */let _temp5 = CreateDataPropertyOrThrow(object, propName, propValue);
@@ -11868,7 +11658,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp5 = _temp5.Value;
     }
-    return _temp5;
+    return Value(_temp5);
   }
 
   /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
@@ -11948,7 +11738,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const sourceText = ClassExpression.sourceText;
     // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
-    let value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name, sourceText, decorators);
+    let value = yield* ClassDefinitionEvaluation(ClassTail, undefined, name, sourceText, decorators);
     /* ReturnIfAbrupt */if (value instanceof Completion) {
       if (value instanceof AbruptCompletion) return value;
       value = value.Value;
@@ -12081,10 +11871,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const catchEnv = new DeclarativeEnvironmentRecord(oldEnv);
     // 3. For each element argName of the BoundNames of CatchParameter, do
     for (const argName of BoundNames(CatchParameter)) {
-      /* X */let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
+      /* X */let _temp = catchEnv.CreateMutableBinding(argName, false);
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! catchEnv.CreateMutableBinding(argName, Value.false) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! catchEnv.CreateMutableBinding(argName, false) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -12124,19 +11914,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const dn of BoundNames(d)) {
         // i. If IsConstantDeclaration of d is true, then
         if (IsConstantDeclaration(d)) {
-          /* X */let _temp = env.CreateImmutableBinding(dn, Value.true);
+          /* X */let _temp = env.CreateImmutableBinding(dn, true);
           /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
           /* node:coverage ignore next */if (_temp instanceof Completion) {
-            /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(dn, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! env.CreateImmutableBinding(dn, true) returned an abrupt completion", {
               cause: _temp
             });
             _temp = _temp.Value;
           } // 1. Perform ! env.CreateImmutableBinding(dn, true).
         } else {
-          /* X */let _temp2 = env.CreateMutableBinding(dn, Value.false);
+          /* X */let _temp2 = env.CreateMutableBinding(dn, false);
           /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
           /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! env.CreateMutableBinding(dn, false) returned an abrupt completion", {
               cause: _temp2
             });
             _temp2 = _temp2.Value;
@@ -12206,7 +11996,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       switch (element.type) {
         case 'Elision':
           postIndex += 1;
-          /* ReturnIfAbrupt */let _temp = yield* Set$1(array, 'length', F(postIndex), Value.true);
+          /* ReturnIfAbrupt */let _temp = yield* Set$1(array, 'length', F(postIndex), true);
           /* ReturnIfAbrupt */if (_temp instanceof Completion) {
             if (_temp instanceof AbruptCompletion) return _temp;
             _temp = _temp.Value;
@@ -12379,18 +12169,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.true;
     }
     // 4. If IsUnresolvableReference(ref) is true, then
-    if (IsUnresolvableReference(ref) === Value.true) {
+    if (IsUnresolvableReference(ref)) {
       /* Assert */ /* node:coverage ignore next */ // a. Assert: ref.[[Strict]] is false.
       if (!!ref.Strict) throw new Assert.Error("!ref.Strict");
       // b. Return true.
       return Value.true;
     }
     // 5. If IsPropertyReference(ref) is true, then
-    if (IsPropertyReference(ref) === Value.true) {
+    if (IsPropertyReference(ref)) {
       // a. Assert: IsPrivateReference(ref) is false.
       /* Assert */ /* node:coverage ignore next */if (!!IsPrivateReference(ref)) throw new Assert.Error("!IsPrivateReference(ref)");
       // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
-      if (IsSuperReference(ref) === Value.true) {
+      if (IsSuperReference(ref)) {
         return Throw.ReferenceError('Cannot delete a super property');
       }
       // c. Let baseObj be ? ToObject(ref.[[Base]]).
@@ -12418,11 +12208,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const deleteStatus = _deleteStatus;
       // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
-      if (deleteStatus === Value.false && ref.Strict) {
+      if (!deleteStatus && ref.Strict) {
         return Throw.TypeError('Cannot not delete property $1 on $2', ref.ReferencedName, baseObj);
       }
       // g. Return deleteStatus.
-      return deleteStatus;
+      return Value(deleteStatus);
     } else {
       // 6. Else,
       // a. Let base be ref.[[Base]].
@@ -12430,7 +12220,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Assert: base is an Environment Record.
       /* Assert */ /* node:coverage ignore next */if (!(base instanceof EnvironmentRecord)) throw new Assert.Error("base instanceof EnvironmentRecord");
       // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
-      return yield* base.DeleteBinding(ref.ReferencedName);
+      /* ReturnIfAbrupt */let _temp2 = yield* base.DeleteBinding(ref.ReferencedName.stringValue());
+      /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+        if (_temp2 instanceof AbruptCompletion) return _temp2;
+        _temp2 = _temp2.Value;
+      }
+      return Value(_temp2);
     }
   }
   Evaluate_UnaryExpression_Delete.section = 'https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation';
@@ -12448,10 +12243,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = _expr;
     // 2. Perform ? GetValue(expr).
-    /* ReturnIfAbrupt */let _temp2 = yield* GetValue(expr);
-    /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
-      if (_temp2 instanceof AbruptCompletion) return _temp2;
-      _temp2 = _temp2.Value;
+    /* ReturnIfAbrupt */let _temp3 = yield* GetValue(expr);
+    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      _temp3 = _temp3.Value;
     }
     // 3. Return undefined.
     return Value.undefined;
@@ -12473,7 +12268,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. If Type(val) is Reference, then
     if (_val instanceof ReferenceRecord) {
       // a. If IsUnresolvableReference(val) is true, return "undefined".
-      if (IsUnresolvableReference(_val) === Value.true) {
+      if (IsUnresolvableReference(_val)) {
         return Value('undefined');
       }
     }
@@ -12523,12 +12318,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = _expr2;
     // 2. Return ? ToNumber(? GetValue(expr)).
-    /* ReturnIfAbrupt */let _temp3 = yield* GetValue(expr);
-    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
-      if (_temp3 instanceof AbruptCompletion) return _temp3;
-      _temp3 = _temp3.Value;
+    /* ReturnIfAbrupt */let _temp4 = yield* GetValue(expr);
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
     }
-    return yield* ToNumber(_temp3);
+    return yield* ToNumber(_temp4);
   }
   Evaluate_UnaryExpression_Plus.section = 'https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation';
 
@@ -12626,7 +12421,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const oldValue = ToBoolean(_oldValue5);
     // 3. If oldValue is true, return false.
-    if (oldValue === Value.true) {
+    if (oldValue) {
       return Value.false;
     }
     // 4. Return true.
@@ -12645,10 +12440,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* Evaluate_UnaryExpression(UnaryExpression) {
     switch (UnaryExpression.operator) {
       case 'delete':
-        /* ReturnIfAbrupt */let _temp4 = exports.surroundingAgent.debugger_cannotPreview;
-        /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-          if (_temp4 instanceof AbruptCompletion) return _temp4;
-          _temp4 = _temp4.Value;
+        /* ReturnIfAbrupt */let _temp5 = exports.surroundingAgent.debugger_cannotPreview;
+        /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+          if (_temp5 instanceof AbruptCompletion) return _temp5;
+          _temp5 = _temp5.Value;
         }
         return yield* Evaluate_UnaryExpression_Delete(UnaryExpression);
       case 'void':
@@ -12795,7 +12590,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const lbool = _lbool;
     // 4. If lbool is false, return lval.
-    if (lbool === Value.false) {
+    if (!lbool) {
       return lval;
     }
     // 5. Let rref be the result of evaluating BitwiseORExpression.
@@ -12841,8 +12636,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _lbool = _lbool.Value;
     }
     const lbool = _lbool;
-    // 4. If lbool is false, return lval.
-    if (lbool === Value.true) {
+    // 4. If lbool is true, return lval.
+    if (lbool) {
       return lval;
     }
     // 5. Let rref be the result of evaluating LogicalANDExpression.
@@ -13027,7 +12822,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let env be GetThisEnvironment().
     const env = GetThisEnvironment();
     // 2. Assert: env.HasSuperBinding() is true.
-    /* Assert */ /* node:coverage ignore next */if (!(env.HasSuperBinding() === Value.true)) throw new Assert.Error("env.HasSuperBinding() === Value.true");
+    /* Assert */ /* node:coverage ignore next */if (!env.HasSuperBinding()) throw new Assert.Error("env.HasSuperBinding()");
     // 3. Assert: env is a Function Environment Record.
     /* Assert */ /* node:coverage ignore next */if (!(env instanceof FunctionEnvironmentRecord)) throw new Assert.Error("env instanceof FunctionEnvironmentRecord");
     // 4. Let baseValue be ? env.GetSuperBase().
@@ -13088,7 +12883,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const propertyKey = StringValue(IdentifierName);
       // 4. const strict = SuperProperty.strict;
       // 5. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-      return MakeSuperPropertyReference(actualThis, propertyKey, strict);
+      return MakeSuperPropertyReference(actualThis, Value(propertyKey), strict);
     }
   }
   Evaluate_SuperProperty.section = 'https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation';
@@ -13096,9 +12891,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-initializeboundname */
   function* InitializeBoundName(name, value, environment) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(name) is String.
-    if (!(name instanceof JSStringValue)) throw new Assert.Error("name instanceof JSStringValue");
+    if (!(typeof name === 'string')) throw new Assert.Error("typeof name === 'string'");
     // 2. If environment is not undefined, then
-    if (!(environment instanceof UndefinedValue)) {
+    if (environment !== undefined) {
       // a. Perform environment.InitializeBinding(name, value).
       yield* environment.InitializeBinding(name, value);
       // b. Return NormalCompletion(undefined).
@@ -13363,75 +13158,89 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     switch (operator) {
       case '<':
         {
-          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
-          let r = yield* IsLessThan(lval, rval);
-          /* ReturnIfAbrupt */if (r instanceof Completion) {
-            if (r instanceof AbruptCompletion) return r;
-            r = r.Value;
+          /* ReturnIfAbrupt */let _r = yield* IsLessThan(lval, rval);
+          /* ReturnIfAbrupt */if (_r instanceof Completion) {
+            if (_r instanceof AbruptCompletion) return _r;
+            _r = _r.Value;
           }
+          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
+          const r = _r;
           // 7. If r is undefined, return false. Otherwise, return r.
-          if (r === Value.undefined) {
+          if (r === undefined) {
             return Value.false;
           }
-          return r;
+          return Value(r);
         }
       case '>':
         {
-          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
-          let r = yield* IsLessThan(rval, lval, false);
-          /* ReturnIfAbrupt */if (r instanceof Completion) {
-            if (r instanceof AbruptCompletion) return r;
-            r = r.Value;
+          /* ReturnIfAbrupt */let _r2 = yield* IsLessThan(rval, lval, false);
+          /* ReturnIfAbrupt */if (_r2 instanceof Completion) {
+            if (_r2 instanceof AbruptCompletion) return _r2;
+            _r2 = _r2.Value;
           }
+          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
+          const r = _r2;
           // 7. If r is undefined, return false. Otherwise, return r.
-          if (r === Value.undefined) {
+          if (r === undefined) {
             return Value.false;
           }
-          return r;
+          return Value(r);
         }
       case '<=':
         {
-          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
-          let r = yield* IsLessThan(rval, lval, false);
-          /* ReturnIfAbrupt */if (r instanceof Completion) {
-            if (r instanceof AbruptCompletion) return r;
-            r = r.Value;
+          /* ReturnIfAbrupt */let _r3 = yield* IsLessThan(rval, lval, false);
+          /* ReturnIfAbrupt */if (_r3 instanceof Completion) {
+            if (_r3 instanceof AbruptCompletion) return _r3;
+            _r3 = _r3.Value;
           }
+          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
+          const r = _r3;
           // 7. If r is true or undefined, return false. Otherwise, return true.
-          if (r === Value.true || r === Value.undefined) {
+          if (r === true || r === undefined) {
             return Value.false;
           }
           return Value.true;
         }
       case '>=':
         {
-          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
-          let r = yield* IsLessThan(lval, rval);
-          /* ReturnIfAbrupt */if (r instanceof Completion) {
-            if (r instanceof AbruptCompletion) return r;
-            r = r.Value;
+          /* ReturnIfAbrupt */let _r4 = yield* IsLessThan(lval, rval);
+          /* ReturnIfAbrupt */if (_r4 instanceof Completion) {
+            if (_r4 instanceof AbruptCompletion) return _r4;
+            _r4 = _r4.Value;
           }
+          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
+          const r = _r4;
           // 7. If r is true or undefined, return false. Otherwise, return true.
-          if (r === Value.true || r === Value.undefined) {
+          if (r === true || r === undefined) {
             return Value.false;
           }
           return Value.true;
         }
       case 'instanceof':
+        /* ReturnIfAbrupt */let _temp4 = yield* InstanceofOperator(lval, rval);
+        /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+          if (_temp4 instanceof AbruptCompletion) return _temp4;
+          _temp4 = _temp4.Value;
+        }
         // 5. Return ? InstanceofOperator(lval, rval).
-        return yield* InstanceofOperator(lval, rval);
+        return Value(_temp4);
       case 'in':
         // 5. Return ? InstanceofOperator(lval, rval).
         if (!(rval instanceof ObjectValue)) {
           return Throw.TypeError('Right-hand side of "in" ($1) is not an object', rval);
         }
         // 6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).
-        /* ReturnIfAbrupt */let _temp4 = yield* ToPropertyKey(lval);
-        /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-          if (_temp4 instanceof AbruptCompletion) return _temp4;
-          _temp4 = _temp4.Value;
+        /* ReturnIfAbrupt */let _temp6 = yield* ToPropertyKey(lval);
+        /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+          if (_temp6 instanceof AbruptCompletion) return _temp6;
+          _temp6 = _temp6.Value;
         }
-        return yield* HasProperty(rval, _temp4);
+        /* ReturnIfAbrupt */let _temp5 = yield* HasProperty(rval, _temp6);
+        /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+          if (_temp5 instanceof AbruptCompletion) return _temp5;
+          _temp5 = _temp5.Value;
+        }
+        return Value(_temp5);
       /* node:coverage ignore next */default:
         /* node:coverage ignore next */
         throw OutOfRange.exhaustive(operator);
@@ -13449,7 +13258,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   //     (WhileStatement)
   function Evaluate_BreakableStatement(BreakableStatement) {
     // 1. Let newLabelSet be a new empty List.
-    const newLabelSet = new JSStringSet();
+    const newLabelSet = new Set();
     // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
     return LabelledEvaluation(BreakableStatement, newLabelSet);
   }
@@ -13472,21 +13281,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // accessor is the default value, undefined.
         let [getter = Value.undefined, setter = Value.undefined] = v;
         if (typeof getter === 'function') {
-          getter = CreateBuiltinFunction(getter, 0, name, [], realmRec, undefined, Value('get'), async);
+          getter = CreateBuiltinFunction(getter, 0, name, [], realmRec, undefined, 'get', async);
         }
         if (typeof setter === 'function') {
-          setter = CreateBuiltinFunction(setter, 1, name, [], realmRec, undefined, Value('set'), async);
+          setter = CreateBuiltinFunction(setter, 1, name, [], realmRec, undefined, 'set', async);
         }
         /* X */let _temp = obj.DefineOwnProperty(name, exports.Descriptor({
-          Getter: getter,
-          Setter: setter,
-          Enumerable: Value.false,
-          Configurable: Value.true,
+          Get: getter,
+          Set: setter,
+          Enumerable: false,
+          Configurable: true,
           ...descriptor
         }));
         /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
         /* node:coverage ignore next */if (_temp instanceof Completion) {
-          /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! obj.DefineOwnProperty(name, Descriptor({\n        Getter: getter,\n        Setter: setter,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n        ...descriptor,\n      })) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! obj.DefineOwnProperty(name, Descriptor({\n        Get: getter,\n        Set: setter,\n        Enumerable: false,\n        Configurable: true,\n        ...descriptor,\n      })) returned an abrupt completion", {
             cause: _temp
           });
           _temp = _temp.Value;
@@ -13504,9 +13313,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         obj.properties.set(name, exports.Descriptor({
           Value: value,
-          Writable: Value.true,
-          Enumerable: Value.false,
-          Configurable: Value.true,
+          Writable: true,
+          Enumerable: false,
+          Configurable: true,
           ...descriptor
         }));
       }
@@ -13520,13 +13329,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (stringTag !== undefined) {
       /* X */let _temp2 = proto.DefineOwnProperty(wellKnownSymbols.toStringTag, exports.Descriptor({
         Value: Value(stringTag),
-        Writable: Value.false,
-        Enumerable: Value.false,
-        Configurable: Value.true
+        Writable: false,
+        Enumerable: false,
+        Configurable: true
       }));
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: Value(stringTag),\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: Value(stringTag),\n      Writable: false,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
           cause: _temp2
         });
         _temp2 = _temp2.Value;
@@ -13536,29 +13345,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
     const cons = CreateBuiltinFunction(markBuiltinFunctionAsConstructor(Constructor), length, Value(name), [], realmRec);
-    /* X */let _temp3 = cons.DefineOwnProperty(Value('prototype'), exports.Descriptor({
+    /* X */let _temp3 = cons.DefineOwnProperty('prototype', exports.Descriptor({
       Value: Prototype,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
     /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: Prototype,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! cons.DefineOwnProperty('prototype', Descriptor({\n    Value: Prototype,\n    Writable: false,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp3
       });
       _temp3 = _temp3.Value;
     }
     if (!Prototype.properties.has('constructor')) {
-      /* X */let _temp4 = Prototype.DefineOwnProperty(Value('constructor'), exports.Descriptor({
+      /* X */let _temp4 = Prototype.DefineOwnProperty('constructor', exports.Descriptor({
         Value: cons,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true
+        Writable: true,
+        Enumerable: false,
+        Configurable: true
       }));
       /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
       /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! Prototype.DefineOwnProperty(Value('constructor'), Descriptor({\n      Value: cons,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! Prototype.DefineOwnProperty('constructor', Descriptor({\n      Value: cons,\n      Writable: true,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
           cause: _temp4
         });
         _temp4 = _temp4.Value;
@@ -13639,12 +13448,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let desc be ? object.[[GetOwnProperty]](r).
           const desc = _desc;
           // 2. If desc is not undefined, then,
-          if (!(desc instanceof UndefinedValue)) {
+          if (desc) {
             // a. Append r to visited.
             visited.push(r);
             // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
-            if (desc.Enumerable === Value.true) {
-              return CreateIteratorResultObject(Value(r), Value.false);
+            if (desc.Enumerable) {
+              return CreateIteratorResultObject(Value(r), false);
             }
           }
         }
@@ -13662,7 +13471,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       O.ObjectWasVisited = Value.false;
       // f. If object is null, return CreateIteratorResultObject(undefined, true).
       if (object === Value.null) {
-        return CreateIteratorResultObject(Value.undefined, Value.true);
+        return CreateIteratorResultObject(Value.undefined, true);
       }
     }
   }
@@ -13676,22 +13485,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function LoopContinues(completion, labelSet) {
     // 1. If completion.[[Type]] is normal, return true.
     if (completion.Type === 'normal') {
-      return Value.true;
+      return true;
     }
     // 2. If completion.[[Type]] is not continue, return false.
     if (completion.Type !== 'continue') {
-      return Value.false;
+      return false;
     }
     // 3. If completion.[[Target]] is empty, return true.
     if (completion.Target === undefined) {
-      return Value.true;
+      return true;
     }
     // 4. If completion.[[Target]] is an element of labelSet, return true.
     if (labelSet.has(completion.Target)) {
-      return Value.true;
+      return true;
     }
     // 5. Return false.
-    return Value.false;
+    return false;
   }
   LoopContinues.section = 'https://tc39.es/ecma262/#sec-loopcontinues';
   function LabelledEvaluation(node, labelSet) {
@@ -13719,7 +13528,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     LabelledItem
   }, labelSet) {
     // 1. Let label be the StringValue of LabelIdentifier.
-    const label = StringValue(LabelIdentifier).stringValue();
+    const label = StringValue(LabelIdentifier);
     // 2. Append label as an element of labelSet.
     labelSet.add(label);
     // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
@@ -13862,7 +13671,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let stmtResult be the result of evaluating Statement.
       const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
       // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
-      if (LoopContinues(stmtResult, labelSet) === Value.false) {
+      if (!LoopContinues(stmtResult, labelSet)) {
         return Completion(UpdateEmpty(stmtResult, iterationResult));
       }
       // c. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
@@ -13884,15 +13693,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const exprValue = _exprValue;
       // f. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
-      /* X */let _temp = ToBoolean(exprValue);
-      /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-      /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(exprValue) returned an abrupt completion", {
-          cause: _temp
-        });
-        _temp = _temp.Value;
-      }
-      if (_temp === Value.false) {
+      if (!ToBoolean(exprValue)) {
         return {
           __proto__: NormalCompletion.prototype,
           Value: iterationResult
@@ -13928,15 +13729,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const exprValue = _exprValue2;
       // c. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
-      /* X */let _temp2 = ToBoolean(exprValue);
-      /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
-      /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(exprValue) returned an abrupt completion", {
-          cause: _temp2
-        });
-        _temp2 = _temp2.Value;
-      }
-      if (_temp2 === Value.false) {
+      if (!ToBoolean(exprValue)) {
         return {
           __proto__: NormalCompletion.prototype,
           Value: iterationResult
@@ -13945,7 +13738,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // d. Let stmtResult be the result of evaluating Statement.
       const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
       // e. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
-      if (LoopContinues(stmtResult, labelSet) === Value.false) {
+      if (!LoopContinues(stmtResult, labelSet)) {
         return Completion(UpdateEmpty(stmtResult, iterationResult));
       }
       // f. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
@@ -13985,22 +13778,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           for (const dn of boundNames) {
             // a. If isConst is true, then
             if (isConst) {
-              /* X */let _temp3 = loopEnv.CreateImmutableBinding(dn, Value.true);
-              /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-              /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-                /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! loopEnv.CreateImmutableBinding(dn, Value.true) returned an abrupt completion", {
-                  cause: _temp3
+              /* X */let _temp = loopEnv.CreateImmutableBinding(dn, true);
+              /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+              /* node:coverage ignore next */if (_temp instanceof Completion) {
+                /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! loopEnv.CreateImmutableBinding(dn, true) returned an abrupt completion", {
+                  cause: _temp
                 });
-                _temp3 = _temp3.Value;
+                _temp = _temp.Value;
               } // i. Perform ! loopEnv.CreateImmutableBinding(dn, true).
             } else {
-              /* X */let _temp4 = loopEnv.CreateMutableBinding(dn, Value.false);
-              /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
-              /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-                /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! loopEnv.CreateMutableBinding(dn, Value.false) returned an abrupt completion", {
-                  cause: _temp4
+              /* X */let _temp2 = loopEnv.CreateMutableBinding(dn, false);
+              /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+              /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+                /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! loopEnv.CreateMutableBinding(dn, false) returned an abrupt completion", {
+                  cause: _temp2
                 });
-                _temp4 = _temp4.Value;
+                _temp2 = _temp2.Value;
               } // b. Else,
               // i. Perform ! loopEnv.CreateMutableBinding(dn, false).
             }
@@ -14058,10 +13851,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // a. Let exprRef be the result of evaluating the first Expression.
             const exprRef = _exprRef3;
             // b. Perform ? GetValue(exprRef).
-            /* ReturnIfAbrupt */let _temp5 = yield* GetValue(exprRef);
-            /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-              if (_temp5 instanceof AbruptCompletion) return _temp5;
-              _temp5 = _temp5.Value;
+            /* ReturnIfAbrupt */let _temp3 = yield* GetValue(exprRef);
+            /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+              if (_temp3 instanceof AbruptCompletion) return _temp3;
+              _temp3 = _temp3.Value;
             }
           }
           // 2. Return ? ForBodyEvaluation(the second Expression, the third Expression, Statement, « », labelSet).
@@ -14241,10 +14034,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let V be undefined.
     let iterationResult = Value.undefined;
     // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-    /* ReturnIfAbrupt */let _temp6 = yield* CreatePerIterationEnvironment(perIterationBindings);
-    /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
-      if (_temp6 instanceof AbruptCompletion) return _temp6;
-      _temp6 = _temp6.Value;
+    /* ReturnIfAbrupt */let _temp4 = yield* CreatePerIterationEnvironment(perIterationBindings);
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
     }
     // 3. Repeat,
     while (true) {
@@ -14265,15 +14058,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const testValue = _testValue;
         // iii. If ! ToBoolean(testValue) is false, return NormalCompletion(V).
-        /* X */let _temp7 = ToBoolean(testValue);
-        /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
-        /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(testValue) returned an abrupt completion", {
-            cause: _temp7
+        /* X */let _temp5 = ToBoolean(testValue);
+        /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+        /* node:coverage ignore next */if (_temp5 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! ToBoolean(testValue) returned an abrupt completion", {
+            cause: _temp5
           });
-          _temp7 = _temp7.Value;
+          _temp5 = _temp5.Value;
         }
-        if (_temp7 === Value.false) {
+        if (!_temp5) {
           return {
             __proto__: NormalCompletion.prototype,
             Value: iterationResult
@@ -14283,7 +14076,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Let result be the result of evaluating stmt.
       const result = EnsureCompletion(yield* Evaluate(stmt));
       // c. If LoopContinues(result, labelSet) is false, return Completion(UpdateEmpty(result, V)).
-      if (LoopContinues(result, labelSet) === Value.false) {
+      if (!LoopContinues(result, labelSet)) {
         return Completion(UpdateEmpty(result, iterationResult));
       }
       // d. If result.[[Value]] is not empty, set V to result.[[Value]].
@@ -14291,10 +14084,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         iterationResult = result.Value;
       }
       // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-      /* ReturnIfAbrupt */let _temp8 = yield* CreatePerIterationEnvironment(perIterationBindings);
-      /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
-        if (_temp8 instanceof AbruptCompletion) return _temp8;
-        _temp8 = _temp8.Value;
+      /* ReturnIfAbrupt */let _temp6 = yield* CreatePerIterationEnvironment(perIterationBindings);
+      /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+        if (_temp6 instanceof AbruptCompletion) return _temp6;
+        _temp6 = _temp6.Value;
       }
       // f. If increment is not [empty], then
       if (increment) {
@@ -14306,10 +14099,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // i. Let incRef be the result of evaluating increment.
         const incRef = _incRef;
         // ii. Perform ? GetValue(incRef).
-        /* ReturnIfAbrupt */let _temp9 = yield* GetValue(incRef);
-        /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
-          if (_temp9 instanceof AbruptCompletion) return _temp9;
-          _temp9 = _temp9.Value;
+        /* ReturnIfAbrupt */let _temp7 = yield* GetValue(incRef);
+        /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+          if (_temp7 instanceof AbruptCompletion) return _temp7;
+          _temp7 = _temp7.Value;
         }
       }
     }
@@ -14330,16 +14123,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const thisIterationEnv = new DeclarativeEnvironmentRecord(outer);
       // e. For each element bn of perIterationBindings, do
       for (const bn of perIterationBindings) {
-        /* X */let _temp0 = thisIterationEnv.CreateMutableBinding(bn, Value.false);
-        /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
-        /* node:coverage ignore next */if (_temp0 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! thisIterationEnv.CreateMutableBinding(bn, Value.false) returned an abrupt completion", {
-            cause: _temp0
+        /* X */let _temp8 = thisIterationEnv.CreateMutableBinding(bn, false);
+        /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+        /* node:coverage ignore next */if (_temp8 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! thisIterationEnv.CreateMutableBinding(bn, false) returned an abrupt completion", {
+            cause: _temp8
           });
-          _temp0 = _temp0.Value;
+          _temp8 = _temp8.Value;
         } // i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
 
-        /* ReturnIfAbrupt */let _lastValue = yield* lastIterationEnv.GetBindingValue(bn, Value.true);
+        /* ReturnIfAbrupt */let _lastValue = yield* lastIterationEnv.GetBindingValue(bn, true);
         /* ReturnIfAbrupt */if (_lastValue instanceof Completion) {
           if (_lastValue instanceof AbruptCompletion) return _lastValue;
           _lastValue = _lastValue.Value;
@@ -14368,13 +14161,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const newEnv = new DeclarativeEnvironmentRecord(oldEnv);
       // c. For each string name in uninitializedBoundNames, do
       for (const name of uninitializedBoundNames) {
-        /* X */let _temp1 = newEnv.CreateMutableBinding(name, Value.false);
-        /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
-        /* node:coverage ignore next */if (_temp1 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! newEnv.CreateMutableBinding(name, Value.false) returned an abrupt completion", {
-            cause: _temp1
+        /* X */let _temp9 = newEnv.CreateMutableBinding(name, false);
+        /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+        /* node:coverage ignore next */if (_temp9 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! newEnv.CreateMutableBinding(name, false) returned an abrupt completion", {
+            cause: _temp9
           });
-          _temp1 = _temp1.Value;
+          _temp9 = _temp9.Value;
         } // i. Perform ! newEnv.CreateMutableBinding(name, false).
       }
       // d. Set the running execution context's LexicalEnvironment to newEnv.
@@ -14484,12 +14277,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       let nextResult = _nextResult;
       if (iteratorKind === 'async') {
-        /* ReturnIfAbrupt */let _temp10 = yield* Await(nextResult);
-        /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
-          if (_temp10 instanceof AbruptCompletion) return _temp10;
-          _temp10 = _temp10.Value;
+        /* ReturnIfAbrupt */let _temp0 = yield* Await(nextResult);
+        /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+          if (_temp0 instanceof AbruptCompletion) return _temp0;
+          _temp0 = _temp0.Value;
         }
-        nextResult = _temp10;
+        nextResult = _temp0;
       }
       if (!(nextResult instanceof ObjectValue)) {
         return Throw.TypeError('The return value ($1) of the next() on an iterator ($2) must be an object', nextResult, iteratorRecord.Iterator);
@@ -14500,7 +14293,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _done = _done.Value;
       }
       const done = _done;
-      if (done === Value.true) return iterationResult;
+      if (done) return iterationResult;
       /* ReturnIfAbrupt */let _nextValue = yield* IteratorValue(nextResult);
       /* ReturnIfAbrupt */if (_nextValue instanceof Completion) {
         if (_nextValue instanceof AbruptCompletion) return _nextValue;
@@ -14517,7 +14310,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           } else {
             /* Assert */ /* node:coverage ignore next */if (!(lhsKind === 'varBinding')) throw new Assert.Error("lhsKind === 'varBinding'");
             /* Assert */ /* node:coverage ignore next */if (!(lhs.type === 'ForBinding')) throw new Assert.Error("lhs.type === 'ForBinding'");
-            status = EnsureCompletion(yield* BindingInitialization(lhs, nextValue, Value.undefined));
+            status = EnsureCompletion(yield* BindingInitialization(lhs, nextValue, undefined));
           }
         } else {
           lhsRef = yield* Evaluate(lhs);
@@ -14545,17 +14338,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           /* Assert */ /* node:coverage ignore next */if (!(boundNames.length === 1)) throw new Assert.Error("boundNames.length === 1");
           // 2. Let lhsName be the sole element of the BoundNames of lhs.
           const lhsName = boundNames[0];
-          /* X */let _temp11 = ResolveBinding(lhsName, lhs.strict);
-          /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
-          /* node:coverage ignore next */if (_temp11 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! ResolveBinding(lhsName, lhs.strict) returned an abrupt completion", {
-              cause: _temp11
+          /* X */let _temp1 = ResolveBinding(lhsName, lhs.strict);
+          /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+          /* node:coverage ignore next */if (_temp1 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! ResolveBinding(lhsName, lhs.strict) returned an abrupt completion", {
+              cause: _temp1
             });
-            _temp11 = _temp11.Value;
+            _temp1 = _temp1.Value;
           }
-          lhsRef = _temp11;
+          lhsRef = _temp1;
           if (declarationKind !== 'normal') {
-            /* Assert */ /* node:coverage ignore next */if (!(IsUnresolvableReference(lhsRef) === Value.false)) throw new Assert.Error("IsUnresolvableReference(lhsRef) === Value.false");
+            /* Assert */ /* node:coverage ignore next */if (!!IsUnresolvableReference(lhsRef)) throw new Assert.Error("!IsUnresolvableReference(lhsRef)");
             const base = lhsRef.Base;
             /* Assert */ /* node:coverage ignore next */if (!(base instanceof DeclarativeEnvironmentRecord)) throw new Assert.Error("base instanceof DeclarativeEnvironmentRecord");
             status = EnsureCompletion(yield* AddDisposableResource(base.DisposableResourceStack, nextValue, declarationKind));
@@ -14589,7 +14382,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         result = yield* DisposeResources(iterationEnv.DisposableResourceStack, result);
       }
       exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      if (LoopContinues(result, labelSet) === Value.false) {
+      if (!LoopContinues(result, labelSet)) {
         status = UpdateEmpty(result, iterationResult);
         if (iterationKind === 'enumerate') return status;
         /* Assert */ /* node:coverage ignore next */if (!(iterationKind === 'iterate')) throw new Assert.Error("iterationKind === 'iterate'");
@@ -14613,13 +14406,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'Using':
         {
           for (const name of BoundNames(declaration.ForBinding)) {
-            /* X */let _temp12 = envRecord.CreateImmutableBinding(name, Value.true);
-            /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
-            /* node:coverage ignore next */if (_temp12 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateImmutableBinding(name, Value.true) returned an abrupt completion", {
-                cause: _temp12
+            /* X */let _temp10 = envRecord.CreateImmutableBinding(name, true);
+            /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+            /* node:coverage ignore next */if (_temp10 instanceof Completion) {
+              /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateImmutableBinding(name, true) returned an abrupt completion", {
+                cause: _temp10
               });
-              _temp12 = _temp12.Value;
+              _temp10 = _temp10.Value;
             }
           }
           return;
@@ -14628,22 +14421,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         {
           for (const name of BoundNames(declaration.ForBinding)) {
             if (IsConstantDeclaration(declaration)) {
-              /* X */let _temp13 = envRecord.CreateImmutableBinding(name, Value.true);
-              /* node:coverage ignore next */if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
-              /* node:coverage ignore next */if (_temp13 instanceof Completion) {
-                /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateImmutableBinding(name, Value.true) returned an abrupt completion", {
-                  cause: _temp13
+              /* X */let _temp11 = envRecord.CreateImmutableBinding(name, true);
+              /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
+              /* node:coverage ignore next */if (_temp11 instanceof Completion) {
+                /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateImmutableBinding(name, true) returned an abrupt completion", {
+                  cause: _temp11
                 });
-                _temp13 = _temp13.Value;
+                _temp11 = _temp11.Value;
               }
             } else {
-              /* X */let _temp14 = envRecord.CreateMutableBinding(name, Value.false);
-              /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
-              /* node:coverage ignore next */if (_temp14 instanceof Completion) {
-                /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateMutableBinding(name, Value.false) returned an abrupt completion", {
-                  cause: _temp14
+              /* X */let _temp12 = envRecord.CreateMutableBinding(name, false);
+              /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+              /* node:coverage ignore next */if (_temp12 instanceof Completion) {
+                /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! envRecord.CreateMutableBinding(name, false) returned an abrupt completion", {
+                  cause: _temp12
                 });
-                _temp14 = _temp14.Value;
+                _temp12 = _temp12.Value;
               }
             }
           }
@@ -14709,7 +14502,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const middle = _middle;
       str += head;
-      str += middle.stringValue();
+      str += middle;
     }
     const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
     return Value(str + tail);
@@ -15002,7 +14795,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const b = _b;
     // 2. If NewTarget is undefined, return b.
     if (NewTarget instanceof UndefinedValue) {
-      return b;
+      return Value(b);
     }
     // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
     /* ReturnIfAbrupt */let _O = yield* OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
@@ -15069,15 +14862,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-number.isinteger */
   function Number_isInteger([number = Value.undefined]) {
-    /* X */let _temp = IsIntegralNumber(number);
-    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-    /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! IsIntegralNumber(number) returned an abrupt completion", {
-        cause: _temp
-      });
-      _temp = _temp.Value;
-    }
-    return _temp;
+    return Value(IsIntegralNumber(number));
   }
   Number_isInteger.section = 'https://tc39.es/ecma262/#sec-number.isinteger';
 
@@ -15098,15 +14883,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!(number instanceof NumberValue)) {
       return Value.false;
     }
-    /* X */let _temp2 = IsIntegralNumber(number);
-    /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
-    /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! IsIntegralNumber(number) returned an abrupt completion", {
-        cause: _temp2
-      });
-      _temp2 = _temp2.Value;
-    }
-    if (_temp2 === Value.true) {
+    if (IsIntegralNumber(number)) {
       if (Math.abs(R(number)) <= 2 ** 53 - 1) {
         return Value.true;
       }
@@ -15116,39 +14893,39 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   Number_isSafeInteger.section = 'https://tc39.es/ecma262/#sec-number.issafeinteger';
   function bootstrapNumber(realmRec) {
     const override = {
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     };
     const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [['EPSILON', F(Number.EPSILON), undefined, override], ['MAX_SAFE_INTEGER', F(Number.MAX_SAFE_INTEGER), undefined, override], ['MAX_VALUE', F(Number.MAX_VALUE), undefined, override], ['MIN_SAFE_INTEGER', F(Number.MIN_SAFE_INTEGER), undefined, override], ['MIN_VALUE', F(Number.MIN_VALUE), undefined, override], ['NaN', F(NaN), undefined, override], ['NEGATIVE_INFINITY', F(-Infinity), undefined, override], ['POSITIVE_INFINITY', F(+Infinity), undefined, override], ['isFinite', Number_isFinite, 1], ['isInteger', Number_isInteger, 1], ['isNaN', Number_isNaN, 1], ['isSafeInteger', Number_isSafeInteger, 1]]);
 
     /** https://tc39.es/ecma262/#sec-number.parsefloat */
     // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
-    /* X */let _temp3 = numberConstructor.DefineOwnProperty(Value('parseFloat'), exports.Descriptor({
+    /* X */let _temp = numberConstructor.DefineOwnProperty(Value('parseFloat'), exports.Descriptor({
       Value: realmRec.Intrinsics['%parseFloat%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
-    /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-    /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! numberConstructor.DefineOwnProperty(Value('parseFloat'), Descriptor({\n    Value: realmRec.Intrinsics['%parseFloat%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
-        cause: _temp3
+    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */if (_temp instanceof Completion) {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! numberConstructor.DefineOwnProperty(Value('parseFloat'), Descriptor({\n    Value: realmRec.Intrinsics['%parseFloat%'],\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
+        cause: _temp
       });
-      _temp3 = _temp3.Value;
+      _temp = _temp.Value;
     }
-    /* X */let _temp4 = numberConstructor.DefineOwnProperty(Value('parseInt'), exports.Descriptor({
+    /* X */let _temp2 = numberConstructor.DefineOwnProperty(Value('parseInt'), exports.Descriptor({
       Value: realmRec.Intrinsics['%parseInt%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
-    /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
-    /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! numberConstructor.DefineOwnProperty(Value('parseInt'), Descriptor({\n    Value: realmRec.Intrinsics['%parseInt%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
-        cause: _temp4
+    /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+    /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! numberConstructor.DefineOwnProperty(Value('parseInt'), Descriptor({\n    Value: realmRec.Intrinsics['%parseInt%'],\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
+        cause: _temp2
       });
-      _temp4 = _temp4.Value;
+      _temp2 = _temp2.Value;
     } /** https://tc39.es/ecma262/#sec-number.parseint */
     // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
 
@@ -15240,7 +15017,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }) {
     let s;
     if (value === undefined) {
-      s = Value('');
+      s = '';
     } else {
       if (NewTarget === Value.undefined && value instanceof SymbolValue) {
         /* X */let _temp = SymbolDescriptiveString(value);
@@ -15251,7 +15028,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           });
           _temp = _temp.Value;
         }
-        return _temp;
+        return Value(_temp);
       }
       /* ReturnIfAbrupt */let _temp2 = yield* ToString(value);
       /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
@@ -15261,7 +15038,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       s = _temp2;
     }
     if (NewTarget instanceof UndefinedValue) {
-      return s;
+      return Value(s);
     }
     /* ReturnIfAbrupt */let _temp4 = yield* GetPrototypeFromConstructor(NewTarget, '%String.prototype%');
     /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
@@ -15315,15 +15092,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let nextCP be ? ToNumber(next).
       const nextCP = _nextCP;
       // b. If IsIntegralNumber(nextCP) is false, throw a RangeError exception.
-      /* X */let _temp5 = IsIntegralNumber(nextCP);
-      /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
-      /* node:coverage ignore next */if (_temp5 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! IsIntegralNumber(nextCP) returned an abrupt completion", {
-          cause: _temp5
-        });
-        _temp5 = _temp5.Value;
-      }
-      if (_temp5 === Value.false) {
+      if (!IsIntegralNumber(nextCP)) {
         return Throw.RangeError('Invalid code point $1', next);
       }
       // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
@@ -15393,7 +15162,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _nextSeg = _nextSeg.Value;
       }
       const nextSeg = _nextSeg;
-      stringElements.push(nextSeg.stringValue());
+      stringElements.push(nextSeg);
       if (nextIndex + 1 === literalSegments) {
         return Value(stringElements.join(''));
       }
@@ -15409,7 +15178,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _nextSub = _nextSub.Value;
       }
       const nextSub = _nextSub;
-      stringElements.push(nextSub.stringValue());
+      stringElements.push(nextSub);
       nextIndex += 1;
     }
   }
@@ -15433,7 +15202,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. If description is undefined, let descString be undefined.
     let descString;
     if (description === Value.undefined) {
-      descString = Value.undefined;
+      descString = undefined;
     } else {
       /* ReturnIfAbrupt */let _temp = yield* ToString(description);
       /* ReturnIfAbrupt */if (_temp instanceof Completion) {
@@ -15461,7 +15230,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const globalSymbolRegistry = agentRecord.GlobalSymbolRegistry;
     for (const e of globalSymbolRegistry) {
       // a. If SameValue(e.[[Key]], stringKey) is true, return e.[[Symbol]].
-      if (SameValue(e.Key, stringKey)) {
+      if (e.Key === stringKey) {
         return e.Symbol;
       }
     }
@@ -15485,7 +15254,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.TypeError('arguments[0] ($1) is not a symbol', sym);
     }
     // 2. Return KeyForSymbol(sym).
-    return KeyForSymbol(sym);
+    return Value(KeyForSymbol(sym));
   }
   Symbol_keyFor.section = 'https://tc39.es/ecma262/#sec-symbol.keyfor';
   function bootstrapSymbol(realmRec) {
@@ -15493,13 +15262,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const [name, sym] of Object.entries(wellKnownSymbols)) {
       /* X */let _temp2 = symbolConstructor.DefineOwnProperty(Value(name), exports.Descriptor({
         Value: sym,
-        Writable: Value.false,
-        Enumerable: Value.false,
-        Configurable: Value.false
+        Writable: false,
+        Enumerable: false,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! symbolConstructor.DefineOwnProperty(Value(name), Descriptor({\n      Value: sym,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! symbolConstructor.DefineOwnProperty(Value(name), Descriptor({\n      Value: sym,\n      Writable: false,\n      Enumerable: false,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp2
         });
         _temp2 = _temp2.Value;
@@ -15507,13 +15276,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     /* X */let _temp3 = symbolConstructor.DefineOwnProperty(Value('prototype'), exports.Descriptor({
       Value: realmRec.Intrinsics['%Symbol.prototype%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
     /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! symbolConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: realmRec.Intrinsics['%Symbol.prototype%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! symbolConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: realmRec.Intrinsics['%Symbol.prototype%'],\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp3
       });
       _temp3 = _temp3.Value;
@@ -15620,7 +15389,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case arg instanceof BigIntValue:
         return `${String(R(arg))}n`;
       case arg instanceof SymbolValue:
-        return `Symbol(${arg.Description instanceof UndefinedValue ? '' : arg.Description.stringValue()})`;
+        return `Symbol(${arg.Description || ''})`;
       case arg instanceof NullValue:
         return 'null';
       case arg instanceof UndefinedValue:
@@ -15646,8 +15415,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             return '[object Error]';
           }
           if (isRegExpObject(arg)) {
-            const P = EscapeRegExpPattern(arg.OriginalSource, arg.OriginalFlags).stringValue();
-            const F = arg.OriginalFlags.stringValue();
+            const P = EscapeRegExpPattern(arg.OriginalSource, arg.OriginalFlags);
+            const F = arg.OriginalFlags;
             return `/${P}/${F}`;
           }
           if (isDateObject(arg)) {
@@ -15658,19 +15427,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             return `[Date ${d.toISOString()}]`;
           }
           if (isBooleanObject(arg)) {
-            return `[Boolean ${format(arg.BooleanData)}]`;
+            return `[Boolean ${arg.BooleanData}]`;
           }
           if (isNumberObject(arg)) {
-            return `[Number ${format(arg.NumberData)}]`;
+            return `[Number ${arg.NumberData}]`;
           }
           if (isBigIntObject(arg)) {
-            return `[BigInt ${format(arg.BigIntData)}]`;
+            return `[BigInt ${arg.BigIntData}]`;
           }
           if (isStringObject(arg)) {
-            return `[String ${format(arg.StringData)}]`;
+            return `[String ${arg.StringData}]`;
           }
           if (isSymbolObject(arg)) {
-            return `[Symbol ${format(arg.SymbolData)}]`;
+            return `[Symbol ${arg.SymbolData}]`;
           }
           if (isArrayExoticObject(arg)) {
             return '[object Array]';
@@ -19050,7 +18819,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           break;
         }
         const PropertyDefinition = this.parsePropertyDefinition();
-        if (!this.state.json && PropertyDefinition.type === 'PropertyDefinition' && PropertyDefinition.PropertyName && !IsComputedPropertyKey(PropertyDefinition.PropertyName) && PropertyDefinition.PropertyName.type !== 'NumericLiteral' && StringValue(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
+        if (!this.state.json && PropertyDefinition.type === 'PropertyDefinition' && PropertyDefinition.PropertyName && !IsComputedPropertyKey(PropertyDefinition.PropertyName) && PropertyDefinition.PropertyName.type !== 'NumericLiteral' && StringValue(PropertyDefinition.PropertyName) === '__proto__') {
           if (hasProto) {
             this.scope.registerObjectLiteralEarlyError(this.addEarlyError(Throw.SyntaxError('Duplicate __proto__ property'), PropertyDefinition.PropertyName));
           } else {
@@ -21007,7 +20776,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (specifier.ModuleExportName) {
           this.addEarlyError(Throw.SyntaxError('Filtered namespace imports cannot contain aliased or string import specifiers'), specifier);
         }
-        const name = StringValue(specifier.ImportedBinding).stringValue();
+        const name = StringValue(specifier.ImportedBinding);
         if (names.has(name)) {
           this.addEarlyError(Throw.SyntaxError('Filtered namespace imports cannot contain duplicate names'), specifier);
         }
@@ -21276,7 +21045,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const WithEntries = [];
       while (!this.eat(Token.RBRACE)) {
         const entry = this.parseWithEntry();
-        const key = StringValue(entry.AttributeKey).value;
+        const key = StringValue(entry.AttributeKey);
         if (seenKeys.has(key)) {
           this.addEarlyError(Throw.SyntaxError('Duplicate import attribute $1', key), entry);
         }
@@ -21985,7 +21754,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _isArray = _isArray.Value;
       }
       const isArray = _isArray;
-      if (isArray === Value.true) {
+      if (isArray) {
         // Let _elementRecordsLen_ be the number of elements in _elementRecords_.
         const elementRecordsLen = elementRecords.length;
         /* ReturnIfAbrupt */let _len = yield* LengthOfArrayLike(val);
@@ -22036,7 +21805,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const keys = _keys;
         for (const P of keys) {
           const entryRecord = entryRecords.find(record => SameValue(record.Key, P));
-          /* ReturnIfAbrupt */let _newElement2 = yield* InternalizeJSONProperty(val, P, reviver, entryRecord);
+          /* ReturnIfAbrupt */let _newElement2 = yield* InternalizeJSONProperty(val, P.stringValue(), reviver, entryRecord);
           /* ReturnIfAbrupt */if (_newElement2 instanceof Completion) {
             if (_newElement2 instanceof AbruptCompletion) return _newElement2;
             _newElement2 = _newElement2.Value;
@@ -22058,7 +21827,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
-    return yield* Call(reviver, holder, [name, val, context]);
+    return yield* Call(reviver, holder, [Value(name), val, context]);
   }
   InternalizeJSONProperty.section = 'https://tc39.es/ecma262/#sec-internalizejsonproperty';
 
@@ -22078,7 +21847,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _isArray2 = _isArray2.Value;
       }
       const isArray = _isArray2;
-      if (isArray === Value.true) {
+      if (isArray) {
         /* Assert */ /* node:coverage ignore next */if (!(typedValNode.type === 'ArrayLiteral')) throw new Assert.Error("typedValNode.type === 'ArrayLiteral'");
         const contentNodes = ArrayLiteralContentNodes(typedValNode);
         const len = contentNodes.length;
@@ -22111,7 +21880,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             });
             _elementParseRecord = _elementParseRecord.Value;
           }
-          const elementParseRecord = CreateJSONParseRecord(contentNodes[index], propName, _elementParseRecord);
+          const elementParseRecord = CreateJSONParseRecord(contentNodes[index], Value(propName), _elementParseRecord);
           elements.push(elementParseRecord);
           index += 1;
         }
@@ -22199,7 +21968,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _jsonString = _jsonString.Value;
     }
     const jsonString = _jsonString;
-    /* ReturnIfAbrupt */let _parseResult = ParseJSON(jsonString.stringValue());
+    /* ReturnIfAbrupt */let _parseResult = ParseJSON(jsonString);
     /* ReturnIfAbrupt */if (_parseResult instanceof Completion) {
       if (_parseResult instanceof AbruptCompletion) return _parseResult;
       _parseResult = _parseResult.Value;
@@ -22209,7 +21978,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */if (!(unfiltered instanceof JSStringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue)) throw new Assert.Error("unfiltered instanceof JSStringValue\n    || unfiltered instanceof NumberValue\n    || unfiltered instanceof BooleanValue\n    || unfiltered instanceof NullValue\n    || unfiltered instanceof ObjectValue");
     if (IsCallable(reviver)) {
       const root = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
-      const rootName = Value('');
+      const rootName = '';
       /* X */let _temp55 = CreateDataPropertyOrThrow(root, rootName, unfiltered);
       /* node:coverage ignore next */if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) _temp55 = skipDebugger(_temp55);
       /* node:coverage ignore next */if (_temp55 instanceof Completion) {
@@ -22218,7 +21987,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp55 = _temp55.Value;
       }
-      const snapshot = CreateJSONParseRecord(parseResult.ParseNode, rootName, unfiltered);
+      const snapshot = CreateJSONParseRecord(parseResult.ParseNode, Value(rootName), unfiltered);
       return yield* InternalizeJSONProperty(root, rootName, reviver, snapshot);
     } else {
       return unfiltered;
@@ -22283,11 +22052,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp60 instanceof AbruptCompletion) return _temp60;
           _temp60 = _temp60.Value;
         }
-        value = _temp60;
+        value = Value(_temp60);
       } else if (isBooleanObject(value)) {
-        value = value.BooleanData;
+        value = Value(value.BooleanData);
       } else if (isBigIntObject(value)) {
-        value = value.BigIntData;
+        value = Value(value.BigIntData);
       }
     }
     if (value === Value.null) {
@@ -22312,7 +22081,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           });
           _temp61 = _temp61.Value;
         }
-        return _temp61;
+        return Value(_temp61);
       }
       return Value('null');
     }
@@ -22326,7 +22095,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _isArray3 = _isArray3.Value;
       }
       const isArray = _isArray3;
-      if (isArray === Value.true) {
+      if (isArray) {
         return yield* SerializeJSONArray(state, value);
       }
       return yield* SerializeJSONObject(state, value);
@@ -22443,7 +22212,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _indexStr = _indexStr.Value;
       }
       const indexStr = _indexStr;
-      /* ReturnIfAbrupt */let _strP2 = yield* SerializeJSONProperty(state, indexStr, value);
+      /* ReturnIfAbrupt */let _strP2 = yield* SerializeJSONProperty(state, Value(indexStr), value);
       /* ReturnIfAbrupt */if (_strP2 instanceof Completion) {
         if (_strP2 instanceof AbruptCompletion) return _strP2;
         _strP2 = _strP2.Value;
@@ -22491,7 +22260,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _isArray4 = _isArray4.Value;
         }
         const isArray = _isArray4;
-        if (isArray === Value.true) {
+        if (isArray) {
           PropertyList = new Set();
           /* ReturnIfAbrupt */let _len3 = yield* LengthOfArrayLike(replacer);
           /* ReturnIfAbrupt */if (_len3 instanceof Completion) {
@@ -22516,9 +22285,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               _v = _v.Value;
             }
             const v = _v;
-            let item = Value.undefined;
+            let item = undefined;
             if (v instanceof JSStringValue) {
-              item = v;
+              item = v.stringValue();
             } else if (v instanceof NumberValue) {
               /* X */let _temp63 = ToString(v);
               /* node:coverage ignore next */if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) _temp63 = skipDebugger(_temp63);
@@ -22539,38 +22308,40 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
                 item = _temp64;
               }
             }
-            if (!(item instanceof UndefinedValue) && !PropertyList.has(item.stringValue())) {
-              PropertyList.add(item.stringValue());
+            if (item !== undefined && !PropertyList.has(item)) {
+              PropertyList.add(item);
             }
             k += 1;
           }
         }
       }
     }
-    let space = _space;
-    if (space instanceof ObjectValue) {
-      if ('NumberData' in space) {
-        /* ReturnIfAbrupt */let _temp65 = yield* ToNumber(space);
+    let space;
+    if (_space instanceof ObjectValue) {
+      if ('NumberData' in _space) {
+        /* ReturnIfAbrupt */let _temp65 = yield* ToNumber(_space);
         /* ReturnIfAbrupt */if (_temp65 instanceof Completion) {
           if (_temp65 instanceof AbruptCompletion) return _temp65;
           _temp65 = _temp65.Value;
         }
-        space = _temp65;
-      } else if ('StringData' in space) {
-        /* ReturnIfAbrupt */let _temp66 = yield* ToString(space);
+        _space = _temp65;
+      } else if ('StringData' in _space) {
+        /* ReturnIfAbrupt */let _temp66 = yield* ToString(_space);
         /* ReturnIfAbrupt */if (_temp66 instanceof Completion) {
           if (_temp66 instanceof AbruptCompletion) return _temp66;
           _temp66 = _temp66.Value;
         }
         space = _temp66;
       }
+    } else if (_space instanceof JSStringValue) {
+      space = _space.stringValue();
     }
     let gap;
-    if (space instanceof NumberValue) {
-      /* X */let _temp67 = ToIntegerOrInfinity(space);
+    if (_space instanceof NumberValue) {
+      /* X */let _temp67 = ToIntegerOrInfinity(_space);
       /* node:coverage ignore next */if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) _temp67 = skipDebugger(_temp67);
       /* node:coverage ignore next */if (_temp67 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(space) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(_space) returned an abrupt completion", {
           cause: _temp67
         });
         _temp67 = _temp67.Value;
@@ -22581,11 +22352,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } else {
         gap = ' '.repeat(space);
       }
-    } else if (space instanceof JSStringValue) {
-      if (space.stringValue().length <= 10) {
-        gap = space.stringValue();
+    } else if (typeof space === 'string') {
+      if (space.length <= 10) {
+        gap = space;
       } else {
-        gap = space.stringValue().slice(0, 10);
+        gap = space.slice(0, 10);
       }
     } else {
       gap = '';
@@ -22618,7 +22389,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _jsonString2 = _jsonString2.Value;
     }
     const jsonString = _jsonString2;
-    const str = jsonString.stringValue();
+    const str = jsonString;
     if (str === '') {
       return Throw.SyntaxError('Unexpected token in JSON');
     }
@@ -22626,7 +22397,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (forbiddenChar.includes(str[0]) || forbiddenChar.includes(str[str.length - 1])) {
       return Throw.SyntaxError('Unexpected token in JSON');
     }
-    /* ReturnIfAbrupt */let _parseResult2 = ParseJSON(jsonString.stringValue());
+    /* ReturnIfAbrupt */let _parseResult2 = ParseJSON(jsonString);
     /* ReturnIfAbrupt */if (_parseResult2 instanceof Completion) {
       if (_parseResult2 instanceof AbruptCompletion) return _parseResult2;
       _parseResult2 = _parseResult2.Value;
@@ -22643,10 +22414,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       /* Assert */ /* node:coverage ignore next */if (!(lastCodeUnit >= 0x0061 && lastCodeUnit <= 0x007A || lastCodeUnit >= 0x0030 && lastCodeUnit <= 0x0039 || lastCodeUnit === 0x0022)) throw new Assert.Error("(lastCodeUnit >= 0x0061 && lastCodeUnit <= 0x007A)\n      || (lastCodeUnit >= 0x0030 && lastCodeUnit <= 0x0039)\n      || lastCodeUnit === 0x0022");
     }
     const obj = OrdinaryObjectCreate(Value.null, ['IsRawJSON']);
-    /* X */let _temp69 = CreateDataPropertyOrThrow(obj, 'rawJSON', jsonString);
+    /* X */let _temp69 = CreateDataPropertyOrThrow(obj, 'rawJSON', Value(jsonString));
     /* node:coverage ignore next */if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) _temp69 = skipDebugger(_temp69);
     /* node:coverage ignore next */if (_temp69 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(obj, 'rawJSON', jsonString) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(obj, 'rawJSON', Value(jsonString)) returned an abrupt completion", {
         cause: _temp69
       });
       _temp69 = _temp69.Value;
@@ -22825,7 +22596,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Let importEntries be ImportEntries of body.
     const importEntries = ImportEntries(body);
     // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
-    const importedBoundNames = new JSStringSet(ImportedLocalNames(importEntries));
+    const importedBoundNames = new Set(ImportedLocalNames(importEntries));
     // 7. Let indirectExportEntries be a new empty List.
     const indirectExportEntries = [];
     // 8. Let localExportEntries be a new empty List.
@@ -22837,7 +22608,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 11. For each ExportEntry Record ee in exportEntries, do
     for (const ee of exportEntries) {
       // a. If ee.[[ModuleRequest]] is null, then
-      if (ee.ModuleRequest === Value.null) {
+      if (!ee.ModuleRequest) {
         // i. If ee.[[LocalName]] is not an element of importedBoundNames, then
         if (!importedBoundNames.has(ee.LocalName)) {
           // 1. Append ee to localExportEntries.
@@ -22845,12 +22616,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         } else {
           // ii. Else,
           // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-          const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue());
+          const ie = importEntries.find(e => e.LocalName === ee.LocalName);
           if (ie.ImportName === 'namespace') {
             indirectExportEntries.push({
               ModuleRequest: ie.ModuleRequest,
               ImportName: 'namespace',
-              LocalName: Value.null,
+              LocalName: null,
               ExportName: ee.ExportName,
               NamespaceNamesFilter: []
             });
@@ -22858,7 +22629,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             indirectExportEntries.push({
               ModuleRequest: ie.ModuleRequest,
               ImportName: 'filtered-namespace',
-              LocalName: Value.null,
+              LocalName: null,
               ExportName: ee.ExportName,
               NamespaceNamesFilter: ie.NamespaceNamesFilter
             });
@@ -22868,13 +22639,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             indirectExportEntries.push({
               ModuleRequest: ie.ModuleRequest,
               ImportName: ie.ImportName,
-              LocalName: Value.null,
+              LocalName: null,
               ExportName: ee.ExportName,
               NamespaceNamesFilter: []
             });
           }
         }
-      } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) {
+      } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === null) {
         // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
         // i. Append ee to starExportEntries.
         starExportEntries.push(ee);
@@ -22906,7 +22677,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       StarExportEntries: starExportEntries,
       OptionalIndirectExportEntries: optionalIndirectExportEntries,
       CycleRoot: undefined,
-      HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
+      HasTLA: body.hasTopLevelAwait,
       AsyncEvaluationOrder: 'unset',
       TopLevelCapability: undefined,
       AsyncParentModules: [],
@@ -22922,7 +22693,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-parsejsonmodule */
   function ParseJSONModule(source) {
-    /* ReturnIfAbrupt */let _parseResult = ParseJSON(source.stringValue());
+    /* ReturnIfAbrupt */let _parseResult = ParseJSON(source);
     /* ReturnIfAbrupt */if (_parseResult instanceof Completion) {
       if (_parseResult instanceof AbruptCompletion) return _parseResult;
       _parseResult = _parseResult.Value;
@@ -23033,14 +22804,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp instanceof AbruptCompletion) return _temp;
         _temp = _temp.Value;
       }
-      parameterStrings.push(_temp.stringValue());
+      parameterStrings.push(_temp);
     }
     /* ReturnIfAbrupt */let _bodyString = yield* ToString(bodyArg);
     /* ReturnIfAbrupt */if (_bodyString instanceof Completion) {
       if (_bodyString instanceof AbruptCompletion) return _bodyString;
       _bodyString = _bodyString.Value;
     }
-    const bodyString = _bodyString.stringValue();
+    const bodyString = _bodyString;
     const currentRealm = exports.surroundingAgent.currentRealmRecord;
     /* ReturnIfAbrupt */let _temp2 = yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, false);
     /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
@@ -23129,13 +22900,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
       /* X */let _temp3 = DefinePropertyOrThrow(F, 'prototype', exports.Descriptor({
         Value: prototype,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.false
+        Writable: true,
+        Enumerable: false,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
       /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n      Value: prototype,\n      Writable: true,\n      Enumerable: false,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp3
         });
         _temp3 = _temp3.Value;
@@ -23144,13 +22915,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
       /* X */let _temp4 = DefinePropertyOrThrow(F, 'prototype', exports.Descriptor({
         Value: prototype,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.false
+        Writable: true,
+        Enumerable: false,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
       /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n      Value: prototype,\n      Writable: true,\n      Enumerable: false,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp4
         });
         _temp4 = _temp4.Value;
@@ -23202,7 +22973,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
     }
     // 1. Let label be the StringValue of LabelIdentifier.
-    const label = StringValue(LabelIdentifier).stringValue();
+    const label = StringValue(LabelIdentifier);
     // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
     return new Completion({
       Type: 'break',
@@ -23336,7 +23107,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           const done = _done;
           // v. If done is true, then
-          if (done === Value.true) {
+          if (done) {
             // 1. Return ? IteratorValue(innerResult).
             return yield* IteratorValue(innerResult);
           }
@@ -23392,7 +23163,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             }
             const done = _done2;
             // 6. If done is true, then
-            if (done === Value.true) {
+            if (done) {
               // a. Return ? IteratorValue(innerResult).
               return yield* IteratorValue(innerResult);
             }
@@ -23489,7 +23260,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           const done = _done3;
           // viii. If done is true, then
-          if (done === Value.true) {
+          if (done) {
             /* ReturnIfAbrupt */let _returnedValue = yield* IteratorValue(innerReturnResult);
             /* ReturnIfAbrupt */if (_returnedValue instanceof Completion) {
               if (_returnedValue instanceof AbruptCompletion) return _returnedValue;
@@ -23541,13 +23312,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
   function StringIndexOf(string, searchValue, fromIndex) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(string) is String.
-    if (!(string instanceof JSStringValue)) throw new Assert.Error("string instanceof JSStringValue");
+    if (!(typeof string === 'string')) throw new Assert.Error("typeof string === 'string'");
     // 2. Assert: Type(searchValue) is String.
-    /* Assert */ /* node:coverage ignore next */if (!(searchValue instanceof JSStringValue)) throw new Assert.Error("searchValue instanceof JSStringValue");
+    /* Assert */ /* node:coverage ignore next */if (!(typeof searchValue === 'string')) throw new Assert.Error("typeof searchValue === 'string'");
     // 3. Assert: fromIndex is a non-negative integer.
     /* Assert */ /* node:coverage ignore next */if (!isNonNegativeInteger(fromIndex)) throw new Assert.Error("isNonNegativeInteger(fromIndex)");
-    const stringStr = string.stringValue();
-    const searchStr = searchValue.stringValue();
+    const stringStr = string;
+    const searchStr = searchValue;
     // 4. Let len be the length of string.
     const len = stringStr.length;
     // 5. If searchValue is the empty string, and fromIndex <= len, return 𝔽(fromIndex).
@@ -23585,7 +23356,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(number) is Number.
     if (!(number instanceof NumberValue)) throw new Assert.Error("number instanceof NumberValue");
     // 2. If IsIntegralNumber(number) is false, throw a RangeError exception.
-    if (IsIntegralNumber(number) === Value.false) {
+    if (!IsIntegralNumber(number)) {
       return Throw.RangeError('Cannot convert $1 to a BigInt', number);
     }
     // 3. Return the BigInt value that represents the mathematical value of number.
@@ -23624,7 +23395,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const lval = _lval;
     // 3. If lval is true, then
-    if (lval === Value.true) {
+    if (lval) {
       /* ReturnIfAbrupt */let _trueRef = yield* Evaluate(AssignmentExpression_a);
       /* ReturnIfAbrupt */if (_trueRef instanceof Completion) {
         if (_trueRef instanceof AbruptCompletion) return _trueRef;
@@ -24968,72 +24739,78 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-stringpad */
-  function* StringPad(O, maxLength, fillString, placement) {
+  function* StringPad(_string, maxLength, fillString, placement) {
     /* Assert */ /* node:coverage ignore next */if (!(placement === 'start' || placement === 'end')) throw new Assert.Error("placement === 'start' || placement === 'end'");
-    /* ReturnIfAbrupt */let _S = yield* ToString(O);
-    /* ReturnIfAbrupt */if (_S instanceof Completion) {
-      if (_S instanceof AbruptCompletion) return _S;
-      _S = _S.Value;
+    let string;
+    if (typeof _string === 'string') string = _string;else {
+      /* ReturnIfAbrupt */let _temp = yield* ToString(_string);
+      /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+        if (_temp instanceof AbruptCompletion) return _temp;
+        _temp = _temp.Value;
+      }
+      string = _temp;
     }
-    const S = _S;
     /* ReturnIfAbrupt */let _intMaxLength = yield* ToLength(maxLength);
     /* ReturnIfAbrupt */if (_intMaxLength instanceof Completion) {
       if (_intMaxLength instanceof AbruptCompletion) return _intMaxLength;
       _intMaxLength = _intMaxLength.Value;
     }
     const intMaxLength = R(_intMaxLength);
-    const stringLength = S.stringValue().length;
+    const stringLength = string.length;
     if (intMaxLength <= stringLength) {
-      return S;
+      return string;
     }
     let filler;
     if (fillString === Value.undefined) {
       filler = ' ';
     } else {
-      /* ReturnIfAbrupt */let _temp = yield* ToString(fillString);
-      /* ReturnIfAbrupt */if (_temp instanceof Completion) {
-        if (_temp instanceof AbruptCompletion) return _temp;
-        _temp = _temp.Value;
+      /* ReturnIfAbrupt */let _temp2 = yield* ToString(fillString);
+      /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+        if (_temp2 instanceof AbruptCompletion) return _temp2;
+        _temp2 = _temp2.Value;
       }
-      filler = _temp.stringValue();
+      filler = _temp2;
     }
     if (filler === '') {
-      return S;
+      return string;
     }
     const fillLen = intMaxLength - stringLength;
     const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
     const truncatedStringFiller = stringFiller.slice(0, fillLen);
     if (placement === 'start') {
-      return Value(truncatedStringFiller + S.stringValue());
+      return truncatedStringFiller + string;
     } else {
-      return Value(S.stringValue() + truncatedStringFiller);
+      return string + truncatedStringFiller;
     }
   }
   StringPad.section = 'https://tc39.es/ecma262/#sec-stringpad';
 
   /** https://tc39.es/ecma262/#sec-trimstring */
-  function* TrimString(string, where) {
-    /* ReturnIfAbrupt */let _temp = RequireObjectCoercible(string);
-    /* ReturnIfAbrupt */if (_temp instanceof Completion) {
-      if (_temp instanceof AbruptCompletion) return _temp;
-      _temp = _temp.Value;
+  function* TrimString(arg, where) {
+    let string;
+    if (typeof arg === 'string') string = arg;else {
+      /* ReturnIfAbrupt */let _temp = RequireObjectCoercible(arg);
+      /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+        if (_temp instanceof AbruptCompletion) return _temp;
+        _temp = _temp.Value;
+      }
+      /* ReturnIfAbrupt */let _temp2 = yield* ToString(arg);
+      /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+        if (_temp2 instanceof AbruptCompletion) return _temp2;
+        _temp2 = _temp2.Value;
+      }
+      string = _temp2;
     }
-    /* ReturnIfAbrupt */let _S = yield* ToString(string);
-    /* ReturnIfAbrupt */if (_S instanceof Completion) {
-      if (_S instanceof AbruptCompletion) return _S;
-      _S = _S.Value;
-    }
-    const S = _S.stringValue();
     let T;
     if (where === 'start') {
-      T = S.trimStart();
+      T = string.trimStart();
     } else if (where === 'end') {
-      T = S.trimEnd();
+      T = string.trimEnd();
     } else {
       /* Assert */ /* node:coverage ignore next */if (!(where === 'start+end')) throw new Assert.Error("where === 'start+end'");
-      T = S.trim();
+      T = string.trim();
     }
-    return Value(T);
+    return T;
   }
   TrimString.section = 'https://tc39.es/ecma262/#sec-trimstring';
 
@@ -25085,7 +24862,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } = ClassDeclaration;
     const sourceText = ClassDeclaration.sourceText;
     if (!BindingIdentifier) {
-      return yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default'), sourceText, decorators);
+      return yield* ClassDefinitionEvaluation(ClassTail, undefined, 'default', sourceText, decorators);
     }
     // 1. Let className be StringValue of BindingIdentifier.
     const className = StringValue(BindingIdentifier);
@@ -25164,7 +24941,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
     const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-    const newEnv = new ObjectEnvironmentRecord(obj, Value.true, oldEnv);
+    const newEnv = new ObjectEnvironmentRecord(obj, true, oldEnv);
     // 5. Set the running execution context's LexicalEnvironment to newEnv.
     exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
     // 6. Let C be the result of evaluating Statement.
@@ -25296,11 +25073,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 2. Let className be the sole element of BoundNames of ClassDeclaration.
       const className = BoundNames(ClassDeclaration)[0];
       // If className is "*default*", then
-      if (className.stringValue() === '*default*') {
+      if (className === '*default*') {
         // a. Let env be the running execution context's LexicalEnvironment.
         const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
         // b. Perform ? InitializeBoundName("*default*", value, env).
-        /* ReturnIfAbrupt */let _temp2 = yield* InitializeBoundName(Value('*default*'), value, env);
+        /* ReturnIfAbrupt */let _temp2 = yield* InitializeBoundName('*default*', value, env);
         /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
           if (_temp2 instanceof AbruptCompletion) return _temp2;
           _temp2 = _temp2.Value;
@@ -25338,7 +25115,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let env be the running execution context's LexicalEnvironment.
       const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Perform ? InitializeBoundName("*default*", value, env).
-      /* ReturnIfAbrupt */let _temp5 = yield* InitializeBoundName(Value('*default*'), value, env);
+      /* ReturnIfAbrupt */let _temp5 = yield* InitializeBoundName('*default*', value, env);
       /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         _temp5 = _temp5.Value;
@@ -25590,10 +25367,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-getsubstitution */
   function* GetSubstitution(matched, str, position, captures, namedCaptures, replacementTemplate) {
-    const stringLength = str.stringValue().length;
+    const stringLength = str.length;
     /* Assert */ /* node:coverage ignore next */if (!(position <= stringLength)) throw new Assert.Error("position <= stringLength");
     const result = [];
-    let templateRemainder = replacementTemplate.stringValue();
+    let templateRemainder = replacementTemplate;
     let ref;
     let refReplacement;
     while (templateRemainder.length) {
@@ -25602,15 +25379,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         refReplacement = '$';
       } else if (templateRemainder.startsWith('$`')) {
         ref = '$`';
-        refReplacement = str.stringValue().slice(0, position);
+        refReplacement = str.slice(0, position);
       } else if (templateRemainder.startsWith('$&')) {
         ref = '$&';
-        refReplacement = matched.stringValue();
+        refReplacement = matched;
       } else if (templateRemainder.startsWith("$'")) {
         ref = "$'";
-        const matchLength = matched.stringValue().length;
+        const matchLength = matched.length;
         const tailPos = position + matchLength;
-        refReplacement = str.stringValue().slice(Math.min(tailPos, stringLength));
+        refReplacement = str.slice(Math.min(tailPos, stringLength));
       } else if (templateRemainder.match(/^\$\d+/)) {
         let digitCount = templateRemainder.match(/^\$\d\d/) ? 2 : 1;
         let digits = templateRemainder.slice(1, 1 + digitCount);
@@ -25625,17 +25402,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         ref = templateRemainder.slice(0, 1 + digitCount);
         if (index >= 1 && index <= captureLen) {
           const capture = captures[index - 1];
-          if (capture instanceof UndefinedValue) {
+          if (capture === undefined) {
             refReplacement = '';
           } else {
-            refReplacement = capture.stringValue();
+            refReplacement = capture;
           }
         } else {
           refReplacement = ref;
         }
       } else if (templateRemainder.startsWith('$<')) {
         const gtPos = templateRemainder.indexOf('>', 0);
-        if (gtPos === -1 || namedCaptures instanceof UndefinedValue) {
+        if (gtPos === -1 || namedCaptures instanceof UndefinedValue || namedCaptures === undefined) {
           ref = '$<';
           refReplacement = ref;
         } else {
@@ -25656,7 +25433,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               if (_temp instanceof AbruptCompletion) return _temp;
               _temp = _temp.Value;
             }
-            refReplacement = _temp.stringValue();
+            refReplacement = _temp;
           }
         }
       } else {
@@ -25674,7 +25451,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // test262/test/staging/sm/String/replace-math.js
       return Throw.RangeError('String is too long');
     }
-    return Value(result_str);
+    return result_str;
   }
   GetSubstitution.section = 'https://tc39.es/ecma262/#sec-getsubstitution';
 
@@ -25694,7 +25471,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
     }
     // 1. Let label be the StringValue of LabelIdentifier.
-    const label = StringValue(LabelIdentifier).stringValue();
+    const label = StringValue(LabelIdentifier);
     // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
     return new Completion({
       Type: 'continue',
@@ -25707,7 +25484,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-evaluation */
   function Evaluate_LabelledStatement(LabelledStatement) {
     // 1. Let newLabelSet be a new empty List.
-    const newLabelSet = new JSStringSet();
+    const newLabelSet = new Set();
     // 2. Return LabelledEvaluation of this LabelledStatement with argument newLabelSet.
     return LabelledEvaluation(LabelledStatement, newLabelSet);
   }
@@ -25758,7 +25535,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const rstr = _rstr;
         // iii. Return the string-concatenation of lstr and rstr.
-        return Value(lstr.stringValue() + rstr.stringValue());
+        return Value(lstr + rstr);
       }
       // d. Set lval to lprim.
       lval = lprim;
@@ -25999,7 +25776,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp2 = _temp2.Value;
       }
       // 3. Return a new List containing name.
-      return [name];
+      return [Value(name)];
     }
   }
   PropertyBindingInitialization.section = 'https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization';
@@ -26074,7 +25851,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       // 5. If environment is undefined, return ? PutValue(lhs, v).
-      if (environment === Value.undefined) {
+      if (!environment) {
         return yield* PutValue(lhs, v);
       }
       // 6. Return InitializeReferencedBinding(lhs, v).
@@ -26203,7 +25980,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp6 = _temp6.Value;
         }
         // 6. Return a new List containing P.
-        propertyNames.push(P);
+        propertyNames.push(Value(P));
       } else {
         /* Assert */ /* node:coverage ignore next */if (!('PropertyName' in AssignmentProperty)) throw new Assert.Error("'PropertyName' in AssignmentProperty");
         // 1. Let name be the result of evaluating PropertyName.
@@ -26567,7 +26344,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp = _temp.Value;
     }
     // 4. If environment is undefined, return PutValue(lhs, restObj).
-    if (environment === Value.undefined) {
+    if (!environment) {
       return yield* PutValue(lhs, restObj);
     }
     // 5. Return InitializeReferencedBinding(lhs, restObj).
@@ -26870,9 +26647,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
       const desc = exports.Descriptor({
         Value: closure,
-        Writable: Value.true,
+        Writable: true,
         Enumerable: enumerable,
-        Configurable: Value.true
+        Configurable: true
       });
       // b. Perform ? DefinePropertyOrThrow(homeObject, key, desc).
       /* ReturnIfAbrupt */let _temp = yield* DefinePropertyOrThrow(homeObject, key, desc);
@@ -26915,7 +26692,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp2 = _temp2.Value;
           }
           // 3. Return ? DefineMethodProperty(methodDef.[[Key]], object, methodDef.[[Closure]], enumerable).
-          if (enumerable) {
+          if (enumerable !== undefined) {
             return yield* DefineMethodProperty$1(methodDef.Key, object, methodDef.Closure, enumerable);
           } else {
             return {
@@ -26952,8 +26729,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 7. Perform MakeMethod(closure, object).
           MakeMethod(closure, object);
           // 8. Perform SetFunctionName(closure, propKey, "set").
-          SetFunctionName(closure, propKey, Value('set'));
-          if (enumerable) {
+          SetFunctionName(closure, propKey, 'set');
+          if (enumerable !== undefined) {
             // 9. If propKey is a Private Name, then
             if (propKey instanceof PrivateName) {
               // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
@@ -26961,16 +26738,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
                 __proto__: PrivateElementRecord.prototype,
                 Key: propKey,
                 Kind: 'accessor',
-                Getter: Value.undefined,
-                Setter: closure
+                Get: Value.undefined,
+                Set: closure
               };
             } else {
               // 10. Else,
               // a. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
               const desc = exports.Descriptor({
-                Setter: closure,
+                Set: closure,
                 Enumerable: enumerable,
-                Configurable: Value.true
+                Configurable: true
               });
               // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
               /* ReturnIfAbrupt */let _temp3 = yield* DefinePropertyOrThrow(object, propKey, desc);
@@ -27017,24 +26794,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 8. Perform MakeMethod(closure, object).
           MakeMethod(closure, object);
           // 9. Perform SetFunctionName(closure, propKey, "get").
-          SetFunctionName(closure, propKey, Value('get'));
-          if (enumerable) {
+          SetFunctionName(closure, propKey, 'get');
+          if (enumerable !== undefined) {
             // 10. If propKey is a Private Name, then
             if (propKey instanceof PrivateName) {
               return {
                 __proto__: PrivateElementRecord.prototype,
                 Key: propKey,
                 Kind: 'accessor',
-                Getter: closure,
-                Setter: Value.undefined
+                Get: closure,
+                Set: Value.undefined
               };
             } else {
               // 11. Else,
               // a. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
               const desc = exports.Descriptor({
-                Getter: closure,
+                Get: closure,
                 Enumerable: enumerable,
-                Configurable: Value.true
+                Configurable: true
               });
               // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
               /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(object, propKey, desc);
@@ -27115,7 +26892,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp6 = _temp6.Value;
     } // 8. Perform ! SetFunctionName(closure, propKey).
 
-    if (enumerable) {
+    if (enumerable !== undefined) {
       // 9. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
       return yield* DefineMethodProperty$1(propKey, object, closure, enumerable);
     } else {
@@ -27185,18 +26962,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     /* X */let _temp9 = DefinePropertyOrThrow(closure, 'prototype', exports.Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
     /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp9
       });
       _temp9 = _temp9.Value;
     }
-    if (enumerable) {
+    if (enumerable !== undefined) {
       // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
       return yield* DefineMethodProperty$1(propKey, object, closure, enumerable);
     } else {
@@ -27266,18 +27043,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     /* X */let _temp10 = DefinePropertyOrThrow(closure, 'prototype', exports.Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
     /* node:coverage ignore next */if (_temp10 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp10
       });
       _temp10 = _temp10.Value;
     }
-    if (enumerable) {
+    if (enumerable !== undefined) {
       // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
       return yield* DefineMethodProperty$1(propKey, object, closure, enumerable);
     } else {
@@ -27296,7 +27073,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // +decorator
 
   function MethodDefinitionEvaluation(node, object, enumerable) {
-    if (enumerable) {
+    if (enumerable !== undefined) {
       switch (node.type) {
         case 'MethodDefinition':
           return MethodDefinitionEvaluation_MethodDefinition(node, object, enumerable);
@@ -27427,12 +27204,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (name instanceof PrivateName) {
         readableName = name.Description;
       } else if (name instanceof SymbolValue) {
-        readableName = SymbolDescriptiveString(name).stringValue();
+        readableName = SymbolDescriptiveString(name);
       } else {
         readableName = name.stringValue();
       }
       const privateStateDesc = `${readableName} accessor storage`;
-      const privateStateName = new PrivateName(Value(privateStateDesc));
+      const privateStateName = new PrivateName(privateStateDesc);
       const getter = MakeAutoAccessorGetter(homeObject, name, privateStateName);
       const setter = MakeAutoAccessorSetter(homeObject, name, privateStateName);
       const initializers = [];
@@ -27447,11 +27224,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       if (!(name instanceof PrivateName)) {
-        const desc = new exports.Descriptor({
-          Getter: getter,
-          Setter: setter,
-          Enumerable: Value.true,
-          Configurable: Value.true
+        const desc = exports.Descriptor({
+          Get: getter,
+          Set: setter,
+          Enumerable: true,
+          Configurable: true
         });
         /* ReturnIfAbrupt */let _temp2 = yield* DefinePropertyOrThrow(homeObject, name, desc);
         /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
@@ -27543,7 +27320,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
       const funcEnv = new DeclarativeEnvironmentRecord(scope);
       // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-      funcEnv.CreateImmutableBinding(name, Value.false);
+      funcEnv.CreateImmutableBinding(name, false);
       // 6. Let privateScope be the running execution context's PrivateEnvironment.
       const privateScope = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
       // 7. Let sourceText be the source text matched by FunctionExpression.
@@ -27607,7 +27384,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
       const funcEnv = new DeclarativeEnvironmentRecord(scope);
       // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-      funcEnv.CreateImmutableBinding(name, Value.false);
+      funcEnv.CreateImmutableBinding(name, false);
       // 6. Let privateScope be the running execution context's PrivateEnvironment.
       const privateScope = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
       // 7. Let sourceText be the source text matched by GeneratorExpression.
@@ -27627,15 +27404,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const prototype = _prototype;
       // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-      /* X */let _temp = DefinePropertyOrThrow(closure, 'prototype', new exports.Descriptor({
+      /* X */let _temp = DefinePropertyOrThrow(closure, 'prototype', exports.Descriptor({
         Value: prototype,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.false
+        Writable: true,
+        Enumerable: false,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', new Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', Descriptor({\n      Value: prototype,\n      Writable: true,\n      Enumerable: false,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -27677,15 +27454,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const prototype = _prototype2;
     // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    /* X */let _temp3 = DefinePropertyOrThrow(closure, 'prototype', new exports.Descriptor({
+    /* X */let _temp3 = DefinePropertyOrThrow(closure, 'prototype', exports.Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
     /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', new Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(closure, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp3
       });
       _temp3 = _temp3.Value;
@@ -27774,10 +27551,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const funcEnv = _funcEnv;
       // 5. Perform ! funcEnv.CreateImmutableBinding(name, false).
-      /* X */let _temp = funcEnv.CreateImmutableBinding(name, Value.false);
+      /* X */let _temp = funcEnv.CreateImmutableBinding(name, false);
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! funcEnv.CreateImmutableBinding(name, Value.false) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! funcEnv.CreateImmutableBinding(name, false) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -27864,7 +27641,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
       const funcEnv = new DeclarativeEnvironmentRecord(scope);
       // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-      funcEnv.CreateImmutableBinding(name, Value.false);
+      funcEnv.CreateImmutableBinding(name, false);
       // 6. Let privateScope be the running execution context's PrivateEnvironment.
       const privateScope = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
       // 7. Let source text be the source textmatched by AsyncGeneratorExpression.
@@ -27886,13 +27663,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
       /* X */let _temp = DefinePropertyOrThrow(closure, Value('prototype'), exports.Descriptor({
         Value: prototype,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.false
+        Writable: true,
+        Enumerable: false,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(\n      closure,\n      Value('prototype'),\n      Descriptor({\n        Value: prototype,\n        Writable: Value.true,\n        Enumerable: Value.false,\n        Configurable: Value.false,\n      }),\n    ) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(\n      closure,\n      Value('prototype'),\n      Descriptor({\n        Value: prototype,\n        Writable: true,\n        Enumerable: false,\n        Configurable: false,\n      }),\n    ) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -27936,13 +27713,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 8. Perform ! DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     /* X */let _temp3 = DefinePropertyOrThrow(closure, Value('prototype'), exports.Descriptor({
       Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
     /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(\n    closure,\n    Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  ) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(\n    closure,\n    Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: true,\n      Enumerable: false,\n      Configurable: false,\n    }),\n  ) returned an abrupt completion", {
         cause: _temp3
       });
       _temp3 = _temp3.Value;
@@ -28125,7 +27902,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (exports.surroundingAgent.hostDefinedOptions.hostHooks?.HostHasSourceTextAvailable) {
       return exports.surroundingAgent.hostDefinedOptions.hostHooks.HostHasSourceTextAvailable(func);
     }
-    return Value.true;
+    return true;
   }
   function HostGetSupportedImportAttributes() {
     if (exports.surroundingAgent.hostDefinedOptions.supportedImportAttributes) {
@@ -28189,9 +27966,99 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return _temp3;
     }
-    return Value.undefined;
   }
   HostFinalizeImportMeta.section = 'https://tc39.es/ecma262/#sec-hostfinalizeimportmeta';
+
+  class PropertyKeyMap {
+    #map = new Map();
+    clear() {
+      this.#map.clear();
+    }
+    delete(key) {
+      if (key instanceof JSStringValue) {
+        key = key.stringValue();
+      }
+      return this.#map.delete(key);
+    }
+    forEach(callbackfn, thisArg) {
+      this.#map.forEach((value, key) => Reflect.apply(callbackfn, thisArg, [value, typeof key === 'string' ? Value(key) : key, this]));
+    }
+    get(key) {
+      if (key instanceof JSStringValue) {
+        key = key.stringValue();
+      }
+      return this.#map.get(key);
+    }
+    has(key) {
+      if (key instanceof JSStringValue) {
+        key = key.stringValue();
+      }
+      return this.#map.has(key);
+    }
+    set(key, value) {
+      if (key instanceof JSStringValue) {
+        key = key.stringValue();
+      }
+      this.#map.set(key, value);
+      return this;
+    }
+    get size() {
+      return this.#map.size;
+    }
+    *entries() {
+      for (const [key, value] of this.#map.entries()) {
+        if (typeof key === 'string') {
+          yield [Value(key), value];
+        } else {
+          yield [key, value];
+        }
+      }
+      return undefined;
+    }
+    *keys() {
+      for (const key of this.#map.keys()) {
+        if (typeof key === 'string') {
+          yield Value(key);
+        } else {
+          yield key;
+        }
+      }
+      return undefined;
+    }
+    *values() {
+      for (const value of this.#map.values()) {
+        yield value;
+      }
+      return undefined;
+    }
+    getOrInsert(key, defaultValue) {
+      if (key instanceof JSStringValue) {
+        key = key.stringValue();
+      }
+      if (this.#map.getOrInsert) return this.#map.getOrInsert(key, defaultValue);
+      if (!this.#map.has(key)) {
+        this.#map.set(key, defaultValue);
+      }
+      return this.#map.get(key);
+    }
+    getOrInsertComputed(key, defaultValueFn) {
+      if (key instanceof JSStringValue) {
+        key = key.stringValue();
+      }
+      const value = typeof key === 'string' ? Value(key) : key;
+      return this.#map.getOrInsertComputed(key, () => defaultValueFn(value));
+    }
+    static {
+      PropertyKeyMap.prototype[Symbol.toStringTag] = 'PropertyKeyMap';
+      PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.entries;
+    }
+    mark(m) {
+      for (const [k, v] of this.#map.entries()) {
+        m(k);
+        m(v);
+      }
+    }
+  }
 
   let _initClass2$1;
   function _applyDecs$2(e, t, n, r, o, i) { var a, c, u, s, f, l, p, d = Symbol.metadata || Symbol.for("Symbol.metadata"), m = Object.defineProperty, h = Object.create, y = [h(null), h(null)], v = t.length; function g(t, n, r) { return function (o, i) { n && (i = o, o = e); for (var a = 0; a < t.length; a++) i = t[a].apply(o, r ? [i] : []); return r ? i : o; }; } function b(e, t, n, r) { if ("function" != typeof e && (r || void 0 !== e)) throw new TypeError(t + " must " + (n || "be") + " a function" + (r ? "" : " or undefined")); return e; } function applyDec(e, t, n, r, o, i, u, s, f, l, p) { function d(e) { if (!p(e)) throw new TypeError("Attempted to access private element on non-instance"); } var h = [].concat(t[0]), v = t[3], w = !u, D = 1 === o, S = 3 === o, j = 4 === o, E = 2 === o; function I(t, n, r) { return function (o, i) { return n && (i = o, o = e), r && r(o), P[t].call(o, i); }; } if (!w) { var P = {}, k = [], F = S ? "get" : j || D ? "set" : "value"; if (f ? (l || D ? P = { get: _setFunctionName$2(function () { return v(this); }, r, "get"), set: function (e) { t[4](this, e); } } : P[F] = v, l || _setFunctionName$2(P[F], r, E ? "" : F)) : l || (P = Object.getOwnPropertyDescriptor(e, r)), !l && !f) { if ((c = y[+s][r]) && 7 !== (c ^ o)) throw Error("Decorating two elements with the same name (" + P[F].name + ") is not supported yet"); y[+s][r] = o < 3 ? 1 : o; } } for (var N = e, O = h.length - 1; O >= 0; O -= n ? 2 : 1) { var T = b(h[O], "A decorator", "be", true), z = n ? h[O - 1] : void 0, A = {}, H = { kind: ["field", "accessor", "method", "getter", "setter", "class"][o], name: r, metadata: a, addInitializer: function (e, t) { if (e.v) throw new TypeError("attempted to call addInitializer after decoration was finished"); b(t, "An initializer", "be", true), i.push(t); }.bind(null, A) }; if (w) c = T.call(z, N, H), A.v = 1, b(c, "class decorators", "return") && (N = c);else if (H.static = s, H.private = f, c = H.access = { has: f ? p.bind() : function (e) { return r in e; } }, j || (c.get = f ? E ? function (e) { return d(e), P.value; } : I("get", 0, d) : function (e) { return e[r]; }), E || S || (c.set = f ? I("set", 0, d) : function (e, t) { e[r] = t; }), N = T.call(z, D ? { get: P.get, set: P.set } : P[F], H), A.v = 1, D) { if ("object" == typeof N && N) (c = b(N.get, "accessor.get")) && (P.get = c), (c = b(N.set, "accessor.set")) && (P.set = c), (c = b(N.init, "accessor.init")) && k.unshift(c);else if (void 0 !== N) throw new TypeError("accessor decorators must return an object with get, set, or init properties or undefined"); } else b(N, (l ? "field" : "method") + " decorators", "return") && (l ? k.unshift(N) : P[F] = N); } return o < 2 && u.push(g(k, s, 1), g(i, s, 0)), l || w || (f ? D ? u.splice(-1, 0, I("get", s), I("set", s)) : u.push(E ? P[F] : b.call.bind(P[F])) : m(e, r, P)), N; } function w(e) { return m(e, d, { configurable: true, enumerable: true, value: a }); } return void 0 !== i && (a = i[d]), a = h(null == a ? null : a), f = [], l = function (e) { e && f.push(g(e)); }, p = function (t, r) { for (var i = 0; i < n.length; i++) { var a = n[i], c = a[1], l = 7 & c; if ((8 & c) == t && !l == r) { var p = a[2], d = !!a[3], m = 16 & c; applyDec(t ? e : e.prototype, a, m, d ? "#" + p : _toPropertyKey$2(p), l, l < 2 ? [] : t ? s = s || [] : u = u || [], f, !!t, d, r, t && d ? function (t) { return _checkInRHS$2(t) === e; } : o); } } }, p(8, 0), p(0, 0), p(8, 1), p(0, 1), l(u), l(s), c = f, v || w(e), { e: c, get c() { var n = []; return v && [w(e = applyDec(e, [t], r, e.name, 5, n)), g(n, 1)]; } }; }
@@ -28368,21 +28235,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
   const wellKnownSymbols = {
-    asyncDispose: new SymbolValue(Value('Symbol.asyncDispose')),
-    asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
-    dispose: new SymbolValue(Value('Symbol.dispose')),
-    hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
-    isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
-    iterator: new SymbolValue(Value('Symbol.iterator')),
-    match: new SymbolValue(Value('Symbol.match')),
-    matchAll: new SymbolValue(Value('Symbol.matchAll')),
-    replace: new SymbolValue(Value('Symbol.replace')),
-    search: new SymbolValue(Value('Symbol.search')),
-    species: new SymbolValue(Value('Symbol.species')),
-    split: new SymbolValue(Value('Symbol.split')),
-    toPrimitive: new SymbolValue(Value('Symbol.toPrimitive')),
-    toStringTag: new SymbolValue(Value('Symbol.toStringTag')),
-    unscopables: new SymbolValue(Value('Symbol.unscopables'))
+    asyncDispose: new SymbolValue('Symbol.asyncDispose'),
+    asyncIterator: new SymbolValue('Symbol.asyncIterator'),
+    dispose: new SymbolValue('Symbol.dispose'),
+    hasInstance: new SymbolValue('Symbol.hasInstance'),
+    isConcatSpreadable: new SymbolValue('Symbol.isConcatSpreadable'),
+    iterator: new SymbolValue('Symbol.iterator'),
+    match: new SymbolValue('Symbol.match'),
+    matchAll: new SymbolValue('Symbol.matchAll'),
+    replace: new SymbolValue('Symbol.replace'),
+    search: new SymbolValue('Symbol.search'),
+    species: new SymbolValue('Symbol.species'),
+    split: new SymbolValue('Symbol.split'),
+    toPrimitive: new SymbolValue('Symbol.toPrimitive'),
+    toStringTag: new SymbolValue('Symbol.toStringTag'),
+    unscopables: new SymbolValue('Symbol.unscopables')
   };
   Object.setPrototypeOf(wellKnownSymbols, null);
   Object.freeze(wellKnownSymbols);
@@ -28555,80 +28422,80 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
     static lessThan(x, y) {
       if (x.isNaN()) {
-        return Value.undefined;
+        return undefined;
       }
       if (y.isNaN()) {
-        return Value.undefined;
+        return undefined;
       }
       // If nx and ny are the same Number value, return false.
       // If nx is +0 and ny is -0, return false.
       // If nx is -0 and ny is +0, return false.
       if (R(x) === R(y)) {
-        return Value.false;
+        return false;
       }
       if (R(x) === +Infinity) {
-        return Value.false;
+        return false;
       }
       if (R(y) === +Infinity) {
-        return Value.true;
+        return true;
       }
       if (R(y) === -Infinity) {
-        return Value.false;
+        return false;
       }
       if (R(x) === -Infinity) {
-        return Value.true;
+        return true;
       }
-      return R(x) < R(y) ? Value.true : Value.false;
+      return R(x) < R(y);
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
     static equal(x, y) {
       if (x.isNaN()) {
-        return Value.false;
+        return false;
       }
       if (y.isNaN()) {
-        return Value.false;
+        return false;
       }
       const xVal = R(x);
       const yVal = R(y);
       if (xVal === yVal) {
-        return Value.true;
+        return true;
       }
       if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-        return Value.true;
+        return true;
       }
       if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-        return Value.true;
+        return true;
       }
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
     static sameValue(x, y) {
       if (x.isNaN() && y.isNaN()) {
-        return Value.true;
+        return true;
       }
       const xVal = x.value;
       const yVal = y.value;
       if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-        return Value.false;
+        return false;
       }
       if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-        return Value.false;
+        return false;
       }
       if (xVal === yVal) {
-        return Value.true;
+        return true;
       }
-      return Value.false;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
     static sameValueZero(x, y) {
-      if (x.isNaN() && y.isNaN()) return Value.true;
-      if (Object.is(x.value, 0) && Object.is(y.value, -0)) return Value.true;
-      if (Object.is(x.value, -0) && Object.is(y.value, 0)) return Value.true;
-      if (x.value === y.value) return Value.true;
-      return Value.false;
+      if (x.isNaN() && y.isNaN()) return true;
+      if (Object.is(x.value, 0) && Object.is(y.value, -0)) return true;
+      if (Object.is(x.value, -0) && Object.is(y.value, 0)) return true;
+      if (x.value === y.value) return true;
+      return false;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
@@ -28651,11 +28518,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
     static toString(x, radix) {
-      if (x.isNaN()) return Value('NaN');
-      if (Object.is(x.value, -0) || Object.is(x.value, 0)) return Value('0');
-      if (x.value < 0) return Value(`-${NumberValue.toString(F(-x.value), radix).stringValue()}`);
-      if (x.isInfinity()) return Value('Infinity');
-      return Value(`${x.value.toString(Number(radix))}`);
+      if (x.isNaN()) return 'NaN';
+      if (Object.is(x.value, -0) || Object.is(x.value, 0)) return '0';
+      if (x.value < 0) return `-${NumberValue.toString(F(-x.value), radix)}`;
+      if (x.isInfinity()) return 'Infinity';
+      return `${x.value.toString(Number(radix))}`;
     }
     static unit = new NumberValue(1);
     static {
@@ -28813,25 +28680,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
     static lessThan(x, y) {
-      return R(x) < R(y) ? Value.true : Value.false;
+      return R(x) < R(y);
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
     static equal(x, y) {
       // Return true if x and y have the same mathematical integer value and false otherwise.
-      return R(x) === R(y) ? Value.true : Value.false;
-    }
-
-    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-    static sameValue(x, y) {
-      // 1. Return BigInt::equal(x, y).
-      return BigIntValue.equal(x, y);
-    }
-
-    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-    static sameValueZero(x, y) {
-      // 1. Return BigInt::equal(x, y).
-      return BigIntValue.equal(x, y);
+      return R(x) === R(y);
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
@@ -28864,11 +28719,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           });
           _str = _str.Value;
         }
-        const str = _str.stringValue();
-        return Value(`-${str}`);
+        const str = _str;
+        return `-${str}`;
       }
       // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-      return Value(`${R(x).toString(Number(radix))}`);
+      return `${R(x).toString(Number(radix))}`;
     }
     static unit = new BigIntValue(1n);
     static {
@@ -28881,60 +28736,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
   function BigIntBitwiseOp(op, x, y) {
-    // TODO: figure out why this doesn't work, probably the modulo.
-    /*
-    // 1. Assert: op is "&", "|", or "^".
-    Assert(['&', '|', '^'].includes(op));
-    // 2. Let result be 0n.
-    let result = 0n;
-    // 3. Let shift be 0.
-    let shift = 0n;
-    // 4. Repeat, until (x = 0 or x = -1) and (y = 0 or y = -1),
-    while (!((x === 0n || x === -1n) && (y === 0n || y === -1n))) {
-      // a. Let xDigit be x modulo 2.
-      const xDigit = x % 2n;
-      // b. Let yDigit be y modulo 2.
-      const yDigit = y % 2n;
-      // c. If op is "&", set result to result + 2^shift × BinaryAnd(xDigit, yDigit).
-      if (op === '&') {
-        result += (2n ** shift) * BinaryAnd(xDigit, yDigit);
-      } else if (op === '|') {
-        // d. Else if op is "|", set result to result + 2shift × BinaryOr(xDigit, yDigit).
-        result += (2n ** shift) * BinaryXor(xDigit, yDigit);
-      } else {
-        // i. Assert: op is "^".
-        Assert(op === '^');
-        // ii. Set result to result + 2^shift × BinaryXor(xDigit, yDigit).
-        result += (2n ** shift) * BinaryXor(xDigit, yDigit);
-      }
-      // f. Set shift to shift + 1.
-      shift += 1n;
-      // g. Set x to (x - xDigit) / 2.
-      x = (x - xDigit) / 2n;
-      // h. Set y to (y - yDigit) / 2.
-      y = (y - yDigit) / 2n;
-    }
-    let tmp;
-    // 5. If op is "&", let tmp be BinaryAnd(x modulo 2, y modulo 2).
-    if (op === '&') {
-      tmp = BinaryAnd(x % 2n, y % 2n);
-    } else if (op === '|') {
-      // 6. Else if op is "|", let tmp be BinaryOr(x modulo 2, y modulo 2).
-      tmp = BinaryOr(x % 2n, y % 2n);
-    } else {
-      // a. Assert: op is "^".
-      Assert(op === '^');
-      // b. Let tmp be BinaryXor(x modulo 2, y modulo 2).
-      tmp = BinaryXor(x % 2n, y % 2n);
-    }
-    // 8. If tmp ≠ 0, then
-    if (tmp !== 0n) {
-      // a. Set result to result - 2^shift. NOTE: This extends the sign.
-      result -= 2n ** shift;
-    }
-    // 9. Return result.
-    return Z(result);
-    */
     switch (op) {
       case '&':
         return Z(R(x) & R(y));
@@ -29001,9 +28802,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     // eslint-disable-next-line require-yield
     *GetOwnProperty(P) {
+      if (P instanceof JSStringValue) P = P.stringValue();
       return OrdinaryGetOwnProperty(this, P);
     }
     *DefineOwnProperty(P, Desc) {
+      if (P instanceof JSStringValue) P = P.stringValue();
       /* ReturnIfAbrupt */let _temp3 = exports.surroundingAgent.debugger_tryTouchDuringPreview(this);
       /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
         if (_temp3 instanceof AbruptCompletion) return _temp3;
@@ -29012,21 +28815,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return yield* OrdinaryDefineOwnProperty(this, P, Desc);
     }
     *HasProperty(P) {
+      if (P instanceof JSStringValue) P = P.stringValue();
       return yield* OrdinaryHasProperty(this, P);
     }
     *Get(P, Receiver) {
+      if (P instanceof JSStringValue) P = P.stringValue();
       return yield* OrdinaryGet(this, P, Receiver);
     }
     *Set(P, V, Receiver) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      // TODO:
       /* ReturnIfAbrupt */let _temp4 = exports.surroundingAgent.debugger_tryTouchDuringPreview(Receiver);
       /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         _temp4 = _temp4.Value;
-      } // TODO:
-
+      }
       return yield* OrdinarySet(this, P, V, Receiver);
     }
     *Delete(P) {
+      if (P instanceof JSStringValue) P = P.stringValue();
       /* ReturnIfAbrupt */let _temp5 = exports.surroundingAgent.debugger_tryTouchDuringPreview(this);
       /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
         if (_temp5 instanceof AbruptCompletion) return _temp5;
@@ -29068,7 +28875,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     Description;
     constructor(description) {
-      this.Description = description.stringValue();
+      this.Description = description;
     }
   }
   class ReferenceRecord {
@@ -29097,6 +28904,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-expect-error
+  // @ts-expect-error
+  // @ts-expect-error
+  // @ts-expect-error
+  // @ts-expect-error
+  // @ts-expect-error
+  // @ts-expect-error
   exports.Descriptor = void 0;
   // @ts-expect-error
   class Descriptor {
@@ -29104,28 +28917,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       [exports.Descriptor, _initClass2$1] = _applyDecs$2(this, [callable()], []).c;
     }
     Value;
-    Getter;
-    Setter;
+    Get;
+    Set;
     Writable;
     Enumerable;
     Configurable;
     constructor(O) {
       this.Value = O.Value;
-      this.Getter = O.Getter;
-      this.Setter = O.Setter;
+      this.Get = O.Get;
+      this.Set = O.Set;
       this.Writable = O.Writable;
       this.Enumerable = O.Enumerable;
       this.Configurable = O.Configurable;
     }
-    everyFieldIsAbsent() {
-      return this.Value === undefined && this.Getter === undefined && this.Setter === undefined && this.Writable === undefined && this.Enumerable === undefined && this.Configurable === undefined;
+    static everyFieldIsAbsent(descriptor) {
+      return descriptor.Value === undefined && descriptor.Get === undefined && descriptor.Set === undefined && descriptor.Writable === undefined && descriptor.Enumerable === undefined && descriptor.Configurable === undefined;
     }
 
     // NON-SPEC
     mark(m) {
       m(this.Value);
-      m(this.Getter);
-      m(this.Setter);
+      m(this.Get);
+      m(this.Set);
     }
     static {
       _initClass2$1();
@@ -29684,7 +29497,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!(exemplar instanceof ObjectValue && 'TypedArrayName' in exemplar && 'ContentType' in exemplar)) throw new Assert.Error("exemplar instanceof ObjectValue\n    && 'TypedArrayName' in exemplar\n    && 'ContentType' in exemplar");
 
     // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
-    const defaultConstructor = exports.surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue()].IntrinsicName);
+    const defaultConstructor = exports.surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName].IntrinsicName);
     // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
     /* ReturnIfAbrupt */let _constructor = yield* SpeciesConstructor(exemplar, defaultConstructor);
     /* ReturnIfAbrupt */if (_constructor instanceof Completion) {
@@ -29738,7 +29551,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-typedarray-create-same-type */
   function* TypedArrayCreateSameType(exemplar, length) {
-    const constructor = exports.surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue()].IntrinsicName);
+    const constructor = exports.surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName].IntrinsicName);
     /* ReturnIfAbrupt */let _result2 = yield* TypedArrayCreateFromConstructor(constructor, [Value(length)]);
     /* ReturnIfAbrupt */if (_result2 instanceof Completion) {
       if (_result2 instanceof AbruptCompletion) return _result2;
@@ -29775,14 +29588,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-typedarrayelementsize */
   function TypedArrayElementSize(O) {
-    const type = O.TypedArrayName.stringValue();
+    const type = O.TypedArrayName;
     return typedArrayInfoByName[type].ElementSize;
   }
   TypedArrayElementSize.section = 'https://tc39.es/ecma262/#sec-typedarrayelementsize';
 
   /** https://tc39.es/ecma262/#sec-typedarrayelementtype */
   function TypedArrayElementType(O) {
-    const type = O.TypedArrayName.stringValue();
+    const type = O.TypedArrayName;
     return typedArrayInfoByName[type].ElementType;
   }
   TypedArrayElementType.section = 'https://tc39.es/ecma262/#sec-typedarrayelementtype';
@@ -29851,12 +29664,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let obj be TypedArrayCreate(proto).
     const obj = TypedArrayCreate(proto);
     // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
-    /* Assert */ /* node:coverage ignore next */if (!(obj.ViewedArrayBuffer === Value.undefined)) throw new Assert.Error("obj.ViewedArrayBuffer === Value.undefined");
+    /* Assert */ /* node:coverage ignore next */if (!(obj.ViewedArrayBuffer === undefined)) throw new Assert.Error("obj.ViewedArrayBuffer === undefined");
     // 4. Set obj.[[TypedArrayName]] to constructorName.
     obj.TypedArrayName = constructorName;
     // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
     // 6. Otherwise, set obj.[[ContentType]] to Number.
-    if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
+    if (constructorName === 'BigInt64Array' || constructorName === 'BigUint64Array') {
       obj.ContentType = 'BigInt';
     } else {
       obj.ContentType = 'Number';
@@ -30014,7 +29827,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const Pk = _Pk;
       const kValue = value[k];
-      /* ReturnIfAbrupt */let _temp8 = yield* Set$1(O, Pk, kValue, Value.true);
+      /* ReturnIfAbrupt */let _temp8 = yield* Set$1(O, Pk, kValue, true);
       /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         _temp8 = _temp8.Value;
@@ -30054,7 +29867,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _kValue = _kValue.Value;
       }
       const kValue = _kValue;
-      /* ReturnIfAbrupt */let _temp0 = yield* Set$1(O, Pk, kValue, Value.true);
+      /* ReturnIfAbrupt */let _temp0 = yield* Set$1(O, Pk, kValue, true);
       /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
         if (_temp0 instanceof AbruptCompletion) return _temp0;
         _temp0 = _temp0.Value;
@@ -30069,11 +29882,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
     if (!(O instanceof ObjectValue && 'ViewedArrayBuffer' in O)) throw new Assert.Error("O instanceof ObjectValue && 'ViewedArrayBuffer' in O");
     // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
-    /* Assert */ /* node:coverage ignore next */if (!(O.ViewedArrayBuffer === Value.undefined)) throw new Assert.Error("O.ViewedArrayBuffer === Value.undefined");
+    /* Assert */ /* node:coverage ignore next */if (!(O.ViewedArrayBuffer === undefined)) throw new Assert.Error("O.ViewedArrayBuffer === undefined");
     // 3. Assert: length is a non-negative integer.
     /* Assert */ /* node:coverage ignore next */if (!isNonNegativeInteger(length)) throw new Assert.Error("isNonNegativeInteger(length)");
     // 4. Let constructorName be the String value of O.[[TypedArrayName]].
-    const constructorName = O.TypedArrayName.stringValue();
+    const constructorName = O.TypedArrayName;
     // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
     const elementSize = typedArrayInfoByName[constructorName].ElementSize;
     // 6. Let byteLength be elementSize × length.
@@ -30169,7 +29982,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         } else {
           mappedValue = kValue;
         }
-        /* ReturnIfAbrupt */let _temp10 = yield* Set$1(targetObj, Pk, mappedValue, Value.true);
+        /* ReturnIfAbrupt */let _temp10 = yield* Set$1(targetObj, Pk, mappedValue, true);
         /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
           if (_temp10 instanceof AbruptCompletion) return _temp10;
           _temp10 = _temp10.Value;
@@ -30239,7 +30052,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         mappedValue = kValue;
       }
       // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-      /* ReturnIfAbrupt */let _temp12 = yield* Set$1(targetObj, Pk, mappedValue, Value.true);
+      /* ReturnIfAbrupt */let _temp12 = yield* Set$1(targetObj, Pk, mappedValue, true);
       /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
         if (_temp12 instanceof AbruptCompletion) return _temp12;
         _temp12 = _temp12.Value;
@@ -30289,7 +30102,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const Pk = _Pk5;
       // c. Perform ? Set(newObj, Pk, kValue, true).
-      /* ReturnIfAbrupt */let _temp13 = yield* Set$1(newObj, Pk, kValue, Value.true);
+      /* ReturnIfAbrupt */let _temp13 = yield* Set$1(newObj, Pk, kValue, true);
       /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
         if (_temp13 instanceof AbruptCompletion) return _temp13;
         _temp13 = _temp13.Value;
@@ -30318,27 +30131,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
     *DefineOwnProperty(P, Desc) {
       const array = this;
-      /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
-      if (P instanceof JSStringValue && P.stringValue() === 'length') {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      /* Assert */ /* node:coverage ignore next */if (!(typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("typeof P === 'string' || IsPropertyKey(P)");
+      if (P === 'length') {
         return yield* ArraySetLength(array, Desc);
       } else if (isArrayIndex(P)) {
         let lengthDesc = OrdinaryGetOwnProperty(array, Value('length'));
-        /* Assert */ /* node:coverage ignore next */if (!!(lengthDesc instanceof UndefinedValue)) throw new Assert.Error("!(lengthDesc instanceof UndefinedValue)");
+        /* Assert */ /* node:coverage ignore next */if (!!!lengthDesc) throw new Assert.Error("!!lengthDesc");
         /* Assert */ /* node:coverage ignore next */if (!IsDataDescriptor(lengthDesc)) throw new Assert.Error("IsDataDescriptor(lengthDesc)");
-        /* Assert */ /* node:coverage ignore next */if (!(lengthDesc.Configurable === Value.false)) throw new Assert.Error("lengthDesc.Configurable === Value.false");
+        /* Assert */ /* node:coverage ignore next */if (!(lengthDesc.Configurable === false)) throw new Assert.Error("lengthDesc.Configurable === false");
         const length = lengthDesc.Value;
         /* Assert */ /* node:coverage ignore next */if (!(length instanceof NumberValue && isNonNegativeInteger(R(length)))) throw new Assert.Error("length instanceof NumberValue && isNonNegativeInteger(R(length))");
-        /* X */let _index = ToUint32(P);
+        /* X */let _index = ToUint32(typeof P === 'string' ? Value(P) : P);
         /* node:coverage ignore next */if (_index && typeof _index === 'object' && 'next' in _index) _index = skipDebugger(_index);
         /* node:coverage ignore next */if (_index instanceof Completion) {
-          /* node:coverage ignore next */if (_index instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(P) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_index instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(typeof P === 'string' ? Value(P) : P) returned an abrupt completion", {
             cause: _index
           });
           _index = _index.Value;
         }
         const index = _index;
-        if (R(index) >= R(length) && lengthDesc.Writable === Value.false) {
-          return Value.false;
+        if (R(index) >= R(length) && !lengthDesc.Writable) {
+          return false;
         }
         /* X */let _succeeded = OrdinaryDefineOwnProperty(array, P, Desc);
         /* node:coverage ignore next */if (_succeeded && typeof _succeeded === 'object' && 'next' in _succeeded) _succeeded = skipDebugger(_succeeded);
@@ -30349,8 +30163,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _succeeded = _succeeded.Value;
         }
         let succeeded = _succeeded;
-        if (succeeded === Value.false) {
-          return Value.false;
+        if (!succeeded) {
+          return false;
         }
         if (R(index) >= R(length)) {
           lengthDesc = exports.Descriptor({
@@ -30366,9 +30180,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _InternalMethods = _InternalMethods.Value;
           }
           succeeded = _InternalMethods;
-          /* Assert */ /* node:coverage ignore next */if (!(succeeded === Value.true)) throw new Assert.Error("succeeded === Value.true");
+          /* Assert */ /* node:coverage ignore next */if (!succeeded) throw new Assert.Error("succeeded");
         }
-        return Value.true;
+        return true;
       }
       return yield* OrdinaryDefineOwnProperty(array, P, Desc);
     }
@@ -30402,13 +30216,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     array.DefineOwnProperty = InternalMethods$5.DefineOwnProperty;
     /* X */let _temp = OrdinaryDefineOwnProperty(array, Value('length'), exports.Descriptor({
       Value: F(length),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({\n    Value: F(length),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({\n    Value: F(length),\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -30429,7 +30243,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _isArray = _isArray.Value;
     }
     const isArray = _isArray;
-    if (isArray === Value.false) {
+    if (!isArray) {
       return ArrayCreate(length);
     }
     /* ReturnIfAbrupt */let _constructor = yield* Get(originalArray, 'constructor');
@@ -30499,24 +30313,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Value: F(newLen)
     });
     const oldLenDesc = OrdinaryGetOwnProperty(array, Value('length'));
-    /* Assert */ /* node:coverage ignore next */if (!!(oldLenDesc instanceof UndefinedValue)) throw new Assert.Error("!(oldLenDesc instanceof UndefinedValue)");
+    /* Assert */ /* node:coverage ignore next */if (!!!oldLenDesc) throw new Assert.Error("!!oldLenDesc");
     /* Assert */ /* node:coverage ignore next */if (!IsDataDescriptor(oldLenDesc)) throw new Assert.Error("IsDataDescriptor(oldLenDesc)");
-    /* Assert */ /* node:coverage ignore next */if (!(oldLenDesc.Configurable === Value.false)) throw new Assert.Error("oldLenDesc.Configurable === Value.false");
+    /* Assert */ /* node:coverage ignore next */if (!!oldLenDesc.Configurable) throw new Assert.Error("!oldLenDesc.Configurable");
     const oldLen = R(oldLenDesc.Value);
     if (newLen >= oldLen) {
       return yield* OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc);
     }
-    if (oldLenDesc.Writable === Value.false) {
-      return Value.false;
+    if (!oldLenDesc.Writable) {
+      return false;
     }
     let newWritable;
-    if (newLenDesc.Writable === undefined || newLenDesc.Writable === Value.true) {
+    if (newLenDesc.Writable === undefined || newLenDesc.Writable) {
       newWritable = true;
     } else {
       newWritable = false;
       newLenDesc = exports.Descriptor({
         ...newLenDesc,
-        Writable: Value.true
+        Writable: true
       });
     }
     /* X */let _succeeded2 = OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc);
@@ -30528,8 +30342,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _succeeded2 = _succeeded2.Value;
     }
     const succeeded = _succeeded2;
-    if (succeeded === Value.false) {
-      return Value.false;
+    if (!succeeded) {
+      return false;
     }
     const keys = [];
     array.properties.forEach((_value, key) => {
@@ -30548,7 +30362,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _deleteSucceeded = _deleteSucceeded.Value;
       }
       const deleteSucceeded = _deleteSucceeded;
-      if (deleteSucceeded === Value.false) {
+      if (!deleteSucceeded) {
         /* X */let _temp3 = ToUint32(P);
         /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
         /* node:coverage ignore next */if (_temp3 instanceof Completion) {
@@ -30564,7 +30378,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (newWritable === false) {
           newLenDesc = exports.Descriptor({
             ...newLenDesc,
-            Writable: Value.false
+            Writable: false
           });
         }
         /* X */let _temp4 = OrdinaryDefineOwnProperty(array, Value('length'), newLenDesc);
@@ -30575,23 +30389,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           });
           _temp4 = _temp4.Value;
         }
-        return Value.false;
+        return false;
       }
     }
     if (newWritable === false) {
-      const s = yield* OrdinaryDefineOwnProperty(array, Value('length'), exports.Descriptor({
-        Writable: Value.false
+      /* X */let _s = yield* OrdinaryDefineOwnProperty(array, Value('length'), exports.Descriptor({
+        Writable: false
       }));
-      /* Assert */ /* node:coverage ignore next */if (!(s === Value.true)) throw new Assert.Error("s === Value.true");
+      /* node:coverage ignore next */if (_s instanceof Completion) {
+        /* node:coverage ignore next */if (_s instanceof AbruptCompletion) throw new Assert.Error("! yield* OrdinaryDefineOwnProperty(array, Value('length'), Descriptor({ Writable: false })) returned an abrupt completion", {
+          cause: _s
+        });
+        _s = _s.Value;
+      }
+      const s = _s;
+      /* Assert */ /* node:coverage ignore next */if (!s) throw new Assert.Error("s");
     }
-    return Value.true;
+    return true;
   }
   ArraySetLength.section = 'https://tc39.es/ecma262/#sec-arraysetlength';
 
   /** https://tc39.es/ecma262/#sec-isconcatspreadable */
   function* IsConcatSpreadable(O) {
     if (!(O instanceof ObjectValue)) {
-      return Value.false;
+      return false;
     }
     /* ReturnIfAbrupt */let _spreadable = yield* Get(O, wellKnownSymbols.isConcatSpreadable);
     /* ReturnIfAbrupt */if (_spreadable instanceof Completion) {
@@ -30656,15 +30477,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const yString = _yString;
     // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
-    const xSmaller = yield* IsLessThan(xString, yString);
+    const xSmaller = yield* IsLessThan(Value(xString), Value(yString));
     // 8. If xSmaller is true, return -1𝔽.
-    if (xSmaller === Value.true) {
+    if (xSmaller) {
       return F(-1);
     }
     // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
-    const ySmaller = yield* IsLessThan(yString, xString);
+    const ySmaller = yield* IsLessThan(Value(yString), Value(xString));
     // 10. If ySmaller is true, return 1𝔽.
-    if (ySmaller === Value.true) {
+    if (ySmaller) {
       return F(1);
     }
     // 11. Return +0𝔽.
@@ -30742,7 +30563,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             result = CreateArrayFromList([indexNumber, elementValue]);
           }
         }
-        /* ReturnIfAbrupt */let _closure2 = yield* GeneratorYield(CreateIteratorResultObject(result, Value.false));
+        /* ReturnIfAbrupt */let _closure2 = yield* GeneratorYield(CreateIteratorResultObject(result, false));
         /* ReturnIfAbrupt */if (_closure2 instanceof Completion) {
           if (_closure2 instanceof AbruptCompletion) return _closure2;
           _closure2 = _closure2.Value;
@@ -30752,7 +30573,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     };
     // 4. Return CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-    const generator = CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), exports.surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), ['HostCapturedValues'], [array]);
+    const generator = CreateIteratorFromClosure(closure, '%ArrayIteratorPrototype%', exports.surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), ['HostCapturedValues'], [array]);
     return generator;
   }
   CreateArrayIterator.section = 'https://tc39.es/ecma262/#sec-createarrayiterator';
@@ -31011,7 +30832,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
       newMaxByteLength = arrayBuffer.ArrayBufferMaxByteLength;
     }
-    if (arrayBuffer.ArrayBufferDetachKey !== Value.undefined) {
+    if (arrayBuffer.ArrayBufferDetachKey !== undefined) {
       return Throw.TypeError('Cannot transfer ArrayBuffer with custom detach key');
     }
     /* ReturnIfAbrupt */let _newBuffer = yield* AllocateArrayBuffer(exports.surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength);
@@ -31047,13 +30868,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-detacharraybuffer */
   function DetachArrayBuffer(arrayBuffer, key) {
-    // 3. If key is not present, set key to undefined.
-    if (key === undefined) {
-      key = Value.undefined;
-    }
     // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-    if (!SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
-      return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
+    if (arrayBuffer.ArrayBufferDetachKey === undefined ? key !== undefined : key === undefined || !SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
+      return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key ?? Value.undefined);
     }
     /* ReturnIfAbrupt */let _temp4 = exports.surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
     /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
@@ -31219,15 +31036,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       rawBytes = encodeFloat64(Number(value.value));
     } else {
       const conversionOperation = typedArrayInfoByType[type].ConversionOperation;
-      /* X */let _intValue = conversionOperation(value);
-      /* node:coverage ignore next */if (_intValue && typeof _intValue === 'object' && 'next' in _intValue) _intValue = skipDebugger(_intValue);
-      /* node:coverage ignore next */if (_intValue instanceof Completion) {
-        /* node:coverage ignore next */if (_intValue instanceof AbruptCompletion) throw new Assert.Error("! conversionOperation(value) returned an abrupt completion", {
-          cause: _intValue
+      /* X */let _converted = conversionOperation(value);
+      /* node:coverage ignore next */if (_converted && typeof _converted === 'object' && 'next' in _converted) _converted = skipDebugger(_converted);
+      /* node:coverage ignore next */if (_converted instanceof Completion) {
+        /* node:coverage ignore next */if (_converted instanceof AbruptCompletion) throw new Assert.Error("! conversionOperation(value) returned an abrupt completion", {
+          cause: _converted
         });
-        _intValue = _intValue.Value;
+        _converted = _converted.Value;
       }
-      const intValue = R(_intValue);
+      const converted = _converted;
+      const intValue = R(typeof converted === 'bigint' || typeof converted === 'number' ? Value(converted) : converted);
       // If intValue ≥ 0, then
       //     Let rawBytes be a List whose elements are the n-byte binary encoding of intValue. The bytes are ordered in little endian order.
       // Else,
@@ -31283,10 +31101,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       block[byteIndex + i] = byte;
     });
     // 11. Return NormalCompletion(undefined).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: Value.undefined
-    };
   }
   SetValueInBuffer.section = 'https://tc39.es/ecma262/#sec-setvalueinbuffer';
 
@@ -31356,7 +31170,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const result = _result;
     /* Assert */ /* node:coverage ignore next */if (!(result === undefined)) throw new Assert.Error("result === undefined");
-    return Value.undefined;
   }
   AsyncBlockStart.section = 'https://tc39.es/ecma262/#sec-async-function-objects';
 
@@ -31423,7 +31236,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         };
       }
       // h. Perform AsyncGeneratorCompleteStep(generator, result, true).
-      AsyncGeneratorCompleteStep(acGenerator, result, Value.true);
+      AsyncGeneratorCompleteStep(acGenerator, result, true);
       // i. Perform AsyncGeneratorDrainQueue(generator).
       yield* AsyncGeneratorDrainQueue(acGenerator);
       // j. Let callerContext be the running execution context.
@@ -31466,7 +31279,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 3. Perform ? RequireInternalSlot(generator, [[AsyncGeneratorQueue]]).
     // 4. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
     const brand = generator.GeneratorBrand;
-    if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : !SameValue(brand, generatorBrand)) {
+    if (brand !== generatorBrand) {
       return Throw.TypeError('$1 is not a $2', generator, generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator');
     }
     return undefined;
@@ -31601,7 +31414,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // Let previousContext be the second to top element of the execution context stack.
     const previousContext = exports.surroundingAgent.executionContextStack[exports.surroundingAgent.executionContextStack.length - 2];
     const previousRealm = previousContext.Realm;
-    AsyncGeneratorCompleteStep(gen, completion, Value.false, previousRealm);
+    AsyncGeneratorCompleteStep(gen, completion, false, previousRealm);
     const queue = gen.AsyncGeneratorQueue;
     if (queue.length) {
       // a. NOTE: Execution continues without suspending the generator.
@@ -31633,7 +31446,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Let promise be PromiseResolve(%Promise%, completion.[[Value]]).
     let promiseCompletion = yield* PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), completion.Value);
     if (promiseCompletion instanceof AbruptCompletion) {
-      AsyncGeneratorCompleteStep(generator, promiseCompletion, Value.true);
+      AsyncGeneratorCompleteStep(generator, promiseCompletion, true);
       yield* AsyncGeneratorDrainQueue(generator);
       return;
     }
@@ -31651,7 +31464,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         Value: value
       };
       // c. Perform AsyncGeneratorCompleteStep(generator, result, true).
-      AsyncGeneratorCompleteStep(generator, result, Value.true);
+      AsyncGeneratorCompleteStep(generator, result, true);
       // d. Perform AsyncGeneratorDrainQueue(generator).
       yield* AsyncGeneratorDrainQueue(generator);
       // e. Return undefined.
@@ -31668,7 +31481,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         Value: reason
       };
       // c. Perform AsyncGeneratorCompleteStep(generator, result, true).
-      AsyncGeneratorCompleteStep(generator, result, Value.true);
+      AsyncGeneratorCompleteStep(generator, result, true);
       // d. Perform AsyncGeneratorDrainQueue(generator).
       yield* AsyncGeneratorDrainQueue(generator);
       // e. Return undefined.
@@ -31700,7 +31513,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             Value: Value.undefined
           };
         }
-        AsyncGeneratorCompleteStep(generator, completion, Value.true);
+        AsyncGeneratorCompleteStep(generator, completion, true);
       }
     }
     generator.AsyncGeneratorState = 'completed';
@@ -31712,7 +31525,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // 6.1.7 #integer-index
   function isIntegerIndex(V) {
-    if (!(V instanceof JSStringValue)) {
+    if (V instanceof JSStringValue) V = V.stringValue();
+    if (typeof V !== 'string') {
       return false;
     }
     /* X */let _numeric = CanonicalNumericIndexString(V);
@@ -31724,7 +31538,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _numeric = _numeric.Value;
     }
     const numeric = _numeric;
-    if (numeric instanceof UndefinedValue) {
+    if (numeric === undefined) {
       return false;
     }
     if (Object.is(R(numeric), 0)) {
@@ -31736,7 +31550,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // 6.1.7 #array-index
   function isArrayIndex(V) {
-    if (!(V instanceof JSStringValue)) {
+    if (V instanceof JSStringValue) V = V.stringValue();
+    if (typeof V !== 'string') {
       return false;
     }
     /* X */let _numeric2 = CanonicalNumericIndexString(V);
@@ -31748,7 +31563,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _numeric2 = _numeric2.Value;
     }
     const numeric = _numeric2;
-    if (numeric instanceof UndefinedValue) {
+    if (numeric === undefined) {
       return false;
     }
     if (!Number.isInteger(R(numeric))) {
@@ -31839,7 +31654,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const getIndex = _getIndex;
     // 4. Set isLittleEndian to ToBoolean(isLittleEndian).
-    isLittleEndian = ToBoolean(isLittleEndian);
+    if (typeof isLittleEndian !== 'boolean') isLittleEndian = ToBoolean(isLittleEndian);
     // 7. Let viewOffset be view.[[ByteOffset]].
     const viewOffset = view.ByteOffset;
     const viewRecord = MakeDataViewWithBufferWitnessRecord(view);
@@ -31856,7 +31671,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 11. Let bufferIndex be getIndex + viewOffset.
     const bufferIndex = getIndex + viewOffset;
     // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-    return GetValueFromBuffer(view.ViewedArrayBuffer, bufferIndex, type, false, 'unordered', isLittleEndian.booleanValue());
+    return GetValueFromBuffer(view.ViewedArrayBuffer, bufferIndex, type, false, 'unordered', isLittleEndian);
   }
   GetViewValue.section = 'https://tc39.es/ecma262/#sec-getviewvalue';
 
@@ -31896,7 +31711,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       numberValue = _temp4;
     }
     // 6. Set isLittleEndian to ToBoolean(isLittleEndian).
-    isLittleEndian = ToBoolean(isLittleEndian);
+    if (typeof isLittleEndian !== 'boolean') isLittleEndian = ToBoolean(isLittleEndian);
     // 9. Let viewOffset be view.[[ByteOffset]].
     const viewOffset = view.ByteOffset;
     const viewRecord = MakeDataViewWithBufferWitnessRecord(view);
@@ -31913,12 +31728,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 13. Let bufferIndex be getIndex + viewOffset.
     const bufferIndex = getIndex + viewOffset;
     // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-    /* ReturnIfAbrupt */let _temp5 = yield* SetValueInBuffer(view.ViewedArrayBuffer, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian.booleanValue());
+    /* ReturnIfAbrupt */let _temp5 = yield* SetValueInBuffer(view.ViewedArrayBuffer, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian);
     /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
       if (_temp5 instanceof AbruptCompletion) return _temp5;
       _temp5 = _temp5.Value;
     }
-    return Value.undefined;
   }
   SetViewValue.section = 'https://tc39.es/ecma262/#sec-setviewvalue';
 
@@ -32157,7 +31971,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (breakpoint.condition) {
           const result = EnsureCompletion(skipDebugger(performDevtoolsEval(breakpoint.condition, exports.surroundingAgent.currentRealmRecord, false, true)));
           if (result instanceof NormalCompletion) {
-            return ToBoolean(result.Value).booleanValue();
+            return ToBoolean(result.Value);
           }
         } else {
           return true;
@@ -32576,30 +32390,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function ToBoolean(argument) {
     if (argument instanceof UndefinedValue) {
       // Return false.
-      return Value.false;
+      return false;
     } else if (argument instanceof NullValue) {
       // Return false.
-      return Value.false;
+      return false;
     } else if (argument instanceof BooleanValue) {
       // Return argument.
-      return argument;
+      return argument === Value.true;
     } else if (argument instanceof NumberValue) {
       // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
       if (R(argument) === 0 || argument.isNaN()) {
-        return Value.false;
+        return false;
       }
     } else if (argument instanceof JSStringValue) {
       // If argument is the empty String, return false; otherwise return true.
       if (argument.stringValue().length === 0) {
-        return Value.false;
+        return false;
       }
     } else if (argument instanceof BigIntValue) {
       // If argument is 0ℤ, return false; otherwise return true.
       if (R(argument) === 0n) {
-        return Value.false;
+        return false;
       }
     }
-    return Value.true;
+    return true;
   }
   ToBoolean.section = 'https://tc39.es/ecma262/#sec-toboolean';
 
@@ -32953,18 +32767,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _int9 = _int9.Value;
     }
     const int = R(_int9);
-    return Z(ToFixedSizeInteger(int, 'unsigned', 64n));
+    return ToFixedSizeInteger(int, 'unsigned', 64n);
   }
   ToBigUint64.section = 'https://tc39.es/ecma262/#sec-tobiguint64';
 
   /** https://tc39.es/ecma262/#sec-tostring */
   function* ToString(argument) {
     if (argument instanceof UndefinedValue) {
-      return Value('undefined');
+      return 'undefined';
     } else if (argument instanceof NullValue) {
-      return Value('null');
+      return 'null';
     } else if (argument instanceof BooleanValue) {
-      return Value(argument === Value.true ? 'true' : 'false');
+      return argument === Value.true ? 'true' : 'false';
     } else if (argument instanceof NumberValue) {
       /* X */let _temp2 = NumberValue.toString(argument, 10n);
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
@@ -32976,7 +32790,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return _temp2;
     } else if (argument instanceof JSStringValue) {
-      return argument;
+      return argument.stringValue();
     } else if (argument instanceof SymbolValue) {
       return Throw.TypeError('Cannot convert a Symbol value to a $1', 'string');
     } else if (argument instanceof BigIntValue) {
@@ -33006,7 +32820,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } else if (argument instanceof BooleanValue) {
       // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument.
       const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']);
-      obj.BooleanData = argument;
+      obj.BooleanData = argument.booleanValue();
       return obj;
     } else if (argument instanceof NumberValue) {
       // Return a new Number object whose [[NumberData]] internal slot is set to argument.
@@ -33015,7 +32829,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return obj;
     } else if (argument instanceof JSStringValue) {
       // Return a new String object whose [[StringData]] internal slot is set to argument.
-      return StringCreate(argument, exports.surroundingAgent.intrinsic('%String.prototype%'));
+      return StringCreate(argument.stringValue(), exports.surroundingAgent.intrinsic('%String.prototype%'));
     } else if (argument instanceof SymbolValue) {
       // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument.
       const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Symbol.prototype%'), ['SymbolData']);
@@ -33024,7 +32838,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } else if (argument instanceof BigIntValue) {
       // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument.
       const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']);
-      obj.BigIntData = argument;
+      // eslint-disable-next-line @engine262/mathematical-value
+      obj.BigIntData = argument.bigintValue();
       return obj;
     }
     /* Assert */ /* node:coverage ignore next */if (!(argument instanceof ObjectValue)) throw new Assert.Error("argument instanceof ObjectValue");
@@ -33055,7 +32870,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp3 = _temp3.Value;
     }
-    return _temp3;
+    return Value(_temp3);
   }
   ToPropertyKey.section = 'https://tc39.es/ecma262/#sec-topropertykey';
 
@@ -33073,24 +32888,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   ToLength.section = 'https://tc39.es/ecma262/#sec-tolength';
 
   /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
-  function CanonicalNumericIndexString(argument) {
-    /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(argument) is String.
-    if (!(argument instanceof JSStringValue)) throw new Assert.Error("argument instanceof JSStringValue");
-    // 2. If argument is "-0", return -0𝔽.
-    if (argument.stringValue() === '-0') {
-      return F(-0);
-    }
-    // 3. Let n be ! ToNumber(argument).
-    /* X */let _n = ToNumber(argument);
+  function CanonicalNumericIndexString(arg) {
+    if (arg === '-0') return F(-0);
+    /* X */let _n = ToNumber(Value(arg));
     /* node:coverage ignore next */if (_n && typeof _n === 'object' && 'next' in _n) _n = skipDebugger(_n);
     /* node:coverage ignore next */if (_n instanceof Completion) {
-      /* node:coverage ignore next */if (_n instanceof AbruptCompletion) throw new Assert.Error("! ToNumber(argument) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_n instanceof AbruptCompletion) throw new Assert.Error("! ToNumber(Value(arg)) returned an abrupt completion", {
         cause: _n
       });
       _n = _n.Value;
     }
     const n = _n;
-    // 4. If SameValue(! ToString(n), argument) is false, return undefined.
     /* X */let _temp4 = ToString(n);
     /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
     /* node:coverage ignore next */if (_temp4 instanceof Completion) {
@@ -33099,11 +32907,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp4 = _temp4.Value;
     }
-    if (!SameValue(_temp4, argument)) {
-      return Value.undefined;
-    }
-    // 4. Return n.
-    return n;
+    if (_temp4 === arg) return n;
+    return undefined;
   }
   CanonicalNumericIndexString.section = 'https://tc39.es/ecma262/#sec-canonicalnumericindexstring';
 
@@ -34471,91 +34276,96 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return number;
   }
 
-  // 6.2.5.1 IsAccessorDescriptor
-  function IsAccessorDescriptor(Desc) {
-    if (Desc.Getter === undefined && Desc.Setter === undefined) {
-      return false;
-    }
-    return true;
-  }
+  /** https://tc39.es/ecma262/#sec-isaccessordescriptor */
 
-  // 6.2.5.2 IsDataDescriptor
-  function IsDataDescriptor(Desc) {
-    if (Desc.Value === undefined && Desc.Writable === undefined) {
-      return false;
-    }
-    return true;
-  }
-
-  // 6.2.5.3 IsGenericDescriptor
-  function IsGenericDescriptor(Desc) {
-    if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
-      return true;
-    }
+  /** https://tc39.es/ecma262/#sec-isaccessordescriptor */
+  function IsAccessorDescriptor(propertyDesc) {
+    if (propertyDesc.Get !== undefined) return true;
+    if (propertyDesc.Set !== undefined) return true;
     return false;
   }
+  IsAccessorDescriptor.section = 'https://tc39.es/ecma262/#sec-isaccessordescriptor';
+
+  /** https://tc39.es/ecma262/#sec-isdatadescriptor */
+
+  /** https://tc39.es/ecma262/#sec-isdatadescriptor */
+  function IsDataDescriptor(propertyDesc) {
+    if (propertyDesc.Value !== undefined) return true;
+    if (propertyDesc.Writable !== undefined) return true;
+    return false;
+  }
+  IsDataDescriptor.section = 'https://tc39.es/ecma262/#sec-isdatadescriptor';
+  /** https://tc39.es/ecma262/#sec-isgenericdescriptor */
+  function IsGenericDescriptor(propertyDesc) {
+    if (IsDataDescriptor(propertyDesc)) return false;
+    if (IsAccessorDescriptor(propertyDesc)) return false;
+    return true;
+  }
+  IsGenericDescriptor.section = 'https://tc39.es/ecma262/#sec-isgenericdescriptor';
+
+  /** https://tc39.es/ecma262/#sec-property-descriptor-specification-type */
 
   /** https://tc39.es/ecma262/#sec-frompropertydescriptor */
-  function FromPropertyDescriptor(Desc) {
-    if (Desc instanceof UndefinedValue) {
+  function FromPropertyDescriptor(propertyDesc) {
+    if (propertyDesc === undefined) {
       return Value.undefined;
     }
     const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
-    if (Desc.Value !== undefined) {
-      /* X */let _temp = CreateDataProperty(obj, 'value', Desc.Value);
+    if (propertyDesc.Value !== undefined) {
+      /* X */let _temp = CreateDataProperty(obj, 'value', propertyDesc.Value);
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'value', Desc.Value) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'value', propertyDesc.Value) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
       }
     }
-    if (Desc.Writable !== undefined) {
-      /* X */let _temp2 = CreateDataProperty(obj, 'writable', Desc.Writable);
+    if (propertyDesc.Writable !== undefined) {
+      /* X */let _temp2 = CreateDataProperty(obj, 'writable', Value(propertyDesc.Writable));
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'writable', Desc.Writable) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'writable', Value(propertyDesc.Writable)) returned an abrupt completion", {
           cause: _temp2
         });
         _temp2 = _temp2.Value;
       }
     }
-    if (Desc.Getter !== undefined) {
-      /* X */let _temp3 = CreateDataProperty(obj, 'get', Desc.Getter);
+    if (propertyDesc.Get !== undefined) {
+      /* X */let _temp3 = CreateDataProperty(obj, 'get', propertyDesc.Get);
       /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
       /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'get', Desc.Getter) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'get', propertyDesc.Get) returned an abrupt completion", {
           cause: _temp3
         });
         _temp3 = _temp3.Value;
       }
     }
-    if (Desc.Setter !== undefined) {
-      /* X */let _temp4 = CreateDataProperty(obj, 'set', Desc.Setter);
+    if (propertyDesc.Set !== undefined) {
+      /* X */let _temp4 = CreateDataProperty(obj, 'set', propertyDesc.Set);
       /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
       /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'set', Desc.Setter) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'set', propertyDesc.Set) returned an abrupt completion", {
           cause: _temp4
         });
         _temp4 = _temp4.Value;
       }
     }
-    if (Desc.Enumerable !== undefined) {
-      /* X */let _temp5 = CreateDataProperty(obj, 'enumerable', Desc.Enumerable);
+    if (propertyDesc.Enumerable !== undefined) {
+      /* X */let _temp5 = CreateDataProperty(obj, 'enumerable', Value(propertyDesc.Enumerable));
       /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
       /* node:coverage ignore next */if (_temp5 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'enumerable', Desc.Enumerable) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'enumerable', Value(propertyDesc.Enumerable)) returned an abrupt completion", {
           cause: _temp5
         });
         _temp5 = _temp5.Value;
       }
     }
-    if (Desc.Configurable !== undefined) {
-      /* X */let _temp6 = CreateDataProperty(obj, 'configurable', Desc.Configurable);
+    if (propertyDesc.Configurable !== undefined) {
+      /* X */let _temp6 = CreateDataProperty(obj, 'configurable', Value(propertyDesc.Configurable));
       /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
       /* node:coverage ignore next */if (_temp6 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'configurable', Desc.Configurable) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(obj, 'configurable', Value(propertyDesc.Configurable)) returned an abrupt completion", {
           cause: _temp6
         });
         _temp6 = _temp6.Value;
@@ -34571,24 +34381,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!(Obj instanceof ObjectValue)) {
       return Throw.TypeError('$1 is not an object', Obj);
     }
-    let desc = exports.Descriptor({});
+    const desc = {};
     /* ReturnIfAbrupt */let _hasEnumerable = yield* HasProperty(Obj, 'enumerable');
     /* ReturnIfAbrupt */if (_hasEnumerable instanceof Completion) {
       if (_hasEnumerable instanceof AbruptCompletion) return _hasEnumerable;
       _hasEnumerable = _hasEnumerable.Value;
     }
     const hasEnumerable = _hasEnumerable;
-    if (hasEnumerable === Value.true) {
+    if (hasEnumerable) {
       /* ReturnIfAbrupt */let _enumerable = yield* Get(Obj, 'enumerable');
       /* ReturnIfAbrupt */if (_enumerable instanceof Completion) {
         if (_enumerable instanceof AbruptCompletion) return _enumerable;
         _enumerable = _enumerable.Value;
       }
       const enumerable = ToBoolean(_enumerable);
-      desc = exports.Descriptor({
-        ...desc,
-        Enumerable: enumerable
-      });
+      desc.Enumerable = enumerable;
     }
     /* ReturnIfAbrupt */let _hasConfigurable = yield* HasProperty(Obj, 'configurable');
     /* ReturnIfAbrupt */if (_hasConfigurable instanceof Completion) {
@@ -34596,17 +34403,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasConfigurable = _hasConfigurable.Value;
     }
     const hasConfigurable = _hasConfigurable;
-    if (hasConfigurable === Value.true) {
+    if (hasConfigurable) {
       /* ReturnIfAbrupt */let _conf = yield* Get(Obj, 'configurable');
       /* ReturnIfAbrupt */if (_conf instanceof Completion) {
         if (_conf instanceof AbruptCompletion) return _conf;
         _conf = _conf.Value;
       }
       const conf = ToBoolean(_conf);
-      desc = exports.Descriptor({
-        ...desc,
-        Configurable: conf
-      });
+      desc.Configurable = conf;
     }
     /* ReturnIfAbrupt */let _hasValue = yield* HasProperty(Obj, 'value');
     /* ReturnIfAbrupt */if (_hasValue instanceof Completion) {
@@ -34614,17 +34418,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasValue = _hasValue.Value;
     }
     const hasValue = _hasValue;
-    if (hasValue === Value.true) {
+    if (hasValue) {
       /* ReturnIfAbrupt */let _value = yield* Get(Obj, 'value');
       /* ReturnIfAbrupt */if (_value instanceof Completion) {
         if (_value instanceof AbruptCompletion) return _value;
         _value = _value.Value;
       }
       const value = _value;
-      desc = exports.Descriptor({
-        ...desc,
-        Value: value
-      });
+      desc.Value = value;
     }
     /* ReturnIfAbrupt */let _hasWritable = yield* HasProperty(Obj, 'writable');
     /* ReturnIfAbrupt */if (_hasWritable instanceof Completion) {
@@ -34632,17 +34433,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasWritable = _hasWritable.Value;
     }
     const hasWritable = _hasWritable;
-    if (hasWritable === Value.true) {
+    if (hasWritable) {
       /* ReturnIfAbrupt */let _writable = yield* Get(Obj, 'writable');
       /* ReturnIfAbrupt */if (_writable instanceof Completion) {
         if (_writable instanceof AbruptCompletion) return _writable;
         _writable = _writable.Value;
       }
       const writable = ToBoolean(_writable);
-      desc = exports.Descriptor({
-        ...desc,
-        Writable: writable
-      });
+      desc.Writable = writable;
     }
     /* ReturnIfAbrupt */let _hasGet = yield* HasProperty(Obj, 'get');
     /* ReturnIfAbrupt */if (_hasGet instanceof Completion) {
@@ -34650,7 +34448,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasGet = _hasGet.Value;
     }
     const hasGet = _hasGet;
-    if (hasGet === Value.true) {
+    if (hasGet) {
       /* ReturnIfAbrupt */let _getter = yield* Get(Obj, 'get');
       /* ReturnIfAbrupt */if (_getter instanceof Completion) {
         if (_getter instanceof AbruptCompletion) return _getter;
@@ -34660,10 +34458,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
         return Throw.TypeError('getter ($1) in a property descriptor $2 must be a function', getter, Obj);
       }
-      desc = exports.Descriptor({
-        ...desc,
-        Getter: getter
-      });
+      desc.Get = getter;
     }
     /* ReturnIfAbrupt */let _hasSet = yield* HasProperty(Obj, 'set');
     /* ReturnIfAbrupt */if (_hasSet instanceof Completion) {
@@ -34671,7 +34466,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasSet = _hasSet.Value;
     }
     const hasSet = _hasSet;
-    if (hasSet === Value.true) {
+    if (hasSet) {
       /* ReturnIfAbrupt */let _setter = yield* Get(Obj, 'set');
       /* ReturnIfAbrupt */if (_setter instanceof Completion) {
         if (_setter instanceof AbruptCompletion) return _setter;
@@ -34681,71 +34476,55 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
         return Throw.TypeError('setter ($1) in a property descriptor $2 must be a function', setter, Obj);
       }
-      desc = exports.Descriptor({
-        ...desc,
-        Setter: setter
-      });
+      desc.Set = setter;
     }
-    if (desc.Getter !== undefined || desc.Setter !== undefined) {
+    if (desc.Get !== undefined || desc.Set !== undefined) {
       if (desc.Value !== undefined || desc.Writable !== undefined) {
         return Throw.TypeError('Property descriptors must not specify both accessors and a value or writable attribute, but $1 does', Obj);
       }
     }
-    return desc;
+    return exports.Descriptor(desc);
   }
   ToPropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-topropertydescriptor';
 
   /** https://tc39.es/ecma262/#sec-completepropertydescriptor */
-  function CompletePropertyDescriptor(Desc) {
-    /* Assert */ /* node:coverage ignore next */if (!(Desc instanceof exports.Descriptor)) throw new Assert.Error("Desc instanceof Descriptor");
-    const like = exports.Descriptor({
+  function CompletePropertyDescriptor(propertyDesc) {
+    const like = {
       Value: Value.undefined,
-      Writable: Value.false,
-      Getter: Value.undefined,
-      Setter: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    });
-    if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-      if (Desc.Value === undefined) {
-        Desc = exports.Descriptor({
-          ...Desc,
-          Value: like.Value
-        });
-      }
-      if (Desc.Writable === undefined) {
-        Desc = exports.Descriptor({
-          ...Desc,
-          Writable: like.Writable
-        });
-      }
+      Writable: false,
+      Get: Value.undefined,
+      Set: Value.undefined,
+      Enumerable: false,
+      Configurable: false
+    };
+    if (IsGenericDescriptor(propertyDesc) || IsDataDescriptor(propertyDesc)) {
+      if (propertyDesc.Value === undefined) propertyDesc = exports.Descriptor({
+        ...propertyDesc,
+        Value: like.Value
+      });
+      if (propertyDesc.Writable === undefined) propertyDesc = exports.Descriptor({
+        ...propertyDesc,
+        Writable: like.Writable
+      });
     } else {
-      if (Desc.Getter === undefined) {
-        Desc = exports.Descriptor({
-          ...Desc,
-          Getter: like.Getter
-        });
-      }
-      if (Desc.Setter === undefined) {
-        Desc = exports.Descriptor({
-          ...Desc,
-          Setter: like.Setter
-        });
-      }
-    }
-    if (Desc.Enumerable === undefined) {
-      Desc = exports.Descriptor({
-        ...Desc,
-        Enumerable: like.Enumerable
+      if (propertyDesc.Get === undefined) propertyDesc = exports.Descriptor({
+        ...propertyDesc,
+        Get: like.Get
+      });
+      if (propertyDesc.Set === undefined) propertyDesc = exports.Descriptor({
+        ...propertyDesc,
+        Set: like.Set
       });
     }
-    if (Desc.Configurable === undefined) {
-      Desc = exports.Descriptor({
-        ...Desc,
-        Configurable: like.Configurable
-      });
-    }
-    return Desc;
+    if (propertyDesc.Enumerable === undefined) propertyDesc = exports.Descriptor({
+      ...propertyDesc,
+      Enumerable: like.Enumerable
+    });
+    if (propertyDesc.Configurable === undefined) propertyDesc = exports.Descriptor({
+      ...propertyDesc,
+      Configurable: like.Configurable
+    });
+    return propertyDesc;
   }
   CompletePropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-completepropertydescriptor';
 
@@ -40456,7 +40235,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp instanceof AbruptCompletion) return _temp;
             _temp = _temp.Value;
           }
-          result.Era = _temp.stringValue();
+          result.Era = _temp;
         } else if (property === 'eraYear') {
           /* ReturnIfAbrupt */let _temp2 = yield* SnapToInteger(value, 'truncate');
           /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
@@ -42155,7 +41934,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue instanceof AbruptCompletion) return _stringValue;
       _stringValue = _stringValue.Value;
     }
-    const stringValue = _stringValue.stringValue();
+    const stringValue = _stringValue;
     if (stringValue !== 'constrain' && stringValue !== 'reject') {
       return Throw.RangeError('overflow option is invalid ($1), only "constrain" and "reject" are accepted', stringValue);
     }
@@ -42177,7 +41956,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue2 instanceof AbruptCompletion) return _stringValue2;
       _stringValue2 = _stringValue2.Value;
     }
-    const stringValue = _stringValue2.stringValue();
+    const stringValue = _stringValue2;
     const acceptedValues = ['compatible', 'earlier', 'later', 'reject'];
     if (!acceptedValues.includes(stringValue)) {
       return Throw.RangeError('disambiguation option is invalid ($1), only "compatible", "earlier", "later" and "reject" are accepted', stringValue);
@@ -42216,7 +41995,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue3 instanceof AbruptCompletion) return _stringValue3;
       _stringValue3 = _stringValue3.Value;
     }
-    const stringValue = _stringValue3.stringValue();
+    const stringValue = _stringValue3;
     const acceptedValues = ['prefer', 'use', 'ignore', 'reject'];
     if (!acceptedValues.includes(stringValue)) {
       return Throw.RangeError('offset option is invalid ($1), only "prefer", "use", "ignore" and "reject" are accepted', stringValue);
@@ -42238,7 +42017,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue4 instanceof AbruptCompletion) return _stringValue4;
       _stringValue4 = _stringValue4.Value;
     }
-    const stringValue = _stringValue4.stringValue();
+    const stringValue = _stringValue4;
     const acceptedValues = ['auto', 'always', 'never', 'critical'];
     if (!acceptedValues.includes(stringValue)) {
       return Throw.RangeError('calendarName option is invalid ($1), only "auto", "always", "never" and "critical" are accepted', stringValue);
@@ -42260,7 +42039,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue5 instanceof AbruptCompletion) return _stringValue5;
       _stringValue5 = _stringValue5.Value;
     }
-    const stringValue = _stringValue5.stringValue();
+    const stringValue = _stringValue5;
     const acceptedValues = ['auto', 'never', 'critical'];
     if (!acceptedValues.includes(stringValue)) {
       return Throw.RangeError('timeZoneName option is invalid ($1), only "auto", "never" and "critical" are accepted', stringValue);
@@ -42283,7 +42062,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue6 instanceof AbruptCompletion) return _stringValue6;
       _stringValue6 = _stringValue6.Value;
     }
-    const stringValue = _stringValue6.stringValue();
+    const stringValue = _stringValue6;
     if (stringValue !== 'never' && stringValue !== 'auto') return Throw.RangeError('offset option is invalid ($1), only "auto" and "never" are accepted', stringValue);
     return stringValue;
   }
@@ -42302,7 +42081,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue7 instanceof AbruptCompletion) return _stringValue7;
       _stringValue7 = _stringValue7.Value;
     }
-    const stringValue = _stringValue7.stringValue();
+    const stringValue = _stringValue7;
     if (stringValue !== 'next' && stringValue !== 'previous') return Throw.RangeError('direction option is not valid ($1), only "next" and "previous" are accepted', stringValue);
     return stringValue;
   }
@@ -42344,7 +42123,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp instanceof AbruptCompletion) return _temp;
         _temp = _temp.Value;
       }
-      if (_temp.stringValue() !== 'auto') {
+      if (_temp !== 'auto') {
         return Throw.RangeError('$1 is out of range', digitsValue);
       }
       return 'auto';
@@ -42452,7 +42231,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue8 instanceof AbruptCompletion) return _stringValue8;
       _stringValue8 = _stringValue8.Value;
     }
-    const stringValue = _stringValue8.stringValue();
+    const stringValue = _stringValue8;
     switch (stringValue) {
       case 'auto':
         return 'auto';
@@ -43002,7 +42781,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_stringValue instanceof AbruptCompletion) return _stringValue;
       _stringValue = _stringValue.Value;
     }
-    const stringValue = _stringValue.stringValue();
+    const stringValue = _stringValue;
     const acceptedValues = ['ceil', 'floor', 'expand', 'trunc', 'halfCeil', 'halfFloor', 'halfExpand', 'halfTrunc', 'halfEven'];
     if (!acceptedValues.includes(stringValue)) {
       return Throw.RangeError('"roundingMode" on object $1 is not valid ($2), only $3 are accepted', options, stringValue, acceptedValues.join(', '));
@@ -43485,7 +43264,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp = _temp.Value;
       }
       // nested if statement due to macro expansion
-      if (_temp === Value.true) {
+      if (_temp) {
         /* ReturnIfAbrupt */let _cause = yield* Get(options, 'cause');
         /* ReturnIfAbrupt */if (_cause instanceof Completion) {
           if (_cause instanceof AbruptCompletion) return _cause;
@@ -43496,13 +43275,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
         /* X */let _temp2 = DefinePropertyOrThrow(O, 'cause', exports.Descriptor({
           Value: cause,
-          Writable: Value.true,
-          Enumerable: Value.false,
-          Configurable: Value.true
+          Writable: true,
+          Enumerable: false,
+          Configurable: true
         }));
         /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
         /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, 'cause', Descriptor({\n        Value: cause,\n        Writable: Value.true,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n      })) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, 'cause', Descriptor({\n        Value: cause,\n        Writable: true,\n        Enumerable: false,\n        Configurable: true,\n      })) returned an abrupt completion", {
             cause: _temp2
           });
           _temp2 = _temp2.Value;
@@ -43536,7 +43315,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (e.HostDefined?.scriptId) {
         return e.HostDefined.scriptId;
       }
-      if (!(e.ScriptOrModule instanceof NullValue)) {
+      if (e.ScriptOrModule) {
         const fromScript = e.ScriptOrModule.HostDefined?.scriptId;
         if (fromScript) {
           return fromScript;
@@ -43707,7 +43486,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const func = thisValue;
     // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
     //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-
     /* X */let _temp2 = HostHasSourceTextAvailable(func);
     /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
     /* node:coverage ignore next */if (_temp2 instanceof Completion) {
@@ -43716,7 +43494,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp2 = _temp2.Value;
     }
-    if (hasSourceTextInternalSlot(func) && _temp2 === Value.true) {
+    if (hasSourceTextInternalSlot(func) && _temp2) {
       // Return ! UTF16Encode(func.[[SourceText]]).
       return Value(func.SourceText);
     }
@@ -43750,15 +43528,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let F be this value.
     const F = thisValue;
     // 2. Return ? OrdinaryHasInstance(F, V).
-    return yield* OrdinaryHasInstance(F, V);
+    /* ReturnIfAbrupt */let _temp3 = yield* OrdinaryHasInstance(F, V);
+    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      _temp3 = _temp3.Value;
+    }
+    return Value(_temp3);
   }
   FunctionProto_hasInstance.section = 'https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance';
   function bootstrapFunctionPrototype(realmRec) {
     const proto = CreateBuiltinFunction(FunctionProto, 0, Value(''), [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Function.prototype%'] = proto;
     const readonly = {
-      Writable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Configurable: false
     };
     assignProps(realmRec, proto, [['apply', FunctionProto_apply, 2], ['bind', FunctionProto_bind, 1], ['call', FunctionProto_call, 1], ['toString', FunctionProto_toString, 0], [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1, readonly]]);
   }
@@ -44241,24 +44024,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp19 = _temp19.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp18 === Value.true && _temp19 === Value.false)) throw new Assert.Error("X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, 'prototype')) === Value.false");
+      /* Assert */ /* node:coverage ignore next */if (!(_temp18 && !_temp19)) throw new Assert.Error("X(IsExtensible(F)) && !X(HasOwnProperty(F, 'prototype'))");
       F.Construct = FunctionConstructSlot;
     }
     F.ConstructorKind = 'base';
     if (writablePrototype === undefined) {
-      writablePrototype = Value.true;
+      writablePrototype = true;
     }
     if (prototype === undefined) {
       prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
       /* X */let _temp20 = DefinePropertyOrThrow(prototype, 'constructor', exports.Descriptor({
         Value: F,
         Writable: writablePrototype,
-        Enumerable: Value.false,
-        Configurable: Value.true
+        Enumerable: false,
+        Configurable: true
       }));
       /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
       /* node:coverage ignore next */if (_temp20 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(prototype, 'constructor', Descriptor({\n      Value: F,\n      Writable: writablePrototype,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(prototype, 'constructor', Descriptor({\n      Value: F,\n      Writable: writablePrototype,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
           cause: _temp20
         });
         _temp20 = _temp20.Value;
@@ -44267,12 +44050,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* X */let _temp21 = DefinePropertyOrThrow(F, 'prototype', exports.Descriptor({
       Value: prototype,
       Writable: writablePrototype,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
     /* node:coverage ignore next */if (_temp21 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: writablePrototype,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'prototype', Descriptor({\n    Value: prototype,\n    Writable: writablePrototype,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp21
       });
       _temp21 = _temp21.Value;
@@ -44302,21 +44085,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!(methodDefinition.Kind === 'method' || methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor')) throw new Assert.Error("methodDefinition.Kind === 'method' || methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor'");
     const key = methodDefinition.Key;
     if (!(key instanceof PrivateName)) {
-      const desc = {
-        Enumerable: Value(enumerable),
-        Configurable: Value.true
-      };
-      if (methodDefinition.Kind === 'getter' || methodDefinition.Kind === 'accessor') {
-        desc.Getter = methodDefinition.Get;
-      }
-      if (methodDefinition.Kind === 'setter' || methodDefinition.Kind === 'accessor') {
-        desc.Setter = methodDefinition.Set;
+      let desc;
+      if (methodDefinition.Kind === 'accessor') {
+        desc = {
+          Enumerable: enumerable,
+          Configurable: true,
+          Get: methodDefinition.Get,
+          Set: methodDefinition.Set
+        };
+      } else if (methodDefinition.Kind === 'getter') {
+        desc = {
+          Enumerable: enumerable,
+          Configurable: true,
+          Get: methodDefinition.Get
+        };
+      } else if (methodDefinition.Kind === 'setter') {
+        desc = {
+          Enumerable: enumerable,
+          Configurable: true,
+          Set: methodDefinition.Set
+        };
       }
       if (methodDefinition.Kind === 'method') {
-        desc.Value = methodDefinition.Value;
-        desc.Writable = Value.true;
+        desc = {
+          Enumerable: enumerable,
+          Configurable: true,
+          Writable: true,
+          Value: methodDefinition.Value
+        };
       }
-      /* ReturnIfAbrupt */let _temp22 = yield* DefinePropertyOrThrow(homeObject, key, new exports.Descriptor(desc));
+      /* Assert */ /* node:coverage ignore next */if (!(desc !== undefined)) throw new Assert.Error("desc! !== undefined");
+      /* ReturnIfAbrupt */let _temp22 = yield* DefinePropertyOrThrow(homeObject, key, exports.Descriptor(desc));
       /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
         if (_temp22 instanceof AbruptCompletion) return _temp22;
         _temp22 = _temp22.Value;
@@ -44343,40 +44142,41 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp24 = _temp24.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!(_temp23 === Value.true && _temp24 === Value.false)) throw new Assert.Error("X(IsExtensible(func)) === Value.true && X(HasOwnProperty(func, 'name')) === Value.false");
+    /* Assert */ /* node:coverage ignore next */if (!(_temp23 && !_temp24)) throw new Assert.Error("X(IsExtensible(func)) && !X(HasOwnProperty(func, 'name'))");
     if (name instanceof SymbolValue) {
       const description = name.Description;
-      if (description === Value.undefined) {
-        name = Value('');
+      if (description === undefined) {
+        name = '';
       } else {
-        name = Value(`[${description.stringValue()}]`);
+        name = `[${description}]`;
       }
     } else if (name instanceof PrivateName) {
       name = Value(name.Description);
     }
     let initialName = name instanceof JSStringValue ? name.stringValue() : null;
+    if (name instanceof JSStringValue) name = name.stringValue();
     // non-spec
     if ('HostInitialName' in func) {
-      func.HostInitialName = name;
+      func.HostInitialName = Value(name);
     }
     if (prefix !== undefined) {
       // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-      const prefixedName = `${prefix.stringValue()} ${name.stringValue()}`;
+      const prefixedName = `${prefix} ${name}`;
       initialName = prefixedName;
-      name = Value(prefixedName);
+      name = prefixedName;
     }
     if ('InitialName' in func) {
       func.InitialName = initialName;
     }
     /* X */let _temp25 = DefinePropertyOrThrow(func, 'name', exports.Descriptor({
-      Value: name,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Value: Value(name),
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
     /* node:coverage ignore next */if (_temp25 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(func, 'name', Descriptor({\n    Value: name,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(func, 'name', Descriptor({\n    Value: Value(name),\n    Writable: false,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp25
       });
       _temp25 = _temp25.Value;
@@ -44404,17 +44204,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp27 = _temp27.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!(_temp26 === Value.true && _temp27 === Value.false)) throw new Assert.Error("X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, 'length')) === Value.false");
+    /* Assert */ /* node:coverage ignore next */if (!(_temp26 && !_temp27)) throw new Assert.Error("X(IsExtensible(F)) && !X(HasOwnProperty(F, 'length'))");
     // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
     /* X */let _temp28 = DefinePropertyOrThrow(F$1, 'length', exports.Descriptor({
       Value: F(length),
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
     /* node:coverage ignore next */if (_temp28 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'length', Descriptor({\n    Value: toNumberValue(length),\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'length', Descriptor({\n    Value: toNumberValue(length),\n    Writable: false,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp28
       });
       _temp28 = _temp28.Value;
@@ -44437,7 +44237,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     calleeContext.Function = F;
     const calleeRealm = F.Realm;
     calleeContext.Realm = calleeRealm;
-    calleeContext.ScriptOrModule = Value.null;
+    calleeContext.ScriptOrModule = null;
     exports.surroundingAgent.executionContextStack.push(calleeContext);
     const isNew = thisArgument === 'uninitialized';
     const thisValue = thisArgument === 'uninitialized' ? Value.undefined : thisArgument;
@@ -44537,7 +44337,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Set func.[[Prototype]] to prototype.
     func.Prototype = prototype;
     // 8. Set func.[[Extensible]] to true.
-    func.Extensible = Value.true;
+    func.Extensible = true;
     // 10. Set func.[[InitialName]] to null.
     func.InitialName = null;
     // https://github.com/tc39/ecma262/pull/3212/
@@ -44605,7 +44405,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _targetHasLength = _targetHasLength.Value;
     }
     const targetHasLength = _targetHasLength;
-    if (targetHasLength === Value.true) {
+    if (targetHasLength) {
       /* ReturnIfAbrupt */let _targetLength = yield* Get(Target, 'length');
       /* ReturnIfAbrupt */if (_targetLength instanceof Completion) {
         if (_targetLength instanceof AbruptCompletion) return _targetLength;
@@ -44642,7 +44442,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       targetName = Value('');
     }
     if (prefix !== undefined) {
-      SetFunctionName(F, targetName, Value(prefix));
+      SetFunctionName(F, targetName, prefix);
     } else {
       SetFunctionName(F, targetName);
     }
@@ -44718,7 +44518,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           resultValue = result.Value;
         }
         // k. Let resumption be NormalCompletion(CreateIteratorResultObject(resultValue, true)).
-        resumption = CreateIteratorResultObject(resultValue, Value.true);
+        resumption = CreateIteratorResultObject(resultValue, true);
       }
       // l. Let callerContext be the running execution context.
       // m. Resume callerContext, passing resumption.
@@ -44744,7 +44544,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function generatorBrandToErrorMessageType(generatorBrand) {
     let expectedType;
     if (generatorBrand !== undefined) {
-      expectedType = generatorBrand.stringValue();
+      expectedType = generatorBrand;
       if (expectedType.startsWith('%') && expectedType.endsWith('Prototype%')) {
         expectedType = expectedType.slice(1, -10).trim();
         if (expectedType.endsWith('Iterator')) {
@@ -44770,7 +44570,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
     // 3. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
     const brand = generator.GeneratorBrand;
-    if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : !SameValue(brand, generatorBrand)) {
+    if (brand !== generatorBrand) {
       return Throw.TypeError('$1 is not a $2 object', generator, generatorBrandToErrorMessageType(generatorBrand) || 'Generator');
     }
     // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
@@ -44797,10 +44597,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const state = _state;
     // 2. If state is completed, return CreateIteratorResultObject(undefined, true).
     if (state === 'completed') {
-      /* X */let _temp3 = CreateIteratorResultObject(Value.undefined, Value.true);
+      /* X */let _temp3 = CreateIteratorResultObject(Value.undefined, true);
       /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
       /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(Value.undefined, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(Value.undefined, true) returned an abrupt completion", {
           cause: _temp3
         });
         _temp3 = _temp3.Value;
@@ -44846,10 +44646,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (state === 'completed') {
       // a. If abruptCompletion.[[Type]] is return, then
       if (abruptCompletion.Type === 'return') {
-        /* X */let _temp4 = CreateIteratorResultObject(abruptCompletion.Value, Value.true);
+        /* X */let _temp4 = CreateIteratorResultObject(abruptCompletion.Value, true);
         /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
         /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(abruptCompletion.Value, Value.true) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(abruptCompletion.Value, true) returned an abrupt completion", {
             cause: _temp4
           });
           _temp4 = _temp4.Value;
@@ -44923,7 +44723,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return yield* AsyncGeneratorYield(_temp5);
     }
     // 3. Otherwise, return ? GeneratorYield(CreateIteratorResultObject(value, false)).
-    return yield* GeneratorYield(CreateIteratorResultObject(value, Value.false));
+    return yield* GeneratorYield(CreateIteratorResultObject(value, false));
   }
   Yield.section = 'https://tc39.es/ecma262/#sec-yield';
 
@@ -45019,7 +44819,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // ii. Let inFunction be true.
         inFunction = true;
         // iii. Let inMethod be thisEnv.HasSuperBinding().
-        inMethod = thisEnv.HasSuperBinding() === Value.true;
+        inMethod = thisEnv.HasSuperBinding();
         // iv. If F.[[ConstructorKind]] is derived, set inDerivedConstructor to true.
         if (F.ConstructorKind === 'derived') {
           inDerivedConstructor = true;
@@ -45169,7 +44969,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // i. For each name in varNames, do
         for (const name of varNames) {
           // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-          if ((yield* varEnv.HasLexicalDeclaration(name)) === Value.true) {
+          if (yield* varEnv.HasLexicalDeclaration(name)) {
             return Throw.SyntaxError('$1 is already declared', name);
           }
           // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
@@ -45186,7 +44986,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 2. For each name in varNames, do
           for (const name of varNames) {
             // a. If thisEnv.HasBinding(name) is true, then
-            if ((yield* thisEnv.HasBinding(name)) === Value.true) {
+            if (yield* thisEnv.HasBinding(name)) {
               // i. Throw a SyntaxError exception.
               return Throw.SyntaxError('$1 is already declared', name);
               // ii. NOTE: Annex B.3.5 defines alternate semantics for the above step.
@@ -45215,7 +45015,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 8. Let functionsToInitialize be a new empty List.
     const functionsToInitialize = [];
     // 9. Let declaredFunctionNames be a new empty List.
-    const declaredFunctionNames = new JSStringSet();
+    const declaredFunctionNames = new Set();
     // 10. For each d in varDeclarations, in reverse list order, do
     for (const d of [...varDeclarations].reverse()) {
       // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
@@ -45238,7 +45038,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // a. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
             const fnDefinable = _fnDefinable;
             // b. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
-            if (fnDefinable === Value.false) {
+            if (!fnDefinable) {
               return Throw.TypeError('$1 is already declared', fn);
             }
           }
@@ -45251,7 +45051,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 11. NOTE: Annex B.3.3.3 adds additional steps at this point.
     // 12. Let declaredVarNames be a new empty List.
-    const declaredVarNames = new JSStringSet();
+    const declaredVarNames = new Set();
     // 13. For each d in varDeclarations, do
     for (const d of varDeclarations) {
       // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
@@ -45270,7 +45070,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               // i. Let vnDefinable be ? varEnv.CanDeclareGlobalVar(vn).
               const vnDefinable = _vnDefinable;
               // ii. If vnDefinable is false, throw a TypeError exception.
-              if (vnDefinable === Value.false) {
+              if (!vnDefinable) {
                 return Throw.TypeError('$1 is already declared', vn);
               }
             }
@@ -45294,13 +45094,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const dn of BoundNames(d)) {
         // i. If IsConstantDeclaration of d is true, then
         if (IsConstantDeclaration(d)) {
-          /* ReturnIfAbrupt */let _temp2 = lexEnv.CreateImmutableBinding(dn, Value.true);
+          /* ReturnIfAbrupt */let _temp2 = lexEnv.CreateImmutableBinding(dn, true);
           /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
             if (_temp2 instanceof AbruptCompletion) return _temp2;
             _temp2 = _temp2.Value;
           } // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).
         } else {
-          /* ReturnIfAbrupt */let _temp3 = yield* lexEnv.CreateMutableBinding(dn, Value.false);
+          /* ReturnIfAbrupt */let _temp3 = yield* lexEnv.CreateMutableBinding(dn, false);
           /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
             if (_temp3 instanceof AbruptCompletion) return _temp3;
             _temp3 = _temp3.Value;
@@ -45317,7 +45117,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
       // c. If varEnv is a global Environment Record, then
       if (varEnv instanceof GlobalEnvironmentRecord) {
-        /* ReturnIfAbrupt */let _temp4 = yield* varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true);
+        /* ReturnIfAbrupt */let _temp4 = yield* varEnv.CreateGlobalFunctionBinding(fn, fo, true);
         /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
           if (_temp4 instanceof AbruptCompletion) return _temp4;
           _temp4 = _temp4.Value;
@@ -45327,11 +45127,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // i. Let bindingExists be varEnv.HasBinding(fn).
         const bindingExists = yield* varEnv.HasBinding(fn);
         // ii. If bindingExists is false, then
-        if (bindingExists === Value.false) {
-          /* X */let _temp5 = varEnv.CreateMutableBinding(fn, Value.true);
+        if (!bindingExists) {
+          /* X */let _temp5 = varEnv.CreateMutableBinding(fn, true);
           /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
           /* node:coverage ignore next */if (_temp5 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.CreateMutableBinding(fn, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.CreateMutableBinding(fn, true) returned an abrupt completion", {
               cause: _temp5
             });
             _temp5 = _temp5.Value;
@@ -45347,10 +45147,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp6 = _temp6.Value;
           } // 3. Perform ! varEnv.InitializeBinding(fn, fo).
         } else {
-          /* X */let _temp7 = varEnv.SetMutableBinding(fn, fo, Value.false);
+          /* X */let _temp7 = varEnv.SetMutableBinding(fn, fo, false);
           /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
           /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.SetMutableBinding(fn, fo, Value.false) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.SetMutableBinding(fn, fo, false) returned an abrupt completion", {
               cause: _temp7
             });
             _temp7 = _temp7.Value;
@@ -45363,7 +45163,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const vn of declaredVarNames) {
       // a. If varEnv is a global Environment Record, then
       if (varEnv instanceof GlobalEnvironmentRecord) {
-        /* ReturnIfAbrupt */let _temp8 = yield* varEnv.CreateGlobalVarBinding(vn, Value.true);
+        /* ReturnIfAbrupt */let _temp8 = yield* varEnv.CreateGlobalVarBinding(vn, true);
         /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
           if (_temp8 instanceof AbruptCompletion) return _temp8;
           _temp8 = _temp8.Value;
@@ -45373,11 +45173,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // i. Let bindingExists be varEnv.HasBinding(vn).
         const bindingExists = yield* varEnv.HasBinding(vn);
         // ii. If bindingExists is false, then
-        if (bindingExists === Value.false) {
-          /* X */let _temp9 = varEnv.CreateMutableBinding(vn, Value.true);
+        if (!bindingExists) {
+          /* X */let _temp9 = varEnv.CreateMutableBinding(vn, true);
           /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
           /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.CreateMutableBinding(vn, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! varEnv.CreateMutableBinding(vn, true) returned an abrupt completion", {
               cause: _temp9
             });
             _temp9 = _temp9.Value;
@@ -45416,10 +45216,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const current = _current;
     // 3. If SameValue(V, current) is true, return true.
     if (SameValue(V, current)) {
-      return Value.true;
+      return true;
     }
     // 4. Return false.
-    return Value.false;
+    return false;
   }
   SetImmutablePrototype.section = 'https://tc39.es/ecma262/#sec-set-immutable-prototype';
 
@@ -45740,7 +45540,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       // a. Let desc be ? promises.[[GetOwnProperty]](key).
       const desc = _desc;
-      if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+      if (desc && desc.Enumerable) {
         /* ReturnIfAbrupt */let _value = yield* Get(promises, key);
         /* ReturnIfAbrupt */if (_value instanceof Completion) {
           if (_value instanceof AbruptCompletion) return _value;
@@ -46198,14 +45998,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp12 = _temp12.Value;
           }
           /* X */let _temp10 = DefinePropertyOrThrow(aggregateError, 'errors', exports.Descriptor({
-            Configurable: Value.true,
-            Enumerable: Value.false,
-            Writable: Value.true,
+            Configurable: true,
+            Enumerable: false,
+            Writable: true,
             Value: _temp12
           }));
           /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
           /* node:coverage ignore next */if (_temp10 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({\n          Configurable: Value.true,\n          Enumerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        })) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({\n          Configurable: true,\n          Enumerable: false,\n          Writable: true,\n          Value: X(CreateArrayFromList(errors)),\n        })) returned an abrupt completion", {
               cause: _temp10
             });
             _temp10 = _temp10.Value;
@@ -46249,14 +46049,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _rejectedSteps4 = _rejectedSteps4.Value;
           }
           /* X */let _rejectedSteps3 = DefinePropertyOrThrow(aggregateError, 'errors', exports.Descriptor({
-            Configurable: Value.true,
-            Enumerable: Value.false,
-            Writable: Value.true,
+            Configurable: true,
+            Enumerable: false,
+            Writable: true,
             Value: _rejectedSteps4
           }));
           /* node:coverage ignore next */if (_rejectedSteps3 && typeof _rejectedSteps3 === 'object' && 'next' in _rejectedSteps3) _rejectedSteps3 = skipDebugger(_rejectedSteps3);
           /* node:coverage ignore next */if (_rejectedSteps3 instanceof Completion) {
-            /* node:coverage ignore next */if (_rejectedSteps3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({\n          Configurable: Value.true,\n          Enumerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        })) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_rejectedSteps3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(aggregateError, 'errors', Descriptor({\n          Configurable: true,\n          Enumerable: false,\n          Writable: true,\n          Value: X(CreateArrayFromList(errors)),\n        })) returned an abrupt completion", {
               cause: _rejectedSteps3
             });
             _rejectedSteps3 = _rejectedSteps3.Value;
@@ -46572,13 +46372,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapPromise(realmRec) {
     const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], ['any', Promise_any, 1], ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], ['try', Promise_try, 1], ['withResolvers', Promise_withResolvers, 0], [wellKnownSymbols.species, [Promise_symbolSpecies]], ['allKeyed', Promise_allKeyed, 1], ['allSettledKeyed', Promise_allSettledKeyed, 1]]);
     /* X */let _temp20 = promiseConstructor.DefineOwnProperty(Value('prototype'), exports.Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
     /* node:coverage ignore next */if (_temp20 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! promiseConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! promiseConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: false,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp20
       });
       _temp20 = _temp20.Value;
@@ -46943,7 +46743,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       done = done.Value;
     }
     done = done;
-    if (done === Value.true) {
+    if (done) {
       iteratorRecord.Done = true;
       return 'done';
     }
@@ -47043,10 +46843,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp5 = _temp5.Value;
     }
-    /* X */let _temp6 = CreateDataPropertyOrThrow(obj, 'done', done);
+    /* X */let _temp6 = CreateDataPropertyOrThrow(obj, 'done', Value(done));
     /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
     /* node:coverage ignore next */if (_temp6 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(obj, 'done', done) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(obj, 'done', Value(done)) returned an abrupt completion", {
         cause: _temp6
       });
       _temp6 = _temp6.Value;
@@ -47059,7 +46859,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function CreateListIteratorRecord(list) {
     const closure = function* closure() {
       for (const E of list) {
-        /* ReturnIfAbrupt */let _closure = yield* GeneratorYield(CreateIteratorResultObject(E, Value.false));
+        /* ReturnIfAbrupt */let _closure = yield* GeneratorYield(CreateIteratorResultObject(E, false));
         /* ReturnIfAbrupt */if (_closure instanceof Completion) {
           if (_closure instanceof AbruptCompletion) return _closure;
           _closure = _closure.Value;
@@ -47135,7 +46935,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     if (value instanceof Completion) value = value.Value; /* node:coverage enable */
     let valueWrapper = yield* PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), value);
-    if (valueWrapper instanceof AbruptCompletion && done === Value.false && closeOnRejection === Value.true) {
+    if (valueWrapper instanceof AbruptCompletion && !done && closeOnRejection) {
       valueWrapper = yield* IteratorClose(syncIteratorRecord, valueWrapper);
     }
     /* IfAbruptRejectPromise */ /* node:coverage disable */if (valueWrapper instanceof AbruptCompletion) {
@@ -47147,7 +46947,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const unwrap = ([v = Value.undefined]) => CreateIteratorResultObject(v, done);
     const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
     let onRejected;
-    if (done === Value.true || closeOnRejection === Value.false) {
+    if (done || !closeOnRejection) {
       onRejected = Value.undefined;
     } else {
       const closeIterator = ([error = Value.undefined]) => IteratorClose(syncIteratorRecord, {
@@ -47238,7 +47038,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (completion instanceof Completion) completion = completion.Value;
       }
     };
-    const gen = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
+    const gen = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
     gen.UnderlyingIterators = openIters;
     return gen;
   }
@@ -47265,26 +47065,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return yield* SetImmutablePrototype(this, V);
     },
     *IsExtensible() {
-      return Value.false;
+      return false;
     },
     *PreventExtensions() {
-      return Value.true;
+      return true;
     },
-    *GetOwnProperty(P) {
-      const O = this;
-      if (IsSymbolLikeNamespaceKey(P, O)) {
-        return OrdinaryGetOwnProperty(O, P);
+    *GetOwnProperty(propertyKey) {
+      const obj = this;
+      if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
+        return OrdinaryGetOwnProperty(obj, propertyKey);
       }
-      /* ReturnIfAbrupt */let _exports = yield* GetModuleExportsList(O);
+      if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
+      /* ReturnIfAbrupt */let _exports = yield* GetModuleExportsList(obj);
       /* ReturnIfAbrupt */if (_exports instanceof Completion) {
         if (_exports instanceof AbruptCompletion) return _exports;
         _exports = _exports.Value;
       }
       const exports$1 = _exports;
-      if (!exports$1.has(P)) {
-        return Value.undefined;
+      if (!exports$1.has(propertyKey)) {
+        return undefined;
       }
-      /* ReturnIfAbrupt */let _value = yield* O.Get(P, O);
+      /* ReturnIfAbrupt */let _value = yield* obj.Get(propertyKey, obj);
       /* ReturnIfAbrupt */if (_value instanceof Completion) {
         if (_value instanceof AbruptCompletion) return _value;
         _value = _value.Value;
@@ -47292,9 +47093,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const value = _value;
       return exports.Descriptor({
         Value: value,
-        Writable: Value.true,
-        Enumerable: Value.true,
-        Configurable: Value.false
+        Writable: true,
+        Enumerable: true,
+        Configurable: false
       });
     },
     *DefineOwnProperty(P, Desc) {
@@ -47308,51 +47109,53 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _current = _current.Value;
       }
       const current = _current;
-      if (current instanceof UndefinedValue) {
-        return Value.false;
+      if (current === undefined) {
+        return false;
       }
       if (IsAccessorDescriptor(Desc)) {
-        return Value.false;
+        return false;
       }
-      if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
-        return Value.false;
+      if (Desc.Writable !== undefined && !Desc.Writable) {
+        return false;
       }
-      if (Desc.Enumerable !== undefined && Desc.Enumerable === Value.false) {
-        return Value.false;
+      if (Desc.Enumerable !== undefined && !Desc.Enumerable) {
+        return false;
       }
-      if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
-        return Value.false;
+      if (Desc.Configurable !== undefined && Desc.Configurable) {
+        return false;
       }
       if (Desc.Value !== undefined) {
-        return Value(SameValue(Desc.Value, current.Value));
+        return SameValue(Desc.Value, current.Value);
       }
-      return Value.true;
+      return true;
     },
-    *HasProperty(P) {
-      const O = this;
-      if (IsSymbolLikeNamespaceKey(P, O)) {
-        return yield* OrdinaryHasProperty(O, P);
+    *HasProperty(propertyKey) {
+      const obj = this;
+      if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
+        return yield* OrdinaryHasProperty(obj, propertyKey);
       }
-      /* ReturnIfAbrupt */let _exports2 = yield* GetModuleExportsList(O);
+      if (typeof propertyKey !== 'string') propertyKey = propertyKey.stringValue();
+      /* ReturnIfAbrupt */let _exports2 = yield* GetModuleExportsList(obj);
       /* ReturnIfAbrupt */if (_exports2 instanceof Completion) {
         if (_exports2 instanceof AbruptCompletion) return _exports2;
         _exports2 = _exports2.Value;
       }
       const exports$1 = _exports2;
-      if (exports$1.has(P)) {
-        return Value.true;
+      if (exports$1.has(propertyKey)) {
+        return true;
       }
-      return Value.false;
+      return false;
     },
     /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
-    *Get(P, Receiver) {
+    *Get(propertyKey, Receiver) {
       const O = this;
-      /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
+      if (propertyKey instanceof JSStringValue) propertyKey = propertyKey.stringValue();
+      /* Assert */ /* node:coverage ignore next */if (!(typeof propertyKey === 'string' || IsPropertyKey(propertyKey))) throw new Assert.Error("typeof propertyKey === 'string' || IsPropertyKey(propertyKey)");
       // 1. If IsSymbolLikeNamespaceKey(P, O), return ! OrdinaryGet(O, P, Receiver).
-      if (IsSymbolLikeNamespaceKey(P, O)) {
-        /* X */let _InternalMethods = yield* OrdinaryGet(O, P, Receiver);
+      if (IsSymbolLikeNamespaceKey(propertyKey, O)) {
+        /* X */let _InternalMethods = yield* OrdinaryGet(O, propertyKey, Receiver);
         /* node:coverage ignore next */if (_InternalMethods instanceof Completion) {
-          /* node:coverage ignore next */if (_InternalMethods instanceof AbruptCompletion) throw new Assert.Error("! yield* OrdinaryGet(O, P, Receiver) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_InternalMethods instanceof AbruptCompletion) throw new Assert.Error("! yield* OrdinaryGet(O, propertyKey, Receiver) returned an abrupt completion", {
             cause: _InternalMethods
           });
           _InternalMethods = _InternalMethods.Value;
@@ -47367,14 +47170,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const exports$1 = _exports3;
       // 3. If exports does not contain P, return undefined.
-      if (!exports$1.has(P)) {
+      if (!exports$1.has(propertyKey)) {
         return Value.undefined;
       }
       // 4. Let m be O.[[Module]].
       const m = O.Module;
       // 5. If m is a Cyclic Module Record and m.GetOptionalIndirectExportsModuleRequests(« P ») is not empty, then
       if (m instanceof CyclicModuleRecord) {
-        const importedNames = [P.stringValue()];
+        const importedNames = [propertyKey];
         if (m.GetOptionalIndirectExportsModuleRequests(importedNames).length > 0) {
           /* ReturnIfAbrupt */let _InternalMethods2 = yield* EvaluateModuleSync(m, importedNames);
           /* ReturnIfAbrupt */if (_InternalMethods2 instanceof Completion) {
@@ -47384,7 +47187,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       // 6. Let binding be m.ResolveExport(P).
-      const binding = m.ResolveExport(P);
+      const binding = m.ResolveExport(propertyKey);
       // 7. Assert: binding is a ResolvedBinding Record.
       /* Assert */ /* node:coverage ignore next */if (!(binding instanceof ResolvedBindingRecord)) throw new Assert.Error("binding instanceof ResolvedBindingRecord");
       // 8. Let targetModule be binding.[[Module]].
@@ -47407,30 +47210,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const targetEnv = targetModule.Environment;
       // 13. If targetEnv is empty, throw a ReferenceError exception.
       if (!targetEnv) {
-        return Throw.ReferenceError('$1 is not defined', P);
+        return Throw.ReferenceError('$1 is not defined', propertyKey);
       }
       // 14. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
-      return yield* targetEnv.GetBindingValue(binding.BindingName, Value.true);
+      return yield* targetEnv.GetBindingValue(binding.BindingName.stringValue(), true);
     },
     *Set() {
-      return Value.false;
+      return false;
     },
-    *Delete(P) {
-      const O = this;
-      /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
-      if (IsSymbolLikeNamespaceKey(P, O)) {
-        return yield* OrdinaryDelete(O, P);
+    *Delete(propertyKey) {
+      const obj = this;
+      if (propertyKey instanceof JSStringValue) propertyKey = propertyKey.stringValue();
+      /* Assert */ /* node:coverage ignore next */if (!(typeof propertyKey === 'string' || IsPropertyKey(propertyKey))) throw new Assert.Error("typeof propertyKey === 'string' || IsPropertyKey(propertyKey)");
+      if (IsSymbolLikeNamespaceKey(propertyKey, obj)) {
+        return yield* OrdinaryDelete(obj, propertyKey);
       }
-      /* ReturnIfAbrupt */let _exports4 = yield* GetModuleExportsList(O);
+      /* ReturnIfAbrupt */let _exports4 = yield* GetModuleExportsList(obj);
       /* ReturnIfAbrupt */if (_exports4 instanceof Completion) {
         if (_exports4 instanceof AbruptCompletion) return _exports4;
         _exports4 = _exports4.Value;
       }
       const exports$1 = _exports4;
-      if (exports$1.has(P)) {
-        return Value.false;
+      if (exports$1.has(propertyKey)) {
+        return false;
       }
-      return Value.true;
+      return true;
     },
     *OwnPropertyKeys() {
       const O = this;
@@ -47442,7 +47246,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       exports$1 = _InternalMethods3;
       if (O.Deferred && exports$1.has('then')) {
-        exports$1 = [...exports$1].filter(x => x.stringValue() !== 'then');
+        exports$1 = [...exports$1].filter(x => x !== 'then');
       }
       /* X */let _symbolKeys = OrdinaryOwnPropertyKeys(O);
       /* node:coverage ignore next */if (_symbolKeys && typeof _symbolKeys === 'object' && 'next' in _symbolKeys) _symbolKeys = skipDebugger(_symbolKeys);
@@ -47453,7 +47257,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _symbolKeys = _symbolKeys.Value;
       }
       const symbolKeys = _symbolKeys;
-      return [...exports$1, ...symbolKeys];
+      return [...[...exports$1].map(Value), ...symbolKeys];
     }
   };
 
@@ -47480,10 +47284,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     M.Module = module;
     // 6. Let sortedExports be a List whose elements are the elements of exports, sorted according to lexicographic code unit order.
     const sortedExports = [...exports$1].sort((x, y) => {
-      /* X */let _result = CompareArrayElements(x, y, Value.undefined);
+      /* X */let _result = CompareArrayElements(Value(x), Value(y), Value.undefined);
       /* node:coverage ignore next */if (_result && typeof _result === 'object' && 'next' in _result) _result = skipDebugger(_result);
       /* node:coverage ignore next */if (_result instanceof Completion) {
-        /* node:coverage ignore next */if (_result instanceof AbruptCompletion) throw new Assert.Error("! CompareArrayElements(x, y, Value.undefined) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_result instanceof AbruptCompletion) throw new Assert.Error("! CompareArrayElements(Value(x), Value(y), Value.undefined) returned an abrupt completion", {
           cause: _result
         });
         _result = _result.Value;
@@ -47492,23 +47296,23 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return R(result);
     });
     // 7. Set M.[[Exports]] to sortedExports.
-    M.Exports = new JSStringSet(sortedExports);
+    M.Exports = new Set(sortedExports);
     let toStringTag;
     // 9. If phase is defer, then
     if (phase === 'defer') {
       M.Deferred = true;
-      toStringTag = Value('Deferred Module');
+      toStringTag = 'Deferred Module';
     } else {
       // 10. Else,
       M.Deferred = false;
-      toStringTag = Value('Module');
+      toStringTag = 'Module';
     }
     // 11. Create an own data property of M named %Symbol.toStringTag% whose [[Value]] is toStringTag whose [[Writable]], [[Enumerable]], and [[Configurable]] attributes are false.
     M.properties.set(wellKnownSymbols.toStringTag, exports.Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-      Value: toStringTag
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
+      Value: Value(toStringTag)
     }));
     // 10. Return M.
     return M;
@@ -47940,14 +47744,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function IsModuleSCCEvaluated(module) {
     if (module.CycleRoot !== undefined) {
       if (module.CycleRoot.Status === 'evaluated') {
-        return Value.true;
+        return true;
       }
-      return Value.false;
+      return false;
     }
     if (module.Status === 'evaluated') {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
   IsModuleSCCEvaluated.section = 'https://tc39.es/proposal-defer-import-eval/#sec-ismodulesccevaluated';
 
@@ -47955,29 +47759,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function ReadyForSyncExecution(module, importedNames = 'all', seen = new Set()) {
     // 1. If module is not a Cyclic Module Record, return true.
     if (!(module instanceof CyclicModuleRecord)) {
-      return Value.true;
+      return true;
     }
     // 2. If seen is not present, set seen to a new empty List.
     //    (handled via the default parameter above)
     // 3. If seen contains module, return true.
     if (seen.has(module)) {
-      return Value.true;
+      return true;
     }
     // 4. Append module to seen.
     seen.add(module);
     // 5. If IsModuleSCCEvaluated(module), return true.
-    if (IsModuleSCCEvaluated(module) === Value.true) {
-      return Value.true;
+    if (IsModuleSCCEvaluated(module)) {
+      return true;
     }
     // 6. If module.[[Status]] is evaluating or evaluating-async, return false.
     if (module.Status === 'evaluating' || module.Status === 'evaluating-async') {
-      return Value.false;
+      return false;
     }
     // 7. Assert: module.[[Status]] is linked.
     /* Assert */ /* node:coverage ignore next */if (!(module.Status === 'linked')) throw new Assert.Error("module.Status === 'linked'");
     // 8. If module.[[HasTLA]] is true, return false.
-    if (module.HasTLA === Value.true) {
-      return Value.false;
+    if (module.HasTLA) {
+      return false;
     }
     // 9. Let requests be the list-concatenation of module.[[RequestedModules]] and module.GetOptionalIndirectExportsModuleRequests(importedNames).
     const requests = [...module.RequestedModules, ...module.GetOptionalIndirectExportsModuleRequests(importedNames)];
@@ -47990,13 +47794,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let requiredModule be GetImportedModule(module, request).
       const requiredModule = GetImportedModule(module, request);
       // b. If ReadyForSyncExecution(requiredModule, request.[[ImportedNames]], seen) is false, then
-      if (ReadyForSyncExecution(requiredModule, request.ImportedNames, seen) === Value.false) {
+      if (!ReadyForSyncExecution(requiredModule, request.ImportedNames, seen)) {
         // i. Return false.
-        return Value.false;
+        return false;
       }
     }
     // 11. Return true.
-    return Value.true;
+    return true;
   }
   ReadyForSyncExecution.section = 'https://tc39.es/proposal-deferred-reexports/#sec-ReadyForSyncExecution';
 
@@ -48004,7 +47808,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* EvaluateModuleSync(module, importedNames = []) {
     // 1. If importedNames is not present, set importedNames to « ».
     // 2. If ReadyForSyncExecution(module, importedNames) is false, throw a TypeError exception.
-    if (ReadyForSyncExecution(module, importedNames) === Value.false) {
+    if (!ReadyForSyncExecution(module, importedNames)) {
       return Throw.TypeError('Module "$1" is not ready for synchronous execution', module.HostDefined?.specifier ?? '<anonymous module>');
     }
     if (!(module instanceof CyclicModuleRecord && module.Status === 'evaluated')) {
@@ -48133,7 +47937,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
     // 14. If module.[[HasTLA]] is true or module.[[PendingAsyncDependencies]] > 0, then
-    if (module.HasTLA === Value.true || module.PendingAsyncDependencies > 0) {
+    if (module.HasTLA || module.PendingAsyncDependencies > 0) {
       /* Assert */ /* node:coverage ignore next */ // a. Assert: module.[[AsyncEvaluationOrder]] is unset.
       if (!(module.AsyncEvaluationOrder === 'unset')) throw new Assert.Error("module.AsyncEvaluationOrder === 'unset'");
       // b. Set module.[[AsyncEvaluationOrder]] to IncrementModuleAsyncEvaluationCount().
@@ -48210,11 +48014,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return result;
     }
     // 6. If module.[[Status]] is evaluating or IsModuleSCCEvaluated(module), return result.
-    if (module.Status === 'evaluating' || IsModuleSCCEvaluated(module) === Value.true) {
+    if (module.Status === 'evaluating' || IsModuleSCCEvaluated(module)) {
       return result;
     }
     // 7. If module.[[HasTLA]] is true, then
-    if (module.HasTLA === Value.true) {
+    if (module.HasTLA) {
       // a. Append module to result.
       result.push(module);
       // b. Return result.
@@ -48297,7 +48101,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
     if (!(module.Status === 'evaluating' || module.Status === 'evaluating-async')) throw new Assert.Error("module.Status === 'evaluating' || module.Status === 'evaluating-async'");
     // 2. Assert: module.[[HasTLA]] is true.
-    /* Assert */ /* node:coverage ignore next */if (!(module.HasTLA === Value.true)) throw new Assert.Error("module.HasTLA === Value.true");
+    /* Assert */ /* node:coverage ignore next */if (!module.HasTLA) throw new Assert.Error("module.HasTLA");
     // 3. Let capability be ! NewPromiseCapability(%Promise%).
     /* X */let _capability = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
     /* node:coverage ignore next */if (_capability && typeof _capability === 'object' && 'next' in _capability) _capability = skipDebugger(_capability);
@@ -48382,7 +48186,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Append m to execList.
           execList.push(m);
           // 2. If m.[[HasTLA]] is false, perform GatherAvailableAncestors(m, execList).
-          if (m.HasTLA === Value.false) {
+          if (!m.HasTLA) {
             GatherAvailableAncestors(m, execList);
           }
         }
@@ -48442,7 +48246,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (m.Status === 'evaluated') {
         /* Assert */ /* node:coverage ignore next */ // i. Assert: m.[[EvaluationError]] is not empty.
         if (!(m.EvaluationError !== undefined)) throw new Assert.Error("m.EvaluationError !== undefined");
-      } else if (m.HasTLA === Value.true) {
+      } else if (m.HasTLA) {
         /* X */let _temp13 = yield* ExecuteAsyncModule(m);
         /* node:coverage ignore next */if (_temp13 instanceof Completion) {
           /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! yield* ExecuteAsyncModule(m) returned an abrupt completion", {
@@ -48619,8 +48423,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const exportedNames = module.GetExportedNames();
       const unambiguousNames = [];
       for (const name of exportedNames) {
-        if (importedNames === 'all' || importedNames.includes(name.stringValue())) {
-          if (phase !== 'defer' || name.stringValue() !== 'then') {
+        if (importedNames === 'all' || importedNames.includes(name)) {
+          if (phase !== 'defer' || name !== 'then') {
             const resolution = module.ResolveExport(name);
             if (resolution instanceof ResolvedBindingRecord) {
               unambiguousNames.push(name);
@@ -48645,7 +48449,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function CreateDefaultExportSyntheticModule(defaultExport) {
     // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
     const closure = function* closure(module) {
-      /* ReturnIfAbrupt */let _closure = yield* module.SetSyntheticExport(Value('default'), defaultExport);
+      /* ReturnIfAbrupt */let _closure = yield* module.SetSyntheticExport('default', defaultExport);
       /* ReturnIfAbrupt */if (_closure instanceof Completion) {
         if (_closure instanceof AbruptCompletion) return _closure;
         _closure = _closure.Value;
@@ -48662,7 +48466,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Namespace: undefined,
       ModuleSource: undefined,
       HostDefined: undefined,
-      ExportNames: [Value('default')],
+      ExportNames: ['default'],
       EvaluationSteps: closure
     });
   }
@@ -48670,7 +48474,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/proposal-import-text/#sec-create-text-module */
   function CreateTextModule(source) {
-    return CreateDefaultExportSyntheticModule(source);
+    return CreateDefaultExportSyntheticModule(Value(source));
   }
   CreateTextModule.section = 'https://tc39.es/proposal-import-text/#sec-create-text-module';
   function CreateBytesModule(arrayBuffer) {
@@ -48791,11 +48595,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Assert: entry.[[Kind]] is accessor.
     /* Assert */ /* node:coverage ignore next */if (!(entry.Kind === 'accessor')) throw new Assert.Error("entry.Kind === 'accessor'");
     // 5. If entry.[[Get]] is undefined, throw a TypeError exception.
-    if (entry.Getter === Value.undefined) {
+    if (entry.Get === Value.undefined) {
       return Throw.TypeError('Private field $1 is not a getter', P);
     }
     // 6. Let getter be entry.[[Get]].
-    const getter = entry.Getter;
+    const getter = entry.Get;
     // 7. Return ? Call(getter, O).
     return yield* Call(getter, O);
   }
@@ -48828,11 +48632,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Assert: entry.[[Kind]] is accessor.
       if (!(entry.Kind === 'accessor')) throw new Assert.Error("entry.Kind === 'accessor'");
       // b. If entry.[[Set]] is undefined, throw a TypeError exception.
-      if (entry.Setter === Value.undefined) {
+      if (entry.Set === Value.undefined) {
         return Throw.TypeError('Private field $1 is not a setter', P);
       }
       // c. Let setter be entry.[[Set]].
-      const setter = entry.Setter;
+      const setter = entry.Set;
       // d. Perform ? Call(setter, O, « value »).
       /* ReturnIfAbrupt */let _temp = yield* Call(setter, O, [value]);
       /* ReturnIfAbrupt */if (_temp instanceof Completion) {
@@ -48852,7 +48656,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       _temp2 = _temp2.Value;
     }
-    if (_temp2 === Value.false) {
+    if (!_temp2) {
       return Throw.TypeError('Cannot define private element to a non-extensible object');
     }
     // 2. Let entry be ! PrivateElementFind(method.[[Key]], O).
@@ -48894,7 +48698,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       _temp3 = _temp3.Value;
     }
-    if (_temp3 === Value.false) {
+    if (!_temp3) {
       return Throw.TypeError('Cannot define private element to a non-extensible object');
     }
     // 2. If entry is not empty, throw a TypeError exception.
@@ -48930,8 +48734,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             __proto__: PrivateElementRecord.prototype,
             Key: element.Key,
             Kind: 'accessor',
-            Getter: element.Get,
-            Setter: element.Set
+            Get: element.Get,
+            Set: element.Set
           };
           privateMethods.push(privateElement);
         } else {
@@ -48943,19 +48747,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (e) {
             /* Assert */ /* node:coverage ignore next */if (!(e.Kind === 'accessor')) throw new Assert.Error("e.Kind === 'accessor'");
             existing = e;
-            if (e.Getter !== undefined && e.Getter !== Value.undefined) {
-              getter = e.Getter;
+            if (e.Get !== undefined && e.Get !== Value.undefined) {
+              getter = e.Get;
             }
-            if (e.Setter !== undefined && e.Setter !== Value.undefined) {
-              setter = e.Setter;
+            if (e.Set !== undefined && e.Set !== Value.undefined) {
+              setter = e.Set;
             }
           }
           const privateElement = {
             __proto__: PrivateElementRecord.prototype,
             Key: element.Key,
             Kind: 'accessor',
-            Getter: getter,
-            Setter: setter
+            Get: getter,
+            Set: setter
           };
           if (existing) {
             const index = privateMethods.indexOf(existing);
@@ -48987,14 +48791,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3.  Set obj's essential internal methods to the default ordinary object definitions specified in 9.1.
     const obj = new ObjectValue(internalSlotsList);
     Object.assign(obj, internalSlotsList.reduce((extraFields, currentField) => {
-      extraFields[currentField] = Value.undefined;
+      extraFields[currentField] = undefined;
       return extraFields;
     }, {}));
     // 4.  Assert: If the caller will not be overriding both obj's [[GetPrototypeOf]] and [[SetPrototypeOf]] essential internal methods, then internalSlotsList contains [[Prototype]].
     // 5.  Assert: If the caller will not be overriding all of obj's [[SetPrototypeOf]], [[IsExtensible]], and [[PreventExtensions]] essential internal methods, then internalSlotsList contains [[Extensible]].
     // 6.  If internalSlotsList contains [[Extensible]], then set obj.[[Extensible]] to true.
     if (internalSlotsList.includes('Extensible')) {
-      obj.Extensible = Value.true;
+      obj.Extensible = true;
     }
     // 7.  Return obj.
     return obj;
@@ -49004,14 +48808,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-get-o-p */
   function* Get(O, P) {
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     return yield* O.Get(P, O);
   }
   Get.section = 'https://tc39.es/ecma262/#sec-get-o-p';
 
   /** https://tc39.es/ecma262/#sec-getv */
   function* GetV(V, P) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* ReturnIfAbrupt */let _O = ToObject(V);
     /* ReturnIfAbrupt */if (_O instanceof Completion) {
       if (_O instanceof AbruptCompletion) return _O;
@@ -49025,15 +48829,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
   function* Set$1(O, P, V, throws) {
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
-    P = typeof P === 'string' ? Value(P) : P;
-    /* Assert */ /* node:coverage ignore next */if (!(throws instanceof BooleanValue)) throw new Assert.Error("throws instanceof BooleanValue");
+    if (P instanceof JSStringValue) P = P.stringValue();
+    /* Assert */ /* node:coverage ignore next */if (!(typeof throws === 'boolean')) throw new Assert.Error("typeof throws === 'boolean'");
     /* ReturnIfAbrupt */let _success = yield* O.Set(P, V, O);
     /* ReturnIfAbrupt */if (_success instanceof Completion) {
       if (_success instanceof AbruptCompletion) return _success;
       _success = _success.Value;
     }
     const success = _success;
-    if (success === Value.false && throws === Value.true) {
+    if (!success && throws) {
       return Throw.TypeError('Cannot set property $1 on $2', P, O);
     }
     return success;
@@ -49043,12 +48847,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-createdataproperty */
   function* CreateDataProperty(O, P, V) {
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     const newDesc = exports.Descriptor({
       Value: V,
-      Writable: Value.true,
-      Enumerable: Value.true,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: true,
+      Configurable: true
     });
     return yield* O.DefineOwnProperty(P, newDesc);
   }
@@ -49057,12 +48861,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-createmethodproperty */
   function* CreateMethodProperty(O, P, V) {
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     const newDesc = exports.Descriptor({
       Value: V,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     });
     return yield* O.DefineOwnProperty(P, newDesc);
   }
@@ -49070,7 +48874,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
   function* CreateDataPropertyOrThrow(O, P, V) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
     /* ReturnIfAbrupt */let _success2 = yield* CreateDataProperty(O, P, V);
     /* ReturnIfAbrupt */if (_success2 instanceof Completion) {
@@ -49078,20 +48882,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _success2 = _success2.Value;
     }
     const success = _success2;
-    if (success === Value.false) {
+    if (!success) {
       return Throw.TypeError('Cannot define property $1', P);
     }
     return success;
   }
   CreateDataPropertyOrThrow.section = 'https://tc39.es/ecma262/#sec-createdatapropertyorthrow';
   function CreateNonEnumerableDataPropertyOrThrow(O, P, V) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
     const newDesc = exports.Descriptor({
       Value: V,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     });
     /* X */let _temp = DefinePropertyOrThrow(O, P, newDesc);
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
@@ -49105,7 +48909,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
   function* DefinePropertyOrThrow(O, P, desc) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
     /* ReturnIfAbrupt */let _success3 = yield* O.DefineOwnProperty(P, desc);
     /* ReturnIfAbrupt */if (_success3 instanceof Completion) {
@@ -49113,7 +48917,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _success3 = _success3.Value;
     }
     const success = _success3;
-    if (success === Value.false) {
+    if (!success) {
       return Throw.TypeError('Cannot define property $1', P);
     }
     return success;
@@ -49122,7 +48926,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
   function* DeletePropertyOrThrow(O, P) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
     /* ReturnIfAbrupt */let _success4 = yield* O.Delete(P);
     /* ReturnIfAbrupt */if (_success4 instanceof Completion) {
@@ -49130,7 +48934,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _success4 = _success4.Value;
     }
     const success = _success4;
-    if (success === Value.false) {
+    if (!success) {
       return Throw.TypeError('Cannot delete property $1', P);
     }
     return success;
@@ -49139,7 +48943,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-getmethod */
   function* GetMethod(V, P) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* ReturnIfAbrupt */let _func = yield* GetV(V, P);
     /* ReturnIfAbrupt */if (_func instanceof Completion) {
       if (_func instanceof AbruptCompletion) return _func;
@@ -49158,7 +48962,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-hasproperty */
   function* HasProperty(O, P) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
     return yield* O.HasProperty(P);
   }
@@ -49166,7 +48970,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-hasownproperty */
   function* HasOwnProperty(O, P) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* Assert */ /* node:coverage ignore next */if (!(O instanceof ObjectValue)) throw new Assert.Error("O instanceof ObjectValue");
     /* ReturnIfAbrupt */let _desc = yield* O.GetOwnProperty(P);
     /* ReturnIfAbrupt */if (_desc instanceof Completion) {
@@ -49174,10 +48978,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _desc = _desc.Value;
     }
     const desc = _desc;
-    if (desc === Value.undefined) {
-      return Value.false;
+    if (!desc) {
+      return false;
     }
-    return Value.true;
+    return true;
   }
   HasOwnProperty.section = 'https://tc39.es/ecma262/#sec-hasownproperty';
 
@@ -49223,8 +49027,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _status = _status.Value;
     }
     const status = _status;
-    if (status === Value.false) {
-      return Value.false;
+    if (!status) {
+      return false;
     }
     /* ReturnIfAbrupt */let _keys = yield* O.OwnPropertyKeys();
     /* ReturnIfAbrupt */if (_keys instanceof Completion) {
@@ -49235,7 +49039,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (level === 'sealed') {
       for (const k of keys) {
         /* ReturnIfAbrupt */let _temp3 = yield* DefinePropertyOrThrow(O, k, exports.Descriptor({
-          Configurable: Value.false
+          Configurable: false
         }));
         /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
           if (_temp3 instanceof AbruptCompletion) return _temp3;
@@ -49250,16 +49054,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _currentDesc = _currentDesc.Value;
         }
         const currentDesc = _currentDesc;
-        if (!(currentDesc instanceof UndefinedValue)) {
+        if (currentDesc) {
           let desc;
           if (IsAccessorDescriptor(currentDesc) === true) {
             desc = exports.Descriptor({
-              Configurable: Value.false
+              Configurable: false
             });
           } else {
             desc = exports.Descriptor({
-              Configurable: Value.false,
-              Writable: Value.false
+              Configurable: false,
+              Writable: false
             });
           }
           /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(O, k, desc);
@@ -49270,7 +49074,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
-    return Value.true;
+    return true;
   }
   SetIntegrityLevel.section = 'https://tc39.es/ecma262/#sec-setintegritylevel';
 
@@ -49284,8 +49088,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _extensible = _extensible.Value;
     }
     const extensible = _extensible;
-    if (extensible === Value.true) {
-      return Value.false;
+    if (extensible) {
+      return false;
     }
     /* ReturnIfAbrupt */let _keys2 = yield* O.OwnPropertyKeys();
     /* ReturnIfAbrupt */if (_keys2 instanceof Completion) {
@@ -49300,18 +49104,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _currentDesc2 = _currentDesc2.Value;
       }
       const currentDesc = _currentDesc2;
-      if (!(currentDesc instanceof UndefinedValue)) {
-        if (currentDesc.Configurable === Value.true) {
-          return Value.false;
+      if (currentDesc) {
+        if (currentDesc.Configurable) {
+          return false;
         }
         if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
-          if (currentDesc.Writable === Value.true) {
-            return Value.false;
+          if (currentDesc.Writable) {
+            return false;
           }
         }
       }
     }
-    return Value.true;
+    return true;
   }
   TestIntegrityLevel.section = 'https://tc39.es/ecma262/#sec-testintegritylevel';
 
@@ -49429,7 +49233,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-invoke */
   function* Invoke(V, P, argumentsList = []) {
-    P = typeof P === 'string' ? Value(P) : P;
+    if (P instanceof JSStringValue) P = P.stringValue();
     /* ReturnIfAbrupt */let _func2 = yield* GetV(V, P);
     /* ReturnIfAbrupt */if (_func2 instanceof Completion) {
       if (_func2 instanceof AbruptCompletion) return _func2;
@@ -49443,14 +49247,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
   function* OrdinaryHasInstance(constructor, O) {
     if (!IsCallable(constructor)) {
-      return Value.false;
+      return false;
     }
     if (isBoundFunctionObject(constructor)) {
       const BC = constructor.BoundTargetFunction;
       return yield* InstanceofOperator(O, BC);
     }
     if (!(O instanceof ObjectValue)) {
-      return Value.false;
+      return false;
     }
     /* ReturnIfAbrupt */let _P = yield* Get(constructor, 'prototype');
     /* ReturnIfAbrupt */if (_P instanceof Completion) {
@@ -49469,10 +49273,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       O = _temp9;
       if (O instanceof NullValue) {
-        return Value.false;
+        return false;
       }
       if (SameValue(P, O)) {
-        return Value.true;
+        return true;
       }
     }
   }
@@ -49527,7 +49331,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _desc2 = _desc2.Value;
         }
         const desc = _desc2;
-        if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+        if (desc && desc.Enumerable) {
           if (kind === 'key') {
             results.push(key);
           } else {
@@ -49616,7 +49420,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _desc3 = _desc3.Value;
         }
         const desc = _desc3;
-        if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+        if (desc && desc.Enumerable) {
           /* ReturnIfAbrupt */let _propValue = yield* Get(from, nextKey);
           /* ReturnIfAbrupt */if (_propValue instanceof Completion) {
             if (_propValue instanceof AbruptCompletion) return _propValue;
@@ -49781,14 +49585,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const desc = _desc4;
     // 4. If desc is undefined, then
-    if (desc === Value.undefined) {
+    if (!desc) {
       /* ReturnIfAbrupt */let _temp10 = yield* CreateDataPropertyOrThrow(thisValue, propertyKey, value);
       /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
         if (_temp10 instanceof AbruptCompletion) return _temp10;
         _temp10 = _temp10.Value;
       }
     } else {
-      /* ReturnIfAbrupt */let _temp11 = yield* Set$1(thisValue, propertyKey, value, Value.true);
+      /* ReturnIfAbrupt */let _temp11 = yield* Set$1(thisValue, propertyKey, value, true);
       /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
         if (_temp11 instanceof AbruptCompletion) return _temp11;
         _temp11 = _temp11.Value;
@@ -49804,210 +49608,177 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // TODO: ban other direct extension from ObjectValue in the linter
 
-  // 9.1.1.1 OrdinaryGetPrototypeOf
-  function OrdinaryGetPrototypeOf(O) {
-    return O.Prototype;
+  /** https://tc39.es/ecma262/#sec-ordinarygetprototypeof */
+  function OrdinaryGetPrototypeOf(obj) {
+    return obj.Prototype;
   }
+  OrdinaryGetPrototypeOf.section = 'https://tc39.es/ecma262/#sec-ordinarygetprototypeof';
 
-  // 9.1.2.1 OrdinarySetPrototypeOf
-  function OrdinarySetPrototypeOf(O, V) {
-    /* Assert */ /* node:coverage ignore next */if (!(V instanceof ObjectValue || V instanceof NullValue)) throw new Assert.Error("V instanceof ObjectValue || V instanceof NullValue");
-    const current = O.Prototype;
-    if (SameValue(V, current)) {
-      return Value.true;
-    }
-    const extensible = O.Extensible;
-    if (extensible === Value.false) {
-      return Value.false;
-    }
-    let p = V;
+  /** https://tc39.es/ecma262/#sec-ordinarysetprototypeof */
+  function OrdinarySetPrototypeOf(obj, proto) {
+    /* Assert */ /* node:coverage ignore next */if (!(proto instanceof ObjectValue || proto instanceof NullValue)) throw new Assert.Error("proto instanceof ObjectValue || proto instanceof NullValue");
+    const current = obj.Prototype;
+    if (SameValue(proto, current)) return true;
+    const extensible = obj.Extensible;
+    if (!extensible) return false;
+    let cursor = proto;
     let done = false;
-    while (done === false) {
-      if (p instanceof NullValue) {
+    while (!done) {
+      if (cursor instanceof NullValue) {
         done = true;
-      } else if (SameValue(p, O)) {
-        return Value.false;
-      } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
-        done = true;
+      } else if (SameValue(cursor, obj)) {
+        return false;
       } else {
-        p = p.Prototype;
+        if (cursor.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
+          done = true;
+        } else {
+          cursor = cursor.Prototype;
+        }
       }
     }
-    O.Prototype = V;
-    return Value.true;
+    obj.Prototype = proto;
+    return true;
   }
+  OrdinarySetPrototypeOf.section = 'https://tc39.es/ecma262/#sec-ordinarysetprototypeof';
 
-  // 9.1.3.1 OrdinaryIsExtensible
-  function OrdinaryIsExtensible(O) {
-    return O.Extensible;
+  /** https://tc39.es/ecma262/#sec-ordinaryisextensible */
+  function OrdinaryIsExtensible(obj) {
+    return obj.Extensible;
   }
+  OrdinaryIsExtensible.section = 'https://tc39.es/ecma262/#sec-ordinaryisextensible';
 
-  // 9.1.4.1 OrdinaryPreventExtensions
-  function OrdinaryPreventExtensions(O) {
-    O.Extensible = Value.false;
-    return Value.true;
+  /** https://tc39.es/ecma262/#sec-ordinarypreventextensions */
+  function OrdinaryPreventExtensions(obj) {
+    obj.Extensible = false;
+    return true;
   }
+  OrdinaryPreventExtensions.section = 'https://tc39.es/ecma262/#sec-ordinarypreventextensions';
 
-  // 9.1.5.1 OrdinaryGetOwnProperty
-  function OrdinaryGetOwnProperty(O, P) {
-    /* Assert */ /* node:coverage ignore next */if (!(typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("typeof P === 'string' || IsPropertyKey(P)");
-    if (!O.properties.has(P)) {
-      return Value.undefined;
+  /** https://tc39.es/ecma262/#sec-ordinarygetownproperty */
+  function OrdinaryGetOwnProperty(obj, propertyKey) {
+    if (!obj.properties.has(propertyKey)) {
+      return undefined;
     }
-    const D = {};
-    const x = O.properties.get(P);
-    if (IsDataDescriptor(x)) {
-      D.Value = x.Value;
-      D.Writable = x.Writable;
-    } else if (IsAccessorDescriptor(x)) {
-      D.Getter = x.Getter;
-      D.Setter = x.Setter;
+    const propertyDesc = {};
+    const ownProperty = obj.properties.get(propertyKey);
+    if (IsDataDescriptor(ownProperty)) {
+      propertyDesc.Value = ownProperty.Value;
+      propertyDesc.Writable = ownProperty.Writable;
+    } else if (IsAccessorDescriptor(ownProperty)) {
+      propertyDesc.Get = ownProperty.Get;
+      propertyDesc.Set = ownProperty.Set;
+    } else {
+      throw new TypeError('Invalid property descriptor stored on an object.');
     }
-    D.Enumerable = x.Enumerable;
-    D.Configurable = x.Configurable;
-    return exports.Descriptor(D);
+    propertyDesc.Enumerable = ownProperty.Enumerable;
+    propertyDesc.Configurable = ownProperty.Configurable;
+    return exports.Descriptor(propertyDesc);
   }
+  OrdinaryGetOwnProperty.section = 'https://tc39.es/ecma262/#sec-ordinarygetownproperty';
 
-  // 9.1.6.1 OrdinaryDefineOwnProperty
-  function* OrdinaryDefineOwnProperty(O, P, Desc) {
-    /* Assert */ /* node:coverage ignore next */if (!(typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("typeof P === 'string' || IsPropertyKey(P)");
-    /* ReturnIfAbrupt */let _current = yield* O.GetOwnProperty(P);
+  /** https://tc39.es/ecma262/#sec-ordinarydefineownproperty */
+  function* OrdinaryDefineOwnProperty(obj, propertyKey, propertyDesc) {
+    /* Assert */ /* node:coverage ignore next */if (!(typeof propertyKey === 'string' || IsPropertyKey(propertyKey))) throw new Assert.Error("typeof propertyKey === 'string' || IsPropertyKey(propertyKey)");
+    /* ReturnIfAbrupt */let _current = yield* obj.GetOwnProperty(propertyKey);
     /* ReturnIfAbrupt */if (_current instanceof Completion) {
       if (_current instanceof AbruptCompletion) return _current;
       _current = _current.Value;
     }
     const current = _current;
-    /* ReturnIfAbrupt */let _extensible = yield* IsExtensible(O);
+    /* ReturnIfAbrupt */let _extensible = yield* IsExtensible(obj);
     /* ReturnIfAbrupt */if (_extensible instanceof Completion) {
       if (_extensible instanceof AbruptCompletion) return _extensible;
       _extensible = _extensible.Value;
     }
     const extensible = _extensible;
-    return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
+    return ValidateAndApplyPropertyDescriptor(obj, propertyKey, extensible, propertyDesc, current);
   }
+  OrdinaryDefineOwnProperty.section = 'https://tc39.es/ecma262/#sec-ordinarydefineownproperty';
 
   /** https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
-  function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
-    return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
+  function IsCompatiblePropertyDescriptor(extensible, propertyDesc, current) {
+    return ValidateAndApplyPropertyDescriptor(undefined, "", extensible, propertyDesc, current);
   }
   IsCompatiblePropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor';
 
-  // 9.1.6.3 ValidateAndApplyPropertyDescriptor
-  function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
-    /* Assert */ /* node:coverage ignore next */if (!(O === Value.undefined || typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("O === Value.undefined || typeof P === 'string' || IsPropertyKey(P)");
-    if (current instanceof UndefinedValue) {
-      if (extensible === Value.false) {
-        return Value.false;
+  /** https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor */
+  function ValidateAndApplyPropertyDescriptor(obj, propertyKey, extensible, propertyDesc, current) {
+    if (!current) {
+      if (!extensible) return false;
+      if (!obj) return true;
+      if (IsAccessorDescriptor(propertyDesc)) {
+        obj.properties.set(propertyKey, exports.Descriptor({
+          Get: propertyDesc.Get ?? Value.undefined,
+          Set: propertyDesc.Set ?? Value.undefined,
+          Enumerable: propertyDesc.Enumerable ?? false,
+          Configurable: propertyDesc.Configurable ?? false
+        }));
+      } else {
+        obj.properties.set(propertyKey, exports.Descriptor({
+          Value: propertyDesc.Value ?? Value.undefined,
+          Writable: propertyDesc.Writable ?? false,
+          Enumerable: propertyDesc.Enumerable ?? false,
+          Configurable: propertyDesc.Configurable ?? false
+        }));
       }
-      /* Assert */ /* node:coverage ignore next */if (!(extensible === Value.true)) throw new Assert.Error("extensible === Value.true");
-      if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-        if (!(O instanceof UndefinedValue)) {
-          O.properties.set(P, exports.Descriptor({
-            Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
-            Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
-            Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
-            Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
+      return true;
+    }
+    if (exports.Descriptor.everyFieldIsAbsent(propertyDesc)) return true;
+    if (!current.Configurable) {
+      if (propertyDesc.Configurable !== undefined && propertyDesc.Configurable === true) return false;
+      if (propertyDesc.Enumerable !== undefined && propertyDesc.Enumerable !== current.Enumerable) return false;
+      if (!IsGenericDescriptor(propertyDesc) && IsAccessorDescriptor(propertyDesc) !== IsAccessorDescriptor(current)) return false;
+      if (IsAccessorDescriptor(current)) {
+        if (propertyDesc.Get && SameValue(propertyDesc.Get, current.Get) === false) return false;
+        if (propertyDesc.Set && SameValue(propertyDesc.Set, current.Set) === false) return false;
+      } else if (!current.Writable) {
+        if (propertyDesc.Writable !== undefined && propertyDesc.Writable) return false;
+        // ii. NOTE: SameValue returns true for NaN values which may be distinguishable by other means. Returning here ensures that any existing property of obj remains unmodified.
+        if (propertyDesc.Value !== undefined) return SameValue(propertyDesc.Value, current.Value);
+      }
+    }
+    if (obj) {
+      if (IsDataDescriptor(current) && IsAccessorDescriptor(propertyDesc)) {
+        const configurable = propertyDesc.Configurable !== undefined ? propertyDesc.Configurable : current.Configurable;
+        const enumerable = propertyDesc.Enumerable !== undefined ? propertyDesc.Enumerable : current.Enumerable;
+        obj.properties.set(propertyKey, exports.Descriptor({
+          // note: type definition of Get and Set is not precise, one of Get/Set may be undefined (instead of Value.undefined)
+          Get: propertyDesc.Get ?? Value.undefined,
+          Set: propertyDesc.Set ?? Value.undefined,
+          Enumerable: enumerable,
+          Configurable: configurable
+        }));
+      } else if (IsAccessorDescriptor(current) && IsDataDescriptor(propertyDesc)) {
+        const configurable = propertyDesc.Configurable !== undefined ? propertyDesc.Configurable : current.Configurable;
+        const enumerable = propertyDesc.Enumerable !== undefined ? propertyDesc.Enumerable : current.Enumerable;
+        obj.properties.set(propertyKey, exports.Descriptor({
+          Value: propertyDesc.Value ?? Value.undefined,
+          Writable: propertyDesc.Writable ?? false,
+          Enumerable: enumerable,
+          Configurable: configurable
+        }));
+      } else {
+        const existing = obj.properties.get(propertyKey);
+        if (IsAccessorDescriptor(existing)) {
+          obj.properties.set(propertyKey, exports.Descriptor({
+            Get: propertyDesc.Get ?? existing.Get,
+            Set: propertyDesc.Set ?? existing.Set,
+            Enumerable: propertyDesc.Enumerable ?? existing.Enumerable,
+            Configurable: propertyDesc.Configurable ?? existing.Configurable
+          }));
+        } else {
+          obj.properties.set(propertyKey, exports.Descriptor({
+            Value: propertyDesc.Value ?? existing.Value,
+            Writable: propertyDesc.Writable ?? existing.Writable,
+            Enumerable: propertyDesc.Enumerable ?? existing.Enumerable,
+            Configurable: propertyDesc.Configurable ?? existing.Configurable
           }));
         }
-      } else {
-        /* Assert */ /* node:coverage ignore next */if (!IsAccessorDescriptor(Desc)) throw new Assert.Error("IsAccessorDescriptor(Desc)");
-        if (!(O instanceof UndefinedValue)) {
-          O.properties.set(P, exports.Descriptor({
-            Getter: Desc.Getter === undefined ? Value.undefined : Desc.Getter,
-            Setter: Desc.Setter === undefined ? Value.undefined : Desc.Setter,
-            Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
-            Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
-          }));
-        }
-      }
-      return Value.true;
-    }
-    if (Desc.everyFieldIsAbsent()) {
-      return Value.true;
-    }
-    if (current.Configurable === Value.false) {
-      if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
-        return Value.false;
-      }
-      if (Desc.Enumerable !== undefined && Desc.Enumerable !== current.Enumerable) {
-        return Value.false;
       }
     }
-    if (IsGenericDescriptor(Desc)) ; else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
-      if (current.Configurable === Value.false) {
-        return Value.false;
-      }
-      if (IsDataDescriptor(current)) {
-        if (!(O instanceof UndefinedValue)) {
-          const entry = {
-            ...O.properties.get(P)
-          };
-          entry.Value = undefined;
-          entry.Writable = undefined;
-          entry.Getter = Value.undefined;
-          entry.Setter = Value.undefined;
-          O.properties.set(P, exports.Descriptor(entry));
-        }
-      } else {
-        if (!(O instanceof UndefinedValue)) {
-          const entry = {
-            ...O.properties.get(P)
-          };
-          entry.Getter = undefined;
-          entry.Setter = undefined;
-          entry.Value = Value.undefined;
-          entry.Writable = Value.false;
-          O.properties.set(P, exports.Descriptor(entry));
-        }
-      }
-    } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
-      if (current.Configurable === Value.false && current.Writable === Value.false) {
-        if (Desc.Writable !== undefined && Desc.Writable === Value.true) {
-          return Value.false;
-        }
-        if (Desc.Value !== undefined && !SameValue(Desc.Value, current.Value)) {
-          return Value.false;
-        }
-        return Value.true;
-      }
-    } else {
-      /* Assert */ /* node:coverage ignore next */if (!(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc))) throw new Assert.Error("IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc)");
-      if (current.Configurable === Value.false) {
-        if (Desc.Setter !== undefined && !SameValue(Desc.Setter, current.Setter)) {
-          return Value.false;
-        }
-        if (Desc.Getter !== undefined && !SameValue(Desc.Getter, current.Getter)) {
-          return Value.false;
-        }
-        return Value.true;
-      }
-    }
-    if (!(O instanceof UndefinedValue)) {
-      const target = {
-        ...O.properties.get(P)
-      };
-      if (Desc.Value !== undefined) {
-        target.Value = Desc.Value;
-      }
-      if (Desc.Writable !== undefined) {
-        target.Writable = Desc.Writable;
-      }
-      if (Desc.Getter !== undefined) {
-        target.Getter = Desc.Getter;
-      }
-      if (Desc.Setter !== undefined) {
-        target.Setter = Desc.Setter;
-      }
-      if (Desc.Enumerable !== undefined) {
-        target.Enumerable = Desc.Enumerable;
-      }
-      if (Desc.Configurable !== undefined) {
-        target.Configurable = Desc.Configurable;
-      }
-      O.properties.set(P, exports.Descriptor(target));
-    }
-    return Value.true;
+    return true;
   }
+  ValidateAndApplyPropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor';
 
   // 9.1.7.1 OrdinaryHasProperty
   function* OrdinaryHasProperty(O, P) {
@@ -50018,8 +49789,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasOwn = _hasOwn.Value;
     }
     const hasOwn = _hasOwn;
-    if (!(hasOwn instanceof UndefinedValue)) {
-      return Value.true;
+    if (hasOwn) {
+      return true;
     }
     /* ReturnIfAbrupt */let _parent = yield* O.GetPrototypeOf();
     /* ReturnIfAbrupt */if (_parent instanceof Completion) {
@@ -50030,7 +49801,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!(parent instanceof NullValue)) {
       return yield* parent.HasProperty(P);
     }
-    return Value.false;
+    return false;
   }
 
   // 9.1.8.1
@@ -50042,7 +49813,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _desc = _desc.Value;
     }
     const desc = _desc;
-    if (desc instanceof UndefinedValue) {
+    if (!desc) {
       /* ReturnIfAbrupt */let _parent2 = yield* O.GetPrototypeOf();
       /* ReturnIfAbrupt */if (_parent2 instanceof Completion) {
         if (_parent2 instanceof AbruptCompletion) return _parent2;
@@ -50058,7 +49829,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return desc.Value;
     }
     /* Assert */ /* node:coverage ignore next */if (!IsAccessorDescriptor(desc)) throw new Assert.Error("IsAccessorDescriptor(desc)");
-    const getter = desc.Getter;
+    const getter = desc.Get;
     if (getter instanceof UndefinedValue) {
       return Value.undefined;
     }
@@ -50080,7 +49851,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // 9.1.9.2 OrdinarySetWithOwnDescriptor
   function* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
     /* Assert */ /* node:coverage ignore next */if (!(typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("typeof P === 'string' || IsPropertyKey(P)");
-    if (ownDesc instanceof UndefinedValue) {
+    if (!ownDesc) {
       /* ReturnIfAbrupt */let _parent3 = yield* O.GetPrototypeOf();
       /* ReturnIfAbrupt */if (_parent3 instanceof Completion) {
         if (_parent3 instanceof AbruptCompletion) return _parent3;
@@ -50092,17 +49863,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       ownDesc = exports.Descriptor({
         Value: Value.undefined,
-        Writable: Value.true,
-        Enumerable: Value.true,
-        Configurable: Value.true
+        Writable: true,
+        Enumerable: true,
+        Configurable: true
       });
     }
     if (IsDataDescriptor(ownDesc)) {
-      if (ownDesc.Writable !== undefined && ownDesc.Writable === Value.false) {
-        return Value.false;
+      if (ownDesc.Writable !== undefined && !ownDesc.Writable) {
+        return false;
       }
       if (!(Receiver instanceof ObjectValue)) {
-        return Value.false;
+        return false;
       }
       /* ReturnIfAbrupt */let _existingDescriptor = yield* Receiver.GetOwnProperty(P);
       /* ReturnIfAbrupt */if (_existingDescriptor instanceof Completion) {
@@ -50110,12 +49881,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _existingDescriptor = _existingDescriptor.Value;
       }
       const existingDescriptor = _existingDescriptor;
-      if (!(existingDescriptor instanceof UndefinedValue)) {
+      if (existingDescriptor) {
         if (IsAccessorDescriptor(existingDescriptor)) {
-          return Value.false;
+          return false;
         }
-        if (existingDescriptor.Writable === Value.false) {
-          return Value.false;
+        if (!existingDescriptor.Writable) {
+          return false;
         }
         const valueDesc = exports.Descriptor({
           Value: V
@@ -50125,16 +49896,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return yield* CreateDataProperty(Receiver, P, V);
     }
     /* Assert */ /* node:coverage ignore next */if (!IsAccessorDescriptor(ownDesc)) throw new Assert.Error("IsAccessorDescriptor(ownDesc)");
-    const setter = ownDesc.Setter;
+    const setter = ownDesc.Set;
     if (setter === undefined || setter instanceof UndefinedValue) {
-      return Value.false;
+      return false;
     }
     /* ReturnIfAbrupt */let _temp = yield* Call(setter, Receiver, [V]);
     /* ReturnIfAbrupt */if (_temp instanceof Completion) {
       if (_temp instanceof AbruptCompletion) return _temp;
       _temp = _temp.Value;
     }
-    return Value.true;
+    return true;
   }
 
   // 9.1.10.1 OrdinaryDelete
@@ -50146,14 +49917,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _desc2 = _desc2.Value;
     }
     const desc = _desc2;
-    if (desc instanceof UndefinedValue) {
-      return Value.true;
+    if (!desc) {
+      return true;
     }
-    if (desc.Configurable === Value.true) {
+    if (desc.Configurable) {
       O.properties.delete(P);
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
 
   // 9.1.11.1
@@ -50339,7 +50110,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Type;
     Handler;
     constructor(O) {
-      /* Assert */ /* node:coverage ignore next */if (!(O.Capability instanceof PromiseCapabilityRecord || O.Capability === Value.undefined)) throw new Assert.Error("O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
+      /* Assert */ /* node:coverage ignore next */if (!(O.Capability instanceof PromiseCapabilityRecord || O.Capability === undefined)) throw new Assert.Error("O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === undefined");
       /* Assert */ /* node:coverage ignore next */if (!(O.Type === 'Fulfill' || O.Type === 'Reject')) throw new Assert.Error("O.Type === 'Fulfill' || O.Type === 'Reject'");
       /* Assert */ /* node:coverage ignore next */if (!(O.Handler === undefined || isFunctionObject(O.Handler.Callback))) throw new Assert.Error("O.Handler === undefined\n           || isFunctionObject(O.Handler.Callback)");
       this.Capability = O.Capability;
@@ -50541,12 +50312,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-ispromise */
   function IsPromise(x) {
     if (!(x instanceof ObjectValue)) {
-      return Value.false;
+      return false;
     }
     if (!('PromiseState' in x)) {
-      return Value.false;
+      return false;
     }
-    return Value.true;
+    return true;
   }
   IsPromise.section = 'https://tc39.es/ecma262/#sec-ispromise';
 
@@ -50582,7 +50353,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-promise-resolve */
   function* PromiseResolve(constructor, resolution) {
     /* Assert */ /* node:coverage ignore next */if (!(constructor instanceof ObjectValue)) throw new Assert.Error("constructor instanceof ObjectValue");
-    if (IsPromise(resolution) === Value.true) {
+    if (IsPromise(resolution)) {
       /* ReturnIfAbrupt */let _xConstructor = yield* Get(resolution, 'constructor');
       /* ReturnIfAbrupt */if (_xConstructor instanceof Completion) {
         if (_xConstructor instanceof AbruptCompletion) return _xConstructor;
@@ -50644,7 +50415,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         handlerResult = yield* HostCallJobCallback(handler, Value.undefined, [argument]);
       }
       // g. If promiseCapability is undefined, then
-      if (promiseCapability instanceof UndefinedValue) {
+      if (!promiseCapability) {
         /* Assert */ /* node:coverage ignore next */ // i. Assert: handlerResult is not an abrupt completion.
         if (!!(handlerResult instanceof AbruptCompletion)) throw new Assert.Error("!(handlerResult instanceof AbruptCompletion)");
         // ii. Return NormalCompletion(empty).
@@ -50711,11 +50482,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: IsPromise(promise) is true.
-    if (!(IsPromise(promise) === Value.true)) throw new Assert.Error("IsPromise(promise) === Value.true");
+    if (!IsPromise(promise)) throw new Assert.Error("IsPromise(promise)");
     // 2. If resultCapability is not present, then
     if (resultCapability === undefined) {
       // a. Set resultCapability to undefined.
-      resultCapability = Value.undefined;
+      resultCapability = undefined;
     }
     let onFulfilledJobCallback;
     // 3. If IsCallable(onFulfilled) is false, then
@@ -50779,9 +50550,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 12. Set promise.[[PromiseIsHandled]] to true.
     promise.PromiseIsHandled = true;
     // 13. If resultCapability is undefined, then
-    if (resultCapability instanceof UndefinedValue) {
+    if (resultCapability === undefined) {
       // a. Return undefined.
-      return Value.undefined;
+      return undefined;
     } else {
       // 14. Else,
       // a. Return resultCapability.[[Promise]].
@@ -50823,7 +50594,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _extensibleTarget = _extensibleTarget.Value;
       }
       const extensibleTarget = _extensibleTarget;
-      if (extensibleTarget === Value.true) {
+      if (extensibleTarget) {
         return handlerProto;
       }
       /* ReturnIfAbrupt */let _targetProto = yield* target.GetPrototypeOf();
@@ -50862,8 +50633,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _booleanTrapResult = _booleanTrapResult.Value;
       }
       const booleanTrapResult = ToBoolean(_booleanTrapResult);
-      if (booleanTrapResult === Value.false) {
-        return Value.false;
+      if (!booleanTrapResult) {
+        return false;
       }
       /* ReturnIfAbrupt */let _extensibleTarget2 = yield* IsExtensible(target);
       /* ReturnIfAbrupt */if (_extensibleTarget2 instanceof Completion) {
@@ -50871,8 +50642,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _extensibleTarget2 = _extensibleTarget2.Value;
       }
       const extensibleTarget = _extensibleTarget2;
-      if (extensibleTarget === Value.true) {
-        return Value.true;
+      if (extensibleTarget) {
+        return true;
       }
       /* ReturnIfAbrupt */let _targetProto2 = yield* target.GetPrototypeOf();
       /* ReturnIfAbrupt */if (_targetProto2 instanceof Completion) {
@@ -50883,7 +50654,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (!SameValue(V, targetProto)) {
         return Throw.TypeError("'setPrototypeOf' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target");
       }
-      return Value.true;
+      return true;
     },
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible */
     *IsExtensible() {
@@ -50915,8 +50686,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _targetResult = _targetResult.Value;
       }
       const targetResult = _targetResult;
-      if (!SameValue(booleanTrapResult, targetResult)) {
-        return Throw.TypeError("'isExtensible' on proxy: trap result does not reflect extensibility of proxy target (which is $1)", targetResult);
+      if (booleanTrapResult !== targetResult) {
+        return Throw.TypeError("'isExtensible' on proxy: trap result does not reflect extensibility of proxy target (which is $1)", Value(targetResult));
       }
       return booleanTrapResult;
     },
@@ -50944,14 +50715,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _booleanTrapResult3 = _booleanTrapResult3.Value;
       }
       const booleanTrapResult = ToBoolean(_booleanTrapResult3);
-      if (booleanTrapResult === Value.true) {
+      if (booleanTrapResult) {
         /* ReturnIfAbrupt */let _extensibleTarget3 = yield* IsExtensible(target);
         /* ReturnIfAbrupt */if (_extensibleTarget3 instanceof Completion) {
           if (_extensibleTarget3 instanceof AbruptCompletion) return _extensibleTarget3;
           _extensibleTarget3 = _extensibleTarget3.Value;
         }
         const extensibleTarget = _extensibleTarget3;
-        if (extensibleTarget === Value.true) {
+        if (extensibleTarget) {
           return Throw.TypeError("'preventExtensions' on proxy: trap returned truthy but the proxy target is extensible");
         }
       }
@@ -50960,6 +50731,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p */
     *GetOwnProperty(P) {
       const O = this;
+      if (typeof P === 'string') P = Value(P);
 
       // 1. Assert: IsPropertyKey(P) is true.
       /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
@@ -51006,11 +50778,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 11. If trapResultObj is undefined, then
       if (trapResultObj === Value.undefined) {
         // a. If targetDesc is undefined, return undefined.
-        if (targetDesc instanceof UndefinedValue) {
-          return Value.undefined;
+        if (!targetDesc) {
+          return undefined;
         }
         // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-        if (targetDesc.Configurable === Value.false) {
+        if (!targetDesc.Configurable) {
           return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap returned undefined for property $1 which is non-configurable in the proxy target", P);
         }
         // c. Let extensibleTarget be ? IsExtensible(target).
@@ -51021,11 +50793,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const extensibleTarget = _extensibleTarget4;
         // d. If extensibleTarget is false, throw a TypeError exception.
-        if (extensibleTarget === Value.false) {
+        if (!extensibleTarget) {
           return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap returned undefined for property $1 which exists in the non-extensible target", P);
         }
         // e. Return undefined.
-        return Value.undefined;
+        return undefined;
       }
       // 12. Let extensibleTarget be ? IsExtensible(target).
       /* ReturnIfAbrupt */let _extensibleTarget5 = yield* IsExtensible(target);
@@ -51040,26 +50812,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_resultDesc instanceof AbruptCompletion) return _resultDesc;
         _resultDesc = _resultDesc.Value;
       }
-      const resultDesc = _resultDesc;
+      let resultDesc = _resultDesc;
       // 14. Call CompletePropertyDescriptor(resultDesc).
-      CompletePropertyDescriptor(resultDesc);
+      resultDesc = CompletePropertyDescriptor(resultDesc);
       // 15. Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
       const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
       // 16. If valid is false, throw a TypeError exception.
-      if (valid === Value.false) {
+      if (!valid) {
         return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap returned descriptor for property $1 that is incompatible with the existing property in the proxy target", P);
       }
       // 17. If resultDesc.[[Configurable]] is false, then
-      if (resultDesc.Configurable === Value.false) {
+      if (!resultDesc.Configurable) {
         // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
-        if (targetDesc instanceof UndefinedValue || targetDesc.Configurable === Value.true) {
+        if (!targetDesc || targetDesc.Configurable) {
           // i. Throw a TypeError exception.
           return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap reported non-configurability for property $1 which is either non-existent or configurable in the proxy target", P);
         }
         // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
-        if ('Writable' in resultDesc && resultDesc.Writable === Value.false) {
+        if ('Writable' in resultDesc && !resultDesc.Writable) {
           // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
-          if (targetDesc.Writable === Value.true) {
+          if (targetDesc.Writable) {
             return Throw.TypeError("'getOwnPropertyDescriptor' on proxy: trap reported non-configurability for property $1 which is writable or configurable in the proxy target", P);
           }
         }
@@ -51070,6 +50842,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc */
     *DefineOwnProperty(P, Desc) {
       const O = this;
+      if (typeof P === 'string') P = Value(P);
 
       // 1. Assert: IsPropertyKey(P) is true.
       /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
@@ -51105,8 +50878,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const booleanTrapResult = ToBoolean(_booleanTrapResult4);
       // 10. If booleanTrapResult is false, return false.
-      if (booleanTrapResult === Value.false) {
-        return Value.false;
+      if (!booleanTrapResult) {
+        return false;
       }
       // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
       /* ReturnIfAbrupt */let _targetDesc2 = yield* target.GetOwnProperty(P);
@@ -51124,7 +50897,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const extensibleTarget = _extensibleTarget6;
       let settingConfigFalse;
       // 13. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, then
-      if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
+      if (Desc.Configurable !== undefined && !Desc.Configurable) {
         // a. Let settingConfigFalse be true.
         settingConfigFalse = true;
       } else {
@@ -51132,37 +50905,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         settingConfigFalse = false;
       }
       // 15. If targetDesc is undefined, then
-      if (targetDesc instanceof UndefinedValue) {
+      if (!targetDesc) {
         // a. If extensibleTarget is false, throw a TypeError exception.
-        if (extensibleTarget === Value.false) {
+        if (!extensibleTarget) {
           return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for adding property $1 to the non-extensible proxy target", P);
         }
         // b. If settingConfigFalse is true, throw a TypeError exception.
-        if (settingConfigFalse === true) {
+        if (settingConfigFalse) {
           return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which is either non-existent or configurable in the proxy target", P);
         }
       } else {
         // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
-        if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
+        if (!IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc)) {
           return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for adding property $1 that is incompatible with the existing property in the proxy target", P);
         }
         // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
-        if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
+        if (settingConfigFalse && targetDesc.Configurable) {
           return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which is either non-existent or configurable in the proxy target", P);
         }
         // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
-        if (IsDataDescriptor(targetDesc) && targetDesc.Configurable === Value.false && targetDesc.Writable === Value.true) {
+        if (IsDataDescriptor(targetDesc) && !targetDesc.Configurable && targetDesc.Writable) {
           // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
-          if ('Writable' in Desc && Desc.Writable === Value.false) {
+          if (Desc.Writable === false) {
             return Throw.TypeError("'defineProperty' on proxy: trap returned truthy for defining non-configurable property $1 which cannot be non-writable, unless there exists a corresponding non-configurable, non-writable own property of the target object", P);
           }
         }
       }
-      return Value.true;
+      return true;
     },
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
     *HasProperty(P) {
       const O = this;
+      if (typeof P === 'string') P = Value(P);
       /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
       const handler = O.ProxyHandler;
       if (handler === Value.null) {
@@ -51185,15 +50959,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _booleanTrapResult5 = _booleanTrapResult5.Value;
       }
       const booleanTrapResult = ToBoolean(_booleanTrapResult5);
-      if (booleanTrapResult === Value.false) {
+      if (!booleanTrapResult) {
         /* ReturnIfAbrupt */let _targetDesc3 = yield* target.GetOwnProperty(P);
         /* ReturnIfAbrupt */if (_targetDesc3 instanceof Completion) {
           if (_targetDesc3 instanceof AbruptCompletion) return _targetDesc3;
           _targetDesc3 = _targetDesc3.Value;
         }
         const targetDesc = _targetDesc3;
-        if (!(targetDesc instanceof UndefinedValue)) {
-          if (targetDesc.Configurable === Value.false) {
+        if (targetDesc) {
+          if (!targetDesc.Configurable) {
             return Throw.TypeError("'has' on proxy: trap returned falsy for property $1 which exists in the proxy target as non-configurable", P);
           }
           /* ReturnIfAbrupt */let _extensibleTarget7 = yield* IsExtensible(target);
@@ -51202,7 +50976,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _extensibleTarget7 = _extensibleTarget7.Value;
           }
           const extensibleTarget = _extensibleTarget7;
-          if (extensibleTarget === Value.false) {
+          if (!extensibleTarget) {
             return Throw.TypeError("'has' on proxy: trap returned falsy for property $1 but the proxy target is not extensible", P);
           }
         }
@@ -51212,6 +50986,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver */
     *Get(P, Receiver) {
       const O = this;
+      if (typeof P === 'string') P = Value(P);
       /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
       const handler = O.ProxyHandler;
       if (handler === Value.null) {
@@ -51240,13 +51015,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _targetDesc4 = _targetDesc4.Value;
       }
       const targetDesc = _targetDesc4;
-      if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
-        if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
+      if (targetDesc && !targetDesc.Configurable) {
+        if (IsDataDescriptor(targetDesc) === true && !targetDesc.Writable) {
           if (!SameValue(trapResult, targetDesc.Value)) {
             return Throw.TypeError("'get' on proxy: property $1 is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value", P);
           }
         }
-        if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Getter === Value.undefined) {
+        if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === Value.undefined) {
           if (trapResult !== Value.undefined) {
             return Throw.TypeError("'get' on proxy: property $1 is a non-configurable accessor property on the proxy target and does not have a getter function, but the trap did not return 'undefined'", P);
           }
@@ -51257,6 +51032,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver */
     *Set(P, V, Receiver) {
       const O = this;
+      if (typeof P === 'string') P = Value(P);
       /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
       const handler = O.ProxyHandler;
       if (handler === Value.null) {
@@ -51279,8 +51055,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _booleanTrapResult6 = _booleanTrapResult6.Value;
       }
       const booleanTrapResult = ToBoolean(_booleanTrapResult6);
-      if (booleanTrapResult === Value.false) {
-        return Value.false;
+      if (!booleanTrapResult) {
+        return false;
       }
       /* ReturnIfAbrupt */let _targetDesc5 = yield* target.GetOwnProperty(P);
       /* ReturnIfAbrupt */if (_targetDesc5 instanceof Completion) {
@@ -51288,23 +51064,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _targetDesc5 = _targetDesc5.Value;
       }
       const targetDesc = _targetDesc5;
-      if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
-        if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
+      if (targetDesc && !targetDesc.Configurable) {
+        if (IsDataDescriptor(targetDesc) === true && !targetDesc.Writable) {
           if (!SameValue(V, targetDesc.Value)) {
             return Throw.TypeError("'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable data property with a different value", P);
           }
         }
         if (IsAccessorDescriptor(targetDesc) === true) {
-          if (targetDesc.Setter === Value.undefined) {
+          if (targetDesc.Set === Value.undefined) {
             return Throw.TypeError("'set' on proxy: trap returned truthy for property $1 which exists in the proxy target as a non-configurable and non-writable accessor property without a setter", P);
           }
         }
       }
-      return Value.true;
+      return true;
     },
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
     *Delete(P) {
       const O = this;
+      if (typeof P === 'string') P = Value(P);
 
       // 1. Assert: IsPropertyKey(P) is true.
       /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
@@ -51338,8 +51115,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const booleanTrapResult = ToBoolean(_booleanTrapResult7);
       // 9. If booleanTrapResult is false, return false.
-      if (booleanTrapResult === Value.false) {
-        return Value.false;
+      if (!booleanTrapResult) {
+        return false;
       }
       // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
       /* ReturnIfAbrupt */let _targetDesc6 = yield* target.GetOwnProperty(P);
@@ -51349,11 +51126,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const targetDesc = _targetDesc6;
       // 11. If targetDesc is undefined, return true.
-      if (targetDesc instanceof UndefinedValue) {
-        return Value.true;
+      if (!targetDesc) {
+        return true;
       }
       // 12. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-      if (targetDesc.Configurable === Value.false) {
+      if (!targetDesc.Configurable) {
         return Throw.TypeError("'deleteProperty' on proxy: trap returned truthy for property $1 which is non-configurable in the proxy target", P);
       }
       // 13. Let extensibleTarget be ? IsExtensible(target).
@@ -51364,11 +51141,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const extensibleTarget = _extensibleTarget8;
       // 14. If extensibleTarget is false, throw a TypeError exception.
-      if (extensibleTarget === Value.false) {
+      if (!extensibleTarget) {
         return Throw.TypeError("'deleteProperty' on proxy: trap returned truthy for property $1 but the proxy target is non-extensible", P);
       }
       // 15. Return true.
-      return Value.true;
+      return true;
     },
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys */
     *OwnPropertyKeys() {
@@ -51430,13 +51207,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _desc = _desc.Value;
         }
         const desc = _desc;
-        if (!(desc instanceof UndefinedValue) && desc.Configurable === Value.false) {
+        if (desc && !desc.Configurable) {
           targetNonconfigurableKeys.push(key);
         } else {
           targetConfigurableKeys.push(key);
         }
       }
-      if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
+      if (extensibleTarget && targetNonconfigurableKeys.length === 0) {
         return trapResult;
       }
       const uncheckedResultKeys = new PropertyKeyMap();
@@ -51449,7 +51226,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         uncheckedResultKeys.delete(key);
       }
-      if (extensibleTarget === Value.true) {
+      if (extensibleTarget) {
         return trapResult;
       }
       for (const key of targetConfigurableKeys) {
@@ -51590,27 +51367,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */if (!!!realm.Intrinsics['%ThrowTypeError%']) throw new Assert.Error("!!realm.Intrinsics['%ThrowTypeError%']");
     const thrower = realm.Intrinsics['%ThrowTypeError%'];
     /* X */let _temp = DefinePropertyOrThrow(F, 'caller', exports.Descriptor({
-      Getter: thrower,
-      Setter: thrower,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Get: thrower,
+      Set: thrower,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'caller', Descriptor({\n    Getter: thrower,\n    Setter: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'caller', Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
     }
     /* X */let _temp2 = DefinePropertyOrThrow(F, 'arguments', exports.Descriptor({
-      Getter: thrower,
-      Setter: thrower,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Get: thrower,
+      Set: thrower,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
     /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'arguments', Descriptor({\n    Getter: thrower,\n    Setter: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(F, 'arguments', Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp2
       });
       _temp2 = _temp2.Value;
@@ -51638,7 +51415,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let names be privEnv.[[Names]].
     const names = privEnv.Names;
     // 2. If names contains a Private Name whose [[Description]] is identifier, then
-    const name = names.find(n => n.Description === identifier.stringValue());
+    const name = names.find(n => n.Description === identifier);
     if (name) {
       // a. Let name be that Private Name.
       // b. Return name.
@@ -51659,10 +51436,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function IsPropertyReference(V) {
     // 1. If V.[[Base]] is unresolvable, return false.
     if (V.Base === 'unresolvable') {
-      return Value.false;
+      return false;
     }
     // 2. If V.[[Base]] is an Environment Record, return false; otherwise return true.
-    return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
+    return V.Base instanceof EnvironmentRecord ? false : true;
   }
   IsPropertyReference.section = 'https://tc39.es/ecma262/#sec-ispropertyreference';
   /** https://tc39.es/ecma262/#sec-isunresolvablereference */
@@ -51670,7 +51447,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: V is a Reference Record.
     if (!(V instanceof ReferenceRecord)) throw new Assert.Error("V instanceof ReferenceRecord");
     // 2. If V.[[Base]] is unresolvable, return true; otherwise return false.
-    return V.Base === 'unresolvable' ? Value.true : Value.false;
+    return V.Base === 'unresolvable' ? true : false;
   }
   IsUnresolvableReference.section = 'https://tc39.es/ecma262/#sec-isunresolvablereference';
 
@@ -51679,7 +51456,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: V is a Reference Record.
     if (!(V instanceof ReferenceRecord)) throw new Assert.Error("V instanceof ReferenceRecord");
     // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
-    return V.ThisValue !== undefined ? Value.true : Value.false;
+    return V.ThisValue !== undefined ? true : false;
   }
   IsSuperReference.section = 'https://tc39.es/ecma262/#sec-issuperreference';
 
@@ -51699,11 +51476,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return V;
     }
     // 2. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
-    if (IsUnresolvableReference(V) === Value.true) {
+    if (IsUnresolvableReference(V)) {
       return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
     }
     // 3. If IsPropertyReference(V) is true, then
-    if (IsPropertyReference(V) === Value.true) {
+    if (IsPropertyReference(V)) {
       // a. Let baseObj be ? ToObject(V.[[Base]]).
       /* ReturnIfAbrupt */let _baseObj = ToObject(V.Base);
       /* ReturnIfAbrupt */if (_baseObj instanceof Completion) {
@@ -51733,7 +51510,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Assert: base is an Environment Record.
       /* Assert */ /* node:coverage ignore next */if (!(base instanceof EnvironmentRecord)) throw new Assert.Error("base instanceof EnvironmentRecord");
       // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]).
-      return yield* base.GetBindingValue(V.ReferencedName, Value(V.Strict));
+      return yield* base.GetBindingValue(V.ReferencedName.stringValue(), V.Strict);
     }
   }
   GetValue.section = 'https://tc39.es/ecma262/#sec-getvalue';
@@ -51745,7 +51522,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.ReferenceError('Invalid assignment target');
     }
     // 2. If IsUnresolvableReference(V) is true, then
-    if (IsUnresolvableReference(V) === Value.true) {
+    if (IsUnresolvableReference(V)) {
       // a. If V.[[Strict]] is true, throw a ReferenceError exception.
       if (V.Strict) {
         return Throw.ReferenceError('$1 is not defined', V.ReferencedName);
@@ -51753,7 +51530,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Let globalObj be GetGlobalObject().
       const globalObj = GetGlobalObject();
       // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
-      /* ReturnIfAbrupt */let _temp2 = yield* Set$1(globalObj, V.ReferencedName, W, Value.false);
+      /* ReturnIfAbrupt */let _temp2 = yield* Set$1(globalObj, V.ReferencedName, W, false);
       /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         _temp2 = _temp2.Value;
@@ -51761,7 +51538,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return undefined;
     }
     // 5. If IsPropertyReference(V) is true, then
-    if (IsPropertyReference(V) === Value.true) {
+    if (IsPropertyReference(V)) {
       /* ReturnIfAbrupt */let _baseObj2 = ToObject(V.Base);
       /* ReturnIfAbrupt */if (_baseObj2 instanceof Completion) {
         if (_baseObj2 instanceof AbruptCompletion) return _baseObj2;
@@ -51790,7 +51567,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const succeeded = _succeeded;
       // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
-      if (succeeded === Value.false && V.Strict) {
+      if (!succeeded && V.Strict) {
         return Throw.TypeError('Cannot set property $1 on $2', V.ReferencedName, baseObj);
       }
       // e. Return.
@@ -51802,7 +51579,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Assert: base is an Environment Record.
       /* Assert */ /* node:coverage ignore next */if (!(base instanceof EnvironmentRecord)) throw new Assert.Error("base instanceof EnvironmentRecord");
       // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
-      return yield* base.SetMutableBinding(V.ReferencedName, W, Value(V.Strict));
+      return yield* base.SetMutableBinding(V.ReferencedName.stringValue(), W, V.Strict);
     }
   }
   PutValue.section = 'https://tc39.es/ecma262/#sec-putvalue';
@@ -51810,9 +51587,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-getthisvalue */
   function GetThisValue(V) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: IsPropertyReference(V) is true.
-    if (!(IsPropertyReference(V) === Value.true)) throw new Assert.Error("IsPropertyReference(V) === Value.true");
+    if (!IsPropertyReference(V)) throw new Assert.Error("IsPropertyReference(V)");
     // 2. If IsSuperReference(V) is true, return V.[[ThisValue]]; otherwise return V.[[Base]].
-    if (IsSuperReference(V) === Value.true) {
+    if (IsSuperReference(V)) {
       return V.ThisValue;
     } else {
       return V.Base;
@@ -51833,13 +51610,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */ // 3. Assert: V is a Reference Record.
     if (!(V instanceof ReferenceRecord)) throw new Assert.Error("V instanceof ReferenceRecord");
     // 4. Assert: IsUnresolvableReference(V) is false.
-    /* Assert */ /* node:coverage ignore next */if (!(IsUnresolvableReference(V) === Value.false)) throw new Assert.Error("IsUnresolvableReference(V) === Value.false");
+    /* Assert */ /* node:coverage ignore next */if (!!IsUnresolvableReference(V)) throw new Assert.Error("!IsUnresolvableReference(V)");
     // 5. Let base be V.[[Base]].
     const base = V.Base;
     // 6. Assert: base is an Environment Record.
     /* Assert */ /* node:coverage ignore next */if (!(base instanceof EnvironmentRecord)) throw new Assert.Error("base instanceof EnvironmentRecord");
     // 7. Return base.InitializeBinding(V.[[ReferencedName]], W).
-    return yield* base.InitializeBinding(V.ReferencedName, W);
+    return yield* base.InitializeBinding(V.ReferencedName.stringValue(), W);
   }
   InitializeReferencedBinding.section = 'https://tc39.es/ecma262/#sec-initializereferencedbinding';
 
@@ -51855,7 +51632,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (script instanceof DynamicParsedCodeRecord && script?.HostDefined?.isInspectorEval) {
         let privateName;
         if (baseValue instanceof ObjectValue) {
-          privateName = baseValue.PrivateElements.find(elem => elem.Key.Description === privateIdentifier.stringValue())?.Key;
+          privateName = baseValue.PrivateElements.find(elem => elem.Key.Description === privateIdentifier)?.Key;
         }
         privateName ??= new PrivateName(privateIdentifier);
         return new ReferenceRecord({
@@ -51889,13 +51666,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const obj = _obj;
     /* X */let _temp = DefinePropertyOrThrow(obj, 'lastIndex', exports.Descriptor({
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: true,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'lastIndex', Descriptor({\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(obj, 'lastIndex', Descriptor({\n    Writable: true,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -51909,7 +51686,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let P;
     // 1. If pattern is undefined, let P be the empty String.
     if (pattern === Value.undefined) {
-      P = Value('');
+      P = '';
+    } else if (typeof pattern === 'string') {
+      P = pattern;
     } else {
       /* ReturnIfAbrupt */let _temp2 = yield* ToString(pattern);
       /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
@@ -51922,7 +51701,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let F$1;
     // 3. If flags is undefined, let F be the empty String.
     if (flags === Value.undefined) {
-      F$1 = Value('');
+      F$1 = '';
+    } else if (typeof flags === 'string') {
+      F$1 = flags;
     } else {
       /* ReturnIfAbrupt */let _temp3 = yield* ToString(flags);
       /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
@@ -51932,7 +51713,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 4. Else, let F be ? ToString(flags).
       F$1 = _temp3;
     }
-    const f = F$1.stringValue();
+    const f = F$1;
     if (/^[dgimsuvy]*$/.test(f) === false) {
       return Throw.SyntaxError('RegExp has invalid flags ($1)', f);
     }
@@ -51949,7 +51730,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     //   a. Let patternText be StringToCodePoints(P).
     // 12. Else,
     //   a. Let patternText be the result of interpreting each of P's 16-bit elements as a Unicode BMP code point. UTF-16 decoding is not applied to the elements.
-    const patternText = P.stringValue();
+    const patternText = P;
     const parseResult = ParsePattern(patternText, u, v);
     if (Array.isArray(parseResult)) {
       return {
@@ -51971,7 +51752,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     obj.RegExpRecord = rer;
     obj.parsedPattern = parseResult;
     obj.RegExpMatcher = CompilePattern(parseResult, rer);
-    /* ReturnIfAbrupt */let _temp4 = yield* Set$1(obj, 'lastIndex', F(0), Value.true);
+    /* ReturnIfAbrupt */let _temp4 = yield* Set$1(obj, 'lastIndex', F(0), true);
     /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       _temp4 = _temp4.Value;
@@ -51994,9 +51775,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-escaperegexppattern */
   function EscapeRegExpPattern(P, _F) {
-    const source = P.stringValue();
+    const source = P;
     if (source === '') {
-      return Value('(?:)');
+      return '(?:)';
     }
     let index = 0;
     let escaped = '';
@@ -52056,27 +51837,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         isEscape = false;
       }
     }
-    return Value(escaped);
+    return escaped;
   }
   EscapeRegExpPattern.section = 'https://tc39.es/ecma262/#sec-escaperegexppattern';
 
   /** https://tc39.es/ecma262/#sec-getstringindex */
   function GetStringIndex(S, Input, e) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(S) is String.
-    if (!(S instanceof JSStringValue)) throw new Assert.Error("S instanceof JSStringValue");
+    if (!(typeof S === 'string')) throw new Assert.Error("typeof S === 'string'");
     // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
     /* Assert */ /* node:coverage ignore next */if (!Array.isArray(Input)) throw new Assert.Error("Array.isArray(Input)");
     // 3. Assert: e is an integer value ≥ 0.
     /* Assert */ /* node:coverage ignore next */if (!(e >= 0)) throw new Assert.Error("e >= 0");
     // 4. If S is the empty String, return 0.
-    if (S.stringValue() === '') {
+    if (S === '') {
       return 0;
     }
     // 5. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
     //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
     let eUTF = 0;
     if (e >= Input.length) {
-      eUTF = S.stringValue().length;
+      eUTF = S.length;
     } else {
       for (let i = 0; i < e; i += 1) {
         eUTF += Input[i].length;
@@ -52089,28 +51870,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-getmatchstring */
   function GetMatchString(S, match) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(S) is String.
-    if (!(S instanceof JSStringValue)) throw new Assert.Error("S instanceof JSStringValue");
+    if (!(typeof S === 'string')) throw new Assert.Error("typeof S === 'string'");
     // 2. Assert: match is a Match Record.
     /* Assert */ /* node:coverage ignore next */if (!('StartIndex' in match && 'EndIndex' in match)) throw new Assert.Error("'StartIndex' in match && 'EndIndex' in match");
     // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
-    /* Assert */ /* node:coverage ignore next */if (!(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length)) throw new Assert.Error("match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length");
+    /* Assert */ /* node:coverage ignore next */if (!(match.StartIndex >= 0 && match.StartIndex <= S.length)) throw new Assert.Error("match.StartIndex >= 0 && match.StartIndex <= S.length");
     // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
-    /* Assert */ /* node:coverage ignore next */if (!(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length)) throw new Assert.Error("match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length");
+    /* Assert */ /* node:coverage ignore next */if (!(match.EndIndex >= match.StartIndex && match.EndIndex <= S.length)) throw new Assert.Error("match.EndIndex >= match.StartIndex && match.EndIndex <= S.length");
     // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
-    return Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+    return S.slice(match.StartIndex, match.EndIndex);
   }
   GetMatchString.section = 'https://tc39.es/ecma262/#sec-getmatchstring';
 
   /** https://tc39.es/ecma262/#sec-getmatchindexpair */
   function GetMatchIndexPair(S, match) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(S) is String.
-    if (!(S instanceof JSStringValue)) throw new Assert.Error("S instanceof JSStringValue");
+    if (!(typeof S === 'string')) throw new Assert.Error("typeof S === 'string'");
     // 2. Assert: match is a Match Record.
     /* Assert */ /* node:coverage ignore next */if (!('StartIndex' in match && 'EndIndex' in match)) throw new Assert.Error("'StartIndex' in match && 'EndIndex' in match");
     // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
-    /* Assert */ /* node:coverage ignore next */if (!(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length)) throw new Assert.Error("match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length");
+    /* Assert */ /* node:coverage ignore next */if (!(match.StartIndex >= 0 && match.StartIndex <= S.length)) throw new Assert.Error("match.StartIndex >= 0 && match.StartIndex <= S.length");
     // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
-    /* Assert */ /* node:coverage ignore next */if (!(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length)) throw new Assert.Error("match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length");
+    /* Assert */ /* node:coverage ignore next */if (!(match.EndIndex >= match.StartIndex && match.EndIndex <= S.length)) throw new Assert.Error("match.EndIndex >= match.StartIndex && match.EndIndex <= S.length");
     // 1. Return CreateArrayFromList(« 𝔽(match.[[StartIndex]]), 𝔽(match.[[EndIndex]]) »).
     return CreateArrayFromList([F(match.StartIndex), F(match.EndIndex)]);
   }
@@ -52119,18 +51900,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
   function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(S) is String.
-    if (!(S instanceof JSStringValue)) throw new Assert.Error("S instanceof JSStringValue");
+    if (!(typeof S === 'string')) throw new Assert.Error("typeof S === 'string'");
     // 2. Assert: indices is a List.
-    /* Assert */ /* node:coverage ignore next */if (!Array.isArray(indices)) throw new Assert.Error("Array.isArray(indices)");
+    /* Assert */ /* node:coverage ignore next */if (!isArray(indices)) throw new Assert.Error("isArray(indices)");
     // 3. Let n be the number of elements in indices.
     const n = indices.length;
     // 4. Assert: n < 2**32-1.
     /* Assert */ /* node:coverage ignore next */if (!(n < 2 ** 32 - 1)) throw new Assert.Error("n < (2 ** 32) - 1");
     // 5. Assert: groupNames is a List with _n_ - 1 elements.
-    /* Assert */ /* node:coverage ignore next */if (!(Array.isArray(groupNames) && groupNames.length === n - 1)) throw new Assert.Error("Array.isArray(groupNames) && groupNames.length === n - 1");
+    /* Assert */ /* node:coverage ignore next */if (!(isArray(groupNames) && groupNames.length === n - 1)) throw new Assert.Error("isArray(groupNames) && groupNames.length === n - 1");
     // 6. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
     // 7. Assert: Type(hasGroups) is Boolean.
-    /* Assert */ /* node:coverage ignore next */if (!(hasGroups instanceof BooleanValue)) throw new Assert.Error("hasGroups instanceof BooleanValue");
+    /* Assert */ /* node:coverage ignore next */if (!(typeof hasGroups === 'boolean')) throw new Assert.Error("typeof hasGroups === 'boolean'");
     // 8. Set A to ! ArrayCreate(n).
     // 9. Assert: The value of A's "length" property is n.
     /* X */let _array = ArrayCreate(n);
@@ -52144,7 +51925,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const array = _array;
     // 10. If hasGroups is true, then
     let groups;
-    if (hasGroups === Value.true) {
+    if (hasGroups) {
       /* X */let _temp5 = OrdinaryObjectCreate(Value.null);
       /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
       /* node:coverage ignore next */if (_temp5 instanceof Completion) {
@@ -52175,7 +51956,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const matchIndices = indices[i];
       // b. If matchIndices is not undefined, then
       let matchIndicesArray;
-      if (matchIndices !== Value.undefined) {
+      if (matchIndices !== undefined) {
         /* X */let _temp7 = GetMatchIndexPair(S, matchIndices);
         /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
         /* node:coverage ignore next */if (_temp7 instanceof Completion) {
@@ -52209,11 +51990,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp8 = _temp8.Value;
       }
       // e. If i > 0 and groupNames[i - 1] is not undefined, then
-      if (i > 0 && groupNames[i - 1] !== Value.undefined) {
+      if (i > 0 && groupNames[i - 1] !== undefined) {
         /* X */let _temp9 = CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray);
         /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
         /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as JSStringValue, matchIndicesArray) returned an abrupt completion", {
+          /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as string, matchIndicesArray) returned an abrupt completion", {
             cause: _temp9
           });
           _temp9 = _temp9.Value;
@@ -52235,19 +52016,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!('OriginalFlags' in R)) {
       // a. If SameValue(R, %RegExp.prototype%) is true, return undefined.
       if (SameValue(R, exports.surroundingAgent.intrinsic('%RegExp.prototype%'))) {
-        return Value.undefined;
+        return undefined;
       }
       // b. Otherwise, throw a TypeError exception.
       return Throw.TypeError('$1 is not a RegExp object', R);
     }
     // 3. Let flags be R.[[OriginalFlags]].
-    const flags = R.OriginalFlags.stringValue();
+    const flags = R.OriginalFlags;
     // 4. If flags contains codeUnit, return true.
     if (flags.includes(codeUnit)) {
-      return Value.true;
+      return true;
     }
     // 5. Return false.
-    return Value.false;
+    return false;
   }
   RegExpHasFlag.section = 'https://tc39.es/ecma262/#sec-regexphasflag';
 
@@ -52297,10 +52078,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const msg = _msg;
       // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
       const msgDesc = exports.Descriptor({
-        Value: msg,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true
+        Value: Value(msg),
+        Writable: true,
+        Enumerable: false,
+        Configurable: true
       });
       // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
       /* X */let _temp = DefinePropertyOrThrow(O, 'message', msgDesc);
@@ -52447,7 +52228,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     calleeContext.Function = F;
     const calleeRealm = F.Realm;
     calleeContext.Realm = calleeRealm;
-    calleeContext.ScriptOrModule = Value.null;
+    calleeContext.ScriptOrModule = null;
     exports.surroundingAgent.executionContextStack.push(calleeContext);
     // 9. NOTE: Any exception objects produced after this point are associated with calleeRealm.
     return calleeContext;
@@ -52548,7 +52329,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     exports.surroundingAgent.executionContextStack.push(evalContext);
     const referrer = evalContext.Realm;
     HostLoadImportedModule(referrer, {
-      Specifier: specifierString.value,
+      Specifier: specifierString,
       Phase: 'evaluation',
       Attributes: [],
       ImportedNames: 'all'
@@ -52566,7 +52347,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _hasOwn = _hasOwn.Value;
       }
       const hasOwn = _hasOwn;
-      if (hasOwn === Value.false) {
+      if (!hasOwn) {
         return Throw.TypeError('Module $1 does not have an export named $2', specifierString, string);
       }
       /* ReturnIfAbrupt */let _value = yield* Get(exports$1, string);
@@ -52632,7 +52413,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const context = new ExecutionContext();
     context.Function = Value.null;
     context.Realm = shadowRealmRecord;
-    context.ScriptOrModule = Value.null;
+    context.ScriptOrModule = null;
     context.VariableEnvironment = varEnv;
     context.LexicalEnvironment = lexEnv;
     context.PrivateEnvironment = null;
@@ -52643,24 +52424,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const InternalMethods$2 = {
     *GetOwnProperty(P) {
       const S = this;
-      /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
+      if (P instanceof JSStringValue) P = P.stringValue();
+      /* Assert */ /* node:coverage ignore next */if (!(typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("typeof P === 'string' || IsPropertyKey(P)");
       const desc = OrdinaryGetOwnProperty(S, P);
-      if (!(desc instanceof UndefinedValue)) {
-        return desc;
-      }
-      /* X */let _InternalMethods = StringGetOwnProperty(S, P);
-      /* node:coverage ignore next */if (_InternalMethods && typeof _InternalMethods === 'object' && 'next' in _InternalMethods) _InternalMethods = skipDebugger(_InternalMethods);
-      /* node:coverage ignore next */if (_InternalMethods instanceof Completion) {
-        /* node:coverage ignore next */if (_InternalMethods instanceof AbruptCompletion) throw new Assert.Error("! StringGetOwnProperty(S, P) returned an abrupt completion", {
-          cause: _InternalMethods
-        });
-        _InternalMethods = _InternalMethods.Value;
-      }
-      return _InternalMethods;
+      if (desc) return desc;
+      return StringGetOwnProperty(S, P);
     },
     *DefineOwnProperty(P, Desc) {
       const S = this;
-      /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
+      if (P instanceof JSStringValue) P = P.stringValue();
+      /* Assert */ /* node:coverage ignore next */if (!(typeof P === 'string' || IsPropertyKey(P))) throw new Assert.Error("typeof P === 'string' || IsPropertyKey(P)");
       /* X */let _stringDesc = StringGetOwnProperty(S, P);
       /* node:coverage ignore next */if (_stringDesc && typeof _stringDesc === 'object' && 'next' in _stringDesc) _stringDesc = skipDebugger(_stringDesc);
       /* node:coverage ignore next */if (_stringDesc instanceof Completion) {
@@ -52670,47 +52443,47 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _stringDesc = _stringDesc.Value;
       }
       const stringDesc = _stringDesc;
-      if (!(stringDesc instanceof UndefinedValue)) {
+      if (stringDesc) {
         const extensible = S.Extensible;
-        /* X */let _InternalMethods2 = IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc);
-        /* node:coverage ignore next */if (_InternalMethods2 && typeof _InternalMethods2 === 'object' && 'next' in _InternalMethods2) _InternalMethods2 = skipDebugger(_InternalMethods2);
-        /* node:coverage ignore next */if (_InternalMethods2 instanceof Completion) {
-          /* node:coverage ignore next */if (_InternalMethods2 instanceof AbruptCompletion) throw new Assert.Error("! IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc) returned an abrupt completion", {
-            cause: _InternalMethods2
+        /* X */let _InternalMethods = IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc);
+        /* node:coverage ignore next */if (_InternalMethods && typeof _InternalMethods === 'object' && 'next' in _InternalMethods) _InternalMethods = skipDebugger(_InternalMethods);
+        /* node:coverage ignore next */if (_InternalMethods instanceof Completion) {
+          /* node:coverage ignore next */if (_InternalMethods instanceof AbruptCompletion) throw new Assert.Error("! IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc) returned an abrupt completion", {
+            cause: _InternalMethods
           });
-          _InternalMethods2 = _InternalMethods2.Value;
+          _InternalMethods = _InternalMethods.Value;
         }
-        return _InternalMethods2;
+        return _InternalMethods;
       }
-      /* X */let _InternalMethods3 = OrdinaryDefineOwnProperty(S, P, Desc);
-      /* node:coverage ignore next */if (_InternalMethods3 && typeof _InternalMethods3 === 'object' && 'next' in _InternalMethods3) _InternalMethods3 = skipDebugger(_InternalMethods3);
-      /* node:coverage ignore next */if (_InternalMethods3 instanceof Completion) {
-        /* node:coverage ignore next */if (_InternalMethods3 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(S, P, Desc) returned an abrupt completion", {
-          cause: _InternalMethods3
+      /* X */let _InternalMethods2 = OrdinaryDefineOwnProperty(S, P, Desc);
+      /* node:coverage ignore next */if (_InternalMethods2 && typeof _InternalMethods2 === 'object' && 'next' in _InternalMethods2) _InternalMethods2 = skipDebugger(_InternalMethods2);
+      /* node:coverage ignore next */if (_InternalMethods2 instanceof Completion) {
+        /* node:coverage ignore next */if (_InternalMethods2 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryDefineOwnProperty(S, P, Desc) returned an abrupt completion", {
+          cause: _InternalMethods2
         });
-        _InternalMethods3 = _InternalMethods3.Value;
+        _InternalMethods2 = _InternalMethods2.Value;
       }
-      return _InternalMethods3;
+      return _InternalMethods2;
     },
     *OwnPropertyKeys() {
       const O = this;
       const keys = [];
       const str = O.StringData;
-      /* Assert */ /* node:coverage ignore next */if (!(str instanceof JSStringValue)) throw new Assert.Error("str instanceof JSStringValue");
-      const len = str.stringValue().length;
+      /* Assert */ /* node:coverage ignore next */if (!(typeof str === 'string')) throw new Assert.Error("typeof str === 'string'");
+      const len = str.length;
 
       // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
       for (let i = 0; i < len; i += 1) {
-        /* X */let _InternalMethods4 = ToString(F(i));
-        /* node:coverage ignore next */if (_InternalMethods4 && typeof _InternalMethods4 === 'object' && 'next' in _InternalMethods4) _InternalMethods4 = skipDebugger(_InternalMethods4);
-        /* node:coverage ignore next */if (_InternalMethods4 instanceof Completion) {
-          /* node:coverage ignore next */if (_InternalMethods4 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(i)) returned an abrupt completion", {
-            cause: _InternalMethods4
+        /* X */let _InternalMethods3 = ToString(F(i));
+        /* node:coverage ignore next */if (_InternalMethods3 && typeof _InternalMethods3 === 'object' && 'next' in _InternalMethods3) _InternalMethods3 = skipDebugger(_InternalMethods3);
+        /* node:coverage ignore next */if (_InternalMethods3 instanceof Completion) {
+          /* node:coverage ignore next */if (_InternalMethods3 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(i)) returned an abrupt completion", {
+            cause: _InternalMethods3
           });
-          _InternalMethods4 = _InternalMethods4.Value;
+          _InternalMethods3 = _InternalMethods3.Value;
         }
         // a. Add ! ToString(𝔽(i)) as the last element of keys.
-        keys.push(_InternalMethods4);
+        keys.push(Value(_InternalMethods3));
       }
 
       // For each own property key P of O such that P is an array index and
@@ -52719,15 +52492,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const P of O.properties.keys()) {
         // This is written with two nested ifs to work around https://github.com/devsnek/engine262/issues/24
         if (isArrayIndex(P)) {
-          /* X */let _InternalMethods5 = ToIntegerOrInfinity(P);
-          /* node:coverage ignore next */if (_InternalMethods5 && typeof _InternalMethods5 === 'object' && 'next' in _InternalMethods5) _InternalMethods5 = skipDebugger(_InternalMethods5);
-          /* node:coverage ignore next */if (_InternalMethods5 instanceof Completion) {
-            /* node:coverage ignore next */if (_InternalMethods5 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(P) returned an abrupt completion", {
-              cause: _InternalMethods5
+          /* X */let _InternalMethods4 = ToIntegerOrInfinity(P);
+          /* node:coverage ignore next */if (_InternalMethods4 && typeof _InternalMethods4 === 'object' && 'next' in _InternalMethods4) _InternalMethods4 = skipDebugger(_InternalMethods4);
+          /* node:coverage ignore next */if (_InternalMethods4 instanceof Completion) {
+            /* node:coverage ignore next */if (_InternalMethods4 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(P) returned an abrupt completion", {
+              cause: _InternalMethods4
             });
-            _InternalMethods5 = _InternalMethods5.Value;
+            _InternalMethods4 = _InternalMethods4.Value;
           }
-          if (_InternalMethods5 >= len) {
+          if (_InternalMethods4 >= len) {
             keys.push(P);
           }
         }
@@ -52757,7 +52530,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-stringcreate */
   function StringCreate(value, prototype) {
     /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(value) is String.
-    if (!(value instanceof JSStringValue)) throw new Assert.Error("value instanceof JSStringValue");
+    if (!(typeof value === 'string')) throw new Assert.Error("typeof value === 'string'");
     // 2. Let S be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
     /* X */let _S = MakeBasicObject(['Prototype', 'Extensible', 'StringData']);
     /* node:coverage ignore next */if (_S && typeof _S === 'object' && 'next' in _S) _S = skipDebugger(_S);
@@ -52779,17 +52552,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Set S.[[OwnPropertyKeys]] as specified in 9.4.3.3.
     S.OwnPropertyKeys = InternalMethods$2.OwnPropertyKeys;
     // 8. Let length be the number of code unit elements in value.
-    const length = value.stringValue().length;
+    const length = value.length;
     // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
     /* X */let _temp = DefinePropertyOrThrow(S, 'length', exports.Descriptor({
       Value: F(length),
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(S, 'length', Descriptor({\n    Value: F(length),\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(S, 'length', Descriptor({\n    Value: F(length),\n    Writable: false,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -52802,10 +52575,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-stringgetownproperty */
   function StringGetOwnProperty(S, P) {
     /* Assert */ /* node:coverage ignore next */if (!(S instanceof ObjectValue && 'StringData' in S)) throw new Assert.Error("S instanceof ObjectValue && 'StringData' in S");
-    /* Assert */ /* node:coverage ignore next */if (!IsPropertyKey(P)) throw new Assert.Error("IsPropertyKey(P)");
-    if (!(P instanceof JSStringValue)) {
-      return Value.undefined;
-    }
+    /* Assert */ /* node:coverage ignore next */if (!(IsPropertyKey(P) || typeof P === 'string')) throw new Assert.Error("IsPropertyKey(P) || typeof P === 'string'");
+    if (P instanceof JSStringValue) P = P.stringValue();
+    if (typeof P !== 'string') return undefined;
     /* X */let _index = CanonicalNumericIndexString(P);
     /* node:coverage ignore next */if (_index && typeof _index === 'object' && 'next' in _index) _index = skipDebugger(_index);
     /* node:coverage ignore next */if (_index instanceof Completion) {
@@ -52815,27 +52587,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _index = _index.Value;
     }
     const index = _index;
-    if (index instanceof UndefinedValue) {
-      return Value.undefined;
+    if (index === undefined) {
+      return undefined;
     }
-    if (IsIntegralNumber(index) === Value.false) {
-      return Value.undefined;
+    if (!IsIntegralNumber(index)) {
+      return undefined;
     }
     if (Object.is(index.value, -0)) {
-      return Value.undefined;
+      return undefined;
     }
     const str = S.StringData;
-    /* Assert */ /* node:coverage ignore next */if (!(str instanceof JSStringValue)) throw new Assert.Error("str instanceof JSStringValue");
-    const len = str.stringValue().length;
+    /* Assert */ /* node:coverage ignore next */if (!(typeof str === 'string')) throw new Assert.Error("typeof str === 'string'");
+    const len = str.length;
     if (R(index) < 0 || len <= R(index)) {
-      return Value.undefined;
+      return undefined;
     }
-    const resultStr = str.stringValue()[R(index)];
+    const resultStr = str[R(index)];
     return exports.Descriptor({
       Value: Value(resultStr),
-      Writable: Value.false,
-      Enumerable: Value.true,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: true,
+      Configurable: false
     });
   }
   StringGetOwnProperty.section = 'https://tc39.es/ecma262/#sec-stringgetownproperty';
@@ -52844,10 +52616,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function SymbolDescriptiveString(sym) {
     /* Assert */ /* node:coverage ignore next */if (!(sym instanceof SymbolValue)) throw new Assert.Error("sym instanceof SymbolValue");
     let desc = sym.Description;
-    if (desc instanceof UndefinedValue) {
-      desc = Value('');
+    if (!desc) {
+      desc = '';
     }
-    return Value(`Symbol(${desc.stringValue()})`);
+    return `Symbol(${desc})`;
   }
   SymbolDescriptiveString.section = 'https://tc39.es/ecma262/#sec-symboldescriptivestring';
 
@@ -52864,7 +52636,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     // 2. Assert: The globalSymbolRegistry List does not currently contain an entry for sym.
-    return Value.undefined;
+    return undefined;
   }
   KeyForSymbol.section = 'https://tc39.es/ecma262/#sec-keyforsymbol';
 
@@ -56387,10 +56159,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-isarray */
   function IsArray(argument) {
     if (!(argument instanceof ObjectValue)) {
-      return Value.false;
+      return false;
     }
     if (isArrayExoticObject(argument)) {
-      return Value.true;
+      return true;
     }
     if (isProxyExoticObject(argument)) {
       if (argument.ProxyHandler === Value.null) {
@@ -56399,7 +56171,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const target = argument.ProxyTarget;
       return IsArray(target);
     }
-    return Value.false;
+    return false;
   }
   IsArray.section = 'https://tc39.es/ecma262/#sec-isarray';
 
@@ -56437,15 +56209,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-isinteger */
   function IsIntegralNumber(argument) {
     if (!(argument instanceof NumberValue)) {
-      return Value.false;
+      return false;
     }
     if (argument.isNaN() || argument.isInfinity()) {
-      return Value.false;
+      return false;
     }
     if (Math.floor(Math.abs(R(argument))) !== Math.abs(R(argument))) {
-      return Value.false;
+      return false;
     }
-    return Value.true;
+    return true;
   }
   IsIntegralNumber.section = 'https://tc39.es/ecma262/#sec-isinteger';
 
@@ -56464,7 +56236,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-isregexp */
   function* IsRegExp(argument) {
     if (!(argument instanceof ObjectValue)) {
-      return Value.false;
+      return false;
     }
     /* ReturnIfAbrupt */let _matcher = yield* Get(argument, wellKnownSymbols.match);
     /* ReturnIfAbrupt */if (_matcher instanceof Completion) {
@@ -56476,17 +56248,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return ToBoolean(matcher);
     }
     if ('RegExpMatcher' in argument) {
-      return Value.true;
+      return true;
     }
-    return Value.false;
+    return false;
   }
   IsRegExp.section = 'https://tc39.es/ecma262/#sec-isregexp';
 
   /** https://tc39.es/ecma262/#sec-isstringprefix */
   function IsStringPrefix(p, q) {
-    /* Assert */ /* node:coverage ignore next */if (!(p instanceof JSStringValue)) throw new Assert.Error("p instanceof JSStringValue");
-    /* Assert */ /* node:coverage ignore next */if (!(q instanceof JSStringValue)) throw new Assert.Error("q instanceof JSStringValue");
-    return q.stringValue().startsWith(p.stringValue());
+    return q.startsWith(p);
   }
   IsStringPrefix.section = 'https://tc39.es/ecma262/#sec-isstringprefix';
 
@@ -56499,7 +56269,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // If x is a Number, then
     if (x instanceof NumberValue) {
       // a. Return Number::sameValue(x, y).
-      return NumberValue.sameValue(x, y) === Value.true;
+      return NumberValue.sameValue(x, y);
     }
     // 3. Return SameValueNonNumber(x, y).
     return SameValueNonNumber(x, y);
@@ -56515,7 +56285,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. If x is a Number, then
     if (x instanceof NumberValue) {
       // a. Return Number::sameValueZero(x, y).
-      return NumberValue.sameValueZero(x, y) === Value.true;
+      return NumberValue.sameValueZero(x, y);
     }
     // 3. Return SameValueNonNumber(x, y).
     return SameValueNonNumber(x, y);
@@ -56529,7 +56299,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return true;
     }
     if (x instanceof BigIntValue) {
-      return BigIntValue.equal(x, y) === Value.true;
+      return BigIntValue.equal(x, y);
     }
     if (x instanceof JSStringValue) {
       return x.stringValue() === y.stringValue();
@@ -56583,12 +56353,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. If Type(px) is String and Type(py) is String, then
     if (px instanceof JSStringValue && py instanceof JSStringValue) {
       // a. If IsStringPrefix(py, px) is true, return false.
-      if (IsStringPrefix(py, px)) {
-        return Value.false;
+      if (IsStringPrefix(py.stringValue(), px.stringValue())) {
+        return false;
       }
       // b. If IsStringPrefix(px, py) is true, return true.
-      if (IsStringPrefix(px, py)) {
-        return Value.true;
+      if (IsStringPrefix(px.stringValue(), py.stringValue())) {
+        return true;
       }
       // c. Let k be the smallest nonnegative integer such that the code unit at index k within px
       //    is different from the code unit at index k within py. (There must be such a k, for
@@ -56606,9 +56376,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const n = py.stringValue().charCodeAt(k);
       // f. If m < n, return true. Otherwise, return false.
       if (m < n) {
-        return Value.true;
+        return true;
       } else {
-        return Value.false;
+        return false;
       }
     } else {
       // a. If Type(px) is BigInt and Type(py) is String, then
@@ -56617,7 +56387,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const ny = StringToBigInt(py);
         // ii. If ny is undefined, return undefined.
         if (ny === undefined) {
-          return Value.undefined;
+          return undefined;
         }
         // iii. Return BigInt::lessThan(px, ny).
         return BigIntValue.lessThan(px, ny);
@@ -56628,7 +56398,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const nx = StringToBigInt(px);
         // ii. If ny is undefined, return undefined.
         if (nx === undefined) {
-          return Value.undefined;
+          return undefined;
         }
         // iii. Return BigInt::lessThan(px, ny).
         return BigIntValue.lessThan(nx, py);
@@ -56660,20 +56430,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       /* Assert */ /* node:coverage ignore next */if (!(nx instanceof BigIntValue && ny instanceof NumberValue || nx instanceof NumberValue && ny instanceof BigIntValue)) throw new Assert.Error("(nx instanceof BigIntValue && ny instanceof NumberValue) || (nx instanceof NumberValue && ny instanceof BigIntValue)");
       // g. If nx or ny is NaN, return undefined.
       if (nx.isNaN && nx.isNaN() || ny.isNaN && ny.isNaN()) {
-        return Value.undefined;
+        return undefined;
       }
       // h. If nx is -∞ or ny is +∞, return true.
       if (nx instanceof NumberValue && R(nx) === -Infinity || ny instanceof NumberValue && R(ny) === +Infinity) {
-        return Value.true;
+        return true;
       }
       // i. If nx is +∞ or ny is -∞, return false.
       if (nx instanceof NumberValue && R(nx) === +Infinity || ny instanceof NumberValue && R(ny) === -Infinity) {
-        return Value.false;
+        return false;
       }
       // j. If the mathematical value of nx is less than the mathematical value of ny, return true; otherwise return false.
       const a = R(nx);
       const b = R(ny);
-      return a < b ? Value.true : Value.false;
+      return a < b;
     }
   }
   IsLessThan.section = 'https://tc39.es/ecma262/#sec-islessthan';
@@ -56855,7 +56625,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. If x is a Number, then
     if (x instanceof NumberValue) {
       // a. Return Number::equal(x, y).
-      return NumberValue.equal(x, y) === Value.true;
+      return NumberValue.equal(x, y);
     }
     // 3. Return SameValueNonNumber(x, y).
     return SameValueNonNumber(x, y);
@@ -56942,31 +56712,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     *PreventExtensions() {
       const O = this;
       if (!IsTypedArrayFixedLength(O)) {
-        return Value.false;
+        return false;
       }
       return OrdinaryPreventExtensions(O);
     },
     /** https://tc39.es/ecma262/#sec-typedarray-getownproperty */
     *GetOwnProperty(P) {
       const O = this;
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      if (typeof P === 'string') {
         // a. Let numericIndex be CanonicalNumericIndexString(P).
         const numericIndex = CanonicalNumericIndexString(P);
         // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
+        if (numericIndex !== undefined) {
           // i. Let value be TypedArrayGetElement(O, numericIndex).
           const value = TypedArrayGetElement(O, numericIndex);
           // ii. If value is undefined, return undefined.
-          if (value === Value.undefined) {
-            return Value.undefined;
+          if (value instanceof UndefinedValue) {
+            return undefined;
           }
           // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
           return exports.Descriptor({
             Value: value,
-            Writable: Value.true,
-            Enumerable: Value.true,
-            Configurable: Value.true
+            Writable: true,
+            Enumerable: true,
+            Configurable: true
           });
         }
       }
@@ -56976,12 +56746,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-typedarray-hasproperty */
     *HasProperty(P) {
       const O = this;
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      if (typeof P === 'string') {
         // a. Let numericIndex be CanonicalNumericIndexString(P).
         const numericIndex = CanonicalNumericIndexString(P);
         // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
+        if (numericIndex !== undefined) {
           return IsValidIntegerIndex(O, numericIndex);
         }
       }
@@ -56991,38 +56761,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-typedarray-defineownproperty */
     *DefineOwnProperty(P, Desc) {
       const O = this;
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      if (typeof P === 'string') {
         // a. Let numericIndex be CanonicalNumericIndexString(P).
         const numericIndex = CanonicalNumericIndexString(P);
         // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
+        if (numericIndex !== undefined) {
           // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
-          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-            return Value.false;
+          if (!IsValidIntegerIndex(O, numericIndex)) {
+            return false;
           }
           // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-          if (Desc.Configurable === Value.false) {
-            return Value.false;
+          if (Desc.Configurable === false) {
+            return false;
           }
           // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
-          if (Desc.Enumerable === Value.false) {
-            return Value.false;
+          if (Desc.Enumerable === false) {
+            return false;
           }
           // ii. If IsAccessorDescriptor(Desc) is true, return false.
           if (IsAccessorDescriptor(Desc)) {
-            return Value.false;
+            return false;
           }
           // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
-          if (Desc.Writable === Value.false) {
-            return Value.false;
+          if (Desc.Writable === false) {
+            return false;
           }
           // vi. If Desc has a [[Value]] field, then
           if (Desc.Value !== undefined) {
             return yield* TypedArraySetElement(O, numericIndex, Desc.Value);
           }
           // vii. Return true.
-          return Value.true;
+          return true;
         }
       }
       // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
@@ -57031,12 +56801,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-typedarray-get */
     *Get(P, Receiver) {
       const O = this;
-      // 2. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      if (typeof P === 'string') {
         // a. Let numericIndex be CanonicalNumericIndexString(P).
         const numericIndex = CanonicalNumericIndexString(P);
         // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
+        if (numericIndex !== undefined) {
           /* X */let _InternalMethods = TypedArrayGetElement(O, numericIndex);
           /* node:coverage ignore next */if (_InternalMethods && typeof _InternalMethods === 'object' && 'next' in _InternalMethods) _InternalMethods = skipDebugger(_InternalMethods);
           /* node:coverage ignore next */if (_InternalMethods instanceof Completion) {
@@ -57055,12 +56825,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-typedarray-set */
     *Set(P, V, Receiver) {
       const O = this;
-      // 2. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      if (typeof P === 'string') {
         // a. Let numericIndex be CanonicalNumericIndexString(P).
         const numericIndex = CanonicalNumericIndexString(P);
         // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
+        if (numericIndex !== undefined) {
           if (SameValue(O, Receiver)) {
             /* ReturnIfAbrupt */let _InternalMethods2 = yield* TypedArraySetElement(O, numericIndex, V);
             /* ReturnIfAbrupt */if (_InternalMethods2 instanceof Completion) {
@@ -57069,10 +56839,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             } // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
 
             // ii. Return true.
-            return Value.true;
+            return true;
           }
-          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-            return Value.true;
+          if (!IsValidIntegerIndex(O, numericIndex)) {
+            return true;
           }
         }
       }
@@ -57082,18 +56852,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-typedarray-delete */
     *Delete(P) {
       const O = this;
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
+      if (P instanceof JSStringValue) P = P.stringValue();
+      if (typeof P === 'string') {
         // a. Let numericIndex be ! CanonicalNumericIndexString(P).
         const numericIndex = CanonicalNumericIndexString(P);
         // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
+        if (numericIndex !== undefined) {
           // ii. If IsValidIntegerIndex(O, numericIndex) is false, return true.
-          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-            return Value.true;
+          if (!IsValidIntegerIndex(O, numericIndex)) {
+            return true;
           } else {
             // iii. Return false.
-            return Value.false;
+            return false;
           }
         }
       }
@@ -57119,7 +56889,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _InternalMethods3 = _InternalMethods3.Value;
           }
           // a. Add ! ToString(𝔽(i)) as the last element of keys.
-          keys.push(_InternalMethods3);
+          keys.push(Value(_InternalMethods3));
         }
       }
       // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
@@ -57247,20 +57017,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
   function IsValidIntegerIndex(O, index) {
-    if (IsDetachedBuffer(O.ViewedArrayBuffer)) return Value.false;
-    if (IsIntegralNumber(index) === Value.false) return Value.false;
-    if (Object.is(index.value, -0) || index.value < 0) return Value.false;
+    if (IsDetachedBuffer(O.ViewedArrayBuffer)) return false;
+    if (!IsIntegralNumber(index)) return false;
+    if (Object.is(index.value, -0) || index.value < 0) return false;
     const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
-    if (IsTypedArrayOutOfBounds(taRecord)) return Value.false;
+    if (IsTypedArrayOutOfBounds(taRecord)) return false;
     const length = TypedArrayLength(taRecord);
-    if (R(index) >= length) return Value.false;
-    return Value.true;
+    if (R(index) >= length) return false;
+    return true;
   }
   IsValidIntegerIndex.section = 'https://tc39.es/ecma262/#sec-isvalidintegerindex';
 
   /** https://tc39.es/ecma262/#sec-typedarraygetelement */
   function TypedArrayGetElement(O, index) {
-    if (IsValidIntegerIndex(O, index) === Value.false) {
+    if (!IsValidIntegerIndex(O, index)) {
       return Value.undefined;
     }
     const offset = O.ByteOffset;
@@ -57291,7 +57061,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       numValue = _temp2;
     }
-    if (IsValidIntegerIndex(O, index) === Value.true) {
+    if (IsValidIntegerIndex(O, index)) {
       const offset = O.ByteOffset;
       const elementSize = TypedArrayElementSize(O);
       const byteIndexInBuffer = R(index) * elementSize + offset;
@@ -57301,9 +57071,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         _temp3 = _temp3.Value;
       }
-      return Value.true;
+      return true;
     }
-    return Value.true;
+    return true;
   }
   TypedArraySetElement.section = 'https://tc39.es/ecma262/#sec-integerindexedelementset';
 
@@ -57388,11 +57158,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp2 = _temp2.Value;
       }
     }
-    // 4. Return NormalCompletion(undefined).
-    return {
-      __proto__: NormalCompletion.prototype,
-      Value: Value.undefined
-    };
   }
   CleanupFinalizationRegistry.section = 'https://tc39.es/ecma262/#sec-cleanup-finalization-registry';
 
@@ -57404,7 +57169,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
-    if (v instanceof SymbolValue && KeyForSymbol(v) === Value.undefined) {
+    if (v instanceof SymbolValue && KeyForSymbol(v) === undefined) {
       return true;
     }
 
@@ -57457,10 +57222,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let msg be ? ToString(message).
       const msg = _msg;
       // b. Perform ! CreateMethodProperty(O, "message", msg).
-      /* X */let _temp = CreateNonEnumerableDataPropertyOrThrow(O, 'message', msg);
+      /* X */let _temp = CreateNonEnumerableDataPropertyOrThrow(O, 'message', Value(msg));
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateNonEnumerableDataPropertyOrThrow(O, 'message', msg) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateNonEnumerableDataPropertyOrThrow(O, 'message', Value(msg)) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -57485,14 +57250,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const errorsList = _errorsList;
     // 5. Perform ! DefinePropertyOrThrow(O, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errorsList) }).
     /* X */let _temp3 = DefinePropertyOrThrow(O, 'errors', exports.Descriptor({
-      Configurable: Value.true,
-      Enumerable: Value.false,
-      Writable: Value.true,
+      Configurable: true,
+      Enumerable: false,
+      Writable: true,
       Value: CreateArrayFromList(errorsList)
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
     /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, 'errors', Descriptor({\n    Configurable: Value.true,\n    Enumerable: Value.false,\n    Writable: Value.true,\n    Value: CreateArrayFromList(errorsList),\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, 'errors', Descriptor({\n    Configurable: true,\n    Enumerable: false,\n    Writable: true,\n    Value: CreateArrayFromList(errorsList),\n  })) returned an abrupt completion", {
         cause: _temp3
       });
       _temp3 = _temp3.Value;
@@ -57607,9 +57372,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return Throw.RangeError('$1 is not a valid array length', len);
         }
       }
-      /* X */let _temp4 = yield* Set$1(array, 'length', intLen, Value.true);
+      /* X */let _temp4 = yield* Set$1(array, 'length', intLen, true);
       /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! yield* Set(array, 'length', intLen, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! yield* Set(array, 'length', intLen, true) returned an abrupt completion", {
           cause: _temp4
         });
         _temp4 = _temp4.Value;
@@ -57729,7 +57494,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const next = _next;
         if (next === 'done') {
-          /* ReturnIfAbrupt */let _temp9 = yield* Set$1(array, 'length', F(k), Value.true);
+          /* ReturnIfAbrupt */let _temp9 = yield* Set$1(array, 'length', F(k), true);
           /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
             if (_temp9 instanceof AbruptCompletion) return _temp9;
             _temp9 = _temp9.Value;
@@ -57815,7 +57580,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       k += 1;
     }
-    /* ReturnIfAbrupt */let _temp12 = yield* Set$1(array, 'length', F(len), Value.true);
+    /* ReturnIfAbrupt */let _temp12 = yield* Set$1(array, 'length', F(len), true);
     /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
       if (_temp12 instanceof AbruptCompletion) return _temp12;
       _temp12 = _temp12.Value;
@@ -57924,8 +57689,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _done = _done.Value;
         }
         const done = _done;
-        if (done === Value.true) {
-          /* ReturnIfAbrupt */let _temp19 = yield* Set$1(array, 'length', F(k), Value.true);
+        if (done) {
+          /* ReturnIfAbrupt */let _temp19 = yield* Set$1(array, 'length', F(k), true);
           /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
             if (_temp19 instanceof AbruptCompletion) return _temp19;
             _temp19 = _temp19.Value;
@@ -58033,7 +57798,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         k += 1;
       }
-      /* ReturnIfAbrupt */let _temp26 = yield* Set$1(array, 'length', F(len), Value.true);
+      /* ReturnIfAbrupt */let _temp26 = yield* Set$1(array, 'length', F(len), true);
       /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
         if (_temp26 instanceof AbruptCompletion) return _temp26;
         _temp26 = _temp26.Value;
@@ -58045,7 +57810,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-array.isarray */
   function Array_isArray([arg = Value.undefined]) {
-    return IsArray(arg);
+    /* ReturnIfAbrupt */let _temp27 = IsArray(arg);
+    /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
+      if (_temp27 instanceof AbruptCompletion) return _temp27;
+      _temp27 = _temp27.Value;
+    }
+    return Value(_temp27);
   }
   Array_isArray.section = 'https://tc39.es/ecma262/#sec-array.isarray';
 
@@ -58058,19 +57828,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const constructor = thisValue;
     let array;
     if (IsConstructor(constructor)) {
-      /* ReturnIfAbrupt */let _temp27 = yield* Construct(constructor, [F(len)]);
-      /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
-        if (_temp27 instanceof AbruptCompletion) return _temp27;
-        _temp27 = _temp27.Value;
-      }
-      array = _temp27;
-    } else {
-      /* ReturnIfAbrupt */let _temp28 = ArrayCreate(len);
+      /* ReturnIfAbrupt */let _temp28 = yield* Construct(constructor, [F(len)]);
       /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
         if (_temp28 instanceof AbruptCompletion) return _temp28;
         _temp28 = _temp28.Value;
       }
       array = _temp28;
+    } else {
+      /* ReturnIfAbrupt */let _temp29 = ArrayCreate(len);
+      /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
+        if (_temp29 instanceof AbruptCompletion) return _temp29;
+        _temp29 = _temp29.Value;
+      }
+      array = _temp29;
     }
     let k = 0;
     while (k < len) {
@@ -58084,17 +57854,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _Pk6 = _Pk6.Value;
       }
       const Pk = _Pk6;
-      /* ReturnIfAbrupt */let _temp29 = yield* CreateDataPropertyOrThrow(array, Pk, kValue);
-      /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
-        if (_temp29 instanceof AbruptCompletion) return _temp29;
-        _temp29 = _temp29.Value;
+      /* ReturnIfAbrupt */let _temp30 = yield* CreateDataPropertyOrThrow(array, Pk, kValue);
+      /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
+        if (_temp30 instanceof AbruptCompletion) return _temp30;
+        _temp30 = _temp30.Value;
       }
       k += 1;
     }
-    /* ReturnIfAbrupt */let _temp30 = yield* Set$1(array, 'length', F(len), Value.true);
-    /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
-      if (_temp30 instanceof AbruptCompletion) return _temp30;
-      _temp30 = _temp30.Value;
+    /* ReturnIfAbrupt */let _temp31 = yield* Set$1(array, 'length', F(len), true);
+    /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
+      if (_temp31 instanceof AbruptCompletion) return _temp31;
+      _temp31 = _temp31.Value;
     }
     return array;
   }
@@ -58391,7 +58161,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%ArrayIteratorPrototype%").
-    return yield* GeneratorResume(thisValue, undefined, Value('%ArrayIteratorPrototype%'));
+    return yield* GeneratorResume(thisValue, undefined, '%ArrayIteratorPrototype%');
   }
   ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next';
   function bootstrapArrayIteratorPrototype(realmRec) {
@@ -59302,9 +59072,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         kRead = _temp;
       } else {
         /* Assert */ /* node:coverage ignore next */if (!(holes === 'read-through-holes')) throw new Assert.Error("holes === 'read-through-holes'");
-        kRead = Value.true;
+        kRead = true;
       }
-      if (kRead === Value.true) {
+      if (kRead) {
         /* ReturnIfAbrupt */let _kValue = yield* Get(obj, Pk);
         /* ReturnIfAbrupt */if (_kValue instanceof Completion) {
           if (_kValue instanceof AbruptCompletion) return _kValue;
@@ -59398,9 +59168,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           kPresent = _temp3;
         } else {
-          kPresent = Value.true;
+          kPresent = true;
         }
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _kValue2 = yield* Get(O, Pk);
           /* ReturnIfAbrupt */if (_kValue2 instanceof Completion) {
             if (_kValue2 instanceof AbruptCompletion) return _kValue2;
@@ -59413,7 +59183,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _testResult = _testResult.Value;
           }
           const testResult = ToBoolean(_testResult);
-          if (testResult === Value.false) {
+          if (!testResult) {
             return Value.false;
           }
         }
@@ -59471,7 +59241,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _testResult2 = _testResult2.Value;
         }
         const testResult = ToBoolean(_testResult2);
-        if (testResult === Value.true) {
+        if (testResult) {
           return kValue;
         }
         k += 1;
@@ -59528,7 +59298,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _testResult3 = _testResult3.Value;
         }
         const testResult = ToBoolean(_testResult3);
-        if (testResult === Value.true) {
+        if (testResult) {
           return F(k);
         }
         k += 1;
@@ -59594,7 +59364,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const testResult = ToBoolean(_testResult4);
         // d. If testResult is true, return kValue.
-        if (testResult === Value.true) {
+        if (testResult) {
           return kValue;
         }
         // e. Set k to k - 1.
@@ -59662,7 +59432,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const testResult = ToBoolean(_testResult5);
         // d. If testResult is true, return 𝔽(k).
-        if (testResult === Value.true) {
+        if (testResult) {
           return F(k);
         }
         // e. Set k to k - 1.
@@ -59718,9 +59488,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           kPresent = _temp9;
         } else {
-          kPresent = Value.true;
+          kPresent = true;
         }
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _kValue7 = yield* Get(O, Pk);
           /* ReturnIfAbrupt */if (_kValue7 instanceof Completion) {
             if (_kValue7 instanceof AbruptCompletion) return _kValue7;
@@ -59842,7 +59612,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _kPresent = _kPresent.Value;
         }
         const kPresent = _kPresent;
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _elementK2 = yield* Get(O, kStr);
           /* ReturnIfAbrupt */if (_elementK2 instanceof Completion) {
             if (_elementK2 instanceof AbruptCompletion) return _elementK2;
@@ -59891,7 +59661,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp12 instanceof AbruptCompletion) return _temp12;
           _temp12 = _temp12.Value;
         }
-        sep = _temp12.stringValue();
+        sep = _temp12;
       }
       let R = '';
       let k = 0;
@@ -59923,7 +59693,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp13 instanceof AbruptCompletion) return _temp13;
             _temp13 = _temp13.Value;
           }
-          next = _temp13.stringValue();
+          next = _temp13;
         }
         R = `${R}${next}`;
         k += 1;
@@ -59984,7 +59754,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _kPresent2 = _kPresent2.Value;
         }
         const kPresent = _kPresent2;
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _elementK3 = yield* Get(O, kStr);
           /* ReturnIfAbrupt */if (_elementK3 instanceof Completion) {
             if (_elementK3 instanceof AbruptCompletion) return _elementK3;
@@ -60052,7 +59822,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               if (_temp17 instanceof AbruptCompletion) return _temp17;
               _temp17 = _temp17.Value;
             }
-            kPresent = _temp17 === Value.true;
+            kPresent = _temp17;
           } else {
             kPresent = true;
           }
@@ -60089,9 +59859,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           kPresent = _temp19;
         } else {
-          kPresent = Value.true;
+          kPresent = true;
         }
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _kValue8 = yield* Get(O, Pk);
           /* ReturnIfAbrupt */if (_kValue8 instanceof Completion) {
             if (_kValue8 instanceof AbruptCompletion) return _kValue8;
@@ -60161,7 +59931,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               if (_temp22 instanceof AbruptCompletion) return _temp22;
               _temp22 = _temp22.Value;
             }
-            kPresent = _temp22 === Value.true;
+            kPresent = _temp22;
           } else {
             kPresent = true;
           }
@@ -60198,9 +59968,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           kPresent = _temp24;
         } else {
-          kPresent = Value.true;
+          kPresent = true;
         }
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _kValue9 = yield* Get(O, Pk);
           /* ReturnIfAbrupt */if (_kValue9 instanceof Completion) {
             if (_kValue9 instanceof AbruptCompletion) return _kValue9;
@@ -60272,7 +60042,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const lowerExists = _lowerExists;
         let lowerValue;
         let upperValue;
-        if (lowerExists === Value.true) {
+        if (lowerExists) {
           /* ReturnIfAbrupt */let _temp27 = yield* Get(O, lowerP);
           /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
             if (_temp27 instanceof AbruptCompletion) return _temp27;
@@ -60286,7 +60056,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _upperExists = _upperExists.Value;
         }
         const upperExists = _upperExists;
-        if (upperExists === Value.true) {
+        if (upperExists) {
           /* ReturnIfAbrupt */let _temp28 = yield* Get(O, upperP);
           /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
             if (_temp28 instanceof AbruptCompletion) return _temp28;
@@ -60294,19 +60064,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           upperValue = _temp28;
         }
-        if (lowerExists === Value.true && upperExists === Value.true) {
-          /* ReturnIfAbrupt */let _temp29 = yield* Set$1(O, lowerP, upperValue, Value.true);
+        if (lowerExists && upperExists) {
+          /* ReturnIfAbrupt */let _temp29 = yield* Set$1(O, lowerP, upperValue, true);
           /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
             if (_temp29 instanceof AbruptCompletion) return _temp29;
             _temp29 = _temp29.Value;
           }
-          /* ReturnIfAbrupt */let _temp30 = yield* Set$1(O, upperP, lowerValue, Value.true);
+          /* ReturnIfAbrupt */let _temp30 = yield* Set$1(O, upperP, lowerValue, true);
           /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
             if (_temp30 instanceof AbruptCompletion) return _temp30;
             _temp30 = _temp30.Value;
           }
-        } else if (lowerExists === Value.false && upperExists === Value.true) {
-          /* ReturnIfAbrupt */let _temp31 = yield* Set$1(O, lowerP, upperValue, Value.true);
+        } else if (!lowerExists && upperExists) {
+          /* ReturnIfAbrupt */let _temp31 = yield* Set$1(O, lowerP, upperValue, true);
           /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
             if (_temp31 instanceof AbruptCompletion) return _temp31;
             _temp31 = _temp31.Value;
@@ -60316,13 +60086,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp32 instanceof AbruptCompletion) return _temp32;
             _temp32 = _temp32.Value;
           }
-        } else if (lowerExists === Value.true && upperExists === Value.false) {
+        } else if (lowerExists && !upperExists) {
           /* ReturnIfAbrupt */let _temp33 = yield* DeletePropertyOrThrow(O, lowerP);
           /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
             if (_temp33 instanceof AbruptCompletion) return _temp33;
             _temp33 = _temp33.Value;
           }
-          /* ReturnIfAbrupt */let _temp34 = yield* Set$1(O, upperP, lowerValue, Value.true);
+          /* ReturnIfAbrupt */let _temp34 = yield* Set$1(O, upperP, lowerValue, true);
           /* ReturnIfAbrupt */if (_temp34 instanceof Completion) {
             if (_temp34 instanceof AbruptCompletion) return _temp34;
             _temp34 = _temp34.Value;
@@ -60379,9 +60149,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           kPresent = _temp36;
         } else {
-          kPresent = Value.true;
+          kPresent = true;
         }
-        if (kPresent === Value.true) {
+        if (kPresent) {
           /* ReturnIfAbrupt */let _kValue0 = yield* Get(O, Pk);
           /* ReturnIfAbrupt */if (_kValue0 instanceof Completion) {
             if (_kValue0 instanceof AbruptCompletion) return _kValue0;
@@ -60394,7 +60164,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _testResult6 = _testResult6.Value;
           }
           const testResult = ToBoolean(_testResult6);
-          if (testResult === Value.true) {
+          if (testResult) {
             return Value.true;
           }
         }
@@ -60459,7 +60229,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_S instanceof AbruptCompletion) return _S;
             _S = _S.Value;
           }
-          const S = _S.stringValue();
+          const S = _S;
           R = `${R}${S}`;
         }
         k += 1;
@@ -60496,7 +60266,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _spreadable = _spreadable.Value;
       }
       const spreadable = _spreadable;
-      if (spreadable === Value.true) {
+      if (spreadable) {
         let k = 0;
         /* ReturnIfAbrupt */let _len = yield* LengthOfArrayLike(E);
         /* ReturnIfAbrupt */if (_len instanceof Completion) {
@@ -60523,7 +60293,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _exists = _exists.Value;
           }
           const exists = _exists;
-          if (exists === Value.true) {
+          if (exists) {
             /* ReturnIfAbrupt */let _subElement = yield* Get(E, P);
             /* ReturnIfAbrupt */if (_subElement instanceof Completion) {
               if (_subElement instanceof AbruptCompletion) return _subElement;
@@ -60569,7 +60339,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         n += 1;
       }
     }
-    /* ReturnIfAbrupt */let _temp3 = yield* Set$1(A, 'length', F(n), Value.true);
+    /* ReturnIfAbrupt */let _temp3 = yield* Set$1(A, 'length', F(n), true);
     /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       _temp3 = _temp3.Value;
@@ -60651,14 +60421,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _fromPresent = _fromPresent.Value;
       }
       const fromPresent = _fromPresent;
-      if (fromPresent === Value.true) {
+      if (fromPresent) {
         /* ReturnIfAbrupt */let _fromVal = yield* Get(O, fromKey);
         /* ReturnIfAbrupt */if (_fromVal instanceof Completion) {
           if (_fromVal instanceof AbruptCompletion) return _fromVal;
           _fromVal = _fromVal.Value;
         }
         const fromVal = _fromVal;
-        /* ReturnIfAbrupt */let _temp4 = yield* Set$1(O, toKey, fromVal, Value.true);
+        /* ReturnIfAbrupt */let _temp4 = yield* Set$1(O, toKey, fromVal, true);
         /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
           if (_temp4 instanceof AbruptCompletion) return _temp4;
           _temp4 = _temp4.Value;
@@ -60735,7 +60505,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _Pk = _Pk.Value;
       }
       const Pk = _Pk;
-      /* ReturnIfAbrupt */let _temp7 = yield* Set$1(O, Pk, value, Value.true);
+      /* ReturnIfAbrupt */let _temp7 = yield* Set$1(O, Pk, value, true);
       /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         _temp7 = _temp7.Value;
@@ -60789,7 +60559,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _kPresent = _kPresent.Value;
       }
       const kPresent = _kPresent;
-      if (kPresent === Value.true) {
+      if (kPresent) {
         /* ReturnIfAbrupt */let _kValue = yield* Get(O, Pk);
         /* ReturnIfAbrupt */if (_kValue instanceof Completion) {
           if (_kValue instanceof AbruptCompletion) return _kValue;
@@ -60802,7 +60572,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _selected = _selected.Value;
         }
         const selected = ToBoolean(_selected);
-        if (selected === Value.true) {
+        if (selected) {
           /* X */let _temp0 = ToString(F(to));
           /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
           /* node:coverage ignore next */if (_temp0 instanceof Completion) {
@@ -60851,7 +60621,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _exists2 = _exists2.Value;
       }
       const exists = _exists2;
-      if (exists === Value.true) {
+      if (exists) {
         /* ReturnIfAbrupt */let _element = yield* Get(source, P);
         /* ReturnIfAbrupt */if (_element instanceof Completion) {
           if (_element instanceof AbruptCompletion) return _element;
@@ -60867,7 +60637,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           element = _temp1;
         }
-        let shouldFlatten = Value.false;
+        let shouldFlatten = false;
         if (depth > 0) {
           /* ReturnIfAbrupt */let _temp10 = IsArray(element);
           /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
@@ -60876,7 +60646,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           shouldFlatten = _temp10;
         }
-        if (shouldFlatten === Value.true) {
+        if (shouldFlatten) {
           /* ReturnIfAbrupt */let _elementLen = yield* LengthOfArrayLike(element);
           /* ReturnIfAbrupt */if (_elementLen instanceof Completion) {
             if (_elementLen instanceof AbruptCompletion) return _elementLen;
@@ -61045,7 +60815,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _kPresent2 = _kPresent2.Value;
       }
       const kPresent = _kPresent2;
-      if (kPresent === Value.true) {
+      if (kPresent) {
         /* ReturnIfAbrupt */let _kValue2 = yield* Get(O, Pk);
         /* ReturnIfAbrupt */if (_kValue2 instanceof Completion) {
           if (_kValue2 instanceof AbruptCompletion) return _kValue2;
@@ -61087,7 +60857,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const len = _len4;
     if (len === 0) {
-      /* ReturnIfAbrupt */let _temp18 = yield* Set$1(O, 'length', F(0), Value.true);
+      /* ReturnIfAbrupt */let _temp18 = yield* Set$1(O, 'length', F(0), true);
       /* ReturnIfAbrupt */if (_temp18 instanceof Completion) {
         if (_temp18 instanceof AbruptCompletion) return _temp18;
         _temp18 = _temp18.Value;
@@ -61112,7 +60882,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp19 instanceof AbruptCompletion) return _temp19;
         _temp19 = _temp19.Value;
       }
-      /* ReturnIfAbrupt */let _temp20 = yield* Set$1(O, 'length', F(newLen), Value.true);
+      /* ReturnIfAbrupt */let _temp20 = yield* Set$1(O, 'length', F(newLen), true);
       /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
         if (_temp20 instanceof AbruptCompletion) return _temp20;
         _temp20 = _temp20.Value;
@@ -61153,14 +60923,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp22 = _temp22.Value;
       }
-      /* ReturnIfAbrupt */let _temp21 = yield* Set$1(O, _temp22, E, Value.true);
+      /* ReturnIfAbrupt */let _temp21 = yield* Set$1(O, _temp22, E, true);
       /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
         if (_temp21 instanceof AbruptCompletion) return _temp21;
         _temp21 = _temp21.Value;
       }
       len += 1;
     }
-    /* ReturnIfAbrupt */let _temp23 = yield* Set$1(O, 'length', F(len), Value.true);
+    /* ReturnIfAbrupt */let _temp23 = yield* Set$1(O, 'length', F(len), true);
     /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
       if (_temp23 instanceof AbruptCompletion) return _temp23;
       _temp23 = _temp23.Value;
@@ -61186,7 +60956,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const len = _len6;
     if (len === 0) {
-      /* ReturnIfAbrupt */let _temp24 = yield* Set$1(O, 'length', F(0), Value.true);
+      /* ReturnIfAbrupt */let _temp24 = yield* Set$1(O, 'length', F(0), true);
       /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
         if (_temp24 instanceof AbruptCompletion) return _temp24;
         _temp24 = _temp24.Value;
@@ -61225,14 +60995,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _fromPresent2 = _fromPresent2.Value;
       }
       const fromPresent = _fromPresent2;
-      if (fromPresent === Value.true) {
+      if (fromPresent) {
         /* ReturnIfAbrupt */let _fromVal2 = yield* Get(O, from);
         /* ReturnIfAbrupt */if (_fromVal2 instanceof Completion) {
           if (_fromVal2 instanceof AbruptCompletion) return _fromVal2;
           _fromVal2 = _fromVal2.Value;
         }
         const fromVal = _fromVal2;
-        /* ReturnIfAbrupt */let _temp25 = yield* Set$1(O, to, fromVal, Value.true);
+        /* ReturnIfAbrupt */let _temp25 = yield* Set$1(O, to, fromVal, true);
         /* ReturnIfAbrupt */if (_temp25 instanceof Completion) {
           if (_temp25 instanceof AbruptCompletion) return _temp25;
           _temp25 = _temp25.Value;
@@ -61259,7 +61029,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp27 instanceof AbruptCompletion) return _temp27;
       _temp27 = _temp27.Value;
     }
-    /* ReturnIfAbrupt */let _temp28 = yield* Set$1(O, 'length', F(len - 1), Value.true);
+    /* ReturnIfAbrupt */let _temp28 = yield* Set$1(O, 'length', F(len - 1), true);
     /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
       if (_temp28 instanceof AbruptCompletion) return _temp28;
       _temp28 = _temp28.Value;
@@ -61325,7 +61095,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _kPresent3 = _kPresent3.Value;
       }
       const kPresent = _kPresent3;
-      if (kPresent === Value.true) {
+      if (kPresent) {
         /* ReturnIfAbrupt */let _kValue3 = yield* Get(O, Pk);
         /* ReturnIfAbrupt */if (_kValue3 instanceof Completion) {
           if (_kValue3 instanceof AbruptCompletion) return _kValue3;
@@ -61350,7 +61120,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       k += 1;
       n += 1;
     }
-    /* ReturnIfAbrupt */let _temp31 = yield* Set$1(A, 'length', F(n), Value.true);
+    /* ReturnIfAbrupt */let _temp31 = yield* Set$1(A, 'length', F(n), true);
     /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
       if (_temp31 instanceof AbruptCompletion) return _temp31;
       _temp31 = _temp31.Value;
@@ -61398,7 +61168,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp34 = _temp34.Value;
       }
-      /* ReturnIfAbrupt */let _temp33 = yield* Set$1(obj, _temp34, sortedList[j], Value.true);
+      /* ReturnIfAbrupt */let _temp33 = yield* Set$1(obj, _temp34, sortedList[j], true);
       /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
         if (_temp33 instanceof AbruptCompletion) return _temp33;
         _temp33 = _temp33.Value;
@@ -61551,7 +61321,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _fromPresent3 = _fromPresent3.Value;
       }
       const fromPresent = _fromPresent3;
-      if (fromPresent === Value.true) {
+      if (fromPresent) {
         /* ReturnIfAbrupt */let _fromValue = yield* Get(obj, from);
         /* ReturnIfAbrupt */if (_fromValue instanceof Completion) {
           if (_fromValue instanceof AbruptCompletion) return _fromValue;
@@ -61574,7 +61344,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       k += 1;
     }
-    /* ReturnIfAbrupt */let _temp41 = yield* Set$1(A, 'length', F(actualDeleteCount), Value.true);
+    /* ReturnIfAbrupt */let _temp41 = yield* Set$1(A, 'length', F(actualDeleteCount), true);
     /* ReturnIfAbrupt */if (_temp41 instanceof Completion) {
       if (_temp41 instanceof AbruptCompletion) return _temp41;
       _temp41 = _temp41.Value;
@@ -61607,14 +61377,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _fromPresent4 = _fromPresent4.Value;
         }
         const fromPresent = _fromPresent4;
-        if (fromPresent === Value.true) {
+        if (fromPresent) {
           /* ReturnIfAbrupt */let _fromValue2 = yield* Get(obj, from);
           /* ReturnIfAbrupt */if (_fromValue2 instanceof Completion) {
             if (_fromValue2 instanceof AbruptCompletion) return _fromValue2;
             _fromValue2 = _fromValue2.Value;
           }
           const fromValue = _fromValue2;
-          /* ReturnIfAbrupt */let _temp42 = yield* Set$1(obj, to, fromValue, Value.true);
+          /* ReturnIfAbrupt */let _temp42 = yield* Set$1(obj, to, fromValue, true);
           /* ReturnIfAbrupt */if (_temp42 instanceof Completion) {
             if (_temp42 instanceof AbruptCompletion) return _temp42;
             _temp42 = _temp42.Value;
@@ -61672,14 +61442,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _fromPresent5 = _fromPresent5.Value;
         }
         const fromPresent = _fromPresent5;
-        if (fromPresent === Value.true) {
+        if (fromPresent) {
           /* ReturnIfAbrupt */let _fromValue3 = yield* Get(obj, from);
           /* ReturnIfAbrupt */if (_fromValue3 instanceof Completion) {
             if (_fromValue3 instanceof AbruptCompletion) return _fromValue3;
             _fromValue3 = _fromValue3.Value;
           }
           const fromValue = _fromValue3;
-          /* ReturnIfAbrupt */let _temp46 = yield* Set$1(obj, to, fromValue, Value.true);
+          /* ReturnIfAbrupt */let _temp46 = yield* Set$1(obj, to, fromValue, true);
           /* ReturnIfAbrupt */if (_temp46 instanceof Completion) {
             if (_temp46 instanceof AbruptCompletion) return _temp46;
             _temp46 = _temp46.Value;
@@ -61705,14 +61475,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp49 = _temp49.Value;
       }
-      /* ReturnIfAbrupt */let _temp48 = yield* Set$1(obj, _temp49, E, Value.true);
+      /* ReturnIfAbrupt */let _temp48 = yield* Set$1(obj, _temp49, E, true);
       /* ReturnIfAbrupt */if (_temp48 instanceof Completion) {
         if (_temp48 instanceof AbruptCompletion) return _temp48;
         _temp48 = _temp48.Value;
       }
       k += 1;
     }
-    /* ReturnIfAbrupt */let _temp50 = yield* Set$1(obj, 'length', F(length - actualDeleteCount + itemCount), Value.true);
+    /* ReturnIfAbrupt */let _temp50 = yield* Set$1(obj, 'length', F(length - actualDeleteCount + itemCount), true);
     /* ReturnIfAbrupt */if (_temp50 instanceof Completion) {
       if (_temp50 instanceof AbruptCompletion) return _temp50;
       _temp50 = _temp50.Value;
@@ -61995,14 +61765,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _fromPresent6 = _fromPresent6.Value;
         }
         const fromPresent = _fromPresent6;
-        if (fromPresent === Value.true) {
+        if (fromPresent) {
           /* ReturnIfAbrupt */let _fromValue5 = yield* Get(O, from);
           /* ReturnIfAbrupt */if (_fromValue5 instanceof Completion) {
             if (_fromValue5 instanceof AbruptCompletion) return _fromValue5;
             _fromValue5 = _fromValue5.Value;
           }
           const fromValue = _fromValue5;
-          /* ReturnIfAbrupt */let _temp57 = yield* Set$1(O, to, fromValue, Value.true);
+          /* ReturnIfAbrupt */let _temp57 = yield* Set$1(O, to, fromValue, true);
           /* ReturnIfAbrupt */if (_temp57 instanceof Completion) {
             if (_temp57 instanceof AbruptCompletion) return _temp57;
             _temp57 = _temp57.Value;
@@ -62029,7 +61799,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _jStr = _jStr.Value;
         }
         const jStr = _jStr;
-        /* ReturnIfAbrupt */let _temp59 = yield* Set$1(O, jStr, E, Value.true);
+        /* ReturnIfAbrupt */let _temp59 = yield* Set$1(O, jStr, E, true);
         /* ReturnIfAbrupt */if (_temp59 instanceof Completion) {
           if (_temp59 instanceof AbruptCompletion) return _temp59;
           _temp59 = _temp59.Value;
@@ -62037,7 +61807,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         j += 1;
       }
     }
-    /* ReturnIfAbrupt */let _temp60 = yield* Set$1(O, 'length', F(len + argCount), Value.true);
+    /* ReturnIfAbrupt */let _temp60 = yield* Set$1(O, 'length', F(len + argCount), true);
     /* ReturnIfAbrupt */if (_temp60 instanceof Completion) {
       if (_temp60 instanceof AbruptCompletion) return _temp60;
       _temp60 = _temp60.Value;
@@ -62175,15 +61945,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const proto = _proto;
     assignProps(realmRec, proto, [['concat', ArrayProto_concat, 1], ['copyWithin', ArrayProto_copyWithin, 2], ['entries', ArrayProto_entries, 0], ['fill', ArrayProto_fill, 1], ['filter', ArrayProto_filter, 1], ['flat', ArrayProto_flat, 0], ['flatMap', ArrayProto_flatMap, 1], ['at', ArrayProto_at, 1], ['keys', ArrayProto_keys, 0], ['map', ArrayProto_map, 1], ['pop', ArrayProto_pop, 0], ['push', ArrayProto_push, 1], ['shift', ArrayProto_shift, 0], ['slice', ArrayProto_slice, 2], ['sort', ArrayProto_sort, 1], ['toSorted', ArrayProto_toSorted, 1], ['splice', ArrayProto_splice, 2], ['toSpliced', ArrayProto_toSpliced, 2], ['toString', ArrayProto_toString, 0], ['unshift', ArrayProto_unshift, 1], ['values', ArrayProto_values, 0], ['with', ArrayProto_with, 2], ['toReversed', ArrayProto_toReversed, 0]]);
     bootstrapArrayPrototypeShared(realmRec, proto, 'Array');
-    /* X */let _temp82 = proto.GetOwnProperty(Value('values'));
-    /* node:coverage ignore next */if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) _temp82 = skipDebugger(_temp82);
-    /* node:coverage ignore next */if (_temp82 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp82 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
-        cause: _temp82
+    /* X */let _temp98 = proto.GetOwnProperty(Value('values'));
+    /* node:coverage ignore next */if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) _temp98 = skipDebugger(_temp98);
+    /* node:coverage ignore next */if (_temp98 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp98 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
+        cause: _temp98
       });
-      _temp82 = _temp82.Value;
+      _temp98 = _temp98.Value;
     }
-    /* X */let _temp63 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _temp82);
+    /* X */let _temp63 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _temp98);
     /* node:coverage ignore next */if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) _temp63 = skipDebugger(_temp63);
     /* node:coverage ignore next */if (_temp63 instanceof Completion) {
       /* node:coverage ignore next */if (_temp63 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, X(proto.GetOwnProperty(Value('values'))) as Descriptor) returned an abrupt completion", {
@@ -62201,167 +61971,295 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp64 = _temp64.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp64 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'at', Value.true)) === Value.true");
-      /* X */let _temp65 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
+      /* X */let _temp65 = CreateDataProperty(unscopableList, 'at', Value.true);
       /* node:coverage ignore next */if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) _temp65 = skipDebugger(_temp65);
       /* node:coverage ignore next */if (_temp65 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp65 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp65 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'at', Value.true) returned an abrupt completion", {
           cause: _temp65
         });
         _temp65 = _temp65.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp65 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'copyWithin', Value.true)) === Value.true");
-      /* X */let _temp66 = CreateDataProperty(unscopableList, 'entries', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp65) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'at', Value.true))");
+      /* X */let _temp66 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
       /* node:coverage ignore next */if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) _temp66 = skipDebugger(_temp66);
       /* node:coverage ignore next */if (_temp66 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
           cause: _temp66
         });
         _temp66 = _temp66.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp66 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'entries', Value.true)) === Value.true");
-      /* X */let _temp67 = CreateDataProperty(unscopableList, 'fill', Value.true);
+      /* X */let _temp67 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
       /* node:coverage ignore next */if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) _temp67 = skipDebugger(_temp67);
       /* node:coverage ignore next */if (_temp67 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp67 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
           cause: _temp67
         });
         _temp67 = _temp67.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp67 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'fill', Value.true)) === Value.true");
-      /* X */let _temp68 = CreateDataProperty(unscopableList, 'find', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp67) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'copyWithin', Value.true))");
+      /* X */let _temp68 = CreateDataProperty(unscopableList, 'entries', Value.true);
       /* node:coverage ignore next */if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) _temp68 = skipDebugger(_temp68);
       /* node:coverage ignore next */if (_temp68 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp68 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp68 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
           cause: _temp68
         });
         _temp68 = _temp68.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp68 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'find', Value.true)) === Value.true");
-      /* X */let _temp69 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
+      /* X */let _temp69 = CreateDataProperty(unscopableList, 'entries', Value.true);
       /* node:coverage ignore next */if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) _temp69 = skipDebugger(_temp69);
       /* node:coverage ignore next */if (_temp69 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
           cause: _temp69
         });
         _temp69 = _temp69.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp69 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findIndex', Value.true)) === Value.true");
-      /* X */let _temp70 = CreateDataProperty(unscopableList, 'findLast', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp69) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'entries', Value.true))");
+      /* X */let _temp70 = CreateDataProperty(unscopableList, 'fill', Value.true);
       /* node:coverage ignore next */if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) _temp70 = skipDebugger(_temp70);
       /* node:coverage ignore next */if (_temp70 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp70 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp70 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
           cause: _temp70
         });
         _temp70 = _temp70.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp70 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLast', Value.true)) === Value.true");
-      /* X */let _temp71 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
+      /* X */let _temp71 = CreateDataProperty(unscopableList, 'fill', Value.true);
       /* node:coverage ignore next */if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) _temp71 = skipDebugger(_temp71);
       /* node:coverage ignore next */if (_temp71 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp71 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp71 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
           cause: _temp71
         });
         _temp71 = _temp71.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp71 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLastIndex', Value.true)) === Value.true");
-      /* X */let _temp72 = CreateDataProperty(unscopableList, 'flat', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp71) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'fill', Value.true))");
+      /* X */let _temp72 = CreateDataProperty(unscopableList, 'find', Value.true);
       /* node:coverage ignore next */if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) _temp72 = skipDebugger(_temp72);
       /* node:coverage ignore next */if (_temp72 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp72 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp72 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
           cause: _temp72
         });
         _temp72 = _temp72.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp72 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flat', Value.true)) === Value.true");
-      /* X */let _temp73 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
+      /* X */let _temp73 = CreateDataProperty(unscopableList, 'find', Value.true);
       /* node:coverage ignore next */if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) _temp73 = skipDebugger(_temp73);
       /* node:coverage ignore next */if (_temp73 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp73 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp73 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
           cause: _temp73
         });
         _temp73 = _temp73.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp73 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flatMap', Value.true)) === Value.true");
-      /* X */let _temp74 = CreateDataProperty(unscopableList, 'includes', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp73) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'find', Value.true))");
+      /* X */let _temp74 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
       /* node:coverage ignore next */if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) _temp74 = skipDebugger(_temp74);
       /* node:coverage ignore next */if (_temp74 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp74 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp74 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
           cause: _temp74
         });
         _temp74 = _temp74.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp74 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'includes', Value.true)) === Value.true");
-      /* X */let _temp75 = CreateDataProperty(unscopableList, 'keys', Value.true);
+      /* X */let _temp75 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
       /* node:coverage ignore next */if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) _temp75 = skipDebugger(_temp75);
       /* node:coverage ignore next */if (_temp75 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp75 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp75 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
           cause: _temp75
         });
         _temp75 = _temp75.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp75 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'keys', Value.true)) === Value.true");
-      /* X */let _temp76 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp75) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findIndex', Value.true))");
+      /* X */let _temp76 = CreateDataProperty(unscopableList, 'findLast', Value.true);
       /* node:coverage ignore next */if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) _temp76 = skipDebugger(_temp76);
       /* node:coverage ignore next */if (_temp76 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp76 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp76 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
           cause: _temp76
         });
         _temp76 = _temp76.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp76 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toReversed', Value.true)) === Value.true");
-      /* X */let _temp77 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
+      /* X */let _temp77 = CreateDataProperty(unscopableList, 'findLast', Value.true);
       /* node:coverage ignore next */if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) _temp77 = skipDebugger(_temp77);
       /* node:coverage ignore next */if (_temp77 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp77 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp77 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
           cause: _temp77
         });
         _temp77 = _temp77.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp77 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSorted', Value.true)) === Value.true");
-      /* X */let _temp78 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+      /* Assert */ /* node:coverage ignore next */if (!_temp77) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLast', Value.true))");
+      /* X */let _temp78 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
       /* node:coverage ignore next */if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) _temp78 = skipDebugger(_temp78);
       /* node:coverage ignore next */if (_temp78 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp78 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp78 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
           cause: _temp78
         });
         _temp78 = _temp78.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp78 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSpliced', Value.true)) === Value.true");
-      /* X */let _temp79 = CreateDataProperty(unscopableList, 'values', Value.true);
+      /* X */let _temp79 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
       /* node:coverage ignore next */if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) _temp79 = skipDebugger(_temp79);
       /* node:coverage ignore next */if (_temp79 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp79 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp79 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
           cause: _temp79
         });
         _temp79 = _temp79.Value;
       }
-      /* Assert */ /* node:coverage ignore next */if (!(_temp79 === Value.true)) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'values', Value.true)) === Value.true");
-      /* X */let _temp80 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, exports.Descriptor({
-        Value: unscopableList,
-        Writable: Value.false,
-        Enumerable: Value.false,
-        Configurable: Value.true
-      }));
+      /* Assert */ /* node:coverage ignore next */if (!_temp79) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLastIndex', Value.true))");
+      /* X */let _temp80 = CreateDataProperty(unscopableList, 'flat', Value.true);
       /* node:coverage ignore next */if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) _temp80 = skipDebugger(_temp80);
       /* node:coverage ignore next */if (_temp80 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp80 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp80 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
           cause: _temp80
         });
         _temp80 = _temp80.Value;
       }
+      /* X */let _temp81 = CreateDataProperty(unscopableList, 'flat', Value.true);
+      /* node:coverage ignore next */if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) _temp81 = skipDebugger(_temp81);
+      /* node:coverage ignore next */if (_temp81 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp81 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
+          cause: _temp81
+        });
+        _temp81 = _temp81.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp81) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flat', Value.true))");
+      /* X */let _temp82 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
+      /* node:coverage ignore next */if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) _temp82 = skipDebugger(_temp82);
+      /* node:coverage ignore next */if (_temp82 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp82 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
+          cause: _temp82
+        });
+        _temp82 = _temp82.Value;
+      }
+      /* X */let _temp83 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
+      /* node:coverage ignore next */if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) _temp83 = skipDebugger(_temp83);
+      /* node:coverage ignore next */if (_temp83 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp83 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
+          cause: _temp83
+        });
+        _temp83 = _temp83.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp83) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flatMap', Value.true))");
+      /* X */let _temp84 = CreateDataProperty(unscopableList, 'includes', Value.true);
+      /* node:coverage ignore next */if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) _temp84 = skipDebugger(_temp84);
+      /* node:coverage ignore next */if (_temp84 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp84 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
+          cause: _temp84
+        });
+        _temp84 = _temp84.Value;
+      }
+      /* X */let _temp85 = CreateDataProperty(unscopableList, 'includes', Value.true);
+      /* node:coverage ignore next */if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) _temp85 = skipDebugger(_temp85);
+      /* node:coverage ignore next */if (_temp85 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp85 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
+          cause: _temp85
+        });
+        _temp85 = _temp85.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp85) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'includes', Value.true))");
+      /* X */let _temp86 = CreateDataProperty(unscopableList, 'keys', Value.true);
+      /* node:coverage ignore next */if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) _temp86 = skipDebugger(_temp86);
+      /* node:coverage ignore next */if (_temp86 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp86 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
+          cause: _temp86
+        });
+        _temp86 = _temp86.Value;
+      }
+      /* X */let _temp87 = CreateDataProperty(unscopableList, 'keys', Value.true);
+      /* node:coverage ignore next */if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) _temp87 = skipDebugger(_temp87);
+      /* node:coverage ignore next */if (_temp87 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp87 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
+          cause: _temp87
+        });
+        _temp87 = _temp87.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp87) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'keys', Value.true))");
+      /* X */let _temp88 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
+      /* node:coverage ignore next */if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) _temp88 = skipDebugger(_temp88);
+      /* node:coverage ignore next */if (_temp88 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp88 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
+          cause: _temp88
+        });
+        _temp88 = _temp88.Value;
+      }
+      /* X */let _temp89 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
+      /* node:coverage ignore next */if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) _temp89 = skipDebugger(_temp89);
+      /* node:coverage ignore next */if (_temp89 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp89 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
+          cause: _temp89
+        });
+        _temp89 = _temp89.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp89) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toReversed', Value.true))");
+      /* X */let _temp90 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
+      /* node:coverage ignore next */if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) _temp90 = skipDebugger(_temp90);
+      /* node:coverage ignore next */if (_temp90 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp90 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
+          cause: _temp90
+        });
+        _temp90 = _temp90.Value;
+      }
+      /* X */let _temp91 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
+      /* node:coverage ignore next */if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) _temp91 = skipDebugger(_temp91);
+      /* node:coverage ignore next */if (_temp91 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp91 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
+          cause: _temp91
+        });
+        _temp91 = _temp91.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp91) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSorted', Value.true))");
+      /* X */let _temp92 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+      /* node:coverage ignore next */if (_temp92 && typeof _temp92 === 'object' && 'next' in _temp92) _temp92 = skipDebugger(_temp92);
+      /* node:coverage ignore next */if (_temp92 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp92 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+          cause: _temp92
+        });
+        _temp92 = _temp92.Value;
+      }
+      /* X */let _temp93 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+      /* node:coverage ignore next */if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) _temp93 = skipDebugger(_temp93);
+      /* node:coverage ignore next */if (_temp93 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp93 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+          cause: _temp93
+        });
+        _temp93 = _temp93.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp93) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSpliced', Value.true))");
+      /* X */let _temp94 = CreateDataProperty(unscopableList, 'values', Value.true);
+      /* node:coverage ignore next */if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) _temp94 = skipDebugger(_temp94);
+      /* node:coverage ignore next */if (_temp94 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp94 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+          cause: _temp94
+        });
+        _temp94 = _temp94.Value;
+      }
+      /* X */let _temp95 = CreateDataProperty(unscopableList, 'values', Value.true);
+      /* node:coverage ignore next */if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) _temp95 = skipDebugger(_temp95);
+      /* node:coverage ignore next */if (_temp95 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp95 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+          cause: _temp95
+        });
+        _temp95 = _temp95.Value;
+      }
+      /* Assert */ /* node:coverage ignore next */if (!_temp95) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'values', Value.true))");
+      /* X */let _temp96 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, exports.Descriptor({
+        Value: unscopableList,
+        Writable: false,
+        Enumerable: false,
+        Configurable: true
+      }));
+      /* node:coverage ignore next */if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) _temp96 = skipDebugger(_temp96);
+      /* node:coverage ignore next */if (_temp96 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp96 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: false,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
+          cause: _temp96
+        });
+        _temp96 = _temp96.Value;
+      }
     }
 
     // Used in `arguments` objects.
-    /* X */let _temp81 = Get(proto, 'values');
-    /* node:coverage ignore next */if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) _temp81 = skipDebugger(_temp81);
-    /* node:coverage ignore next */if (_temp81 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp81 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'values') returned an abrupt completion", {
-        cause: _temp81
+    /* X */let _temp97 = Get(proto, 'values');
+    /* node:coverage ignore next */if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) _temp97 = skipDebugger(_temp97);
+    /* node:coverage ignore next */if (_temp97 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp97 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'values') returned an abrupt completion", {
+        cause: _temp97
       });
-      _temp81 = _temp81.Value;
+      _temp97 = _temp97.Value;
     }
-    realmRec.Intrinsics['%Array.prototype.values%'] = _temp81;
+    realmRec.Intrinsics['%Array.prototype.values%'] = _temp97;
     realmRec.Intrinsics['%Array.prototype%'] = proto;
   }
 
@@ -62403,10 +62301,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     if (result instanceof Completion) result = result.Value; /* node:coverage enable */
     // 8. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true).
-    /* X */let _temp = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true);
+    /* X */let _temp = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true);
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -62448,7 +62346,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. If return is undefined, then
     if (ret === Value.undefined) {
       // a. Let iteratorResult be CreateIteratorResultObject(value, true).
-      const iteratorResult = CreateIteratorResultObject(value || Value.undefined, Value.true);
+      const iteratorResult = CreateIteratorResultObject(value || Value.undefined, true);
       // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
       /* X */let _temp2 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
@@ -62493,10 +62391,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return promiseCapability.Promise;
     }
     // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, false).
-    /* X */let _temp4 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.false);
+    /* X */let _temp4 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, false);
     /* node:coverage ignore next */if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
     /* node:coverage ignore next */if (_temp4 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.false) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, false) returned an abrupt completion", {
         cause: _temp4
       });
       _temp4 = _temp4.Value;
@@ -62593,10 +62491,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return promiseCapability.Promise;
     }
     // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true).
-    /* X */let _temp7 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true);
+    /* X */let _temp7 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true);
     /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
     /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true) returned an abrupt completion", {
         cause: _temp7
       });
       _temp7 = _temp7.Value;
@@ -62625,13 +62523,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapAsyncFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
     /* X */let _temp = cons.DefineOwnProperty(Value('prototype'), exports.Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: false,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -62661,25 +62559,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapAsyncGeneratorFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
     /* X */let _temp = cons.DefineOwnProperty(Value('prototype'), exports.Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Enumerable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: false,\n    Enumerable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
     }
     /* X */let _temp2 = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(Value('constructor'), exports.Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
     /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! (realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! (realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({\n    Writable: false,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp2
       });
       _temp2 = _temp2.Value;
@@ -62690,17 +62588,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function bootstrapAsyncGeneratorFunctionPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, {
-      Writable: Value.false
+      Writable: false
     }]], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
     /* X */let _temp = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(Value('constructor'), exports.Descriptor({
       Value: proto,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! (realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! (realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: false,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -62738,7 +62636,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. If state is completed, then
     if (state === 'completed') {
       // a. Let iteratorResult be CreateIteratorResultObject(undefined, true).
-      const iteratorResult = CreateIteratorResultObject(Value.undefined, Value.true);
+      const iteratorResult = CreateIteratorResultObject(Value.undefined, true);
       // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
       /* X */let _temp = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
@@ -63138,9 +63036,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. If Type(value) is Object and value has a [[BigIntData]] internal slot, then
     if (value instanceof ObjectValue && 'BigIntData' in value) {
       /* Assert */ /* node:coverage ignore next */ // a. Assert: Type(value.[[BigIntData]]) is BigInt.
-      if (!(value.BigIntData instanceof BigIntValue)) throw new Assert.Error("value.BigIntData instanceof BigIntValue");
+      if (!(typeof value.BigIntData === 'bigint')) throw new Assert.Error("typeof value.BigIntData === 'bigint'");
       // b. Return value.[[BigIntData]].
-      return value.BigIntData;
+      return Value(value.BigIntData);
     }
     // 3. Throw a TypeError exception.
     return Throw.TypeError('$1 is not a $2 object', value, 'BigInt');
@@ -63174,7 +63072,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       radixMV = _temp;
     }
-    return BigIntValue.toString(x, radixMV);
+    return Value(BigIntValue.toString(x, radixMV));
   }
   BigIntProto_toString.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tostring';
 
@@ -63197,8 +63095,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     if (value instanceof ObjectValue && 'BooleanData' in value) {
       const b = value.BooleanData;
-      /* Assert */ /* node:coverage ignore next */if (!(b instanceof BooleanValue)) throw new Assert.Error("b instanceof BooleanValue");
-      return b;
+      /* Assert */ /* node:coverage ignore next */if (!(typeof b === 'boolean')) throw new Assert.Error("typeof b === 'boolean'");
+      return Value(b);
     }
     return Throw.TypeError('$1 is not a $2 object', value, 'Boolean');
   }
@@ -63232,7 +63130,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   BooleanProto_valueOf.section = 'https://tc39.es/ecma262/#sec-boolean.prototype.valueof';
   function bootstrapBooleanPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toString', BooleanProto_toString, 0], ['valueOf', BooleanProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
-    proto.BooleanData = Value.false;
+    proto.BooleanData = false;
     realmRec.Intrinsics['%Boolean.prototype%'] = proto;
   }
 
@@ -63438,7 +63336,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       littleEndian = Value.undefined;
     }
     // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigInt64, value).
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value);
+    /* ReturnIfAbrupt */let _temp4 = yield* SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value);
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setBigInt64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64';
 
@@ -63453,7 +63356,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       littleEndian = Value.undefined;
     }
     // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigUint64, value).
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value);
+    /* ReturnIfAbrupt */let _temp5 = yield* SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value);
+    /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+      if (_temp5 instanceof AbruptCompletion) return _temp5;
+      _temp5 = _temp5.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setBigUint64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64';
 
@@ -63465,7 +63373,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Float16', value);
+    /* ReturnIfAbrupt */let _temp6 = yield* SetViewValue(v, byteOffset, littleEndian, 'Float16', value);
+    /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+      if (_temp6 instanceof AbruptCompletion) return _temp6;
+      _temp6 = _temp6.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setFloat16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32';
 
@@ -63477,7 +63390,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Float32', value);
+    /* ReturnIfAbrupt */let _temp7 = yield* SetViewValue(v, byteOffset, littleEndian, 'Float32', value);
+    /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+      if (_temp7 instanceof AbruptCompletion) return _temp7;
+      _temp7 = _temp7.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setFloat32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32';
 
@@ -63489,7 +63407,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Float64', value);
+    /* ReturnIfAbrupt */let _temp8 = yield* SetViewValue(v, byteOffset, littleEndian, 'Float64', value);
+    /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
+      if (_temp8 instanceof AbruptCompletion) return _temp8;
+      _temp8 = _temp8.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setFloat64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64';
 
@@ -63498,7 +63421,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const v = thisValue;
-    return yield* SetViewValue(v, byteOffset, Value.true, 'Int8', value);
+    /* ReturnIfAbrupt */let _temp9 = yield* SetViewValue(v, byteOffset, Value.true, 'Int8', value);
+    /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+      if (_temp9 instanceof AbruptCompletion) return _temp9;
+      _temp9 = _temp9.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setInt8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint8';
 
@@ -63510,7 +63438,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Int16', value);
+    /* ReturnIfAbrupt */let _temp0 = yield* SetViewValue(v, byteOffset, littleEndian, 'Int16', value);
+    /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+      if (_temp0 instanceof AbruptCompletion) return _temp0;
+      _temp0 = _temp0.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setInt16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint16';
 
@@ -63522,7 +63455,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Int32', value);
+    /* ReturnIfAbrupt */let _temp1 = yield* SetViewValue(v, byteOffset, littleEndian, 'Int32', value);
+    /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
+      if (_temp1 instanceof AbruptCompletion) return _temp1;
+      _temp1 = _temp1.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setInt32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint32';
 
@@ -63531,7 +63469,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const v = thisValue;
-    return yield* SetViewValue(v, byteOffset, Value.true, 'Uint8', value);
+    /* ReturnIfAbrupt */let _temp10 = yield* SetViewValue(v, byteOffset, Value.true, 'Uint8', value);
+    /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
+      if (_temp10 instanceof AbruptCompletion) return _temp10;
+      _temp10 = _temp10.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setUint8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint8';
 
@@ -63543,7 +63486,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Uint16', value);
+    /* ReturnIfAbrupt */let _temp11 = yield* SetViewValue(v, byteOffset, littleEndian, 'Uint16', value);
+    /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
+      if (_temp11 instanceof AbruptCompletion) return _temp11;
+      _temp11 = _temp11.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setUint16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint16';
 
@@ -63555,7 +63503,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (littleEndian === undefined) {
       littleEndian = Value.false;
     }
-    return yield* SetViewValue(v, byteOffset, littleEndian, 'Uint32', value);
+    /* ReturnIfAbrupt */let _temp12 = yield* SetViewValue(v, byteOffset, littleEndian, 'Uint32', value);
+    /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
+      if (_temp12 instanceof AbruptCompletion) return _temp12;
+      _temp12 = _temp12.Value;
+    }
+    return Value.undefined;
   }
   DataViewProto_setUint32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint32';
   function bootstrapDataViewPrototype(realmRec) {
@@ -64669,7 +64622,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _paddedYear = _paddedYear.Value;
     }
-    const paddedYear = _paddedYear.stringValue();
+    const paddedYear = _paddedYear;
     return Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
   }
   DateString.section = 'https://tc39.es/ecma262/#sec-datestring';
@@ -64785,7 +64738,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _paddedYear2 = _paddedYear2.Value;
     }
-    const paddedYear = _paddedYear2.stringValue();
+    const paddedYear = _paddedYear2;
     return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(R(tv))}`);
   }
   DateProto_toUTCString.section = 'https://tc39.es/ecma262/#sec-date.prototype.toutcstring';
@@ -64819,9 +64772,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   DateProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive';
   function bootstrapDatePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], ['toTemporalInstant', DateProto_toTemporalInstant, 0], ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     }]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Date.prototype%'] = proto;
   }
@@ -64942,7 +64895,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const v = _v;
         if (v instanceof JSStringValue) {
           // Assert: The next step never returns an abrupt completion because Type(v) is String.
-          tv = parseDate(v);
+          tv = parseDate(v.stringValue());
         } else {
           /* ReturnIfAbrupt */let _temp7 = yield* ToNumber(v);
           /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
@@ -65073,7 +65026,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-date-time-string-format */
   function parseDate(dateTimeString) {
-    const str = dateTimeString.stringValue();
+    const str = dateTimeString;
     const result = EnsureCompletion(ParseISODateTime(str, 'non-spec-date'));
     if (result instanceof NormalCompletion) {
       const parsed = result.Value;
@@ -65318,17 +65271,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.TypeError('this value $1 is not an object', O);
     }
     // 3. Let name be ? Get(O, "name").
-    /* ReturnIfAbrupt */let _name = yield* Get(O, 'name');
-    /* ReturnIfAbrupt */if (_name instanceof Completion) {
-      if (_name instanceof AbruptCompletion) return _name;
-      _name = _name.Value;
+    /* ReturnIfAbrupt */let _name2 = yield* Get(O, 'name');
+    /* ReturnIfAbrupt */if (_name2 instanceof Completion) {
+      if (_name2 instanceof AbruptCompletion) return _name2;
+      _name2 = _name2.Value;
     }
-    let name = _name;
+    const _name = _name2;
+    let name;
     // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
-    if (name === Value.undefined) {
-      name = Value('Error');
+    if (_name === Value.undefined) {
+      name = 'Error';
     } else {
-      /* ReturnIfAbrupt */let _temp = yield* ToString(name);
+      /* ReturnIfAbrupt */let _temp = yield* ToString(_name);
       /* ReturnIfAbrupt */if (_temp instanceof Completion) {
         if (_temp instanceof AbruptCompletion) return _temp;
         _temp = _temp.Value;
@@ -65336,17 +65290,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       name = _temp;
     }
     // 5. Let msg be ? Get(O, "message").
-    /* ReturnIfAbrupt */let _msg = yield* Get(O, 'message');
-    /* ReturnIfAbrupt */if (_msg instanceof Completion) {
-      if (_msg instanceof AbruptCompletion) return _msg;
-      _msg = _msg.Value;
+    /* ReturnIfAbrupt */let _msg2 = yield* Get(O, 'message');
+    /* ReturnIfAbrupt */if (_msg2 instanceof Completion) {
+      if (_msg2 instanceof AbruptCompletion) return _msg2;
+      _msg2 = _msg2.Value;
     }
-    let msg = _msg;
+    const _msg = _msg2;
+    let msg;
     // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
-    if (msg === Value.undefined) {
-      msg = Value('');
+    if (_msg === Value.undefined) {
+      msg = '';
     } else {
-      /* ReturnIfAbrupt */let _temp2 = yield* ToString(msg);
+      /* ReturnIfAbrupt */let _temp2 = yield* ToString(_msg);
       /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         _temp2 = _temp2.Value;
@@ -65354,15 +65309,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       msg = _temp2;
     }
     // 7. If name is the empty String, return msg.
-    if (name.stringValue() === '') {
-      return msg;
+    if (name === '') {
+      return Value(msg);
     }
     // 8. If msg is the empty String, return name.
-    if (msg.stringValue() === '') {
-      return name;
+    if (msg === '') {
+      return Value(name);
     }
     // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-    return Value(`${name.stringValue()}: ${msg.stringValue()}`);
+    return Value(`${name}: ${msg}`);
   }
   ErrorProto_toString.section = 'https://tc39.es/ecma262/#sec-error.prototype.tostring';
 
@@ -65619,22 +65574,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
     const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
     /* X */let _temp = DefinePropertyOrThrow(cons, 'prototype', exports.Descriptor({
-      Writable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Configurable: false
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(cons, 'prototype', Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(cons, 'prototype', Descriptor({\n    Writable: false,\n    Configurable: false,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
     }
     /* X */let _temp2 = DefinePropertyOrThrow(generator, 'constructor', exports.Descriptor({
-      Writable: Value.false
+      Writable: false
     }));
     /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
     /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(generator, 'constructor', Descriptor({\n    Writable: Value.false,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(generator, 'constructor', Descriptor({\n    Writable: false,\n  })) returned an abrupt completion", {
         cause: _temp2
       });
       _temp2 = _temp2.Value;
@@ -65646,17 +65601,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapGeneratorFunctionPrototype(realmRec) {
     const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
     const generator = bootstrapPrototype(realmRec, [['prototype', generatorPrototype, undefined, {
-      Writable: Value.false
+      Writable: false
     }]], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
     /* X */let _temp = DefinePropertyOrThrow(generatorPrototype, 'constructor', exports.Descriptor({
       Value: generator,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(generatorPrototype, 'constructor', Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(generatorPrototype, 'constructor', Descriptor({\n    Value: generator,\n    Writable: false,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -65801,7 +65756,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const hasInstance = _hasInstance;
     // 3. If hasInstance is true, then
-    if (hasInstance === Value.true) {
+    if (hasInstance) {
       // a. Return iteratorRecord.[[Iterator]].
       return iteratorRecord.Iterator;
     }
@@ -65872,7 +65827,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       return Value.undefined;
-    }, Value('Iterator Helper'), exports.surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
+    }, 'Iterator Helper', exports.surroundingAgent.intrinsic('%IteratorHelperPrototype%'), ['UnderlyingIterators']);
     gen.UnderlyingIterators = [];
     return gen;
   }
@@ -66053,7 +66008,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _propertyDesc = _propertyDesc.Value;
       }
       const propertyDesc = _propertyDesc;
-      if (!(propertyDesc instanceof UndefinedValue) && propertyDesc.Enumerable === Value.true) {
+      if (propertyDesc && propertyDesc.Enumerable) {
         let _value = yield* Get(iterables, key);
         /* IfAbruptCloseIterators */ /* node:coverage ignore next */if (_value instanceof AbruptCompletion) return yield* IteratorCloseAll(iters, _value); /* node:coverage ignore next */
         if (_value instanceof Completion) _value = _value.Value;
@@ -66123,7 +66078,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, undefined, "Iterator Helper").
-    return yield* GeneratorResume(thisValue, Value.undefined, Value('Iterator Helper'));
+    return yield* GeneratorResume(thisValue, Value.undefined, 'Iterator Helper');
   }
   IteratorHelperPrototype_next.section = 'https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.next';
 
@@ -66159,13 +66114,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp2 = _temp2.Value;
       }
       // d. Return CreateIteratorResultObject(undefined, true).
-      return CreateIteratorResultObject(Value.undefined, Value.true);
+      return CreateIteratorResultObject(Value.undefined, true);
     }
 
     // 5. Let C be ReturnCompletion(undefined).
     const completion = ReturnCompletion(Value.undefined);
     // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
-    return yield* GeneratorResumeAbrupt(O, completion, Value('Iterator Helper'));
+    return yield* GeneratorResumeAbrupt(O, completion, 'Iterator Helper');
   }
   IteratorHelperPrototype_return.section = 'https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.return';
   function bootstrapIteratorHelperPrototype(realmRec) {
@@ -66266,7 +66221,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -66343,7 +66298,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (completion instanceof Completion) completion = completion.Value;
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -66386,7 +66341,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let result = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
       /* IfAbruptCloseIterator */ /* node:coverage ignore next */if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result)); /* node:coverage ignore next */
       if (result instanceof Completion) result = result.Value;
-      if (ToBoolean(result) === Value.false) {
+      if (!ToBoolean(result)) {
         return yield* IteratorClose(iterated, EnsureCompletion(Value.false));
       }
       // NOTE: The following step will not change counter once it reaches 2 ** 53.
@@ -66433,7 +66388,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let selected = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
         /* IfAbruptCloseIterator */ /* node:coverage ignore next */if (selected instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, selected)); /* node:coverage ignore next */
         if (selected instanceof Completion) selected = selected.Value;
-        if (ToBoolean(selected) === Value.true) {
+        if (ToBoolean(selected)) {
           let completion = EnsureCompletion(yield* Yield(value));
           /* IfAbruptCloseIterator */ /* node:coverage ignore next */if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion)); /* node:coverage ignore next */
           if (completion instanceof Completion) completion = completion.Value;
@@ -66442,7 +66397,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         counter += 1;
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -66485,7 +66440,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let result = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
       /* IfAbruptCloseIterator */ /* node:coverage ignore next */if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result)); /* node:coverage ignore next */
       if (result instanceof Completion) result = result.Value;
-      if (ToBoolean(result) === Value.true) {
+      if (ToBoolean(result)) {
         return yield* IteratorClose(iterated, EnsureCompletion(value));
       }
       // NOTE: The following step will not change counter once it reaches 2 ** 53.
@@ -66556,7 +66511,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         counter += 1;
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -66718,7 +66673,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         counter += 1;
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -66822,7 +66777,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let result = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
       /* IfAbruptCloseIterator */ /* node:coverage ignore next */if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result)); /* node:coverage ignore next */
       if (result instanceof Completion) result = result.Value;
-      if (ToBoolean(result) === Value.true) {
+      if (ToBoolean(result)) {
         return yield* IteratorClose(iterated, EnsureCompletion(Value.true));
       }
       // NOTE: The following step will not change counter once it reaches 2 ** 53.
@@ -66894,7 +66849,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (completion instanceof Completion) completion = completion.Value;
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -66976,7 +66931,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     };
-    const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+    const result = CreateIteratorFromClosure(closure, 'Iterator Helper', exports.surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
     result.UnderlyingIterators = [iterated];
     return result;
   }
@@ -67055,7 +67010,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (sepCompletion instanceof AbruptCompletion) return sepCompletion;
         sepCompletion = sepCompletion.Value;
       }
-      sep = sepCompletion.stringValue();
+      sep = sepCompletion;
     }
     /* ReturnIfAbrupt */let _temp16 = yield* GetIteratorDirect(obj);
     /* ReturnIfAbrupt */if (_temp16 instanceof Completion) {
@@ -67088,7 +67043,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (valueString instanceof AbruptCompletion) return valueString;
           valueString = valueString.Value;
         }
-        result += valueString.stringValue();
+        result += valueString;
       }
     }
   }
@@ -67290,10 +67245,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.undefined;
     };
     // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
-    /* X */let _generator = CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), exports.surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]);
+    /* X */let _generator = CreateIteratorFromClosure(closure, '%MapIteratorPrototype%', exports.surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]);
     /* node:coverage ignore next */if (_generator && typeof _generator === 'object' && 'next' in _generator) _generator = skipDebugger(_generator);
     /* node:coverage ignore next */if (_generator instanceof Completion) {
-      /* node:coverage ignore next */if (_generator instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_generator instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, '%MapIteratorPrototype%', surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['HostCapturedValues'], [map]) returned an abrupt completion", {
         cause: _generator
       });
       _generator = _generator.Value;
@@ -67308,7 +67263,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
-    return yield* GeneratorResume(thisValue, undefined, Value('%MapIteratorPrototype%'));
+    return yield* GeneratorResume(thisValue, undefined, '%MapIteratorPrototype%');
   }
   MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
   function bootstrapMapIteratorPrototype(realmRec) {
@@ -68469,8 +68424,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapMath(realmRec) {
     /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
     const readonly = {
-      Writable: Value.false,
-      Configurable: Value.false
+      Writable: false,
+      Configurable: false
     };
 
     // @@toStringTag is handled in the bootstrapPrototype() call.
@@ -68513,10 +68468,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const msg = _msg;
           // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
           const msgDesc = exports.Descriptor({
-            Value: msg,
-            Writable: Value.true,
-            Enumerable: Value.false,
-            Configurable: Value.true
+            Value: Value(msg),
+            Writable: true,
+            Enumerable: false,
+            Configurable: true
           });
           // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
           /* X */let _Constructor = DefinePropertyOrThrow(O, 'message', msgDesc);
@@ -68584,7 +68539,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const f = _f;
     /* Assert */ /* node:coverage ignore next */if (!(fractionDigits !== Value.undefined || f === 0)) throw new Assert.Error("fractionDigits !== Value.undefined || f === 0");
     if (!x.isFinite()) {
-      return NumberValue.toString(x, 10n);
+      return Value(NumberValue.toString(x, 10n));
     }
     if (f < 0 || f > 100) {
       return Throw.RangeError('Invalid format range for $1', 'toExponential');
@@ -68614,15 +68569,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.RangeError('Invalid format range for $1', 'toFixed');
     }
     if (!x.isFinite()) {
-      /* X */let _temp = NumberValue.toString(x, 10n);
-      /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-      /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(x, 10n) returned an abrupt completion", {
-          cause: _temp
-        });
-        _temp = _temp.Value;
-      }
-      return _temp;
+      return Value(NumberValue.toString(x, 10n));
     }
     return Value(R(x).toFixed(f));
   }
@@ -68645,15 +68592,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const x = _x3;
     if (precision === Value.undefined) {
-      /* X */let _temp2 = ToString(x);
-      /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
-      /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! ToString(x) returned an abrupt completion", {
-          cause: _temp2
+      /* X */let _temp = ToString(x);
+      /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+      /* node:coverage ignore next */if (_temp instanceof Completion) {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! ToString(x) returned an abrupt completion", {
+          cause: _temp
         });
-        _temp2 = _temp2.Value;
+        _temp = _temp.Value;
       }
-      return _temp2;
+      return Value(_temp);
     }
     /* ReturnIfAbrupt */let _p = yield* ToIntegerOrInfinity(precision);
     /* ReturnIfAbrupt */if (_p instanceof Completion) {
@@ -68662,15 +68609,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const p = _p;
     if (!x.isFinite()) {
-      /* X */let _temp3 = NumberValue.toString(x, 10n);
-      /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-      /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(x, 10n) returned an abrupt completion", {
-          cause: _temp3
-        });
-        _temp3 = _temp3.Value;
-      }
-      return _temp3;
+      return Value(NumberValue.toString(x, 10n));
     }
     if (p < 1 || p > 100) {
       return Throw.RangeError('Invalid format range for $1', 'toPrecision');
@@ -68693,14 +68632,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (radix === Value.undefined) {
       radixMV = 10n;
     } else {
-      /* ReturnIfAbrupt */let _temp4 = yield* SnapToInteger(radix, 'truncate', 2n, 36n);
-      /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-        if (_temp4 instanceof AbruptCompletion) return _temp4;
-        _temp4 = _temp4.Value;
+      /* ReturnIfAbrupt */let _temp2 = yield* SnapToInteger(radix, 'truncate', 2n, 36n);
+      /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+        if (_temp2 instanceof AbruptCompletion) return _temp2;
+        _temp2 = _temp2.Value;
       }
-      radixMV = _temp4;
+      radixMV = _temp2;
     }
-    return NumberValue.toString(x, radixMV);
+    return Value(NumberValue.toString(x, radixMV));
   }
   NumberProto_toString.section = 'https://tc39.es/ecma262/#sec-number.prototype.tostring';
 
@@ -68788,7 +68727,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
           const desc = _desc;
           // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
-          if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
+          if (desc && desc.Enumerable) {
             /* ReturnIfAbrupt */let _propValue = yield* Get(from, nextKey);
             /* ReturnIfAbrupt */if (_propValue instanceof Completion) {
               if (_propValue instanceof AbruptCompletion) return _propValue;
@@ -68797,7 +68736,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // a. Let propValue be ? Get(from, nextKey).
             const propValue = _propValue;
             // b. Perform ? Set(to, nextKey, propValue, true).
-            /* ReturnIfAbrupt */let _temp2 = yield* Set$1(to, nextKey, propValue, Value.true);
+            /* ReturnIfAbrupt */let _temp2 = yield* Set$1(to, nextKey, propValue, true);
             /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
               if (_temp2 instanceof AbruptCompletion) return _temp2;
               _temp2 = _temp2.Value;
@@ -68868,7 +68807,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
       const propDesc = _propDesc;
       // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
-      if (!(propDesc instanceof UndefinedValue) && propDesc.Enumerable === Value.true) {
+      if (propDesc && propDesc.Enumerable) {
         /* ReturnIfAbrupt */let _descObj = yield* Get(props, nextKey);
         /* ReturnIfAbrupt */if (_descObj instanceof Completion) {
           if (_descObj instanceof AbruptCompletion) return _descObj;
@@ -68971,7 +68910,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const status = _status;
     // 3. If status is false, throw a TypeError exception.
-    if (status === Value.false) {
+    if (!status) {
       return Throw.TypeError('Unable to freeze object $1', O);
     }
     // 4. Return O.
@@ -68998,7 +68937,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
     const obj = _obj2;
     // 3. Assert: obj is an extensible ordinary object with no own properties.
-    /* Assert */ /* node:coverage ignore next */if (!(obj.Extensible === Value.true && obj.properties.size === 0)) throw new Assert.Error("obj.Extensible === Value.true && obj.properties.size === 0");
+    /* Assert */ /* node:coverage ignore next */if (!(obj.Extensible && obj.properties.size === 0)) throw new Assert.Error("obj.Extensible && obj.properties.size === 0");
     // 4. Let closure be a new Abstract Closure with parameters (key, value) that captures obj and performs the following steps when called:
     function* closure([key = Value.undefined, value = Value.undefined]) {
       /* ReturnIfAbrupt */let _propertyKey = yield* ToPropertyKey(key);
@@ -69232,7 +69171,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const key = _key3;
     // 3. Return ? HasOwnProperty(obj, key).
-    return yield* HasOwnProperty(obj, key);
+    /* ReturnIfAbrupt */let _temp9 = yield* HasOwnProperty(obj, key);
+    /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+      if (_temp9 instanceof AbruptCompletion) return _temp9;
+      _temp9 = _temp9.Value;
+    }
+    return Value(_temp9);
   }
   Object_hasOwn.section = 'https://tc39.es/ecma262/#sec-object.hasown';
 
@@ -69250,7 +69194,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.false;
     }
     // 2. Return ? IsExtensible(O).
-    return yield* IsExtensible(O);
+    /* ReturnIfAbrupt */let _temp0 = yield* IsExtensible(O);
+    /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+      if (_temp0 instanceof AbruptCompletion) return _temp0;
+      _temp0 = _temp0.Value;
+    }
+    return Value(_temp0);
   }
   Object_isExtensible.section = 'https://tc39.es/ecma262/#sec-object.isextensible';
 
@@ -69261,7 +69210,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.true;
     }
     // 2. Return ? TestIntegrityLevel(O, frozen).
-    return yield* TestIntegrityLevel(O, 'frozen');
+    /* ReturnIfAbrupt */let _temp1 = yield* TestIntegrityLevel(O, 'frozen');
+    /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
+      if (_temp1 instanceof AbruptCompletion) return _temp1;
+      _temp1 = _temp1.Value;
+    }
+    return Value(_temp1);
   }
   Object_isFrozen.section = 'https://tc39.es/ecma262/#sec-object.isfrozen';
 
@@ -69272,7 +69226,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.true;
     }
     // 2. Return ? TestIntegrityLevel(O, sealed).
-    return yield* TestIntegrityLevel(O, 'sealed');
+    /* ReturnIfAbrupt */let _temp10 = yield* TestIntegrityLevel(O, 'sealed');
+    /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
+      if (_temp10 instanceof AbruptCompletion) return _temp10;
+      _temp10 = _temp10.Value;
+    }
+    return Value(_temp10);
   }
   Object_isSealed.section = 'https://tc39.es/ecma262/#sec-object.issealed';
 
@@ -69311,7 +69270,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const status = _status2;
     // 3. If status is false, throw a TypeError exception.
-    if (status === Value.false) {
+    if (!status) {
       return Throw.TypeError('Unable to prevent extensions on object $1', O);
     }
     // 4. Return O.
@@ -69333,7 +69292,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const status = _status3;
     // 3. If status is false, throw a TypeError exception.
-    if (status === Value.false) {
+    if (!status) {
       return Throw.TypeError('Unable to seal object $1', O);
     }
     // 4. Return O.
@@ -69343,10 +69302,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-object.setprototypeof */
   function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
-    /* ReturnIfAbrupt */let _temp9 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
-      if (_temp9 instanceof AbruptCompletion) return _temp9;
-      _temp9 = _temp9.Value;
+    /* ReturnIfAbrupt */let _temp11 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
+      if (_temp11 instanceof AbruptCompletion) return _temp11;
+      _temp11 = _temp11.Value;
     } // 1. Perform ? RequireObjectCoercible(O).
 
     // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
@@ -69365,7 +69324,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const status = _status4;
     // 5. If status is false, throw a TypeError exception.
-    if (status === Value.false) {
+    if (!status) {
       return Throw.TypeError('Could not set prototype of object');
     }
     // 6. Return O.
@@ -69417,7 +69376,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const O = _O;
     // 3. Return ? HasOwnProperty(O, P).
-    return yield* HasOwnProperty(O, P);
+    /* ReturnIfAbrupt */let _temp = yield* HasOwnProperty(O, P);
+    /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+      if (_temp instanceof AbruptCompletion) return _temp;
+      _temp = _temp.Value;
+    }
+    return Value(_temp);
   }
   ObjectProto_hasOwnProperty.section = 'https://tc39.es/ecma262/#sec-object.prototype.hasownproperty';
 
@@ -69438,13 +69402,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const O = _O2;
     // 3. Repeat,
     while (true) {
-      /* ReturnIfAbrupt */let _temp = yield* V.GetPrototypeOf();
-      /* ReturnIfAbrupt */if (_temp instanceof Completion) {
-        if (_temp instanceof AbruptCompletion) return _temp;
-        _temp = _temp.Value;
+      /* ReturnIfAbrupt */let _temp2 = yield* V.GetPrototypeOf();
+      /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+        if (_temp2 instanceof AbruptCompletion) return _temp2;
+        _temp2 = _temp2.Value;
       }
       // a. Set V to ? V.[[GetPrototypeOf]]().
-      V = _temp;
+      V = _temp2;
       // b. If V is null, return false.
       if (V === Value.null) {
         return Value.false;
@@ -69483,11 +69447,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const desc = _desc;
     // 4. If desc is undefined, return false.
-    if (desc instanceof UndefinedValue) {
+    if (!desc) {
       return Value.false;
     }
     // 5. Return desc.[[Enumerable]].
-    return desc.Enumerable;
+    return Value(desc.Enumerable);
   }
   ObjectProto_propertyIsEnumerable.section = 'https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable';
 
@@ -69533,7 +69497,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const isArray = _isArray;
     let builtinTag;
     // 5. If isArray is true, let builtinTag be "Array".
-    if (isArray === Value.true) {
+    if (isArray) {
       builtinTag = 'Array';
     } else if ('ParameterMap' in O) {
       // 6. Else if O has a [[ParameterMap]] internal slot, let builtinTag be "Arguments".
@@ -69608,9 +69572,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
     const desc = exports.Descriptor({
-      Getter: getter,
-      Enumerable: Value.true,
-      Configurable: Value.true
+      Get: getter,
+      Enumerable: true,
+      Configurable: true
     });
     // 4. Let key be ? ToPropertyKey(P).
     /* ReturnIfAbrupt */let _key = yield* ToPropertyKey(P);
@@ -69620,10 +69584,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const key = _key;
     // 5. Perform ? DefinePropertyOrThrow(O, key, desc).
-    /* ReturnIfAbrupt */let _temp2 = yield* DefinePropertyOrThrow(O, key, desc);
-    /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
-      if (_temp2 instanceof AbruptCompletion) return _temp2;
-      _temp2 = _temp2.Value;
+    /* ReturnIfAbrupt */let _temp3 = yield* DefinePropertyOrThrow(O, key, desc);
+    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      _temp3 = _temp3.Value;
     }
     // 6. Return undefined.
     return Value.undefined;
@@ -69647,9 +69611,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
     const desc = exports.Descriptor({
-      Setter: setter,
-      Enumerable: Value.true,
-      Configurable: Value.true
+      Set: setter,
+      Enumerable: true,
+      Configurable: true
     });
     // 4. Let key be ? ToPropertyKey(P).
     /* ReturnIfAbrupt */let _key2 = yield* ToPropertyKey(P);
@@ -69659,10 +69623,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const key = _key2;
     // 5. Perform ? DefinePropertyOrThrow(O, key, desc).
-    /* ReturnIfAbrupt */let _temp3 = yield* DefinePropertyOrThrow(O, key, desc);
-    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
-      if (_temp3 instanceof AbruptCompletion) return _temp3;
-      _temp3 = _temp3.Value;
+    /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(O, key, desc);
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
     }
     // 6. Return undefined.
     return Value.undefined;
@@ -69697,21 +69661,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const desc = _desc2;
       // b. If desc is not undefined, then
-      if (!(desc instanceof UndefinedValue)) {
+      if (desc) {
         // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
         if (IsAccessorDescriptor(desc)) {
-          return desc.Getter;
+          return desc.Get;
         }
         // ii. Return undefined.
         return Value.undefined;
       }
       // c. Set O to ? O.[[GetPrototypeOf]]().
-      /* ReturnIfAbrupt */let _temp4 = yield* O.GetPrototypeOf();
-      /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-        if (_temp4 instanceof AbruptCompletion) return _temp4;
-        _temp4 = _temp4.Value;
+      /* ReturnIfAbrupt */let _temp5 = yield* O.GetPrototypeOf();
+      /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+        if (_temp5 instanceof AbruptCompletion) return _temp5;
+        _temp5 = _temp5.Value;
       }
-      O = _temp4;
+      O = _temp5;
       // d. If O is null, return undefined.
       if (O === Value.null) {
         return Value.undefined;
@@ -69748,21 +69712,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const desc = _desc3;
       // b. If desc is not undefined, then
-      if (!(desc instanceof UndefinedValue)) {
+      if (desc) {
         // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
         if (IsAccessorDescriptor(desc)) {
-          return desc.Setter;
+          return desc.Set;
         }
         // ii. Return undefined.
         return Value.undefined;
       }
       // c. Set O to ? O.[[GetPrototypeOf]]().
-      /* ReturnIfAbrupt */let _temp5 = yield* O.GetPrototypeOf();
-      /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-        if (_temp5 instanceof AbruptCompletion) return _temp5;
-        _temp5 = _temp5.Value;
+      /* ReturnIfAbrupt */let _temp6 = yield* O.GetPrototypeOf();
+      /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+        if (_temp6 instanceof AbruptCompletion) return _temp6;
+        _temp6 = _temp6.Value;
       }
-      O = _temp5;
+      O = _temp6;
       // d. If O is null, return undefined.
       if (O === Value.null) {
         return Value.undefined;
@@ -69794,10 +69758,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let O be the *this* value.
     // 2. Perform ? RequireObjectCoercible(this value).
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp6 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
-      if (_temp6 instanceof AbruptCompletion) return _temp6;
-      _temp6 = _temp6.Value;
+    /* ReturnIfAbrupt */let _temp7 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+      if (_temp7 instanceof AbruptCompletion) return _temp7;
+      _temp7 = _temp7.Value;
     }
     // 2. If Type(proto) is neither Object nor Null, return undefined.
     if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
@@ -69815,7 +69779,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const status = _status;
     // 5. If status is false, throw a TypeError exception.
-    if (status === Value.false) {
+    if (!status) {
       return Throw.TypeError('Could not set prototype of object');
     }
     // 6. Return undefined.
@@ -69836,7 +69800,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const proto = MakeBasicObject(['Prototype', 'Extensible']);
 
     // * has an [[Extensible]] internal slot whose value is true.
-    proto.Extensible = Value.true;
+    proto.Extensible = true;
 
     // * has a [[Prototype]] internal slot whose value is null.
     proto.Prototype = Value.null;
@@ -69852,24 +69816,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapObjectPrototype(realmRec) {
     const proto = realmRec.Intrinsics['%Object.prototype%'];
     assignProps(realmRec, proto, [['hasOwnProperty', ObjectProto_hasOwnProperty, 1], ['isPrototypeOf', ObjectProto_isPrototypeOf, 1], ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1], ['toLocaleString', ObjectProto_toLocaleString, 0], ['toString', ObjectProto_toString, 0], ['valueOf', ObjectProto_valueOf, 0], ['__defineGetter__', ObjectProto__defineGetter__, 2], ['__defineSetter__', ObjectProto__defineSetter__, 2], ['__lookupGetter__', ObjectProto__lookupGetter__, 1], ['__lookupSetter__', ObjectProto__lookupSetter__, 1], ['__proto__', [ObjectProto___proto___getter, ObjectProto___proto___setter]]]);
-    /* X */let _temp7 = Get(proto, 'toString');
-    /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
-    /* node:coverage ignore next */if (_temp7 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'toString') returned an abrupt completion", {
-        cause: _temp7
-      });
-      _temp7 = _temp7.Value;
-    }
-    realmRec.Intrinsics['%Object.prototype.toString%'] = _temp7;
-    /* X */let _temp8 = Get(proto, 'valueOf');
+    /* X */let _temp8 = Get(proto, 'toString');
     /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
     /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'valueOf') returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'toString') returned an abrupt completion", {
         cause: _temp8
       });
       _temp8 = _temp8.Value;
     }
-    realmRec.Intrinsics['%Object.prototype.valueOf%'] = _temp8;
+    realmRec.Intrinsics['%Object.prototype.toString%'] = _temp8;
+    /* X */let _temp9 = Get(proto, 'valueOf');
+    /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
+    /* node:coverage ignore next */if (_temp9 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'valueOf') returned an abrupt completion", {
+        cause: _temp9
+      });
+      _temp9 = _temp9.Value;
+    }
+    realmRec.Intrinsics['%Object.prototype.valueOf%'] = _temp9;
   }
 
   /** https://tc39.es/ecma262/#sec-parsefloat-string */
@@ -69890,7 +69854,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _trimmedString = _trimmedString.Value;
     }
-    const trimmedString = _trimmedString.stringValue();
+    const trimmedString = _trimmedString;
     // 3. If neither trimmedString nor any prefix of trimmedString satisfies the syntax of a StrDecimalLiteral (see 7.1.4.1), return NaN.
     // 4. Let numberString be the longest prefix of trimmedString, which might be trimmedString itself, that satisfies the syntax of a StrDecimalLiteral.
     // 5. Let mathFloat be MV of numberString.
@@ -70015,7 +69979,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _trimmedString = _trimmedString.Value;
     }
-    let trimmedString = _trimmedString.stringValue();
+    let trimmedString = _trimmedString;
     if (trimmedString === '') return F(NaN);
     let sign = 1;
     if (trimmedString[0] === '\x2D') {
@@ -70187,7 +70151,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let promise be the this value.
     const promise = thisValue;
     // 2. If IsPromise(promise) is false, throw a TypeError exception.
-    if (IsPromise(promise) === Value.false) {
+    if (!IsPromise(promise)) {
       return Throw.TypeError('$1 is not a $2 object', promise, 'Promise');
     }
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
@@ -70387,7 +70351,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const desc = _desc;
     // 4. Return ? target.[[DefineOwnProperty]](key, desc).
-    return yield* target.DefineOwnProperty(key, desc);
+    /* ReturnIfAbrupt */let _temp = yield* target.DefineOwnProperty(key, desc);
+    /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+      if (_temp instanceof AbruptCompletion) return _temp;
+      _temp = _temp.Value;
+    }
+    return Value(_temp);
   }
   Reflect_defineProperty.section = 'https://tc39.es/ecma262/#sec-reflect.defineproperty';
 
@@ -70405,7 +70374,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const key = _key2;
     // 3. Return ? target.[[Delete]](key).
-    return yield* target.Delete(key);
+    /* ReturnIfAbrupt */let _temp2 = yield* target.Delete(key);
+    /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
+      if (_temp2 instanceof AbruptCompletion) return _temp2;
+      _temp2 = _temp2.Value;
+    }
+    return Value(_temp2);
   }
   Reflect_deleteProperty.section = 'https://tc39.es/ecma262/#sec-reflect.deleteproperty';
 
@@ -70482,7 +70456,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const key = _key5;
     // 3. Return ? target.[[HasProperty]](key).
-    return yield* target.HasProperty(key);
+    /* ReturnIfAbrupt */let _temp3 = yield* target.HasProperty(key);
+    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      _temp3 = _temp3.Value;
+    }
+    return Value(_temp3);
   }
   Reflect_has.section = 'https://tc39.es/ecma262/#sec-reflect.has';
 
@@ -70493,7 +70472,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.TypeError('$1 is not an object', target);
     }
     // 2. Return ? target.[[IsExtensible]]().
-    return yield* target.IsExtensible();
+    /* ReturnIfAbrupt */let _temp4 = yield* target.IsExtensible();
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
+    }
+    return Value(_temp4);
   }
   Reflect_isExtensible.section = 'https://tc39.es/ecma262/#sec-reflect.isextensible';
 
@@ -70522,7 +70506,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.TypeError('$1 is not an object', target);
     }
     // 2. Return ? target.[[PreventExtensions]]().
-    return yield* target.PreventExtensions();
+    /* ReturnIfAbrupt */let _temp5 = yield* target.PreventExtensions();
+    /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+      if (_temp5 instanceof AbruptCompletion) return _temp5;
+      _temp5 = _temp5.Value;
+    }
+    return Value(_temp5);
   }
   Reflect_preventExtensions.section = 'https://tc39.es/ecma262/#sec-reflect.preventextensions';
 
@@ -70544,7 +70533,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       receiver = target;
     }
     // 4. Return ? target.[[Set]](key, V, receiver).
-    return yield* target.Set(key, V, receiver);
+    /* ReturnIfAbrupt */let _temp6 = yield* target.Set(key, V, receiver);
+    /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+      if (_temp6 instanceof AbruptCompletion) return _temp6;
+      _temp6 = _temp6.Value;
+    }
+    return Value(_temp6);
   }
   Reflect_set.section = 'https://tc39.es/ecma262/#sec-reflect.set';
 
@@ -70559,7 +70553,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.TypeError('Object prototype must be an object or null');
     }
     // 3. Return ? target.[[SetPrototypeOf]](proto).
-    return yield* target.SetPrototypeOf(proto);
+    /* ReturnIfAbrupt */let _temp7 = yield* target.SetPrototypeOf(proto);
+    /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+      if (_temp7 instanceof AbruptCompletion) return _temp7;
+      _temp7 = _temp7.Value;
+    }
+    return Value(_temp7);
   }
   Reflect_setPrototypeOf.section = 'https://tc39.es/ecma262/#sec-reflect.setprototypeof';
   function bootstrapReflect(realmRec) {
@@ -70587,7 +70586,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let newTarget be the active function object.
       newTarget = exports.surroundingAgent.activeFunctionObject;
       // b. If patternIsRegExp is true and flags is undefined, then
-      if (patternIsRegExp === Value.true && flags === Value.undefined) {
+      if (patternIsRegExp && flags === Value.undefined) {
         /* ReturnIfAbrupt */let _patternConstructor = yield* Get(pattern, 'constructor');
         /* ReturnIfAbrupt */if (_patternConstructor instanceof Completion) {
           if (_patternConstructor instanceof AbruptCompletion) return _patternConstructor;
@@ -70609,7 +70608,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
     if (isRegExpObject(pattern)) {
       // a. Let P be pattern.[[OriginalSource]].
-      P = pattern.OriginalSource;
+      P = Value(pattern.OriginalSource);
       // b. If flags is undefined, let F be pattern.[[OriginalFlags]].
       if (flags === Value.undefined) {
         F = pattern.OriginalFlags;
@@ -70617,7 +70616,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // c. Else, let F be flags.
         F = flags;
       }
-    } else if (patternIsRegExp === Value.true) {
+    } else if (patternIsRegExp) {
       /* ReturnIfAbrupt */let _temp = yield* Get(pattern, 'source');
       /* ReturnIfAbrupt */if (_temp instanceof Completion) {
         if (_temp instanceof AbruptCompletion) return _temp;
@@ -70764,7 +70763,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const matchStr = _matchStr;
         // v. If matchStr is the empty String, then
-        if (matchStr.stringValue() === '') {
+        if (matchStr === '') {
           /* ReturnIfAbrupt */let _thisIndex2 = yield* Get(R$1, 'lastIndex');
           /* ReturnIfAbrupt */if (_thisIndex2 instanceof Completion) {
             if (_thisIndex2 instanceof AbruptCompletion) return _thisIndex2;
@@ -70788,7 +70787,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           const nextIndex = _nextIndex;
           // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-          /* ReturnIfAbrupt */let _closure2 = yield* Set$1(R$1, 'lastIndex', F(nextIndex), Value.true);
+          /* ReturnIfAbrupt */let _closure2 = yield* Set$1(R$1, 'lastIndex', F(nextIndex), true);
           /* ReturnIfAbrupt */if (_closure2 instanceof Completion) {
             if (_closure2 instanceof AbruptCompletion) return _closure2;
             _closure2 = _closure2.Value;
@@ -70803,10 +70802,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     };
     // 4. Return ! CreateIteratorFromClosure(closure, "%RegExpStringIteratorPrototype%", %RegExpStringIteratorPrototype%).
-    /* X */let _temp = CreateIteratorFromClosure(closure, Value('%RegExpStringIteratorPrototype%'), exports.surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'));
+    /* X */let _temp = CreateIteratorFromClosure(closure, '%RegExpStringIteratorPrototype%', exports.surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'));
     /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
     /* node:coverage ignore next */if (_temp instanceof Completion) {
-      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, Value('%RegExpStringIteratorPrototype%'), surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, '%RegExpStringIteratorPrototype%', surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')) returned an abrupt completion", {
         cause: _temp
       });
       _temp = _temp.Value;
@@ -70820,7 +70819,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
-    return yield* GeneratorResume(thisValue, undefined, Value('%RegExpStringIteratorPrototype%'));
+    return yield* GeneratorResume(thisValue, undefined, '%RegExpStringIteratorPrototype%');
   }
   RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next';
   function bootstrapRegExpStringIteratorPrototype(realmRec) {
@@ -70851,7 +70850,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-regexpexec */
   function* RegExpExec(R, S) {
     /* Assert */ /* node:coverage ignore next */if (!(R instanceof ObjectValue)) throw new Assert.Error("R instanceof ObjectValue");
-    /* Assert */ /* node:coverage ignore next */if (!(S instanceof JSStringValue)) throw new Assert.Error("S instanceof JSStringValue");
+    /* Assert */ /* node:coverage ignore next */if (!(typeof S === 'string')) throw new Assert.Error("typeof S === 'string'");
     /* ReturnIfAbrupt */let _exec = yield* Get(R, 'exec');
     /* ReturnIfAbrupt */if (_exec instanceof Completion) {
       if (_exec instanceof AbruptCompletion) return _exec;
@@ -70859,7 +70858,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const exec = _exec;
     if (IsCallable(exec)) {
-      /* ReturnIfAbrupt */let _result = yield* Call(exec, R, [S]);
+      /* ReturnIfAbrupt */let _result = yield* Call(exec, R, [Value(S)]);
       /* ReturnIfAbrupt */if (_result instanceof Completion) {
         if (_result instanceof AbruptCompletion) return _result;
         _result = _result.Value;
@@ -70882,7 +70881,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
   function* RegExpBuiltinExec(R$1, S) {
     // Let length be the number of code units in S.
-    const length = S.stringValue().length;
+    const length = S.length;
     /* X */let _lastIndex2 = Get(R$1, 'lastIndex');
     /* node:coverage ignore next */if (_lastIndex2 && typeof _lastIndex2 === 'object' && 'next' in _lastIndex2) _lastIndex2 = skipDebugger(_lastIndex2);
     /* node:coverage ignore next */if (_lastIndex2 instanceof Completion) {
@@ -70897,7 +70896,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _lastIndex = _lastIndex.Value;
     }
     let lastIndex = R(_lastIndex);
-    const flags = R$1.OriginalFlags.stringValue();
+    const flags = R$1.OriginalFlags;
     const global = flags.includes('g');
     const sticky = flags.includes('y');
     const hasIndices = flags.includes('d');
@@ -70908,7 +70907,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const fullUnicode = flags.includes('u') || flags.includes('v');
     let matchSucceeded = false;
     // If fullUnicode is true, let input be StringToCodePoints(S). Otherwise, let input be a List whose elements are the code units that are the elements of S.
-    const input = MatchState.createRegExpMatchingSource(fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split(''), S.stringValue());
+    const input = MatchState.createRegExpMatchingSource(fullUnicode ? Array.from(S) : S.split(''), S);
 
     // used to calculate inputIndex below
     const accumulatedInputLength = [];
@@ -70922,7 +70921,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     while (matchSucceeded === false) {
       if (lastIndex > length) {
         if (global || sticky) {
-          /* ReturnIfAbrupt */let _temp3 = yield* Set$1(R$1, 'lastIndex', F(0), Value.true);
+          /* ReturnIfAbrupt */let _temp3 = yield* Set$1(R$1, 'lastIndex', F(0), true);
           /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
             if (_temp3 instanceof AbruptCompletion) return _temp3;
             _temp3 = _temp3.Value;
@@ -70944,7 +70943,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       r = matcher(input, inputIndex);
       if (r === 'failure') {
         if (sticky) {
-          /* ReturnIfAbrupt */let _temp4 = yield* Set$1(R$1, 'lastIndex', F(0), Value.true);
+          /* ReturnIfAbrupt */let _temp4 = yield* Set$1(R$1, 'lastIndex', F(0), true);
           /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
             if (_temp4 instanceof AbruptCompletion) return _temp4;
             _temp4 = _temp4.Value;
@@ -70962,7 +70961,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       e = GetStringIndex(S, input, e);
     }
     if (global || sticky) {
-      /* ReturnIfAbrupt */let _temp5 = yield* Set$1(R$1, 'lastIndex', F(e), Value.true);
+      /* ReturnIfAbrupt */let _temp5 = yield* Set$1(R$1, 'lastIndex', F(e), true);
       /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         _temp5 = _temp5.Value;
@@ -71000,10 +70999,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp7 = _temp7.Value;
     }
-    /* X */let _temp8 = CreateDataPropertyOrThrow(A, 'input', S);
+    /* X */let _temp8 = CreateDataPropertyOrThrow(A, 'input', Value(S));
     /* node:coverage ignore next */if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
     /* node:coverage ignore next */if (_temp8 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, 'input', S) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, 'input', Value(S)) returned an abrupt completion", {
         cause: _temp8
       });
       _temp8 = _temp8.Value;
@@ -71016,10 +71015,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const groupNames = [];
     indices.push(match);
     const matchedSubStr = GetMatchString(S, match);
-    /* X */let _temp9 = CreateDataPropertyOrThrow(A, '0', matchedSubStr);
+    /* X */let _temp9 = CreateDataPropertyOrThrow(A, '0', Value(matchedSubStr));
     /* node:coverage ignore next */if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
     /* node:coverage ignore next */if (_temp9 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, '0', matchedSubStr) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, '0', Value(matchedSubStr)) returned an abrupt completion", {
         cause: _temp9
       });
       _temp9 = _temp9.Value;
@@ -71028,10 +71027,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let hasGroups;
     if (R$1.parsedPattern.capturingGroups.filter(x => x.GroupName).length > 0) {
       groups = OrdinaryObjectCreate(Value.null);
-      hasGroups = Value.true;
+      hasGroups = true;
     } else {
       groups = Value.undefined;
-      hasGroups = Value.false;
+      hasGroups = false;
     }
     /* X */let _temp0 = CreateDataPropertyOrThrow(A, 'groups', groups);
     /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
@@ -71047,7 +71046,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let capturedValue;
       if (!captureI) {
         capturedValue = Value.undefined;
-        indices.push(Value.undefined);
+        indices.push(undefined);
       } else {
         let captureStart = captureI.startIndex;
         let captureEnd = captureI.endIndex;
@@ -71059,7 +71058,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           StartIndex: captureStart,
           EndIndex: captureEnd
         };
-        capturedValue = GetMatchString(S, capture);
+        capturedValue = Value(GetMatchString(S, capture));
         indices.push(capture);
       }
       /* X */let _temp11 = ToString(F(i));
@@ -71080,13 +71079,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const i_th = i - 1;
       if (R$1.parsedPattern.capturingGroups[i_th].GroupName) {
-        const s = Value(R$1.parsedPattern.capturingGroups[i_th].GroupName);
-        if (matchedGroupNames.includes(s.stringValue())) {
+        const s = R$1.parsedPattern.capturingGroups[i_th].GroupName;
+        if (matchedGroupNames.includes(s)) {
           /* Assert */ /* node:coverage ignore next */if (!(capturedValue === Value.undefined)) throw new Assert.Error("capturedValue === Value.undefined");
-          groupNames.push(Value.undefined);
+          groupNames.push(undefined);
         } else {
           if (capturedValue !== Value.undefined) {
-            matchedGroupNames.push(s.stringValue());
+            matchedGroupNames.push(s);
           }
           /* X */let _temp10 = CreateDataPropertyOrThrow(groups, s, capturedValue);
           /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
@@ -71099,7 +71098,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           groupNames.push(s);
         }
       } else {
-        groupNames.push(Value.undefined);
+        groupNames.push(undefined);
       }
     }
     if (hasIndices) {
@@ -71123,11 +71122,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!unicode) {
       return index + 1;
     }
-    const length = S.stringValue().length;
+    const length = S.length;
     if (index + 1 >= length) {
       return index + 1;
     }
-    const cp = CodePointAt(S.stringValue(), index);
+    const cp = CodePointAt(S, index);
     return index + cp.CodeUnitCount;
   }
   AdvanceStringIndex.section = 'https://tc39.es/ecma262/#sec-advancestringindex';
@@ -71141,7 +71140,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER S).
     const cu = 's';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp13 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
+      if (_temp13 instanceof AbruptCompletion) return _temp13;
+      _temp13 = _temp13.Value;
+    }
+    return Value(_temp13);
   }
   RegExpProto_dotAllGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll';
 
@@ -71160,7 +71164,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _hasIndices = _hasIndices.Value;
     }
     const hasIndices = ToBoolean(_hasIndices);
-    if (hasIndices === Value.true) {
+    if (hasIndices) {
       result += 'd';
     }
     /* ReturnIfAbrupt */let _global = yield* Get(R, 'global');
@@ -71169,7 +71173,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _global = _global.Value;
     }
     const global = ToBoolean(_global);
-    if (global === Value.true) {
+    if (global) {
       result += 'g';
     }
     /* ReturnIfAbrupt */let _ignoreCase = yield* Get(R, 'ignoreCase');
@@ -71178,7 +71182,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _ignoreCase = _ignoreCase.Value;
     }
     const ignoreCase = ToBoolean(_ignoreCase);
-    if (ignoreCase === Value.true) {
+    if (ignoreCase) {
       result += 'i';
     }
     /* ReturnIfAbrupt */let _multiline = yield* Get(R, 'multiline');
@@ -71187,7 +71191,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _multiline = _multiline.Value;
     }
     const multiline = ToBoolean(_multiline);
-    if (multiline === Value.true) {
+    if (multiline) {
       result += 'm';
     }
     /* ReturnIfAbrupt */let _dotAll = yield* Get(R, 'dotAll');
@@ -71196,7 +71200,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _dotAll = _dotAll.Value;
     }
     const dotAll = ToBoolean(_dotAll);
-    if (dotAll === Value.true) {
+    if (dotAll) {
       result += 's';
     }
     /* ReturnIfAbrupt */let _unicode = yield* Get(R, 'unicode');
@@ -71205,7 +71209,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _unicode = _unicode.Value;
     }
     const unicode = ToBoolean(_unicode);
-    if (unicode === Value.true) {
+    if (unicode) {
       result += 'u';
     }
     /* ReturnIfAbrupt */let _unicodeSet = yield* Get(R, 'unicodeSets');
@@ -71214,7 +71218,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _unicodeSet = _unicodeSet.Value;
     }
     const unicodeSet = ToBoolean(_unicodeSet);
-    if (unicodeSet === Value.true) {
+    if (unicodeSet) {
       result += 'v';
     }
     /* ReturnIfAbrupt */let _sticky = yield* Get(R, 'sticky');
@@ -71223,7 +71227,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _sticky = _sticky.Value;
     }
     const sticky = ToBoolean(_sticky);
-    if (sticky === Value.true) {
+    if (sticky) {
       result += 'y';
     }
     return Value(result);
@@ -71245,7 +71249,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Throw.TypeError('$1 is not a $2 object', R, 'RegExp');
     }
     const flags = R.OriginalFlags;
-    if (flags.stringValue().includes('g')) {
+    if (flags.includes('g')) {
       return Value.true;
     }
     return Value.false;
@@ -71261,7 +71265,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER D).
     const cu = 'd';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp14 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp14 instanceof Completion) {
+      if (_temp14 instanceof AbruptCompletion) return _temp14;
+      _temp14 = _temp14.Value;
+    }
+    return Value(_temp14);
   }
   RegExpProto_hasIndicesGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices';
 
@@ -71274,7 +71283,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x0069 (LATIN SMALL LETTER I).
     const cu = 'i';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp15 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp15 instanceof Completion) {
+      if (_temp15 instanceof AbruptCompletion) return _temp15;
+      _temp15 = _temp15.Value;
+    }
+    return Value(_temp15);
   }
   RegExpProto_ignoreCaseGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase';
 
@@ -71308,18 +71322,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const flags = _flags;
     // 5. If flags does not contain "g", then
-    if (!flags.stringValue().includes('g')) {
+    if (!flags.includes('g')) {
       // a. Return ? RegExpExec(rx, S).
       return yield* RegExpExec(rx, S);
     } else {
       // 6. Else,
       // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-      const fullUnicode = flags.stringValue().includes('u');
+      const fullUnicode = flags.includes('u');
       // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-      /* ReturnIfAbrupt */let _temp13 = yield* Set$1(rx, 'lastIndex', F(0), Value.true);
-      /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
-        if (_temp13 instanceof AbruptCompletion) return _temp13;
-        _temp13 = _temp13.Value;
+      /* ReturnIfAbrupt */let _temp16 = yield* Set$1(rx, 'lastIndex', F(0), true);
+      /* ReturnIfAbrupt */if (_temp16 instanceof Completion) {
+        if (_temp16 instanceof AbruptCompletion) return _temp16;
+        _temp16 = _temp16.Value;
       }
       /* X */let _A2 = ArrayCreate(0);
       /* node:coverage ignore next */if (_A2 && typeof _A2 === 'object' && 'next' in _A2) _A2 = skipDebugger(_A2);
@@ -71365,24 +71379,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let matchStr be ? ToString(? Get(result, "0")).
           const matchStr = _matchStr;
           // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
-          /* X */let _temp16 = ToString(F(n));
-          /* node:coverage ignore next */if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
-          /* node:coverage ignore next */if (_temp16 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(n)) returned an abrupt completion", {
-              cause: _temp16
+          /* X */let _temp19 = ToString(F(n));
+          /* node:coverage ignore next */if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
+          /* node:coverage ignore next */if (_temp19 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(n)) returned an abrupt completion", {
+              cause: _temp19
             });
-            _temp16 = _temp16.Value;
+            _temp19 = _temp19.Value;
           }
-          /* X */let _temp14 = CreateDataPropertyOrThrow(A, _temp16, matchStr);
-          /* node:coverage ignore next */if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) _temp14 = skipDebugger(_temp14);
-          /* node:coverage ignore next */if (_temp14 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(n))), matchStr) returned an abrupt completion", {
-              cause: _temp14
+          /* X */let _temp17 = CreateDataPropertyOrThrow(A, _temp19, Value(matchStr));
+          /* node:coverage ignore next */if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
+          /* node:coverage ignore next */if (_temp17 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(n))), Value(matchStr)) returned an abrupt completion", {
+              cause: _temp17
             });
-            _temp14 = _temp14.Value;
+            _temp17 = _temp17.Value;
           }
           // 3. If matchStr is the empty String, then
-          if (matchStr.stringValue() === '') {
+          if (matchStr === '') {
             /* ReturnIfAbrupt */let _thisIndex2 = yield* Get(rx, 'lastIndex');
             /* ReturnIfAbrupt */if (_thisIndex2 instanceof Completion) {
               if (_thisIndex2 instanceof AbruptCompletion) return _thisIndex2;
@@ -71398,10 +71412,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
             const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
             // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-            /* ReturnIfAbrupt */let _temp15 = yield* Set$1(rx, 'lastIndex', F(nextIndex), Value.true);
-            /* ReturnIfAbrupt */if (_temp15 instanceof Completion) {
-              if (_temp15 instanceof AbruptCompletion) return _temp15;
-              _temp15 = _temp15.Value;
+            /* ReturnIfAbrupt */let _temp18 = yield* Set$1(rx, 'lastIndex', F(nextIndex), true);
+            /* ReturnIfAbrupt */if (_temp18 instanceof Completion) {
+              if (_temp18 instanceof AbruptCompletion) return _temp18;
+              _temp18 = _temp18.Value;
             }
           }
           // 4. Set n to n + 1.
@@ -71443,7 +71457,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _flags3 = _flags3.Value;
     }
     const flags = _flags3;
-    /* ReturnIfAbrupt */let _matcher = yield* Construct(C, [R, flags]);
+    /* ReturnIfAbrupt */let _matcher = yield* Construct(C, [R, Value(flags)]);
     /* ReturnIfAbrupt */if (_matcher instanceof Completion) {
       if (_matcher instanceof AbruptCompletion) return _matcher;
       _matcher = _matcher.Value;
@@ -71460,13 +71474,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _lastIndex3 = _lastIndex3.Value;
     }
     const lastIndex = _lastIndex3;
-    /* ReturnIfAbrupt */let _temp17 = yield* Set$1(matcher, 'lastIndex', lastIndex, Value.true);
-    /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
-      if (_temp17 instanceof AbruptCompletion) return _temp17;
-      _temp17 = _temp17.Value;
+    /* ReturnIfAbrupt */let _temp20 = yield* Set$1(matcher, 'lastIndex', lastIndex, true);
+    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
+      if (_temp20 instanceof AbruptCompletion) return _temp20;
+      _temp20 = _temp20.Value;
     }
-    const global = flags.stringValue().includes('g');
-    const fullUnicode = flags.stringValue().includes('u') || flags.stringValue().includes('v');
+    const global = flags.includes('g');
+    const fullUnicode = flags.includes('u') || flags.includes('v');
     return CreateRegExpStringIterator(matcher, S, global, fullUnicode);
   }
   RegExpProto_matchAll.section = 'https://tc39.es/ecma262/#sec-regexp-prototype-matchall';
@@ -71480,7 +71494,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x006D (LATIN SMALL LETTER M).
     const cu = 'm';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp21 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
+      if (_temp21 instanceof AbruptCompletion) return _temp21;
+      _temp21 = _temp21.Value;
+    }
+    return Value(_temp21);
   }
   RegExpProto_multilineGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline';
 
@@ -71502,18 +71521,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const S = _S4;
     // 4. Let lengthS be the length of S.
-    const lengthS = S.stringValue().length;
+    const lengthS = S.length;
     // 5. Let functionalReplace be IsCallable(replaceValue).
     const functionalReplace = IsCallable(replaceValue);
     // 6. If functionalReplace is false, then
     if (!functionalReplace) {
-      /* ReturnIfAbrupt */let _temp18 = yield* ToString(replaceValue);
-      /* ReturnIfAbrupt */if (_temp18 instanceof Completion) {
-        if (_temp18 instanceof AbruptCompletion) return _temp18;
-        _temp18 = _temp18.Value;
+      /* ReturnIfAbrupt */let _temp22 = yield* ToString(replaceValue);
+      /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
+        if (_temp22 instanceof AbruptCompletion) return _temp22;
+        _temp22 = _temp22.Value;
       }
       // a. Set replaceValue to ? ToString(replaceValue).
-      replaceValue = _temp18;
+      replaceValue = Value(_temp22);
     }
     // 7. Let flags be ? ToString(? Get(rx, "flags")).
     /* ReturnIfAbrupt */let _flags6 = yield* Get(rx, 'flags');
@@ -71528,17 +71547,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const flags = _flags5;
     // 8. If flags contains "g", let global be true. Otherwise, let global be false.
-    const global = flags.stringValue().includes('g') ? Value.true : Value.false;
+    const global = flags.includes('g') ? Value.true : Value.false;
     let fullUnicode;
     // 9. If global is true, then
     if (global === Value.true) {
       // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-      fullUnicode = flags.stringValue().includes('u');
+      fullUnicode = flags.includes('u');
       // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-      /* ReturnIfAbrupt */let _temp19 = yield* Set$1(rx, 'lastIndex', F(0), Value.true);
-      /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
-        if (_temp19 instanceof AbruptCompletion) return _temp19;
-        _temp19 = _temp19.Value;
+      /* ReturnIfAbrupt */let _temp23 = yield* Set$1(rx, 'lastIndex', F(0), true);
+      /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
+        if (_temp23 instanceof AbruptCompletion) return _temp23;
+        _temp23 = _temp23.Value;
       }
     }
     // 10. Let results be a new empty List.
@@ -71579,7 +71598,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let matchStr be ? ToString(? Get(result, "0")).
           const matchStr = _matchStr3;
           // 2. If matchStr is the empty String, then
-          if (matchStr.stringValue() === '') {
+          if (matchStr === '') {
             /* ReturnIfAbrupt */let _thisIndex4 = yield* Get(rx, 'lastIndex');
             /* ReturnIfAbrupt */if (_thisIndex4 instanceof Completion) {
               if (_thisIndex4 instanceof AbruptCompletion) return _thisIndex4;
@@ -71595,10 +71614,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
             const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
             // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-            /* ReturnIfAbrupt */let _temp20 = yield* Set$1(rx, 'lastIndex', F(nextIndex), Value.true);
-            /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
-              if (_temp20 instanceof AbruptCompletion) return _temp20;
-              _temp20 = _temp20.Value;
+            /* ReturnIfAbrupt */let _temp24 = yield* Set$1(rx, 'lastIndex', F(nextIndex), true);
+            /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
+              if (_temp24 instanceof AbruptCompletion) return _temp24;
+              _temp24 = _temp24.Value;
             }
           }
         }
@@ -71632,7 +71651,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const matched = _matched;
       // d. Let matchLength be the length of matched.
-      const matchLength = matched.stringValue().length;
+      const matchLength = matched.length;
       // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
       /* ReturnIfAbrupt */let _position2 = yield* Get(result, 'index');
       /* ReturnIfAbrupt */if (_position2 instanceof Completion) {
@@ -71670,16 +71689,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let capN = _capN;
         // ii. If capN is not undefined, then
         if (capN !== Value.undefined) {
-          /* ReturnIfAbrupt */let _temp21 = yield* ToString(capN);
-          /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
-            if (_temp21 instanceof AbruptCompletion) return _temp21;
-            _temp21 = _temp21.Value;
+          /* ReturnIfAbrupt */let _temp25 = yield* ToString(capN);
+          /* ReturnIfAbrupt */if (_temp25 instanceof Completion) {
+            if (_temp25 instanceof AbruptCompletion) return _temp25;
+            _temp25 = _temp25.Value;
           }
           // 1. Set capN to ? ToString(capN).
-          capN = _temp21;
+          capN = _temp25;
         }
         // iii. Append capN to captures.
-        captures.push(capN);
+        captures.push(capN instanceof UndefinedValue ? undefined : capN);
         // iv. NOTE: When n = 1, the preceding step puts the first element into captures
         //     (at index 0). More generally, the nth capture (the characters captured by
         //     the nth set of capturing parentheses) is at captures[n - 1].
@@ -71697,7 +71716,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // k. If functionalReplace is true, then
       if (functionalReplace) {
         // i. Let replacerArgs be the list-concatenation of « matched », captures, and « 𝔽(position), S ».
-        const replacerArgs = [matched, ...captures, F(position), S];
+        const replacerArgs = [Value(matched), ...captures.map(Value), F(position), Value(S)];
         // ii. If namedCaptures is not undefined, then
         if (namedCaptures !== Value.undefined) {
           // 1. Append namedCaptures to replacerArgs.
@@ -71711,31 +71730,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         const replValue = _replValue;
         // iv. Let replacement be ? ToString(replValue).
-        /* ReturnIfAbrupt */let _temp22 = yield* ToString(replValue);
-        /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
-          if (_temp22 instanceof AbruptCompletion) return _temp22;
-          _temp22 = _temp22.Value;
+        /* ReturnIfAbrupt */let _temp26 = yield* ToString(replValue);
+        /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
+          if (_temp26 instanceof AbruptCompletion) return _temp26;
+          _temp26 = _temp26.Value;
         }
-        replacement = _temp22;
+        replacement = _temp26;
       } else {
         // l. Else,
         // i. If namedCaptures is not undefined, then
         if (namedCaptures !== Value.undefined) {
-          /* ReturnIfAbrupt */let _temp23 = ToObject(namedCaptures);
-          /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
-            if (_temp23 instanceof AbruptCompletion) return _temp23;
-            _temp23 = _temp23.Value;
+          /* ReturnIfAbrupt */let _temp27 = ToObject(namedCaptures);
+          /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
+            if (_temp27 instanceof AbruptCompletion) return _temp27;
+            _temp27 = _temp27.Value;
           }
           // 1. Set namedCaptures to ? ToObject(namedCaptures).
-          namedCaptures = _temp23;
+          namedCaptures = _temp27;
         }
         // ii. Let replacement be ? GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue).
-        /* ReturnIfAbrupt */let _temp24 = yield* GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
-        /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
-          if (_temp24 instanceof AbruptCompletion) return _temp24;
-          _temp24 = _temp24.Value;
+        /* ReturnIfAbrupt */let _temp28 = yield* GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue.stringValue());
+        /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
+          if (_temp28 instanceof AbruptCompletion) return _temp28;
+          _temp28 = _temp28.Value;
         }
-        replacement = _temp24;
+        replacement = _temp28;
       }
       // m. If position ≥ nextSourcePosition, then
       if (position >= nextSourcePosition) {
@@ -71743,7 +71762,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         //          ill-behaving RegExp subclass or use of an access triggered side-effect to change the
         //          global flag or other characteristics of rx. In such cases, the corresponding substitution is ignored.
         // ii. Set accumulatedResult to the string-concatenation of accumulatedResult, the substring of S from nextSourcePosition to position, and replacement.
-        accumulatedResult = accumulatedResult + S.stringValue().substring(nextSourcePosition, position) + replacement.stringValue();
+        accumulatedResult = accumulatedResult + S.substring(nextSourcePosition, position) + replacement;
         // iii. Set nextSourcePosition to position + matchLength.
         nextSourcePosition = position + matchLength;
       }
@@ -71753,7 +71772,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value(accumulatedResult);
     }
     // 17. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
-    return Value(accumulatedResult + S.stringValue().substring(nextSourcePosition));
+    return Value(accumulatedResult + S.substring(nextSourcePosition));
   }
   RegExpProto_replace.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@replace';
 
@@ -71778,10 +71797,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const previousLastIndex = _previousLastIndex;
     if (!SameValue(previousLastIndex, F(0))) {
-      /* ReturnIfAbrupt */let _temp25 = yield* Set$1(rx, 'lastIndex', F(0), Value.true);
-      /* ReturnIfAbrupt */if (_temp25 instanceof Completion) {
-        if (_temp25 instanceof AbruptCompletion) return _temp25;
-        _temp25 = _temp25.Value;
+      /* ReturnIfAbrupt */let _temp29 = yield* Set$1(rx, 'lastIndex', F(0), true);
+      /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
+        if (_temp29 instanceof AbruptCompletion) return _temp29;
+        _temp29 = _temp29.Value;
       }
     }
     /* ReturnIfAbrupt */let _result4 = yield* RegExpExec(rx, S);
@@ -71797,10 +71816,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const currentLastIndex = _currentLastIndex;
     if (!SameValue(currentLastIndex, previousLastIndex)) {
-      /* ReturnIfAbrupt */let _temp26 = yield* Set$1(rx, 'lastIndex', previousLastIndex, Value.true);
-      /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
-        if (_temp26 instanceof AbruptCompletion) return _temp26;
-        _temp26 = _temp26.Value;
+      /* ReturnIfAbrupt */let _temp30 = yield* Set$1(rx, 'lastIndex', previousLastIndex, true);
+      /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
+        if (_temp30 instanceof AbruptCompletion) return _temp30;
+        _temp30 = _temp30.Value;
       }
     }
     if (result instanceof NullValue) {
@@ -71827,7 +71846,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* Assert */ /* node:coverage ignore next */if (!isRegExpObject(R)) throw new Assert.Error("isRegExpObject(R)");
     const src = R.OriginalSource;
     R.OriginalFlags;
-    return EscapeRegExpPattern(src);
+    return Value(EscapeRegExpPattern(src));
   }
   RegExpProto_sourceGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.source';
 
@@ -71862,7 +71881,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_flags7 instanceof AbruptCompletion) return _flags7;
       _flags7 = _flags7.Value;
     }
-    const flags = _flags7.stringValue();
+    const flags = _flags7;
     const unicodeMatching = flags.includes('u');
     const newFlags = flags.includes('y') ? Value(flags) : Value(`${flags}y`);
     /* ReturnIfAbrupt */let _splitter = yield* Construct(C, [rx, newFlags]);
@@ -71885,14 +71904,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (limit === Value.undefined) {
       lim = 2 ** 32 - 1;
     } else {
-      /* ReturnIfAbrupt */let _temp27 = yield* ToUint32(limit);
-      /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
-        if (_temp27 instanceof AbruptCompletion) return _temp27;
-        _temp27 = _temp27.Value;
+      /* ReturnIfAbrupt */let _temp31 = yield* ToUint32(limit);
+      /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
+        if (_temp31 instanceof AbruptCompletion) return _temp31;
+        _temp31 = _temp31.Value;
       }
-      lim = R(_temp27);
+      lim = R(_temp31);
     }
-    const size = S.stringValue().length;
+    const size = S.length;
     let p = 0;
     if (lim === 0) {
       return A;
@@ -71907,22 +71926,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (z !== Value.null) {
         return A;
       }
-      /* X */let _temp28 = CreateDataProperty(A, '0', S);
-      /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
-      /* node:coverage ignore next */if (_temp28 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, '0', S) returned an abrupt completion", {
-          cause: _temp28
+      /* X */let _temp32 = CreateDataProperty(A, '0', Value(S));
+      /* node:coverage ignore next */if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
+      /* node:coverage ignore next */if (_temp32 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, '0', Value(S)) returned an abrupt completion", {
+          cause: _temp32
         });
-        _temp28 = _temp28.Value;
+        _temp32 = _temp32.Value;
       }
       return A;
     }
     let q = p;
     while (q < size) {
-      /* ReturnIfAbrupt */let _temp29 = yield* Set$1(splitter, 'lastIndex', F(q), Value.true);
-      /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
-        if (_temp29 instanceof AbruptCompletion) return _temp29;
-        _temp29 = _temp29.Value;
+      /* ReturnIfAbrupt */let _temp33 = yield* Set$1(splitter, 'lastIndex', F(q), true);
+      /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
+        if (_temp33 instanceof AbruptCompletion) return _temp33;
+        _temp33 = _temp33.Value;
       }
       /* ReturnIfAbrupt */let _z2 = yield* RegExpExec(splitter, S);
       /* ReturnIfAbrupt */if (_z2 instanceof Completion) {
@@ -71949,22 +71968,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (e === p) {
           q = AdvanceStringIndex(S, q, unicodeMatching);
         } else {
-          const T = Value(S.stringValue().substring(p, q));
-          /* X */let _temp33 = ToString(F(lengthA));
-          /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
-          /* node:coverage ignore next */if (_temp33 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
-              cause: _temp33
+          const T = Value(S.substring(p, q));
+          /* X */let _temp37 = ToString(F(lengthA));
+          /* node:coverage ignore next */if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) _temp37 = skipDebugger(_temp37);
+          /* node:coverage ignore next */if (_temp37 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
+              cause: _temp37
             });
-            _temp33 = _temp33.Value;
+            _temp37 = _temp37.Value;
           }
-          /* X */let _temp30 = CreateDataProperty(A, _temp33, T);
-          /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
-          /* node:coverage ignore next */if (_temp30 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
-              cause: _temp30
+          /* X */let _temp34 = CreateDataProperty(A, _temp37, T);
+          /* node:coverage ignore next */if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
+          /* node:coverage ignore next */if (_temp34 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
+              cause: _temp34
             });
-            _temp30 = _temp30.Value;
+            _temp34 = _temp34.Value;
           }
           lengthA += 1;
           if (lengthA === lim) {
@@ -71994,21 +72013,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               _nextCapture = _nextCapture.Value;
             }
             const nextCapture = _nextCapture;
-            /* X */let _temp32 = ToString(F(lengthA));
-            /* node:coverage ignore next */if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
-            /* node:coverage ignore next */if (_temp32 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
-                cause: _temp32
+            /* X */let _temp36 = ToString(F(lengthA));
+            /* node:coverage ignore next */if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
+            /* node:coverage ignore next */if (_temp36 instanceof Completion) {
+              /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
+                cause: _temp36
               });
-              _temp32 = _temp32.Value;
+              _temp36 = _temp36.Value;
             }
-            /* X */let _temp31 = CreateDataProperty(A, _temp32, nextCapture);
-            /* node:coverage ignore next */if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) _temp31 = skipDebugger(_temp31);
-            /* node:coverage ignore next */if (_temp31 instanceof Completion) {
-              /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, X(ToString(F(lengthA))), nextCapture) returned an abrupt completion", {
-                cause: _temp31
+            /* X */let _temp35 = CreateDataProperty(A, _temp36, nextCapture);
+            /* node:coverage ignore next */if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) _temp35 = skipDebugger(_temp35);
+            /* node:coverage ignore next */if (_temp35 instanceof Completion) {
+              /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, X(ToString(F(lengthA))), nextCapture) returned an abrupt completion", {
+                cause: _temp35
               });
-              _temp31 = _temp31.Value;
+              _temp35 = _temp35.Value;
             }
             i += 1;
             lengthA += 1;
@@ -72020,22 +72039,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
-    const T = Value(S.stringValue().substring(p, size));
-    /* X */let _temp35 = ToString(F(lengthA));
-    /* node:coverage ignore next */if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) _temp35 = skipDebugger(_temp35);
-    /* node:coverage ignore next */if (_temp35 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
-        cause: _temp35
+    const T = Value(S.substring(p, size));
+    /* X */let _temp39 = ToString(F(lengthA));
+    /* node:coverage ignore next */if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) _temp39 = skipDebugger(_temp39);
+    /* node:coverage ignore next */if (_temp39 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
+        cause: _temp39
       });
-      _temp35 = _temp35.Value;
+      _temp39 = _temp39.Value;
     }
-    /* X */let _temp34 = CreateDataProperty(A, _temp35, T);
-    /* node:coverage ignore next */if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
-    /* node:coverage ignore next */if (_temp34 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
-        cause: _temp34
+    /* X */let _temp38 = CreateDataProperty(A, _temp39, T);
+    /* node:coverage ignore next */if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) _temp38 = skipDebugger(_temp38);
+    /* node:coverage ignore next */if (_temp38 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
+        cause: _temp38
       });
-      _temp34 = _temp34.Value;
+      _temp38 = _temp38.Value;
     }
     return A;
   }
@@ -72050,7 +72069,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x0097 (LATIN SMALL LETTER Y).
     const cu = 'y';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp40 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp40 instanceof Completion) {
+      if (_temp40 instanceof AbruptCompletion) return _temp40;
+      _temp40 = _temp40.Value;
+    }
+    return Value(_temp40);
   }
   RegExpProto_stickyGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky';
 
@@ -72111,7 +72135,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _flags8 = _flags8.Value;
     }
     const flags = _flags8;
-    const result = `/${pattern.stringValue()}/${flags.stringValue()}`;
+    const result = `/${pattern}/${flags}`;
     return Value(result);
   }
   RegExpProto_toString.section = 'https://tc39.es/ecma262/#sec-regexp.prototype.tostring';
@@ -72125,7 +72149,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x0075 (LATIN SMALL LETTER U).
     const cu = 'u';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp41 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp41 instanceof Completion) {
+      if (_temp41 instanceof AbruptCompletion) return _temp41;
+      _temp41 = _temp41.Value;
+    }
+    return Value(_temp41);
   }
   RegExpProto_unicodeGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode';
 
@@ -72138,7 +72167,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let cu be the code unit 0x0076 (LATIN SMALL LETTER V).
     const cu = 'v';
     // 3. Return ? RegExpHasFlag(R, cu).
-    return RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */let _temp42 = RegExpHasFlag(R, cu);
+    /* ReturnIfAbrupt */if (_temp42 instanceof Completion) {
+      if (_temp42 instanceof AbruptCompletion) return _temp42;
+      _temp42 = _temp42.Value;
+    }
+    return Value(_temp42);
   }
   RegExpProto_unicodeSetsGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.unicodeSets';
   function bootstrapRegExpPrototype(realmRec) {
@@ -72285,10 +72319,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.undefined;
     };
     // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
-    /* X */let _generator = CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), exports.surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]);
+    /* X */let _generator = CreateIteratorFromClosure(closure, '%SetIteratorPrototype%', exports.surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]);
     /* node:coverage ignore next */if (_generator && typeof _generator === 'object' && 'next' in _generator) _generator = skipDebugger(_generator);
     /* node:coverage ignore next */if (_generator instanceof Completion) {
-      /* node:coverage ignore next */if (_generator instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_generator instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, '%SetIteratorPrototype%', surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['HostCapturedValues'], [set]) returned an abrupt completion", {
         cause: _generator
       });
       _generator = _generator.Value;
@@ -72303,7 +72337,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
-    return yield* GeneratorResume(thisValue, undefined, Value('%SetIteratorPrototype%'));
+    return yield* GeneratorResume(thisValue, undefined, '%SetIteratorPrototype%');
   }
   SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
   function bootstrapSetIteratorPrototype(realmRec) {
@@ -72464,7 +72498,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _inOther = _inOther.Value;
           }
           const inOther = ToBoolean(_inOther);
-          if (inOther === Value.true) {
+          if (inOther) {
             resultSetData[index] = undefined;
           }
         }
@@ -72658,7 +72692,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _inOther2 = _inOther2.Value;
           }
           const inOther = ToBoolean(_inOther2);
-          if (inOther === Value.true && !SetDataHas(resultSetData, e)) {
+          if (inOther && !SetDataHas(resultSetData, e)) {
             resultSetData.push(e);
           }
         }
@@ -72759,7 +72793,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _inOther3 = _inOther3.Value;
           }
           const inOther = ToBoolean(_inOther3);
-          if (inOther === Value.true) {
+          if (inOther) {
             return BooleanValue.false;
           }
           thisSize = O.SetData.length;
@@ -72847,7 +72881,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _inOther4 = _inOther4.Value;
         }
         const inOther = ToBoolean(_inOther4);
-        if (inOther === Value.false) {
+        if (!inOther) {
           return Value.false;
         }
         thisSize = O.SetData.length;
@@ -73256,13 +73290,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const shadowRealmConstructor = bootstrapConstructor(realmRec, ShadowRealmConstructor, 'ShadowRealm', 0, realmRec.Intrinsics['%ShadowRealm.prototype%'], []);
     /* X */let _temp3 = shadowRealmConstructor.DefineOwnProperty(Value('prototype'), exports.Descriptor({
       Value: realmRec.Intrinsics['%ShadowRealm.prototype%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
     /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! shadowRealmConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: realmRec.Intrinsics['%ShadowRealm.prototype%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! shadowRealmConstructor.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: realmRec.Intrinsics['%ShadowRealm.prototype%'],\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp3
       });
       _temp3 = _temp3.Value;
@@ -73320,7 +73354,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const callerRealm = exports.surroundingAgent.currentRealmRecord;
     const evalRealm = O.ShadowRealm;
-    return ShadowRealmImportValue(specifierString, exportName, callerRealm, evalRealm);
+    return ShadowRealmImportValue(specifierString, exportName.stringValue(), callerRealm, evalRealm);
   }
   ShadowRealmPrototype_importValue.section = 'https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.importvalue';
   function bootstrapShadowRealmPrototype(realmRec) {
@@ -73333,7 +73367,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%StringIteratorPrototype%").
-    return yield* GeneratorResume(thisValue, undefined, Value('%StringIteratorPrototype%'));
+    return yield* GeneratorResume(thisValue, undefined, '%StringIteratorPrototype%');
   }
   StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
   function bootstrapStringIteratorPrototype(realmRec) {
@@ -73348,8 +73382,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     if (value instanceof ObjectValue && 'StringData' in value) {
       const s = value.StringData;
-      /* Assert */ /* node:coverage ignore next */if (!(s instanceof JSStringValue)) throw new Assert.Error("s instanceof JSStringValue");
-      return s;
+      /* Assert */ /* node:coverage ignore next */if (!(typeof s === 'string')) throw new Assert.Error("typeof s === 'string'");
+      return Value(s);
     }
     return Throw.TypeError('$1 is not a $2 object', value, 'String');
   }
@@ -73377,11 +73411,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _position = _position.Value;
     }
     const position = _position;
-    const size = S.stringValue().length;
+    const size = S.length;
     if (position < 0 || position >= size) {
       return Value('');
     }
-    return Value(S.stringValue()[position]);
+    return Value(S[position]);
   }
   StringProto_charAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.charat';
 
@@ -73407,11 +73441,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _position2 = _position2.Value;
     }
     const position = _position2;
-    const size = S.stringValue().length;
+    const size = S.length;
     if (position < 0 || position >= size) {
       return F(NaN);
     }
-    return F(S.stringValue().charCodeAt(position));
+    return F(S.charCodeAt(position));
   }
   StringProto_charCodeAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.charcodeat';
 
@@ -73437,14 +73471,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _position3 = _position3.Value;
     }
     const position = _position3;
-    const size = S.stringValue().length;
+    const size = S.length;
     if (position < 0 || position >= size) {
       return Value.undefined;
     }
-    /* X */let _cp = CodePointAt(S.stringValue(), position);
+    /* X */let _cp = CodePointAt(S, position);
     /* node:coverage ignore next */if (_cp && typeof _cp === 'object' && 'next' in _cp) _cp = skipDebugger(_cp);
     /* node:coverage ignore next */if (_cp instanceof Completion) {
-      /* node:coverage ignore next */if (_cp instanceof AbruptCompletion) throw new Assert.Error("! CodePointAt(S.stringValue(), position) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_cp instanceof AbruptCompletion) throw new Assert.Error("! CodePointAt(S, position) returned an abrupt completion", {
         cause: _cp
       });
       _cp = _cp.Value;
@@ -73470,7 +73504,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _S4 = _S4.Value;
     }
     const S = _S4;
-    let R = S.stringValue();
+    let R = S;
     const _args = [...args];
     while (_args.length > 0) {
       const next = _args.shift();
@@ -73480,7 +73514,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _nextString = _nextString.Value;
       }
       const nextString = _nextString;
-      R = `${R}${nextString.stringValue()}`;
+      R = `${R}${nextString}`;
     }
     return Value(R);
   }
@@ -73501,14 +73535,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_string instanceof AbruptCompletion) return _string;
       _string = _string.Value;
     }
-    const string = _string.stringValue();
+    const string = _string;
     /* ReturnIfAbrupt */let _isRegExp = yield* IsRegExp(searchString);
     /* ReturnIfAbrupt */if (_isRegExp instanceof Completion) {
       if (_isRegExp instanceof AbruptCompletion) return _isRegExp;
       _isRegExp = _isRegExp.Value;
     }
     const isRegExp = _isRegExp;
-    if (isRegExp === Value.true) {
+    if (isRegExp) {
       return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.endsWith');
     }
     /* ReturnIfAbrupt */let _searchStr = yield* ToString(searchString);
@@ -73516,7 +73550,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_searchStr instanceof AbruptCompletion) return _searchStr;
       _searchStr = _searchStr.Value;
     }
-    const searchStr = _searchStr.stringValue();
+    const searchStr = _searchStr;
     const length = string.length;
     let end;
     if (endPosition === Value.undefined) {
@@ -73558,14 +73592,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_string2 instanceof AbruptCompletion) return _string2;
       _string2 = _string2.Value;
     }
-    const string = _string2.stringValue();
+    const string = _string2;
     /* ReturnIfAbrupt */let _isRegExp2 = yield* IsRegExp(searchString);
     /* ReturnIfAbrupt */if (_isRegExp2 instanceof Completion) {
       if (_isRegExp2 instanceof AbruptCompletion) return _isRegExp2;
       _isRegExp2 = _isRegExp2.Value;
     }
     const isRegExp = _isRegExp2;
-    if (isRegExp === Value.true) {
+    if (isRegExp) {
       return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.includes');
     }
     /* ReturnIfAbrupt */let _searchStr2 = yield* ToString(searchString);
@@ -73573,7 +73607,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_searchStr2 instanceof AbruptCompletion) return _searchStr2;
       _searchStr2 = _searchStr2.Value;
     }
-    const searchStr = _searchStr2.stringValue();
+    const searchStr = _searchStr2;
     const length = string.length;
     /* ReturnIfAbrupt */let _start = yield* ToIntegerOrInfinity(position);
     /* ReturnIfAbrupt */if (_start instanceof Completion) {
@@ -73627,7 +73661,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const searchStr = _searchStr3;
     // 4. Let pos be ? ToIntegerOrInfinity(position).
     // 6. Let len be the length of S.
-    const length = string.stringValue().length;
+    const length = string.length;
     // 7. Let start be min(max(pos, 0), len).
     /* ReturnIfAbrupt */let _start2 = yield* ToIntegerOrInfinity(position);
     /* ReturnIfAbrupt */if (_start2 instanceof Completion) {
@@ -73686,13 +73720,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_string4 instanceof AbruptCompletion) return _string4;
       _string4 = _string4.Value;
     }
-    const string = _string4.stringValue();
+    const string = _string4;
     /* ReturnIfAbrupt */let _searchStr4 = yield* ToString(searchString);
     /* ReturnIfAbrupt */if (_searchStr4 instanceof Completion) {
       if (_searchStr4 instanceof AbruptCompletion) return _searchStr4;
       _searchStr4 = _searchStr4.Value;
     }
-    const searchStr = _searchStr4.stringValue();
+    const searchStr = _searchStr4;
     /* ReturnIfAbrupt */let _numberPosition = yield* ToNumber(position);
     /* ReturnIfAbrupt */if (_numberPosition instanceof Completion) {
       if (_numberPosition instanceof AbruptCompletion) return _numberPosition;
@@ -73755,13 +73789,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_S6 instanceof AbruptCompletion) return _S6;
       _S6 = _S6.Value;
     }
-    const S = Unicode.str_normalization(_S6.stringValue(), 'NFC');
+    const S = Unicode.str_normalization(_S6, 'NFC');
     /* ReturnIfAbrupt */let _That = yield* ToString(that);
     /* ReturnIfAbrupt */if (_That instanceof Completion) {
       if (_That instanceof AbruptCompletion) return _That;
       _That = _That.Value;
     }
-    const That = Unicode.str_normalization(_That.stringValue(), 'NFC');
+    const That = Unicode.str_normalization(_That, 'NFC');
     if (S === That) {
       return F(0);
     } else if (S < That) {
@@ -73805,7 +73839,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _rx = _rx.Value;
     }
     const rx = _rx;
-    return yield* Invoke(rx, wellKnownSymbols.match, [S]);
+    return yield* Invoke(rx, wellKnownSymbols.match, [Value(S)]);
   }
   StringProto_match.section = 'https://tc39.es/ecma262/#sec-string.prototype.match';
 
@@ -73829,7 +73863,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let isRegExp be ? IsRegExp(regexp).
       const isRegExp = _isRegExp3;
       // b. If isRegExp is true, then
-      if (isRegExp === Value.true) {
+      if (isRegExp) {
         /* ReturnIfAbrupt */let _flags = yield* Get(regexp, 'flags');
         /* ReturnIfAbrupt */if (_flags instanceof Completion) {
           if (_flags instanceof AbruptCompletion) return _flags;
@@ -73849,7 +73883,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp15 = _temp15.Value;
         }
         // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
-        if (!_temp15.stringValue().includes('g')) {
+        if (!_temp15.includes('g')) {
           return Throw.TypeError('The RegExp passed to String.prototype.$1 must have the global flag', 'matchAll');
         }
       }
@@ -73881,7 +73915,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const rx = _rx2;
     // 5. Return ? Invoke(rx, @@matchAll, « S »).
-    return yield* Invoke(rx, wellKnownSymbols.matchAll, [S]);
+    return yield* Invoke(rx, wellKnownSymbols.matchAll, [Value(S)]);
   }
   StringProto_matchAll.section = 'https://tc39.es/ecma262/#sec-string.prototype.matchall';
 
@@ -73901,21 +73935,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _S9 = _S9.Value;
     }
     const S = _S9;
+    let f;
     if (form === Value.undefined) {
-      form = Value('NFC');
+      f = 'NFC';
     } else {
       /* ReturnIfAbrupt */let _temp17 = yield* ToString(form);
       /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
         if (_temp17 instanceof AbruptCompletion) return _temp17;
         _temp17 = _temp17.Value;
       }
-      form = _temp17;
+      f = _temp17;
     }
-    const f = form.stringValue();
     if (f !== 'NFC' && f !== 'NFD' && f !== 'NFKC' && f !== 'NFKD') {
       return Throw.RangeError('Invalid normalization form');
     }
-    const ns = Unicode.str_normalization(S.stringValue(), f);
+    const ns = Unicode.str_normalization(S, f);
     return Value(ns);
   }
   StringProto_normalize.section = 'https://tc39.es/ecma262/#sec-string.prototype.normalize';
@@ -73930,7 +73964,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp18 instanceof AbruptCompletion) return _temp18;
       _temp18 = _temp18.Value;
     }
-    return yield* StringPad(O, maxLength, fillString, 'end');
+    /* ReturnIfAbrupt */let _temp19 = yield* StringPad(O, maxLength, fillString, 'end');
+    /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
+      if (_temp19 instanceof AbruptCompletion) return _temp19;
+      _temp19 = _temp19.Value;
+    }
+    return Value(_temp19);
   }
   StringProto_padEnd.section = 'https://tc39.es/ecma262/#sec-string.prototype.padend';
 
@@ -73939,12 +73978,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp19 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
-      if (_temp19 instanceof AbruptCompletion) return _temp19;
-      _temp19 = _temp19.Value;
+    /* ReturnIfAbrupt */let _temp20 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
+      if (_temp20 instanceof AbruptCompletion) return _temp20;
+      _temp20 = _temp20.Value;
     }
-    return yield* StringPad(O, maxLength, fillString, 'start');
+    /* ReturnIfAbrupt */let _temp21 = yield* StringPad(O, maxLength, fillString, 'start');
+    /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
+      if (_temp21 instanceof AbruptCompletion) return _temp21;
+      _temp21 = _temp21.Value;
+    }
+    return Value(_temp21);
   }
   StringProto_padStart.section = 'https://tc39.es/ecma262/#sec-string.prototype.padstart';
 
@@ -73953,10 +73997,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp20 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
-      if (_temp20 instanceof AbruptCompletion) return _temp20;
-      _temp20 = _temp20.Value;
+    /* ReturnIfAbrupt */let _temp22 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
+      if (_temp22 instanceof AbruptCompletion) return _temp22;
+      _temp22 = _temp22.Value;
     }
     /* ReturnIfAbrupt */let _S0 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_S0 instanceof Completion) {
@@ -73981,7 +74025,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     let T = '';
     for (let i = 0; i < n; i += 1) {
-      T += S.stringValue();
+      T += S;
     }
     return Value(T);
   }
@@ -73992,10 +74036,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp21 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
-      if (_temp21 instanceof AbruptCompletion) return _temp21;
-      _temp21 = _temp21.Value;
+    /* ReturnIfAbrupt */let _temp23 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
+      if (_temp23 instanceof AbruptCompletion) return _temp23;
+      _temp23 = _temp23.Value;
     }
     if (searchValue instanceof ObjectValue) {
       /* ReturnIfAbrupt */let _replacer = yield* GetMethod(searchValue, wellKnownSymbols.replace);
@@ -74021,48 +74065,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const searchString = _searchString;
     const functionalReplace = IsCallable(replaceValue);
+    let replacementValue;
     if (!functionalReplace) {
-      /* ReturnIfAbrupt */let _temp22 = yield* ToString(replaceValue);
-      /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
-        if (_temp22 instanceof AbruptCompletion) return _temp22;
-        _temp22 = _temp22.Value;
-      }
-      replaceValue = _temp22;
-    }
-    const searchLength = searchString.stringValue().length;
-    const position = string.stringValue().indexOf(searchString.stringValue(), 0);
-    if (position === -1) {
-      return string;
-    }
-    const preceding = string.stringValue().slice(0, position);
-    const following = string.stringValue().slice(position + searchLength);
-    let replacement;
-    if (functionalReplace) {
-      /* ReturnIfAbrupt */let _temp24 = yield* Call(replaceValue, Value.undefined, [searchString, F(position), string]);
+      /* ReturnIfAbrupt */let _temp24 = yield* ToString(replaceValue);
       /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
         if (_temp24 instanceof AbruptCompletion) return _temp24;
         _temp24 = _temp24.Value;
       }
-      /* ReturnIfAbrupt */let _temp23 = yield* ToString(_temp24);
-      /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
-        if (_temp23 instanceof AbruptCompletion) return _temp23;
-        _temp23 = _temp23.Value;
+      replacementValue = _temp24;
+    }
+    const searchLength = searchString.length;
+    const position = string.indexOf(searchString, 0);
+    if (position === -1) {
+      return Value(string);
+    }
+    const preceding = string.slice(0, position);
+    const following = string.slice(position + searchLength);
+    let replacement;
+    if (functionalReplace) {
+      /* ReturnIfAbrupt */let _temp26 = yield* Call(replaceValue, Value.undefined, [Value(searchString), F(position), Value(string)]);
+      /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
+        if (_temp26 instanceof AbruptCompletion) return _temp26;
+        _temp26 = _temp26.Value;
       }
-      replacement = _temp23;
-    } else {
-      /* Assert */ /* node:coverage ignore next */if (!(replaceValue instanceof JSStringValue)) throw new Assert.Error("replaceValue instanceof JSStringValue");
-      const captures = [];
-      /* X */let _temp25 = GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue);
-      /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
-      /* node:coverage ignore next */if (_temp25 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue) returned an abrupt completion", {
-          cause: _temp25
-        });
+      /* ReturnIfAbrupt */let _temp25 = yield* ToString(_temp26);
+      /* ReturnIfAbrupt */if (_temp25 instanceof Completion) {
+        if (_temp25 instanceof AbruptCompletion) return _temp25;
         _temp25 = _temp25.Value;
       }
       replacement = _temp25;
+    } else {
+      /* Assert */ /* node:coverage ignore next */if (!(typeof replacementValue === 'string')) throw new Assert.Error("typeof replacementValue === 'string'");
+      const captures = [];
+      /* X */let _temp27 = GetSubstitution(searchString, string, position, captures, undefined, replacementValue);
+      /* node:coverage ignore next */if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) _temp27 = skipDebugger(_temp27);
+      /* node:coverage ignore next */if (_temp27 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp27 instanceof AbruptCompletion) throw new Assert.Error("! GetSubstitution(searchString, string, position, captures, undefined, replacementValue) returned an abrupt completion", {
+          cause: _temp27
+        });
+        _temp27 = _temp27.Value;
+      }
+      replacement = _temp27;
     }
-    return Value(preceding + replacement.stringValue() + following);
+    return Value(preceding + replacement + following);
   }
   StringProto_replace.section = 'https://tc39.es/ecma262/#sec-string.prototype.replace';
 
@@ -74071,10 +74116,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp26 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
-      if (_temp26 instanceof AbruptCompletion) return _temp26;
-      _temp26 = _temp26.Value;
+    /* ReturnIfAbrupt */let _temp28 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
+      if (_temp28 instanceof AbruptCompletion) return _temp28;
+      _temp28 = _temp28.Value;
     }
     // 2.If searchValue is an Object, then
     if (searchValue instanceof ObjectValue) {
@@ -74086,7 +74131,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let isRegExp be ? IsRegExp(searchValue).
       const isRegExp = _isRegExp4;
       // b. If isRegExp is true, then
-      if (isRegExp === Value.true) {
+      if (isRegExp) {
         /* ReturnIfAbrupt */let _flags2 = yield* Get(searchValue, 'flags');
         /* ReturnIfAbrupt */if (_flags2 instanceof Completion) {
           if (_flags2 instanceof AbruptCompletion) return _flags2;
@@ -74095,18 +74140,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // i. Let flags be ? Get(searchValue, "flags").
         const flags = _flags2;
         // ii. Perform ? RequireObjectCoercible(flags).
-        /* ReturnIfAbrupt */let _temp27 = RequireObjectCoercible(flags);
-        /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
-          if (_temp27 instanceof AbruptCompletion) return _temp27;
-          _temp27 = _temp27.Value;
+        /* ReturnIfAbrupt */let _temp29 = RequireObjectCoercible(flags);
+        /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
+          if (_temp29 instanceof AbruptCompletion) return _temp29;
+          _temp29 = _temp29.Value;
         }
-        /* ReturnIfAbrupt */let _temp28 = yield* ToString(flags);
-        /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
-          if (_temp28 instanceof AbruptCompletion) return _temp28;
-          _temp28 = _temp28.Value;
+        /* ReturnIfAbrupt */let _temp30 = yield* ToString(flags);
+        /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
+          if (_temp30 instanceof AbruptCompletion) return _temp30;
+          _temp30 = _temp30.Value;
         }
         // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
-        if (!_temp28.stringValue().includes('g')) {
+        if (!_temp30.includes('g')) {
           return Throw.TypeError('The RegExp passed to String.prototype.$1 must have the global flag', 'replaceAll');
         }
       }
@@ -74141,16 +74186,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const functionalReplace = IsCallable(replaceValue);
     // 6. If functionalReplace is false, then
     if (!functionalReplace) {
-      /* ReturnIfAbrupt */let _temp29 = yield* ToString(replaceValue);
-      /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
-        if (_temp29 instanceof AbruptCompletion) return _temp29;
-        _temp29 = _temp29.Value;
+      /* ReturnIfAbrupt */let _temp31 = yield* ToString(replaceValue);
+      /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
+        if (_temp31 instanceof AbruptCompletion) return _temp31;
+        _temp31 = _temp31.Value;
       }
       // a. Let replaceValue be ? ToString(replaceValue).
-      replaceValue = _temp29;
+      replaceValue = Value(_temp31);
     }
     // 7. Let searchLength be the length of searchString.
-    const searchLength = searchString.stringValue().length;
+    const searchLength = searchString.length;
     // 8. Let advanceBy be max(1, searchLength).
     const advanceBy = Math.max(1, searchLength);
     // 9. Let matchPositions be a new empty List.
@@ -74170,15 +74215,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Append position to the end of matchPositions.
       matchPositions.push(position);
       // b. Let position be ! StringIndexOf(string, searchString, position + advanceBy).
-      /* X */let _temp30 = StringIndexOf(string, searchString, position + advanceBy);
-      /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
-      /* node:coverage ignore next */if (_temp30 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! StringIndexOf(string, searchString, position + advanceBy) returned an abrupt completion", {
-          cause: _temp30
+      /* X */let _temp32 = StringIndexOf(string, searchString, position + advanceBy);
+      /* node:coverage ignore next */if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
+      /* node:coverage ignore next */if (_temp32 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! StringIndexOf(string, searchString, position + advanceBy) returned an abrupt completion", {
+          cause: _temp32
         });
-        _temp30 = _temp30.Value;
+        _temp32 = _temp32.Value;
       }
-      position = R(_temp30);
+      position = R(_temp32);
     }
     // 12. Let endOfLastMatch be 0.
     let endOfLastMatch = 0;
@@ -74189,18 +74234,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let replacement;
       // a. If functionalReplace is true, then
       if (functionalReplace) {
-        /* ReturnIfAbrupt */let _temp32 = yield* Call(replaceValue, Value.undefined, [searchString, F(position), string]);
-        /* ReturnIfAbrupt */if (_temp32 instanceof Completion) {
-          if (_temp32 instanceof AbruptCompletion) return _temp32;
-          _temp32 = _temp32.Value;
+        /* ReturnIfAbrupt */let _temp34 = yield* Call(replaceValue, Value.undefined, [Value(searchString), F(position), Value(string)]);
+        /* ReturnIfAbrupt */if (_temp34 instanceof Completion) {
+          if (_temp34 instanceof AbruptCompletion) return _temp34;
+          _temp34 = _temp34.Value;
         }
-        /* ReturnIfAbrupt */let _temp31 = yield* ToString(_temp32);
-        /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
-          if (_temp31 instanceof AbruptCompletion) return _temp31;
-          _temp31 = _temp31.Value;
+        /* ReturnIfAbrupt */let _temp33 = yield* ToString(_temp34);
+        /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
+          if (_temp33 instanceof AbruptCompletion) return _temp33;
+          _temp33 = _temp33.Value;
         }
         // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, 𝔽(position), string »).
-        replacement = _temp31;
+        replacement = _temp33;
       } else {
         /* Assert */ /* node:coverage ignore next */ // b. Else,
         // i. Assert: Type(replaceValue) is String.
@@ -74208,27 +74253,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // ii. Let captures be a new empty List.
         const captures = [];
         // iii. Let replacement be GetSubstitution(searchString, string, position, captures, undefined, replaceValue).
-        /* X */let _temp33 = GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue);
-        /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
-        /* node:coverage ignore next */if (_temp33 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue) returned an abrupt completion", {
-            cause: _temp33
+        /* X */let _temp35 = GetSubstitution(searchString, string, position, captures, undefined, replaceValue.stringValue());
+        /* node:coverage ignore next */if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) _temp35 = skipDebugger(_temp35);
+        /* node:coverage ignore next */if (_temp35 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp35 instanceof AbruptCompletion) throw new Assert.Error("! GetSubstitution(searchString, string, position, captures, undefined, replaceValue.stringValue()) returned an abrupt completion", {
+            cause: _temp35
           });
-          _temp33 = _temp33.Value;
+          _temp35 = _temp35.Value;
         }
-        replacement = _temp33;
+        replacement = _temp35;
       }
       // c. Let stringSlice be the substring of string consisting of the code units from endOfLastMatch (inclusive) up through position (exclusive).
-      const stringSlice = string.stringValue().slice(endOfLastMatch, position);
+      const stringSlice = string.slice(endOfLastMatch, position);
       // d. Let result be the string-concatenation of result, stringSlice, and replacement.
-      result = result + stringSlice + replacement.stringValue();
+      result = result + stringSlice + replacement;
       // e. Let endOfLastMatch be position + searchLength.
       endOfLastMatch = position + searchLength;
     }
     // 15. If endOfLastMatch < the length of string, then
-    if (endOfLastMatch < string.stringValue().length) {
+    if (endOfLastMatch < string.length) {
       // a. Let result be the string-concatenation of result and the substring of string consisting of the code units from endOfLastMatch (inclusive) up through the final code unit of string (inclusive).
-      result += string.stringValue().slice(endOfLastMatch);
+      result += string.slice(endOfLastMatch);
     }
     // 16. Return result.
     return Value(result);
@@ -74240,10 +74285,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp34 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp34 instanceof Completion) {
-      if (_temp34 instanceof AbruptCompletion) return _temp34;
-      _temp34 = _temp34.Value;
+    /* ReturnIfAbrupt */let _temp36 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp36 instanceof Completion) {
+      if (_temp36 instanceof AbruptCompletion) return _temp36;
+      _temp36 = _temp36.Value;
     }
     if (regexp instanceof ObjectValue) {
       /* ReturnIfAbrupt */let _searcher = yield* GetMethod(regexp, wellKnownSymbols.search);
@@ -74268,7 +74313,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _rx3 = _rx3.Value;
     }
     const rx = _rx3;
-    return yield* Invoke(rx, wellKnownSymbols.search, [string]);
+    return yield* Invoke(rx, wellKnownSymbols.search, [Value(string)]);
   }
   StringProto_search.section = 'https://tc39.es/ecma262/#sec-string.prototype.slice';
 
@@ -74277,17 +74322,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp35 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp35 instanceof Completion) {
-      if (_temp35 instanceof AbruptCompletion) return _temp35;
-      _temp35 = _temp35.Value;
+    /* ReturnIfAbrupt */let _temp37 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp37 instanceof Completion) {
+      if (_temp37 instanceof AbruptCompletion) return _temp37;
+      _temp37 = _temp37.Value;
     }
     /* ReturnIfAbrupt */let _string8 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_string8 instanceof Completion) {
       if (_string8 instanceof AbruptCompletion) return _string8;
       _string8 = _string8.Value;
     }
-    const string = _string8.stringValue();
+    const string = _string8;
     const length = string.length;
     /* ReturnIfAbrupt */let _from = yield* ToClampedIndex(start, length);
     /* ReturnIfAbrupt */if (_from instanceof Completion) {
@@ -74299,12 +74344,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (end === Value.undefined) {
       to = length;
     } else {
-      /* ReturnIfAbrupt */let _temp36 = yield* ToClampedIndex(end, length);
-      /* ReturnIfAbrupt */if (_temp36 instanceof Completion) {
-        if (_temp36 instanceof AbruptCompletion) return _temp36;
-        _temp36 = _temp36.Value;
+      /* ReturnIfAbrupt */let _temp38 = yield* ToClampedIndex(end, length);
+      /* ReturnIfAbrupt */if (_temp38 instanceof Completion) {
+        if (_temp38 instanceof AbruptCompletion) return _temp38;
+        _temp38 = _temp38.Value;
       }
-      to = _temp36;
+      to = _temp38;
     }
     if (from >= to) return Value('');
     return Value(string.slice(from, to));
@@ -74316,10 +74361,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp37 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp37 instanceof Completion) {
-      if (_temp37 instanceof AbruptCompletion) return _temp37;
-      _temp37 = _temp37.Value;
+    /* ReturnIfAbrupt */let _temp39 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp39 instanceof Completion) {
+      if (_temp39 instanceof AbruptCompletion) return _temp39;
+      _temp39 = _temp39.Value;
     }
     if (separator instanceof ObjectValue) {
       /* ReturnIfAbrupt */let _splitter = yield* GetMethod(separator, wellKnownSymbols.split);
@@ -74352,14 +74397,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (limit === Value.undefined) {
       lim = F(2 ** 32 - 1);
     } else {
-      /* ReturnIfAbrupt */let _temp38 = yield* ToUint32(limit);
-      /* ReturnIfAbrupt */if (_temp38 instanceof Completion) {
-        if (_temp38 instanceof AbruptCompletion) return _temp38;
-        _temp38 = _temp38.Value;
+      /* ReturnIfAbrupt */let _temp40 = yield* ToUint32(limit);
+      /* ReturnIfAbrupt */if (_temp40 instanceof Completion) {
+        if (_temp40 instanceof AbruptCompletion) return _temp40;
+        _temp40 = _temp40.Value;
       }
-      lim = _temp38;
+      lim = _temp40;
     }
-    const s = S.stringValue().length;
+    const s = S.length;
     let p = 0;
     /* ReturnIfAbrupt */let _R = yield* ToString(separator);
     /* ReturnIfAbrupt */if (_R instanceof Completion) {
@@ -74371,25 +74416,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return A;
     }
     if (separator === Value.undefined) {
-      /* X */let _temp39 = CreateDataPropertyOrThrow(A, '0', S);
-      /* node:coverage ignore next */if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) _temp39 = skipDebugger(_temp39);
-      /* node:coverage ignore next */if (_temp39 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, '0', S) returned an abrupt completion", {
-          cause: _temp39
+      /* X */let _temp41 = CreateDataPropertyOrThrow(A, '0', Value(S));
+      /* node:coverage ignore next */if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
+      /* node:coverage ignore next */if (_temp41 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, '0', Value(S)) returned an abrupt completion", {
+          cause: _temp41
         });
-        _temp39 = _temp39.Value;
+        _temp41 = _temp41.Value;
       }
       return A;
     }
     if (s === 0) {
-      if (R$1.stringValue() !== '') {
-        /* X */let _temp40 = CreateDataPropertyOrThrow(A, '0', S);
-        /* node:coverage ignore next */if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) _temp40 = skipDebugger(_temp40);
-        /* node:coverage ignore next */if (_temp40 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, '0', S) returned an abrupt completion", {
-            cause: _temp40
+      if (R$1 !== '') {
+        /* X */let _temp42 = CreateDataPropertyOrThrow(A, '0', Value(S));
+        /* node:coverage ignore next */if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) _temp42 = skipDebugger(_temp42);
+        /* node:coverage ignore next */if (_temp42 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, '0', Value(S)) returned an abrupt completion", {
+            cause: _temp42
           });
-          _temp40 = _temp40.Value;
+          _temp42 = _temp42.Value;
         }
       }
       return A;
@@ -74403,22 +74448,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (e === p) {
           q += 1;
         } else {
-          const T = Value(S.stringValue().substring(p, q));
-          /* X */let _temp42 = ToString(F(lengthA));
-          /* node:coverage ignore next */if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) _temp42 = skipDebugger(_temp42);
-          /* node:coverage ignore next */if (_temp42 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
-              cause: _temp42
+          const T = Value(S.substring(p, q));
+          /* X */let _temp44 = ToString(F(lengthA));
+          /* node:coverage ignore next */if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) _temp44 = skipDebugger(_temp44);
+          /* node:coverage ignore next */if (_temp44 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
+              cause: _temp44
             });
-            _temp42 = _temp42.Value;
+            _temp44 = _temp44.Value;
           }
-          /* X */let _temp41 = CreateDataPropertyOrThrow(A, _temp42, T);
-          /* node:coverage ignore next */if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
-          /* node:coverage ignore next */if (_temp41 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
-              cause: _temp41
+          /* X */let _temp43 = CreateDataPropertyOrThrow(A, _temp44, T);
+          /* node:coverage ignore next */if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) _temp43 = skipDebugger(_temp43);
+          /* node:coverage ignore next */if (_temp43 instanceof Completion) {
+            /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
+              cause: _temp43
             });
-            _temp41 = _temp41.Value;
+            _temp43 = _temp43.Value;
           }
           lengthA += 1;
           if (lengthA === R(lim)) {
@@ -74429,67 +74474,64 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
-    const T = Value(S.stringValue().substring(p, s));
-    /* X */let _temp44 = ToString(F(lengthA));
-    /* node:coverage ignore next */if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) _temp44 = skipDebugger(_temp44);
-    /* node:coverage ignore next */if (_temp44 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
-        cause: _temp44
+    const T = Value(S.substring(p, s));
+    /* X */let _temp46 = ToString(F(lengthA));
+    /* node:coverage ignore next */if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) _temp46 = skipDebugger(_temp46);
+    /* node:coverage ignore next */if (_temp46 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp46 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(lengthA)) returned an abrupt completion", {
+        cause: _temp46
       });
-      _temp44 = _temp44.Value;
+      _temp46 = _temp46.Value;
     }
-    /* X */let _temp43 = CreateDataPropertyOrThrow(A, _temp44, T);
-    /* node:coverage ignore next */if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) _temp43 = skipDebugger(_temp43);
-    /* node:coverage ignore next */if (_temp43 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp43 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
-        cause: _temp43
+    /* X */let _temp45 = CreateDataPropertyOrThrow(A, _temp46, T);
+    /* node:coverage ignore next */if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) _temp45 = skipDebugger(_temp45);
+    /* node:coverage ignore next */if (_temp45 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp45 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T) returned an abrupt completion", {
+        cause: _temp45
       });
-      _temp43 = _temp43.Value;
+      _temp45 = _temp45.Value;
     }
     return A;
   }
   StringProto_split.section = 'https://tc39.es/ecma262/#sec-string.prototype.split';
-
-  /** https://tc39.es/ecma262/#sec-splitmatch */
   function* SplitMatch(S, q, R) {
-    /* Assert */ /* node:coverage ignore next */if (!(R instanceof JSStringValue)) throw new Assert.Error("R instanceof JSStringValue");
-    const r = R.stringValue().length;
-    const s = S.stringValue().length;
+    /* Assert */ /* node:coverage ignore next */if (!(typeof R === 'string')) throw new Assert.Error("typeof R === 'string'");
+    const r = R.length;
+    const s = S.length;
     if (q + r > s) {
       return false;
     }
     for (let i = 0; i < r; i += 1) {
-      if (S.stringValue().charCodeAt(q + i) !== R.stringValue().charCodeAt(i)) {
+      if (S.charCodeAt(q + i) !== R.charCodeAt(i)) {
         return false;
       }
     }
     return q + r;
   }
-  SplitMatch.section = 'https://tc39.es/ecma262/#sec-splitmatch';
 
   /** https://tc39.es/ecma262/#sec-string.prototype.startswith */
   function* StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], {
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp45 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp45 instanceof Completion) {
-      if (_temp45 instanceof AbruptCompletion) return _temp45;
-      _temp45 = _temp45.Value;
+    /* ReturnIfAbrupt */let _temp47 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp47 instanceof Completion) {
+      if (_temp47 instanceof AbruptCompletion) return _temp47;
+      _temp47 = _temp47.Value;
     }
     /* ReturnIfAbrupt */let _string9 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_string9 instanceof Completion) {
       if (_string9 instanceof AbruptCompletion) return _string9;
       _string9 = _string9.Value;
     }
-    const string = _string9.stringValue();
+    const string = _string9;
     /* ReturnIfAbrupt */let _isRegExp5 = yield* IsRegExp(searchString);
     /* ReturnIfAbrupt */if (_isRegExp5 instanceof Completion) {
       if (_isRegExp5 instanceof AbruptCompletion) return _isRegExp5;
       _isRegExp5 = _isRegExp5.Value;
     }
     const isRegExp = _isRegExp5;
-    if (isRegExp === Value.true) {
+    if (isRegExp) {
       return Throw.TypeError('First argument to $1 must not be a regular expression', 'String.prototype.startsWith');
     }
     /* ReturnIfAbrupt */let _searchStr5 = yield* ToString(searchString);
@@ -74497,7 +74539,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_searchStr5 instanceof AbruptCompletion) return _searchStr5;
       _searchStr5 = _searchStr5.Value;
     }
-    const searchStr = _searchStr5.stringValue();
+    const searchStr = _searchStr5;
     const length = string.length;
     /* ReturnIfAbrupt */let _start3 = yield* ToIntegerOrInfinity(position);
     /* ReturnIfAbrupt */if (_start3 instanceof Completion) {
@@ -74524,17 +74566,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp46 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp46 instanceof Completion) {
-      if (_temp46 instanceof AbruptCompletion) return _temp46;
-      _temp46 = _temp46.Value;
+    /* ReturnIfAbrupt */let _temp48 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp48 instanceof Completion) {
+      if (_temp48 instanceof AbruptCompletion) return _temp48;
+      _temp48 = _temp48.Value;
     }
     /* ReturnIfAbrupt */let _string0 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_string0 instanceof Completion) {
       if (_string0 instanceof AbruptCompletion) return _string0;
       _string0 = _string0.Value;
     }
-    const string = _string0.stringValue();
+    const string = _string0;
     const length = string.length;
     /* ReturnIfAbrupt */let _finalStart = yield* ToIntegerOrInfinity(start);
     /* ReturnIfAbrupt */if (_finalStart instanceof Completion) {
@@ -74547,12 +74589,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (end === Value.undefined) {
       finalEnd = length;
     } else {
-      /* ReturnIfAbrupt */let _temp47 = yield* ToIntegerOrInfinity(end);
-      /* ReturnIfAbrupt */if (_temp47 instanceof Completion) {
-        if (_temp47 instanceof AbruptCompletion) return _temp47;
-        _temp47 = _temp47.Value;
+      /* ReturnIfAbrupt */let _temp49 = yield* ToIntegerOrInfinity(end);
+      /* ReturnIfAbrupt */if (_temp49 instanceof Completion) {
+        if (_temp49 instanceof AbruptCompletion) return _temp49;
+        _temp49 = _temp49.Value;
       }
-      finalEnd = clamp(0, _temp47, length);
+      finalEnd = clamp(0, _temp49, length);
     }
     const from = Math.min(finalStart, finalEnd);
     const to = Math.max(finalStart, finalEnd);
@@ -74565,10 +74607,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp48 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp48 instanceof Completion) {
-      if (_temp48 instanceof AbruptCompletion) return _temp48;
-      _temp48 = _temp48.Value;
+    /* ReturnIfAbrupt */let _temp50 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp50 instanceof Completion) {
+      if (_temp50 instanceof AbruptCompletion) return _temp50;
+      _temp50 = _temp50.Value;
     }
     /* ReturnIfAbrupt */let _S10 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_S10 instanceof Completion) {
@@ -74576,7 +74618,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _S10 = _S10.Value;
     }
     const S = _S10;
-    const L = Unicode.str_toLocaleLowercase(S.stringValue());
+    const L = Unicode.str_toLocaleLowercase(S);
     return Value(L);
   }
   StringProto_toLocaleLowerCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase';
@@ -74586,10 +74628,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp49 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp49 instanceof Completion) {
-      if (_temp49 instanceof AbruptCompletion) return _temp49;
-      _temp49 = _temp49.Value;
+    /* ReturnIfAbrupt */let _temp51 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp51 instanceof Completion) {
+      if (_temp51 instanceof AbruptCompletion) return _temp51;
+      _temp51 = _temp51.Value;
     }
     /* ReturnIfAbrupt */let _S11 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_S11 instanceof Completion) {
@@ -74597,7 +74639,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _S11 = _S11.Value;
     }
     const S = _S11;
-    const L = Unicode.str_toLocaleUppercase(S.stringValue());
+    const L = Unicode.str_toLocaleUppercase(S);
     return Value(L);
   }
   StringProto_toLocaleUpperCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase';
@@ -74607,10 +74649,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp50 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp50 instanceof Completion) {
-      if (_temp50 instanceof AbruptCompletion) return _temp50;
-      _temp50 = _temp50.Value;
+    /* ReturnIfAbrupt */let _temp52 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp52 instanceof Completion) {
+      if (_temp52 instanceof AbruptCompletion) return _temp52;
+      _temp52 = _temp52.Value;
     }
     /* ReturnIfAbrupt */let _S12 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_S12 instanceof Completion) {
@@ -74618,7 +74660,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _S12 = _S12.Value;
     }
     const S = _S12;
-    const L = Unicode.str_toLowercase(S.stringValue());
+    const L = Unicode.str_toLowercase(S);
     return Value(L);
   }
   StringProto_toLowerCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.tolowercase';
@@ -74636,10 +74678,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp51 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp51 instanceof Completion) {
-      if (_temp51 instanceof AbruptCompletion) return _temp51;
-      _temp51 = _temp51.Value;
+    /* ReturnIfAbrupt */let _temp53 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp53 instanceof Completion) {
+      if (_temp53 instanceof AbruptCompletion) return _temp53;
+      _temp53 = _temp53.Value;
     }
     /* ReturnIfAbrupt */let _S13 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_S13 instanceof Completion) {
@@ -74647,7 +74689,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _S13 = _S13.Value;
     }
     const S = _S13;
-    const L = Unicode.str_toUppercase(S.stringValue());
+    const L = Unicode.str_toUppercase(S);
     return Value(L);
   }
   StringProto_toUpperCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.touppercase';
@@ -74657,10 +74699,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp52 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp52 instanceof Completion) {
-      if (_temp52 instanceof AbruptCompletion) return _temp52;
-      _temp52 = _temp52.Value;
+    /* ReturnIfAbrupt */let _temp54 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp54 instanceof Completion) {
+      if (_temp54 instanceof AbruptCompletion) return _temp54;
+      _temp54 = _temp54.Value;
     }
     /* ReturnIfAbrupt */let _S14 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_S14 instanceof Completion) {
@@ -74670,7 +74712,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Let S be ? ToString(O).
     const S = _S14;
     // 3. Let strLen be the length of S.
-    const strLen = S.stringValue().length;
+    const strLen = S.length;
     // 4. Let k be 0.
     let k = 0;
     // 5. Let result be the empty String.
@@ -74678,7 +74720,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Repeat, while k < strLen,
     while (k < strLen) {
       // a. Let cp be CodePointAt(S, k).
-      const cp = CodePointAt(S.stringValue(), k);
+      const cp = CodePointAt(S, k);
       // b. If cp.[[IsUnpairedSurrogate]] is true, then
       if (cp.IsUnpairedSurrogate) {
         // i. Set result to the string-concatenation of result and 0xFFFD (REPLACEMENT CHARACTER).
@@ -74701,7 +74743,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const S = thisValue;
-    return yield* TrimString(S, 'start+end');
+    /* ReturnIfAbrupt */let _temp55 = yield* TrimString(S, 'start+end');
+    /* ReturnIfAbrupt */if (_temp55 instanceof Completion) {
+      if (_temp55 instanceof AbruptCompletion) return _temp55;
+      _temp55 = _temp55.Value;
+    }
+    return Value(_temp55);
   }
   StringProto_trim.section = 'https://tc39.es/ecma262/#sec-string.prototype.trim';
 
@@ -74710,7 +74757,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const S = thisValue;
-    return yield* TrimString(S, 'end');
+    /* ReturnIfAbrupt */let _temp56 = yield* TrimString(S, 'end');
+    /* ReturnIfAbrupt */if (_temp56 instanceof Completion) {
+      if (_temp56 instanceof AbruptCompletion) return _temp56;
+      _temp56 = _temp56.Value;
+    }
+    return Value(_temp56);
   }
   StringProto_trimEnd.section = 'https://tc39.es/ecma262/#sec-string.prototype.trimend';
 
@@ -74719,7 +74771,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const S = thisValue;
-    return yield* TrimString(S, 'start');
+    /* ReturnIfAbrupt */let _temp57 = yield* TrimString(S, 'start');
+    /* ReturnIfAbrupt */if (_temp57 instanceof Completion) {
+      if (_temp57 instanceof AbruptCompletion) return _temp57;
+      _temp57 = _temp57.Value;
+    }
+    return Value(_temp57);
   }
   StringProto_trimStart.section = 'https://tc39.es/ecma262/#sec-string.prototype.trimstart';
 
@@ -74736,10 +74793,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp53 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp53 instanceof Completion) {
-      if (_temp53 instanceof AbruptCompletion) return _temp53;
-      _temp53 = _temp53.Value;
+    /* ReturnIfAbrupt */let _temp58 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp58 instanceof Completion) {
+      if (_temp58 instanceof AbruptCompletion) return _temp58;
+      _temp58 = _temp58.Value;
     }
     /* ReturnIfAbrupt */let _s = yield* ToString(O);
     /* ReturnIfAbrupt */if (_s instanceof Completion) {
@@ -74747,7 +74804,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _s = _s.Value;
     }
     // 2. Let s be ? ToString(O).
-    const s = _s.stringValue();
+    const s = _s;
     // 3. Let closure be a new Abstract Closure with no parameters that captures s and performs the following steps when called:
     const closure = function* closure() {
       // a. Let position be 0.
@@ -74785,10 +74842,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.undefined;
     };
     // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-    /* X */let _generator = CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), exports.surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]);
+    /* X */let _generator = CreateIteratorFromClosure(closure, '%StringIteratorPrototype%', exports.surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]);
     /* node:coverage ignore next */if (_generator && typeof _generator === 'object' && 'next' in _generator) _generator = skipDebugger(_generator);
     /* node:coverage ignore next */if (_generator instanceof Completion) {
-      /* node:coverage ignore next */if (_generator instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_generator instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorFromClosure(closure, '%StringIteratorPrototype%', surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['HostCapturedValues'], [O]) returned an abrupt completion", {
         cause: _generator
       });
       _generator = _generator.Value;
@@ -74803,10 +74860,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     const O = thisValue;
-    /* ReturnIfAbrupt */let _temp54 = RequireObjectCoercible(O);
-    /* ReturnIfAbrupt */if (_temp54 instanceof Completion) {
-      if (_temp54 instanceof AbruptCompletion) return _temp54;
-      _temp54 = _temp54.Value;
+    /* ReturnIfAbrupt */let _temp59 = RequireObjectCoercible(O);
+    /* ReturnIfAbrupt */if (_temp59 instanceof Completion) {
+      if (_temp59 instanceof AbruptCompletion) return _temp59;
+      _temp59 = _temp59.Value;
     }
     /* ReturnIfAbrupt */let _string1 = yield* ToString(O);
     /* ReturnIfAbrupt */if (_string1 instanceof Completion) {
@@ -74814,7 +74871,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _string1 = _string1.Value;
     }
     const string = _string1;
-    const length = string.stringValue().length;
+    const length = string.length;
     /* ReturnIfAbrupt */let _k = yield* ToAbsoluteIndex(index, length);
     /* ReturnIfAbrupt */if (_k instanceof Completion) {
       if (_k instanceof AbruptCompletion) return _k;
@@ -74826,11 +74883,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Value.undefined;
     }
     // 8. Return the String value consisting of only the code unit at position k in S.
-    return Value(string.stringValue()[k]);
+    return Value(string[k]);
   }
   StringProto_at.section = 'https://tc39.es/ecma262/#sec-string.prototype.at';
   function bootstrapStringPrototype(realmRec) {
-    const proto = StringCreate(Value(''), realmRec.Intrinsics['%Object.prototype%']);
+    const proto = StringCreate('', realmRec.Intrinsics['%Object.prototype%']);
     assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], ['isWellFormed', StringProto_isWellFormed, 0], ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], ['toWellFormed', StringProto_toWellFormed, 0], ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
     realmRec.Intrinsics['%String.prototype%'] = proto;
   }
@@ -74869,7 +74926,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const sym = _sym;
     // 3. Return sym.[[Description]].
-    return sym.Description;
+    return Value(sym.Description);
   }
   SymbolProto_descriptionGetter.section = 'https://tc39.es/ecma262/#sec-symbol.prototype.description';
 
@@ -74885,7 +74942,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let sym be ? thisSymbolValue(this value).
     const sym = _sym2;
     // 2. Return SymbolDescriptiveString(sym).
-    return SymbolDescriptiveString(sym);
+    return Value(SymbolDescriptiveString(sym));
   }
   SymbolProto_toString.section = 'https://tc39.es/ecma262/#sec-symbol.prototype.tostring';
 
@@ -74908,9 +74965,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   SymbolProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive';
   function bootstrapSymbolPrototype(realmRec) {
     const override = {
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: false,
+      Enumerable: false,
+      Configurable: true
     };
     const proto = bootstrapPrototype(realmRec, [['toString', SymbolProto_toString, 0], ['description', [SymbolProto_descriptionGetter]], ['valueOf', SymbolProto_valueOf, 0], [wellKnownSymbols.toPrimitive, SymbolProto_toPrimitive, 1, override]], realmRec.Intrinsics['%Object.prototype%'], 'Symbol');
     realmRec.Intrinsics['%Symbol.prototype%'] = proto;
@@ -74933,7 +74990,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_messageString instanceof AbruptCompletion) return _messageString;
         _messageString = _messageString.Value;
       }
-      const messageString = _messageString;
+      const messageString = Value(_messageString);
       /* X */let _temp = CreateNonEnumerableDataPropertyOrThrow(obj, 'message', messageString);
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
@@ -75002,7 +75059,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp = _temp.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!(_temp === Value.true)) throw new Assert.Error("X(SetIntegrityLevel(f, 'frozen')) === Value.true");
+    /* X */let _temp2 = SetIntegrityLevel(f, 'frozen');
+    /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+    /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! SetIntegrityLevel(f, 'frozen') returned an abrupt completion", {
+        cause: _temp2
+      });
+      _temp2 = _temp2.Value;
+    }
+    /* Assert */ /* node:coverage ignore next */if (!_temp2) throw new Assert.Error("X(SetIntegrityLevel(f, 'frozen'))");
     realmRec.Intrinsics['%ThrowTypeError%'] = f;
   }
 
@@ -75103,14 +75168,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (alphabet.stringValue() === 'base64') {
       // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64 encoding specified in section 4 of RFC 4648. Padding is included if and only if omitPadding is false.
       outAscii = btoa_polyfill(String.fromCharCode(...toEncode));
-      if (omitPadding !== Value.false) {
+      if (omitPadding) {
         outAscii = outAscii.replace(/=/g, '');
       }
     } else {
       /* Assert */ /* node:coverage ignore next */if (!(alphabet.stringValue() === 'base64url')) throw new Assert.Error("alphabet.stringValue() === 'base64url'");
       // Let outAscii be the sequence of code points which results from encoding toEncode according to the base64url encoding specified in section 5 of RFC 4648. Padding is included if and only if omitPadding is false.
       outAscii = btoa_polyfill(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
-      if (omitPadding !== Value.false) {
+      if (omitPadding) {
         outAscii = outAscii.replace(/=/g, '');
       }
     }
@@ -75146,7 +75211,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp3 = _temp3.Value;
       }
       hex = _temp3;
-      out += hex.stringValue();
+      out += hex;
     }
     return Value(out);
   }
@@ -75203,7 +75268,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       };
     }
     const resultLength = result.Bytes.length;
-    /* ReturnIfAbrupt */let _ta = yield* AllocateTypedArray(Value('Uint8Array'), exports.surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength);
+    /* ReturnIfAbrupt */let _ta = yield* AllocateTypedArray('Uint8Array', exports.surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength);
     /* ReturnIfAbrupt */if (_ta instanceof Completion) {
       if (_ta instanceof AbruptCompletion) return _ta;
       _ta = _ta.Value;
@@ -75324,7 +75389,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       };
     }
     const resultLength = result.Bytes.length;
-    /* ReturnIfAbrupt */let _ta2 = yield* AllocateTypedArray(Value('Uint8Array'), exports.surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength);
+    /* ReturnIfAbrupt */let _ta2 = yield* AllocateTypedArray('Uint8Array', exports.surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength);
     /* ReturnIfAbrupt */if (_ta2 instanceof Completion) {
       if (_ta2 instanceof AbruptCompletion) return _ta2;
       _ta2 = _ta2.Value;
@@ -75400,7 +75465,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp0 instanceof AbruptCompletion) return _temp0;
       _temp0 = _temp0.Value;
     }
-    if (ta.TypedArrayName.stringValue() !== 'Uint8Array') {
+    if (ta.TypedArrayName !== 'Uint8Array') {
       return Throw.TypeError('Not a Uint8Array');
     }
     return undefined;
@@ -75737,7 +75802,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (NewTarget instanceof UndefinedValue) {
           return Throw.TypeError('$1 cannot be invoked without new', TypedArray);
         }
-        const constructorName = Value(TypedArray);
+        const constructorName = TypedArray;
         const proto = `%${TypedArray}.prototype%`;
         const numberOfArgs = args.length;
         if (numberOfArgs === 0) {
@@ -75823,8 +75888,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-typedarray-constructors';
       const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
-        Writable: Value.false,
-        Configurable: Value.false
+        Writable: false,
+        Configurable: false
       }]]);
       /* X */let _temp5 = taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']);
       /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
@@ -75855,7 +75920,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Let buffer be O.[[ViewedArrayBuffer]].
     const buffer = O.ViewedArrayBuffer;
     // 5. Return buffer.
-    return buffer;
+    return buffer || Value.undefined;
   }
   TypedArrayProto_buffer.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer';
 
@@ -76061,10 +76126,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _Pk = _Pk.Value;
       }
       const Pk = _Pk;
-      /* X */let _temp1 = Set$1(obj, Pk, value, Value.true);
+      /* X */let _temp1 = Set$1(obj, Pk, value, true);
       /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
       /* node:coverage ignore next */if (_temp1 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! Set(obj, Pk, value, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! Set(obj, Pk, value, true) returned an abrupt completion", {
           cause: _temp1
         });
         _temp1 = _temp1.Value;
@@ -76118,7 +76183,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _selected = _selected.Value;
       }
       const selected = ToBoolean(_selected);
-      if (selected === Value.true) {
+      if (selected) {
         kept.push(kValue);
         captured += 1;
       }
@@ -76140,10 +76205,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp12 = _temp12.Value;
       }
-      /* X */let _temp11 = Set$1(resultArray, _temp12, e, Value.true);
+      /* X */let _temp11 = Set$1(resultArray, _temp12, e, true);
       /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
       /* node:coverage ignore next */if (_temp11 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, X(ToString(F(n))), e, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, X(ToString(F(n))), e, true) returned an abrupt completion", {
           cause: _temp11
         });
         _temp11 = _temp11.Value;
@@ -76238,10 +76303,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _mappedValue = _mappedValue.Value;
       }
       const mappedValue = _mappedValue;
-      /* X */let _temp15 = Set$1(resultArray, Pk, mappedValue, Value.true);
+      /* X */let _temp15 = Set$1(resultArray, Pk, mappedValue, true);
       /* node:coverage ignore next */if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
       /* node:coverage ignore next */if (_temp15 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, Pk, mappedValue, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, Pk, mappedValue, true) returned an abrupt completion", {
           cause: _temp15
         });
         _temp15 = _temp15.Value;
@@ -76527,10 +76592,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             });
             _temp26 = _temp26.Value;
           }
-          /* X */let _temp25 = Set$1(resultArray, _temp26, kValue, Value.true);
+          /* X */let _temp25 = Set$1(resultArray, _temp26, kValue, true);
           /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
           /* node:coverage ignore next */if (_temp25 instanceof Completion) {
-            /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, X(ToString(F(n))), kValue, Value.true) returned an abrupt completion", {
+            /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, X(ToString(F(n))), kValue, true) returned an abrupt completion", {
               cause: _temp25
             });
             _temp25 = _temp25.Value;
@@ -76580,10 +76645,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp29 = _temp29.Value;
       }
-      /* X */let _temp28 = Set$1(obj, _temp29, sortedList[j], Value.true);
+      /* X */let _temp28 = Set$1(obj, _temp29, sortedList[j], true);
       /* node:coverage ignore next */if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) _temp28 = skipDebugger(_temp28);
       /* node:coverage ignore next */if (_temp28 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! Set(obj, X(ToString(F(j))), sortedList[j], Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp28 instanceof AbruptCompletion) throw new Assert.Error("! Set(obj, X(ToString(F(j))), sortedList[j], true) returned an abrupt completion", {
           cause: _temp28
         });
         _temp28 = _temp28.Value;
@@ -76636,10 +76701,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         });
         _temp31 = _temp31.Value;
       }
-      /* X */let _temp30 = Set$1(resultArray, _temp31, sortedList[j], Value.true);
+      /* X */let _temp30 = Set$1(resultArray, _temp31, sortedList[j], true);
       /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
       /* node:coverage ignore next */if (_temp30 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, X(ToString(F(j))), sortedList[j], Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, X(ToString(F(j))), sortedList[j], true) returned an abrupt completion", {
           cause: _temp30
         });
         _temp30 = _temp30.Value;
@@ -76731,9 +76796,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Let name be O.[[TypedArrayName]].
     const name = O.TypedArrayName;
     // 5. Assert: Type(name) is String.
-    /* Assert */ /* node:coverage ignore next */if (!(name instanceof JSStringValue)) throw new Assert.Error("name instanceof JSStringValue");
+    /* Assert */ /* node:coverage ignore next */if (!(typeof name === 'string')) throw new Assert.Error("typeof name === 'string'");
     // 6. Return name.
-    return name;
+    return Value(name);
   }
   TypedArrayProto_toStringTag.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag';
 
@@ -76812,7 +76877,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       numericValue = _temp38;
     }
-    if (IsValidIntegerIndex(obj, F(actualIndex)) === Value.false) {
+    if (!IsValidIntegerIndex(obj, F(actualIndex))) {
       return Throw.RangeError('TypedArray index out of bounds');
     }
     /* ReturnIfAbrupt */let _resultArray5 = yield* TypedArrayCreateSameType(obj, length);
@@ -76846,10 +76911,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         fromValue = _temp39;
       }
-      /* X */let _temp40 = Set$1(resultArray, Pk, fromValue, Value.true);
+      /* X */let _temp40 = Set$1(resultArray, Pk, fromValue, true);
       /* node:coverage ignore next */if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) _temp40 = skipDebugger(_temp40);
       /* node:coverage ignore next */if (_temp40 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, Pk, fromValue, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp40 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, Pk, fromValue, true) returned an abrupt completion", {
           cause: _temp40
         });
         _temp40 = _temp40.Value;
@@ -76907,10 +76972,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _fromValue = _fromValue.Value;
       }
       const fromValue = _fromValue;
-      /* X */let _temp41 = Set$1(resultArray, Pk, fromValue, Value.true);
+      /* X */let _temp41 = Set$1(resultArray, Pk, fromValue, true);
       /* node:coverage ignore next */if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
       /* node:coverage ignore next */if (_temp41 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, Pk, fromValue, Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! Set(resultArray, Pk, fromValue, true) returned an abrupt completion", {
           cause: _temp41
         });
         _temp41 = _temp41.Value;
@@ -76947,13 +77012,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const fn = _fn;
       /* X */let _temp42 = proto.DefineOwnProperty(wellKnownSymbols.iterator, exports.Descriptor({
         Value: fn,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true
+        Writable: true,
+        Enumerable: false,
+        Configurable: true
       }));
       /* node:coverage ignore next */if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) _temp42 = skipDebugger(_temp42);
       /* node:coverage ignore next */if (_temp42 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: true,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
           cause: _temp42
         });
         _temp42 = _temp42.Value;
@@ -76966,8 +77031,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapTypedArrayPrototypes(realmRec) {
     Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
       const proto = bootstrapPrototype(realmRec, [['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
-        Writable: Value.false,
-        Configurable: Value.false
+        Writable: false,
+        Configurable: false
       }]], realmRec.Intrinsics['%TypedArray.prototype%']);
       realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
     });
@@ -77053,8 +77118,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-encode */
-  function Encode(_string, extraUnescaped) {
-    const string = _string.stringValue();
+  function Encode(string, extraUnescaped) {
     const len = string.length;
     let R = '';
     const alwaysUnescaped = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.!~*\'()';
@@ -77085,8 +77149,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   Encode.section = 'https://tc39.es/ecma262/#sec-encode';
 
   /** https://tc39.es/ecma262/#sec-decode */
-  function Decode(_string, preserveEscapeSet) {
-    const string = _string.stringValue();
+  function Decode(string, preserveEscapeSet) {
     const len = string.length;
     let R = '';
     let k = 0;
@@ -77803,7 +77866,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. If returnMethod is undefined, then
     if (returnMethod instanceof UndefinedValue) {
       // a. Return CreateIteratorResultObject(undefined, true).
-      return CreateIteratorResultObject(Value.undefined, Value.true);
+      return CreateIteratorResultObject(Value.undefined, true);
     }
     // 7. Return ? Call(returnMethod, iterator).
     return yield* Call(returnMethod, iterator);
@@ -78067,13 +78130,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const [name, value] of [['Infinity', F(Infinity)], ['NaN', F(NaN)], ['undefined', Value.undefined]]) {
       /* X */let _temp = DefinePropertyOrThrow(global, Value(name), exports.Descriptor({
         Value: value,
-        Writable: Value.false,
-        Enumerable: Value.false,
-        Configurable: Value.false
+        Writable: false,
+        Enumerable: false,
+        Configurable: false
       }));
       /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
       /* node:coverage ignore next */if (_temp instanceof Completion) {
-        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: value,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: value,\n      Writable: false,\n      Enumerable: false,\n      Configurable: false,\n    })) returned an abrupt completion", {
           cause: _temp
         });
         _temp = _temp.Value;
@@ -78081,13 +78144,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     /* X */let _temp2 = DefinePropertyOrThrow(global, 'globalThis', exports.Descriptor({
       Value: realmRec.GlobalEnv.GlobalThisValue,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
+      Writable: true,
+      Enumerable: false,
+      Configurable: true
     }));
     /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
     /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, 'globalThis', Descriptor({\n    Value: realmRec.GlobalEnv.GlobalThisValue,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, 'globalThis', Descriptor({\n    Value: realmRec.GlobalEnv.GlobalThisValue,\n    Writable: true,\n    Enumerable: false,\n    Configurable: true,\n  })) returned an abrupt completion", {
         cause: _temp2
       });
       _temp2 = _temp2.Value;
@@ -78108,13 +78171,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       /* X */let _temp3 = DefinePropertyOrThrow(global, Value(name), exports.Descriptor({
         Value: value,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true
+        Writable: true,
+        Enumerable: false,
+        Configurable: true
       }));
       /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
       /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: value,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(global, Value(name), Descriptor({\n      Value: value,\n      Writable: true,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
           cause: _temp3
         });
         _temp3 = _temp3.Value;
@@ -78538,7 +78601,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const s = JSON.stringify(v.stringValue()).slice(1, -1);
       return `'${s}'`;
     },
-    Symbol: v => `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
+    Symbol: v => `Symbol(${v.Description || ''})`,
     Object: (v, ctx, i) => {
       if (ctx.inspected.includes(v)) {
         return '[Circular]';
@@ -78596,8 +78659,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return e.stringValue();
       }
       if (isRegExpObject(v)) {
-        const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags).stringValue();
-        const F = v.OriginalFlags.stringValue();
+        const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags);
+        const F = v.OriginalFlags;
         return `/${P}/${F}`;
       }
       if ('DateValue' in v) {
@@ -78608,19 +78671,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return `[Date ${d.toISOString()}]`;
       }
       if ('BooleanData' in v) {
-        return `[Boolean ${i(v.BooleanData)}]`;
+        return `[Boolean ${v.BooleanData}]`;
       }
       if ('NumberData' in v) {
-        return `[Number ${i(v.NumberData)}]`;
+        return `[Number ${v.NumberData}]`;
       }
       if ('BigIntData' in v) {
-        return `[BigInt ${i(v.BigIntData)}]`;
+        return `[BigInt ${v.BigIntData}]`;
       }
       if ('StringData' in v) {
-        return `[String ${i(v.StringData)}]`;
+        return `[String ${v.StringData}]`;
       }
       if ('SymbolData' in v) {
-        return `[Symbol ${i(v.SymbolData)}]`;
+        return `[Symbol ${v.SymbolData}]`;
       }
       if (isShadowRealmObject(v)) {
         return '[ShadowRealm]';
@@ -78628,7 +78691,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       ctx.indent += 1;
       ctx.inspected.push(v);
       try {
-        const isArray = IsArray(v) === Value.true;
+        const isArray = IsArray(v);
         const isTypedArray = isTypedArrayObject(v);
         if (isArray || isTypedArray) {
           /* X */let _length = LengthOfArrayLike(v);
@@ -78658,11 +78721,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               _elem = _elem.Value;
             }
             const elem = _elem;
-            if (elem instanceof UndefinedValue) {
+            if (!elem) {
               holes += 1;
             } else {
               flushHoles();
-              if (elem.Value) {
+              if (IsDataDescriptor(elem)) {
                 out.push(i(elem.Value));
               } else {
                 out.push('<accessor>');
@@ -78670,7 +78733,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             }
           }
           flushHoles();
-          return `${isTypedArray ? `${v.TypedArrayName.stringValue()} ` : ''}[${out.join(', ')}]`;
+          return `${isTypedArray ? `${v.TypedArrayName} ` : ''}[${out.join(', ')}]`;
         }
         /* X */let _keys = v.OwnPropertyKeys();
         /* node:coverage ignore next */if (_keys && typeof _keys === 'object' && 'next' in _keys) _keys = skipDebugger(_keys);
@@ -78692,7 +78755,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _C = _C.Value;
           }
           const C = _C;
-          if (C.Enumerable === Value.true) {
+          if (C.Enumerable) {
             cache.push([key instanceof JSStringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key), C.Value ? i(C.Value) : '<accessor>']);
           }
         }
@@ -78763,7 +78826,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (thisEnv instanceof FunctionEnvironmentRecord) {
       const F = thisEnv.FunctionObject;
       inFunction = true;
-      inMethod = thisEnv.HasSuperBinding() === Value.true;
+      inMethod = thisEnv.HasSuperBinding();
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;
       }
@@ -79036,7 +79099,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const newContext = new ExecutionContext();
       newContext.Function = Value.null;
       newContext.Realm = this;
-      newContext.ScriptOrModule = Value.null;
+      newContext.ScriptOrModule = null;
       this.HostDefined = HostDefined;
       this.topContext = newContext;
       exports.surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
@@ -79153,7 +79216,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         throw new TypeError('sourceText must be a string');
       }
       const pop = this.pushTopContext();
-      const module = ParseJSONModule(Value(sourceText));
+      const module = ParseJSONModule(sourceText);
       pop?.();
       return module;
     }
@@ -79162,7 +79225,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         throw new TypeError('sourceText must be a string');
       }
       const pop = this.pushTopContext();
-      const module = CreateTextModule(Value(sourceText));
+      const module = CreateTextModule(sourceText);
       pop?.();
       return module;
     }
@@ -79204,7 +79267,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (s.Type === 'throw') {
             return s;
           }
-          str.push(s.Value.stringValue());
+          str.push(s.Value);
         }
         log(...str);
         return Value.undefined;
@@ -79317,11 +79380,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       });
       _temp = _temp.Value;
     }
-    if (_temp === Value.true) {
-      /* X */let _temp2 = Set$1(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), Value.true);
+    if (_temp) {
+      /* X */let _temp2 = Set$1(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), true);
       /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
       /* node:coverage ignore next */if (_temp2 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), Value.true) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), true) returned an abrupt completion", {
           cause: _temp2
         });
         _temp2 = _temp2.Value;
@@ -80069,8 +80132,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IteratorToList = IteratorToList;
   exports.IteratorValue = IteratorValue;
   exports.IteratorZip = IteratorZip;
-  exports.JSStringMap = JSStringMap;
-  exports.JSStringSet = JSStringSet;
   exports.JSStringValue = JSStringValue;
   exports.KeyForSymbol = KeyForSymbol;
   exports.KeyedBindingInitialization = KeyedBindingInitialization;
@@ -80456,6 +80517,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.setSurroundingAgent = setSurroundingAgent;
   exports.skipDebugger = skipDebugger;
   exports.sourceTextMatchedBy = sourceTextMatchedBy;
+  exports.typedArrayInfoByName = typedArrayInfoByName;
   exports.typedArrayInfoByType = typedArrayInfoByType;
   exports.unwrapCompletion = X;
   exports.wellKnownSymbols = wellKnownSymbols;
