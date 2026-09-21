@@ -75,7 +75,7 @@ function* FunctionPrototype_customMatcher(
   if (subject instanceof ObjectValue && subject.ConstructedBy.some((constructor) => constructor === thisValue)) {
     return Value.true;
   }
-  if (thisValue.IsClassConstructor === Value.false) {
+  if (!thisValue.IsClassConstructor) {
     return Q(yield* Call(thisValue, receiver, [subject, hint]));
   }
   return Value.false;
@@ -89,7 +89,7 @@ function primitiveMatcherResult(hint: MatcherHint, primitive: Value | undefined)
 /** https://tc39.es/proposal-pattern-matching/#sec-boolean-%symbol.custommatcher% */
 function Boolean_customMatcher([subject = Value.undefined, hint = Value.undefined]: Arguments): ValueCompletion {
   const kind = Q(ValidateCustomMatcherHint(hint));
-  const primitive = subject instanceof BooleanValue ? subject : isBooleanObject(subject) ? subject.BooleanData : undefined;
+  const primitive = subject instanceof BooleanValue ? subject : isBooleanObject(subject) ? Value(subject.BooleanData) : undefined;
   return primitiveMatcherResult(kind, primitive);
 }
 
@@ -103,14 +103,14 @@ function Number_customMatcher([subject = Value.undefined, hint = Value.undefined
 /** https://tc39.es/proposal-pattern-matching/#sec-bigint-%symbol.custommatcher% */
 function BigInt_customMatcher([subject = Value.undefined, hint = Value.undefined]: Arguments): ValueCompletion {
   const kind = Q(ValidateCustomMatcherHint(hint));
-  const primitive = subject instanceof BigIntValue ? subject : isBigIntObject(subject) ? subject.BigIntData : undefined;
+  const primitive = subject instanceof BigIntValue ? subject : isBigIntObject(subject) ? Value(subject.BigIntData) : undefined;
   return primitiveMatcherResult(kind, primitive);
 }
 
 /** https://tc39.es/proposal-pattern-matching/#sec-string-%symbol.custommatcher% */
 function String_customMatcher([subject = Value.undefined, hint = Value.undefined]: Arguments): ValueCompletion {
   const kind = Q(ValidateCustomMatcherHint(hint));
-  const primitive = subject instanceof JSStringValue ? subject : isStringObject(subject) ? subject.StringData : undefined;
+  const primitive = subject instanceof JSStringValue ? subject : isStringObject(subject) ? Value(subject.StringData) : undefined;
   return primitiveMatcherResult(kind, primitive);
 }
 
@@ -128,8 +128,8 @@ function Error_customMatcher(
 ): ValueCompletion {
   Q(ValidateCustomMatcherHint(hint, 'boolean'));
   if (!isErrorObject(subject)) return Value.false;
-  const expected = IsCallable(thisValue) && thisValue.InitialName instanceof JSStringValue
-    ? thisValue.InitialName.stringValue()
+  const expected = IsCallable(thisValue) && thisValue.InitialName !== null
+    ? thisValue.InitialName
     : 'Error';
   if (expected === 'Error') return Value.true;
   return Value((subject as ErrorObject).ErrorData === expected);
@@ -144,7 +144,7 @@ function Date_customMatcher([subject = Value.undefined, hint = Value.undefined]:
 /** https://tc39.es/proposal-pattern-matching/#sec-regexp-%symbol.custommatcher% */
 function* RegExp_customMatcher([subject = Value.undefined, hint = Value.undefined]: Arguments): ValueEvaluator {
   Q(ValidateCustomMatcherHint(hint, 'boolean'));
-  return Q(yield* IsRegExp(subject));
+  return Value(Q(yield* IsRegExp(subject)));
 }
 
 /** https://tc39.es/proposal-pattern-matching/#sec-regexp.prototype-%symbol.custommatcher% */
@@ -154,11 +154,11 @@ function* RegExpPrototype_customMatcher(
 ): ValueEvaluator {
   const kind = Q(ValidateCustomMatcherHint(hint));
   if (kind === 'boolean') {
-    const test = Q(yield* Get(regexp as ObjectValue, Value('test')));
+    const test = Q(yield* Get(regexp as ObjectValue, 'test'));
     return Q(yield* Call(test, regexp, [subject]));
   }
   if (!(regexp instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', regexp);
-  const flags = Q(yield* ToString(Q(yield* Get(regexp, Value('flags'))))).stringValue();
+  const flags = Q(yield* ToString(Q(yield* Get(regexp, 'flags'))));
   if (flags.includes('g')) {
     const matchAll = Q(yield* Get(regexp, wellKnownSymbols.matchAll));
     return Q(yield* Call(matchAll, regexp, [subject]));
@@ -173,7 +173,7 @@ function* RegExpPrototype_customMatcher(
 function Array_customMatcher([subject = Value.undefined, hint = Value.undefined]: Arguments): ValueCompletion {
   const kind = Q(ValidateCustomMatcherHint(hint));
   const isArray = Q(IsArray(subject));
-  if (isArray === Value.false) return Value.false;
+  if (!isArray) return Value.false;
   return kind === 'boolean' ? Value.true : subject;
 }
 
@@ -184,8 +184,8 @@ function TypedArray_customMatcher(
 ): ValueCompletion {
   const kind = Q(ValidateCustomMatcherHint(hint));
   if (!isTypedArrayObject(subject)) return Value.false;
-  if (!IsCallable(thisValue) || !(thisValue.InitialName instanceof JSStringValue)
-      || subject.TypedArrayName.stringValue() !== thisValue.InitialName.stringValue()) return Value.false;
+  if (!IsCallable(thisValue) || thisValue.InitialName === null
+      || subject.TypedArrayName !== thisValue.InitialName) return Value.false;
   return kind === 'boolean' ? Value.true : subject;
 }
 

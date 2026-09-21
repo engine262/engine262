@@ -98,7 +98,7 @@ function* HasPropertyCached(subject: ObjectValue, cache: MatchCache, propertyNam
   const subjectCache = getSubjectCache(subject, cache);
   const cached = subjectCache.has.get(propertyName);
   if (cached !== undefined) return cached;
-  const result = Q(yield* HasProperty(subject, propertyName)) === Value.true;
+  const result = Q(yield* HasProperty(subject, propertyName));
   subjectCache.has.set(propertyName, result);
   return result;
 }
@@ -127,7 +127,7 @@ function* GetIteratorCached(subject: Value, cache: MatchCache): PlainEvaluator<I
 function* GetIteratorNthValueCached(iterator: IteratorRecord, cache: MatchCache, index: number): PlainEvaluator<Value | 'not-matched'> {
   const values = cache.iteratorValues.get(iterator)!;
   if (index < values.length) return values[index];
-  if (iterator.Done === Value.true) return 'not-matched';
+  if (iterator.Done) return 'not-matched';
   while (values.length <= index) {
     const next = Q(yield* IteratorStepValue(iterator));
     if (next === 'done') return 'not-matched';
@@ -155,7 +155,7 @@ function* evaluateWithBindings(
   try {
     const reference = Q(yield* Evaluate(expression));
     const value = Q(yield* GetValue(reference));
-    const receiver = reference instanceof ReferenceRecord && IsPropertyReference(reference) === Value.true
+    const receiver = reference instanceof ReferenceRecord && IsPropertyReference(reference)
       ? GetThisValue(reference)
       : Value.null;
     return { value, receiver };
@@ -167,13 +167,12 @@ function* evaluateWithBindings(
 function* createBindingEnvironment(outer: typeof surroundingAgent.runningExecutionContext.LexicalEnvironment, bindings: ReadonlyMap<string, PatternBinding>) {
   const env = new DeclarativeEnvironmentRecord(outer);
   for (const [name, binding] of bindings) {
-    const key = Value(name);
     if (binding.kind === 'const') {
-      env.CreateImmutableBinding(key, Value.true);
+      env.CreateImmutableBinding(name, true);
     } else {
-      yield* env.CreateMutableBinding(key, Value.false);
+      yield* env.CreateMutableBinding(name, false);
     }
-    yield* env.InitializeBinding(key, binding.value);
+    yield* env.InitializeBinding(name, binding.value);
   }
   return env;
 }
@@ -206,7 +205,7 @@ function* InvokeCustomMatcher(matcher: Value, subject: Value, context: MatchCont
   if (!IsCallable(customMatcher)) return Throw.TypeError('$1 is not a function', customMatcher);
   const result = Q(yield* Call(customMatcher, matcher, [subject, Value(kind), receiver]));
   if (result === Value.false) return false;
-  if (kind === 'boolean') return ToBoolean(result) === Value.true;
+  if (kind === 'boolean') return ToBoolean(result);
   if (!(result instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', result);
   return yield* GetIteratorCached(result, context.cache);
 }
@@ -327,29 +326,29 @@ export function* MatchPatternMatches(pattern: ParseNode.MatchPattern, subject: V
         case '<': {
           if (!(subject instanceof JSStringValue || subject instanceof NumberValue || subject instanceof BigIntValue)) return false;
           const result = Q(yield* IsLessThan(subject, value, true));
-          return result === Value.true;
+          return result === true;
         }
         case '>': {
           if (!(subject instanceof JSStringValue || subject instanceof NumberValue || subject instanceof BigIntValue)) return false;
           const result = Q(yield* IsLessThan(value, subject, false));
-          return result === Value.true;
+          return result === true;
         }
         case '<=': {
           if (!(subject instanceof JSStringValue || subject instanceof NumberValue || subject instanceof BigIntValue)) return false;
           const result = Q(yield* IsLessThan(value, subject, false));
-          return result === Value.false;
+          return result === false;
         }
         case '>=': {
           if (!(subject instanceof JSStringValue || subject instanceof NumberValue || subject instanceof BigIntValue)) return false;
           const result = Q(yield* IsLessThan(subject, value, true));
-          return result === Value.false;
+          return result === false;
         }
         case 'instanceof':
-          return Q(yield* InstanceofOperator(subject, value)) === Value.true;
+          return Q(yield* InstanceofOperator(subject, value));
         case 'in':
           if (!(subject instanceof JSStringValue) && subject.type !== 'Symbol') return false;
           if (!(value instanceof ObjectValue)) return false;
-          return Q(yield* HasProperty(value, subject)) === Value.true;
+          return Q(yield* HasProperty(value, subject));
         case '==': return Q(yield* IsLooselyEqual(subject, value));
         case '!=': return !Q(yield* IsLooselyEqual(subject, value));
         case '===': return IsStrictlyEqual(subject, value);
@@ -359,7 +358,7 @@ export function* MatchPatternMatches(pattern: ParseNode.MatchPattern, subject: V
     }
     case 'if': {
       const value = Q(yield* evaluateWithBindings(pattern.Expression, context.bindings)).value;
-      return ToBoolean(value) === Value.true;
+      return ToBoolean(value);
     }
     case 'and':
       if (!Q(yield* MatchPatternMatches(pattern.Left, subject, context))) return false;
@@ -386,7 +385,7 @@ export function* FinishMatch<T>(matchCompletion: Completion<T>, cache: MatchCach
   const errors: Value[] = [];
   if (matchCompletion instanceof ThrowCompletion) errors.push(matchCompletion.Value);
   for (const iterator of cache.iteratorsToClose) {
-    if (iterator.Done === Value.false) {
+    if (!iterator.Done) {
       const close = EnsureCompletion(yield* IteratorClose(iterator, NormalCompletion(Value.undefined)));
       if (close instanceof ThrowCompletion) errors.push(close.Value);
     }
