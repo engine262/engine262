@@ -20,7 +20,7 @@ test('Every built-in function should have a section property', { timeout: 10000 
         return o;
       }
       throw new Error(`${o.Value} did not have a section`);
-    }, 1, Value(''), []),
+    }, 1, Value(''), [], { captures: null }),
   ));
   const targets: Value[] = [];
   Object.entries(realm.Intrinsics)

@@ -1,6 +1,7 @@
 // https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar
 
 import type { TemporalDurationObject } from '../intrinsics/Temporal/Duration.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import { OutOfRange } from '../utils/language.mts';
 import { Decimal } from '../host-defined/decimal.mts';
 import { SnapToInteger } from '../abstract-ops/type-conversion.mts';
@@ -588,7 +589,7 @@ export declare namespace RFC9557ParseNode {
   }
 }
 
-export class DateParser {
+export class DateParser implements GCMarkable {
   static parse<T>(
     source: string,
     f: (parser: DateParser) => T,
@@ -630,6 +631,10 @@ export class DateParser {
   } as const;
 
   private earlyErrors: ObjectValue[] = [];
+
+  mark(trace: GCTrace): void {
+    trace.strong('earlyErrors', this.earlyErrors, 'internal-slot');
+  }
 
   private raise: Throw = (message: string, ...args: Formattable[]) => {
     throw Reflect.apply(Throw[this.grammarParameters.RangeError ? 'RangeError' : 'SyntaxError'], null, [message, ...args]);

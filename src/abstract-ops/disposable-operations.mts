@@ -113,7 +113,7 @@ export function* GetDisposeMethod(value: Value, kind: DisposableResourceKind): V
     X(Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]));
     return promiseCapability.Promise;
   };
-  return CreateBuiltinFunction(closure, 0, Value(''), []);
+  return CreateBuiltinFunction(closure, 0, Value(''), [], { captures: () => ({ syncMethod }) });
 }
 
 /** https://tc39.es/ecma262/#sec-disposeresources */

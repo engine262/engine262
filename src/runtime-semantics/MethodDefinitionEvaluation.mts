@@ -4,9 +4,10 @@ import {
 import {
   Q, X,
 } from '../completion.mts';
-import { OutOfRange } from '../utils/language.mts';
+import { callable, OutOfRange, record } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import { ClassElementDefinitionRecord, DefineMethod, Evaluate_PropertyName } from './all.mts';
 import { surroundingAgent } from '#self';
 import {
@@ -17,7 +18,6 @@ import {
   MakeMethod,
   sourceTextMatchedBy,
   type FunctionObject,
-  type GCMarker,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
@@ -28,6 +28,7 @@ export interface PrivateElementRecord_Value {
   readonly Get?: undefined;
   readonly Set?: undefined;
 }
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export interface PrivateElementRecord_Accessor {
   readonly Key: PrivateName;
   readonly Kind: 'accessor';
@@ -35,21 +36,41 @@ export interface PrivateElementRecord_Accessor {
   readonly Get?: FunctionObject | UndefinedValue;
   readonly Set?: FunctionObject | UndefinedValue;
 }
-export type PrivateElementRecord = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
-export const PrivateElementRecord = function PrivateElementRecord(value: PrivateElementRecord) {
-  Object.setPrototypeOf(value, PrivateElementRecord.prototype);
-  return value;
-} as {
-  (value: PrivateElementRecord): PrivateElementRecord;
-  [Symbol.hasInstance](instance: unknown): instance is PrivateElementRecord;
-};
+type PrivateElementRecordInit = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
+type PrivateElementRecordFields = Omit<PrivateElementRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */ // @ts-expect-error
+export function PrivateElementRecord(O: PrivateElementRecordFields): PrivateElementRecord
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */ // @ts-expect-error
+export @callable() @record class PrivateElementRecord implements GCMarkable {
+  readonly Key: PrivateName;
 
-// NON-SPEC
-PrivateElementRecord.prototype.mark = function mark(m: GCMarker): void {
-  m(this.Value);
-  m(this.Get);
-  m(this.Set);
-};
+  readonly Kind: PrivateElementRecordInit['Kind'];
+
+  Value?: Value;
+
+  readonly Get?: FunctionObject | UndefinedValue;
+
+  readonly Set?: FunctionObject | UndefinedValue;
+
+  constructor(O: PrivateElementRecordFields) {
+    if (new.target !== PrivateElementRecord) {
+      throw new TypeError('PrivateElementRecord is a final class and cannot be subclassed');
+    }
+    this.Key = O.Key;
+    this.Kind = O.Kind;
+    this.Value = O.Value;
+    this.Get = O.Get;
+    this.Set = O.Set;
+  }
+
+  // NON-SPEC
+  mark(trace: GCTrace): void {
+    trace.strong('Key', this.Key, 'private-element');
+    trace.strong('Value', this.Value, 'private-element');
+    trace.strong('Get', this.Get, 'private-element');
+    trace.strong('Set', this.Set, 'private-element');
+  }
+}
 
 // -decorator
 // +decorator: remove this function
@@ -94,7 +115,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       // 2. Perform ! SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
       X(SetFunctionName(methodDef.Closure, methodDef.Key));
       // 3. Return ? DefineMethodProperty(methodDef.[[Key]], object, methodDef.[[Closure]], enumerable).
-      if (enumerable !== undefined) {
+      if (enumerable) {
         return Q(yield* DefineMethodProperty(methodDef.Key, object, methodDef.Closure, enumerable));
       } else {
         return ClassElementDefinitionRecord({
@@ -121,7 +142,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       MakeMethod(closure, object);
       // 8. Perform SetFunctionName(closure, propKey, "set").
       SetFunctionName(closure, propKey, 'set');
-      if (enumerable !== undefined) {
+      if (enumerable) {
         // 9. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
         // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
@@ -170,7 +191,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       MakeMethod(closure, object);
       // 9. Perform SetFunctionName(closure, propKey, "get").
       SetFunctionName(closure, propKey, 'get');
-      if (enumerable !== undefined) {
+      if (enumerable) {
         // 10. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
           return PrivateElementRecord({
@@ -228,7 +249,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMet
   X(MakeMethod(closure, object));
   // 8. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  if (enumerable !== undefined) {
+  if (enumerable) {
     // 9. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
   } else {
@@ -272,7 +293,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
     Enumerable: false,
     Configurable: false,
   })));
-  if (enumerable !== undefined) {
+  if (enumerable) {
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
   } else {
@@ -316,7 +337,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
     Enumerable: false,
     Configurable: false,
   })));
-  if (enumerable !== undefined) {
+  if (enumerable) {
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
   } else {
@@ -334,7 +355,7 @@ export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike,
 // +decorator
 export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>
 export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable?: boolean): PlainEvaluator<ClassElementDefinitionRecord | PrivateElementRecord | void> {
-  if (enumerable !== undefined) {
+  if (enumerable) {
     switch (node.type) {
       case 'MethodDefinition':
         return MethodDefinitionEvaluation_MethodDefinition(node, object, enumerable);

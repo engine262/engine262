@@ -1,0 +1,147 @@
+gc-captures: CreateBuiltinFunction requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:16:10]
+    │
+ 13 │     return value;
+ 14 │   }
+ 15 │   // @ts-expect-error This fixture intentionally omits the captures options.
+ 16 │   return CreateBuiltinFunction(behaviour, 0, 'missingBuiltinOptions', []);
+    · ─┬────────┬───────────────────────────────────────────────────────────────  
+    ·  ╰─ -   return CreateBuiltinFunction(behaviour, 0, 'missingBuiltinOptions', []);
+    ·     +   return CreateBuiltinFunction(behaviour, 0, 'missingBuiltinOptions', [], { captures: () => ({ value }) });
+    ·           │                                                                 
+    ·           ╰─ CreateBuiltinFunction requires an explicit captures field.
+ 17 │ }
+ 18 │ 
+ 19 │ export function missingBuiltinField(value: Value) {
+────╯
+
+gc-captures: CreateBuiltinFunction requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:22:10]
+    │
+ 19 │ export function missingBuiltinField(value: Value) {
+ 20 │   const behaviour: NativeSteps = () => value;
+ 21 │   // @ts-expect-error This fixture intentionally omits captures.
+ 22 │   return CreateBuiltinFunction(behaviour, 0, 'missingBuiltinField', [], { async: false });
+    · ─┬────────┬───────────────────────────────────────────────────────────────────────────────  
+    ·  ╰─ -   return CreateBuiltinFunction(behaviour, 0, 'missingBuiltinField', [], { async: false });
+    ·     +   return CreateBuiltinFunction(behaviour, 0, 'missingBuiltinField', [], { captures: () => ({ value }), async: false });
+    ·           │                                                                                 
+    ·           ╰─ CreateBuiltinFunction requires an explicit captures field.
+ 23 │ }
+ 24 │ 
+ 25 │ export function missingMemberCapture(value: ObjectValue) {
+────╯
+
+gc-captures: CreateBuiltinFunction requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:29:10]
+    │
+ 26 │   const holder: { Value: ObjectValue | undefined } = { Value: value };
+ 27 │   const behaviour: NativeSteps = () => holder.Value ?? Value.undefined;
+ 28 │   // @ts-expect-error This fixture intentionally omits captures.
+ 29 │   return CreateBuiltinFunction(behaviour, 0, 'missingMemberCapture', [], { async: false });
+    · ─┬────────┬────────────────────────────────────────────────────────────────────────────────  
+    ·  ╰─ -   return CreateBuiltinFunction(behaviour, 0, 'missingMemberCapture', [], { async: false });
+    ·     +   return CreateBuiltinFunction(behaviour, 0, 'missingMemberCapture', [], { captures: () => ({ ["holder.Value"]: holder.Value }), async: false });
+    ·           │                                                                                  
+    ·           ╰─ CreateBuiltinFunction requires an explicit captures field.
+ 30 │ }
+ 31 │ 
+ 32 │ export function missingEmptyBuiltinCapture() {
+────╯
+
+gc-captures: CreateBuiltinFunction requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:35:10]
+    │
+ 32 │ export function missingEmptyBuiltinCapture() {
+ 33 │   const behaviour: NativeSteps = () => Value.undefined;
+ 34 │   // @ts-expect-error This fixture intentionally omits the captures options.
+ 35 │   return CreateBuiltinFunction(behaviour, 0, 'missingEmptyBuiltinCapture', []);
+    · ─┬────────┬────────────────────────────────────────────────────────────────────  
+    ·  ╰─ -   return CreateBuiltinFunction(behaviour, 0, 'missingEmptyBuiltinCapture', []);
+    ·     +   return CreateBuiltinFunction(behaviour, 0, 'missingEmptyBuiltinCapture', [], { captures: null });
+    ·           │                                                                      
+    ·           ╰─ CreateBuiltinFunction requires an explicit captures field.
+ 36 │ }
+ 37 │ 
+ 38 │ export function missingFromCapture(value: Value) {
+────╯
+
+gc-captures: CreateBuiltinFunction.from requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:41:10]
+    │
+ 38 │     export function missingFromCapture(value: Value) {
+ 39 │       const steps: CanBeNativeSteps = () => value;
+ 40 │       // @ts-expect-error This fixture intentionally omits captures.
+ 41 │ ╭─▶   return CreateBuiltinFunction.from({
+    · │   ─┬───────────────────────────────────  
+    · │    ╰─ +     captures: () => ({ value }),
+ 42 │ │       steps,
+ 43 │ │       name: 'missingFromCapture',
+ 44 │ ├─▶   });
+    · │           
+    · ╰──────── CreateBuiltinFunction.from requires an explicit captures field.
+ 45 │     }
+ 46 │     
+ 47 │     export function missingIteratorCapture(value: Value, prototype: ObjectValue) {
+────╯
+
+gc-captures: CreateIteratorFromClosure requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:52:10]
+    │
+ 49 │     return value;
+ 50 │   };
+ 51 │   // @ts-expect-error This fixture intentionally omits captures.
+ 52 │   return CreateIteratorFromClosure(closure, undefined, prototype, {});
+    · ─┬────────┬───────────────────────────────────────────────────────────  
+    ·  ╰─ -   return CreateIteratorFromClosure(closure, undefined, prototype, {});
+    ·     +   return CreateIteratorFromClosure(closure, undefined, prototype, { captures: () => ({ value }),});
+    ·           │                                                             
+    ·           ╰─ CreateIteratorFromClosure requires an explicit captures field.
+ 53 │ }
+ 54 │ 
+ 55 │ export function unresolvedBehaviour(behaviour: NativeSteps) {
+────╯
+
+gc-captures: CreateBuiltinFunction requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:57:10]
+    │
+ 54 │ 
+ 55 │ export function unresolvedBehaviour(behaviour: NativeSteps) {
+ 56 │   // @ts-expect-error This fixture intentionally omits the captures options.
+ 57 │   return CreateBuiltinFunction(behaviour, 0, 'unresolvedBehaviour', []);
+    ·          ─┬────────────────────────────────────────────────────────────  
+    ·           ╰─ CreateBuiltinFunction requires an explicit captures field.
+ 58 │ }
+ 59 │ 
+ 60 │ export function missingNestedBuiltinCapture(value: Value) {
+────╯
+
+gc-captures: CreateBuiltinFunction requires an explicit captures field.
+    ╭─[gc-captures-factory.invalid.fixture.mts:66:10]
+    │
+ 63 │     return nested();
+ 64 │   };
+ 65 │   // @ts-expect-error This fixture intentionally omits captures.
+ 66 │   return CreateBuiltinFunction(behaviour, 0, 'missingNestedBuiltinCapture', [], { async: false });
+    · ─┬────────┬───────────────────────────────────────────────────────────────────────────────────────  
+    ·  ╰─ -   return CreateBuiltinFunction(behaviour, 0, 'missingNestedBuiltinCapture', [], { async: false });
+    ·     +   return CreateBuiltinFunction(behaviour, 0, 'missingNestedBuiltinCapture', [], { captures: () => ({ value }), async: false });
+    ·           │                                                                                         
+    ·           ╰─ CreateBuiltinFunction requires an explicit captures field.
+ 67 │ }
+ 68 │ 
+────╯
+
+gc-captures: @engine262/babel-compiler: cannot insert a GC frame for value
+   ╭─[gc-captures-transformed.invalid.fixture.mts:5:5]
+   │
+ 2 │ 
+ 3 │ export function* untransformable(): ValueEvaluator {
+ 4 │   for (let value: Value = Value.undefined; true;) {
+ 5 │     yield { suspend: 'await' };
+   ·     ─┬────────────────────────  
+   ·      ╰─ @engine262/babel-compiler: cannot insert a GC frame for value
+ 6 │     void value;
+ 7 │   }
+ 8 │ }
+───╯

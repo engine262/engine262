@@ -381,20 +381,24 @@ OrdinaryObjectCreate.from = (object: Record<string, Value | CanBeNativeSteps>, p
   for (const key in object) {
     if (Object.hasOwn(object, key)) {
       const value = object[key];
-      X(CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from(value, key)));
+      X(CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from({
+        steps: value,
+        name: key,
+        captures: null,
+      })));
     }
   }
   return O;
 };
 
-// 9.1.13 OrdinaryCreateFromConstructor
+/** https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor */
 export function* OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics, internalSlotsList?: readonly T[]): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(yield* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
-// 9.1.14 GetPrototypeFromConstructor
+/** https://tc39.es/ecma262/#sec-getprototypefromconstructor */
 export function* GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.

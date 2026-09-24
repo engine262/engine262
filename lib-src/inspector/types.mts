@@ -11,6 +11,7 @@ export interface DebuggerContext {
   onDebuggerDisconnect(): void;
   preference: DebuggerPreference;
   context: InspectorContext;
+  setDomainEnabled(domain: 'Debugger' | 'HeapProfiler' | 'Runtime', enabled: boolean): void;
 }
 
 export interface DebuggerNamespace {
@@ -151,6 +152,7 @@ export interface RuntimeNamespace {
 }
 
 export interface HeapProfilerNamespace {
+  resetProfiles?(req: void, context: DebuggerContext): void;
   /** https://chromedevtools.github.io/devtools-protocol/v8/HeapProfiler/#method-addInspectedHeapObject */
   addInspectedHeapObject?(req: Protocol.HeapProfiler.AddInspectedHeapObjectRequest, context: DebuggerContext): void;
   /** https://chromedevtools.github.io/devtools-protocol/v8/HeapProfiler/#method-collectGarbage */

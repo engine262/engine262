@@ -1,4 +1,5 @@
 import { Value } from '../value.mts';
+import type { GCRootHandle } from '../gc.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -244,11 +245,25 @@ export function HostGetModuleSourceModuleRecord(specifier: ObjectValue): Abstrac
 
 // #sec-HostLoadImportedModule
 export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, moduleRequest: ModuleRequestRecord, hostDefined: ModuleRecordHostDefined | undefined, payload: HostLoadImportedModulePayloadOpaque) {
+  const root = surroundingAgent.gc.addRootProvider('host:module-load', () => ({
+    referrer,
+    payload: payload.data,
+    specifier: moduleRequest.Specifier,
+    attributes: moduleRequest.Attributes,
+    importedNames: moduleRequest.ImportedNames,
+  }));
+  payload.gcRoot = root;
   const HostHook = surroundingAgent.hostDefinedOptions.hostHooks?.HostLoadImportedModule;
-  if (HostHook) {
-    HostHook(referrer, moduleRequest, hostDefined, payload);
-  } else {
-    FinishLoadingImportedModule(referrer, moduleRequest, payload, Throw.Error('Host does not set a module loader'));
+  try {
+    if (HostHook) {
+      HostHook(referrer, moduleRequest, hostDefined, payload);
+    } else {
+      FinishLoadingImportedModule(referrer, moduleRequest, payload, Throw.Error('Host does not set a module loader'));
+    }
+  } catch (error) {
+    payload.gcRoot = undefined;
+    root[Symbol.dispose]();
+    throw error;
   }
 }
 
@@ -256,6 +271,8 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
 export type HostLoadImportedModulePayloadOpaque = {
   /** @internal */
   data: GraphLoadingState | PromiseCapabilityRecord;
+  /** @internal */
+  gcRoot?: GCRootHandle;
   HostLoadImportedModulePayloadOpaque?: never
 };
 

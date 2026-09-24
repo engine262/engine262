@@ -104,9 +104,15 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
         line: site.lineNumber,
         source: source === test.content ? undefined : source,
         specifier: site.getSpecifier(),
+        range: nodeRange(site),
       });
     }
     return reportStack;
+  }
+
+  function nodeRange(site: CallSite): readonly [startIndex: number, endIndex: number] {
+    const node = site.lastNode?.parent || site.lastCallNode!;
+    return [node.location.startIndex, node.location.endIndex];
   }
 
   function fail(test: Test, error: Value): WorkerToSupervisor {
@@ -160,19 +166,22 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
   // doneprintHandle.js
   const pop = realm.pushTopContext();
   if (test.attrs.flags.async) {
-    const $DONE = CreateBuiltinFunction.from(function* $DONE(error = Value.undefined) {
-      if (asyncTestCompleted) {
-        log(test, toDisplayStack(getCurrentStack()), '$DONE called after test completion');
-        return;
-      }
-      asyncTestCompleted = true;
-      if (error !== Value.undefined) {
-        asyncTestPromise.resolve(fail(test, error));
-      } else {
-        asyncTestPromise.resolve({
-          status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
-        });
-      }
+    const $DONE = CreateBuiltinFunction.from({
+      steps: function* $DONE(error = Value.undefined) {
+        if (asyncTestCompleted) {
+          log(test, toDisplayStack(getCurrentStack()), '$DONE called after test completion');
+          return;
+        }
+        asyncTestCompleted = true;
+        if (error !== Value.undefined) {
+          asyncTestPromise.resolve(fail(test, error));
+        } else {
+          asyncTestPromise.resolve({
+            status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
+          });
+        }
+      },
+      captures: null,
     });
     realm.GlobalObject.properties.set(Value('$DONE'), Descriptor({ Value: $DONE, Configurable: true, Enumerable: false, Writable: true }));
   }
@@ -246,11 +255,17 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
         return;
       }
       const promise = ValueOfNormalCompletion(completion);
-      PerformPromiseThen(promise, CreateBuiltinFunction.from(function* waitIO() {
-        untilFinished().then(() => finishTest.resolve(NormalCompletion(undefined)));
-        return Value.undefined;
-      }), CreateBuiltinFunction.from((err = Value.undefined) => {
-        finishTest.resolve(ThrowCompletion(err));
+      PerformPromiseThen(promise, CreateBuiltinFunction.from({
+        steps: function* waitIO() {
+          untilFinished().then(() => finishTest.resolve(NormalCompletion(undefined)));
+          return Value.undefined;
+        },
+        captures: null,
+      }), CreateBuiltinFunction.from({
+        steps: (err = Value.undefined) => {
+          finishTest.resolve(ThrowCompletion(err));
+        },
+        captures: null,
       }));
     });
   } else {

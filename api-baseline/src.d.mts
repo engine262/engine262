@@ -10,7 +10,7 @@ export declare const AbruptCompletion: abstract new <const T>(init: AbruptComple
     readonly Type: 'break' | 'continue' | 'return' | 'throw';
     readonly Value: T | Value;
     readonly Target: string | undefined;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 };
 
 export declare type AbruptCompletionInit = BreakCompletionInit | ContinueCompletionInit | ReturnCompletionInit | ThrowCompletionInit;
@@ -39,10 +39,11 @@ export declare abstract class AbstractEventLoop implements EventLoop {
      */
     enqueueAsync(type: NodeJSJobType | string, job: Job, doAsyncEnqueue: (enqueue: () => void, cancel: () => void) => void): void;
     get hasPendingJobs(): boolean;
+    getQueuedJobsForGC(): Iterable<Job>;
     /** Change the automatic run type of the event loop */
     run(type: EventLoopRunType): void;
     runOnce(): void;
-    mark(marker: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare interface AbstractModuleInit {
@@ -70,7 +71,7 @@ declare abstract class AbstractModuleRecord {
     readonly ModuleSource: ObjectValue | undefined;
     readonly HostDefined: ModuleRecordHostDefined | undefined;
     constructor(init: AbstractModuleInit);
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 export { AbstractModuleRecord }
 export { AbstractModuleRecord as ModuleRecord }
@@ -149,7 +150,7 @@ export declare function AddZonedDateTime(epochNanoseconds: EpochNanoseconds, tim
 export declare function AdjustDateDurationRecord(dateDuration: DateDurationRecord, days: Integer, weeks?: Integer, months?: Integer): PlainCompletion<DateDurationRecord>;
 
 /** https://tc39.es/ecma262/#sec-agents */
-export declare class Agent {
+export declare class Agent implements GCMarkable {
     #private;
     readonly executionContextStack: ExecutionContextStack;
     /** https://tc39.es/ecma262/#running-execution-context */
@@ -158,7 +159,9 @@ export declare class Agent {
     readonly AgentRecord: AgentRecord;
     readonly jobQueue: JobQueue;
     readonly eventLoop: EventLoop;
+    readonly gc: GarbageCollector;
     readonly finalizationRegistryScheduledForCleanup: Set<FinalizationRegistryObject>;
+    readonly realms: Set<Realm>;
     hostDefinedOptions: AgentHostDefined;
     constructor(options?: AgentHostDefined);
     /** https://tc39.es/ecma262/#current-realm */
@@ -167,7 +170,8 @@ export declare class Agent {
     get activeFunctionObject(): NullValue | FunctionObject;
     intrinsic<const T extends keyof Intrinsics>(name: T): Intrinsics[T];
     feature(name: Feature): boolean;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
+    registerRealm(realm: Realm): void;
     /** Evaluate an evaluator. It will skip the debugger if the agent is already debugger-paused. */
     evaluate<T extends Value>(evaluator: ValueEvaluator<T>, onFinished: (completion: NormalCompletion<T> | ThrowCompletion) => void, evaluationOptions?: ResumeEvaluateOptions | false): void;
     isPaused(): boolean;
@@ -351,17 +355,17 @@ export declare interface AsyncGeneratorObject extends OrdinaryObject {
     GeneratorBrand: string | undefined;
 }
 
-/** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
-/** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
-export declare interface AsyncGeneratorRequestRecord {
+/** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */ export declare function AsyncGeneratorRequestRecord(O: AsyncGeneratorRequestRecordInit): AsyncGeneratorRequestRecord;
+
+/** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */ export declare class AsyncGeneratorRequestRecord implements GCMarkable {
     readonly Completion: YieldCompletion;
     readonly Capability: PromiseCapabilityRecord;
+    constructor(O: AsyncGeneratorRequestRecordInit);
+    mark(trace: GCTrace): void;
 }
 
-export declare const AsyncGeneratorRequestRecord: {
-    (value: AsyncGeneratorRequestRecord): AsyncGeneratorRequestRecord;
-    [Symbol.hasInstance](instance: unknown): instance is AsyncGeneratorRequestRecord;
-};
+/** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
+declare type AsyncGeneratorRequestRecordInit = Omit<AsyncGeneratorRequestRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorresume */
 export declare function AsyncGeneratorResume(generator: AsyncGeneratorObject, completion: YieldCompletion): Generator<EvaluatorYieldType, undefined, EvaluatorNextType>;
@@ -414,6 +418,7 @@ export declare interface BaseFunctionObject extends OrdinaryObject {
 
 export declare abstract class BaseParser extends Lexer {
     protected abstract scope: Scope;
+    mark(trace: GCTrace): void;
     abstract startNode<T extends ParseNode>(inheritStart?: ParseNode): ParseNode.Unfinished<T>;
     abstract finishNode<T extends ParseNode.Unfinished, K extends T['type'] & ParseNode['type']>(node: T, type: K): ParseNodesByType[K];
     /**
@@ -442,7 +447,7 @@ export declare abstract class BaseValue {
     static [Symbol.hasInstance]: (value: unknown) => value is Value;
 }
 
-export declare class BasicJobQueue extends Set<Job> implements JobQueue, Markable {
+export declare class BasicJobQueue extends Set<Job> implements JobQueue, GCMarkable {
     enqueueFinalizationRegistryCleanupJob(job: Job): void;
     enqueuePromiseJob(job: Job): void;
     enqueueTimeoutJob(job: Job): void;
@@ -450,7 +455,8 @@ export declare class BasicJobQueue extends Set<Job> implements JobQueue, Markabl
     onNewJob: JobQueue['onNewJob'];
     shift(): Job | undefined;
     get length(): number;
-    mark(marker: GCMarker): void;
+    getQueuedJobsForGC(): Iterable<Job>;
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
@@ -584,7 +590,6 @@ export declare function BuildLinkingList(linkingList: AbstractModuleRecord[], re
 
 export declare interface BuiltinFunctionObject extends BaseFunctionObject {
     readonly nativeFunction: NativeSteps;
-    HostCapturedValues?: readonly Value[];
 }
 
 export declare interface BuiltinModuleLoaderOptions {
@@ -686,7 +691,7 @@ export declare class CallFrame {
     toCallFrame(): Protocol.Runtime.CallFrame | undefined;
 }
 
-export declare class CallSite {
+export declare class CallSite implements GCMarkable {
     context: ExecutionContext;
     lastNode: ParseNode | null;
     nextNode: ParseNode | null;
@@ -694,6 +699,7 @@ export declare class CallSite {
     inheritedLastCallNode: ParseNode.CallExpression | null;
     constructCall: boolean;
     constructor(context: ExecutionContext);
+    mark(trace: GCTrace): void;
     clone(context?: ExecutionContext): CallSite;
     isTopLevel(): boolean;
     isConstructCall(): boolean;
@@ -732,6 +738,21 @@ export declare function CanonicalizeKeyedCollectionKey(key: Value): Value;
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
 export declare function CanonicalNumericIndexString(arg: string): NumberValue | undefined;
 
+export declare function captureEvaluatorFrame(captures: GCCaptureProvider, name: string): Disposable;
+
+declare interface CaptureMetadata {
+    readonly name: string;
+    readonly kind: 'job' | 'callback' | 'evaluator' | 'host';
+    readonly captures: GCCaptureProvider;
+}
+
+export declare interface CaptureReferenceGraphOptions {
+    readonly additionalRoots?: Iterable<{
+        readonly name: string;
+        readonly value: GCTraceTarget;
+    }>;
+}
+
 export declare function captureStack(): {
     stack: CallSite[];
     nativeStack: string | undefined;
@@ -749,13 +770,21 @@ export declare type CharacterValueAcceptNode = ParseNode.RegExp.CharacterEscape 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-runtime-semantics-classdefinitionevaluation */
 export declare function ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: string | undefined, className: string | PropertyKeyValue | PrivateName, sourceText: string, decorators: readonly DecoratorDefinitionRecord[]): ValueEvaluator<FunctionObject>;
 
-/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */
-export declare type ClassElementDefinitionRecord = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */ export declare function ClassElementDefinitionRecord<const T extends ClassElementDefinitionRecordInit>(O: T): ClassElementDefinitionRecord & T;
 
-export declare const ClassElementDefinitionRecord: {
-    (record: ClassElementDefinitionRecord): ClassElementDefinitionRecord;
-    [Symbol.hasInstance](instance: unknown): instance is ClassElementDefinitionRecord;
-};
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */ export declare class ClassElementDefinitionRecord implements GCMarkable {
+    readonly Kind: ClassElementDefinitionRecordInit['Kind'];
+    readonly Key: PrivateName | JSStringValue | SymbolValue;
+    Value: FunctionObject;
+    Decorators: readonly DecoratorDefinitionRecord[] | undefined;
+    readonly Initializers: FunctionObject[];
+    readonly ExtraInitializers: FunctionObject[];
+    Get: FunctionObject;
+    Set: FunctionObject;
+    readonly BackingStorageKey: PrivateName;
+    constructor(O: ClassElementDefinitionRecordFields);
+    mark(trace: GCTrace): void;
+}
 
 export declare interface ClassElementDefinitionRecord_Accessor {
     readonly Kind: 'accessor';
@@ -797,34 +826,39 @@ export declare interface ClassElementDefinitionRecord_Setter {
     Decorators: readonly DecoratorDefinitionRecord[] | undefined;
 }
 
+declare type ClassElementDefinitionRecordFields = Omit<ClassElementDefinitionRecord, keyof GCMarkable>;
+
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */
+declare type ClassElementDefinitionRecordInit = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
+
 export declare function ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): PlainEvaluator<ClassFieldDefinitionRecord>;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-runtime-semantics-classfielddefinitionevaluation */
 export declare function ClassFieldDefinitionEvaluation_decorator(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): PlainEvaluator<ClassElementDefinitionRecord>;
 
-/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */
-export declare interface ClassFieldDefinitionRecord {
+/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */ export declare function ClassFieldDefinitionRecord(O: ClassFieldDefinitionRecordInit): ClassFieldDefinitionRecord;
+
+/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */ export declare class ClassFieldDefinitionRecord implements GCMarkable {
     readonly Name: PropertyKeyValue | PrivateName;
     readonly Initializer: ECMAScriptFunctionObject | undefined;
+    constructor(O: ClassFieldDefinitionRecordInit);
+    mark(trace: GCTrace): void;
 }
 
-export declare const ClassFieldDefinitionRecord: {
-    (value: ClassFieldDefinitionRecord): ClassFieldDefinitionRecord;
-    [Symbol.hasInstance](instance: unknown): instance is ClassFieldDefinitionRecord;
-};
+declare type ClassFieldDefinitionRecordInit = Omit<ClassFieldDefinitionRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
 export declare function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }: ParseNode.ClassStaticBlock, homeObject: ObjectValue): ClassStaticBlockDefinitionRecord;
 
-/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */
-export declare interface ClassStaticBlockDefinitionRecord {
+/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */ export declare function ClassStaticBlockDefinitionRecord(O: ClassStaticBlockDefinitionRecordInit): ClassStaticBlockDefinitionRecord;
+
+/** https://tc39.es/ecma262/#sec-classstaticblockdefinition-record-specification-type */ export declare class ClassStaticBlockDefinitionRecord implements GCMarkable {
     readonly BodyFunction: ECMAScriptFunctionObject;
+    constructor(O: ClassStaticBlockDefinitionRecordInit);
+    mark(trace: GCTrace): void;
 }
 
-export declare const ClassStaticBlockDefinitionRecord: {
-    (value: ClassStaticBlockDefinitionRecord): ClassStaticBlockDefinitionRecord;
-    [Symbol.hasInstance](instance: unknown): instance is ClassStaticBlockDefinitionRecord;
-};
+declare type ClassStaticBlockDefinitionRecordInit = Omit<ClassStaticBlockDefinitionRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
 export declare function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): PlainEvaluator<void>;
@@ -832,6 +866,7 @@ export declare function CleanupFinalizationRegistry(finalizationRegistry: Finali
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export declare function ClearKeptObjects(): void;
 
+/** https://tc39.es/ecma262/#sec-clonearraybuffer */
 export declare function CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number): ValueEvaluator<ArrayBufferObject>;
 
 /** https://developer.mozilla.org/en-US/docs/Glossary/Code_point */
@@ -920,12 +955,12 @@ export declare const Completion: {
     readonly prototype: CompletionImpl<unknown>;
 };
 
-export declare class CompletionImpl<const T> {
+export declare class CompletionImpl<const T> implements GCMarkable {
     readonly Type: 'normal' | 'break' | 'continue' | 'return' | 'throw';
     readonly Value: T | Value;
     readonly Target: string | undefined;
     constructor(init: CompletionInit<T>);
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare type CompletionInit<T> = NormalCompletionInit<T> | AbruptCompletionInit;
@@ -999,11 +1034,32 @@ export declare function CreateArrayIterator(array: ObjectValue, kind: 'key+value
 /** https://tc39.es/ecma262/#sec-createasyncfromsynciterator */
 export declare function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord): IteratorRecord;
 
-/** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export declare function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, async?: boolean): BuiltinFunctionObject;
+/**
+ * https://tc39.es/ecma262/#sec-createbuiltinfunction
+ *
+ * The positional form is retained for built-ins added by the current
+ * specification snapshot; the options form carries the GC capture provider.
+ */
+export declare function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], options: CreateBuiltinFunctionOptions): BuiltinFunctionObject;
 
 export declare namespace CreateBuiltinFunction {
-    var from: (steps: CanBeNativeSteps, name?: string, async?: boolean) => BuiltinFunctionObject;
+    var from: (optionsOrSteps: CreateBuiltinFunctionFromOptions | CanBeNativeSteps, positionalName?: string, positionalAsync?: boolean) => BuiltinFunctionObject;
+}
+
+/** This is a helper function to define non-spec host functions. */
+export declare interface CreateBuiltinFunctionFromOptions {
+    readonly steps: CanBeNativeSteps;
+    readonly name?: string;
+    readonly async?: boolean;
+    readonly captures: GCCaptureProvider | null;
+}
+
+export declare interface CreateBuiltinFunctionOptions {
+    readonly captures: GCCaptureProvider | null;
+    readonly realm?: Realm;
+    readonly prototype?: ObjectValue | NullValue;
+    readonly prefix?: string;
+    readonly async?: boolean;
 }
 
 export declare function createBuiltinModuleLoader(options?: BuiltinModuleLoaderOptions): ModuleLoader;
@@ -1041,17 +1097,40 @@ export declare function CreateDynamicFunction(constructor: FunctionObject, newTa
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createfieldinitializerfunction */
 export declare function CreateFieldInitializerFunction(homeObject: ObjectValue, propName: PropertyKeyValue | PrivateName, Initializer: ParseNode.AssignmentExpressionOrHigher): Mutable<ECMAScriptFunctionObject>;
 
+export declare function createGarbageCollector(agent: Agent): GarbageCollector;
+
 /** https://tc39.es/ecma262/#sec-createintrinsics */
 export declare function CreateIntrinsics(realmRec: Realm): any;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record */
 export declare function CreateISODateRecord(y: Integer, m: Integer, d: Integer): PlainCompletion<ISODateRecord>;
 
-/** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
+export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, options: CreateIteratorFromClosureOptions): Mutable<GeneratorObject>;
+
 export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject>;
+
+/**
+ * https://tc39.es/ecma262/#sec-createiteratorfromclosure
+ *
+ * The options form carries GC captures; the positional form remains supported
+ * for iterator helpers from the current specification snapshot.
+ */
+export declare interface CreateIteratorFromClosureOptions {
+    readonly extraSlots?: readonly string[];
+    readonly captures: GCCaptureProvider | null;
+}
 
 /** https://tc39.es/ecma262/#sec-createiterresultobject */
 export declare function CreateIteratorResultObject(value: Value, done: boolean): OrdinaryObject;
+
+export declare interface CreateJobOptions {
+    readonly name: string;
+    readonly queueName: string;
+    readonly evaluate: () => PlainEvaluator<unknown>;
+    readonly callerRealm: Realm | undefined;
+    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue | null;
+    readonly captures: GCCaptureProvider | null;
+}
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
 export declare function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'all'): PlainEvaluator<Value[]>;
@@ -1146,7 +1225,7 @@ export declare abstract class CyclicModuleRecord extends AbstractModuleRecord {
     Link(importedNames?: ImportedNamesValue): PlainCompletion<void>;
     /** https://tc39.es/ecma262/#sec-moduleevaluation */
     Evaluate(importedNames?: ImportedNamesValue): Evaluator<PromiseObject>;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'CycleRoot' | 'HasTLA' | 'AsyncEvaluationOrder' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
@@ -1255,14 +1334,14 @@ export declare type DecimalInit = string | number | bigint | decimal.Decimal | D
 
 export declare function DeclarationPart<T extends ParseNode>(node: T): T;
 
-export declare interface DeclarativeEnvironmentBinding {
+export declare interface DeclarativeEnvironmentBinding extends GCMarkable {
     readonly indirect: boolean;
     initialized: boolean;
     readonly mutable?: boolean;
     readonly strict?: boolean;
     readonly deletable?: boolean;
     value?: Value | undefined;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
@@ -1290,14 +1369,19 @@ export declare class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     HasSuperBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
     WithBaseObject(): UndefinedValue;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
-/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */
-export declare interface DecoratorDefinitionRecord {
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */ export declare function DecoratorDefinitionRecord(O: DecoratorDefinitionRecordInit): DecoratorDefinitionRecord;
+
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */ export declare class DecoratorDefinitionRecord implements GCMarkable {
     readonly Decorator: Value;
     readonly Receiver: ReferenceRecord | Value;
+    constructor(O: DecoratorDefinitionRecordInit);
+    mark(trace: GCTrace): void;
 }
+
+declare type DecoratorDefinitionRecordInit = Omit<DecoratorDefinitionRecord, keyof GCMarkable>;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratorevaluation */
 export declare function DecoratorEvaluation(decorator: ParseNode.Decorator): PlainEvaluator<DecoratorDefinitionRecord>;
@@ -1332,10 +1416,16 @@ export declare function DefineMethod(MethodDefinition: ParseNode.MethodDefinitio
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-definemethodproperty */
 export declare function DefineMethodProperty(homeObject: ObjectValue, methodDefinition: ClassElementDefinitionRecord, enumerable: boolean): PlainEvaluator<void>;
 
-export declare interface DefineMethodRecord {
+/** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */ export declare function DefineMethodRecord(O: DefineMethodRecordInit): DefineMethodRecord;
+
+/** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */ export declare class DefineMethodRecord implements GCMarkable {
     readonly Key: PropertyKeyValue | PrivateName;
     readonly Closure: ECMAScriptFunctionObject;
+    constructor(O: DefineMethodRecordInit);
+    mark(trace: GCTrace): void;
 }
+
+declare type DefineMethodRecordInit = Omit<DefineMethodRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
 export declare function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue | string, desc: Descriptor): Generator<EvaluatorYieldType, true | ThrowCompletion, EvaluatorNextType>;
@@ -1366,7 +1456,7 @@ export declare class Descriptor {
     readonly Configurable?: boolean;
     private constructor();
     static everyFieldIsAbsent(descriptor: Descriptor): boolean;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare interface DescriptorWithEnumerableAndConfigurable {
@@ -1509,7 +1599,7 @@ export declare function EnumerableOwnProperties(O: ObjectValue, kind: 'value'): 
 export declare function EnumerableOwnProperties(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<ObjectValue[]>;
 
 /** https://tc39.es/ecma262/#sec-environment-records */
-export declare abstract class EnvironmentRecord {
+export declare abstract class EnvironmentRecord implements GCMarkable {
     readonly OuterEnv: EnvironmentRecord | null;
     constructor(outerEnv: EnvironmentRecord | null);
     abstract HasBinding(name: string): PlainEvaluator<boolean>;
@@ -1522,7 +1612,7 @@ export declare abstract class EnvironmentRecord {
     abstract HasThisBinding(): boolean;
     abstract HasSuperBinding(): boolean;
     abstract WithBaseObject(): ObjectValue | UndefinedValue;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare type EnvironmentRecordWithThisBinding = FunctionEnvironmentRecord | GlobalEnvironmentRecord | ModuleEnvironmentRecord;
@@ -1877,7 +1967,7 @@ export declare type EvaluatorYieldType_Yield = {
     value: ObjectValue | ThrowCompletion;
 };
 
-export declare interface EventLoop extends Markable {
+export declare interface EventLoop extends GCMarkable {
     /**
      * Enqueue a host job (macrotask) now.
      */
@@ -1906,6 +1996,7 @@ export declare interface EventLoop extends Markable {
      * This can be used to implement a mechanism to exit the program when all code has finished executing.
      */
     onNoPendingJob: Set<() => void>;
+    getQueuedJobsForGC?(): Iterable<Job>;
 }
 
 export declare type EventLoopRunType = 'manual' | 'automatic';
@@ -1914,7 +2005,7 @@ export declare type EventLoopRunType = 'manual' | 'automatic';
 export declare function ExcludeImportedNames(a: ImportedNamesValue, b: ImportedNamesValue): ImportedNamesValue;
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
-export declare class ExecutionContext {
+export declare class ExecutionContext implements GCMarkable {
     CodeEvaluationState?: YieldOrAwaitEvaluator;
     Function: NullValue | FunctionObject;
     ScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
@@ -1928,7 +2019,7 @@ export declare class ExecutionContext {
     promiseCapability?: PromiseCapabilityRecord;
     poppedForTailCall: boolean;
     copy(): ExecutionContext;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare interface ExecutionContextHostDefined {
@@ -2174,7 +2265,7 @@ export declare class FunctionEnvironmentRecord extends DeclarativeEnvironmentRec
     GetThisBinding(): ThrowCompletion | Value;
     /** https://tc39.es/ecma262/#sec-getsuperbase */
     GetSuperBase(): NullValue | ObjectValue | UndefinedValue;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare enum FunctionKind {
@@ -2205,17 +2296,48 @@ export declare abstract class FunctionParser extends IdentifierParser {
     parseFunctionBody(isAsync: boolean, isGenerator: boolean, isArrow: boolean): ParseNode.FunctionBodyLike;
 }
 
+export declare interface GarbageCollectionReport {
+    readonly graph: ObjectReferenceGraphSnapshot;
+    readonly cleared: {
+        readonly weakRefs: number;
+        readonly weakMapEntries: number;
+        readonly weakSetEntries: number;
+        readonly finalizationTargets: number;
+    };
+    readonly cleanupJobsScheduled: number;
+}
+
+export declare interface GarbageCollector {
+    captureReferenceGraph(options?: CaptureReferenceGraphOptions): ObjectReferenceGraphSnapshot;
+    collect(options?: CaptureReferenceGraphOptions): GarbageCollectionReport;
+    addRoot(name: string, value: GCTraceTarget): GCRootHandle;
+    addRootProvider(name: string, references: GCCaptureProvider): GCRootHandle;
+    getValue(id: ReferenceNodeId): Value | undefined;
+}
+
 /** https://tc39.es/proposal-defer-import-eval/#sec-GatherAsynchronousTransitiveDependencies  */
 export declare function GatherAsynchronousTransitiveDependencies(module: AbstractModuleRecord, seen?: Set<AbstractModuleRecord>): AbstractModuleRecord[];
 
 /** https://tc39.es/proposal-deferred-reexports/#sec-GatherAsynchronousTransitiveDependenciesForRequests */
 export declare function GatherAsynchronousTransitiveDependenciesForRequests(referrer: CyclicModuleRecord, requests: readonly ModuleRequestRecord[], seen?: Set<AbstractModuleRecord>): AbstractModuleRecord[];
 
-/** https://tc39.es/ecma262/#sec-weakref-execution */
-declare function gc_2(): void;
-export { gc_2 as gc }
+export declare type GCCaptureProvider = () => Readonly<Record<string, GCTraceTarget>>;
+
+export declare interface GCMarkable {
+    mark(trace: GCTrace): void;
+}
 
 export declare type GCMarker = (value: unknown) => void;
+
+export declare type GCRootHandle = Disposable;
+
+export declare interface GCTrace {
+    strong(name: string, target: GCTraceTarget, reason: ReferenceReasonKind): void;
+    weak(name: string, target: GCTraceTarget, reason: ReferenceReasonKind): void;
+    ephemeron(name: string, key: GCTraceTarget, value: GCTraceTarget, reason: ReferenceReasonKind): void;
+}
+
+export declare type GCTraceTarget = unknown;
 
 export declare function generatorBrandToErrorMessageType(generatorBrand: string | undefined): string | undefined;
 
@@ -2323,6 +2445,7 @@ export declare function GetIterator(obj: Value, kind: 'sync' | 'async'): PlainEv
 /** https://tc39.es/ecma262/#sec-getiteratordirect */
 export declare function GetIteratorDirect(obj: ObjectValue): PlainEvaluator<IteratorRecord>;
 
+/** https://tc39.es/ecma262/#sec-getiteratorflattenable */
 export declare function GetIteratorFlattenable(obj: Value, primitiveHandling: PrimitiveHanding): PlainEvaluator<IteratorRecord>;
 
 /** https://tc39.es/ecma262/#sec-getiteratorfrommethod */
@@ -2363,6 +2486,7 @@ export declare function GetOptionsObject(options: Value): ObjectValue | ThrowCom
 
 export declare function GetPossibleEpochNanoseconds(timeZone: TimeZoneIdentifier, isoDateTime: ISODateTimeRecord): PlainCompletion<EpochNanoseconds[]>;
 
+/** https://tc39.es/ecma262/#sec-getprototypefromconstructor */
 export declare function GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue>;
 
 /** https://tc39.es/proposal-temporal/#sec-getroundingincrementoption */
@@ -2489,7 +2613,7 @@ export declare class GlobalEnvironmentRecord extends EnvironmentRecord {
     CreateGlobalVarBinding(name: string, deletable: boolean): PlainEvaluator;
     /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
     CreateGlobalFunctionBinding(name: string, value: FunctionObject, deletable: boolean): PlainEvaluator;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-globalsymbolregistry-records */
@@ -2498,7 +2622,7 @@ export declare interface GlobalSymbolRegistryRecord {
     readonly Symbol: SymbolValue;
 }
 
-export declare class GraphLoadingState {
+export declare class GraphLoadingState implements GCMarkable {
     readonly PromiseCapability: PromiseCapabilityRecord;
     readonly HostDefined?: ModuleRecordHostDefined;
     IsLoading: boolean;
@@ -2508,6 +2632,7 @@ export declare class GraphLoadingState {
     constructor({ PromiseCapability, HostDefined, PreviouslyImportedNames }: Pick<GraphLoadingState, 'PromiseCapability' | 'HostDefined'> & {
         PreviouslyImportedNames?: PreviouslyImportedNamesEntry[];
     });
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-groupby */
@@ -2536,10 +2661,10 @@ export declare function hasSourceTextInternalSlot(O: undefined | null | Value): 
 export declare function HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, argumentsList: Arguments): ValueEvaluator;
 
 /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
-export declare function HostEnqueueFinalizationRegistryCleanupJob(finalizationRegistry: FinalizationRegistryObject): void;
+export declare function HostEnqueueFinalizationRegistryCleanupJob(surroundingAgent: Agent, finalizationRegistry: FinalizationRegistryObject): void;
 
 /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
-export declare function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: Realm | null): void;
+export declare function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: Realm | null, captures: GCCaptureProvider): void;
 
 export declare function HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: boolean): PlainEvaluator;
 
@@ -3237,13 +3362,19 @@ declare interface IteratorObject_2 extends OrdinaryObject {
 }
 export { IteratorObject_2 as IteratorObject }
 
-/** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
-/** https://tc39.es/ecma262/#sec-iteration */
-export declare interface IteratorRecord {
+/** https://tc39.es/ecma262/#sec-iterator-records */ export declare function IteratorRecord(O: IteratorRecordInit): IteratorRecord;
+
+/** https://tc39.es/ecma262/#sec-iterator-records */ export declare class IteratorRecord implements GCMarkable {
     readonly Iterator: ObjectValue;
     readonly NextMethod: Value;
     Done: boolean;
+    constructor(O: IteratorRecordInit);
+    mark(trace: GCTrace): void;
 }
+
+/** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
+/** https://tc39.es/ecma262/#sec-iteration */
+declare type IteratorRecordInit = Omit<IteratorRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#sec-iteratorstep */
 export declare function IteratorStep(iteratorRecord: IteratorRecord): PlainEvaluator<ObjectValue | 'done'>;
@@ -3263,22 +3394,30 @@ export declare function IteratorZip(_iters: readonly IteratorRecord[], mode: Ite
 export declare type IteratorZipMode = 'shortest' | 'longest' | 'strict';
 
 /** https://tc39.es/ecma262/#job */
-export declare interface Job {
+export declare class Job implements GCMarkable {
+    readonly name: string;
     readonly queueName: string;
-    readonly job: () => PlainEvaluator<unknown>;
+    readonly evaluate: () => PlainEvaluator<unknown>;
     readonly callerRealm: Realm | undefined;
-    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
+    readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue | null;
+    constructor(options: CreateJobOptions);
+    mark(trace: GCTrace): void;
 }
 
-/** https://tc39.es/ecma262/#sec-jobcallback-records */
-export declare interface JobCallbackRecord {
+/** https://tc39.es/ecma262/#sec-jobcallback-records */ export declare function JobCallbackRecord(O: JobCallbackRecordInit): JobCallbackRecord;
+
+/** https://tc39.es/ecma262/#sec-jobcallback-records */ export declare class JobCallbackRecord implements GCMarkable {
     Callback: FunctionObject & {
         [kAsyncContext]?: ExecutionContext;
     };
     HostDefined: undefined;
+    constructor(O: JobCallbackRecordInit);
+    mark(trace: GCTrace): void;
 }
 
-export declare interface JobQueue extends Markable {
+declare type JobCallbackRecordInit = Omit<JobCallbackRecord, keyof GCMarkable>;
+
+export declare interface JobQueue extends GCMarkable {
     enqueueFinalizationRegistryCleanupJob(job: Job): void;
     enqueuePromiseJob(job: Job): void;
     enqueueTimeoutJob(job: Job): void;
@@ -3289,6 +3428,7 @@ export declare interface JobQueue extends Markable {
     shiftPromiseJob?(): Job | undefined;
     shiftTimeoutJob?(): Job | undefined;
     shiftGenericJob?(): Job | undefined;
+    getQueuedJobsForGC?(): Iterable<Job>;
     get length(): number;
 }
 
@@ -3343,7 +3483,7 @@ export declare function LargerOfTwoTemporalUnits(xUnit: TemporalUnit, yUnit: Tem
 /** https://tc39.es/ecma262/#sec-lengthofarraylike */
 export declare function LengthOfArrayLike(obj: ObjectValue): PlainEvaluator<number>;
 
-export declare abstract class Lexer {
+export declare abstract class Lexer implements GCMarkable {
     protected abstract readonly source: string;
     protected abstract readonly decoratingSource?: string;
     protected currentToken: TokenData;
@@ -3361,6 +3501,7 @@ export declare abstract class Lexer {
     protected escapeIndex: number;
     protected abstract readonly specifier?: string;
     earlyErrors: Set<ErrorObject>;
+    mark(trace: GCTrace): void;
     decorateSyntaxError(error: Pick<ErrorObject, 'HostDefinedMessageString' | 'HostDefinedStack'>, location: number | Locatable): void;
     static decorateSyntaxErrorWithScriptId(error: ObjectValue, scriptId: string | undefined): void;
     addEarlyError({ Value: error }: ThrowCompletion, location?: Locatable): ErrorObject;
@@ -3485,6 +3626,7 @@ export declare class ManagedRealm extends Realm {
     GlobalEnv: GlobalEnvironmentRecord;
     HostDefined: ManagedRealmHostDefined;
     topContext: ExecutionContext;
+    mark(trace: GCTrace): void;
     /**
      * Push this realm's top context (if it is not currently) as the running execution context.
      *
@@ -3554,6 +3696,8 @@ export declare interface MappedArgumentsObject extends OrdinaryObject {
 export declare interface Markable {
     mark(marker: GCMarker): void;
 }
+
+export declare function markActiveEvaluators(agent: Agent, trace: GCTrace): void;
 
 export declare function markBuiltinFunctionAsConstructor(steps: NativeSteps): NativeSteps;
 
@@ -3769,7 +3913,8 @@ export declare class NodeJSLikeEventLoop extends AbstractEventLoop {
     enqueue(type: NodeJSJobType | string, job: Job): void;
     protected shiftNextJob(): Job | undefined;
     protected get hasQueuedJobs(): boolean;
-    mark(marker: GCMarker): void;
+    getQueuedJobsForGC(): Iterable<Job>;
+    mark(trace: GCTrace): void;
 }
 
 export declare type NonCalendarFields = 'time-fields' | 'time-fields-with-offset' | 'time-fields-with-time-zone-and-offset' | 'no-non-calendar-fields';
@@ -3932,7 +4077,7 @@ export declare class ObjectEnvironmentRecord extends EnvironmentRecord {
     HasSuperBinding(): boolean;
     /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
     WithBaseObject(): ObjectValue | UndefinedValue;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare interface ObjectInternalMethods<Self> {
@@ -3951,12 +4096,21 @@ export declare interface ObjectInternalMethods<Self> {
     Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
 }
 
+export declare interface ObjectReferenceGraphSnapshot extends SerializedObjectReferenceGraph {
+    getNode(id: ReferenceNodeId): ReferenceNode | undefined;
+    getNodeFor(value: object): ReferenceNode | undefined;
+    referencing(id: ReferenceNodeId): readonly ReferenceEdge[];
+    referencedBy(id: ReferenceNodeId): readonly ReferenceEdge[];
+    isReachable(id: ReferenceNodeId): boolean;
+    toJSON(): SerializedObjectReferenceGraph;
+}
+
 export declare type ObjectSlotReturn = {
     [key in keyof ObjectInternalMethods<ObjectValue>]: ReturnType<NonNullable<ObjectInternalMethods<ObjectValue>[key]>>;
 };
 
 /** https://tc39.es/ecma262/#sec-object-type */
-export declare class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
+export declare class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue>, GCMarkable {
     readonly type: 'Object';
     readonly properties: PropertyKeyMap<FullyPopulatedDescriptor>;
     readonly internalSlotsList: readonly string[];
@@ -3974,7 +4128,7 @@ export declare class ObjectValue extends Value implements ObjectInternalMethods<
     Set(P: PropertyKeyValue | string, V: Value, Receiver: Value): ObjectSlotReturn['Set'];
     Delete(P: PropertyKeyValue | string): ObjectSlotReturn['Delete'];
     OwnPropertyKeys(): ObjectSlotReturn['OwnPropertyKeys'];
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
     static [Symbol.hasInstance]: (value: unknown) => value is ObjectValue;
 }
 
@@ -3987,6 +4141,7 @@ export declare function OrdinaryCallBindThis(F: ECMAScriptFunctionObject, callee
 /** https://tc39.es/ecma262/#sec-ordinarycallevaluatebody */
 export declare function OrdinaryCallEvaluateBody(F: ECMAScriptFunctionObject, argumentsList: Arguments): Generator<EvaluatorYieldType, BreakCompletion | ContinueCompletion | NormalCompletion<never> | NormalCompletion<void | Value> | ReturnCompletion_ | ThrowCompletion<Value>, EvaluatorNextType>;
 
+/** https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor */
 export declare function OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics, internalSlotsList?: readonly T[]): ValueEvaluator<ObjectValue>;
 
 /** https://tc39.es/ecma262/#sec-ordinarydefineownproperty */
@@ -5527,13 +5682,19 @@ export declare function PrivateBoundIdentifiers(node: ParseNode | readonly Parse
 /** https://tc39.es/ecma262/#sec-privateelementfind */
 export declare function PrivateElementFind(P: PrivateName, O: ObjectValue): PrivateElementRecord | undefined;
 
-export declare type PrivateElementRecord = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */ export declare function PrivateElementRecord(O: PrivateElementRecordFields): PrivateElementRecord;
 
-export declare const PrivateElementRecord: {
-    (value: PrivateElementRecord): PrivateElementRecord;
-    [Symbol.hasInstance](instance: unknown): instance is PrivateElementRecord;
-};
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */ export declare class PrivateElementRecord implements GCMarkable {
+    readonly Key: PrivateName;
+    readonly Kind: PrivateElementRecordInit['Kind'];
+    Value?: Value;
+    readonly Get?: FunctionObject | UndefinedValue;
+    readonly Set?: FunctionObject | UndefinedValue;
+    constructor(O: PrivateElementRecordFields);
+    mark(trace: GCTrace): void;
+}
 
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export declare interface PrivateElementRecord_Accessor {
     readonly Key: PrivateName;
     readonly Kind: 'accessor';
@@ -5551,13 +5712,17 @@ export declare interface PrivateElementRecord_Value {
     readonly Set?: undefined;
 }
 
+declare type PrivateElementRecordFields = Omit<PrivateElementRecord, keyof GCMarkable>;
+
+declare type PrivateElementRecordInit = PrivateElementRecord_Value | PrivateElementRecord_Accessor;
+
 /** https://tc39.es/ecma262/#sec-privateenvironment-records */
-export declare class PrivateEnvironmentRecord {
+export declare class PrivateEnvironmentRecord implements GCMarkable {
     readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | null;
     readonly Names: PrivateName[];
     /** https://tc39.es/ecma262/#sec-newprivateenvironment */
     constructor(outerEnv: PrivateEnvironmentRecord | null);
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-privatefieldadd */
@@ -5570,10 +5735,11 @@ export declare function PrivateGet(O: ObjectValue, P: PrivateName): Generator<Ev
 export declare function PrivateMethodOrAccessorAdd(O: ObjectValue, method: PrivateElementRecord): Generator<EvaluatorYieldType, ThrowCompletion | undefined, EvaluatorNextType>;
 
 /** https://tc39.es/ecma262/#sec-private-names */
-export declare class PrivateName {
+export declare class PrivateName implements GCMarkable {
     private _;
     readonly Description: string;
     constructor(description: string);
+    mark(trace: GCTrace): void;
 }
 
 export declare interface PrivateScopeInfo {
@@ -5581,6 +5747,7 @@ export declare interface PrivateScopeInfo {
     readonly names: Map<string, Set<'field' | 'method' | 'get' | 'set'>>;
 }
 
+/** https://tc39.es/ecma262/#sec-privateset */
 export declare function PrivateSet(O: ObjectValue, P: PrivateName, value: Value): Generator<EvaluatorYieldType, ThrowCompletion | undefined, EvaluatorNextType>;
 
 /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
@@ -5600,13 +5767,17 @@ export declare interface PromiseAllResolveElementFunctionObject extends BuiltinF
     };
 }
 
-/** https://tc39.es/ecma262/#sec-promisecapability-records */
-export declare class PromiseCapabilityRecord {
-    constructor(value: PromiseCapabilityRecord);
+/** https://tc39.es/ecma262/#sec-promisecapability-records */ export declare function PromiseCapabilityRecord(O: PromiseCapabilityRecordInit): PromiseCapabilityRecord;
+
+/** https://tc39.es/ecma262/#sec-promisecapability-records */ export declare class PromiseCapabilityRecord implements GCMarkable {
     readonly Promise: PromiseObject;
     readonly Resolve: FunctionObject;
     readonly Reject: FunctionObject;
+    constructor(O: PromiseCapabilityRecordInit);
+    mark(trace: GCTrace): void;
 }
+
+declare type PromiseCapabilityRecordInit = Omit<PromiseCapabilityRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#table-internal-slots-of-promise-instances */
 export declare interface PromiseObject extends OrdinaryObject {
@@ -5617,13 +5788,17 @@ export declare interface PromiseObject extends OrdinaryObject {
     PromiseIsHandled: boolean;
 }
 
-/** https://tc39.es/ecma262/#sec-promisereaction-records */
-export declare class PromiseReactionRecord {
+/** https://tc39.es/ecma262/#sec-promisereaction-records */ export declare function PromiseReactionRecord(O: PromiseReactionRecordInit): PromiseReactionRecord;
+
+/** https://tc39.es/ecma262/#sec-promisereaction-records */ export declare class PromiseReactionRecord implements GCMarkable {
     readonly Capability: PromiseCapabilityRecord | undefined;
     readonly Type: 'Fulfill' | 'Reject';
     readonly Handler: JobCallbackRecord | undefined;
-    constructor(O: PromiseReactionRecord);
+    constructor(O: PromiseReactionRecordInit);
+    mark(trace: GCTrace): void;
 }
+
+declare type PromiseReactionRecordInit = Omit<PromiseReactionRecord, keyof GCMarkable>;
 
 /** https://tc39.es/ecma262/#sec-promise-resolve */
 export declare function PromiseResolve(constructor: ObjectValue, resolution: Value): ValueEvaluator<PromiseObject>;
@@ -5650,7 +5825,7 @@ export declare class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
     getOrInsertComputed(key: PropertyKeyValue | string, defaultValueFn: (key: PropertyKeyValue) => V): V;
     [Symbol.iterator]: () => MapIterator<[PropertyKeyValue, V]>;
     [Symbol.toStringTag]: string;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -5672,6 +5847,12 @@ export declare interface ProxyObject extends ExoticObject, BuiltinFunctionObject
 
 /** https://tc39.es/ecma262/#sec-putvalue */
 export declare function PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator;
+
+/**
+ * https://tc39.es/ecma262/#sec-returnifabrupt
+ * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
+ */
+export declare function Q<const T>(_completion: T): Q<T>;
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt */
 export declare type Q<T> = T extends NormalCompletion<infer V> ? V : T extends AbruptCompletion ? never : T;
@@ -5697,7 +5878,7 @@ export declare const RawTokens: readonly [readonly ["TEMPLATE", "`"], readonly [
 export declare function ReadyForSyncExecution(module: AbstractModuleRecord, importedNames?: ImportedNamesValue, seen?: Set<CyclicModuleRecord>): boolean;
 
 /** https://tc39.es/ecma262/#sec-code-realms */
-export declare abstract class Realm {
+export declare abstract class Realm implements GCMarkable {
     abstract readonly AgentSignifier: unknown;
     abstract readonly Intrinsics: Intrinsics;
     abstract readonly GlobalObject: ObjectValue;
@@ -5709,19 +5890,68 @@ export declare abstract class Realm {
     readonly LoadedModules: LoadedModuleRequestRecord[];
     abstract readonly HostDefined: ManagedRealmHostDefined;
     abstract randomState: undefined | BigUint64Array;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
+}
+
+export declare type ReferenceEdge = (ReferenceEdgeBase & {
+    readonly strength: 'strong' | 'weak';
+}) | (ReferenceEdgeBase & {
+    readonly strength: 'ephemeron';
+    readonly condition: ReferenceNodeId;
+    readonly active: boolean;
+});
+
+declare interface ReferenceEdgeBase {
+    readonly from: ReferenceNodeId;
+    readonly to: ReferenceNodeId;
+    readonly reason: ReferenceReason;
 }
 
 export declare type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
 
-export declare class ReferenceRecord {
+export declare interface ReferenceNode {
+    readonly id: ReferenceNodeId;
+    readonly kind: ReferenceNodeKind;
+    readonly name: string;
+    readonly shallowSize: number | null;
+    readonly reachable: boolean;
+}
+
+export declare type ReferenceNodeId = number & {
+    readonly [referenceNodeIdBrand]: true;
+};
+
+declare const referenceNodeIdBrand: unique symbol;
+
+export declare type ReferenceNodeKind = 'object' | 'function' | 'symbol' | 'value' | 'agent' | 'realm' | 'execution-context' | 'environment' | 'module' | 'job' | 'callback' | 'evaluator' | 'record' | 'collection' | 'host';
+
+export declare interface ReferenceReason {
+    readonly kind: ReferenceReasonKind;
+    readonly name: string;
+}
+
+export declare type ReferenceReasonKind = 'property' | 'element' | 'internal-slot' | 'binding' | 'private-element' | 'capture' | 'job' | 'host';
+
+/** https://tc39.es/ecma262/#sec-reference-record-specification-type */ export declare function ReferenceRecord(O: ReferenceRecordInit): ReferenceRecord;
+
+/** https://tc39.es/ecma262/#sec-reference-record-specification-type */ export declare class ReferenceRecord implements GCMarkable {
     readonly Base: 'unresolvable' | Value | EnvironmentRecord;
     ReferencedName: Value | PrivateName;
     readonly Strict: boolean;
     readonly ThisValue: Value | undefined;
-    constructor({ Base, ReferencedName, Strict, ThisValue }: Pick<ReferenceRecord, 'Base' | 'ReferencedName' | 'Strict' | 'ThisValue'>);
-    mark(m: GCMarker): void;
+    constructor(O: ReferenceRecordInit);
+    mark(trace: GCTrace): void;
 }
+
+declare type ReferenceRecordInit = Omit<ReferenceRecord, keyof GCMarkable>;
+
+export declare interface ReferenceRoot {
+    readonly kind: ReferenceRootKind;
+    readonly name: string;
+    readonly to: ReferenceNodeId;
+}
+
+export declare type ReferenceRootKind = 'agent' | 'execution-context' | 'kept-object' | 'queued-job' | 'event-loop' | 'inspector' | 'host';
 
 /** https://tc39.es/ecma262/#sec-destructuring-assignment */
 export declare function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | ParseNode.ObjectLiteral | ParseNode.PropertyDefinition | ParseNode.MemberExpression | ParseNode.CoverInitializedName | ParseNode.AssignmentExpression | ParseNode.Elision | ParseNode.IdentifierReference | ParseNode.ElementListElement | DestructuringParseNode | ParseNode.Expression, type?: 'array' | 'object'): ParseNode.AssignmentPattern;
@@ -5854,11 +6084,11 @@ export declare interface ResizableArrayBufferObject extends ArrayBufferObject {
 /** https://tc39.es/ecma262/#sec-resolvebinding */
 export declare function ResolveBinding(name: string, strict: boolean, env?: EnvironmentRecord | undefined | null): PlainEvaluator<ReferenceRecord>;
 
-export declare class ResolvedBindingRecord {
+export declare class ResolvedBindingRecord implements GCMarkable {
     readonly Module: AbstractModuleRecord;
     readonly BindingName: 'namespace' | 'deferred-namespace' | 'source' | JSStringValue;
     constructor({ Module, BindingName }: Pick<ResolvedBindingRecord, 'BindingName' | 'Module'>);
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 /** https://tc39.es/ecma262/#sec-resolve-private-identifier */
@@ -5958,7 +6188,7 @@ export declare function SameValueNonNumber(x: Value, y: Value): boolean;
 /** https://tc39.es/ecma262/#sec-samevaluezero */
 export declare function SameValueZero(x: Value, y: Value): boolean;
 
-export declare class Scope {
+export declare class Scope implements GCMarkable {
     private readonly parser;
     private readonly scopeStack;
     labels: Label[];
@@ -5972,6 +6202,7 @@ export declare class Scope {
     private readonly undefinedPrivateAccesses;
     private flags;
     constructor(parser: Parser);
+    mark(trace: GCTrace): void;
     hasReturn(): boolean;
     hasAwait(): boolean;
     hasYield(): boolean;
@@ -6027,18 +6258,29 @@ export declare interface ScopeInfo {
 /** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
 export declare function ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator;
 
-export declare class ScriptRecord {
+/** https://tc39.es/ecma262/#script-record */ export declare function ScriptRecord(O: ScriptRecordInit): ScriptRecord;
+
+/** https://tc39.es/ecma262/#script-record */ export declare class ScriptRecord implements GCMarkable {
     readonly Realm: Realm;
     readonly ECMAScriptCode: ParseNode.Script;
     readonly LoadedModules: LoadedModuleRequestRecord[];
     readonly HostDefined: ParseScriptHostDefined;
-    mark(m: GCMarker): void;
-    constructor(record: Omit<ScriptRecord, 'mark'>);
+    mark(trace: GCTrace): void;
+    constructor(O: ScriptRecordInit);
 }
+
+declare type ScriptRecordInit = Omit<ScriptRecord, keyof GCMarkable>;
 
 export declare function SecondFromTime(t: FiniteTimeValue): Integer;
 
 export declare const SecondsPerMinute = 60n;
+
+export declare interface SerializedObjectReferenceGraph {
+    readonly agentId: number;
+    readonly nodes: readonly ReferenceNode[];
+    readonly edges: readonly ReferenceEdge[];
+    readonly roots: readonly ReferenceRoot[];
+}
 
 /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
 declare function Set_2(O: ObjectValue, P: PropertyKeyValue | string, V: Value, throws: boolean): Generator<EvaluatorYieldType, boolean | ThrowCompletion, EvaluatorNextType>;
@@ -6114,7 +6356,7 @@ export declare class SourceTextModuleRecord extends CyclicModuleRecord {
     InitializeEnvironment(): NormalCompletion<undefined> | ThrowCompletion;
     /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
     ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator;
-    mark(m: GCMarker): void;
+    mark(trace: GCTrace): void;
 }
 
 export declare type SourceTextModuleRecordInit = CyclicModuleRecordInit & Pick<SourceTextModuleRecord, 'ImportMeta' | 'ECMAScriptCode' | 'Context' | 'ImportEntries' | 'LocalExportEntries' | 'IndirectExportEntries' | 'StarExportEntries'> & Partial<Pick<SourceTextModuleRecord, 'OptionalIndirectExportEntries'>>;
@@ -6176,6 +6418,8 @@ export declare abstract class StatementParser extends ExpressionParser {
     parseExpressionStatement(): ParseNode.ExpressionStatement | ParseNode.LabelledStatement;
 }
 
+export declare function stepEvaluator<Result>(evaluator: Evaluator<Result>, input: EvaluatorNextType): IteratorResult<EvaluatorYieldType, Result>;
+
 /** https://tc39.es/ecma262/#sec-stringcreate */
 export declare function StringCreate(value: string, prototype: ObjectValue): Mutable<StringObject>;
 
@@ -6211,10 +6455,11 @@ export declare let surroundingAgent: Agent;
 export declare function SymbolDescriptiveString(sym: SymbolValue): string;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
-export declare class SymbolValue extends PrimitiveValue {
+export declare class SymbolValue extends PrimitiveValue implements GCMarkable {
     readonly type: 'Symbol';
     readonly Description: string | undefined;
     constructor(Description: string | undefined);
+    mark(trace: GCTrace): void;
     static [Symbol.hasInstance]: (value: unknown) => value is SymbolValue;
 }
 
@@ -6488,35 +6733,14 @@ export declare function ThisSymbolValue(value: Value): SymbolValue | ThrowComple
 export declare function Throw(_: never): never;
 
 export declare namespace Throw {
-    var EvalError: Throw;
-}
-
-export declare namespace Throw {
-    var RangeError: Throw;
-}
-
-export declare namespace Throw {
-    var ReferenceError: Throw;
-}
-
-export declare namespace Throw {
-    var SyntaxError: Throw;
-}
-
-export declare namespace Throw {
-    var TypeError: Throw;
-}
-
-export declare namespace Throw {
-    var URIError: Throw;
-}
-
-export declare namespace Throw {
-    var Error: Throw;
-}
-
-export declare namespace Throw {
-    var AggregateError: Throw;
+    let EvalError: Throw;
+    let RangeError: Throw;
+    let ReferenceError: Throw;
+    let SyntaxError: Throw;
+    let TypeError: Throw;
+    let URIError: Throw;
+    let Error: Throw;
+    let AggregateError: Throw;
 }
 
 export declare interface Throw {
@@ -6654,6 +6878,8 @@ export declare type TokenArrayToEnumLike<A extends readonly TokenDefinition[]> =
     readonly [I in ParserTokenIndex<keyof A> as A[I][0]]: I;
 };
 
+export declare function TokenData(O: TokenDataInit): TokenData;
+
 export declare class TokenData {
     readonly type: Token;
     readonly startIndex: number;
@@ -6664,11 +6890,13 @@ export declare class TokenData {
     readonly name: string;
     readonly value: string | number | bigint | boolean | null;
     readonly escaped: boolean;
-    constructor({ type, startIndex, endIndex, line, column, hadLineTerminatorBefore, name, value, escaped }: Pick<TokenData, 'type' | 'startIndex' | 'endIndex' | 'line' | 'column' | 'hadLineTerminatorBefore' | 'name' | 'value' | 'escaped'>);
+    constructor(O: TokenDataInit);
     valueAsString(): string;
     valueAsNumeric(): number | bigint;
     valueAsBoolean(): boolean;
 }
+
+declare type TokenDataInit = Pick<TokenData, 'column' | 'endIndex' | 'escaped' | 'hadLineTerminatorBefore' | 'line' | 'name' | 'startIndex' | 'type' | 'value'>;
 
 export declare type TokenDefinition = readonly [name: string, value: string | null];
 
@@ -7094,7 +7322,8 @@ export declare class WebLikeEventLoop extends AbstractEventLoop {
     enqueue(type: NodeJSJobType | string, job: Job): void;
     protected shiftNextJob(): Job | undefined;
     protected get hasQueuedJobs(): boolean;
-    mark(marker: GCMarker): void;
+    mark(trace: GCTrace): void;
+    getQueuedJobsForGC(): Iterable<Job>;
 }
 
 /** https://tc39.es/ecma262/#sec-week-day */
@@ -7118,6 +7347,8 @@ export declare const wellKnownSymbols: {
     readonly toStringTag: SymbolValue;
     readonly unscopables: SymbolValue;
 };
+
+export declare function withCapturedReferences<T extends object>(owner: T, options: CaptureMetadata): T;
 
 /** https://tc39.es/proposal-shadowrealm/#sec-wrappedfunctioncreate */
 export declare function WrappedFunctionCreate(callerRealm: Realm, Target: FunctionObject): Generator<EvaluatorYieldType, Mutable<WrappedFunctionExoticObject> | ThrowCompletion, EvaluatorNextType>;

@@ -34,7 +34,7 @@ function* AsyncIteratorPrototype_asyncDispose(_args: Arguments, { thisValue }: F
     IfAbruptRejectPromise(resultWrapper, promiseCapability);
     __ts_cast__<PromiseObject>(resultWrapper);
     const unwrap = () => Value.undefined;
-    const onFulfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
+    const onFulfilled = CreateBuiltinFunction(unwrap, 1, Value(''), [], { captures: null });
     PerformPromiseThen(resultWrapper, onFulfilled, Value.undefined, promiseCapability);
   }
   return promiseCapability.Promise;

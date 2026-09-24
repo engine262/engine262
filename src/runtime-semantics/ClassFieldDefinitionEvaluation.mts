@@ -1,6 +1,8 @@
 import { X, Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
 import { Evaluate_PropertyName } from './PropertyName.mts';
 import {
   surroundingAgent,
@@ -15,18 +17,28 @@ import {
   type ECMAScriptFunctionObject, type FunctionCallContext, type FunctionObject, type ObjectValue, PrivateName, type PropertyKeyValue,
 } from '#self';
 
-/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */
-export interface ClassFieldDefinitionRecord {
+type ClassFieldDefinitionRecordInit = Omit<ClassFieldDefinitionRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */ // @ts-expect-error
+export function ClassFieldDefinitionRecord(O: ClassFieldDefinitionRecordInit): ClassFieldDefinitionRecord
+/** https://tc39.es/ecma262/#sec-classfielddefinition-record-specification-type */ // @ts-expect-error
+export @callable() @record class ClassFieldDefinitionRecord implements GCMarkable {
   readonly Name: PropertyKeyValue | PrivateName;
+
   readonly Initializer: ECMAScriptFunctionObject | undefined;
+
+  constructor(O: ClassFieldDefinitionRecordInit) {
+    if (new.target !== ClassFieldDefinitionRecord) {
+      throw new TypeError('ClassFieldDefinitionRecord is a final class and cannot be subclassed');
+    }
+    this.Name = O.Name;
+    this.Initializer = O.Initializer;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Name', this.Name, 'private-element');
+    trace.strong('Initializer', this.Initializer, 'capture');
+  }
 }
-export const ClassFieldDefinitionRecord = function ClassFieldDefinitionRecord(value: ClassFieldDefinitionRecord) {
-  Object.setPrototypeOf(value, ClassFieldDefinitionRecord.prototype);
-  return value;
-} as {
-  (value: ClassFieldDefinitionRecord): ClassFieldDefinitionRecord;
-  [Symbol.hasInstance](instance: unknown): instance is ClassFieldDefinitionRecord;
-};
 
 export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): PlainEvaluator<ClassFieldDefinitionRecord> {
   const { ClassElementName, Initializer } = FieldDefinition;
@@ -165,7 +177,7 @@ export function MakeAutoAccessorGetter(_homeObject: ObjectValue, _name: Property
     const o = thisValue as ObjectValue;
     return Q(yield* PrivateGet(o, privateStateName));
   };
-  const getter = CreateBuiltinFunction(getterClosure, 0, Value('get'), []);
+  const getter = CreateBuiltinFunction(getterClosure, 0, Value('get'), [], { captures: () => ({ privateStateName }) });
   // TODO(decorator): spec bug, SetFunctionName only accepts ECMAScriptFunctionObject, but the name is already set when calling CreateBuiltinFunction
   // SetFunctionName(getter, name, Value('get'));
   // TODO(decorator): https://github.com/tc39/proposal-decorators/issues/568
@@ -179,7 +191,7 @@ export function MakeAutoAccessorSetter(_homeObject: ObjectValue, _name: Property
     Q(yield* PrivateSet(o, privateStateName, value));
     return Value.undefined;
   };
-  const setter = CreateBuiltinFunction(setterClosure, 1, Value('set'), []);
+  const setter = CreateBuiltinFunction(setterClosure, 1, Value('set'), [], { captures: () => ({ privateStateName }) });
   // TODO(decorator): spec bug
   // SetFunctionName(setter, name, Value('set'));
   // TODO(decorator): https://github.com/tc39/proposal-decorators/issues/568

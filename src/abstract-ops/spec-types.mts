@@ -56,10 +56,10 @@ export function R(x: BigIntValue): bigint;
 export function R(x: BigIntValue | NumberValue): bigint | number;
 export function R(x: unknown) {
   if (x instanceof BigIntValue) {
-    return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+    return x.bigintValue();
   }
   Assert(x instanceof NumberValue);
-  const number = x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+  const number = x.numberValue();
   if (Object.is(number, -0)) {
     return 0;
   }

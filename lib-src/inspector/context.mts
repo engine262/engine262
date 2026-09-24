@@ -26,13 +26,24 @@ import {
   IsAccessorDescriptor,
   isIntegerIndex,
   type OrdinaryObject,
+  type GCRootHandle,
+  type ObjectReferenceGraphSnapshot,
+  type ReferenceNodeId,
 } from '#self';
 
 interface InspectedRealmDescriptor {
   readonly realm: ManagedRealm;
   readonly descriptor: Protocol.Runtime.ExecutionContextDescription;
   readonly agent: Agent;
+  readonly rootHandle: GCRootHandle;
   detach(): void;
+}
+
+export interface RemoteObjectEntry {
+  readonly value: ObjectValue | SymbolValue;
+  readonly agent: Agent;
+  readonly group: string;
+  readonly rootHandle: GCRootHandle;
 }
 
 export class InspectorContext {
@@ -56,6 +67,7 @@ export class InspectorContext {
       realm,
       descriptor,
       agent,
+      rootHandle: agent.gc.addRoot(`inspector:realm:${id}`, realm),
       detach: () => {
         realm.HostDefined.attachingInspector = oldInspector;
         realm.HostDefined.attachingInspectorReportError = function attachingInspectorReportError(realm, error) {
@@ -76,6 +88,10 @@ export class InspectorContext {
         this.detachRealm(realm.realm);
       }
     }
+    for (const [id, entry] of this.#remoteObjects) {
+      if (entry.agent === agent) this.releaseObject(id);
+    }
+    this.resetHeapProfiler();
   }
 
   detachRealm(realm: ManagedRealm) {
@@ -83,9 +99,10 @@ export class InspectorContext {
     if (index === -1) {
       return;
     }
-    const { descriptor } = this.realms[index]!;
+    const { descriptor, rootHandle } = this.realms[index]!;
     realm.HostDefined.attachingInspector = undefined;
     realm.HostDefined.attachingInspectorReportError = undefined;
+    rootHandle[Symbol.dispose]();
     this.realms[index] = undefined;
     this.#io.sendEvent['Runtime.executionContextDestroyed']({ executionContextId: descriptor.id, executionContextUniqueId: descriptor.uniqueId });
   }
@@ -111,56 +128,147 @@ export class InspectorContext {
     return this.realms.find(Boolean);
   }
 
-  #idToObject = new Map<string, ObjectValue | SymbolValue>();
+  get agents(): readonly Agent[] {
+    return [...new Set(this.realms.flatMap((realm) => (realm ? [realm.agent] : [])))];
+  }
 
-  #objectToId = new Map<ObjectValue | SymbolValue, string>();
+  #remoteObjects = new Map<string, RemoteObjectEntry>();
+
+  #objectToIds = new WeakMap<ObjectValue | SymbolValue, Map<string, string>>();
 
   #objectCounter = 1;
 
-  #internObject(object: ObjectValue | SymbolValue, group = 'default') {
-    if (this.#objectToId.has(object)) {
-      return this.#objectToId.get(object)!;
-    }
+  #internObject(object: ObjectValue | SymbolValue, group = 'default', agent = surroundingAgent) {
+    const ids = this.#objectToIds.get(object);
+    const existing = ids?.get(group);
+    if (existing) return existing;
     const id = `${group}:${this.#objectCounter}`;
     this.#objectCounter += 1;
-    this.#idToObject.set(id, object);
-    this.#objectToId.set(object, id);
+    const rootHandle = agent.gc.addRoot(`inspector:remote:${id}`, object);
+    this.#remoteObjects.set(id, {
+      value: object,
+      agent,
+      group,
+      rootHandle,
+    });
+    if (ids) ids.set(group, id);
+    else this.#objectToIds.set(object, new Map([[group, id]]));
     return id;
   }
 
   releaseObject(id: string) {
-    const object = this.#idToObject.get(id);
-    if (object) {
-      this.#idToObject.delete(id);
-      this.#objectToId.delete(object);
-    }
+    const entry = this.#remoteObjects.get(id);
+    if (!entry) return;
+    entry.rootHandle[Symbol.dispose]();
+    this.#remoteObjects.delete(id);
+    const ids = this.#objectToIds.get(entry.value);
+    ids?.delete(entry.group);
+    if (ids?.size === 0) this.#objectToIds.delete(entry.value);
   }
 
   releaseObjectGroup(group: string) {
-    for (const [id, object] of this.#idToObject.entries()) {
-      if (id.startsWith(group)) {
-        this.#idToObject.delete(id);
-        this.#objectToId.delete(object);
-      }
+    for (const [id, entry] of this.#remoteObjects) {
+      if (entry.group === group) this.releaseObject(id);
     }
   }
 
   getObject(objectId: string) {
-    return this.#idToObject.get(objectId);
+    return this.#remoteObjects.get(objectId)?.value;
   }
 
-  toRemoteObject(value: Value, options: { objectGroup?: string, generatePreview?: boolean }): Protocol.Runtime.RemoteObject {
-    return getInspector(value).toRemoteObject(value, (val) => this.#internObject(val, options.objectGroup), this, options.generatePreview);
+  getObjectEntry(objectId: string): RemoteObjectEntry | undefined {
+    return this.#remoteObjects.get(objectId);
+  }
+
+  #heapObjects = new Map<string, { readonly agent: Agent; readonly id: ReferenceNodeId }>();
+
+  #heapObjectIds = new Map<string, string>();
+
+  #nextHeapObjectId = 1;
+
+  #inspectedHeapObjects: { readonly heapObjectId: string; readonly rootHandle: GCRootHandle }[] = [];
+
+  registerHeapSnapshot(agent: Agent, graph: ObjectReferenceGraphSnapshot): void {
+    for (const node of graph.nodes) {
+      this.#heapObjects.set(this.heapObjectId(agent, node.id), { agent, id: node.id });
+    }
+  }
+
+  getHeapObjectId(objectId: string): string | undefined {
+    const entry = this.getObjectEntry(objectId);
+    if (!entry) return undefined;
+    const graph = entry.agent.gc.captureReferenceGraph();
+    const node = graph.getNodeFor(entry.value);
+    if (!node) return undefined;
+    const heapObjectId = this.heapObjectId(entry.agent, node.id);
+    this.#heapObjects.set(heapObjectId, { agent: entry.agent, id: node.id });
+    return heapObjectId;
+  }
+
+  getHeapObject(heapObjectId: string): { readonly agent: Agent; readonly id: ReferenceNodeId; readonly value: Value } | undefined {
+    const entry = this.#heapObjects.get(heapObjectId);
+    if (!entry) return undefined;
+    const value = entry.agent.gc.getValue(entry.id);
+    return value ? { ...entry, value } : undefined;
+  }
+
+  addInspectedHeapObject(heapObjectId: string): boolean {
+    const entry = this.getHeapObject(heapObjectId);
+    if (!entry) return false;
+    const existing = this.#inspectedHeapObjects.findIndex((item) => item.heapObjectId === heapObjectId);
+    if (existing !== -1) {
+      const [item] = this.#inspectedHeapObjects.splice(existing, 1);
+      this.#inspectedHeapObjects.push(item!);
+      return true;
+    }
+    const rootHandle = entry.agent.gc.addRoot(`inspector:heap:${heapObjectId}`, entry.value);
+    this.#inspectedHeapObjects.push({ heapObjectId, rootHandle });
+    if (this.#inspectedHeapObjects.length > 5) {
+      this.#inspectedHeapObjects.shift()!.rootHandle[Symbol.dispose]();
+    }
+    return true;
+  }
+
+  resetHeapProfiler(): void {
+    for (const entry of this.#inspectedHeapObjects) entry.rootHandle[Symbol.dispose]();
+    this.#inspectedHeapObjects.length = 0;
+    this.#heapObjects.clear();
+    this.#heapObjectIds.clear();
+    this.#nextHeapObjectId = 1;
+  }
+
+  getHeapSnapshotObjectId(agent: Agent, id: ReferenceNodeId): string {
+    return this.heapObjectId(agent, id);
+  }
+
+  private heapObjectId(agent: Agent, id: ReferenceNodeId): string {
+    const key = `${agent.AgentRecord.Signifier}:${id}`;
+    const existing = this.#heapObjectIds.get(key);
+    if (existing) return existing;
+    const heapObjectId = String(this.#nextHeapObjectId);
+    this.#nextHeapObjectId += 2;
+    this.#heapObjectIds.set(key, heapObjectId);
+    return heapObjectId;
+  }
+
+  toRemoteObject(value: Value, options: { objectGroup?: string, generatePreview?: boolean, agent?: Agent }): Protocol.Runtime.RemoteObject {
+    return getInspector(value).toRemoteObject(
+      value,
+      (val) => this.#internObject(val, options.objectGroup, options.agent),
+      this,
+      options.generatePreview,
+    );
   }
 
   getProperties({
     objectId, accessorPropertiesOnly, generatePreview, nonIndexedPropertiesOnly, ownProperties,
   }: Protocol.Runtime.GetPropertiesRequest): Protocol.Runtime.GetPropertiesResponse {
-    const object = this.getObject(objectId);
-    if (!(object instanceof ObjectValue)) {
+    const entry = this.getObjectEntry(objectId);
+    if (!entry || !(entry.value instanceof ObjectValue)) {
       return { result: [] };
     }
-    const wrap = (v: Value) => this.toRemoteObject(v, { generatePreview });
+    const object = entry.value;
+    const wrap = (v: Value) => this.toRemoteObject(v, { generatePreview, agent: entry.agent });
 
     const properties: Protocol.Runtime.PropertyDescriptor[] = [];
     const internalProperties: Protocol.Runtime.InternalPropertyDescriptor[] = [];
@@ -177,7 +285,12 @@ export class InspectorContext {
         privateProperties.push(desc);
       });
 
-      const exoticProperties = getInspector(object).exoticProperties?.(object, (val) => this.#internObject(val), this, generatePreview);
+      const exoticProperties = getInspector(object).exoticProperties?.(
+        object,
+        (val) => this.#internObject(val, 'default', entry.agent),
+        this,
+        generatePreview,
+      );
       if (exoticProperties) {
         properties.push(...exoticProperties);
       }
@@ -224,7 +337,12 @@ export class InspectorContext {
       }
     })();
 
-    const additionalInternalFields = getInspector(object).toInternalProperties?.(object, (val) => this.#internObject(val, 'default'), this, generatePreview);
+    const additionalInternalFields = getInspector(object).toInternalProperties?.(
+      object,
+      (val) => this.#internObject(val, 'default', entry.agent),
+      this,
+      generatePreview,
+    );
     if (additionalInternalFields) {
       internalProperties.push(...additionalInternalFields);
     }
@@ -261,14 +379,17 @@ export class InspectorContext {
     return callSite?.map((call) => call.toCallFrame()!).filter(Boolean) || [];
   }
 
-  createEvaluationResult(completion: ValueCompletion): Protocol.Runtime.EvaluateResponse {
+  createEvaluationResult(
+    completion: ValueCompletion,
+    options: { readonly objectGroup?: string; readonly agent?: Agent } = {},
+  ): Protocol.Runtime.EvaluateResponse {
     completion = EnsureCompletion(completion);
     if (!(completion.Value instanceof Value)) {
       throw new RangeError('Invalid completion value');
     }
     return {
       exceptionDetails: completion instanceof ThrowCompletion ? this.createExceptionDetails(completion, false) : undefined,
-      result: this.toRemoteObject(completion.Value, {}),
+      result: this.toRemoteObject(completion.Value, options),
     };
   }
 

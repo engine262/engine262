@@ -16,6 +16,8 @@ import {
 } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
 import {
   Assert,
   Call,
@@ -38,18 +40,28 @@ import {
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
 
-/** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
-export interface AsyncGeneratorRequestRecord {
+type AsyncGeneratorRequestRecordInit = Omit<AsyncGeneratorRequestRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */ // @ts-expect-error
+export function AsyncGeneratorRequestRecord(O: AsyncGeneratorRequestRecordInit): AsyncGeneratorRequestRecord
+/** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */ // @ts-expect-error
+export @callable() @record class AsyncGeneratorRequestRecord implements GCMarkable {
   readonly Completion: YieldCompletion;
+
   readonly Capability: PromiseCapabilityRecord;
+
+  constructor(O: AsyncGeneratorRequestRecordInit) {
+    if (new.target !== AsyncGeneratorRequestRecord) {
+      throw new TypeError('AsyncGeneratorRequestRecord is a final class and cannot be subclassed');
+    }
+    this.Completion = O.Completion;
+    this.Capability = O.Capability;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Completion', this.Completion, 'internal-slot');
+    trace.strong('Capability', this.Capability, 'internal-slot');
+  }
 }
-export const AsyncGeneratorRequestRecord = function AsyncGeneratorRequestRecord(value: AsyncGeneratorRequestRecord) {
-  Object.setPrototypeOf(value, AsyncGeneratorRequestRecord.prototype);
-  return value;
-} as {
-  (value: AsyncGeneratorRequestRecord): AsyncGeneratorRequestRecord;
-  [Symbol.hasInstance](instance: unknown): instance is AsyncGeneratorRequestRecord;
-};
 
 export interface AsyncGeneratorObject extends OrdinaryObject {
   AsyncGeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | 'draining-queue';
@@ -273,7 +285,9 @@ export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Pla
     return Value.undefined;
   };
   // 8. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), [], {
+    captures: () => ({ generator }),
+  });
   // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs the following steps when called:
   const rejectedClosure: NativeSteps = function* rejectedClosure([reason = Value.undefined]: Arguments) {
     Assert(generator.AsyncGeneratorState === 'draining-queue');
@@ -287,7 +301,9 @@ export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Pla
     return Value.undefined;
   };
   // 10. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), [], {
+    captures: () => ({ generator }),
+  });
   // 11. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
   PerformPromiseThen(promise, onFulfilled, onRejected);
 }

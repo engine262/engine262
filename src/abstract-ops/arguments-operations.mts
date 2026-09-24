@@ -166,7 +166,7 @@ function MakeArgGetter(name: string, env: EnvironmentRecord) {
   //   a. Return env.GetBindingValue(name, false).
   const getterClosure = () => env.GetBindingValue(name, false);
   // 2. Let getter be ! CreateBuiltinFunction(getterClosure, 0, "", « »).
-  const getter = X(CreateBuiltinFunction(getterClosure, 0, Value(''), ['Name', 'Env']));
+  const getter = X(CreateBuiltinFunction(getterClosure, 0, Value(''), ['Name', 'Env'], { captures: () => ({ env }) } ));
   // 3. NOTE: getter is never directly accessible to ECMAScript code.
   // 4. Return getter.
   return getter;
@@ -178,7 +178,7 @@ function MakeArgSetter(name: string, env: EnvironmentRecord) {
   //   a. Return env.SetMutableBinding(name, value, false).
   const setterClosure = ([value = Value.undefined]: Arguments) => env.SetMutableBinding(name, value, false);
   // 2. Let setter be ! CreateBuiltinFunction(setterClosure, 1, "", « »).
-  const setter = X(CreateBuiltinFunction(setterClosure, 1, Value(''), ['Name', 'Env']));
+  const setter = X(CreateBuiltinFunction(setterClosure, 1, Value(''), ['Name', 'Env'], { captures: () => ({ name, env }) }));
   // 3. NOTE: setter is never directly accessible to ECMAScript code.
   // 4. Return setter.
   return setter;

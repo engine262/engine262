@@ -18,6 +18,8 @@ import {
   AbruptCompletion,
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
 import type { AsyncFromSyncIteratorObject } from '../intrinsics/AsyncFromSyncIteratorPrototype.mts';
 import type {
   Evaluator, PlainEvaluator, YieldEvaluator,
@@ -52,10 +54,29 @@ import {
 // and
 /** https://tc39.es/ecma262/#sec-iteration */
 
-export interface IteratorRecord {
+type IteratorRecordInit = Omit<IteratorRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-iterator-records */ // @ts-expect-error
+export function IteratorRecord(O: IteratorRecordInit): IteratorRecord
+/** https://tc39.es/ecma262/#sec-iterator-records */ // @ts-expect-error
+export @callable() @record class IteratorRecord implements GCMarkable {
   readonly Iterator: ObjectValue;
+
   readonly NextMethod: Value;
   Done: boolean;
+
+  constructor(O: IteratorRecordInit) {
+    if (new.target !== IteratorRecord) {
+      throw new TypeError('IteratorRecord is a final class and cannot be subclassed');
+    }
+    this.Iterator = O.Iterator;
+    this.NextMethod = O.NextMethod;
+    this.Done = O.Done;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Iterator', this.Iterator, 'internal-slot');
+    trace.strong('NextMethod', this.NextMethod, 'internal-slot');
+  }
 }
 
 export interface IteratorObject extends OrdinaryObject {
@@ -65,11 +86,11 @@ export interface IteratorObject extends OrdinaryObject {
 /** https://tc39.es/ecma262/#sec-getiteratordirect */
 export function* GetIteratorDirect(obj: ObjectValue): PlainEvaluator<IteratorRecord> {
   const nextMethod = Q(yield* Get(obj, 'next'));
-  const iteratorRecord: IteratorRecord = {
+  const iteratorRecord = IteratorRecord({
     Iterator: obj,
     NextMethod: nextMethod,
     Done: false,
-  };
+  });
   return iteratorRecord;
 }
 
@@ -105,6 +126,7 @@ export function* GetIterator(obj: Value, kind: 'sync' | 'async'): PlainEvaluator
 }
 
 export type PrimitiveHanding = 'iterate-string-primitives' | 'reject-primitives'
+/** https://tc39.es/ecma262/#sec-getiteratorflattenable */
 export function* GetIteratorFlattenable(obj: Value, primitiveHandling: PrimitiveHanding): PlainEvaluator<IteratorRecord> {
   if (!(obj instanceof ObjectValue)) {
     if (primitiveHandling === 'reject-primitives') {
@@ -262,12 +284,17 @@ export function CreateListIteratorRecord(list: Iterable<Value>): IteratorRecord 
     }
     return NormalCompletion(Value.undefined);
   };
-  const iterator = CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%Iterator.prototype%'));
-  return {
+  const iterator = CreateIteratorFromClosure(
+    closure,
+    undefined,
+    surroundingAgent.intrinsic('%Iterator.prototype%'),
+    { captures: () => ({ list }) },
+  );
+  return IteratorRecord({
     Iterator: iterator,
     NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
     Done: false,
-  };
+  });
 }
 
 /** https://tc39.es/ecma262/#sec-iteratortolist */
@@ -289,11 +316,11 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord):
   ]) as Mutable<AsyncFromSyncIteratorObject>;
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;
   const nextMethod = X(Get(asyncIterator, 'next'));
-  return {
+  return IteratorRecord({
     Iterator: asyncIterator,
     NextMethod: nextMethod,
     Done: false,
-  };
+  });
 }
 
 /** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
@@ -311,13 +338,17 @@ export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseC
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
   __ts_cast__<PromiseObject>(valueWrapper);
   const unwrap = ([v = Value.undefined]: Arguments) => CreateIteratorResultObject(v, done);
-  const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
+  const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), [], {
+    captures: null,
+  });
   let onRejected;
   if (done || !closeOnRejection) {
     onRejected = Value.undefined;
   } else {
     const closeIterator = ([error = Value.undefined]: Arguments) => IteratorClose(syncIteratorRecord, ThrowCompletion(error));
-    onRejected = CreateBuiltinFunction(closeIterator, 1, Value(''), []);
+    onRejected = CreateBuiltinFunction(closeIterator, 1, Value(''), [], {
+      captures: () => ({ syncIteratorRecord }),
+    });
   }
   PerformPromiseThen(valueWrapper, onFullfilled, onRejected, promiseCapability);
   return promiseCapability.Promise;
@@ -401,7 +432,10 @@ export function IteratorZip(
     closure,
     'Iterator Helper',
     surroundingAgent.intrinsic('%IteratorHelperPrototype%'),
-    ['UnderlyingIterators'],
+    {
+      captures: () => ({ iters, openIters, padding }),
+      extraSlots: ['UnderlyingIterators'],
+    },
   ) as GeneratorObject;
   gen.UnderlyingIterators = openIters;
   return gen;

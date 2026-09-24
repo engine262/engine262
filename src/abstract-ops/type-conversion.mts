@@ -247,7 +247,6 @@ export function* ToClampedIndex(value: Value | number, length: number): PlainEva
   const index = Q(yield* ToAbsoluteIndex(value, length));
   return clamp(0, index, length);
 }
-
 /** https://tc39.es/ecma262/#sec-tofixedsizeinteger */
 export function ToFixedSizeInteger(int: number, signed: 'signed' | 'unsigned', bitWidth: number): number;
 export function ToFixedSizeInteger(int: bigint, signed: 'signed' | 'unsigned', bitWidth: bigint): bigint;

@@ -270,6 +270,9 @@ export function bootstrapURIHandling(realmRec: Realm) {
     ['encodeURI', encodeURI, 1],
     ['encodeURIComponent', encodeURIComponent, 1],
   ] as const).forEach(([name, f, length]) => {
-    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, Value(name), [], realmRec);
+    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, Value(name), [], {
+      captures: null,
+      realm: realmRec,
+    });
   });
 }

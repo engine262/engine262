@@ -41,7 +41,10 @@ export const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undef
           const realm = module.Module.Realm as ManagedRealm;
           const evaluate = CreateBuiltinFunction(function* evaluate() {
             return yield* (Get(module, key));
-          }, 0, 'Module.evaluate', [], realm);
+          }, 0, 'Module.evaluate', [], {
+            captures: () => ({ module }),
+            realm,
+          });
           result.push({
             name: key,
             get: getInspector(evaluate).toRemoteObject(evaluate, getObjectId, context, generatePreview),

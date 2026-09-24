@@ -9,7 +9,7 @@ import {
   surroundingAgent,
   Throw,
   Value,
-  type Job,
+  Job,
   type ImportAttributeRecord,
   type ModuleCacheKey,
   type ModuleLoader,
@@ -165,15 +165,17 @@ export function createFileSystemModuleLoader(options: FileSystemLoaderOptions = 
           callback(err, null!);
         }
       } else {
-        const job: Job = {
+        const job = new Job({
+          name: 'moduleLoaderJob',
           queueName: 'module-loader',
-          job: function* moduleLoaderJob() {
+          evaluate: function* moduleLoaderJob() {
             callback(result.err, result.data);
             return Value.undefined;
           },
           callerRealm: undefined,
           callerScriptOrModule: null,
-        };
+          captures: () => ({ realm }),
+        });
         const result = { err: null as unknown, data: '' };
         surroundingAgent.eventLoop.enqueueAsync('poll', job, (enqueue) => {
           readFile(path, 'utf8').then(
@@ -200,15 +202,17 @@ export function createFileSystemModuleLoader(options: FileSystemLoaderOptions = 
           callback(err, null!);
         }
       } else {
-        const job: Job = {
+        const job = new Job({
+          name: 'moduleLoaderBytesJob',
           queueName: 'module-loader',
-          job: function* moduleLoaderBytesJob() {
+          evaluate: function* moduleLoaderBytesJob() {
             callback(result.err, result.data);
             return Value.undefined;
           },
           callerRealm: undefined,
           callerScriptOrModule: null,
-        };
+          captures: () => ({ realm }),
+        });
         const result = { err: null as unknown, data: new Uint8Array() };
         surroundingAgent.eventLoop.enqueueAsync('poll', job, (enqueue) => {
           readFile(path).then(

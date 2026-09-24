@@ -18,8 +18,8 @@ import {
   UTF16EncodeCodePoint,
 } from '../static-semantics/all.mts';
 import { Q, X } from '../completion.mts';
-import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
 import { clamp } from '../abstract-ops/math.mts';
+import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
 import { assignProps } from './bootstrap.mts';
 import {
   surroundingAgent,
@@ -36,17 +36,17 @@ import {
   RegExpCreate,
   RequireObjectCoercible,
   ToIntegerOrInfinity,
-  ToAbsoluteIndex,
   ToNumber,
   ToString,
   ToUint32,
+  ToAbsoluteIndex,
+  ToClampedIndex,
   StringCreate,
   Throw,
   Yield,
   F, R, R as MathematicalValue,
   Realm,
   Unicode,
-  ToClampedIndex,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-thisstringvalue */
@@ -160,7 +160,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   while (k + searchLen <= length) {
     let match = true;
     for (let j = 0; j < searchLen; j += 1) {
-      if (searchStr[j] !== string[k + j]) {
+    if (searchStr[j] !== string[k + j]) {
         match = false;
         break;
       }
@@ -178,17 +178,19 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   // 2. Let S be ? ToString(O).
-  const string = Q(yield* ToString(O));
+  const S = Q(yield* ToString(O));
   // 3. Let searchStr be ? ToString(searchString).
   const searchStr = Q(yield* ToString(searchString));
   // 4. Let pos be ? ToIntegerOrInfinity(position).
+  const pos = Q(yield* ToIntegerOrInfinity(position));
+  // 5. Assert: If position is undefined, then pos is 0.
+  Assert(!(position === Value.undefined) || pos === 0);
   // 6. Let len be the length of S.
-  const length = string.length;
+  const len = S.length;
   // 7. Let start be min(max(pos, 0), len).
-  const start = clamp(0, Q(yield* ToIntegerOrInfinity(position)), length);
-  Assert(!(position === Value.undefined) || start === 0);
+  const start = Math.min(Math.max(pos, 0), len);
   // 8. Return ! StringIndexOf(S, searchStr, start).
-  return X(StringIndexOf(string, searchStr, start));
+  return X(StringIndexOf(S, searchStr, start));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
@@ -214,8 +216,8 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   if (maxStart < 0) {
     return F(-1);
   }
-  const start = numberPosition.isNaN() ? maxStart : clamp(0, X(ToIntegerOrInfinity(numberPosition)), maxStart);
-  Assert(!(position === Value.undefined) || start === maxStart);
+  const pos = numberPosition.isNaN() ? Infinity : Q(yield* ToIntegerOrInfinity(numberPosition));
+  const start = Math.min(Math.max(pos, 0), length);
   let k = start;
   while (k >= 0) {
     if (k + searchLength <= length) {
@@ -718,7 +720,7 @@ function* StringProto_valueOf(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype-@@iterator */
-function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* StringProto_AtAt_iterator(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   Q(RequireObjectCoercible(O));
   // 2. Let s be ? ToString(O).
@@ -742,8 +744,6 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
       // v. Perform ? Yield(resultString).
       Q(yield* Yield(resultString));
     }
-    // NON-SPEC
-    generator.HostCapturedValues = undefined;
     // d. Return undefined.
     return Value.undefined;
   };
@@ -805,7 +805,7 @@ export function bootstrapStringPrototype(realmRec: Realm) {
     ['trimEnd', StringProto_trimEnd, 0],
     ['trimStart', StringProto_trimStart, 0],
     ['valueOf', StringProto_valueOf, 0],
-    [wellKnownSymbols.iterator, StringProto_iterator, 0],
+    [wellKnownSymbols.iterator, StringProto_AtAt_iterator, 0],
   ]);
 
   realmRec.Intrinsics['%String.prototype%'] = proto;

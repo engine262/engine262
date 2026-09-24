@@ -6,6 +6,8 @@ import type {
 } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
 import { InspectorContext } from './context.mts';
+import { CDPError } from './errors.mts';
+import { referenceGraphsToHeapSnapshot, serializeHeapSnapshot } from './heap-snapshot.mts';
 import {
   Call, NormalCompletion, ObjectValue, ParseScript, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
   ParseModule,
@@ -21,6 +23,7 @@ import {
   parseNodeToBreakpointLocation,
   performDevtoolsEval,
   isFunctionObject,
+  type ReferenceNodeId,
   ModuleRecord,
   GetModuleNamespace,
   X,
@@ -28,10 +31,13 @@ import {
 
 export const Debugger: DebuggerNamespace = {
   enable(_req, context) {
+    context.setDomainEnabled('Debugger', true);
+    context.setDomainEnabled('Runtime', true);
     context.onDebuggerConnect();
     return { debuggerId: 'debugger.0' };
   },
   disable(_req, context) {
+    context.setDomainEnabled('Debugger', false);
     context.onDebuggerDisconnect();
   },
   getScriptSource({ scriptId }) {
@@ -116,7 +122,9 @@ export const Profiler: ProfilerNamespace = {
 };
 export const Runtime: RuntimeNamespace = {
   discardConsoleEntries() { },
-  enable() {},
+  enable(_req, context) {
+    context.setDomainEnabled('Runtime', true);
+  },
   compileScript(options, { context, sendEvent }) {
     let parsed!: ScriptRecord | SourceTextModuleRecord | ObjectValue[];
     let realm = context.getRealm(options.executionContextId);
@@ -184,7 +192,10 @@ export const Runtime: RuntimeNamespace = {
           return { result: { type: typeof value, value: valueRealized } };
         }
       }
-      return context.createEvaluationResult(r);
+      return context.createEvaluationResult(r, {
+        objectGroup: options.objectGroup,
+        agent: realmDesc.agent,
+      });
     });
     pop?.();
     if (completion instanceof ThrowCompletion) {
@@ -243,8 +254,78 @@ export const Runtime: RuntimeNamespace = {
   runIfWaitingForDebugger() { },
 };
 export const HeapProfiler: HeapProfilerNamespace = {
-  enable() { },
-  collectGarbage() { },
+  enable(_req, context) {
+    context.setDomainEnabled('HeapProfiler', true);
+  },
+  disable(_req, context) {
+    context.sendEvent['HeapProfiler.resetProfiles']();
+    context.context.resetHeapProfiler();
+    context.setDomainEnabled('HeapProfiler', false);
+  },
+  collectGarbage(_req, { context }) {
+    for (const agent of context.agents) agent.gc.collect();
+  },
+  takeHeapSnapshot({ reportProgress }, { context, sendEvent }) {
+    const graphs = context.agents.map((agent) => {
+      const graph = agent.gc.captureReferenceGraph();
+      context.registerHeapSnapshot(agent, graph);
+      return {
+        agent,
+        graph,
+        heapObjectId: (id: ReferenceNodeId) => context.getHeapSnapshotObjectId(agent, id),
+      };
+    });
+    const snapshot = referenceGraphsToHeapSnapshot(graphs);
+    if (reportProgress === true) {
+      sendEvent['HeapProfiler.reportHeapSnapshotProgress']({
+        done: snapshot.snapshot.node_count,
+        total: snapshot.snapshot.node_count,
+        finished: true,
+      });
+    }
+    for (const chunk of serializeHeapSnapshot(snapshot)) {
+      sendEvent['HeapProfiler.addHeapSnapshotChunk']({ chunk });
+    }
+  },
+  getHeapObjectId({ objectId }, { context }) {
+    const heapSnapshotObjectId = context.getHeapObjectId(objectId);
+    if (!heapSnapshotObjectId) throw CDPError.serverError(`Unknown Runtime object id: ${objectId}`);
+    return { heapSnapshotObjectId };
+  },
+  getObjectByHeapObjectId({ objectId, objectGroup }, { context }) {
+    const entry = context.getHeapObject(objectId);
+    if (!entry) throw CDPError.serverError(`Unknown or collected heap object id: ${objectId}`);
+    return {
+      result: context.toRemoteObject(entry.value, {
+        objectGroup,
+        agent: entry.agent,
+      }),
+    };
+  },
+  addInspectedHeapObject({ heapObjectId }, { context }) {
+    if (!context.addInspectedHeapObject(heapObjectId)) {
+      throw CDPError.serverError(`Unknown or collected heap object id: ${heapObjectId}`);
+    }
+  },
+  resetProfiles(_req, { context, sendEvent }) {
+    sendEvent['HeapProfiler.resetProfiles']();
+    context.resetHeapProfiler();
+  },
+  startSampling() {
+    throw CDPError.methodNotFound('HeapProfiler.startSampling');
+  },
+  getSamplingProfile() {
+    throw CDPError.methodNotFound('HeapProfiler.getSamplingProfile');
+  },
+  stopSampling() {
+    throw CDPError.methodNotFound('HeapProfiler.stopSampling');
+  },
+  startTrackingHeapObjects() {
+    throw CDPError.methodNotFound('HeapProfiler.startTrackingHeapObjects');
+  },
+  stopTrackingHeapObjects() {
+    throw CDPError.methodNotFound('HeapProfiler.stopTrackingHeapObjects');
+  },
 };
 
 export const Target: TargetNamespace = {
@@ -266,6 +347,7 @@ function evaluate(options: {
   throwOnSideEffect?: boolean,
   awaitPromise?: boolean,
   callFrameId?: string,
+  objectGroup?: string,
 }, inspectorContext: DebuggerContext): Protocol.Runtime.EvaluateResponse | Promise<Protocol.Runtime.EvaluateResponse> {
   const { context } = inspectorContext;
   const isPreview = options.throwOnSideEffect;
@@ -276,6 +358,7 @@ function evaluate(options: {
   if (!realm) {
     return unsupportedError;
   }
+  const resultOptions = { objectGroup: options.objectGroup, agent: realm.agent };
 
   const isCallOnFrame = typeof options.callFrameId === 'string';
   let callOnFramePoppedLevel = 0;
@@ -330,7 +413,7 @@ function evaluate(options: {
       if (!isEvaluator(toBeEvaluated)) {
         throw new Assert.Error('Unexpected');
       }
-      resolve(context.createEvaluationResult(skipDebugger(toBeEvaluated)));
+      resolve(context.createEvaluationResult(skipDebugger(toBeEvaluated), resultOptions));
     };
     if (isPreview) {
       surroundingAgent.debugger_scopePreview(noDebuggerEvaluate);
@@ -344,20 +427,23 @@ function evaluate(options: {
     if (toBeEvaluated instanceof ModuleRecord) {
       realm.realm.evaluateModule(toBeEvaluated, undefined, (completion) => {
         if (completion instanceof ThrowCompletion) {
-          resolve(context.createEvaluationResult(completion));
+          resolve(context.createEvaluationResult(completion, resultOptions));
         } else {
-          resolve(context.createEvaluationResult(NormalCompletion(GetModuleNamespace(toBeEvaluated, 'evaluation'))));
+          resolve(context.createEvaluationResult(
+            NormalCompletion(GetModuleNamespace(toBeEvaluated, 'evaluation')),
+            resultOptions,
+          ));
         }
       });
     } else if (toBeEvaluated instanceof ScriptRecord) {
       realm.realm.evaluateScript(toBeEvaluated, {}, (completion) => {
-        resolve(context.createEvaluationResult(completion));
+        resolve(context.createEvaluationResult(completion, resultOptions));
       });
     } else {
       let completion;
       surroundingAgent.evaluate(toBeEvaluated, (c) => {
         completion = c;
-        resolve(context.createEvaluationResult(c));
+        resolve(context.createEvaluationResult(c, resultOptions));
       });
       if (!completion) surroundingAgent.resumeEvaluate();
     }

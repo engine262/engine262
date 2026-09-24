@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import * as babel from '@babel/core';
+import { resolve } from 'node:path';
+import type * as babelCore from '@babel/core';
+import engine262Compiler, {
+  createTypeScriptProjectService,
+  type TypeScriptProjectService,
+} from '@engine262/babel-compiler';
+import { babel } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -17,19 +23,42 @@ const banner = `/*!
  */
 `;
 
-const babelOptions: babel.TransformOptions = {
-  targets: ['last 2 node versions'],
-  generatorOpts: {
-    importAttributesKeyword: 'with',
-  },
-  presets: [[
-    '@babel/preset-env',
-    {},
-  ], [
-    '@babel/preset-typescript',
-    {},
-  ]],
+const typescriptProject = createTypeScriptProjectService('./lib-src/inspector/tsconfig.json');
+const compilerOptions = {
+  internals: '#self',
+  valueDefinitionPath: resolve('src/value.mts'),
 };
+
+type BabelPlugins = NonNullable<babelCore.InputOptions['plugins']>;
+type BabelOptions = Pick<babelCore.InputOptions,
+  'babelrc' | 'configFile' | 'plugins' | 'presets' | 'sourceMaps' | 'targets'
+> & {
+  readonly generatorOpts: NonNullable<babelCore.InputOptions['generatorOpts']> & {
+    readonly importAttributesKeyword: 'with';
+  };
+};
+
+export function createBabelOptions(
+  additionalPlugins: BabelPlugins = [],
+): BabelOptions {
+  return {
+    babelrc: false,
+    configFile: false,
+    sourceMaps: true,
+    targets: ['last 2 node versions'],
+    generatorOpts: {
+      importAttributesKeyword: 'with',
+    },
+    plugins: [
+      '@babel/plugin-transform-explicit-resource-management',
+      ...additionalPlugins,
+    ],
+    presets: [
+      ['@babel/preset-env', {}],
+      ['@babel/preset-typescript', {}],
+    ],
+  };
+}
 
 const onLog: RollupOptions['onLog'] = function onLog(level, log, handler) {
   if (log.code === 'CIRCULAR_DEPENDENCY' || log.code === 'SOURCEMAP_BROKEN') {
@@ -45,7 +74,15 @@ export default defineConfig([
   {
     input: 'lib-src/inspector/index.mts',
     plugins: [
-      babelPlugin(babelOptions),
+      watchTypeScriptProject(typescriptProject),
+      babel({
+        ...createBabelOptions([
+          [engine262Compiler, { ...compilerOptions, project: typescriptProject }],
+        ]),
+        babelHelpers: 'bundled',
+        exclude: '**/node_modules/**',
+        extensions: ['.mts'],
+      }),
       {
         name: 'resolve-self',
         resolveId(source, _importer, _options) {
@@ -97,14 +134,17 @@ export default defineConfig([
       (json.default || json)({ compact: true }),
       (commonjs.default || commonjs)(),
       nodeResolve({ exportConditions: ['rollup'], extensions: ['.mts'] }),
-      babelPlugin({
-        ...babelOptions,
-        plugins: [
-          './scripts/transform.mts',
+      watchTypeScriptProject(typescriptProject),
+      babel({
+        ...createBabelOptions([
+          [engine262Compiler, { ...compilerOptions, project: typescriptProject }],
           ['@babel/plugin-proposal-decorators', {
             'version': '2023-11',
           }],
-        ],
+        ]),
+        babelHelpers: 'bundled',
+        exclude: '**/node_modules/**',
+        extensions: ['.mts'],
       }),
       {
         name: 'dts',
@@ -171,28 +211,17 @@ function importUnicodeLib(): Plugin {
   };
 }
 
-function babelPlugin(options: babel.TransformOptions): Plugin {
+function watchTypeScriptProject(project: TypeScriptProjectService): Plugin {
   return {
-    name: 'babel8',
-    async transform(code, id) {
-      if (id.includes('node_modules') || !id.endsWith('.mts')) {
-        return null;
-      }
-
-      const result = await babel.transformAsync(code, {
-        ...options,
-        filename: id,
-        sourceMaps: true,
-      });
-
-      if (!result?.code) {
-        return null;
-      }
-
-      return {
-        code: result.code,
-        map: result.map ?? null,
-      };
+    name: '@engine262/typescript-project',
+    buildStart() {
+      for (const fileName of project.getWatchFileNames()) this.addWatchFile(fileName);
+    },
+    watchChange(id) {
+      project.invalidateFile(id);
+    },
+    closeWatcher() {
+      project.dispose();
     },
   };
 }

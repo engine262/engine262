@@ -1,0 +1,618 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Assert with source code > case 1`] = `
+"/* Assert */ /* node:coverage ignore next */ // optimized
+if (!(expr + expr2)) throw new Assert.Error("expr + expr2");
+// unoptimized
+Assert(expr, "expr") || true;"
+`;
+
+exports[`Assert with source code > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Assert"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    // optimized\\n    Assert(expr + expr2);\\n    // unoptimized\\n    Assert(expr) || true;\\n  "
+  ],
+  "mappings": "AAEI,6CADA;AACAA,EAAA,CAAAA,GAAO,IAAI,GAAG,KAAK,CAAb,EAANA,KAAA,CAAAA,GAAA,OAAM,CAANA,KAAM,CAANA,cAAK,CAAC;AACN;AACA,MAAM,CAAC,IAAI,SAAC,IAAI,IAAI",
+  "ignoreList": []
+}"
+`;
+
+exports[`Completion optimization > case 1`] = `
+"import { AbruptCompletion, Completion } from "#self";
+function f() {
+  let value1 = _;
+  // normal
+  const value2 = {
+    __proto__: NormalCompletion.prototype,
+    Value: {
+      Value: 1
+    }
+  };
+  // nested
+  /* ReturnIfAbrupt */if (value1 instanceof Completion) {
+    if (value1 instanceof AbruptCompletion) return value1;
+    value1 = value1.Value;
+  }
+  const value3 = {
+    __proto__: NormalCompletion.prototype,
+    Value: value1
+  };
+}"
+`;
+
+exports[`Completion optimization > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "NormalCompletion",
+    "Q"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      const value1 = _;\\n      // normal\\n      const value2 = NormalCompletion({ Value: 1 });\\n      // nested\\n      const value3 = NormalCompletion(Q(value1));\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAM,MAAM,GAAG,CAAC;EAChB;EACA,MAAM,MAAM,GAAGA;IAAAA,SAAgB,EAAhB,gBAAgB,CAAhBA,SAAgB;IAAhBA,KAAgB,EAAC;MAAE,KAAK,EAAE;IAAE;EAAb,CAAe;EAC7C;EACgC,oBAAAC,EAAA,CAAAA,CAAE,MAAM,YAARA,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAE,MAAM,YAARA,gBAAC,EAADA,MAAA,CAAE,MAAM;IAAN,MAAM,GAAN,MAAM,CAARA,KAAC;EAAD;EAAhC,MAAM,MAAM,GAAGD;IAAAA,SAAgB,EAAhB,gBAAgB,CAAhBA,SAAgB;IAAhBA,KAAgB,EAAG;EAAJ,CAAY;AAC5C",
+  "ignoreList": []
+}"
+`;
+
+exports[`Struct optimization > case 1`] = `
+"interface record {}
+declare function record(value: object): void;
+class ProtocolRecord implements record {
+  readonly Value: number;
+  constructor(o: {
+    Value: number;
+  }) {
+    if (new.target !== ProtocolRecord) throw new TypeError('final');
+    this.Value = o.Value;
+  }
+}
+@record
+class DecoratedRecord {
+  readonly Value: number;
+  constructor(o: {
+    Value: number;
+  }) {
+    if (new.target !== DecoratedRecord) throw new TypeError('final');
+    this.Value = o.Value;
+  }
+}
+const called = {
+  __proto__: ProtocolRecord.prototype,
+  Value: 1
+};
+const constructed = {
+  __proto__: ProtocolRecord.prototype,
+  Value: 2
+};
+const decorated = {
+  __proto__: DecoratedRecord.prototype,
+  Value: 3
+};"
+`;
+
+exports[`Struct optimization > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    interface record {}\\n    declare function record(value: object): void;\\n\\n    class ProtocolRecord implements record {\\n      readonly Value: number;\\n      constructor(o: { Value: number }) {\\n        if (new.target !== ProtocolRecord) throw new TypeError('final');\\n        this.Value = o.Value;\\n      }\\n    }\\n\\n    @record\\n    class DecoratedRecord {\\n      readonly Value: number;\\n      constructor(o: { Value: number }) {\\n        if (new.target !== DecoratedRecord) throw new TypeError('final');\\n        this.Value = o.Value;\\n      }\\n    }\\n\\n    const called = ProtocolRecord({ Value: 1 });\\n    const constructed = new ProtocolRecord({ Value: 2 });\\n    const decorated = DecoratedRecord({ Value: 3 });\\n  "
+  ],
+  "mappings": "AACI,UAAU,MAAM,CAAC,CAAC;AAClB,iBAAiB,MAAM,CAAC,KAAK,EAAE,MAAM,CAAC,EAAE,IAAI;AAE5C,MAAM,cAAc,YAAY,MAAM,CAAC;EACrC,SAAS,KAAK,EAAE,MAAM;EACtB,WAAW,CAAC,CAAC,EAAE;IAAE,KAAK,EAAE,MAAM;EAAC,CAAC,EAAE;IAChC,IAAI,GAAG,CAAC,MAAM,KAAK,cAAc,EAAE,MAAM,IAAI,SAAS,CAAC,OAAO,CAAC;IAC/D,IAAI,CAAC,KAAK,GAAG,CAAC,CAAC,KAAK;EACtB;AACF;AAEA,CAAC;AAAM,MACD,eAAe,CAAC;EACpB,SAAS,KAAK,EAAE,MAAM;EACtB,WAAW,CAAC,CAAC,EAAE;IAAE,KAAK,EAAE,MAAM;EAAC,CAAC,EAAE;IAChC,IAAI,GAAG,CAAC,MAAM,KAAK,eAAe,EAAE,MAAM,IAAI,SAAS,CAAC,OAAO,CAAC;IAChE,IAAI,CAAC,KAAK,GAAG,CAAC,CAAC,KAAK;EACtB;AACF;AAEA,MAAM,MAAM;EAAA,WAAG,cAAc;EAAG,KAAK,EAAE;AAAC,CAAG;AAC3C,MAAM,WAAW;EAAA,WAAO,cAAc;EAAG,KAAK,EAAE;AAAC,CAAG;AACpD,MAAM,SAAS;EAAA,WAAG,eAAe;EAAG,KAAK,EAAE;AAAC,CAAG",
+  "ignoreList": []
+}"
+`;
+
+exports[`function.section > case 1`] = `
+"/** https://tc39.es/ecma262/#sec-test */
+function Test() {}
+Test.section = 'https://tc39.es/ecma262/#sec-test';
+Test.specName = 'Test';
+
+/** https://tc39.es/ecma262/#sec-test */
+export function Test2() {}
+Test2.section = 'https://tc39.es/ecma262/#sec-test';
+Test2.specName = 'Test2';
+
+/** https://tc39.es/ecma262/#sec-test */
+const Test5 = function () {};
+Test5.section = 'https://tc39.es/ecma262/#sec-test';
+Test5.specName = 'Test5';
+
+/** https://tc39.es/ecma262/#sec-test */
+const Test6 = () => {};
+Test6.section = 'https://tc39.es/ecma262/#sec-test';
+Test6.specName = 'Test6';
+
+/** https://tc39.es/ecma262/#sec-test */
+function SomeProto_Test_getter() {}
+SomeProto_Test_getter.section = 'https://tc39.es/ecma262/#sec-test';
+SomeProto_Test_getter.specName = 'Some#Test';
+
+/** https://tc39.es/ecma262/#sec-test */
+function Test_fooSetter() {}
+Test_fooSetter.section = 'https://tc39.es/ecma262/#sec-test';
+Test_fooSetter.specName = 'Test.foo';
+
+/** https://tc39.es/ecma262/#sec-test */
+function TestCapture() {}
+TestCapture.section = 'https://tc39.es/ecma262/#sec-test';
+TestCapture.specName = 'TestCapture';
+
+/** https://tc39.es/ecma262/#sec-test */
+export function TestExportCapture() {}
+TestExportCapture.section = 'https://tc39.es/ecma262/#sec-test';
+TestExportCapture.specName = 'TestExportCapture';
+class TestClass {
+  /** https://tc39.es/ecma262/#sec-test */
+  TestMethod() {}
+  static {
+    Object.assign(this.prototype.TestMethod, {
+      section: 'https://tc39.es/ecma262/#sec-test',
+      specName: 'TestMethod'
+    });
+  }
+}
+const TestObject = {
+  /** https://tc39.es/ecma262/#sec-test */
+  TestMethod() {}
+};
+
+/** https://tc39.es/ecma262/#sec-test-overload */
+export function TestOverload(value: string): string;
+export function TestOverload(value: number): number;
+export function TestOverload(value: string | number) {
+  return value;
+}
+TestOverload.section = 'https://tc39.es/ecma262/#sec-test-overload';
+TestOverload.specName = 'TestOverload';
+
+/** https://tc39.es/ecma262/#sec-test */
+export const Test3 = function () {};
+Test3.section = 'https://tc39.es/ecma262/#sec-test';
+Test3.specName = 'Test3';
+
+/** https://tc39.es/ecma262/#sec-test */
+export const Test4 = () => {};
+Test4.section = 'https://tc39.es/ecma262/#sec-test';
+Test4.specName = 'Test4';
+
+/** https://tc39.es/ecma262/#sec-test */
+export const TestData = {};
+
+/** https://tc39.es/ecma262/#typedarray-species-create */
+export function TypedArraySpeciesCreate() {}
+TypedArraySpeciesCreate.section = 'https://tc39.es/ecma262/#typedarray-species-create';
+TypedArraySpeciesCreate.specName = 'TypedArraySpeciesCreate';"
+`;
+
+exports[`function.section > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    /** https://tc39.es/ecma262/#sec-test */\\n    function Test() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export function Test2() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    const Test5 = function () {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    const Test6 = () => {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    function SomeProto_Test_getter() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    function Test_fooSetter() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    function TestCapture() {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export function TestExportCapture() {}\\n\\n    class TestClass {\\n      /** https://tc39.es/ecma262/#sec-test */\\n      TestMethod() {}\\n\\n      static {\\n        Object.assign(this.prototype.TestMethod, {\\n          section: 'https://tc39.es/ecma262/#sec-test',\\n          specName: 'TestMethod',\\n        });\\n      }\\n    }\\n\\n    const TestObject = {\\n      /** https://tc39.es/ecma262/#sec-test */\\n      TestMethod() {},\\n    };\\n\\n    /** https://tc39.es/ecma262/#sec-test-overload */\\n    export function TestOverload(value: string): string;\\n    export function TestOverload(value: number): number;\\n    export function TestOverload(value: string | number) {\\n      return value;\\n    }\\n\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export const Test3 = function () {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export const Test4 = () => {}\\n    /** https://tc39.es/ecma262/#sec-test */\\n    export const TestData = {};\\n\\n    /** https://tc39.es/ecma262/#typedarray-species-create */\\n    export function TypedArraySpeciesCreate() {}\\n  "
+  ],
+  "mappings": "AACI;AACA,SAAS,IAAI,GAAG,CAAC;AADjB,IAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,IAAwC,CAAxC,QAAwC,GAAxC,MAAwC;;AAExC;AACA,OAAO,SAAS,KAAK,GAAG,CAAC;AADzB,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,KAAwC,CAAxC,QAAwC,GAAxC,OAAwC;;AAExC;AACA,MAAM,KAAK,GAAG,YAAY,CAAC,CAAC;AAD5B,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,KAAwC,CAAxC,QAAwC,GAAxC,OAAwC;;AAExC;AACA,MAAM,KAAK,GAAG,MAAM,CAAC,CAAC;AADtB,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,KAAwC,CAAxC,QAAwC,GAAxC,OAAwC;;AAExC;AACA,SAAS,qBAAqB,GAAG,CAAC;AADlC,qBAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,qBAAwC,CAAxC,QAAwC,GAAxC,WAAwC;;AAExC;AACA,SAAS,cAAc,GAAG,CAAC;AAD3B,cAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,cAAwC,CAAxC,QAAwC,GAAxC,UAAwC;;AAExC;AACA,SAAS,WAAW,GAAG,CAAC;AADxB,WAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,WAAwC,CAAxC,QAAwC,GAAxC,aAAwC;;AAExC;AACA,OAAO,SAAS,iBAAiB,GAAG,CAAC;AADrC,iBAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,iBAAwC,CAAxC,QAAwC,GAAxC,mBAAwC;AAGxC,MAAM,SAAS,CAAC;EACd;EACA,UAAU,GAAG,CAAC;EAEd;IACE,MAAM,CAAC,MAAM,CAAC,IAAI,CAAC,SAAS,CAAC,UAAU,EAAE;MACvC,OAAO,EAAE,mCAAmC;MAC5C,QAAQ,EAAE;IACZ,CAAC,CAAC;EACJ;AACF;AAEA,MAAM,UAAU,GAAG;EACjB;EACA,UAAU,GAAG,CAAC;AAChB,CAAC;;AAED;AACA,OAAO,SAAS,YAAY,CAAC,KAAK,EAAE,MAAM,CAAC,EAAE,MAAM;AACnD,OAAO,SAAS,YAAY,CAAC,KAAK,EAAE,MAAM,CAAC,EAAE,MAAM;AACnD,OAAO,SAAS,YAAY,CAAC,KAAK,EAAE,MAAM,GAAG,MAAM,EAAE;EACnD,OAAO,KAAK;AACd;AALA,YAAiD,CAAjD,OAAiD,GAAjD,4CAAiD;AAAjD,YAAiD,CAAjD,QAAiD,GAAjD,cAAiD;;AAOjD;AACA,OAAO,MAAM,KAAK,GAAG,YAAY,CAAC,CAAC;AADnC,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,KAAwC,CAAxC,QAAwC,GAAxC,OAAwC;;AAExC;AACA,OAAO,MAAM,KAAK,GAAG,MAAM,CAAC,CAAC;AAD7B,KAAwC,CAAxC,OAAwC,GAAxC,mCAAwC;AAAxC,KAAwC,CAAxC,QAAwC,GAAxC,OAAwC;;AAExC;AACA,OAAO,MAAM,QAAQ,GAAG,CAAC,CAAC;;AAE1B;AACA,OAAO,SAAS,uBAAuB,GAAG,CAAC;AAD3C,uBAAyD,CAAzD,OAAyD,GAAzD,oDAAyD;AAAzD,uBAAyD,CAAzD,QAAyD,GAAzD,yBAAyD",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform OutOfRange > case 1`] = `
+"function f() {
+  /* node:coverage ignore next */
+  throw OutOfRange.exhaustive('message');
+}
+switch (key) {
+  case value:
+    break;
+  /* node:coverage ignore next */default:
+    /* node:coverage ignore next */
+    throw OutOfRange.nonExhaustive(key);
+}"
+`;
+
+exports[`transform OutOfRange > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() { throw OutOfRange.exhaustive('message'); }\\n    switch (key) {\\n      case value:\\n        break;\\n      default:\\n        throw OutOfRange.nonExhaustive(key);\\n    }\\n  "
+  ],
+  "mappings": "AACI,SAAS,CAAC,GAAG;EAAA;EAAE,MAAM,UAAU,CAAC,UAAU,CAAC,SAAS,CAAC;AAAE;AACvD,QAAQ,GAAG;EACT,KAAK,KAAK;IACR;EAAM,+BACR;IAAA;IACE,MAAM,UAAU,CAAC,aAAa,CAAC,GAAG,CAAC;AACvC",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Q() correctly > complex 1`] = `
+"import { AbruptCompletion, Completion } from "#self";
+function f() {
+  let value;
+  /* ReturnIfAbrupt */let _completion = Call(value);
+  /* ReturnIfAbrupt */if (_completion instanceof Completion) {
+    if (_completion instanceof AbruptCompletion) return _completion;
+    _completion = _completion.Value;
+  }
+  /* ReturnIfAbrupt */let _completion2 = Call(value);
+  /* ReturnIfAbrupt */if (_completion2 instanceof Completion) {
+    if (_completion2 instanceof AbruptCompletion) return _completion2;
+    _completion2 = _completion2.Value;
+  }
+  const completion = Apply(_completion, _completion2);
+}"
+`;
+
+exports[`transform Q() correctly > complex source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Q"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      const completion = Apply(Q(Call(value)), Q(Call(value)));\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACgB,oBAAAA,GAAA,CAAAA,WAAC,GAAC,IAAI,CAAC,KAAK,CAAX;EAAD,oBAAAA,EAAA,CAAAA,YAAC,YAADA,UAAC,EAADA;IAAAA,EAAA,CAAAA,YAAC,YAADA,gBAAC,EAADA,MAAA,CAAAA,WAAC;IAADA,WAAC,GAADA,WAAC,CAADA,KAAC;EAAD;EAAgB,oBAAAA,GAAA,CAAAA,YAAC,GAAC,IAAI,CAAC,KAAK,CAAX;EAAD,oBAAAA,EAAA,CAAAA,aAAC,YAADA,UAAC,EAADA;IAAAA,EAAA,CAAAA,aAAC,YAADA,gBAAC,EAADA,MAAA,CAAAA,YAAC;IAADA,YAAC,GAADA,YAAC,CAADA,KAAC;EAAD;EAAzC,MAAM,UAAU,GAAG,KAAK,CAACA,WAAC,EAAeA,YAAc,CAAC;AAC1D",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Q() correctly > return 1`] = `
+"function f() {
+  let value;
+  return value;
+}"
+`;
+
+exports[`transform Q() correctly > return arrow 1`] = `
+"let value;
+const f = () => value;"
+`;
+
+exports[`transform Q() correctly > return arrow source map 1`] = `
+"{
+  "version": 3,
+  "names": [],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    let value;\\n    const f = () => Q(value);\\n  "
+  ],
+  "mappings": "AACI,IAAI,KAAK;AACT,MAAM,CAAC,GAAG,MAAQ,KAAM",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Q() correctly > return source map 1`] = `
+"{
+  "version": 3,
+  "names": [],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      return Q(value);\\n    }\\n  "
+  ],
+  "mappings": "AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACT,OAAS,KAAK;AAChB",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Q() correctly > statement 1`] = `
+"import { AbruptCompletion, Completion } from "#self";
+function f() {
+  let value;
+  /* ReturnIfAbrupt */if (value instanceof Completion) {
+    if (value instanceof AbruptCompletion) return value;
+    value = value.Value;
+  }
+}"
+`;
+
+exports[`transform Q() correctly > statement source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Q"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      Q(value);\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACT,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;IAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;EAAD;AACF",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Q() correctly > value 1`] = `
+"import { AbruptCompletion, Completion } from "#self";
+function f() {
+  let value;
+  /* ReturnIfAbrupt */if (value instanceof Completion) {
+    if (value instanceof AbruptCompletion) return value;
+    value = value.Value;
+  }
+  const x = value;
+}"
+`;
+
+exports[`transform Q() correctly > value source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Q"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      const x = Q(value);\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACC,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;IAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;EAAD;EAAV,MAAM,CAAC,GAAK,KAAM;AACpB",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Throw() correctly > case 1`] = `
+"import { ThrowCompletion } from "#self";
+function f(value) {
+  /* Throw */return {
+    __proto__: ThrowCompletion.prototype,
+    Value: value
+  };
+}"
+`;
+
+exports[`transform Throw() correctly > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Throw"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f(value) {\\n      Throw(value);\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,CAAC,KAAK,EAAE;EAChB,WAAAA,MAAA,CAAAA;IAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;IAALA,KAAK,EAAC;EAAF,CAAC;AACP",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform Throw() correctly > direct return 1`] = `
+"import { ThrowCompletion } from "#self";
+function f(value) {
+  return {
+    __proto__: ThrowCompletion.prototype,
+    Value: value
+  };
+}
+const f2 = value => ({
+  __proto__: ThrowCompletion.prototype,
+  Value: value
+});"
+`;
+
+exports[`transform Throw() correctly > direct return source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Throw"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f(value) {\\n      return Throw(value);\\n    }\\n    const f2 = value => Throw(value);\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,CAAC,KAAK,EAAE;EAChB,OAAOA;IAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;IAALA,KAAK,EAAC;EAAF,CAAC;AACd;AACA,MAAM,EAAE,GAAG,KAAK,KAAIA;EAAAA,SAAK,EAALA,eAAK,CAALA,SAAK;EAALA,KAAK,EAAC;AAAF,CAAC,CAAO",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform X() correctly > complex 1`] = `
+"import { Assert, Completion, AbruptCompletion, skipDebugger } from "#self";
+let value;
+/* X */let _temp = Call(value);
+/* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+/* node:coverage ignore next */if (_temp instanceof Completion) {
+  /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! Call(value) returned an abrupt completion", {
+    cause: _temp
+  });
+  _temp = _temp.Value;
+}
+Apply(_temp);"
+`;
+
+exports[`transform X() correctly > complex source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "X"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    let value;\\n    Apply(X(Call(value)));\\n  "
+  ],
+  "mappings": ";AACI,IAAI,KAAK;AACH,OAAAA,GAAA,CAAAA,KAAC,GAAC,IAAI,CAAC,KAAK,CAAX;AAAD,+BAAAA,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;AAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;EAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,6CAAC,EAADA;IAAAA,KAAC,EAADA;EAAA,EAAC;EAADA,KAAC,GAADA,KAAC,CAADA,KAAC;AAAD;AAAN,KAAK,CAACA,KAAc,CAAC",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform X() correctly > condition 1`] = `
+"import { Assert, Completion, AbruptCompletion, skipDebugger } from "#self";
+function f() {
+  let value;
+  if (test) {
+    /* X */let _temp = value.compute();
+    /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* node:coverage ignore next */if (_temp instanceof Completion) {
+      /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! value.compute() returned an abrupt completion", {
+        cause: _temp
+      });
+      _temp = _temp.Value;
+    }
+    return _temp;
+  }
+}"
+`;
+
+exports[`transform X() correctly > condition source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "X"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      if (test) return X(value.compute());\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACT,IAAI,IAAI;IAAS,OAAAA,GAAA,CAAAA,KAAC,GAAC,KAAK,CAAC,OAAO,CAAC,CAAf;IAAD,+BAAAA,EAAA,CAAAA,MAAC,IAADA,MAAA,CAAAA,KAAC,KAADA,QAAC,IAADA,MAAC,IAADA,KAAC,EAADA,KAAC,GAADA,YAAC,CAADA,KAAA,CAAC;IAAD,+BAAAA,EAAA,CAAAA,MAAC,YAADA,UAAC,EAADA;MAAAA,iCAAA,CAAAA,MAAC,YAADA,gBAAC,EAADA,KAAA,CAAAA,GAAA,CAAAA,MAAC,CAADA,KAAC,CAADA,iDAAC,EAADA;QAAAA,KAAC,EAADA;MAAA,EAAC;MAADA,KAAC,GAADA,KAAC,CAADA,KAAC;IAAD;IAAP,OAAOA,KAAC;EAAkB;AACtC",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform X() correctly > return 1`] = `
+"import { Completion, AbruptCompletion, skipDebugger } from "#self";
+function f() {
+  let value;
+  /* ReturnIfAbrupt */if (value instanceof Completion) {
+    if (value instanceof AbruptCompletion) return value;
+    value = value.Value;
+  }
+  return value;
+}"
+`;
+
+exports[`transform X() correctly > return source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "X"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value;\\n      return X(value);\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK;EACF,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;IAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;IAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;EAAD;EAAP,OAAS,KAAK;AAChB",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform X() correctly > statement 1`] = `
+"import { Completion, AbruptCompletion, skipDebugger } from "#self";
+let value = 1;
+/* ReturnIfAbrupt */if (value instanceof Completion) {
+  if (value instanceof AbruptCompletion) return value;
+  value = value.Value;
+}"
+`;
+
+exports[`transform X() correctly > statement source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "X"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    const value = 1;\\n    X(value);\\n  "
+  ],
+  "mappings": ";AACI,IAAM,KAAK,GAAG,CAAC;AACf,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;EAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;AAAD",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform X() correctly > value 1`] = `
+"import { Completion, AbruptCompletion, skipDebugger } from "#self";
+let value;
+/* ReturnIfAbrupt */if (value instanceof Completion) {
+  if (value instanceof AbruptCompletion) return value;
+  value = value.Value;
+}
+const x = value;"
+`;
+
+exports[`transform X() correctly > value source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "X"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    let value;\\n    const x = X(value);\\n  "
+  ],
+  "mappings": ";AACI,IAAI,KAAK;AACC,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;EAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;EAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;AAAD;AAAV,MAAM,CAAC,GAAK,KAAM",
+  "ignoreList": []
+}"
+`;
+
+exports[`transform simple ternary > case 1`] = `
+"import { AbruptCompletion, Completion } from "#self";
+function f() {
+  let value, error;
+  let x;
+  if (condition) {
+    /* ReturnIfAbrupt */if (value instanceof Completion) {
+      if (value instanceof AbruptCompletion) return value;
+      value = value.Value;
+    }
+    x = value;
+  } else {
+    x = error;
+  }
+}"
+`;
+
+exports[`transform simple ternary > case source map 1`] = `
+"{
+  "version": 3,
+  "names": [
+    "Q"
+  ],
+  "sources": [
+    "unknown"
+  ],
+  "sourcesContent": [
+    "\\n    function f() {\\n      let value, error;\\n      const x = condition ? Q(value) : (error);\\n    }\\n  "
+  ],
+  "mappings": ";AACI,SAAS,CAAC,GAAG;EACX,IAAI,KAAK,EAAE,KAAK;EAAC;EAAA,IACP,SAAS;IAAG,oBAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,UAAC,EAADA;MAAAA,EAAA,CAAAA,CAAE,KAAK,YAAPA,gBAAC,EAADA,MAAA,CAAE,KAAK;MAAL,KAAK,GAAL,KAAK,CAAPA,KAAC;IAAD;IAAhB,CAAC,GAAiB,KAAK;EAAA;IAAvB,CAAC,GAA2B,KAAK;EAAA;AACzC",
+  "ignoreList": []
+}"
+`;

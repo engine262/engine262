@@ -5,12 +5,19 @@ import {
 import { isArray } from '../utils/language.mts';
 import { callCallback } from '../utils/callback.mts';
 import {
+  createGarbageCollector,
+  markActiveEvaluators,
+  stepEvaluator,
+  type GarbageCollector,
+  type GCMarkable,
+  type GCTrace,
+} from '../gc.mts';
+import {
   ObjectValue, SymbolValue, type Intrinsics, Value, ThrowCompletion, type ValueEvaluator, NormalCompletion, EnsureCompletion, skipDebugger, type ValueCompletion, type ScriptRecord, SourceTextModuleRecord, Realm, X, Construct,
   ExecutionContextStack,
   type AgentHostDefined,
   DynamicParsedCodeRecord,
   type Feature,
-  type GCMarker,
   type ResumeEvaluateOptions,
   type ParseNode,
   type BreakpointLocation,
@@ -54,7 +61,7 @@ export interface AgentRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-agents */
-export class Agent {
+export class Agent implements GCMarkable {
   // An agent comprises a set of ECMAScript execution contexts, an execution context stack, a running execution context, an Agent Record, and an executing thread. Except for the executing thread, the constituents of an agent belong exclusively to that agent.
   readonly executionContextStack = new ExecutionContextStack();
 
@@ -74,7 +81,11 @@ export class Agent {
 
   readonly eventLoop: EventLoop;
 
+  readonly gc: GarbageCollector = createGarbageCollector(this);
+
   readonly finalizationRegistryScheduledForCleanup = new Set<FinalizationRegistryObject>();
+
+  readonly realms = new Set<Realm>();
 
   hostDefinedOptions: AgentHostDefined;
 
@@ -123,11 +134,28 @@ export class Agent {
   }
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    this.AgentRecord.KeptAlive.forEach(m);
-    this.executionContextStack.forEach(m);
-    this.jobQueue.mark(m);
-    this.eventLoop.mark(m);
+  mark(trace: GCTrace) {
+    trace.strong('executionContextStack', this.executionContextStack, 'internal-slot');
+    trace.strong('jobQueue', this.jobQueue, 'job');
+    trace.strong('eventLoop', this.eventLoop, 'job');
+    trace.strong('finalizationRegistryScheduledForCleanup', this.finalizationRegistryScheduledForCleanup, 'job');
+    trace.strong('parsedSources', this.parsedSources, 'internal-slot');
+    trace.strong('realms', this.realms, 'internal-slot');
+    for (const value of this.AgentRecord.KeptAlive) {
+      trace.strong('AgentRecord.KeptAlive', value, 'internal-slot');
+    }
+    for (const [index, entry] of this.AgentRecord.GlobalSymbolRegistry.entries()) {
+      trace.strong(`AgentRecord.GlobalSymbolRegistry[${index}].Key`, entry.Key, 'element');
+      trace.strong(`AgentRecord.GlobalSymbolRegistry[${index}].Symbol`, entry.Symbol, 'element');
+    }
+    if (this.#pausedEvaluator) {
+      trace.strong('pausedEvaluator', this.#pausedEvaluator.evaluator, 'capture');
+    }
+    markActiveEvaluators(this, trace);
+  }
+
+  registerRealm(realm: Realm): void {
+    this.realms.add(realm);
   }
 
   // NON-SPEC
@@ -178,7 +206,7 @@ export class Agent {
     }
     let debuggerStatementCompletion = options?.debuggerStatementCompletion;
     while (true) {
-      const state = evaluator.next({ resume: 'debugger', value: debuggerStatementCompletion });
+      const state = stepEvaluator(evaluator, { resume: 'debugger', value: debuggerStatementCompletion });
       debuggerStatementCompletion = undefined;
 
       if (!noBreakpoint && this.breakpointsEnabled && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {

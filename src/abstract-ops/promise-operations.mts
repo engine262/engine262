@@ -15,6 +15,8 @@ import {
   X,
 } from '../completion.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
+import type { GCTrace } from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
 import {
   Assert,
   Call,
@@ -31,6 +33,7 @@ import {
 import {
   HostPromiseRejectionTracker,
   surroundingAgent,
+  type GCMarkable,
 } from '#self';
 import {
   Throw,
@@ -56,30 +59,48 @@ export interface PromiseAllRejectElementFunctionObject extends BuiltinFunctionOb
   readonly AlreadyCalled: { Value: boolean };
 }
 
-/** https://tc39.es/ecma262/#sec-promisecapability-records */
-export class PromiseCapabilityRecord {
-  constructor(value: PromiseCapabilityRecord) {
-    this.Promise = value.Promise;
-    this.Resolve = value.Resolve;
-    this.Reject = value.Reject;
-  }
-
+type PromiseCapabilityRecordInit = Omit<PromiseCapabilityRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-promisecapability-records */ // @ts-expect-error
+export function PromiseCapabilityRecord(O: PromiseCapabilityRecordInit): PromiseCapabilityRecord
+/** https://tc39.es/ecma262/#sec-promisecapability-records */ // @ts-expect-error
+export @callable() @record class PromiseCapabilityRecord implements GCMarkable {
   readonly Promise: PromiseObject;
 
   readonly Resolve: FunctionObject;
 
   readonly Reject: FunctionObject;
+
+  constructor(O: PromiseCapabilityRecordInit) {
+    if (new.target !== PromiseCapabilityRecord) {
+      throw new TypeError('PromiseCapabilityRecord is a final class and cannot be subclassed');
+    }
+    this.Promise = O.Promise;
+    this.Resolve = O.Resolve;
+    this.Reject = O.Reject;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Promise', this.Promise, 'internal-slot');
+    trace.strong('Resolve', this.Resolve, 'internal-slot');
+    trace.strong('Reject', this.Reject, 'internal-slot');
+  }
 }
 
-/** https://tc39.es/ecma262/#sec-promisereaction-records */
-export class PromiseReactionRecord {
+type PromiseReactionRecordInit = Omit<PromiseReactionRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-promisereaction-records */ // @ts-expect-error
+export function PromiseReactionRecord(O: PromiseReactionRecordInit): PromiseReactionRecord
+/** https://tc39.es/ecma262/#sec-promisereaction-records */ // @ts-expect-error
+export @callable() @record class PromiseReactionRecord implements GCMarkable {
   readonly Capability: PromiseCapabilityRecord | undefined;
 
   readonly Type: 'Fulfill' | 'Reject';
 
   readonly Handler: JobCallbackRecord | undefined;
 
-  constructor(O: PromiseReactionRecord) {
+  constructor(O: PromiseReactionRecordInit) {
+    if (new.target !== PromiseReactionRecord) {
+      throw new TypeError('PromiseReactionRecord is a final class and cannot be subclassed');
+    }
     Assert(O.Capability instanceof PromiseCapabilityRecord
         || O.Capability === undefined);
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject');
@@ -88,6 +109,11 @@ export class PromiseReactionRecord {
     this.Capability = O.Capability;
     this.Type = O.Type;
     this.Handler = O.Handler;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Capability', this.Capability, 'internal-slot');
+    trace.strong('Handler', this.Handler, 'internal-slot');
   }
 }
 
@@ -140,12 +166,14 @@ export function CreateResolvingFunctions(toResolve: PromiseObject) {
     // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
     const job = NewPromiseResolveThenableJob(promise, resolution, thenJobCallback);
     // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-    HostEnqueuePromiseJob(job.Job, job.Realm);
+    HostEnqueuePromiseJob(job.Job, job.Realm, job.Captures);
     // 16. Return undefined.
     return Value.undefined;
   };
   // 4. Let resolve be CreateBuiltinFunction(resolveSteps, 1, "", « »).
-  const resolve = CreateBuiltinFunction(resolveSteps, 1, Value(''), []);
+  const resolve = CreateBuiltinFunction(resolveSteps, 1, Value(''), [], {
+    captures: () => ({ promise: promiseOrEmpty.Value }),
+  });
   // 7. Let rejectSteps be the algorithm steps defined in Promise Reject Functions.
   const rejectSteps = function PromiseRejectFunctions([reason = Value.undefined]: Arguments): ValueCompletion<UndefinedValue> {
     if (!promiseOrEmpty.Value) {
@@ -158,7 +186,9 @@ export function CreateResolvingFunctions(toResolve: PromiseObject) {
     return Value.undefined;
   };
   // 9. Let reject be CreateBuiltinFunction(rejectSteps, 1, "", « »).
-  const reject = CreateBuiltinFunction(rejectSteps, 1, Value(''), []);
+  const reject = CreateBuiltinFunction(rejectSteps, 1, Value(''), [], {
+    captures: () => ({ promise: promiseOrEmpty.Value }),
+  });
   // 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
   return {
     Resolve: resolve,
@@ -195,7 +225,11 @@ function NewPromiseResolveThenableJob(promiseToResolve: PromiseObject, thenable:
   }
   // 5. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
   // 6. Return { [[Job]]: job, [[Realm]]: thenRealm }.
-  return { Job: job, Realm: thenRealm };
+  return {
+    Job: job,
+    Realm: thenRealm,
+    Captures: () => ({ promiseToResolve, thenable, then }),
+  };
 }
 
 /** https://tc39.es/ecma262/#sec-fulfillpromise */
@@ -226,7 +260,12 @@ export function* NewPromiseCapability(constructor: Value): PlainEvaluator<Promis
     resolvingFunctions.Reject = reject;
     return Value.undefined;
   };
-  const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), []));
+  const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), [], {
+    captures: () => ({
+      resolve: resolvingFunctions.Resolve,
+      reject: resolvingFunctions.Reject,
+    }),
+  }));
   const promise = Q(yield* Construct(constructor, [executor])) as PromiseObject;
   if (!IsCallable(resolvingFunctions.Resolve)) {
     return Throw.TypeError('Promise resolve function $1 is not callable', resolvingFunctions.Resolve || Value.undefined);
@@ -234,7 +273,7 @@ export function* NewPromiseCapability(constructor: Value): PlainEvaluator<Promis
   if (!IsCallable(resolvingFunctions.Reject)) {
     return Throw.TypeError('Promise reject function $1 is not callable', resolvingFunctions.Reject || Value.undefined);
   }
-  return new PromiseCapabilityRecord({
+  return PromiseCapabilityRecord({
     Promise: promise,
     Resolve: resolvingFunctions.Resolve,
     Reject: resolvingFunctions.Reject,
@@ -273,7 +312,7 @@ function TriggerPromiseReactions(reactions: readonly PromiseReactionRecord[], ar
     // a. Let job be NewPromiseReactionJob(reaction, argument).
     const job = NewPromiseReactionJob(reaction, argument);
     // b. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-    HostEnqueuePromiseJob(job.Job, job.Realm);
+    HostEnqueuePromiseJob(job.Job, job.Realm, job.Captures);
   });
   // 2. Return undefined.
   return Value.undefined;
@@ -359,7 +398,11 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
     //    is a revoked Proxy and no ECMAScript code runs, _handlerRealm_ is used to create error objects.
   }
   // 4. Return { [[Job]]: job, [[Realm]]: handlerRealm }.
-  return { Job: job, Realm: handlerRealm };
+  return {
+    Job: job,
+    Realm: handlerRealm,
+    Captures: () => ({ reaction, argument }),
+  };
 }
 
 /** https://tc39.es/ecma262/#sec-performpromisethen */
@@ -392,13 +435,13 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
     onRejectedJobCallback = HostMakeJobCallback(onRejected);
   }
   // 7. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
-  const fulfillReaction = new PromiseReactionRecord({
+  const fulfillReaction = PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Fulfill',
     Handler: onFulfilledJobCallback,
   });
   // 8. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
-  const rejectReaction = new PromiseReactionRecord({
+  const rejectReaction = PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Reject',
     Handler: onRejectedJobCallback,
@@ -416,7 +459,7 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
     // b. Let fulfillJob be NewPromiseReactionJob(fulfillReaction, value).
     const fulfillJob = NewPromiseReactionJob(fulfillReaction, value);
     // c. Perform HostEnqueuePromiseJob(fulfillJob.[[Job]], fulfillJob.[[Realm]]).
-    HostEnqueuePromiseJob(fulfillJob.Job, fulfillJob.Realm);
+    HostEnqueuePromiseJob(fulfillJob.Job, fulfillJob.Realm, fulfillJob.Captures);
   } else {
     // a. Assert: The value of promise.[[PromiseState]] is rejected.
     Assert(promise.PromiseState === 'rejected');
@@ -429,7 +472,7 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
     // d. Let rejectJob be NewPromiseReactionJob(rejectReaction, reason).
     const rejectJob = NewPromiseReactionJob(rejectReaction, reason);
     // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
-    HostEnqueuePromiseJob(rejectJob.Job, rejectJob.Realm);
+    HostEnqueuePromiseJob(rejectJob.Job, rejectJob.Realm, rejectJob.Captures);
   }
   // 12. Set promise.[[PromiseIsHandled]] to true.
   promise.PromiseIsHandled = true;

@@ -18,9 +18,10 @@ export type { ParametersMap, ParsePrintFormat } from './host-defined/error-messa
 export { Decimal } from './host-defined/decimal.mts';
 export type { DecimalInit } from './host-defined/decimal.mts';
 export * from './evaluator.mts';
+export * from './gc.mts';
 
 export {
-  gc, type ManagedRealmHostDefined, ManagedRealm,
+  type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { Location, ParseNode, ParseNodesByType, Position } from './parser/ParseNode.mts';
 export type { ArrowInfo, AssignmentInfo, Label, PrivateScopeInfo, Scope, ScopeFlagSetters, ScopeInfo } from './parser/Scope.mts';

@@ -1,5 +1,6 @@
+import type { GCTrace } from '../gc.mts';
 import {
-  JSStringValue, Value, type GCMarker, type PropertyKeyValue, SymbolValue,
+  JSStringValue, Value, type PropertyKeyValue, SymbolValue,
 } from '#self';
 
 export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
@@ -103,10 +104,12 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
     PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.entries;
   }
 
-  mark(m: GCMarker) {
+  mark(trace: GCTrace) {
+    let index = 0;
     for (const [k, v] of this.#map.entries()) {
-      m(k);
-      m(v);
+      trace.strong(`${index}:key`, k, 'element');
+      trace.strong(`${index}:value`, v, 'element');
+      index += 1;
     }
   }
 }

@@ -39,6 +39,7 @@ import {
   type PlainCompletion,
   NormalCompletion,
   type PromiseObject,
+  Job,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -174,22 +175,27 @@ const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'repl',
     Configurable: true,
     Enumerable: false,
     Writable: true,
-    Value: CreateBuiltinFunction.from(function* timeout(f = Value.undefined, time = Value.undefined) {
-      if (!isFunctionObject(f)) return Throw.TypeError('setTimeout($1, ...) should be a function', f);
-      const delay = yield* ToNumber(time);
-      if (delay instanceof ThrowCompletion) return delay;
-      const delayTime = R(ValueOfNormalCompletion(delay));
+    Value: CreateBuiltinFunction.from({
+      steps: function* timeout(f = Value.undefined, time = Value.undefined) {
+        if (!isFunctionObject(f)) return Throw.TypeError('setTimeout($1, ...) should be a function', f);
+        const delay = yield* ToNumber(time);
+        if (delay instanceof ThrowCompletion) return delay;
+        const delayTime = R(ValueOfNormalCompletion(delay));
 
-      const job = {
-        queueName: 'setTimeout resolve',
-        job: () => Call(f, Value.undefined, []),
-        callerRealm: surroundingAgent.runningExecutionContext.Realm,
-        callerScriptOrModule: GetActiveScriptOrModule(),
-      };
-      surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
-        setTimeout(enqueue, delayTime);
-      });
-      return Value.undefined;
+        const job = new Job({
+          name: 'setTimeoutResolve',
+          queueName: 'setTimeout resolve',
+          evaluate: () => Call(f, Value.undefined, []),
+          callerRealm: surroundingAgent.runningExecutionContext.Realm,
+          callerScriptOrModule: GetActiveScriptOrModule(),
+          captures: () => ({ f }),
+        });
+        surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
+          setTimeout(enqueue, delayTime);
+        });
+        return Value.undefined;
+      },
+      captures: null,
     }),
   }));
   pop?.();
@@ -267,8 +273,11 @@ function oneShotEval(inspector: NodeWebsocketInspector | undefined, source: stri
         handleResult(promise);
         return;
       }
-      PerformPromiseThen(ValueOfNormalCompletion(promise), Value.null, CreateBuiltinFunction.from((error = Value.undefined) => {
-        handleResult(ThrowCompletion(error));
+      PerformPromiseThen(ValueOfNormalCompletion(promise), Value.null, CreateBuiltinFunction.from({
+        steps: (error = Value.undefined) => {
+          handleResult(ThrowCompletion(error));
+        },
+        captures: null,
       }));
     });
   } else {

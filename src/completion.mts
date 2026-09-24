@@ -4,8 +4,8 @@ import {
 import { kAsyncContext } from './utils/internal.mts';
 import { callable, OutOfRange } from './utils/language.mts';
 import type { Evaluator } from './evaluator.mts';
+import type { GCMarkable, GCTrace } from './gc.mts';
 import {
-  type GCMarker,
   Assert,
   CreateBuiltinFunction,
   PerformPromiseThen,
@@ -52,7 +52,7 @@ export type CompletionInit<T> =
   // 2. Return completionRecord as the Completion Record of this abstract operation.
   return completionRecord;
 })
-export class CompletionImpl<const T> {
+export class CompletionImpl<const T> implements GCMarkable {
   declare readonly Type: 'normal' | 'break' | 'continue' | 'return' | 'throw';
 
   readonly Value!: T | Value;
@@ -84,8 +84,9 @@ export class CompletionImpl<const T> {
   }
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.Value);
+  mark(trace: GCTrace) {
+    trace.strong('Value', this.Value, 'internal-slot');
+    trace.strong('Target', this.Target, 'internal-slot');
   }
 
   static {
@@ -324,8 +325,6 @@ export type Q<T> =
 /**
  * https://tc39.es/ecma262/#sec-returnifabrupt
  * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
- *
- * @internal
  */
 export function Q<const T>(_completion: T): Q<T> {
   /* node:coverage ignore next */
@@ -462,14 +461,14 @@ export function* Await(arg: Value): ValueEvaluator {
     yield* RunSuspendedContext(asyncContext, { resume: 'await', value: NormalCompletion(v) });
     return Value.undefined;
   };
-  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), [], { captures: () => ({ asyncContext }) });
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   const rejectedClosure = function* rejectedClosure([reason = Value.undefined]: Arguments) {
     yield* RunSuspendedContext(asyncContext, { resume: 'await', value: ThrowCompletion(reason) });
     return Value.undefined;
   };
-  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), [], { captures: () => ({ asyncContext }) });
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onRejected[kAsyncContext] = asyncContext;
   PerformPromiseThen(promise, onFulfilled, onRejected);

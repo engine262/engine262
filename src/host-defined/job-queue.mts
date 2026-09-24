@@ -1,6 +1,7 @@
 import { callCallback } from '../utils/callback.mts';
+import { withCapturedReferences, type GCMarkable, type GCTrace } from '../gc.mts';
 import {
-  AbruptCompletion, Assert, ClearKeptObjects, ExecutionContext, type GCMarker, type Job, type Markable, ThrowCompletion, Value, type ValueEvaluator, skipDebugger, surroundingAgent,
+  AbruptCompletion, Assert, ClearKeptObjects, ExecutionContext, type Job, ThrowCompletion, Value, NullValue, type ValueEvaluator, skipDebugger, surroundingAgent,
 } from '#self';
 
 
@@ -10,25 +11,35 @@ export function runSingleJobInQueue(job: Job, onError: (error: Value) => void, f
   Assert(!surroundingAgent.executionContextStack.length);
 
   // 1. Perform any implementation-defined preparation steps.
-  const { callerRealm, callerScriptOrModule, job: evaluator } = job;
+  const { callerRealm, callerScriptOrModule, evaluate } = job;
+  const jobEvaluator = withCapturedReferences(evaluate(), {
+    name: `active job: ${job.name}`,
+    kind: 'job',
+    captures: () => ({ job }),
+  });
   if (callerRealm) {
     // Spec: If a Realm Record is provided, these operations schedule the job to be performed at some future time in the provided realm, in the agent that owns the realm.
     const newContext = new ExecutionContext();
     surroundingAgent.executionContextStack.push(newContext);
     newContext.Function = Value.null;
     newContext.Realm = callerRealm;
-    newContext.ScriptOrModule = callerScriptOrModule;
-    surroundingAgent.evaluate((function* job(): ValueEvaluator {
+    newContext.ScriptOrModule = callerScriptOrModule instanceof NullValue ? null : callerScriptOrModule;
+    const activeJobEvaluator = withCapturedReferences((function* job(): ValueEvaluator {
       // 2. Invoke the Job Abstract Closure.
-      const completion = yield* evaluator();
+      const completion = yield* jobEvaluator;
       surroundingAgent.executionContextStack.pop(newContext);
       continuation(completion);
       return Value.undefined;
-    }()), () => {});
+    }()), {
+      name: `active job context: ${job.name}`,
+      kind: 'job',
+      captures: () => ({ job, jobEvaluator }),
+    });
+    surroundingAgent.evaluate(activeJobEvaluator, () => {});
   } else {
     // Spec: If null is provided instead for the realm, then the job does not evaluate ECMAScript code.
     // 2. Invoke the Job Abstract Closure.
-    const completion = skipDebugger(evaluator());
+    const completion = skipDebugger(jobEvaluator);
     continuation(completion);
   }
 
@@ -45,7 +56,7 @@ export function runSingleJobInQueue(job: Job, onError: (error: Value) => void, f
   }
 }
 
-export interface JobQueue extends Markable {
+export interface JobQueue extends GCMarkable {
   enqueueFinalizationRegistryCleanupJob(job: Job): void;
   enqueuePromiseJob(job: Job): void;
   enqueueTimeoutJob(job: Job): void;
@@ -57,10 +68,11 @@ export interface JobQueue extends Markable {
   shiftPromiseJob?(): Job | undefined;
   shiftTimeoutJob?(): Job | undefined;
   shiftGenericJob?(): Job | undefined;
+  getQueuedJobsForGC?(): Iterable<Job>;
   get length(): number;
 }
 
-export class BasicJobQueue extends Set<Job> implements JobQueue, Markable {
+export class BasicJobQueue extends Set<Job> implements JobQueue, GCMarkable {
   enqueueFinalizationRegistryCleanupJob(job: Job): void {
     this.add(job);
     callCallback(this.onNewJob, job);
@@ -93,16 +105,18 @@ export class BasicJobQueue extends Set<Job> implements JobQueue, Markable {
     return this.size;
   }
 
-  mark(marker: GCMarker): void {
+  getQueuedJobsForGC(): Iterable<Job> {
+    return this;
+  }
+
+  mark(trace: GCTrace): void {
     for (const job of this) {
-      marker(job.job);
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
+      trace.strong(job.name, job, 'job');
     }
   }
 }
 
-export class ByTypeJobQueue implements JobQueue, Markable {
+export class ByTypeJobQueue implements JobQueue, GCMarkable {
   #all = new Set<Job>();
 
   #finalizationRegistryCleanupJobs = new Set<Job>();
@@ -181,11 +195,13 @@ export class ByTypeJobQueue implements JobQueue, Markable {
     return this.#all.size;
   }
 
-  mark(marker: GCMarker): void {
+  getQueuedJobsForGC(): Iterable<Job> {
+    return this.#all;
+  }
+
+  mark(trace: GCTrace): void {
     for (const job of this.#all) {
-      marker(job.job);
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
+      trace.strong(job.name, job, 'job');
     }
   }
 }

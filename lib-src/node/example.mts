@@ -7,7 +7,7 @@ import {
   CreateNonEnumerableDataPropertyOrThrow,
   Throw,
   IsCallable,
-  type Job,
+  Job,
   GetActiveScriptOrModule,
   Call,
   NumberValue,
@@ -111,23 +111,29 @@ function printResult(value: ValueCompletion) {
 
   // define an async built-in function
   const pop = realm.pushTopContext();
-  const sleep = CreateBuiltinFunction.from(function* sleep(ms = Value.undefined, callback = Value.undefined) {
-    if (!(ms instanceof NumberValue)) return Throw.TypeError('First argument must be a number');
-    if (!IsCallable(callback)) return Throw.TypeError('Second argument must be a function');
-    const job: Job = {
-      queueName: 'setTimeout',
-      callerRealm: surroundingAgent.currentRealmRecord,
-      callerScriptOrModule: GetActiveScriptOrModule(),
-      job: function* setTimeoutResolve() {
-        return yield* Call(callback, Value.undefined, []);
-      },
-    };
-    surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
-      setTimeout(enqueue, ms.value);
-    });
-    return Value.undefined;
-  }, 'sleep');
-  X(CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, 'sleep', sleep));
+  const sleep = CreateBuiltinFunction.from({
+    steps: function* sleep(ms = Value.undefined, callback = Value.undefined) {
+      if (!(ms instanceof NumberValue)) return Throw.TypeError('First argument must be a number');
+      if (!IsCallable(callback)) return Throw.TypeError('Second argument must be a function');
+      const job = new Job({
+        name: 'setTimeoutResolve',
+        queueName: 'setTimeout',
+        callerRealm: surroundingAgent.currentRealmRecord,
+        callerScriptOrModule: GetActiveScriptOrModule(),
+        evaluate: function* setTimeoutResolve() {
+          return yield* Call(callback, Value.undefined, []);
+        },
+        captures: () => ({ callback }),
+      });
+      surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
+        setTimeout(enqueue, ms.value);
+      });
+      return Value.undefined;
+    },
+    name: 'sleep',
+    captures: null,
+  });
+  X(CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('sleep'), sleep));
   pop?.();
 
   const result2 = realm.evaluateScriptSkipDebugger(`
@@ -161,11 +167,17 @@ realm.evaluateModule(`
   } else {
     PerformPromiseThen(
       ValueOfNormalCompletion(result),
-      CreateBuiltinFunction.from(() => {
-        console.log('Module evaluated successfully');
+      CreateBuiltinFunction.from({
+        steps: () => {
+          console.log('Module evaluated successfully');
+        },
+        captures: null,
       }),
-      CreateBuiltinFunction.from((error = Value.undefined) => {
-        console.error('Module evaluation error:', inspect(error));
+      CreateBuiltinFunction.from({
+        steps: (error = Value.undefined) => {
+          console.error('Module evaluation error:', inspect(error));
+        },
+        captures: null,
       }),
     );
   }

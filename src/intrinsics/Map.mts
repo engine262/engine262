@@ -34,6 +34,7 @@ import {
   type OrdinaryObject,
 } from '#self';
 
+/** https://tc39.es/ecma262/#sec-add-entries-from-iterable */
 export function* AddEntriesFromIterable(target: ObjectValue, iterable: Value, adder: FunctionObject): ValueEvaluator {
   Assert(iterable !== Value.undefined && iterable !== Value.null);
   const iteratorRecord = Q(yield* GetIterator(iterable, 'sync'));
@@ -114,7 +115,7 @@ function* Map_groupBy([items = Value.undefined, callback = Value.undefined]: Arg
 }
 
 /** https://tc39.es/ecma262/#sec-get-map-@@species */
-function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function Map_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return the this value.
   return thisValue;
 }
@@ -122,7 +123,7 @@ function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext)
 export function bootstrapMap(realmRec: Realm) {
   const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
     ['groupBy', Map_groupBy, 2],
-    [wellKnownSymbols.species, [Map_speciesGetter]],
+    [wellKnownSymbols.species, [Map_AtAt_species_getter]],
   ]);
 
   realmRec.Intrinsics['%Map%'] = mapConstructor;

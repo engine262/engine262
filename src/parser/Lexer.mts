@@ -2,13 +2,14 @@ import isUnicodeIDStartRegex from '@unicode/unicode-17.0.0/Binary_Property/ID_St
 import isUnicodeIDContinueRegex from '@unicode/unicode-17.0.0/Binary_Property/ID_Continue/regex.js';
 import isSpaceSeparatorRegex from '@unicode/unicode-17.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
   Assert, CallFrame, isErrorObject, isLeadingSurrogate, isTrailingSurrogate, ObjectValue, surroundingAgent,
   Throw,
   ThrowCompletion,
 } from '../index.mts';
 import type { ErrorObject } from '../intrinsics/Error.mts';
-import { __ts_cast__ } from '../utils/language.mts';
+import { __ts_cast__, callable, record } from '../utils/language.mts';
 import { getHostDefinedErrorDetails } from '../utils/stack.mts';
 import {
   Token,
@@ -142,7 +143,10 @@ const SingleCharTokens: { [key: string]: number } = {
   '@': Token.AT,
 };
 
-export class TokenData {
+type TokenDataInit = Pick<TokenData, 'column' | 'endIndex' | 'escaped' | 'hadLineTerminatorBefore' | 'line' | 'name' | 'startIndex' | 'type' | 'value'>;
+// @ts-expect-error
+export function TokenData(O: TokenDataInit): TokenData // @ts-expect-error
+export @callable() @record class TokenData {
   readonly type: Token;
 
   readonly startIndex: number;
@@ -161,26 +165,19 @@ export class TokenData {
 
   readonly escaped: boolean;
 
-  constructor({
-    type,
-    startIndex,
-    endIndex,
-    line,
-    column,
-    hadLineTerminatorBefore,
-    name,
-    value,
-    escaped,
-  }: Pick<TokenData, 'type' | 'startIndex' | 'endIndex' | 'line' | 'column' | 'hadLineTerminatorBefore' | 'name' | 'value' | 'escaped'>) {
-    this.type = type;
-    this.startIndex = startIndex;
-    this.endIndex = endIndex;
-    this.line = line;
-    this.column = column;
-    this.hadLineTerminatorBefore = hadLineTerminatorBefore;
-    this.name = name;
-    this.value = value;
-    this.escaped = escaped;
+  constructor(O: TokenDataInit) {
+    if (new.target !== TokenData) {
+      throw new TypeError('TokenData is a final class and cannot be subclassed');
+    }
+    this.type = O.type;
+    this.startIndex = O.startIndex;
+    this.endIndex = O.endIndex;
+    this.line = O.line;
+    this.column = O.column;
+    this.hadLineTerminatorBefore = O.hadLineTerminatorBefore;
+    this.name = O.name;
+    this.value = O.value;
+    this.escaped = O.escaped;
   }
 
   valueAsString() {
@@ -199,7 +196,7 @@ export class TokenData {
   }
 }
 
-export abstract class Lexer {
+export abstract class Lexer implements GCMarkable {
   protected abstract readonly source: string;
 
   protected abstract readonly decoratingSource?: string;
@@ -237,6 +234,10 @@ export abstract class Lexer {
   protected abstract readonly specifier?: string;
 
   earlyErrors = new Set<ErrorObject>();
+
+  mark(trace: GCTrace): void {
+    trace.strong('earlyErrors', this.earlyErrors, 'internal-slot');
+  }
 
   decorateSyntaxError(error: Pick<ErrorObject, 'HostDefinedMessageString' | 'HostDefinedStack'>, location: number | Locatable) {
     let startIndex: number;

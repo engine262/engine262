@@ -1,0 +1,15 @@
+no-floating-evaluator: Evaluator is not stepped. It should be yield* evaluator
+   ╭─[no-floating-evaluator.invalid.fixture.mts:4:3]
+   │
+ 1 │ import { valueEvaluator } from './q-macro-types.fixture.mjs';
+ 2 │ 
+ 3 │ export function* floatingEvaluator() {
+ 4 │   valueEvaluator();
+   · ─┬─┬───────────────  
+   ·  ╰─ -   valueEvaluator();
+   ·     +   yield* valueEvaluator();
+   ·    │                 
+   ·    ╰─ Evaluator is not stepped. It should be yield* evaluator
+ 5 │ }
+ 6 │ 
+───╯

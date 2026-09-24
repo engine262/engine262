@@ -136,7 +136,7 @@ function CreatePromiseAllResolveElement(index: number, values: Value[], resultCa
     }
     return Value.undefined;
   };
-  const onFulfilled = CreateBuiltinFunction(fulfilledSteps, 1, '', ['AlreadyCalled', 'Index']) as Mutable<PromiseAllResolveElementFunctionObject>;
+  const onFulfilled = CreateBuiltinFunction(fulfilledSteps, 1, '', ['AlreadyCalled', 'Index'], { captures: () => ({ resultCapability, values }) }) as Mutable<PromiseAllResolveElementFunctionObject>;
   onFulfilled.AlreadyCalled = { Value: false };
   onFulfilled.Index = index;
   return onFulfilled;
@@ -322,7 +322,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
       };
 
       // vii. Let onFulfilled be CreateBuiltinFunction(onFulfilledSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
-      const onFulfilled = CreateBuiltinFunction(onFulfilledSteps, 1, Value(''), ['AlreadyCalled', 'Index']) as Mutable<PromiseAllResolveElementFunctionObject>;
+      const onFulfilled = CreateBuiltinFunction(onFulfilledSteps, 1, Value(''), ['AlreadyCalled', 'Index'], { captures: () => ({ allKeys, entries, resultCapability }) }) as Mutable<PromiseAllResolveElementFunctionObject>;
       onFulfilled.AlreadyCalled = alreadyCalled;
       onFulfilled.Index = index;
 
@@ -360,7 +360,7 @@ function* PerformPromiseAllKeyed(variant: 'all' | 'all-settled', promises: Objec
           return Value.undefined;
         };
 
-        const onRejectNative = CreateBuiltinFunction(onRejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index']) as Mutable<PromiseAllRejectElementFunctionObject>;
+        const onRejectNative = CreateBuiltinFunction(onRejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'], { captures: () => ({ allKeys, entries, resultCapability }) }) as Mutable<PromiseAllRejectElementFunctionObject>;
         onRejectNative.AlreadyCalled = alreadyCalled;
         onRejectNative.Index = index;
         onRejected = onRejectNative;
@@ -484,7 +484,7 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
       'Values',
       'Capability',
       'RemainingElements',
-    ])) as Mutable<PromiseAllResolveElementFunctionObject>;
+    ], { captures: () => ({ resultCapability, values }) })) as Mutable<PromiseAllResolveElementFunctionObject>;
 
     const alreadyCalled = { Value: false };
     onFulfilled.AlreadyCalled = alreadyCalled;
@@ -512,7 +512,7 @@ function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: 
     };
 
     // u. Let onRejected be ! CreateBuiltinFunction(rejectedSteps, 1, "", « [[AlreadyCalled]], [[Index]] »).
-    const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllResolveElementFunctionObject>;
+    const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'], { captures: () => ({ resultCapability, values }) })) as Mutable<PromiseAllResolveElementFunctionObject>;
     onRejected.AlreadyCalled = alreadyCalled;
     onRejected.Index = index;
     index += 1;
@@ -610,7 +610,7 @@ function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Functio
       return Value.undefined;
     };
     // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'])) as Mutable<PromiseAllRejectElementFunctionObject>;
+    const onRejected = X(CreateBuiltinFunction(rejectedSteps, 1, Value(''), ['AlreadyCalled', 'Index'], { captures: () => ({ errors, resultCapability }) })) as Mutable<PromiseAllRejectElementFunctionObject>;
     onRejected.AlreadyCalled = { Value: false };
     onRejected.Index = index;
     index += 1;
@@ -731,7 +731,7 @@ function* Promise_resolve([x = Value.undefined]: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/ecma262/#sec-get-promise-@@species */
-function Promise_symbolSpecies(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function Promise_AtAt_species(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return the this value.
   return thisValue;
 }
@@ -786,7 +786,7 @@ export function bootstrapPromise(realmRec: Realm) {
     ['resolve', Promise_resolve, 1],
     ['try', Promise_try, 1],
     ['withResolvers', Promise_withResolvers, 0],
-    [wellKnownSymbols.species, [Promise_symbolSpecies]],
+    [wellKnownSymbols.species, [Promise_AtAt_species]],
     ['allKeyed', Promise_allKeyed, 1],
     ['allSettledKeyed', Promise_allSettledKeyed, 1],
   ]);

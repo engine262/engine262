@@ -52,7 +52,11 @@ export function ContinueDynamicImport(
     // b. Return unused.
   };
   // 5. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), [],
+    {
+      captures: () => ({ promiseCapability }),
+    }
+  );
 
   // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
   function* linkAndEvaluateClosure() {
@@ -138,14 +142,22 @@ export function ContinueDynamicImport(
     }
 
     // f. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), []);
+    const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), [],
+      {
+        captures: () => ({ module, promiseCapability }),
+      },
+    );
 
     // g. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
     PerformPromiseThen(evaluatePromise!, onFulfilled, onRejected);
     // h. Return unused.
   }
   // 7. Let linkAndEvaluate be CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", « »).
-  const linkAndEvaluate = CreateBuiltinFunction(linkAndEvaluateClosure, 0, Value(''), []);
+  const linkAndEvaluate = CreateBuiltinFunction(linkAndEvaluateClosure, 0, Value(''), [],
+    {
+      captures: () => ({ module, promiseCapability, onRejected }),
+    },
+  );
 
   // 8. Perform PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected).
   PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected);

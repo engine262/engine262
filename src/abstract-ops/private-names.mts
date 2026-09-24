@@ -44,6 +44,7 @@ export function* PrivateGet(O: ObjectValue, P: PrivateName) {
   return Q(yield* Call(getter, O));
 }
 
+/** https://tc39.es/ecma262/#sec-privateset */
 export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));

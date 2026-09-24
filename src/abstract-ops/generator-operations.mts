@@ -17,6 +17,10 @@ import {
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  withCapturedReferences,
+  type GCCaptureProvider,
+} from '../gc.mts';
+import {
   Assert,
   AsyncGeneratorYield,
   CreateIteratorResultObject,
@@ -35,7 +39,6 @@ export interface GeneratorObject extends OrdinaryObject {
   GeneratorContext: ExecutionContext | null;
   readonly GeneratorBrand: string | undefined;
   UnderlyingIterators?: IteratorRecord[];
-  // NON-SPEC
   HostCapturedValues?: readonly Value[];
 }
 
@@ -249,12 +252,44 @@ export function* Yield(value: Value): YieldEvaluator {
   return Q(yield* GeneratorYield(CreateIteratorResultObject(value, false)));
 }
 
-/** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject> {
+/**
+ * https://tc39.es/ecma262/#sec-createiteratorfromclosure
+ *
+ * The options form carries GC captures; the positional form remains supported
+ * for iterator helpers from the current specification snapshot.
+ */
+export interface CreateIteratorFromClosureOptions {
+  readonly extraSlots?: readonly string[];
+  readonly captures: GCCaptureProvider | null;
+}
+
+export function CreateIteratorFromClosure(
+  closure: () => YieldEvaluator,
+  generatorBrand: string | undefined,
+  generatorPrototype: ObjectValue,
+  options: CreateIteratorFromClosureOptions,
+): Mutable<GeneratorObject>;
+export function CreateIteratorFromClosure(
+  closure: () => YieldEvaluator,
+  generatorBrand: string | undefined,
+  generatorPrototype: ObjectValue,
+  extraSlots?: string[],
+  enclosedValues?: readonly Value[],
+): Mutable<GeneratorObject>;
+export function CreateIteratorFromClosure(
+  closure: () => YieldEvaluator,
+  generatorBrand: string | undefined,
+  generatorPrototype: ObjectValue,
+  optionsOrExtraSlots: CreateIteratorFromClosureOptions | string[] = [],
+  enclosedValues?: readonly Value[],
+): Mutable<GeneratorObject> {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
   // 2. If extraSlots is not present, set extraSlots to a new empty List.
-  extraSlots ??= [];
+  const options = Array.isArray(optionsOrExtraSlots)
+    ? { extraSlots: optionsOrExtraSlots, captures: null }
+    : optionsOrExtraSlots;
+  const extraSlots = [...options.extraSlots ?? []];
   // 3. Let internalSlotsList be the list-concatenation of extraSlots and « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
   const internalSlotsList = extraSlots.concat(['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
   // 4. Let generator be OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
@@ -264,9 +299,16 @@ export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generat
   // 6. Set generator.[[GeneratorState]] to suspended-start.
   generator.GeneratorState = 'suspendedStart';
 
-  // NON-SPEC
   if (enclosedValues && extraSlots.includes('HostCapturedValues')) {
     generator.HostCapturedValues = enclosedValues.slice();
+  }
+
+  if (options.captures) {
+    withCapturedReferences(generator, {
+      name: closure.name || 'IteratorClosure',
+      kind: 'evaluator',
+      captures: options.captures,
+    });
   }
 
   // 7. Let callerContext be the running execution context.

@@ -61,14 +61,14 @@ function* SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
 }
 
 /** https://tc39.es/ecma262/#sec-get-set-@@species */
-function Set_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function Set_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   // Return the this value.
   return thisValue;
 }
 
 export function bootstrapSet(realmRec: Realm) {
   const setConstructor = bootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
-    [wellKnownSymbols.species, [Set_speciesGetter]],
+    [wellKnownSymbols.species, [Set_AtAt_species_getter]],
   ]);
 
   realmRec.Intrinsics['%Set%'] = setConstructor;

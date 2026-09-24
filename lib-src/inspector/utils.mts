@@ -76,6 +76,9 @@ export function createConsole(
       1,
       Value(method),
       [],
+      {
+        captures: () => ({ realm }),
+      },
     );
     X(CreateDataProperty(console, Value(method), f));
   });

@@ -76,6 +76,7 @@ function* FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undef
   return Q(yield* Call(func, thisArg, argList));
 }
 
+/** https://tc39.es/ecma262/#sec-bound-function-exotic-objects-call-thisargument-argumentslist */
 function* BoundFunctionExoticObjectCall(this: BoundFunctionObject, _thisArgument: ObjectValue, argumentsList: Arguments): ValueEvaluator {
   const F = this;
 
@@ -86,6 +87,7 @@ function* BoundFunctionExoticObjectCall(this: BoundFunctionObject, _thisArgument
   return Q(yield* Call(target, boundThis, args));
 }
 
+/** https://tc39.es/ecma262/#sec-bound-function-exotic-objects-construct-argumentslist-newtarget */
 function* BoundFunctionExoticObjectConstruct(this: BoundFunctionObject, argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue> {
   const F = this;
 
@@ -175,9 +177,11 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
   const func = thisValue;
   // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
   //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (hasSourceTextInternalSlot(func) && X(HostHasSourceTextAvailable(func))) {
-    // Return ! UTF16Encode(func.[[SourceText]]).
-    return Value(func.SourceText);
+  if (hasSourceTextInternalSlot(func)) {
+    if (X(HostHasSourceTextAvailable(func))) {
+      // Return ! UTF16Encode(func.[[SourceText]]).
+      return Value(func.SourceText);
+    }
   }
   // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
@@ -202,7 +206,7 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
 }
 
 /** https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
-function* FunctionProto_hasInstance([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* FunctionProto_AtAt_hasInstance([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let F be this value.
   const F = thisValue;
   // 2. Return ? OrdinaryHasInstance(F, V).
@@ -215,8 +219,11 @@ export function bootstrapFunctionPrototype(realmRec: Realm) {
     0,
     Value(''),
     [],
-    realmRec,
-    realmRec.Intrinsics['%Object.prototype%'],
+    {
+      captures: null,
+      realm: realmRec,
+      prototype: realmRec.Intrinsics['%Object.prototype%'],
+    },
   );
   realmRec.Intrinsics['%Function.prototype%'] = proto;
 
@@ -226,6 +233,6 @@ export function bootstrapFunctionPrototype(realmRec: Realm) {
     ['bind', FunctionProto_bind, 1],
     ['call', FunctionProto_call, 1],
     ['toString', FunctionProto_toString, 0],
-    [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1, readonly],
+    [wellKnownSymbols.hasInstance, FunctionProto_AtAt_hasInstance, 1, readonly],
   ]);
 }

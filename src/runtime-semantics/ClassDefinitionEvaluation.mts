@@ -1,5 +1,5 @@
 import {
-  Value, NullValue, ObjectValue, PrivateName,
+  Value, NullValue, ObjectValue, PrivateName, JSStringValue, SymbolValue,
   type Arguments,
   type FunctionCallContext,
   UndefinedValue,
@@ -7,6 +7,7 @@ import {
   ReferenceRecord,
 } from '../value.mts';
 import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
   IsStatic,
   ConstructorMethod,
@@ -17,7 +18,9 @@ import {
   Q, X,
   AbruptCompletion,
 } from '../completion.mts';
-import { __ts_cast__, OutOfRange, type Mutable } from '../utils/language.mts';
+import {
+  __ts_cast__, callable, OutOfRange, record, type Mutable,
+} from '../utils/language.mts';
 import type { Location, ParseNode } from '../parser/ParseNode.mts';
 import {
   DefineMethod,
@@ -211,7 +214,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
         return Throw.TypeError('$1 cannot be invoked without new', surroundingAgent.activeFunctionObject);
       }
       // iii. Let F be the active function object.
-      const F = surroundingAgent.activeFunctionObject as ECMAScriptFunctionObject; // eslint-disable-line no-shadow
+      const F = surroundingAgent.activeFunctionObject as ECMAScriptFunctionObject;
       let result;
       // iv. If F.[[ConstructorKind]] is derived, then
       if (F.ConstructorKind === 'derived') {
@@ -235,7 +238,11 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       return result;
     };
     // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]], [[PrivateMethods]], [[Fields]] », the current Realm Record, constructorParent).
-    F = X(CreateBuiltinFunction(markBuiltinFunctionAsConstructor(defaultConstructor), 0, className, ['ConstructorKind', 'SourceText', surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods', surroundingAgent.feature('decorators') ? 'Elements' : 'Fields', 'HostLocation'], surroundingAgent.currentRealmRecord, constructorParent)) as Mutable<DefaultConstructorBuiltinFunction>;
+    F = X(CreateBuiltinFunction(markBuiltinFunctionAsConstructor(defaultConstructor), 0, className, ['ConstructorKind', 'SourceText', surroundingAgent.feature('decorators') ? 'Initializers' : 'PrivateMethods', surroundingAgent.feature('decorators') ? 'Elements' : 'Fields', 'HostLocation'], {
+      captures: null,
+      realm: surroundingAgent.currentRealmRecord,
+      prototype: constructorParent,
+    })) as Mutable<DefaultConstructorBuiltinFunction>;
     F.HostLocation = [getActiveScriptId(), ClassTail.location];
   } else { // 15. Else,
     // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
@@ -540,7 +547,7 @@ export function* DecoratorEvaluation(decorator: ParseNode.Decorator): PlainEvalu
   const expr = decorator.MemberExpression || decorator.CallExpression || decorator.ParenthesizedExpression;
   const ref = Q(yield* Evaluate(expr));
   const value = Q(yield* GetValue(ref));
-  return { Decorator: value, Receiver: ref };
+  return DecoratorDefinitionRecord({ Decorator: value, Receiver: ref });
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratorelistvaluation */
@@ -567,7 +574,9 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
         return Q(yield* PrivateGet(obj, name));
       }
     };
-    const getter = CreateBuiltinFunction(getterClosure, 1, Value(''), []);
+    const getter = CreateBuiltinFunction(getterClosure, 1, Value(''), [], {
+      captures: () => ({ name }),
+    });
     X(CreateDataPropertyOrThrow(accessObj, 'get', getter));
   }
   if (kind === 'field' || kind === 'accessor' || kind === 'setter') {
@@ -581,7 +590,7 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
         return Value(Q(yield* PrivateSet(obj, name, value)));
       }
     };
-    const setter = CreateBuiltinFunction(setterClosure, 2, Value(''), []);
+  const setter = CreateBuiltinFunction(setterClosure, 2, Value(''), [], { captures: () => ({ name }) });
     X(CreateDataPropertyOrThrow(accessObj, 'set', setter));
   }
   const hasClosure = function* has(this: Value, [obj = Value.undefined]: Arguments): ValueEvaluator {
@@ -596,7 +605,7 @@ export function CreateDecoratorAccessObject(kind: ClassElementDefinitionRecord['
     }
     return Value.false;
   };
-  const has = CreateBuiltinFunction(hasClosure, 1, Value('has'), []);
+  const has = CreateBuiltinFunction(hasClosure, 1, Value('has'), [], { captures: () => ({ name }) });
   X(CreateDataPropertyOrThrow(accessObj, 'has', has));
   return accessObj;
 }
@@ -614,7 +623,7 @@ export function CreateAddInitializerFunction(initializers: FunctionObject[], dec
     initializers.push(initializer);
     return Value.undefined;
   };
-  return CreateBuiltinFunction(addInitializerClosure, 1, Value('addInitializer'), []);
+  return CreateBuiltinFunction(addInitializerClosure, 1, Value('addInitializer'), [], { captures: () => ({ initializers }) });
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createdecoratorcontextobject */
@@ -750,14 +759,31 @@ export function* ApplyDecoratorsAndDefineMethod(homeObject: ObjectValue, methodD
   Q(yield* DefineMethodProperty(homeObject, methodDefinition, false));
 }
 
-/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */
-export interface DecoratorDefinitionRecord {
+type DecoratorDefinitionRecordInit = Omit<DecoratorDefinitionRecord, keyof GCMarkable>;
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */ // @ts-expect-error
+export function DecoratorDefinitionRecord(O: DecoratorDefinitionRecordInit): DecoratorDefinitionRecord
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */ // @ts-expect-error
+export @callable() @record class DecoratorDefinitionRecord implements GCMarkable {
   readonly Decorator: Value;
+
   readonly Receiver: ReferenceRecord | Value;
+
+  constructor(O: DecoratorDefinitionRecordInit) {
+    if (new.target !== DecoratorDefinitionRecord) {
+      throw new TypeError('DecoratorDefinitionRecord is a final class and cannot be subclassed');
+    }
+    this.Decorator = O.Decorator;
+    this.Receiver = O.Receiver;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Decorator', this.Decorator, 'capture');
+    trace.strong('Receiver', this.Receiver, 'capture');
+  }
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */
-export type ClassElementDefinitionRecord = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
+type ClassElementDefinitionRecordInit = ClassElementDefinitionRecord_Method | ClassElementDefinitionRecord_Field | ClassElementDefinitionRecord_Accessor | ClassElementDefinitionRecord_Getter | ClassElementDefinitionRecord_Setter;
 export interface ClassElementDefinitionRecord_Method {
   readonly Kind: 'method';
   readonly Key: PrivateName | PropertyKeyValue;
@@ -799,11 +825,52 @@ export interface ClassElementDefinitionRecord_Setter {
   Decorators: readonly DecoratorDefinitionRecord[] | undefined;
 }
 
-// This is a struct defined as a marco.
-export const ClassElementDefinitionRecord = (function ClassElementDefinitionRecord(record: ClassElementDefinitionRecord) {
-  Object.setPrototypeOf(record, ClassElementDefinitionRecord.prototype);
-  return record;
-}) as {
-  (record: ClassElementDefinitionRecord): ClassElementDefinitionRecord;
-  [Symbol.hasInstance](instance: unknown): instance is ClassElementDefinitionRecord;
-};
+type ClassElementDefinitionRecordFields = Omit<ClassElementDefinitionRecord, keyof GCMarkable>;
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */ // @ts-expect-error
+export function ClassElementDefinitionRecord<const T extends ClassElementDefinitionRecordInit>(O: T): ClassElementDefinitionRecord & T
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */ // @ts-expect-error
+export @callable() @record class ClassElementDefinitionRecord implements GCMarkable {
+  readonly Kind: ClassElementDefinitionRecordInit['Kind'];
+
+  readonly Key: PrivateName | JSStringValue | SymbolValue;
+
+  Value: FunctionObject;
+
+  Decorators: readonly DecoratorDefinitionRecord[] | undefined;
+
+  readonly Initializers: FunctionObject[];
+
+  readonly ExtraInitializers: FunctionObject[];
+
+  Get: FunctionObject;
+
+  Set: FunctionObject;
+
+  readonly BackingStorageKey: PrivateName;
+
+  constructor(O: ClassElementDefinitionRecordFields) {
+    if (new.target !== ClassElementDefinitionRecord) {
+      throw new TypeError('ClassElementDefinitionRecord is a final class and cannot be subclassed');
+    }
+    this.Kind = O.Kind;
+    this.Key = O.Key;
+    this.Value = O.Value;
+    this.Decorators = O.Decorators;
+    this.Initializers = O.Initializers;
+    this.ExtraInitializers = O.ExtraInitializers;
+    this.Get = O.Get;
+    this.Set = O.Set;
+    this.BackingStorageKey = O.BackingStorageKey;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Key', this.Key, 'private-element');
+    trace.strong('Value', this.Value, 'capture');
+    trace.strong('Get', this.Get, 'capture');
+    trace.strong('Set', this.Set, 'capture');
+    trace.strong('BackingStorageKey', this.BackingStorageKey, 'private-element');
+    trace.strong('Initializers', this.Initializers, 'capture');
+    trace.strong('ExtraInitializers', this.ExtraInitializers, 'capture');
+    trace.strong('Decorators', this.Decorators, 'capture');
+  }
+}

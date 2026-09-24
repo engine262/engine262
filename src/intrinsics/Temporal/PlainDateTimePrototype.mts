@@ -65,13 +65,13 @@ function thisTemporalDateTimeValue(value: Value): PlainCompletion<TemporalPlainD
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.calendarid */
-function PlainDateTimeProto_calendarIdGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_calendarId_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Value(plainDateTime.Calendar);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.era */
-function PlainDateTimeProto_eraGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_era_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Era;
   if (result === undefined) return Value.undefined;
@@ -79,7 +79,7 @@ function PlainDateTimeProto_eraGetter(_args: Arguments, { thisValue }: FunctionC
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.erayear */
-function PlainDateTimeProto_eraYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_eraYear_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).EraYear;
   if (result === undefined) return Value.undefined;
@@ -87,123 +87,123 @@ function PlainDateTimeProto_eraYearGetter(_args: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year */
-function PlainDateTimeProto_yearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_year_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Year));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.month */
-function PlainDateTimeProto_monthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_month_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Month));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthcode */
-function PlainDateTimeProto_monthCodeGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_monthCode_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Value(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).MonthCode);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.day */
-function PlainDateTimeProto_dayGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_day_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).Day));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.hour */
-function PlainDateTimeProto_hourGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_hour_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(plainDateTime.ISODateTime.Time.Hour));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.minute */
-function PlainDateTimeProto_minuteGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_minute_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(plainDateTime.ISODateTime.Time.Minute));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.second */
-function PlainDateTimeProto_secondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_second_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(plainDateTime.ISODateTime.Time.Second));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.millisecond */
-function PlainDateTimeProto_millisecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_millisecond_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(plainDateTime.ISODateTime.Time.Millisecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.microsecond */
-function PlainDateTimeProto_microsecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_microsecond_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(plainDateTime.ISODateTime.Time.Microsecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.nanosecond */
-function PlainDateTimeProto_nanosecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_nanosecond_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(plainDateTime.ISODateTime.Time.Nanosecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofweek */
-function PlainDateTimeProto_dayOfWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_dayOfWeek_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfWeek));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofyear */
-function PlainDateTimeProto_dayOfYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_dayOfYear_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DayOfYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.weekofyear */
-function PlainDateTimeProto_weekOfYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_weekOfYear_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).WeekOfYear.Week;
   return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.yearofweek */
-function PlainDateTimeProto_yearOfWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_yearOfWeek_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const result = CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).WeekOfYear.Year;
   return result === undefined ? Value.undefined : F(Number(result));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinweek */
-function PlainDateTimeProto_daysInWeekGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_daysInWeek_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInWeek));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinmonth */
-function PlainDateTimeProto_daysInMonthGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_daysInMonth_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInMonth));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinyear */
-function PlainDateTimeProto_daysInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_daysInYear_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).DaysInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthsinyear */
-function PlainDateTimeProto_monthsInYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_monthsInYear_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return F(Number(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).MonthsInYear));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.inleapyear */
-function PlainDateTimeProto_inLeapYearGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_inLeapYear_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Value(CalendarISOToDate(plainDateTime.Calendar, plainDateTime.ISODateTime.ISODate).InLeapYear);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.with */
-function* PlainDateTimeProto_with([temporalDateTimeLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_with([temporalDateTimeLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   if (!Q(yield* IsPartialTemporalObject(temporalDateTimeLike))) {
     return Throw.TypeError('$1 is not a partial Temporal object', temporalDateTimeLike);
@@ -225,7 +225,7 @@ function* PlainDateTimeProto_with([temporalDateTimeLike = Value.undefined, optio
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaintime */
-function* PlainDateTimeProto_withPlainTime([plainTimeLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_withPlainTime([plainTimeLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const time = Q(yield* ToTimeRecordOrMidnight(plainTimeLike));
   const isoDateTime: ISODateTimeRecord = { ISODate: plainDateTime.ISODateTime.ISODate, Time: time };
@@ -233,38 +233,38 @@ function* PlainDateTimeProto_withPlainTime([plainTimeLike = Value.undefined]: Ar
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withcalendar */
-function PlainDateTimeProto_withCalendar([calendarLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_withCalendar([calendarLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const calendar = Q(ToTemporalCalendarIdentifier(calendarLike));
   return X(CreateTemporalDateTime(plainDateTime.ISODateTime, calendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.add */
-function* PlainDateTimeProto_add([temporalDurationLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_add([temporalDurationLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Q(yield* AddDurationToDateTime('add', plainDateTime, temporalDurationLike, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.subtract */
-function* PlainDateTimeProto_subtract([temporalDurationLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_subtract([temporalDurationLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Q(yield* AddDurationToDateTime('subtract', plainDateTime, temporalDurationLike, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.until */
-function* PlainDateTimeProto_until([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_until([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Q(yield* DifferenceTemporalPlainDateTime('until', plainDateTime, other, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.since */
-function* PlainDateTimeProto_since([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_since([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Q(yield* DifferenceTemporalPlainDateTime('since', plainDateTime, other, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.round */
-function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   if (roundTo instanceof UndefinedValue) {
     return Throw.TypeError('roundTo is required');
@@ -305,7 +305,7 @@ function* PlainDateTimeProto_round([roundTo = Value.undefined]: Arguments, { thi
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.equals */
-function* PlainDateTimeProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const other = Q(yield* ToTemporalDateTime(_other));
   if (CompareISODateTime(plainDateTime.ISODateTime, other.ISODateTime) !== 0n) {
@@ -316,7 +316,7 @@ function* PlainDateTimeProto_equals([_other = Value.undefined]: Arguments, { thi
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tostring */
-function* PlainDateTimeProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const showCalendar = Q(yield* GetTemporalShowCalendarNameOption(resolvedOptions));
@@ -336,25 +336,25 @@ function* PlainDateTimeProto_toString([options = Value.undefined]: Arguments, { 
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tolocalestring */
-function PlainDateTimeProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Value(FormatISODateTime(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tojson */
-function PlainDateTimeProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return Value(FormatISODateTime(plainDateTime.ISODateTime, plainDateTime.Calendar, 'auto', 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof */
-function PlainDateTimeProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   Q(thisTemporalDateTimeValue(thisValue));
   return Throw.TypeError('Temporal.PlainDateTime cannot be converted to primitive value. If you are comparing two Temporal.PlainDateTime objects with > or <, use Temporal.PlainDateTime.compare() instead.');
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime */
-function* PlainDateTimeProto_toZonedDateTime([temporalTimeZoneLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainDateTimeProto_toZonedDateTime([temporalTimeZoneLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   const timeZone = Q(ToTemporalTimeZoneIdentifier(temporalTimeZoneLike)) as TimeZoneIdentifier;
   const resolvedOptions = Q(GetOptionsObject(options));
@@ -364,57 +364,57 @@ function* PlainDateTimeProto_toZonedDateTime([temporalTimeZoneLike = Value.undef
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate */
-function PlainDateTimeProto_toPlainDate(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_toPlainDate(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return X(CreateTemporalDate(plainDateTime.ISODateTime.ISODate, plainDateTime.Calendar));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime */
-function PlainDateTimeProto_toPlainTime(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainDateTimeProto_toPlainTime(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainDateTime = Q(thisTemporalDateTimeValue(thisValue));
   return X(CreateTemporalTime(plainDateTime.ISODateTime.Time));
 }
 
 export function bootstrapTemporalPlainDateTimePrototype(realmRec: Realm) {
   const prototype = bootstrapPrototype(realmRec, [
-    ['calendarId', [PlainDateTimeProto_calendarIdGetter]],
-    ['era', [PlainDateTimeProto_eraGetter]],
-    ['eraYear', [PlainDateTimeProto_eraYearGetter]],
-    ['year', [PlainDateTimeProto_yearGetter]],
-    ['month', [PlainDateTimeProto_monthGetter]],
-    ['monthCode', [PlainDateTimeProto_monthCodeGetter]],
-    ['day', [PlainDateTimeProto_dayGetter]],
-    ['hour', [PlainDateTimeProto_hourGetter]],
-    ['minute', [PlainDateTimeProto_minuteGetter]],
-    ['second', [PlainDateTimeProto_secondGetter]],
-    ['millisecond', [PlainDateTimeProto_millisecondGetter]],
-    ['microsecond', [PlainDateTimeProto_microsecondGetter]],
-    ['nanosecond', [PlainDateTimeProto_nanosecondGetter]],
-    ['dayOfWeek', [PlainDateTimeProto_dayOfWeekGetter]],
-    ['dayOfYear', [PlainDateTimeProto_dayOfYearGetter]],
-    ['weekOfYear', [PlainDateTimeProto_weekOfYearGetter]],
-    ['yearOfWeek', [PlainDateTimeProto_yearOfWeekGetter]],
-    ['daysInWeek', [PlainDateTimeProto_daysInWeekGetter]],
-    ['daysInMonth', [PlainDateTimeProto_daysInMonthGetter]],
-    ['daysInYear', [PlainDateTimeProto_daysInYearGetter]],
-    ['monthsInYear', [PlainDateTimeProto_monthsInYearGetter]],
-    ['inLeapYear', [PlainDateTimeProto_inLeapYearGetter]],
-    ['with', PlainDateTimeProto_with, 1],
-    ['withPlainTime', PlainDateTimeProto_withPlainTime, 0],
-    ['withCalendar', PlainDateTimeProto_withCalendar, 1],
-    ['add', PlainDateTimeProto_add, 1],
-    ['subtract', PlainDateTimeProto_subtract, 1],
-    ['until', PlainDateTimeProto_until, 1],
-    ['since', PlainDateTimeProto_since, 1],
-    ['round', PlainDateTimeProto_round, 1],
-    ['equals', PlainDateTimeProto_equals, 1],
-    ['toString', PlainDateTimeProto_toString, 0],
-    ['toLocaleString', PlainDateTimeProto_toLocaleString, 0],
-    ['toJSON', PlainDateTimeProto_toJSON, 0],
-    ['valueOf', PlainDateTimeProto_valueOf, 0],
-    ['toZonedDateTime', PlainDateTimeProto_toZonedDateTime, 1],
-    ['toPlainDate', PlainDateTimeProto_toPlainDate, 0],
-    ['toPlainTime', PlainDateTimeProto_toPlainTime, 0],
+    ['calendarId', [Temporal_PlainDateTimeProto_calendarId_getter]],
+    ['era', [Temporal_PlainDateTimeProto_era_getter]],
+    ['eraYear', [Temporal_PlainDateTimeProto_eraYear_getter]],
+    ['year', [Temporal_PlainDateTimeProto_year_getter]],
+    ['month', [Temporal_PlainDateTimeProto_month_getter]],
+    ['monthCode', [Temporal_PlainDateTimeProto_monthCode_getter]],
+    ['day', [Temporal_PlainDateTimeProto_day_getter]],
+    ['hour', [Temporal_PlainDateTimeProto_hour_getter]],
+    ['minute', [Temporal_PlainDateTimeProto_minute_getter]],
+    ['second', [Temporal_PlainDateTimeProto_second_getter]],
+    ['millisecond', [Temporal_PlainDateTimeProto_millisecond_getter]],
+    ['microsecond', [Temporal_PlainDateTimeProto_microsecond_getter]],
+    ['nanosecond', [Temporal_PlainDateTimeProto_nanosecond_getter]],
+    ['dayOfWeek', [Temporal_PlainDateTimeProto_dayOfWeek_getter]],
+    ['dayOfYear', [Temporal_PlainDateTimeProto_dayOfYear_getter]],
+    ['weekOfYear', [Temporal_PlainDateTimeProto_weekOfYear_getter]],
+    ['yearOfWeek', [Temporal_PlainDateTimeProto_yearOfWeek_getter]],
+    ['daysInWeek', [Temporal_PlainDateTimeProto_daysInWeek_getter]],
+    ['daysInMonth', [Temporal_PlainDateTimeProto_daysInMonth_getter]],
+    ['daysInYear', [Temporal_PlainDateTimeProto_daysInYear_getter]],
+    ['monthsInYear', [Temporal_PlainDateTimeProto_monthsInYear_getter]],
+    ['inLeapYear', [Temporal_PlainDateTimeProto_inLeapYear_getter]],
+    ['with', Temporal_PlainDateTimeProto_with, 1],
+    ['withPlainTime', Temporal_PlainDateTimeProto_withPlainTime, 0],
+    ['withCalendar', Temporal_PlainDateTimeProto_withCalendar, 1],
+    ['add', Temporal_PlainDateTimeProto_add, 1],
+    ['subtract', Temporal_PlainDateTimeProto_subtract, 1],
+    ['until', Temporal_PlainDateTimeProto_until, 1],
+    ['since', Temporal_PlainDateTimeProto_since, 1],
+    ['round', Temporal_PlainDateTimeProto_round, 1],
+    ['equals', Temporal_PlainDateTimeProto_equals, 1],
+    ['toString', Temporal_PlainDateTimeProto_toString, 0],
+    ['toLocaleString', Temporal_PlainDateTimeProto_toLocaleString, 0],
+    ['toJSON', Temporal_PlainDateTimeProto_toJSON, 0],
+    ['valueOf', Temporal_PlainDateTimeProto_valueOf, 0],
+    ['toZonedDateTime', Temporal_PlainDateTimeProto_toZonedDateTime, 1],
+    ['toPlainDate', Temporal_PlainDateTimeProto_toPlainDate, 0],
+    ['toPlainTime', Temporal_PlainDateTimeProto_toPlainTime, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainDateTime');
   realmRec.Intrinsics['%Temporal.PlainDateTime.prototype%'] = prototype;
   return prototype;

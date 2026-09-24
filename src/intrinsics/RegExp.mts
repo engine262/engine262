@@ -150,7 +150,7 @@ function EncodeForRegExpEscape(cp: CodePoint) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp-@@species */
-function RegExp_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function RegExp_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
 
@@ -158,7 +158,7 @@ export function bootstrapRegExp(realmRec: Realm) {
   const proto = realmRec.Intrinsics['%RegExp.prototype%'];
 
   const cons = bootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [
-    [wellKnownSymbols.species, [RegExp_speciesGetter]],
+    [wellKnownSymbols.species, [RegExp_AtAt_species_getter]],
     ['escape', RegExp_escape, 1],
   ]);
 

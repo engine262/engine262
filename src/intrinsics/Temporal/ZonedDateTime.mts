@@ -44,7 +44,7 @@ export function isTemporalZonedDateTimeObject(o: Value): o is TemporalZonedDateT
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime */
-function* ZonedDateTimeConstructor([
+function* Temporal_ZonedDateTimeConstructor([
   _epochNanoseconds = Value.undefined,
   _timeZone = Value.undefined,
   _calendar = Value.undefined,
@@ -96,7 +96,7 @@ function* ZonedDateTime_compare([_xZonedDateTime = Value.undefined, _yZonedDateT
 export function bootstrapTemporalZonedDateTime(realmRec: Realm) {
   const prototype = bootstrapTemporalZonedDateTimePrototype(realmRec);
 
-  const constructor = bootstrapConstructor(realmRec, ZonedDateTimeConstructor, 'ZonedDateTime', 2, prototype, [
+  const constructor = bootstrapConstructor(realmRec, Temporal_ZonedDateTimeConstructor, 'ZonedDateTime', 2, prototype, [
     ['from', ZonedDateTime_from, 1],
     ['compare', ZonedDateTime_compare, 2],
   ]);

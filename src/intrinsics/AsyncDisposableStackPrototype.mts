@@ -28,7 +28,7 @@ function* AsyncDisposableStackProto_adopt(
   const closure = function* closure(): ValueEvaluator {
     return Q(yield* Call(onDisposeAsync, Value.undefined, [value]));
   };
-  const func = CreateBuiltinFunction(closure, 0, Value(''), []);
+  const func = CreateBuiltinFunction(closure, 0, Value(''), [], { captures: () => ({ onDisposeAsync, value }) });
   Q(yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', func));
   return value;
 }

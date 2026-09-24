@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint';
-import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 import ts from 'typescript';
+import { getParserServices } from './utils.mjs';
 
 declare module 'typescript' {
   interface Type {
@@ -11,12 +12,12 @@ declare module 'typescript' {
 const rule = {
   meta: {
     messages: {
-      floating: 'Generator is not stepped. It should be yield* evaluator',
+      floating: 'Evaluator is not stepped. It should be yield* evaluator',
     },
     fixable: 'code',
   },
   create(context) {
-    const services = getParserServices(context);
+    const services = getParserServices(context, 'no-floating-evaluator');
     const checker = services.program.getTypeChecker();
     const GeneratorSymbol = checker.resolveName('Generator', undefined, ts.SymbolFlags.Interface, false);
     const AsyncGeneratorSymbol = checker.resolveName('AsyncGenerator', undefined, ts.SymbolFlags.Interface, false);
@@ -47,15 +48,3 @@ const rule = {
 } satisfies Rule.RuleModule;
 
 export default rule;
-
-function getParserServices(context: Rule.RuleContext): ParserServicesWithTypeInformation {
-  const { parserServices } = context.sourceCode;
-  if (
-    parserServices?.esTreeNodeToTSNodeMap == null
-    || parserServices.tsNodeToESTreeNodeMap == null
-    || parserServices.program == null
-  ) {
-    throw new Error('This rule requires type information from typescript-eslint');
-  }
-  return parserServices;
-}

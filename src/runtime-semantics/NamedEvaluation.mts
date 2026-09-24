@@ -12,8 +12,8 @@ import {
   InstantiateAsyncArrowFunctionExpression,
   DecoratorListEvaluation,
 } from './all.mts';
-import type {
-  FunctionDeclaration, FunctionObject, PrivateName, PropertyKeyValue,
+import {
+  type FunctionDeclaration, type FunctionObject, type PrivateName, type PropertyKeyValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation */

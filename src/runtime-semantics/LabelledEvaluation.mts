@@ -40,8 +40,8 @@ import {
   DestructuringAssignmentEvaluation,
   refineLeftHandSideExpression,
 } from './all.mts';
-import { surroundingAgent, DeclarativeEnvironmentRecord, IsUnresolvableReference } from '#self';
 import {
+  surroundingAgent, DeclarativeEnvironmentRecord, IsUnresolvableReference,
   Assert,
   Call,
   GetIterator,
@@ -57,7 +57,7 @@ import {
   ToBoolean,
   ToObject,
   Throw,
-  type IteratorRecord,
+  IteratorRecord,
   ValueOfNormalCompletion,
 } from '#self';
 
@@ -567,7 +567,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly string[], expr
     // d. Let nextMethod be ! GetV(iterator, "next").
     const nextMethod = X(GetV(iterator, 'next'));
     // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    return { Iterator: iterator, NextMethod: nextMethod, Done: false };
+    return IteratorRecord({ Iterator: iterator, NextMethod: nextMethod, Done: false });
   } else { // 7. Else,
     // a. Assert: iterationKind is iterate or async-iterate.
     Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate');

@@ -53,28 +53,10 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
         setter = Value.undefined,
       ] = v;
       if (typeof getter === 'function') {
-        getter = CreateBuiltinFunction(
-          getter,
-          0,
-          name,
-          [],
-          realmRec,
-          undefined,
-          'get',
-          async,
-        );
+        getter = CreateBuiltinFunction(getter, 0, name, [], { captures: null, realm: realmRec, prefix: 'get', async });
       }
       if (typeof setter === 'function') {
-        setter = CreateBuiltinFunction(
-          setter,
-          1,
-          name,
-          [],
-          realmRec,
-          undefined,
-          'set',
-          async,
-        );
+        setter = CreateBuiltinFunction(setter, 1, name, [], { captures: null, realm: realmRec, prefix: 'set', async });
       }
       X(obj.DefineOwnProperty(name, Descriptor({
         Get: getter,
@@ -90,7 +72,15 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
       let value;
       if (typeof v === 'function') {
         Assert(typeof len === 'number');
-        value = CreateBuiltinFunction(v, len, name, [], realmRec, undefined, undefined, async);
+        value = CreateBuiltinFunction(v, len, name, [],
+          {
+            captures: null,
+            realm: realmRec,
+            prototype: undefined,
+            prefix: undefined,
+            async,
+          }
+        );
       } else {
         value = v;
       }
@@ -129,7 +119,10 @@ export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, 
     length,
     Value(name),
     [],
-    realmRec,
+    {
+      captures: null,
+      realm: realmRec,
+    },
   );
 
   X(cons.DefineOwnProperty('prototype', Descriptor({

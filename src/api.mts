@@ -1,9 +1,8 @@
 import { ObjectValue, Value, type PropertyKeyValue } from './value.mts';
+import type { GCTrace } from './gc.mts';
 import {
   ScriptEvaluation,
-  type Markable,
 } from './host-defined/engine.mts';
-import { HostEnqueueFinalizationRegistryCleanupJob } from './execution-context/WeakReference.mts';
 import { AgentSignifier } from './execution-context/Agent.mts';
 import { ExecutionContext } from './execution-context/ExecutionContext.mts';
 import {
@@ -24,15 +23,11 @@ import {
 import {
   CyclicModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
 } from './modules.mts';
-import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
-import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
-import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
-import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type { ModuleCache } from './utils/module.mts';
 import {
-  surroundingAgent, type GCMarker,
+  surroundingAgent,
   CreateIntrinsics,
   SetDefaultGlobalBindings,
   OrdinaryObjectCreate,
@@ -48,112 +43,6 @@ import {
   Realm,
   GlobalEnvironmentRecord, type Intrinsics,
 } from '#self';
-
-/** https://tc39.es/ecma262/#sec-weakref-execution */
-export function gc() {
-  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
-  // 1. For each obj of S, do
-  //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
-  //     i. Set ref.[[WeakRefTarget]] to empty.
-  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, and cell.[[WeakRefTarget]] is obj,
-  //     i. Set cell.[[WeakRefTarget]] to empty.
-  //     ii. Let _enqueueCleanup_ be an implementation-defined choice of either *true* or *false*.
-  //     iii. If _enqueueCleanup_ is *true*, perform HostEnqueueFinalizationRegistryCleanupJob(_fg_).
-  //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
-  //     i. Set r.[[Key]] to empty.
-  //     ii. Set r.[[Value]] to empty.
-  //   d. For each WeakSet set such that set.[[WeakSetData]] contains obj,
-  //     i. Replace the element of set whose value is obj with an element whose value is empty.
-
-  const marked = new Set<unknown>();
-  const weakrefs = new Set<WeakRefObject>();
-  const fgs = new Set<FinalizationRegistryObject>();
-  const weakmaps = new Set<WeakMapObject>();
-  const weaksets = new Set<WeakSetObject>();
-  const ephemeronQueue: WeakMapObject['WeakMapData'][number][] = [];
-
-  const markCb: GCMarker = (O) => {
-    if (typeof O !== 'object' || O === null) {
-      return;
-    }
-
-    if (marked.has(O)) {
-      return;
-    }
-    marked.add(O);
-
-    if (isWeakRef(O)) {
-      weakrefs.add(O);
-      markCb(O.properties);
-      markCb(O.Prototype);
-    } else if (isFinalizationRegistryObject(O)) {
-      fgs.add(O);
-      markCb(O.properties);
-      markCb(O.Prototype);
-      O.Cells.forEach((cell) => {
-        markCb(cell.HeldValue);
-      });
-    } else if (isWeakMapObject(O)) {
-      weakmaps.add(O);
-      markCb(O.properties);
-      markCb(O.Prototype);
-      O.WeakMapData.forEach((r) => {
-        ephemeronQueue.push(r);
-      });
-    } else if (isWeakSetObject(O)) {
-      weaksets.add(O);
-      markCb(O.properties);
-      markCb(O.Prototype);
-    } else if ('mark' in O) {
-      (O as Markable).mark(markCb);
-    }
-  };
-
-  markCb(surroundingAgent);
-
-  while (ephemeronQueue.length > 0) {
-    const item = ephemeronQueue.shift()!;
-    if (marked.has(item.Key)) {
-      markCb(item.Value);
-    }
-  }
-
-  weakrefs.forEach((ref) => {
-    if (!marked.has(ref.WeakRefTarget)) {
-      ref.WeakRefTarget = undefined;
-    }
-  });
-
-  fgs.forEach((fg) => {
-    let dirty = false;
-    fg.Cells.forEach((cell) => {
-      if (!marked.has(cell.WeakRefTarget)) {
-        cell.WeakRefTarget = undefined;
-        dirty = true;
-      }
-    });
-    if (dirty) {
-      HostEnqueueFinalizationRegistryCleanupJob(fg);
-    }
-  });
-
-  weakmaps.forEach((map) => {
-    map.WeakMapData.forEach((r) => {
-      if (!marked.has(r.Key)) {
-        r.Key = undefined;
-        r.Value = undefined;
-      }
-    });
-  });
-
-  weaksets.forEach((set) => {
-    set.WeakSetData.forEach((obj, i) => {
-      if (!marked.has(obj)) {
-        set.WeakSetData[i] = undefined;
-      }
-    });
-  });
-}
 
 export interface ManagedRealmHostDefined {
   getImportMetaProperties?(module: ModuleRecordHostDefinedPublic): readonly { readonly Key: PropertyKeyValue, readonly Value: Value }[];
@@ -191,6 +80,11 @@ export class ManagedRealm extends Realm {
   override HostDefined: ManagedRealmHostDefined;
 
   topContext: ExecutionContext;
+
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
+    trace.strong('topContext', this.topContext, 'internal-slot');
+  }
 
   /**
    * Push this realm's top context (if it is not currently) as the running execution context.
@@ -232,6 +126,7 @@ export class ManagedRealm extends Realm {
     this.HostDefined = HostDefined;
     this.topContext = newContext;
 
+    surroundingAgent.registerRealm(this);
     surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
   }
 
@@ -311,16 +206,22 @@ export class ManagedRealm extends Realm {
     const module = X(moduleCompletion);
 
     const pop = this.pushTopContext();
-    PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from(function* linkAndEvaluate() {
-      const link = module.Link();
-      if (link instanceof ThrowCompletion) {
-        finish(link);
+    PerformPromiseThen(module.LoadRequestedModules(), CreateBuiltinFunction.from({
+      steps: function* linkAndEvaluate() {
+        const link = module.Link();
+        if (link instanceof ThrowCompletion) {
+          finish(link);
+          return Value.undefined;
+        }
+        finish(yield* module.Evaluate());
         return Value.undefined;
-      }
-      finish(yield* module.Evaluate());
-      return Value.undefined;
-    }), CreateBuiltinFunction.from((err = Value.undefined) => {
-      finish(ThrowCompletion(err));
+      },
+      captures: () => ({ module }),
+    }), CreateBuiltinFunction.from({
+      steps: (err = Value.undefined) => {
+        finish(ThrowCompletion(err));
+      },
+      captures: null,
     }));
     pop?.();
     surroundingAgent.eventLoop.runOnce();

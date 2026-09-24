@@ -1,14 +1,14 @@
 import {
   type FinalizationRegistryObject, Q, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, Value, KeyForSymbol,
-  GetActiveScriptOrModule,
   surroundingAgent,
-  type Job,
+  Agent,
+  Job,
   type PlainEvaluator,
 } from '#self';
 
 
 /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
-export function HostEnqueueFinalizationRegistryCleanupJob(finalizationRegistry: FinalizationRegistryObject): void {
+export function HostEnqueueFinalizationRegistryCleanupJob(surroundingAgent: Agent, finalizationRegistry: FinalizationRegistryObject): void {
   const hostHook = surroundingAgent.hostDefinedOptions.hostHooks?.HostEnqueueFinalizationRegistryCleanupJob;
   if (hostHook) {
     hostHook(finalizationRegistry);
@@ -16,16 +16,26 @@ export function HostEnqueueFinalizationRegistryCleanupJob(finalizationRegistry: 
   }
   if (surroundingAgent.finalizationRegistryScheduledForCleanup.has(finalizationRegistry)) return;
   surroundingAgent.finalizationRegistryScheduledForCleanup.add(finalizationRegistry);
-  const cleanJob: Job = {
+  const cleanJob = new Job({
+    name: 'FinalizationRegistryCleanup',
     queueName: 'FinalizationRegistryCleanup',
-    job: function finalizationJob() {
+    evaluate: function finalizationJob() {
       surroundingAgent.finalizationRegistryScheduledForCleanup.delete(finalizationRegistry);
       return CleanupFinalizationRegistry(finalizationRegistry);
     },
-    callerRealm: surroundingAgent.currentRealmRecord,
-    callerScriptOrModule: GetActiveScriptOrModule(),
-  };
+    callerRealm: finalizationRegistry.Realm,
+    callerScriptOrModule: activeScriptOrModule(surroundingAgent),
+    captures: () => ({ agent: surroundingAgent, finalizationRegistry }),
+  });
   surroundingAgent.jobQueue.enqueueFinalizationRegistryCleanupJob(cleanJob);
+}
+
+function activeScriptOrModule(agent: Agent) {
+  for (let index = agent.executionContextStack.length - 1; index >= 0; index -= 1) {
+    const scriptOrModule = agent.executionContextStack[index]!.ScriptOrModule;
+    if (scriptOrModule !== null) return scriptOrModule;
+  }
+  return Value.null;
 }
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */

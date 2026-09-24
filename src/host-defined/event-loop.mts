@@ -1,7 +1,8 @@
 import { callCallback } from '../utils/callback.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
   Agent,
-  type GCMarker, type Job, type Markable,
+  type Job,
   runSingleJobInQueue,
 } from '#self';
 
@@ -9,7 +10,7 @@ import {
 export type NodeJSJobType = 'timers' | 'pending callbacks' | 'idle-prepare' | 'poll' | 'check' | 'close callbacks';
 export type EventLoopRunType = 'manual' | 'automatic';
 
-export interface EventLoop extends Markable {
+export interface EventLoop extends GCMarkable {
   /**
    * Enqueue a host job (macrotask) now.
    */
@@ -42,6 +43,8 @@ export interface EventLoop extends Markable {
    * This can be used to implement a mechanism to exit the program when all code has finished executing.
    */
   onNoPendingJob: Set<() => void>;
+
+  getQueuedJobsForGC?(): Iterable<Job>;
 }
 
 export abstract class AbstractEventLoop implements EventLoop {
@@ -101,6 +104,10 @@ export abstract class AbstractEventLoop implements EventLoop {
 
   get hasPendingJobs(): boolean {
     return this.#pendingJobs.size > 0;
+  }
+
+  getQueuedJobsForGC(): Iterable<Job> {
+    return this.#pendingJobs;
   }
 
   /** Change the automatic run type of the event loop */
@@ -167,11 +174,10 @@ export abstract class AbstractEventLoop implements EventLoop {
     }
   }
 
-  mark(marker: GCMarker): void {
+  mark(trace: GCTrace): void {
+    trace.strong('surroundingAgent', this.surroundingAgent, 'internal-slot');
     for (const job of this.#pendingJobs) {
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
-      marker(job.job);
+      trace.strong(job.name, job, 'job');
     }
   }
 }
@@ -222,13 +228,16 @@ export class WebLikeEventLoop extends AbstractEventLoop {
     return this.queuedJobs.size > 0;
   }
 
-  override mark(marker: GCMarker): void {
-    super.mark(marker);
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
     for (const job of this.queuedJobs.keys()) {
-      marker(job.job);
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
+      trace.strong(job.name, job, 'job');
     }
+  }
+
+  override* getQueuedJobsForGC(): Iterable<Job> {
+    yield* super.getQueuedJobsForGC();
+    yield* this.queuedJobs.keys();
   }
 }
 
@@ -300,12 +309,16 @@ export class NodeJSLikeEventLoop extends AbstractEventLoop {
     return this.queuedJobs.size > 0;
   }
 
-  override mark(marker: GCMarker): void {
-    super.mark(marker);
+
+  override* getQueuedJobsForGC(): Iterable<Job> {
+    yield* super.getQueuedJobsForGC();
+    yield* this.queuedJobs;
+  }
+
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
     for (const job of this.queuedJobs) {
-      marker(job.job);
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
+      trace.strong(job.name, job, 'job');
     }
   }
 }

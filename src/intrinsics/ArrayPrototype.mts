@@ -1,6 +1,7 @@
 import {
   Descriptor,
   ObjectValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
   type Arguments,
@@ -11,7 +12,6 @@ import {
 } from '../completion.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
-import { clamp } from '../abstract-ops/math.mts';
 import { assignProps } from './bootstrap.mts';
 import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
 import { surroundingAgent } from '#self';
@@ -34,8 +34,6 @@ import {
   LengthOfArrayLike,
   OrdinaryObjectCreate,
   ToBoolean,
-  ToAbsoluteIndex,
-  ToClampedIndex,
   ToIntegerOrInfinity,
   ToObject,
   ToString,
@@ -88,11 +86,34 @@ function* ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext)
 /** https://tc39.es/ecma262/#sec-array.prototype.copywithin */
 function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
-  const length = Q(yield* LengthOfArrayLike(O));
-  let to = Q(yield* ToClampedIndex(target, length));
-  let from = Q(yield* ToClampedIndex(start, length));
-  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
-  let count = Math.min(final - from, length - to);
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeTarget = Q(yield* ToIntegerOrInfinity(target));
+  let to;
+  if (relativeTarget < 0) {
+    to = Math.max(len + relativeTarget, 0);
+  } else {
+    to = Math.min(relativeTarget, len);
+  }
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let from;
+  if (relativeStart < 0) {
+    from = Math.max(len + relativeStart, 0);
+  } else {
+    from = Math.min(relativeStart, len);
+  }
+  let relativeEnd;
+  if (end === Value.undefined) {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
+  }
+  let final;
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  }
+  let count = Math.min(final - from, len - to);
   let direction;
   if (from < to && to < from + count) {
     direction = -1;
@@ -127,9 +148,26 @@ function ArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallContext
 /** https://tc39.es/ecma262/#sec-array.prototype.fill */
 function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
-  const length = Q(yield* LengthOfArrayLike(O));
-  let k = Q(yield* ToClampedIndex(start, length));
-  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let k;
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  }
+  let relativeEnd;
+  if (end instanceof UndefinedValue) {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
+  }
+  let final;
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  }
   while (k < final) {
     const Pk: string = X(ToString(F(k)));
     Q(yield* Set(O, Pk, value, true));
@@ -321,9 +359,26 @@ function* ArrayProto_shift(_args: Arguments, { thisValue }: FunctionCallContext)
 /** https://tc39.es/ecma262/#sec-array.prototype.slice */
 function* ArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
-  const length = Q(yield* LengthOfArrayLike(O));
-  let k = Q(yield* ToClampedIndex(start, length));
-  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let k;
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  }
+  let relativeEnd;
+  if (end instanceof UndefinedValue) {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
+  }
+  let final;
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  }
   const count = Math.max(final - k, 0);
   const A = Q(yield* ArraySpeciesCreate(O, count));
   let n = 0;
@@ -390,9 +445,15 @@ function* ArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisV
 /** https://tc39.es/ecma262/#sec-array.prototype.splice */
 function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
-  const obj = Q(ToObject(thisValue));
-  const length = Q(yield* LengthOfArrayLike(obj));
-  const actualStart = Q(yield* ToClampedIndex(start, length));
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let actualStart;
+  if (relativeStart < 0) {
+    actualStart = Math.max(len + relativeStart, 0);
+  } else {
+    actualStart = Math.min(relativeStart, len);
+  }
   let insertCount;
   let actualDeleteCount;
   if (args.length === 0) {
@@ -400,23 +461,22 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
     actualDeleteCount = 0;
   } else if (args.length === 1) {
     insertCount = 0;
-    actualDeleteCount = length - actualStart;
-    Assert(actualDeleteCount >= 0);
+    actualDeleteCount = len - actualStart;
   } else {
     insertCount = args.length - 2;
     const dc = Q(yield* ToIntegerOrInfinity(deleteCount));
-    actualDeleteCount = clamp(0, dc, length - actualStart);
+    actualDeleteCount = Math.min(Math.max(dc, 0), len - actualStart);
   }
-  if (length + insertCount - actualDeleteCount > (2 ** 53) - 1) {
+  if (len + insertCount - actualDeleteCount > (2 ** 53) - 1) {
     return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
   }
-  const A = Q(yield* ArraySpeciesCreate(obj, actualDeleteCount));
+  const A = Q(yield* ArraySpeciesCreate(O, actualDeleteCount));
   let k = 0;
   while (k < actualDeleteCount) {
     const from = X(ToString(F(actualStart + k)));
-    const fromPresent = Q(yield* HasProperty(obj, from));
+    const fromPresent = Q(yield* HasProperty(O, from));
     if (fromPresent) {
-      const fromValue = Q(yield* Get(obj, from));
+      const fromValue = Q(yield* Get(O, from));
       Q(yield* CreateDataPropertyOrThrow(A, X(ToString(F(k))), fromValue));
     }
     k += 1;
@@ -425,34 +485,34 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
   const itemCount = items.length;
   if (itemCount < actualDeleteCount) {
     k = actualStart;
-    while (k < length - actualDeleteCount) {
+    while (k < len - actualDeleteCount) {
       const from = X(ToString(F(k + actualDeleteCount)));
       const to = X(ToString(F(k + itemCount)));
-      const fromPresent = Q(yield* HasProperty(obj, from));
+      const fromPresent = Q(yield* HasProperty(O, from));
       if (fromPresent) {
-        const fromValue = Q(yield* Get(obj, from));
-        Q(yield* Set(obj, to, fromValue, true));
+        const fromValue = Q(yield* Get(O, from));
+        Q(yield* Set(O, to, fromValue, true));
       } else {
-        Q(yield* DeletePropertyOrThrow(obj, to));
+        Q(yield* DeletePropertyOrThrow(O, to));
       }
       k += 1;
     }
-    k = length;
-    while (k > length - actualDeleteCount + itemCount) {
-      Q(yield* DeletePropertyOrThrow(obj, X(ToString(F(k - 1)))));
+    k = len;
+    while (k > len - actualDeleteCount + itemCount) {
+      Q(yield* DeletePropertyOrThrow(O, X(ToString(F(k - 1)))));
       k -= 1;
     }
   } else if (itemCount > actualDeleteCount) {
-    k = length - actualDeleteCount;
+    k = len - actualDeleteCount;
     while (k > actualStart) {
       const from = X(ToString(F(k + actualDeleteCount - 1)));
       const to = X(ToString(F(k + itemCount - 1)));
-      const fromPresent = Q(yield* HasProperty(obj, from));
+      const fromPresent = Q(yield* HasProperty(O, from));
       if (fromPresent) {
-        const fromValue = Q(yield* Get(obj, from));
-        Q(yield* Set(obj, to, fromValue, true));
+        const fromValue = Q(yield* Get(O, from));
+        Q(yield* Set(O, to, fromValue, true));
       } else {
-        Q(yield* DeletePropertyOrThrow(obj, to));
+        Q(yield* DeletePropertyOrThrow(O, to));
       }
       k -= 1;
     }
@@ -460,40 +520,47 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
   k = actualStart;
   while (items.length > 0) {
     const E = items.shift()!;
-    Q(yield* Set(obj, X(ToString(F(k))), E, true));
+    Q(yield* Set(O, X(ToString(F(k))), E, true));
     k += 1;
   }
-  Q(yield* Set(obj, 'length', F(length - actualDeleteCount + itemCount), true));
+  Q(yield* Set(O, 'length', F(len - actualDeleteCount + itemCount), true));
   return A;
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.tospliced */
 function* ArrayProto_toSpliced(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const [start = Value.undefined, skipCount = Value.undefined, ...items] = args as Value[];
-  const obj = Q(ToObject(thisValue));
-  const length = Q(yield* LengthOfArrayLike(obj));
-  const actualStart = Q(yield* ToClampedIndex(start, length));
-  const maxSkipCount = length - actualStart;
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let actualStart;
+  if (relativeStart === -Infinity) {
+    actualStart = 0;
+  } else if (relativeStart < 0) {
+    actualStart = Math.max(len + relativeStart, 0);
+  } else {
+    actualStart = Math.min(relativeStart, len);
+  }
   const insertCount = items.length;
   let actualSkipCount;
   if (args[0] === undefined) {
     actualSkipCount = 0;
   } else if (args[1] === undefined) {
-    actualSkipCount = maxSkipCount;
+    actualSkipCount = len - actualStart;
   } else {
-    actualSkipCount = clamp(0, Q(yield* ToIntegerOrInfinity(skipCount)), maxSkipCount);
+    const sc = Q(yield* ToIntegerOrInfinity(skipCount));
+    actualSkipCount = Math.min(Math.max(sc, 0), len - actualStart);
   }
-  const newLen = length - actualSkipCount + insertCount;
+  const newLen = len - actualSkipCount + insertCount;
   if (newLen > (2 ** 53) - 1) {
     return Throw.TypeError('Cannot make length of array-like object surpass the bounds of an integer index');
   }
-  Assert(newLen >= 0);
   const A = Q(ArrayCreate(newLen));
   let i = 0;
   let r = actualStart + actualSkipCount;
   while (i < actualStart) {
     const Pi = X(ToString(F(i)));
-    const iValue = Q(yield* Get(obj, Pi));
+    const iValue = Q(yield* Get(O, Pi));
     X(CreateDataPropertyOrThrow(A, Pi, iValue));
     i += 1;
   }
@@ -505,7 +572,7 @@ function* ArrayProto_toSpliced(args: Arguments, { thisValue }: FunctionCallConte
   while (i < newLen) {
     const Pi = X(ToString(F(i)));
     const from = X(ToString(F(r)));
-    const fromValue = Q(yield* Get(obj, from));
+    const fromValue = Q(yield* Get(O, from));
     X(CreateDataPropertyOrThrow(A, Pi, fromValue));
     i += 1;
     r += 1;
@@ -515,21 +582,27 @@ function* ArrayProto_toSpliced(args: Arguments, { thisValue }: FunctionCallConte
 
 /** https://tc39.es/ecma262/#sec-array.prototype.with */
 function* ArrayProto_with([index = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const obj = Q(ToObject(thisValue));
-  const length = Q(yield* LengthOfArrayLike(obj));
-  const actualIndex = Q(yield* ToAbsoluteIndex(index, length));
-  if (actualIndex < 0 || actualIndex >= length) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
+  let actualIndex;
+  if (relativeIndex >= 0) {
+    actualIndex = relativeIndex;
+  } else {
+    actualIndex = len + relativeIndex;
+  }
+  if (actualIndex >= len || actualIndex < 0) {
     return Throw.RangeError('$1 is out of range', index);
   }
-  const A = Q(ArrayCreate(length));
+  const A = Q(ArrayCreate(len));
   let k = 0;
-  while (k < length) {
+  while (k < len) {
     const Pk = X(ToString(F(k)));
     let fromValue;
     if (k === actualIndex) {
       fromValue = value;
     } else {
-      fromValue = Q(yield* Get(obj, Pk));
+      fromValue = Q(yield* Get(O, Pk));
     }
     X(CreateDataPropertyOrThrow(A, Pk, fromValue));
     k += 1;
@@ -593,11 +666,20 @@ function* ArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: Fun
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. Let len be ? LengthOfArrayLike(O).
-  const length = Q(yield* LengthOfArrayLike(O));
+  const len = Q(yield* LengthOfArrayLike(O));
   // 3. Let relativeIndex be ? ToIntegerOrInfinity(index).
-  const k = Q(yield* ToAbsoluteIndex(index, length));
+  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
+  let k;
+  // 4. If relativeIndex ≥ 0, then
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else { // 5. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  }
   // 6. If k < 0 or k ≥ len, then return undefined.
-  if (k < 0 || k >= length) {
+  if (k < 0 || k >= len) {
     return Value.undefined;
   }
   // 7. Return ? Get(O, ! ToString(k)).

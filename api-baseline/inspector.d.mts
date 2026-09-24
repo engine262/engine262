@@ -68,6 +68,8 @@ export declare abstract class Inspector {
     protected abstract send(data: object): void;
     readonly preference: DebuggerPreference;
     protected onMessage(id: unknown, methodArg: string, params: unknown): void;
+    private sendHandlerError;
+    private sendError;
     sendEvent: DevtoolEvents;
     console(realm: Realm, type: Protocol.Runtime.ConsoleAPICalledEventType, args: Arguments): void;
     onDebuggerDisconnect(): void;

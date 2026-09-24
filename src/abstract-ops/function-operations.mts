@@ -28,6 +28,10 @@ import {
 import { type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import {
+  withCapturedReferences,
+  type GCCaptureProvider,
+} from '../gc.mts';
 import { FunctionProto_toString, type BoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import {
   Assert,
@@ -51,6 +55,7 @@ import {
   NewPromiseCapability,
   AsyncFunctionStart,
   Get,
+  R,
   ToIntegerOrInfinity,
   InitializePrivateMethods,
   getActiveScriptId,
@@ -107,8 +112,6 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
-  // NON-SPEC
-  HostCapturedValues?: readonly Value[];
 }
 export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject | BoundFunctionObject;
 // This file covers abstract operations defined in
@@ -638,14 +641,40 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
   }
 }
 
-/** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, async = false): BuiltinFunctionObject {
-  if (typeof name === 'string') {
-    name = Value(name);
-  }
+export interface CreateBuiltinFunctionOptions {
+  readonly captures: GCCaptureProvider | null;
+  readonly realm?: Realm;
+  readonly prototype?: ObjectValue | NullValue;
+  readonly prefix?: string;
+  readonly async?: boolean;
+}
+
+/**
+ * https://tc39.es/ecma262/#sec-createbuiltinfunction
+ *
+ * The positional form is retained for built-ins added by the current
+ * specification snapshot; the options form carries the GC capture provider.
+ */
+export function CreateBuiltinFunction(
+  behaviour: NativeSteps,
+  length: number,
+  name: string | PropertyKeyValue | PrivateName,
+  additionalInternalSlotsList: readonly string[],
+  options: CreateBuiltinFunctionOptions,
+): BuiltinFunctionObject {
+  const {
+    captures,
+    realm: suppliedRealm,
+    prototype: suppliedPrototype,
+    prefix,
+    async = false,
+  } = options;
+  if (name instanceof JSStringValue) name = name.stringValue();
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof behaviour === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
+  let realm = suppliedRealm;
+  let prototype = suppliedPrototype;
   if (realm === undefined) {
     realm = surroundingAgent.currentRealmRecord;
   }
@@ -673,6 +702,13 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
   func.InitialName = null;
   // https://github.com/tc39/ecma262/pull/3212/
   func.IsClassConstructor = false;
+  if (captures) {
+    withCapturedReferences(func, {
+      name: typeof name === 'string' ? name : 'BuiltinFunction',
+      kind: 'callback',
+      captures,
+    });
+  }
   // 11. Perform ! SetFunctionLength(func, length).
   X(SetFunctionLength(func, length));
   // 12. If prefix is not present, then
@@ -688,7 +724,39 @@ export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, na
 }
 
 /** This is a helper function to define non-spec host functions. */
-CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name, async = false) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, name, [], surroundingAgent.currentRealmRecord, undefined, undefined, async);
+export interface CreateBuiltinFunctionFromOptions {
+  readonly steps: CanBeNativeSteps;
+  readonly name?: string;
+  readonly async?: boolean;
+  readonly captures: GCCaptureProvider | null;
+}
+
+CreateBuiltinFunction.from = (
+  optionsOrSteps: CreateBuiltinFunctionFromOptions | CanBeNativeSteps,
+  positionalName?: string,
+  positionalAsync = false,
+) => {
+  const options = typeof optionsOrSteps === 'function'
+    ? {
+      steps: optionsOrSteps,
+      name: positionalName ?? optionsOrSteps.name,
+      async: positionalAsync,
+      captures: null,
+    }
+    : optionsOrSteps;
+  const { steps, name = steps.name, async = false, captures } = options;
+  return CreateBuiltinFunction(
+    Reflect.apply.bind(null, steps, null),
+    steps.length,
+    name,
+    [],
+    {
+      captures,
+      realm: surroundingAgent.currentRealmRecord,
+      async,
+    },
+  );
+};
 
 export function markBuiltinFunctionAsConstructor(steps: NativeSteps) {
   steps.isConstructor = true;
@@ -713,13 +781,14 @@ export function* CopyNameAndLength(F: FunctionObject, Target: FunctionObject, pr
   if (targetHasLength) {
     const targetLength = Q(yield* Get(Target, 'length'));
     if (targetLength instanceof NumberValue) {
-      const targetLengthAsInt = X(ToIntegerOrInfinity(targetLength));
-      if (targetLengthAsInt === Infinity) {
+      if (R(targetLength) === Infinity) {
         length = Infinity;
-      } else if (targetLengthAsInt === -Infinity) {
+      } else if (R(targetLength) === -Infinity) {
         length = 0;
       } else {
-        length = Math.max(targetLengthAsInt - argCount, 0);
+        const targetLenAsInt = X(ToIntegerOrInfinity(targetLength));
+        Assert(Number.isFinite(targetLenAsInt));
+        length = Math.max(targetLenAsInt - argCount, 0);
       }
     }
   }

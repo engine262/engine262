@@ -160,6 +160,7 @@ export function IsSharedArrayBuffer(_obj: Value) {
   return false;
 }
 
+/** https://tc39.es/ecma262/#sec-clonearraybuffer */
 export function* CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number): ValueEvaluator<ArrayBufferObject> {
   Assert(!IsDetachedBuffer(srcBuffer));
   const targetBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength));

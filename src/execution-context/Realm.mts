@@ -88,8 +88,9 @@ import { bootstrapWeakSet } from '../intrinsics/WeakSet.mts';
 import { bootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mts';
 import { bootstrapWrapForValidIteratorPrototype } from '../intrinsics/WrapForValidIteratorPrototype.mts';
 import { bootstrapTemporal } from '../intrinsics/Temporal/Temporal.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
-  type ObjectValue, type GlobalEnvironmentRecord, type ParseNode, type LoadedModuleRequestRecord, type ManagedRealmHostDefined, type GCMarker,
+  type ObjectValue, type GlobalEnvironmentRecord, type ParseNode, type LoadedModuleRequestRecord, type ManagedRealmHostDefined,
   ManagedRealm,
   type Mutable,
   DefinePropertyOrThrow,
@@ -100,7 +101,7 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-code-realms */
-export abstract class Realm {
+export abstract class Realm implements GCMarkable {
   abstract readonly AgentSignifier: unknown;
 
   abstract readonly Intrinsics: Intrinsics;
@@ -118,17 +119,17 @@ export abstract class Realm {
   // NON-SPEC
   abstract randomState: undefined | BigUint64Array;
 
-  mark(m: GCMarker) {
-    m(this.GlobalObject);
-    m(this.GlobalEnv);
-    for (const v of Object.values(this.Intrinsics)) {
-      m(v);
+  mark(trace: GCTrace) {
+    trace.strong('GlobalObject', this.GlobalObject, 'internal-slot');
+    trace.strong('GlobalEnv', this.GlobalEnv, 'internal-slot');
+    for (const [name, value] of Object.entries(this.Intrinsics)) {
+      trace.strong(`Intrinsics.${name}`, value, 'internal-slot');
     }
-    for (const v of Object.values(this.TemplateMap)) {
-      m(v);
+    for (let index = 0; index < this.TemplateMap.length; index += 1) {
+      trace.strong(`TemplateMap[${index}].Array`, this.TemplateMap[index]!.Array, 'element');
     }
-    for (const v of this.LoadedModules) {
-      m(v.Module);
+    for (let index = 0; index < this.LoadedModules.length; index += 1) {
+      trace.strong(`LoadedModules[${index}]`, this.LoadedModules[index]!.Module, 'element');
     }
   }
 }

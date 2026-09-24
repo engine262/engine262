@@ -278,8 +278,6 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
       }
       // iii. If index ≥ len, return undefined.
       if (index >= len) {
-        // NON_SPEC
-        generator.HostCapturedValues = undefined;
         return Value.undefined;
       }
       const indexNumber = F(index);
