@@ -1437,7 +1437,7 @@ export abstract class ExpressionParser extends FunctionParser {
       let isStaticField = true;
       if (staticId && (this.test(Token.ASSIGN)
         || this.test(Token.SEMICOLON)
-        || this.peek().hadLineTerminatorBefore
+        || this.test(Token.LPAREN)
         || isAutomaticSemicolon(this.peek().type))) {
         isStaticField = false;
       }
@@ -1519,7 +1519,7 @@ export abstract class ExpressionParser extends FunctionParser {
       if (type === 'class element' && (
         this.test(Token.ASSIGN)
         || this.test(Token.SEMICOLON)
-        || this.peek().hadLineTerminatorBefore
+        || (this.peek().hadLineTerminatorBefore && !isSpecialMethod && !this.test(Token.LPAREN))
         || isAutomaticSemicolon(this.peek().type)
       )) {
         node.accessor = isAccessorField;
