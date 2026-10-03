@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 a600354c2954300d62d108bf9ed3459a8e4a289b
+ * engine262 0.0.1 678c2c0a5811e1d2c6616e144a5067a4783c70a4
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -19306,7 +19306,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         node.Decorators = this.parseDecorators();
         const staticId = this.test('static') ? this.parseIdentifierName() : null;
         let isStaticField = true;
-        if (staticId && (this.test(Token.ASSIGN) || this.test(Token.SEMICOLON) || this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type))) {
+        if (staticId && (this.test(Token.ASSIGN) || this.test(Token.SEMICOLON) || this.test(Token.LPAREN) || isAutomaticSemicolon(this.peek().type))) {
           isStaticField = false;
         }
         node.static = !!staticId && isStaticField;
@@ -19364,7 +19364,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           node.AssignmentExpression = this.parseAssignmentExpression();
           return this.finishNode(node, 'PropertyDefinition');
         }
-        if (type === 'class element' && (this.test(Token.ASSIGN) || this.test(Token.SEMICOLON) || this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type))) {
+        if (type === 'class element' && (this.test(Token.ASSIGN) || this.test(Token.SEMICOLON) || this.peek().hadLineTerminatorBefore && !isSpecialMethod && !this.test(Token.LPAREN) || isAutomaticSemicolon(this.peek().type))) {
           node.accessor = isAccessorField;
           node.ClassElementName = firstName;
           node.Initializer = this.scope.with({
