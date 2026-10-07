@@ -12,7 +12,6 @@ import {
   RequireInternalSlot,
   F,
   Realm,
-  Throw,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
@@ -39,7 +38,7 @@ function* DataViewProto_byteLength(_args: Arguments, { thisValue }: FunctionCall
   Assert('ViewedArrayBuffer' in O);
   const viewRecord = MakeDataViewWithBufferWitnessRecord(O, 'seq-cst');
   if (IsViewOutOfBounds(viewRecord)) {
-    return Throw.TypeError('Offset is out of bound');
+    return F(0);
   }
   const size = GetViewByteLength(viewRecord);
   return F(size);
@@ -55,7 +54,7 @@ function* DataViewProto_byteOffset(_args: Arguments, { thisValue }: FunctionCall
   Assert('ViewedArrayBuffer' in O);
   const viewRecord = MakeDataViewWithBufferWitnessRecord(O, 'seq-cst');
   if (IsViewOutOfBounds(viewRecord)) {
-    return Throw.TypeError('Offset is out of bound');
+    return F(0);
   }
   const offset = O.ByteOffset;
   return F(offset);
