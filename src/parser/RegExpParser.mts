@@ -1300,14 +1300,18 @@ export class RegExpParser {
         { UnicodeMode: true },
         () => this.maybeParseCharacterClassEscape(),
       );
-      if (!escape) {
-        this.raise(Throw.SyntaxError('Expect a CharacterClassEscape but $1 found', this.peek()));
-      }
-      return {
-        type: 'ClassSetOperand',
-        production: 'NestedClass',
-        NestedClass: { type: 'NestedClass', production: 'CharacterClassEscape', CharacterClassEscape: escape },
+      if (escape) {
+        return {
+          type: 'ClassSetOperand',
+          production: 'NestedClass',
+          NestedClass: { type: 'NestedClass', production: 'CharacterClassEscape', CharacterClassEscape: escape },
+        }
       };
+      // ClassSetOperand :: ClassSetCharacter :: \ CharacterEscape
+      // ClassSetOperand :: ClassSetCharacter :: \ ClassSetReservedPunctuator
+      // ClassSetOperand :: ClassSetCharacter :: \ b
+      //     fallthrough
+      this.position -= 1; // rewind the eat('\\')
     }
     const ClassSetCharacter = this.maybeParseClassSetCharacter();
     if (!ClassSetCharacter) {
