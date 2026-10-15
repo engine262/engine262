@@ -7011,6 +7011,7 @@ export declare const Unicode: {
     getStringPropertySet(property: keyof typeof Table71_BinaryPropertyOfStrings): readonly ListOfCharacter[];
     /** https://www.unicode.org/reports/tr44/#Simple_Case_Folding */
     SimpleOrCommonCaseFoldingMapping(ch: Character): Character | undefined;
+    CaseFoldingCandidates(ch: Character): Character[];
     iterateCharacterByCodePoint(string: Character | ListOfCharacter): IterableIterator<Character>;
     str_normalization(string: string, form: 'NFC' | 'NFD' | 'NFKC' | 'NFKD'): string;
     str_toLowercase(string: string): string;

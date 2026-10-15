@@ -232,6 +232,9 @@ export const Unicode = {
     }
     return ch;
   },
+  CaseFoldingCandidates(ch: Character) {
+    return [ch, ...getCaseFoldingCandidates(ch)];
+  },
   iterateCharacterByCodePoint(string: Character | ListOfCharacter) {
     return string[Symbol.iterator]() as IterableIterator<Character>;
   },
@@ -251,6 +254,28 @@ export const Unicode = {
     return string.toLocaleUpperCase();
   },
 };
+
+const caseFoldingCandidatesCache = new Map<string, Character[]>();
+function getCaseFoldingCandidates(ch: Character): Character[] {
+  const cached = caseFoldingCandidatesCache.get(ch);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const candidates: Character[] = [];
+  for (const [source, folded] of unicodeCaseFoldingCommon) {
+    if (source !== ch && folded === ch) {
+      candidates.push(source as Character);
+    }
+  }
+  for (const [source, folded] of unicodeCaseFoldingSimple) {
+    if (!unicodeCaseFoldingCommon.has(source) && source !== ch && folded === ch) {
+      candidates.push(source as Character);
+    }
+  }
+  caseFoldingCandidatesCache.set(ch, candidates);
+  return candidates;
+}
 
 /** https://tc39.es/ecma262/#sec-pattern-semantics */
 export type BMPCharacter = string & { description: 'A code unit', length: 1 };

@@ -101,6 +101,7 @@ type Matcher = (x: MatchState, c: MatcherContinuation) => NonSpecFlattenedRegExp
 type MatcherContinuation = (y: MatchState) => NonSpecFlattenedRegExpMatchingProcess;
 
 type CharTester = (char: Character, canonicalize: RegExpRecord | undefined) => boolean;
+
 /** https://tc39.es/ecma262/#pattern-charset */
 abstract class CharSet {
   abstract has(c: Character, rer: RegExpRecord | undefined): boolean;
@@ -153,93 +154,47 @@ abstract class CharSet {
   }
 
   static intersection(...sets: CharSet[]): CharSet {
-    let intersectionChars: Set<Character>;
-    const setChars = sets.filter((x) => x.chars);
-    if (setChars.length === 0) {
-      intersectionChars = new Set<Character>();
-    } else if (setChars.length === 1) {
-      intersectionChars = setChars[0].chars!;
-    } else {
-      const smallestSet = setChars.reduce((a, b) => (a.chars!.size < b.chars!.size ? a : b));
-      intersectionChars = new Set();
-      smallestSet.chars!.forEach((c) => {
-        if (setChars.every((s) => s.chars!.has(c))) {
-          intersectionChars.add(c);
+    // Upper bound:
+    // if a char T is in the result, it must in the upper bound. (result ⊆ upper bound)
+    //
+    // only concrete-only set can be used to compute upper bound.
+    // examples
+    //     {a, b, c} & {b, c, d, Script=Latin}, upper bound is {a, b, c}, the latter one is excluded because of Script=Latin (a tester)
+    //     {Script=Latin} & {Script=Greek}, there is no upper bound.
+
+    // TODO: utilize the upper bound.
+    // let upperBound: Set<Character> | undefined;
+    // for (const set of sets) {
+    //   if (set.chars && !set.charTester?.length) {
+    //     if (!upperBound) upperBound = new Set(set.chars);
+    //     else upperBound = upperBound.intersection(set.chars);
+    //   }
+    // }
+
+    const stringSets = sets.map((set) => set.strings);
+    const intersectionStrings = new Set<ListOfCharacter>();
+    if (stringSets.length && stringSets.every((strings) => strings !== undefined)) {
+      const smallestSet = stringSets.reduce((smallest, strings) => strings!.size < smallest!.size ? strings : smallest);
+      smallestSet!.forEach((string) => {
+        if (sets.every((set) => set.hasList(string))) {
+          intersectionStrings.add(string);
         }
       });
     }
 
-    let intersectionStrings: Set<ListOfCharacter>;
-    const setStrings = sets.filter((x) => x.strings);
-    if (setStrings.length === 0) {
-      intersectionStrings = new Set<ListOfCharacter>();
-    } else if (setStrings.length === 1) {
-      intersectionStrings = setStrings[0].strings!;
-    } else {
-      const smallestSet = setStrings.reduce((a, b) => (a.strings!.size < b.strings!.size ? a : b));
-      intersectionStrings = new Set();
-      smallestSet.strings!.forEach((s) => {
-        if (setStrings.every((c) => c.strings!.has(s))) {
-          intersectionStrings.add(s);
-        }
-      });
-    }
-
-    let allCharTesters: CharTester[] = [];
-    sets.forEach((set) => {
-      if (set.charTester) {
-        allCharTesters = allCharTesters.concat(set.charTester);
-      }
-    });
-
-    if (!allCharTesters.length) {
-      if (!intersectionStrings.size) {
-        return new ConcreteCharSet(intersectionChars);
-      }
-      if (!intersectionChars.size) {
-        return ConcreteStringSet.of(intersectionStrings);
-      }
-      return new UnionCharSet(intersectionChars, intersectionStrings, undefined);
-    }
-    return new UnionCharSet(intersectionChars, intersectionStrings, allCharTesters.length ? [(char, canonicalize) => allCharTesters.every((f) => f(char, canonicalize))] : undefined);
+    return new UnionCharSet(undefined, intersectionStrings, [
+      (char, rer) => sets.every((set) => set.has(char, rer)),
+    ]);
   }
 
   static subtract(maxSet: CharSet, subtractAllStrings: boolean, ...subtracts: readonly CharSet[]): CharSet {
-    const maxChars = maxSet.chars;
-    const maxStrings = subtractAllStrings ? undefined : maxSet.strings;
-    let allSubtractCharTesters: CharTester[] = [];
-    subtracts.forEach((subtract) => {
-      if (maxChars) {
-        subtract.chars?.forEach((c) => maxChars.delete(c));
-      }
-      if (maxStrings) {
-        subtract.strings?.forEach((s) => maxStrings.delete(s));
-      }
-      if (subtract.charTester) {
-        allSubtractCharTesters = allSubtractCharTesters.concat(subtract.charTester);
-      }
-    });
-    if (!maxSet.charTester?.length && !allSubtractCharTesters.length) {
-      if (!maxStrings?.size) {
-        return new ConcreteCharSet(maxChars || []);
-      }
-      if (!maxChars?.size) {
-        return ConcreteStringSet.of(maxStrings);
-      }
-      return new UnionCharSet(maxChars, maxStrings, undefined);
-    }
+    const maxStrings = !subtractAllStrings && maxSet.strings
+      ? new Set([...maxSet.strings].filter((string) => !subtracts.some((set) => set.hasList(string))))
+      : undefined;
     return new UnionCharSet(
       undefined,
       maxStrings,
-      [(char, canonicalize) => {
-        if (!(maxChars?.has(char) || maxSet.charTester?.some((f) => f(char, canonicalize)))) {
-          return false;
-        }
-        if (allSubtractCharTesters.some((f) => f(char, canonicalize))) {
-          return false;
-        }
-        return true;
-      }],
+      [(char, rer) => maxSet.has(char, rer) && !subtracts.some((set) => set.has(char, rer))],
     );
   }
 }
@@ -280,7 +235,10 @@ class ConcreteCharSet extends CharSet {
     this.chars = new Set(chars);
   }
 
-  override has(c: Character, rer: RegExpRecord): boolean {
+  override has(c: Character, rer: RegExpRecord | undefined): boolean {
+    if (!rer) {
+      return this.chars.has(c);
+    }
     const canonicalizeKey = JSON.stringify(rer);
     this.#canonicalize ??= {};
     if (!this.#canonicalize[canonicalizeKey]) {
@@ -1271,7 +1229,13 @@ function MaybeSimpleCaseFolding(rer: RegExpRecord, A: CharSet): CharSet {
 function CharacterComplement(rer: RegExpRecord, S: CharSet): VirtualCharSet {
   const A = AllCharacters(rer);
   // Return the CharSet containing the CharSetElements of A which are not also CharSetElements of S.
-  return new VirtualCharSet((ch, rer) => A.has(ch, rer) && !S.has(ch, rer));
+  return new VirtualCharSet((ch, currentRer) => {
+    if (!currentRer || !HasEitherUnicodeFlag(currentRer) || !currentRer.IgnoreCase) {
+      return A.has(ch, undefined) && !S.has(ch, undefined);
+    }
+    return Unicode.CaseFoldingCandidates(ch).some((candidate) =>
+      Canonicalize(currentRer, candidate) === ch && A.has(candidate, undefined) && !S.has(candidate, undefined));
+  });
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
