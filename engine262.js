@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 678c2c0a5811e1d2c6616e144a5067a4783c70a4
+ * engine262 0.0.1 c0225bda6511df676baf553579473cfdca0c4d60
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -17773,18 +17773,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const escape = this.scope({
           UnicodeMode: true
         }, () => this.maybeParseCharacterClassEscape());
-        if (!escape) {
-          this.raise(Throw.SyntaxError('Expect a CharacterClassEscape but $1 found', this.peek()));
+        if (escape) {
+          return {
+            type: 'ClassSetOperand',
+            production: 'NestedClass',
+            NestedClass: {
+              type: 'NestedClass',
+              production: 'CharacterClassEscape',
+              CharacterClassEscape: escape
+            }
+          };
         }
-        return {
-          type: 'ClassSetOperand',
-          production: 'NestedClass',
-          NestedClass: {
-            type: 'NestedClass',
-            production: 'CharacterClassEscape',
-            CharacterClassEscape: escape
-          }
-        };
+        // ClassSetOperand :: ClassSetCharacter :: \ CharacterEscape
+        // ClassSetOperand :: ClassSetCharacter :: \ ClassSetReservedPunctuator
+        // ClassSetOperand :: ClassSetCharacter :: \ b
+        //     fallthrough
+        this.position -= 1; // rewind the eat('\\')
       }
       const ClassSetCharacter = this.maybeParseClassSetCharacter();
       if (!ClassSetCharacter) {
@@ -23907,8 +23911,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return function* Assertion_WordBoundary(x, c) {
         const Input = x.input;
         const e = x.endIndex;
-        const a = IsWordChar(rer, Input.raw, e - 1);
-        const b = IsWordChar(rer, Input.raw, e);
+        const a = IsWordChar(rer, Input, e - 1);
+        const b = IsWordChar(rer, Input, e);
         if (a && !b || !a && b) {
           return yield () => c(x);
         }
@@ -23918,8 +23922,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return function* Assertion_NotWordBoundary(x, c) {
         const Input = x.input;
         const e = x.endIndex;
-        const a = IsWordChar(rer, Input.raw, e - 1);
-        const b = IsWordChar(rer, Input.raw, e);
+        const a = IsWordChar(rer, Input, e - 1);
+        const b = IsWordChar(rer, Input, e);
         if (a && b || !a && !b) {
           return yield () => c(x);
         }
