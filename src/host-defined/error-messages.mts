@@ -507,7 +507,6 @@ export interface Throw {
   | 'Duplicate import attribute $1'
   | 'Duplicate regular expression flag "$1"'
   | 'Duplicated capture group $1'
-  | 'Expect a CharacterClassEscape but $1 found'
   | "Expected 'this' value to be a function but got $1"
   | 'Expected a character but got $1'
   | 'Export identifier $1 already declared'
