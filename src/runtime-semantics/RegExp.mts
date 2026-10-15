@@ -557,8 +557,8 @@ function CompileAssertion(node: ParseNode.RegExp.Assertion, rer: RegExpRecord): 
     return function* Assertion_WordBoundary(x, c) {
       const Input = x.input;
       const e = x.endIndex;
-      const a = IsWordChar(rer, Input.raw, e - 1);
-      const b = IsWordChar(rer, Input.raw, e);
+      const a = IsWordChar(rer, Input, e - 1);
+      const b = IsWordChar(rer, Input, e);
       if ((a && !b) || (!a && b)) {
         return yield () => c(x);
       }
@@ -568,8 +568,8 @@ function CompileAssertion(node: ParseNode.RegExp.Assertion, rer: RegExpRecord): 
     return function* Assertion_NotWordBoundary(x, c) {
       const Input = x.input;
       const e = x.endIndex;
-      const a = IsWordChar(rer, Input.raw, e - 1);
-      const b = IsWordChar(rer, Input.raw, e);
+      const a = IsWordChar(rer, Input, e - 1);
+      const b = IsWordChar(rer, Input, e);
       if ((a && b) || (!a && !b)) {
         return yield () => c(x);
       }
@@ -653,7 +653,7 @@ function CompileAssertion(node: ParseNode.RegExp.Assertion, rer: RegExpRecord): 
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
-function IsWordChar(rer: RegExpRecord, Input: string, e: number): boolean {
+function IsWordChar(rer: RegExpRecord, Input: RegExpMatchingSource, e: number): boolean {
   const inputLength = Input.length;
   if (e === -1 || e === inputLength) {
     return false;
