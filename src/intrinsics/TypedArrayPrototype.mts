@@ -213,7 +213,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
   const result = Q(yield* TypedArraySpeciesCreate(obj, [F(captured)]));
   let n = 0;
   for (const element of kept) {
-    X(TypedArraySetElement(result, F(n), element));
+    Q(yield* TypedArraySetElement(result, F(n), element));
     n += 1;
   }
   return result;
@@ -758,7 +758,7 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
     } else {
       fromValue = TypedArrayGetElement(obj, F(k));
     }
-    X(TypedArraySetElement(resultArray, F(k), fromValue));
+    Q(yield* TypedArraySetElement(resultArray, F(k), fromValue));
     k += 1;
   }
   return resultArray;
