@@ -394,15 +394,11 @@ export function* OrdinaryCreateFromConstructor<const T extends string>(construct
   return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
-// 9.1.14 GetPrototypeFromConstructor
-export function* GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue> {
-  // Assert: intrinsicDefaultProto is a String value that
-  // is this specification's name of an intrinsic object.
-  Assert(IsCallable(constructor));
-  let proto = Q(yield* Get(constructor, 'prototype'));
-  if (!(proto instanceof ObjectValue)) {
-    const realm = Q(GetFunctionRealm(constructor));
-    proto = realm.Intrinsics[intrinsicDefaultProto];
-  }
-  return proto;
+// https://tc39.es/ecma262/#sec-getprototypefromconstructor
+export function* GetPrototypeFromConstructor(ctor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue> {
+  // Assert: _intrinsicDefaultProto_ is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
+  const proto = Q(yield* Get(ctor, 'prototype'));
+  if (proto instanceof ObjectValue) return proto;
+  const realm = Q(GetFunctionRealm(ctor));
+  return realm.Intrinsics[intrinsicDefaultProto];
 }

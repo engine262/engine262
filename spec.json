@@ -18,13 +18,6 @@
       "diff": ["spec.html"]
     },
     {
-      "name": "iterator-join",
-      "description": "Iterator.prototype.join proposal",
-      "source": "https://github.com/tc39/proposal-iterator-join",
-      "commit": "8056e788b091100524f0c1c2bf6fc1ca57486fc0",
-      "path": ["spec.html"]
-    },
-    {
       "name": "iterator-chunking",
       "description": "Iterator Chunking proposal",
       "source": "https://github.com/tc39/proposal-iterator-chunking",

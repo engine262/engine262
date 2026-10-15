@@ -2371,7 +2371,7 @@ export declare function GetOptionsObject(options: Value): ObjectValue | ThrowCom
 
 export declare function GetPossibleEpochNanoseconds(timeZone: AvailableTimeZoneIdentifier, isoDateTime: ISODateTimeRecord): PlainCompletion<EpochNanoseconds[]>;
 
-export declare function GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue>;
+export declare function GetPrototypeFromConstructor(ctor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue>;
 
 /** https://tc39.es/proposal-temporal/#sec-getroundingincrementoption */
 export declare function GetRoundingIncrementOption(options: ObjectValue): PlainEvaluator<Integer>;

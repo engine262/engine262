@@ -636,7 +636,7 @@ function* IteratorPrototype_toStringTag_setter([v = Value.undefined]: Arguments,
   return Value.undefined;
 }
 
-/** https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join */
+/** https://tc39.es/ecma262/#sec-iterator.prototype.join */
 function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue;
   if (!(obj instanceof ObjectValue)) {
@@ -655,10 +655,8 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
   let result = '';
   let first = true;
   while (true) {
-    const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
-    if (value === 'done') {
-      return Value(result);
-    }
+    const value = Q(yield* IteratorStepValue(iterated));
+    if (value === 'done') return Value(result);
     if (first) {
       first = false;
     } else {
