@@ -101,6 +101,8 @@ test('native function names', { timeout: 15000 }, () => {
       return Value(CallSite.getFunctionName(f) || '<CallSite.getFunctionName returned null>');
     }
     return Value('<not a function object>');
+  }, {
+    captures: null,
   });
   X(CreateDataPropertyOrThrow(realm.GlobalObject, 'getName', f));
   pop?.();

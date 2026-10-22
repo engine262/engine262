@@ -104,9 +104,15 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
         line: site.lineNumber,
         source: source === test.content ? undefined : source,
         specifier: site.getSpecifier(),
+        range: nodeRange(site),
       });
     }
     return reportStack;
+  }
+
+  function nodeRange(site: CallSite): readonly [startIndex: number, endIndex: number] {
+    const node = site.lastNode?.parent || site.lastCallNode!;
+    return [node.location.startIndex, node.location.endIndex];
   }
 
   function fail(test: Test, error: Value): WorkerToSupervisor {
@@ -173,6 +179,8 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
           status: 'PASS', flags: test.currentTestFlag, testId: test.id, file: test.file,
         });
       }
+    }, {
+      captures: null,
     });
     realm.GlobalObject.properties.set(Value('$DONE'), Descriptor({ Value: $DONE, Configurable: true, Enumerable: false, Writable: true }));
   }
@@ -187,7 +195,9 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
       pop?.();
       return result.promise;
     }
-    const $DONOTEVALUATE = CreateBuiltinFunction.from(() => Throw.EvalError('Test262: This statement should not be evaluated.'));
+    const $DONOTEVALUATE = CreateBuiltinFunction.from(() => Throw.EvalError('Test262: This statement should not be evaluated.'), {
+      captures: null,
+    });
     realm.GlobalObject.properties.set(Value('$DONOTEVALUATE'), Descriptor({
       Value: $DONOTEVALUATE,
       Configurable: true,
@@ -249,8 +259,12 @@ async function run(test: Test): Promise<WorkerToSupervisor> {
       PerformPromiseThen(promise, CreateBuiltinFunction.from(function* waitIO() {
         untilFinished().then(() => finishTest.resolve(NormalCompletion(undefined)));
         return Value.undefined;
+      }, {
+        captures: null,
       }), CreateBuiltinFunction.from((err = Value.undefined) => {
         finishTest.resolve(ThrowCompletion(err));
+      }, {
+        captures: null,
       }));
     });
   } else {

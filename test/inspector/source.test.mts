@@ -21,6 +21,8 @@ test('code in eval', async () => {
   realm.GlobalObject.properties.set('e', Descriptor({
     Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
       messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    }, {
+      captures: null,
     }),
     Configurable: true,
     Enumerable: false,
@@ -52,6 +54,8 @@ test('code in new Function', async () => {
     Writable: true,
     Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
       messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    }, {
+      captures: null,
     }),
   }));
   pop?.();
@@ -87,6 +91,8 @@ test('code in ShadowRealm', async () => {
   shadowRealm.ShadowRealm.GlobalObject.properties.set('e', Descriptor({
     Value: CreateBuiltinFunction.from(function* e(e = Value.undefined) {
       messages.push(getHostDefinedErrorDetails(e).callStack?.map((f) => f.toCallFrame()));
+    }, {
+      captures: null,
     }),
     Configurable: true,
     Enumerable: false,

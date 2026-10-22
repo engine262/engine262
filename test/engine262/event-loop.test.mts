@@ -6,6 +6,7 @@ import {
   MicroTaskEventLoop,
   WebLikeEventLoop,
   Job,
+  ManagedRealm,
   Value,
   setSurroundingAgent,
   NodeJSLikeEventLoop,
@@ -62,6 +63,33 @@ test('MicroTaskEventLoop reruns when a job enqueues more work', () => {
   eventLoop.run('automatic');
 
   expect(calls.join(',')).toMatchInlineSnapshot(`"micro-1,micro-2"`);
+});
+
+test('job evaluator factories run after the caller realm context is initialized', () => {
+  const agent = new Agent({ startEventLoop: false });
+  setSurroundingAgent(agent);
+  const realm = new ManagedRealm();
+  let observedContextDepth = 0;
+
+  agent.jobQueue.enqueueGenericJob(new Job({
+    name: 'context-order',
+    queueName: 'context-order',
+    evaluate() {
+      observedContextDepth = agent.executionContextStack.length;
+      return (function* evaluateJob() {
+        return Value.undefined;
+      }());
+    },
+    callerRealm: realm,
+    callerScriptOrModule: Value.null,
+    captures: null,
+  }));
+
+  expect(agent.jobQueue.length).toBe(1);
+  expect(agent.executionContextStack.length).toBe(0);
+  agent.eventLoop.runOnce();
+
+  expect(observedContextDepth).toBe(1);
 });
 
 test('WebLikeEventLoop keeps microtasks ahead of macrotasks', () => {

@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 
-const bin = fileURLToPath(new URL('../../lib-src/node/bin.mts', import.meta.url));
+const bin = fileURLToPath(new URL('../../lib/node/bin.mjs', import.meta.url));
 
 function runCli(args: string[]) {
   return new Promise<{ code: number | null, stdout: string, stderr: string }>((resolve) => {

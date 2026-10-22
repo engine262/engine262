@@ -1,15 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { join, resolve, relative } from 'node:path';
+import { isAbsolute, join, resolve, relative } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
 import {
   mkdir, opendir, readFile, stat,
 } from 'node:fs/promises';
-import { stripVTControlCharacters, styleText, type InspectColor } from 'node:util';
+import { stripVTControlCharacters, styleText } from 'node:util';
 import { fork } from 'node:child_process';
 import { cpus } from 'node:os';
 import { glob, isDynamicPattern } from 'tinyglobby';
+import {
+  Config,
+  Label,
+  LabelAttach,
+  Range,
+  Report,
+  RichText,
+  Source,
+  create_semantic_token_from_typescript_ast,
+} from '@magic-works/ariadne';
+import * as typescript from 'typescript';
 import YAML from 'js-yaml';
-import { highlight } from 'cli-highlight';
 import {
   type WorkerToSupervisor, type SupervisorToWorker, Test,
   readList,
@@ -17,7 +28,7 @@ import {
   type Stack,
   type WorkerToSupervisor_Log,
 } from '../base.mts';
-import { annotateFileWithURL, isCI } from '../tui.mts';
+import { isCI } from '../tui.mts';
 import {
   createTestReporter,
   supportColor,
@@ -26,6 +37,7 @@ import {
 import { fatal_exit } from '../base.mts';
 import { args } from './test262.mts';
 
+const provideSemanticTokens = create_semantic_token_from_typescript_ast(typescript);
 const abort = new AbortController();
 const inputs = {
   Test262TestsPath: join(process.env.TEST262 || resolve(import.meta.dirname, 'test262'), 'test'),
@@ -514,45 +526,54 @@ function createWorker(workerId: number) {
 
 
 function fail(message: WorkerToSupervisor_Failed, showSource: boolean) {
-  const { description, testId, file } = message;
+  const { testId, file } = message;
   let error = message.message;
   error = error.replaceAll(`${process.cwd()}/`, '');
   process.exitCode = 1;
 
-  let flags = message.flags;
-  flags = flags.replace('module,', '');
-
-  const descText = (flags ? `[${flags}] ` : '') + description.trim();
-  const desc = styleText('yellow', descText);
-  const descNeedOwnLine = desc.includes('\n') || descText.length > (process.stdout.columns - file.length - 8);
-  // FAILED filename.js
-  const line1 = `${styleText(['bgRed', 'white', 'bold'], ' FAIL ')} ${annotateFileWithURL(file)}${descNeedOwnLine ? '' : ` ${desc}`}\n`;
-  //   Test description in the header
-  const line2 = descNeedOwnLine ? `${indent(desc, '   ')}\n` : '';
-  //   Source code with error position annotated
-  const line3 = showSource ? annotateSourceWithPosition(error, reporter.tests.get(testId)!.content, 'error', message.stack) : '';
-  //   Error message
-  const line4 = `${indent(error, '  ')}\n`;
-  const line5 = styleText('red', `${'⎯'.repeat(process.stdout.columns)}\n`);
-  const output = line1 + line2 + line3 + line4;
-  reporter.stdout(output, line5);
+  const flags = message.flags.replace('module,', '');
+  const description = (flags ? `[${flags}] ` : '') + message.description.trim();
+  const test = reporter.tests.get(testId)!;
+  let main;
+  if (showSource && message.stack.length) {
+    main = annotateSourceWithPosition({
+      type: 'error',
+      description,
+      source: { type: 'file', code: test.content, file, specifier: test.specifier ?? '' },
+      error_message: error,
+      stack: message.stack,
+    });
+  } else {
+    main = styleText('red', ` Failed: `) + description + '\n' + indent(error, ' ') + '\n';
+  }
+  const red_line = styleText('red', `${'⎯'.repeat(process.stdout.columns)}\n`);
+  const output = main + red_line;
+  reporter.stdout(output);
   outputStreams.CurrentRunFailureLog.write(stripVTControlCharacters(output));
   reporter.testFailed(testId);
 }
 
 function log(message: WorkerToSupervisor_Log, workerId: unknown) {
   const { file, testId } = message;
-  let log = message.message;
-  log = log.replaceAll(`${process.cwd()}/`, '');
+  const description = message.message.replaceAll(`${process.cwd()}/`, '');
 
-  // LOG filename.js
-  const line1 = `${styleText(['bgYellowBright', 'white', 'bold'], ' LOG ')} ${file ? annotateFileWithURL(file) : `Worker ${workerId}`}\n`;
-  //   Source code with log position annotated
-  const line2 = testId ? annotateSourceWithPosition(log, reporter.tests.get(testId)!.content, 'warn', message.stack) : '';
-  //   Log message
-  const line3 = `${indent(log, '  ')}\n`;
-  const line4 = styleText('yellowBright', `${'⎯'.repeat(process.stdout.columns)}\n`);
-  const output = line1 + line2 + line3 + line4;
+  const test = testId === undefined ? undefined : reporter.tests.get(testId);
+  let main;
+  if (testId && message.stack.length) {
+    main = annotateSourceWithPosition({
+      type: 'log',
+      description,
+      source: file ?
+        { type: 'file', code: test!.content, file, specifier: test?.specifier ?? '' } :
+        { type: 'worker', workerId },
+      error_message: description,
+      stack: message.stack,
+    });
+  } else {
+    main = styleText('yellow', ` Logged: `) + description + '\n';
+  }
+  const yellow_line = styleText('yellowBright', `${'⎯'.repeat(process.stdout.columns)}\n`);
+  const output = main + yellow_line;
   reporter.stdout(output);
   outputStreams.CurrentRunFailureLog.write(stripVTControlCharacters(output));
 }
@@ -561,33 +582,79 @@ function indent(string: string, space: string) {
   return string.split('\n').map((line) => space + line).join('\n');
 }
 
-function annotateSourceWithPosition(error: string, sourceCode: string, type: 'error' | 'warn', [stack]: Stack[]) {
-  sourceCode = stack?.source || sourceCode;
-  const color: InspectColor = type === 'error' ? 'red' : 'yellow';
-  if (!stack) {
-    return '';
-  }
-  if (sourceCode.endsWith('\n')) {
-    sourceCode = sourceCode.slice(0, -1);
-  }
-  const highLightedLines = (supportColor ? highlight(sourceCode, { language: 'js' }) : sourceCode).split('\n');
-  const linesPad = (highLightedLines.length + 1).toString().length;
-  const decoratedLines = highLightedLines.map((line, index) => `  ${styleText(color, (index + 1).toString().padStart(linesPad))} | ${line}`);
-  const LINES_BEFORE = 3;
-  const LINES_AFTER = 2;
-  const slicedLines = decoratedLines.slice(
-    Math.max(0, Number(stack.line) - LINES_BEFORE),
-    Math.min(decoratedLines.length, Number(stack.line)),
-  );
-  slicedLines.push(''.padStart(linesPad + 5) + styleText(color, `${'-'.repeat(Math.max(Number(stack.column) - 1, 0))}^ ${error.split('\n')[0].trim()}`));
-  slicedLines.push(
-    decoratedLines.slice(
-      Number(stack.line),
-      Math.min(decoratedLines.length, Number(stack.line) + LINES_AFTER),
-    ).join('\n'),
-  );
+type AnnotateSource =
+  { type: "worker", workerId: unknown } |
+  AnnotateSourceFile;
 
-  sourceCode = `${slicedLines.join('\n')}`;
-  sourceCode += '\n';
-  return sourceCode;
+type AnnotateSourceFile = { type: "file", file: string, specifier: string, code: string };
+
+interface AnnotateOptions {
+  source: AnnotateSource;
+  description: string;
+  error_message: string;
+  type: 'log' | 'error';
+  stack: Stack[];
+}
+
+function annotateSourceWithPosition(options: AnnotateOptions) {
+  const stack = options.stack[0];
+  const source_file = options.stack?.[0]?.source || (options.source.type === 'file' ? options.source.code : '');
+  const [labelStart, labelEnd] = stack.range;
+  const from = options.source.type === 'file' ?
+    displayFile(options.source) :
+    { path: `Worker ${options.source.workerId}`, isTest262: false };
+  const error_message_lines = options.error_message.split('\n');
+  const error_message_head = error_message_lines[0].trim();
+  const report = Report.build(
+    from.path,
+    labelStart,
+  )
+    .with_message(RichText.from([
+      options.type === 'error' ?
+        { text: ' Failed: ', semanticToken: 'error' } :
+        { text: ' Logged: ', semanticToken: 'warning' },
+      options.description,
+    ]))
+    .with_label(
+      Label.new({
+        sourceId: from.path,
+        range: Range.new(labelStart, labelEnd),
+      }).with_message(error_message_head),
+    )
+    .with_semantic_token_capability()
+    .with_semantic_token_ranged(provideSemanticTokens)
+    .with_location_display((sourceId, line, column) => from.absolute ? RichText.from([
+      {
+        text: `${sourceId}:${line}:${column}`,
+        link: `${pathToFileURL(from.absolute).toString()}#${line}:${column}`,
+      },
+      ...(from.isTest262 ? [
+        ' | ',
+        {
+          text: 'GitHub',
+          link: new URL(`https://github.com/tc39/test262/blob/main/test/${from.path}`, import.meta.url).toJSON(),
+        },
+      ] : []),
+    ]) : sourceId)
+    .with_config(Config.default().with_label_attach(LabelAttach.Start));
+  if (error_message_lines.length > 1) {
+    report.with_note(options.error_message);
+  }
+  return report
+    .finish()
+    .render({ sourceId: from.path, source: Source.from(source_file) }, supportColor ? 'ansi' : 'plain', {
+      maxWidth: process.stdout.columns ?? 120,
+      contextLines: 1,
+    });
+}
+
+function displayFile(file: AnnotateSourceFile): { path: string; absolute?: string; isTest262: boolean } {
+  const absolute = file.specifier;
+  const test262Relative = relative(inputs.Test262TestsPath, absolute);
+  const isTest262 = test262Relative === '' || (!test262Relative.startsWith('..') && !isAbsolute(test262Relative));
+  return {
+    path: isTest262 ? test262Relative : relative(process.cwd(), absolute),
+    absolute,
+    isTest262,
+  };
 }

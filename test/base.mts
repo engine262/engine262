@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { fileSystemModuleLoader, fileSystemModuleLoaderSync } from '../lib-src/node/module.mts';
+import { fileSystemModuleLoader, fileSystemModuleLoaderSync } from '../lib/node/module.mjs';
 import { supportColor, type SkipReason } from './tui.mts';
 import {
   Agent, ManagedRealm, type OrdinaryObject, OrdinaryObjectCreate, createTest262Intrinsics,
