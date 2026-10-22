@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 2d7d8d988c77e94473ba0377122cdfccdfe243ba
+ * engine262 0.0.1 a6f3f79ca217d522866e883ab819a048f678afaa
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -49966,28 +49966,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinaryObjectCreate(proto, internalSlotsList);
   }
 
-  // 9.1.14 GetPrototypeFromConstructor
-  function* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
-    /* Assert */ /* node:coverage ignore next */ // Assert: intrinsicDefaultProto is a String value that
-    // is this specification's name of an intrinsic object.
-    if (!IsCallable(constructor)) throw new Assert.Error("IsCallable(constructor)");
-    /* ReturnIfAbrupt */let _proto2 = yield* Get(constructor, 'prototype');
+  // https://tc39.es/ecma262/#sec-getprototypefromconstructor
+  function* GetPrototypeFromConstructor(ctor, intrinsicDefaultProto) {
+    /* ReturnIfAbrupt */let _proto2 = yield* Get(ctor, 'prototype');
     /* ReturnIfAbrupt */if (_proto2 instanceof Completion) {
       if (_proto2 instanceof AbruptCompletion) return _proto2;
       _proto2 = _proto2.Value;
     }
-    let proto = _proto2;
-    if (!(proto instanceof ObjectValue)) {
-      /* ReturnIfAbrupt */let _realm = GetFunctionRealm(constructor);
-      /* ReturnIfAbrupt */if (_realm instanceof Completion) {
-        if (_realm instanceof AbruptCompletion) return _realm;
-        _realm = _realm.Value;
-      }
-      const realm = _realm;
-      proto = realm.Intrinsics[intrinsicDefaultProto];
+    // Assert: _intrinsicDefaultProto_ is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
+    const proto = _proto2;
+    if (proto instanceof ObjectValue) return proto;
+    /* ReturnIfAbrupt */let _realm = GetFunctionRealm(ctor);
+    /* ReturnIfAbrupt */if (_realm instanceof Completion) {
+      if (_realm instanceof AbruptCompletion) return _realm;
+      _realm = _realm.Value;
     }
-    return proto;
+    const realm = _realm;
+    return realm.Intrinsics[intrinsicDefaultProto];
   }
+  GetPrototypeFromConstructor.section = 'https://tc39.es/ecma262/#sec-getprototypefromconstructor';
 
   /** https://tc39.es/ecma262/#job */
 
@@ -66614,7 +66611,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   IteratorPrototype_toStringTag_setter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag%';
 
-  /** https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join */
+  /** https://tc39.es/ecma262/#sec-iterator.prototype.join */
   function* IteratorProto_join([separator = Value.undefined], {
     thisValue
   }) {
@@ -66655,9 +66652,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _value13 = _value13.Value;
       }
       const value = _value13;
-      if (value === 'done') {
-        return Value(result);
-      }
+      if (value === 'done') return Value(result);
       if (first) {
         first = false;
       } else {
@@ -66675,7 +66670,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
   }
-  IteratorProto_join.section = 'https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join';
+  IteratorProto_join.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.join';
   function bootstrapIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructor_getter, IteratorProto_constructor_setter]], ['chunks', IteratorProto_chunks, 1], ['drop', IteratorProto_drop, 1], [wellKnownSymbols.dispose, IteratorProto_dispose, 0], ['every', IteratorProto_every, 1], ['filter', IteratorProto_filter, 1], ['find', IteratorProto_find, 1], ['flatMap', IteratorProto_flatMap, 1], ['forEach', IteratorProto_forEach, 1], ['includes', IteratorProto_includes, 1], ['join', IteratorProto_join, 1], ['map', IteratorProto_map, 1], ['reduce', IteratorProto_reduce, 1], ['some', IteratorProto_some, 1], ['take', IteratorProto_take, 1], ['toArray', IteratorProto_toArray, 0], ['windows', IteratorProto_windows, 1], [wellKnownSymbols.iterator, IteratorProto_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Iterator.prototype%'] = proto;
@@ -75841,12 +75836,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const result = _result;
     let n = 0;
     for (const element of kept) {
-      /* X */let _temp11 = TypedArraySetElement(result, F(n), element);
-      /* node:coverage ignore next */if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
-      /* node:coverage ignore next */if (_temp11 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(result, F(n), element) returned an abrupt completion", {
-          cause: _temp11
-        });
+      /* ReturnIfAbrupt */let _temp11 = yield* TypedArraySetElement(result, F(n), element);
+      /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
+        if (_temp11 instanceof AbruptCompletion) return _temp11;
         _temp11 = _temp11.Value;
       }
       n += 1;
@@ -76909,12 +76901,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } else {
         fromValue = TypedArrayGetElement(obj, F(k));
       }
-      /* X */let _temp41 = TypedArraySetElement(resultArray, F(k), fromValue);
-      /* node:coverage ignore next */if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) _temp41 = skipDebugger(_temp41);
-      /* node:coverage ignore next */if (_temp41 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp41 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(k), fromValue) returned an abrupt completion", {
-          cause: _temp41
-        });
+      /* ReturnIfAbrupt */let _temp41 = yield* TypedArraySetElement(resultArray, F(k), fromValue);
+      /* ReturnIfAbrupt */if (_temp41 instanceof Completion) {
+        if (_temp41 instanceof AbruptCompletion) return _temp41;
         _temp41 = _temp41.Value;
       }
       k += 1;
