@@ -5,7 +5,7 @@ import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { surroundingAgent } from '#self';
 import {
-  RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer, ToClampedIndex,
+  RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer, ResolveBounds,
   SpeciesConstructor, Construct, SameValue, CopyDataBlockBytes,
   F,
   type ArrayBufferObject,
@@ -132,9 +132,10 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
   const length = O.ArrayBufferByteLength;
-  // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
-  const first = Q(yield* ToClampedIndex(start, length));
-  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  // 6. Let bounds be ? ResolveBounds(len, start, end).
+  const bounds = Q(yield* ResolveBounds(length, start, end));
+  const first = bounds.From;
+  const final = bounds.To;
   // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
@@ -195,8 +196,9 @@ function* ArrayBufferProto_sliceToImmutable([start = Value.undefined, end = Valu
   if (IsSharedArrayBuffer(O)) return Throw.TypeError('Attempt to access shared ArrayBuffer');
   if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
   const length = O.ArrayBufferByteLength;
-  const first = Q(yield* ToClampedIndex(start, length));
-  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  const bounds = Q(yield* ResolveBounds(length, start, end));
+  const first = bounds.From;
+  const final = bounds.To;
   const newLength = Math.max(final - first, 0);
   if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
   if (O.ArrayBufferByteLength < final) return Throw.RangeError('ArrayBuffer shrank during sliceToImmutable');

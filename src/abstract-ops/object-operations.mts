@@ -45,6 +45,7 @@ import {
   IfAbruptCloseIterator,
   type ValueCompletion,
   ToPropertyKey,
+  ToIntegerOrInfinity,
   CanonicalizeKeyedCollectionKey,
   Throw,
   OrdinaryObjectCreate,
@@ -53,6 +54,30 @@ import {
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-operations-on-objects */
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-resolvebounds */
+export function* ResolveBounds(len: number, start: Value, end: Value): PlainEvaluator<{ From: number; To: number }> {
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let from: number;
+  if (relativeStart === -Infinity) {
+    from = 0;
+  } else if (relativeStart < 0) {
+    from = Math.max(len + relativeStart, 0);
+  } else {
+    from = Math.min(relativeStart, len);
+  }
+
+  const relativeEnd = end === Value.undefined ? len : Q(yield* ToIntegerOrInfinity(end));
+  let to: number;
+  if (relativeEnd === -Infinity) {
+    to = 0;
+  } else if (relativeEnd < 0) {
+    to = Math.max(len + relativeEnd, 0);
+  } else {
+    to = Math.min(relativeEnd, len);
+  }
+  return { From: from, To: to };
+}
 
 /** https://tc39.es/ecma262/#sec-makebasicobject */
 export function MakeBasicObject<const T extends string>(internalSlotsList: readonly T[]) {

@@ -40,3 +40,19 @@ test('sliceToImmutable copies bounds and permits frozen typed arrays', () => {
       (() => { try { view.set([]); return false; } catch (e) { return e instanceof TypeError; } })()
   `);
 });
+
+test('slice methods resolve bounds in argument order', () => {
+  evaluate(`
+    const source = new Uint8Array([10, 20, 30, 40]).buffer;
+    const calls = [];
+    const start = { valueOf() { calls.push('start'); return -3; } };
+    const end = { valueOf() { calls.push('end'); return -1; } };
+    const immutable = new Uint8Array(source.sliceToImmutable(start, end));
+    const mutable = new Uint8Array(source.slice(-3, -1));
+    const full = source.sliceToImmutable(-Infinity, Infinity);
+    calls.join(',') === 'start,end' && immutable.length === 2 &&
+      immutable[0] === 20 && immutable[1] === 30 &&
+      mutable.length === 2 && mutable[0] === 20 && mutable[1] === 30 &&
+      full.byteLength === 4 && full.immutable
+  `);
+});

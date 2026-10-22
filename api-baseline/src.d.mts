@@ -2053,6 +2053,11 @@ export declare type F = Num;
 export declare type Feature = (typeof FEATURES)[number]['flag'];
 
 export declare const FEATURES: [{
+    readonly name: 'Immutable ArrayBuffers';
+    readonly flag: 'immutable-arraybuffer';
+    readonly url: 'https://github.com/tc39/proposal-immutable-arraybuffer';
+    readonly enableInPlayground: true;
+}, {
     readonly name: 'Decorators';
     readonly flag: 'decorators';
     readonly url: 'https://github.com/tc39/proposal-decorators';
@@ -3446,7 +3451,6 @@ export declare function MakeAutoAccessorGetter(_homeObject: ObjectValue, _name: 
 
 export declare function MakeAutoAccessorSetter(_homeObject: ObjectValue, _name: PropertyKeyValue | PrivateName, privateStateName: PrivateName): BuiltinFunctionObject;
 
-/** https://tc39.es/ecma262/#sec-operations-on-objects */
 /** https://tc39.es/ecma262/#sec-makebasicobject */
 export declare function MakeBasicObject<const T extends string>(internalSlotsList: readonly T[]): ObjectValue & Record<T, unknown>;
 
@@ -5884,6 +5888,13 @@ export declare interface ResizableArrayBufferObject extends ArrayBufferObject {
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */
 export declare function ResolveBinding(name: string, strict: boolean, env?: EnvironmentRecord | undefined | null): PlainEvaluator<ReferenceRecord>;
+
+/** https://tc39.es/ecma262/#sec-operations-on-objects */
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-resolvebounds */
+export declare function ResolveBounds(len: number, start: Value, end: Value): PlainEvaluator<{
+    From: number;
+    To: number;
+}>;
 
 export declare class ResolvedBindingRecord {
     readonly Module: AbstractModuleRecord;

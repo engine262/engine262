@@ -49,8 +49,14 @@ export function isArrayBufferObject(o: Value): o is ArrayBufferObject {
 /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
 export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: number, maxByteLength?: number | 'immutable'): ValueEvaluator<ArrayBufferObject> {
   const slots = ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey'];
+  let allocatingResizableBuffer;
   if (typeof maxByteLength === 'number') {
-    if (byteLength > maxByteLength) {
+    allocatingResizableBuffer = true;
+  } else {
+    allocatingResizableBuffer = false;
+  }
+  if (allocatingResizableBuffer) {
+    if (byteLength > (maxByteLength as number)) {
       return Throw.RangeError('Cannot resize ArrayBuffer to bigger than maxByteLength');
     }
     slots.push('ArrayBufferMaxByteLength');
@@ -61,17 +67,17 @@ export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: nu
   // 2. Assert: byteLength is a non-negative integer.
   Assert(isNonNegativeInteger(byteLength));
   // 3. Let block be ? CreateByteDataBlock(byteLength).
-  const block = Q(CreateByteDataBlock(byteLength, typeof maxByteLength === 'number' ? maxByteLength : undefined));
+  const block = Q(CreateByteDataBlock(byteLength, allocatingResizableBuffer ? maxByteLength as number : undefined));
   // 4. Set obj.[[ArrayBufferData]] to block.
   obj.ArrayBufferData = block;
   // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
   obj.ArrayBufferByteLength = byteLength;
-  if (typeof maxByteLength === 'number') {
+  if (allocatingResizableBuffer) {
     // a. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
-    if (maxByteLength > (surroundingAgent.hostDefinedOptions?.resizableArrayBufferMaxByteLength ?? 0xFFFF_FFFF)) {
+    if ((maxByteLength as number) > (surroundingAgent.hostDefinedOptions?.resizableArrayBufferMaxByteLength ?? 0xFFFF_FFFF)) {
       return Throw.RangeError('Cannot allocate memory');
     }
-    obj.ArrayBufferMaxByteLength = maxByteLength;
+    obj.ArrayBufferMaxByteLength = maxByteLength as number;
   }
   return obj;
 }
