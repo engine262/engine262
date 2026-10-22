@@ -60,6 +60,7 @@ import {
   ToIndex,
   IsFixedLengthArrayBuffer,
   IsDetachedBuffer,
+  IsImmutableBuffer,
   ArrayBufferByteLength,
   Throw,
 } from '#self';
@@ -172,7 +173,7 @@ export function isTypedArrayObject(value: Value): value is TypedArrayObject {
 }
 
 /** https://tc39.es/ecma262/#typedarray-species-create */
-export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
+export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList: Arguments, accessMode: 'read' | 'write' = 'read'): ValueEvaluator<TypedArrayObject> {
   // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
   Assert(exemplar instanceof ObjectValue
     && 'TypedArrayName' in exemplar
@@ -182,7 +183,7 @@ export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentLis
   // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
   const constructor = Q(yield* SpeciesConstructor(exemplar, defaultConstructor));
   // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
-  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList));
+  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList, accessMode));
   // 5. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
   Assert('TypedArrayName' in result && 'ContentType' in result);
   // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
@@ -194,9 +195,9 @@ export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentLis
 }
 
 /** https://tc39.es/ecma262/#sec-typedarraycreatefromconstructor */
-export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
+export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, argumentList: Arguments, accessMode: 'read' | 'write' = 'read'): ValueEvaluator<TypedArrayObject> {
   const newTypedArray = Q(yield* Construct(constructor, argumentList)) as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(newTypedArray, 'seq-cst'));
+  const taRecord = Q(ValidateTypedArray(newTypedArray, 'seq-cst', accessMode));
   if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
     if (IsTypedArrayOutOfBounds(taRecord)) {
       return Throw.TypeError('TypedArray index out of bounds');
@@ -219,9 +220,12 @@ export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, length: nu
 }
 
 /** https://tc39.es/ecma262/#sec-validatetypedarray */
-export function ValidateTypedArray(O: Value, order: 'seq-cst' | 'unordered'): PlainCompletion<TypedArrayWithBufferWitnessRecord> {
+export function ValidateTypedArray(O: Value, order: 'seq-cst' | 'unordered', accessMode: 'read' | 'write' = 'read'): PlainCompletion<TypedArrayWithBufferWitnessRecord> {
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
+  if (accessMode === 'write' && IsImmutableBuffer((O as TypedArrayObject).ViewedArrayBuffer as ArrayBufferObject)) {
+    return Throw.TypeError('Cannot modify immutable TypedArray');
+  }
   return ValidateTypedArrayBounds(O as TypedArrayObject, order);
 }
 
@@ -484,7 +488,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   if (!(usingIterator instanceof UndefinedValue)) {
     const values = Q(yield* IteratorToList(Q(yield* GetIteratorFromMethod(source, usingIterator))));
     const len = values.length;
-    const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
+    const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)], 'write'));
     let k = 0;
     while (k < len) {
       const kValue = values[k];
@@ -505,7 +509,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   // 9. Let len be ? LengthOfArrayLike(arrayLike).
   const len = Q(yield* LengthOfArrayLike(arrayLike));
   // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
+  const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)], 'write'));
   // 11. Let k be 0.
   let k = 0;
   // 12. Repeat, while k < len
@@ -531,7 +535,7 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
   if (!IsConstructor(C)) {
     return Throw.TypeError('$1 is not a constructor', C);
   }
-  const newObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
+  const newObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)], 'write'));
   let k = 0;
   while (k < len) {
     const kValue = items[k]!;

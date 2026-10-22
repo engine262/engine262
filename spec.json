@@ -96,6 +96,13 @@
       "source": "https://github.com/tc39/proposal-defer-import-eval",
       "commit": "d317e5bb5167269978ee5dca9845276db5e6d7ce",
       "path": ["spec.emu"]
+    },
+    {
+      "name": "immutable-arraybuffer",
+      "description": "Immutable ArrayBuffers proposal",
+      "source": "https://github.com/tc39/proposal-immutable-arraybuffer",
+      "commit": "cdfbfa731ba0e880115f5fd1b7aa48f5203e3ca1",
+      "path": ["spec.emu"]
     }
   ]
 }

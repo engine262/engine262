@@ -20,6 +20,7 @@ import {
   R,
   ArrayBufferByteLength,
   IsFixedLengthArrayBuffer,
+  IsImmutableBuffer,
   type ArrayBufferObject,
   MakeBasicObject,
   isIntegerIndex,
@@ -33,6 +34,7 @@ import {
   OrdinaryGetOwnProperty,
   OrdinaryHasProperty,
   OrdinarySet,
+  ValidateAndApplyPropertyDescriptor,
   GetValueFromBuffer,
   SetValueInBuffer,
   ToBigInt,
@@ -71,11 +73,12 @@ const InternalMethods = {
           return undefined;
         }
         // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+        const mutable = !IsImmutableBuffer(O.ViewedArrayBuffer as ArrayBufferObject);
         return Descriptor({
           Value: value,
-          Writable: true,
+          Writable: mutable,
           Enumerable: true,
-          Configurable: true,
+          Configurable: mutable,
         });
       }
     }
@@ -109,6 +112,11 @@ const InternalMethods = {
         // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
         if (!IsValidIntegerIndex(O, numericIndex)) {
           return false;
+        }
+        if (IsImmutableBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) {
+          const current = Q(yield* O.GetOwnProperty(P));
+          Assert(current !== undefined);
+          return ValidateAndApplyPropertyDescriptor(undefined, P, false, Desc, current);
         }
         // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
         if (Desc.Configurable === false) {
@@ -162,6 +170,7 @@ const InternalMethods = {
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
       if (numericIndex !== undefined) {
+        if (IsImmutableBuffer(O.ViewedArrayBuffer as ArrayBufferObject)) return false;
         if (SameValue(O, Receiver)) {
           // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
           Q(yield* TypedArraySetElement(O, numericIndex, V));
@@ -355,6 +364,7 @@ export function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue): B
 
 /** https://tc39.es/ecma262/#sec-integerindexedelementset */
 export function* TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): PlainEvaluator<boolean> {
+  Assert(!IsImmutableBuffer(O.ViewedArrayBuffer as ArrayBufferObject));
   // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
   // 4. Otherwise, let numValue be ? ToNumber(value).
   let numValue;

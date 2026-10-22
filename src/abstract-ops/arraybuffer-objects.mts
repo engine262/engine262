@@ -35,6 +35,7 @@ export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferData: DataBlock | null;
   readonly ArrayBufferByteLength: number;
   readonly ArrayBufferDetachKey: Value | undefined;
+  readonly ArrayBufferIsImmutable?: undefined;
 }
 
 export interface ResizableArrayBufferObject extends ArrayBufferObject {
@@ -46,37 +47,46 @@ export function isArrayBufferObject(o: Value): o is ArrayBufferObject {
 }
 
 /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
-export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: number, maxByteLength?: number): ValueEvaluator<ArrayBufferObject> {
+export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: number, maxByteLength?: number | 'immutable'): ValueEvaluator<ArrayBufferObject> {
   const slots = ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey'];
-  let allocatingResizableBuffer;
-  if (maxByteLength !== undefined) {
-    allocatingResizableBuffer = true;
-  } else {
-    allocatingResizableBuffer = false;
-  }
-  if (allocatingResizableBuffer) {
-    if (byteLength > maxByteLength!) {
+  if (typeof maxByteLength === 'number') {
+    if (byteLength > maxByteLength) {
       return Throw.RangeError('Cannot resize ArrayBuffer to bigger than maxByteLength');
     }
     slots.push('ArrayBufferMaxByteLength');
+  } else if (maxByteLength === 'immutable') {
+    slots.push('ArrayBufferIsImmutable');
   }
   const obj = Q(yield* OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots)) as Mutable<ArrayBufferObject & ResizableArrayBufferObject>;
   // 2. Assert: byteLength is a non-negative integer.
   Assert(isNonNegativeInteger(byteLength));
   // 3. Let block be ? CreateByteDataBlock(byteLength).
-  const block = Q(CreateByteDataBlock(byteLength, maxByteLength));
+  const block = Q(CreateByteDataBlock(byteLength, typeof maxByteLength === 'number' ? maxByteLength : undefined));
   // 4. Set obj.[[ArrayBufferData]] to block.
   obj.ArrayBufferData = block;
   // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
   obj.ArrayBufferByteLength = byteLength;
-  if (allocatingResizableBuffer) {
+  if (typeof maxByteLength === 'number') {
     // a. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
-    if (maxByteLength! > (surroundingAgent.hostDefinedOptions?.resizableArrayBufferMaxByteLength ?? 0xFFFF_FFFF)) {
+    if (maxByteLength > (surroundingAgent.hostDefinedOptions?.resizableArrayBufferMaxByteLength ?? 0xFFFF_FFFF)) {
       return Throw.RangeError('Cannot allocate memory');
     }
-    obj.ArrayBufferMaxByteLength = maxByteLength!;
+    obj.ArrayBufferMaxByteLength = maxByteLength;
   }
   return obj;
+}
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-allocateimmutablearraybuffer */
+export function* AllocateImmutableArrayBuffer(constructor: FunctionObject, byteLength: number, fromBlock: DataBlock, fromIndex: number, count: number): ValueEvaluator<ArrayBufferObject> {
+  Assert(count <= byteLength);
+  const buffer = Q(yield* AllocateArrayBuffer(constructor, byteLength, 'immutable'));
+  CopyDataBlockBytes(buffer.ArrayBufferData!, 0, fromBlock, fromIndex, count);
+  return buffer;
+}
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-isimmutablebuffer */
+export function IsImmutableBuffer(arrayBuffer: ArrayBufferObject): boolean {
+  return 'ArrayBufferIsImmutable' in arrayBuffer;
 }
 
 /** https://tc39.es/ecma262/#sec-arraybufferbytelength */
@@ -92,7 +102,7 @@ export function ArrayBufferByteLength(arrayBuffer: ArrayBufferObject, _order: 's
 export function* ArrayBufferCopyAndDetach(
   _arrayBuffer: Value,
   newLength: Value,
-  preserveResizability: 'preserve-resizability' | 'fixed-length',
+  preserveResizability: 'preserve-resizability' | 'fixed-length' | 'immutable',
 ): ValueEvaluator<ArrayBufferObject> {
   Q(RequireInternalSlot(_arrayBuffer, 'ArrayBufferData'));
   const arrayBuffer = _arrayBuffer as Mutable<ArrayBufferObject>;
@@ -110,21 +120,25 @@ export function* ArrayBufferCopyAndDetach(
   if (IsDetachedBuffer(arrayBuffer)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
-
-  let newMaxByteLength;
-  if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
-    newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
+  if (IsImmutableBuffer(arrayBuffer)) {
+    return Throw.TypeError('Cannot transfer immutable ArrayBuffer');
   }
-
   if (arrayBuffer.ArrayBufferDetachKey !== undefined) {
     return Throw.TypeError('Cannot transfer ArrayBuffer with custom detach key');
   }
 
-  const newBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength));
   const copyLength = Math.min(newByteLength, arrayBuffer.ArrayBufferByteLength);
-  const fromBlock = arrayBuffer.ArrayBufferData!;
-  const toBlock = newBuffer.ArrayBufferData!;
-  CopyDataBlockBytes(toBlock, 0, fromBlock, 0, copyLength);
+  let newBuffer: ArrayBufferObject;
+  if (preserveResizability === 'immutable') {
+    newBuffer = Q(yield* AllocateImmutableArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, arrayBuffer.ArrayBufferData!, 0, copyLength));
+  } else {
+    let newMaxByteLength;
+    if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
+      newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
+    }
+    newBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength));
+    CopyDataBlockBytes(newBuffer.ArrayBufferData!, 0, arrayBuffer.ArrayBufferData!, 0, copyLength);
+  }
   X(DetachArrayBuffer(arrayBuffer));
   return newBuffer;
 }
@@ -141,6 +155,9 @@ export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
 export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(!IsSharedArrayBuffer(arrayBuffer));
+  if (IsImmutableBuffer(arrayBuffer)) {
+    return Throw.TypeError('Cannot detach immutable ArrayBuffer');
+  }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
   if (arrayBuffer.ArrayBufferDetachKey === undefined
       ? key !== undefined
@@ -323,6 +340,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
 export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: boolean): PlainEvaluator<void> {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(!IsDetachedBuffer(arrayBuffer));
+  Assert(!IsImmutableBuffer(arrayBuffer));
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex));

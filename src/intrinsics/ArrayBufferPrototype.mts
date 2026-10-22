@@ -18,6 +18,8 @@ import {
   ArrayBufferCopyAndDetach,
   Realm,
   Throw,
+  IsImmutableBuffer,
+  AllocateImmutableArrayBuffer,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
@@ -74,6 +76,16 @@ function ArrayBufferProto_resizable(_args: Arguments, { thisValue }: FunctionCal
     return Throw.TypeError('Invalid call to ArrayBuffer.prototype.resizable on shared ArrayBuffer');
   }
   return Value(!IsFixedLengthArrayBuffer(O));
+}
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-get-arraybuffer.prototype.immutable */
+function ArrayBufferProto_immutable(_args: Arguments, { thisValue }: FunctionCallContext) {
+  const O = thisValue as ArrayBufferObject;
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O)) {
+    return Throw.TypeError('Invalid call to ArrayBuffer.prototype.immutable on shared ArrayBuffer');
+  }
+  return Value(IsImmutableBuffer(O));
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.resize */
@@ -139,6 +151,9 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   if (IsDetachedBuffer(newO)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
+  if (IsImmutableBuffer(newO)) {
+    return Throw.TypeError('ArrayBuffer.prototype.slice species returned an immutable ArrayBuffer');
+  }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
   if (SameValue(newO, O)) {
     return Throw.TypeError('Subclass constructor returned the same object $1', newO);
@@ -173,16 +188,39 @@ function* ArrayBufferProto_transferToFixedLength([newLength = Value.undefined]: 
   return yield* ArrayBufferCopyAndDetach(thisValue, newLength, 'fixed-length');
 }
 
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.slicetoimmutable */
+function* ArrayBufferProto_sliceToImmutable([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  const O = thisValue as ArrayBufferObject;
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O)) return Throw.TypeError('Attempt to access shared ArrayBuffer');
+  if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const length = O.ArrayBufferByteLength;
+  const first = Q(yield* ToClampedIndex(start, length));
+  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
+  const newLength = Math.max(final - first, 0);
+  if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  if (O.ArrayBufferByteLength < final) return Throw.RangeError('ArrayBuffer shrank during sliceToImmutable');
+  return yield* AllocateImmutableArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newLength, O.ArrayBufferData!, first, newLength);
+}
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.transfertoimmutable */
+function* ArrayBufferProto_transferToImmutable([newLength = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  return yield* ArrayBufferCopyAndDetach(thisValue, newLength, 'immutable');
+}
+
 export function bootstrapArrayBufferPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
     ['detached', [ArrayBufferProto_detached]],
+    ['immutable', [ArrayBufferProto_immutable]],
     ['maxByteLength', [ArrayBufferProto_maxByteLength]],
     ['resizable', [ArrayBufferProto_resizable]],
     ['resize', ArrayBufferProto_resize, 1],
     ['slice', ArrayBufferProto_slice, 2],
+    ['sliceToImmutable', ArrayBufferProto_sliceToImmutable, 2],
     ['transfer', ArrayBufferProto_transfer, 0],
     ['transferToFixedLength', ArrayBufferProto_transferToFixedLength, 0],
+    ['transferToImmutable', ArrayBufferProto_transferToImmutable, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
 
   realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
