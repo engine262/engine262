@@ -1,0 +1,378 @@
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:19:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type ValueCompletion,
+    · 
+ 16 │ } from '#self';
+ 17 │ 
+ 18 │ export function inferredValue(value: Value) {
+    · ─┬───────────────────────────────────────────  
+    ·  ╰─ - export function inferredValue(value: Value) {
+    ·     + export function inferredValue(value: Value): ValueCompletion {
+ 19 │   return Q(valueCompletion(value));
+    ·          ─┬───────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 20 │ }
+ 21 │ 
+ 22 │ export const inferredArrow = (value: Value) => Q(valueCompletion(value));
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:22:48]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type ValueCompletion,
+    · 
+ 19 │   return Q(valueCompletion(value));
+ 20 │ }
+ 21 │ 
+ 22 │ export const inferredArrow = (value: Value) => Q(valueCompletion(value));
+    · ─┬──────────────────────────────────────────────┬────────────────────────  
+    ·  ╰─ - export const inferredArrow = (value: Value) => Q(valueCompletion(value));
+    ·     + export const inferredArrow = (value: Value): ValueCompletion => Q(valueCompletion(value));
+    ·                                                 │                          
+    ·                                                 ╰─ The function return type does not include ThrowCompletion
+ 23 │ 
+ 24 │ export function* inferredValueEvaluator() {
+ 25 │   return Q(yield* valueEvaluator());
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:25:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type ValueEvaluator,
+    · 
+ 22 │ export const inferredArrow = (value: Value) => Q(valueCompletion(value));
+ 23 │ 
+ 24 │ export function* inferredValueEvaluator() {
+    · ─┬─────────────────────────────────────────  
+    ·  ╰─ - export function* inferredValueEvaluator() {
+    ·     + export function* inferredValueEvaluator(): ValueEvaluator {
+ 25 │   return Q(yield* valueEvaluator());
+    ·          ─┬────────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 26 │ }
+ 27 │ 
+ 28 │ export function inferredString() {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:29:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type PlainCompletion,
+    · 
+ 26 │ }
+ 27 │ 
+ 28 │ export function inferredString() {
+    · ─┬────────────────────────────────  
+    ·  ╰─ - export function inferredString() {
+    ·     + export function inferredString(): PlainCompletion<string> {
+ 29 │   return Q(stringCompletion());
+    ·          ─┬───────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 30 │ }
+ 31 │ 
+ 32 │ export function* inferredStringEvaluator() {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:33:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type PlainEvaluator,
+    · 
+ 30 │ }
+ 31 │ 
+ 32 │ export function* inferredStringEvaluator() {
+    · ─┬──────────────────────────────────────────  
+    ·  ╰─ - export function* inferredStringEvaluator() {
+    ·     + export function* inferredStringEvaluator(): PlainEvaluator<string> {
+ 33 │   return Q(yield* stringEvaluator());
+    ·          ─┬─────────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 34 │ }
+ 35 │ 
+ 36 │ export function inferredNamed() {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:37:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type PlainCompletion,
+    · 
+ 34 │ }
+ 35 │ 
+ 36 │ export function inferredNamed() {
+    · ─┬───────────────────────────────  
+    ·  ╰─ - export function inferredNamed() {
+    ·     + export function inferredNamed(): PlainCompletion<NamedResult> {
+ 37 │   return Q(namedCompletion());
+    ·          ─┬──────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 38 │ }
+ 39 │ 
+ 40 │ export function inferredUnavailable() {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:41:10]
+    │
+ 38 │ }
+ 39 │ 
+ 40 │ export function inferredUnavailable() {
+ 41 │   return Q(unavailableCompletion());
+    ·          ─┬────────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 42 │ }
+ 43 │ 
+ 44 │ export function* inferredUnavailableEvaluator() {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:45:10]
+    │
+ 42 │ }
+ 43 │ 
+ 44 │ export function* inferredUnavailableEvaluator() {
+ 45 │   return Q(yield* unavailableEvaluator());
+    ·          ─┬──────────────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 46 │ }
+ 47 │ 
+ 48 │ export function annotatedValue(value: Value): Value {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:49:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type ValueCompletion,
+    · 
+ 46 │ }
+ 47 │ 
+ 48 │ export function annotatedValue(value: Value): Value {
+    · ─┬───────────────────────────────────────────────────  
+    ·  ╰─ - export function annotatedValue(value: Value): Value {
+    ·     + export function annotatedValue(value: Value): ValueCompletion {
+ 49 │   return Q(valueCompletion(value));
+    ·          ─┬───────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 50 │ }
+ 51 │ 
+ 52 │ export function* annotatedValueEvaluator(): Generator<EvaluatorYieldType, Value, EvaluatorNextType> {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:53:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type ValueEvaluator,
+    · 
+ 50 │ }
+ 51 │ 
+ 52 │ export function* annotatedValueEvaluator(): Generator<EvaluatorYieldType, Value, EvaluatorNextType> {
+    · ─┬───────────────────────────────────────────────────────────────────────────────────────────────────  
+    ·  ╰─ - export function* annotatedValueEvaluator(): Generator<EvaluatorYieldType, Value, EvaluatorNextType> {
+    ·     + export function* annotatedValueEvaluator(): ValueEvaluator {
+ 53 │   return Q(yield* valueEvaluator());
+    ·          ─┬────────────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 54 │ }
+ 55 │ 
+ 56 │ export function annotatedNamed(): NamedResult {
+────╯
+
+q-macro: The function return type does not include ThrowCompletion
+    ╭─[q-macro.invalid.fixture.mts:57:10]
+    │
+  8 │   valueCompletion,
+  9 │   valueEvaluator,
+ 10 │ } from './q-macro-types.fixture.mjs';
+ 11 │ import {
+    · ─┬──────  
+    ·  ╰─ +   type PlainCompletion,
+    · 
+ 54 │ }
+ 55 │ 
+ 56 │ export function annotatedNamed(): NamedResult {
+    · ─┬─────────────────────────────────────────────  
+    ·  ╰─ - export function annotatedNamed(): NamedResult {
+    ·     + export function annotatedNamed(): PlainCompletion<NamedResult> {
+ 57 │   return Q(namedCompletion());
+    ·          ─┬──────────────────  
+    ·           ╰─ The function return type does not include ThrowCompletion
+ 58 │ }
+ 59 │ 
+────╯
+
+q-macro: Q() cannot be called with a spread argument
+    ╭─[q-macro-spread.invalid.fixture.mts:7:10]
+    │
+  4 │ declare function IfAbruptRejectPromise(...args: unknown[]): unknown;
+  5 │ 
+  6 │ export function spreadQ(args: Parameters<typeof Q>) {
+  7 │   return Q(...args);
+    ·          ─┬────────  
+    ·           ╰─ Q() cannot be called with a spread argument
+  8 │ }
+  9 │ 
+ 10 │ export function spreadIfAbruptRejectPromise(args: Parameters<typeof IfAbruptRejectPromise>) {
+────╯
+
+q-macro: IfAbruptRejectPromise() cannot be called with a spread argument
+    ╭─[q-macro-spread.invalid.fixture.mts:11:10]
+    │
+  8 │ }
+  9 │ 
+ 10 │ export function spreadIfAbruptRejectPromise(args: Parameters<typeof IfAbruptRejectPromise>) {
+ 11 │   return IfAbruptRejectPromise(...args);
+    ·          ─┬────────────────────────────  
+    ·           ╰─ IfAbruptRejectPromise() cannot be called with a spread argument
+ 12 │ }
+ 13 │ 
+ 14 │ export function spreadIfAbruptCloseIterator(args: Parameters<typeof IfAbruptCloseIterator>) {
+────╯
+
+q-macro: IfAbruptCloseIterator() cannot be called with a spread argument
+    ╭─[q-macro-spread.invalid.fixture.mts:15:10]
+    │
+ 12 │ }
+ 13 │ 
+ 14 │ export function spreadIfAbruptCloseIterator(args: Parameters<typeof IfAbruptCloseIterator>) {
+ 15 │   return IfAbruptCloseIterator(...args);
+    ·          ─┬────────────────────────────  
+    ·           ╰─ IfAbruptCloseIterator() cannot be called with a spread argument
+ 16 │ }
+ 17 │ 
+────╯
+
+q-macro: Q() cannot be used outside a function
+   ╭─[q-macro-outside-function.invalid.fixture.mts:3:1]
+   │
+ 1 │ import { Q } from '#self';
+ 2 │ 
+ 3 │ Q(null);
+   · ─┬─────  
+   ·  ╰─ Q() cannot be used outside a function
+ 4 │ 
+───╯
+
+q-macro: Q() cannot be transformed in this control-flow position
+    ╭─[q-macro-transform.invalid.fixture.mts:17:10]
+    │
+ 14 │   condition: boolean,
+ 15 │   capability: unknown,
+ 16 │ ) {
+ 17 │   while (Q(value)) consume(value);
+    ·          ─┬──────  
+    ·           ╰─ Q() cannot be transformed in this control-flow position
+ 18 │   if (condition && Q(value)) consume(value);
+ 19 │   consume(condition ? Q(value) : value);
+ 20 │   IfAbruptRejectPromise(createValue(), capability);
+────╯
+
+q-macro: Q() cannot be transformed in this control-flow position
+    ╭─[q-macro-transform.invalid.fixture.mts:18:20]
+    │
+ 15 │   capability: unknown,
+ 16 │ ) {
+ 17 │   while (Q(value)) consume(value);
+ 18 │   if (condition && Q(value)) consume(value);
+    ·                    ─┬──────  
+    ·                     ╰─ Q() cannot be transformed in this control-flow position
+ 19 │   consume(condition ? Q(value) : value);
+ 20 │   IfAbruptRejectPromise(createValue(), capability);
+ 21 │   IfAbruptCloseIterator(value, createIterator());
+────╯
+
+q-macro: Q() cannot be transformed within this conditional expression
+    ╭─[q-macro-transform.invalid.fixture.mts:19:23]
+    │
+ 16 │ ) {
+ 17 │   while (Q(value)) consume(value);
+ 18 │   if (condition && Q(value)) consume(value);
+ 19 │   consume(condition ? Q(value) : value);
+    ·                       ─┬──────  
+    ·                        ╰─ Q() cannot be transformed within this conditional expression
+ 20 │   IfAbruptRejectPromise(createValue(), capability);
+ 21 │   IfAbruptCloseIterator(value, createIterator());
+ 22 │   const closure = () => X(value);
+────╯
+
+q-macro: The first argument to IfAbruptRejectPromise must be an identifier
+    ╭─[q-macro-transform.invalid.fixture.mts:20:3]
+    │
+ 17 │   while (Q(value)) consume(value);
+ 18 │   if (condition && Q(value)) consume(value);
+ 19 │   consume(condition ? Q(value) : value);
+ 20 │   IfAbruptRejectPromise(createValue(), capability);
+    ·   ─┬──────────────────────────────────────────────  
+    ·    ╰─ The first argument to IfAbruptRejectPromise must be an identifier
+ 21 │   IfAbruptCloseIterator(value, createIterator());
+ 22 │   const closure = () => X(value);
+ 23 │   return closure;
+────╯
+
+q-macro: The second argument to IfAbruptCloseIterator must be an identifier
+    ╭─[q-macro-transform.invalid.fixture.mts:21:3]
+    │
+ 18 │   if (condition && Q(value)) consume(value);
+ 19 │   consume(condition ? Q(value) : value);
+ 20 │   IfAbruptRejectPromise(createValue(), capability);
+ 21 │   IfAbruptCloseIterator(value, createIterator());
+    ·   ─┬────────────────────────────────────────────  
+    ·    ╰─ The second argument to IfAbruptCloseIterator must be an identifier
+ 22 │   const closure = () => X(value);
+ 23 │   return closure;
+ 24 │ }
+────╯
+
+q-macro: X() cannot be the sole expression of an arrow function
+    ╭─[q-macro-transform.invalid.fixture.mts:22:25]
+    │
+ 19 │   consume(condition ? Q(value) : value);
+ 20 │   IfAbruptRejectPromise(createValue(), capability);
+ 21 │   IfAbruptCloseIterator(value, createIterator());
+ 22 │   const closure = () => X(value);
+    ·                         ─┬──────  
+    ·                          ╰─ X() cannot be the sole expression of an arrow function
+ 23 │   return closure;
+ 24 │ }
+ 25 │ 
+────╯

@@ -1,0 +1,36 @@
+{
+  "name": "@engine262/eslint-plugin",
+  "version": "0.0.0",
+  "description": "ESLint rules for engine262",
+  "type": "module",
+  "main": "./lib/index.mjs",
+  "types": "./lib/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.mts",
+      "import": "./lib/index.mjs"
+    }
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@engine262/babel-compiler": "workspace:*"
+  },
+  "peerDependencies": {
+    "@typescript-eslint/parser": ">=8.0.0",
+    "eslint": "^9.0.0 || ^10.0.0",
+    "typescript": ">=5.9.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/engine262/engine262.git",
+    "directory": "packages/eslint-plugin"
+  }
+}

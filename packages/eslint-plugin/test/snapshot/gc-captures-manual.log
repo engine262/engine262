@@ -1,0 +1,235 @@
+gc-captures-manual: CreateBuiltinFunction capture provider omits GC references: value.
+    ╭─[gc-captures.invalid.fixture.mts:18:10]
+    │
+ 15 │     } from '#self';
+ 16 │     
+ 17 │     export function missingCapture(value: Value) {
+ 18 │ ╭─▶   return makeBuiltin(
+ 19 │ │       () => value,
+ 20 │ │       0,
+ 21 │ │       'missingCapture',
+    ⋮ ⋮   
+ 23 │ │       { captures: null },
+    · │   ─┬─────────────────────  
+    · │    ╰─ -     { captures: null },
+    · │       +     { captures: () => ({ value }) },
+ 24 │ ├─▶   );
+    · │          
+    · ╰─────── CreateBuiltinFunction capture provider omits GC references: value.
+ 25 │     }
+ 26 │     
+ 27 │     export function missingShorthandCapture(value: Value) {
+────╯
+
+gc-captures-manual: CreateBuiltinFunction capture provider omits GC references: value.
+    ╭─[gc-captures.invalid.fixture.mts:29:10]
+    │
+ 26 │     
+ 27 │     export function missingShorthandCapture(value: Value) {
+ 28 │       const behaviour: NativeSteps = () => value;
+ 29 │ ╭─▶   return makeBuiltin(
+ 30 │ │       behaviour,
+ 31 │ │       0,
+ 32 │ │       'missingShorthandCapture',
+    ⋮ ⋮   
+ 34 │ │       { captures: null },
+    · │   ─┬─────────────────────  
+    · │    ╰─ -     { captures: null },
+    · │       +     { captures: () => ({ value }) },
+ 35 │ ├─▶   );
+    · │          
+    · ╰─────── CreateBuiltinFunction capture provider omits GC references: value.
+ 36 │     }
+ 37 │     
+ 38 │     export function missingJobCapture(value: Value) {
+────╯
+
+gc-captures-manual: Job capture provider omits GC references: value.
+    ╭─[gc-captures.invalid.fixture.mts:39:10]
+    │
+ 36 │     }
+ 37 │     
+ 38 │     export function missingJobCapture(value: Value) {
+ 39 │ ╭─▶   return new Job({
+ 40 │ │       name: 'missingJobCapture',
+ 41 │ │       queueName: 'test',
+ 42 │ │       evaluate: function* missingJobCaptureEvaluate() {
+    ⋮ ⋮   
+ 47 │ │       captures: null,
+    · │   ─┬─────────────────  
+    · │    ╰─ -     captures: null,
+    · │       +     captures: () => ({ value }),
+ 48 │ ├─▶   });
+    · │           
+    · ╰──────── Job capture provider omits GC references: value.
+ 49 │     }
+ 50 │     
+ 51 │     export function directEvaluatorStep(evaluator: Evaluator<Value>) {
+────╯
+
+gc-captures-manual: Evaluator.next() may only be called by stepEvaluator().
+    ╭─[gc-captures.invalid.fixture.mts:52:10]
+    │
+ 49 │ }
+ 50 │ 
+ 51 │ export function directEvaluatorStep(evaluator: Evaluator<Value>) {
+ 52 │   return evaluator.next({ resume: 'debugger', value: undefined });
+    ·          ─┬──────────────────────────────────────────────────────  
+    ·           ╰─ Evaluator.next() may only be called by stepEvaluator().
+ 53 │ }
+ 54 │ 
+ 55 │ export function missingIteratorCaptures(
+────╯
+
+gc-captures-manual: CreateIteratorFromClosure requires an explicit captures field.
+    ╭─[gc-captures.invalid.fixture.mts:59:10]
+    │
+ 56 │   closure: () => YieldEvaluator,
+ 57 │   generatorPrototype: ObjectValue,
+ 58 │ ) {
+ 59 │   return CreateIteratorFromClosure(closure, undefined, generatorPrototype, {});
+    ·          ─┬───────────────────────────────────────────────────────────────────  
+    ·           ╰─ CreateIteratorFromClosure requires an explicit captures field.
+ 60 │ }
+ 61 │ 
+ 62 │ export function* missingEvaluatorFrame(value: Value): Evaluator<Value> {
+────╯
+
+gc-captures-manual: Evaluator frame omits GC references live across suspension: value.
+    ╭─[gc-captures.invalid.fixture.mts:63:3]
+    │
+ 59 │   return CreateIteratorFromClosure(closure, undefined, generatorPrototype, {});
+ 60 │ }
+ 61 │ 
+ 62 │ export function* missingEvaluatorFrame(value: Value): Evaluator<Value> {
+    · ─┬──────────────────────────────────────────────────────────────────────  
+    ·  ╰─ +   using _ = captureEvaluatorFrame(() => ({ value }), 'missingEvaluatorFrame');
+ 63 │   yield { suspend: 'await' };
+    ·   ─┬────────────────────────  
+    ·    ╰─ Evaluator frame omits GC references live across suspension: value.
+ 64 │   return value;
+ 65 │ }
+ 66 │ 
+────╯
+
+gc-captures-manual: Evaluator frame omits GC references live across suspension: value.
+    ╭─[gc-captures.invalid.fixture.mts:69:3]
+    │
+ 65 │ }
+ 66 │ 
+ 67 │ export function* missingLocalEvaluatorFrame(): Evaluator<Value> {
+ 68 │   const value: Value = Value.undefined;
+    · ─┬─────────────────────────────────────  
+    ·  ╰─ +   using _ = captureEvaluatorFrame(() => ({ value }), 'missingLocalEvaluatorFrame');
+ 69 │   yield { suspend: 'await' };
+    ·   ─┬────────────────────────  
+    ·    ╰─ Evaluator frame omits GC references live across suspension: value.
+ 70 │   return value;
+ 71 │ }
+ 72 │ 
+────╯
+
+gc-captures-manual: Evaluator frame omits GC references live across suspension: value.
+    ╭─[gc-captures.invalid.fixture.mts:75:3]
+    │
+ 70 │   return value;
+ 71 │ }
+ 72 │ 
+ 73 │ export function* missingNestedUseFrame(value: Value): Evaluator<Value> {
+    · ─┬──────────────────────────────────────────────────────────────────────  
+    ·  ╰─ +   using _ = captureEvaluatorFrame(() => ({ value }), 'missingNestedUseFrame');
+ 74 │   const nested = () => value;
+ 75 │   yield { suspend: 'await' };
+    ·   ─┬────────────────────────  
+    ·    ╰─ Evaluator frame omits GC references live across suspension: value.
+ 76 │   return nested();
+ 77 │ }
+ 78 │ 
+────╯
+
+gc-captures-manual: Evaluator frame omits GC references live across suspension: onRejected, promise.
+    ╭─[gc-captures.invalid.fixture.mts:85:3]
+    │
+ 81 │   [onRejected = Value.undefined]: Arguments,
+ 82 │   { thisValue }: FunctionCallContext,
+ 83 │ ): ValueEvaluator {
+ 84 │   const promise = thisValue;
+    · ─┬──────────────────────────  
+    ·  ╰─ +   using _ = captureEvaluatorFrame(() => ({ onRejected, promise }), 'Promise.prototype.catch');
+ 85 │   yield* Invoke(promise, Value('then'), [Value.undefined, onRejected]);
+    ·   ─┬──────────────────────────────────────────────────────────────────  
+    ·    ╰─ Evaluator frame omits GC references live across suspension: onRejected, promise.
+ 86 │   return promise;
+ 87 │ }
+ 88 │ 
+────╯
+
+gc-captures-manual: Evaluator frames before this suspension can be merged.
+    ╭─[gc-captures.invalid.fixture.mts:94:3]
+    │
+ 88 │ 
+ 89 │ /** https://tc39.es/ecma262/#sec-merge-evaluator-frames */
+ 90 │ export function* mergeEvaluatorFrames(parameter: Value): Evaluator<Value> {
+ 91 │   using _ = captureEvaluatorFrame(() => ({ parameter }), 'mergeEvaluatorFrames');
+    · ─┬───────────────────────────────────────────────────────────────────────────────  
+    ·  ╰─ -   using _ = captureEvaluatorFrame(() => ({ parameter }), 'mergeEvaluatorFrames');
+ 92 │   const alias = parameter;
+ 93 │   using _2 = captureEvaluatorFrame(() => ({ alias }), 'mergeEvaluatorFrames');
+    · ─┬────────────────────────────────────────────────────────────────────────────  
+    ·  ╰─ -   using _2 = captureEvaluatorFrame(() => ({ alias }), 'mergeEvaluatorFrames');
+    ·     +   using _ = captureEvaluatorFrame(() => ({ alias, parameter }), 'mergeEvaluatorFrames');
+ 94 │   yield { suspend: 'await' };
+    ·   ─┬────────────────────────  
+    ·    ╰─ Evaluator frames before this suspension can be merged.
+ 95 │   return alias === parameter ? alias : parameter;
+ 96 │ }
+ 97 │ 
+────╯
+
+gc-captures-manual: later is captured before its lexical binding is initialized.
+     ╭─[gc-captures.invalid.fixture.mts:125:7]
+     │
+ 122 │ export function* captureBeforeInitialization(value: Value): Evaluator<Value> {
+ 123 │   using _ = captureEvaluatorFrame(
+ 124 │     () => ({
+ 125 │       later,
+     ·       ─┬───  
+     ·        ╰─ later is captured before its lexical binding is initialized.
+ 126 │     }),
+ 127 │     'captureBeforeInitialization',
+ 128 │   );
+─────╯
+
+gc-captures-manual: Evaluator frame capture extra is not live across a suspension.
+     ╭─[gc-captures.invalid.fixture.mts:136:51]
+     │
+ 133 │ 
+ 134 │ /** https://tc39.es/ecma262/#sec-unnecessary-capture */
+ 135 │ export function* unnecessaryCapture(value: Value, extra: Value): Evaluator<Value> {
+ 136 │   using _ = captureEvaluatorFrame(() => ({ value, extra }), 'unnecessaryCapture');
+     · ─┬─────────────────────────────────────────────────┬──────────────────────────────  
+     ·  ╰─ -   using _ = captureEvaluatorFrame(() => ({ value, extra }), 'unnecessaryCapture');
+     ·     +   using _ = captureEvaluatorFrame(() => ({ value }), 'unnecessaryCapture');
+     ·                                                    │                                
+     ·                                                    ╰─ Evaluator frame capture extra is not live across a suspension.
+ 137 │   yield { suspend: 'await' };
+ 138 │   return value;
+ 139 │ }
+─────╯
+
+gc-captures-manual: Evaluator frame capture sourceText is not live across a suspension.
+     ╭─[gc-captures.invalid.fixture.mts:144:54]
+     │
+ 141 │ export const unannotatedEvaluator = {
+ 142 │   * evalScript(sourceText: Value) {
+ 143 │     const parsed = sourceText;
+ 144 │     using _ = captureEvaluatorFrame(() => ({ parsed, sourceText }), 'evalScript');
+     · ─┬────────────────────────────────────────────────────┬───────────────────────────  
+     ·  ╰─ -     using _ = captureEvaluatorFrame(() => ({ parsed, sourceText }), 'evalScript');
+     ·     +     using _ = captureEvaluatorFrame(() => ({ parsed }), 'evalScript');
+     ·                                                       │                             
+     ·                                                       ╰─ Evaluator frame capture sourceText is not live across a suspension.
+ 145 │     yield { suspend: 'await' };
+ 146 │     return parsed;
+ 147 │   },
+─────╯

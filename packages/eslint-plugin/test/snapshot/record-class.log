@@ -1,0 +1,229 @@
+record-class: Record classes may only use the @callable and @record class decorators.
+    ╭─[record-class.invalid.fixture.mts:9:2]
+    │
+  6 │ 
+  7 │ class Base {}
+  8 │ 
+  9 │ @other
+    ·  ─┬───  
+    ·   ╰─ Record classes may only use the @callable and @record class decorators.
+ 10 │ @record
+ 11 │ export class InvalidRecord extends Base {
+ 12 │   @member
+────╯
+
+record-class: Record classes may not extend another class.
+    ╭─[record-class.invalid.fixture.mts:11:36]
+    │
+  8 │ 
+  9 │ @other
+ 10 │ @record
+ 11 │ export class InvalidRecord extends Base {
+    ·                                    ─┬──  
+    ·                                     ╰─ Record classes may not extend another class.
+ 12 │   @member
+ 13 │   readonly Initialized: string = '';
+ 14 │ 
+────╯
+
+record-class: Record class fields and methods may not have decorators.
+    ╭─[record-class.invalid.fixture.mts:12:4]
+    │
+  9 │ @other
+ 10 │ @record
+ 11 │ export class InvalidRecord extends Base {
+ 12 │   @member
+    ·    ─┬────  
+    ·     ╰─ Record class fields and methods may not have decorators.
+ 13 │   readonly Initialized: string = '';
+ 14 │ 
+ 15 │   protected Protected: string;
+────╯
+
+record-class: Record class fields may not have initializers.
+    ╭─[record-class.invalid.fixture.mts:13:34]
+    │
+ 10 │ @record
+ 11 │ export class InvalidRecord extends Base {
+ 12 │   @member
+ 13 │   readonly Initialized: string = '';
+    ·                                  ─╮  
+    ·                                   ╰─ Record class fields may not have initializers.
+ 14 │ 
+ 15 │   protected Protected: string;
+ 16 │ 
+────╯
+
+record-class: Record class fields may not be private or protected.
+    ╭─[record-class.invalid.fixture.mts:15:13]
+    │
+ 12 │   @member
+ 13 │   readonly Initialized: string = '';
+ 14 │ 
+ 15 │   protected Protected: string;
+    ·             ─┬───────  
+    ·              ╰─ Record class fields may not be private or protected.
+ 16 │ 
+ 17 │   #private: string;
+ 18 │ 
+────╯
+
+record-class: Record classes may not use JavaScript private names.
+    ╭─[record-class.invalid.fixture.mts:17:3]
+    │
+ 14 │ 
+ 15 │   protected Protected: string;
+ 16 │ 
+ 17 │   #private: string;
+    ·   ─┬──────  
+    ·    ╰─ Record classes may not use JavaScript private names.
+ 18 │ 
+ 19 │   static {
+ 20 │     void 0;
+────╯
+
+record-class: Record classes may not have class static blocks.
+    ╭─[record-class.invalid.fixture.mts:19:3]
+    │
+ 16 │ 
+ 17 │   #private: string;
+ 18 │ 
+ 19 │   static {
+    ·   ─┬────  
+    ·    ╰─ Record classes may not have class static blocks.
+ 20 │     void 0;
+ 21 │   }
+ 22 │ 
+────╯
+
+record-class: Record class fields and methods may not have decorators.
+    ╭─[record-class.invalid.fixture.mts:23:4]
+    │
+ 20 │     void 0;
+ 21 │   }
+ 22 │ 
+ 23 │   @member
+    ·    ─┬────  
+    ·     ╰─ Record class fields and methods may not have decorators.
+ 24 │   method(): string {
+ 25 │     return this.#private;
+ 26 │   }
+────╯
+
+record-class: Record class constructors must guard new.target against the class name.
+    ╭─[record-class.invalid.fixture.mts:28:3]
+    │
+ 25 │     return this.#private;
+ 26 │   }
+ 27 │ 
+ 28 │   constructor(o: { Initialized: string; Protected: string }) {
+    · ─┬─┬──────────────────────────────────────────────────────────  
+    ·  ╰─ +     if (new.target !== InvalidRecord) {
+    ·     +       throw new TypeError('InvalidRecord is a final class and cannot be subclassed');
+    ·     +     }
+    ·    │                                                            
+    ·    ╰─ Record class constructors must guard new.target against the class name.
+ 29 │     super();
+ 30 │     this.Initialized = o.Initialized;
+ 31 │     this.Protected = o.Protected;
+────╯
+
+record-class: Record class constructor must copy every field with this.X = o.X and perform no other work.
+    ╭─[record-class.invalid.fixture.mts:29:5]
+    │
+ 26 │   }
+ 27 │ 
+ 28 │   constructor(o: { Initialized: string; Protected: string }) {
+ 29 │     super();
+    ·     ─┬──────  
+    ·      ╰─ Record class constructor must copy every field with this.X = o.X and perform no other work.
+ 30 │     this.Initialized = o.Initialized;
+ 31 │     this.Protected = o.Protected;
+ 32 │     this.#private = '';
+────╯
+
+record-class: Record class constructor must copy every field with this.X = o.X and perform no other work.
+    ╭─[record-class.invalid.fixture.mts:32:5]
+    │
+ 29 │     super();
+ 30 │     this.Initialized = o.Initialized;
+ 31 │     this.Protected = o.Protected;
+ 32 │     this.#private = '';
+    ·     ─┬─────────────────  
+    ·      ╰─ Record class constructor must copy every field with this.X = o.X and perform no other work.
+ 33 │   }
+ 34 │ }
+ 35 │ 
+────╯
+
+record-class: Record class constructor must copy every field with this.X = o.X and perform no other work.
+    ╭─[record-class.invalid.fixture.mts:39:20]
+    │
+ 36 │ export class MissingCopy implements record {
+ 37 │   readonly A: string;
+ 38 │ 
+ 39 │   declare readonly B: string;
+    ·                    ┬  
+    ·                    ╰─ Record class constructor must copy every field with this.X = o.X and perform no other work.
+ 40 │ 
+ 41 │   constructor(o: Pick<MissingCopy, 'A' | 'B'>) {
+ 42 │     if (new.target !== MissingCopy) {
+    · 
+ 45 │     this.A = o.A;
+    · ─┬───────────────  
+    ·  ╰─ +     this.B = o.B;
+ 46 │   }
+ 47 │ }
+ 48 │ 
+────╯
+
+record-class: Record class constructor must copy every field with this.X = o.X and perform no other work.
+    ╭─[record-class.invalid.fixture.mts:57:5]
+    │
+ 54 │       throw new TypeError('ExtraStatement is final');
+ 55 │     }
+ 56 │     this.A = o.A;
+ 57 │     void o;
+    ·     ─┬─────  
+    ·      ╰─ Record class constructor must copy every field with this.X = o.X and perform no other work.
+ 58 │   }
+ 59 │ }
+ 60 │ 
+────╯
+
+record-class: Record class constructor must copy every field with this.X = o.X and perform no other work.
+    ╭─[record-class.fixable.fixture.mts:7:20]
+    │
+  4 │ export class MissingGuardAndCopy implements record {
+  5 │   readonly A: string;
+  6 │ 
+  7 │   declare readonly B: string;
+    ·                    ┬  
+    ·                    ╰─ Record class constructor must copy every field with this.X = o.X and perform no other work.
+  8 │ 
+  9 │   constructor(o: Pick<MissingGuardAndCopy, 'A' | 'B'>) {
+ 10 │     this.A = o.A;
+    · ─┬───────────────  
+    ·  ╰─ +     this.B = o.B;
+ 11 │   }
+ 12 │ }
+ 13 │ 
+────╯
+
+record-class: Record class constructors must guard new.target against the class name.
+    ╭─[record-class.fixable.fixture.mts:9:3]
+    │
+  6 │ 
+  7 │   declare readonly B: string;
+  8 │ 
+  9 │   constructor(o: Pick<MissingGuardAndCopy, 'A' | 'B'>) {
+    · ─┬─┬────────────────────────────────────────────────────  
+    ·  ╰─ +     if (new.target !== MissingGuardAndCopy) {
+    ·     +       throw new TypeError('MissingGuardAndCopy is a final class and cannot be subclassed');
+    ·     +     }
+    ·    │                                                      
+    ·    ╰─ Record class constructors must guard new.target against the class name.
+ 10 │     this.A = o.A;
+ 11 │   }
+ 12 │ }
+────╯
