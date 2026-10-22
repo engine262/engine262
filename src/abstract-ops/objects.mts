@@ -18,7 +18,6 @@ import {
   Get,
   GetFunctionRealm,
   IsAccessorDescriptor,
-  IsCallable,
   IsDataDescriptor,
   IsExtensible,
   IsGenericDescriptor,
