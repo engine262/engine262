@@ -29,6 +29,7 @@ import {
   Get,
   ToIndex,
   type PlainEvaluator,
+  intrinsics,
 } from '#self';
 
 export interface ArrayBufferObject extends OrdinaryObject {
@@ -84,10 +85,12 @@ export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: nu
 
 /** https://tc39.es/proposal-immutable-arraybuffer/#sec-allocateimmutablearraybuffer */
 export function* AllocateImmutableArrayBuffer(constructor: FunctionObject, byteLength: number, fromBlock: DataBlock, fromIndex: number, count: number): ValueEvaluator<ArrayBufferObject> {
+  Assert(constructor === intrinsics()['%ArrayBuffer%']);
   Assert(count <= byteLength);
-  const buffer = Q(yield* AllocateArrayBuffer(constructor, byteLength, 'immutable'));
-  CopyDataBlockBytes(buffer.ArrayBufferData!, 0, fromBlock, fromIndex, count);
-  return buffer;
+  const newBuffer = Q(yield* AllocateArrayBuffer(constructor, byteLength, 'immutable'));
+  const toBlock = newBuffer.ArrayBufferData!;
+  CopyDataBlockBytes(toBlock, 0, fromBlock, fromIndex, count);
+  return newBuffer;
 }
 
 /** https://tc39.es/proposal-immutable-arraybuffer/#sec-isimmutablebuffer */
@@ -136,14 +139,16 @@ export function* ArrayBufferCopyAndDetach(
   const copyLength = Math.min(newByteLength, arrayBuffer.ArrayBufferByteLength);
   let newBuffer: ArrayBufferObject;
   if (preserveResizability === 'immutable') {
-    newBuffer = Q(yield* AllocateImmutableArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, arrayBuffer.ArrayBufferData!, 0, copyLength));
+    newBuffer = Q(yield* AllocateImmutableArrayBuffer(intrinsics()['%ArrayBuffer%'], newByteLength, arrayBuffer.ArrayBufferData!, 0, copyLength));
   } else {
     let newMaxByteLength;
     if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
       newMaxByteLength = (arrayBuffer as ResizableArrayBufferObject).ArrayBufferMaxByteLength;
     }
-    newBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength));
-    CopyDataBlockBytes(newBuffer.ArrayBufferData!, 0, arrayBuffer.ArrayBufferData!, 0, copyLength);
+    newBuffer = Q(yield* AllocateArrayBuffer(intrinsics()['%ArrayBuffer%'], newByteLength, newMaxByteLength));
+    const toBlock = newBuffer.ArrayBufferData!;
+    const fromBlock = arrayBuffer.ArrayBufferData!;
+    CopyDataBlockBytes(toBlock, 0, fromBlock, 0, copyLength);
   }
   X(DetachArrayBuffer(arrayBuffer));
   return newBuffer;

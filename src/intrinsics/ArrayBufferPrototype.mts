@@ -3,7 +3,7 @@ import {
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
-import { surroundingAgent } from '#self';
+import { intrinsics, surroundingAgent } from '#self';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer, ResolveBounds,
   SpeciesConstructor, Construct, SameValue, CopyDataBlockBytes,
@@ -201,8 +201,11 @@ function* ArrayBufferProto_sliceToImmutable([start = Value.undefined, end = Valu
   const final = bounds.To;
   const newLength = Math.max(final - first, 0);
   if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
-  if (O.ArrayBufferByteLength < final) return Throw.RangeError('ArrayBuffer shrank during sliceToImmutable');
-  return yield* AllocateImmutableArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newLength, O.ArrayBufferData!, first, newLength);
+  const fromBuf = O.ArrayBufferData!;
+  const currentLen = O.ArrayBufferByteLength;
+  if (currentLen < final) return Throw.RangeError('ArrayBuffer shrank during sliceToImmutable');
+  const newBuffer = yield* AllocateImmutableArrayBuffer(intrinsics()['%ArrayBuffer%'], newLength, fromBuf, first, newLength);
+  return newBuffer;
 }
 
 /** https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.transfertoimmutable */
