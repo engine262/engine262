@@ -39,6 +39,7 @@ import {
   type PlainCompletion,
   NormalCompletion,
   type PromiseObject,
+  Job,
 } from '#self';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
@@ -180,12 +181,13 @@ const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'repl',
       if (delay instanceof ThrowCompletion) return delay;
       const delayTime = R(ValueOfNormalCompletion(delay));
 
-      const job = {
+      const job = new Job({
+        name: 'setTimeoutResolve',
         queueName: 'setTimeout resolve',
-        job: () => Call(f, Value.undefined, []),
+        evaluate: () => Call(f, Value.undefined, []),
         callerRealm: surroundingAgent.runningExecutionContext.Realm,
         callerScriptOrModule: GetActiveScriptOrModule(),
-      };
+      });
       surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
         setTimeout(enqueue, delayTime);
       });
@@ -197,14 +199,14 @@ const realm = new ManagedRealm({ resolverCache: new ModuleCache(), name: 'repl',
 
 // Define console.log
 {
-  const format = (function* format(args: Arguments): PlainEvaluator<string> {
+  const format = function* format(args: Arguments): PlainEvaluator<string> {
     const str = [];
     for (const arg of args.values()) {
       // TODO: inspect should return a PlainEvaluator so debugger can hook in.
       str.push(inspect(arg));
     }
     return str.join(' ');
-  });
+  };
   createConsole(realm, {
     * log(args) {
       writeStdout(`${yield* format(args)}\n`);

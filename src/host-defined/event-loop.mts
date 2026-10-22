@@ -43,6 +43,8 @@ export interface EventLoop extends GCMarkable {
    * This can be used to implement a mechanism to exit the program when all code has finished executing.
    */
   onNoPendingJob: Set<() => void>;
+
+  getQueuedJobsForGC?(): Iterable<Job>;
 }
 
 export abstract class AbstractEventLoop implements EventLoop {
@@ -102,6 +104,10 @@ export abstract class AbstractEventLoop implements EventLoop {
 
   get hasPendingJobs(): boolean {
     return this.#pendingJobs.size > 0;
+  }
+
+  getQueuedJobsForGC(): Iterable<Job> {
+    return this.#pendingJobs;
   }
 
   /** Change the automatic run type of the event loop */
@@ -228,6 +234,11 @@ export class WebLikeEventLoop extends AbstractEventLoop {
       trace.strong(job.name, job, 'job');
     }
   }
+
+  override* getQueuedJobsForGC(): Iterable<Job> {
+    yield* super.getQueuedJobsForGC();
+    yield* this.queuedJobs.keys();
+  }
 }
 
 const NODEJS_PHASES = [
@@ -296,6 +307,12 @@ export class NodeJSLikeEventLoop extends AbstractEventLoop {
 
   protected get hasQueuedJobs(): boolean {
     return this.queuedJobs.size > 0;
+  }
+
+
+  override* getQueuedJobsForGC(): Iterable<Job> {
+    yield* super.getQueuedJobsForGC();
+    yield* this.queuedJobs;
   }
 
   override mark(trace: GCTrace): void {

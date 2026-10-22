@@ -3,6 +3,7 @@ import { InspectorContext } from './context.mts';
 import * as impl from './methods.mts';
 import type { DebuggerContext, DebuggerPreference, DevtoolEvents } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
+import { CDPError } from './errors.mts';
 import type {
   Agent, Arguments, HostPromiseRejectionTracker, ManagedRealm, Realm, Value,
 } from '#self';
@@ -103,50 +104,60 @@ export abstract class Inspector {
 
   protected onMessage(id: unknown, methodArg: string, params: unknown): void {
     if (ignoreMethods.includes(methodArg)) {
+      this.sendError(id, CDPError.methodNotFound(methodArg));
       return;
     }
     const [namespace, method] = methodArg.split('.');
     if (ignoreNamespaces.includes(namespace)) {
+      this.sendError(id, CDPError.methodNotFound(methodArg));
       return;
     }
     if (!(namespace in impl)) {
-      this.sendEvent['Runtime.consoleAPICalled']({
-        timestamp: Date.now(),
-        type: 'warning',
-        executionContextId: 0,
-        args: [{
-          type: 'string',
-          value: `engine262 internal error: Namespace not implemented: ${namespace}.*`,
-        }],
-      });
+      this.sendError(id, CDPError.methodNotFound(methodArg));
       return;
     }
     const ns = (impl as Record<string, object>)[namespace];
     if (!(method in ns)) {
-      this.sendEvent['Runtime.consoleAPICalled']({
-        timestamp: Date.now(),
-        type: 'warning',
-        executionContextId: 0,
-        args: [{
-          type: 'string',
-          value: `engine262 internal error: Method not implemented: ${namespace}.${method}`,
-        }],
-      });
+      this.sendError(id, CDPError.methodNotFound(methodArg));
       return;
     }
 
     const f = (ns as Record<string, (args: unknown, context: DebuggerContext) => unknown>)[method];
-    new Promise((resolve) => {
-      resolve(f(params, this.#debugContext));
-    }).then((result = {}) => {
+    let response;
+    try {
+      response = f(params, this.#debugContext);
+    } catch (error) {
+      this.sendHandlerError(id, error);
+      return;
+    }
+    Promise.resolve(response).then((result = {}) => {
       this.send({ id, result });
+    }, (error: unknown) => {
+      this.sendHandlerError(id, error);
+    });
+  }
+
+  private sendHandlerError(id: unknown, error: unknown): void {
+    if (error instanceof CDPError) this.sendError(id, error);
+    else if (error instanceof TypeError) this.sendError(id, CDPError.invalidParams(error.message));
+    else this.sendError(id, CDPError.serverError(error instanceof Error ? error.message : String(error)));
+  }
+
+  private sendError(id: unknown, error: CDPError): void {
+    this.send({
+      id,
+      error: {
+        code: error.code,
+        message: error.message,
+      },
     });
   }
 
   sendEvent: DevtoolEvents = Object.create(new Proxy({}, {
     get: (_, key: string) => {
       const f = (params: Record<string, unknown>) => {
-        if (this.#debuggerAttached) {
+        const domain = key.slice(0, key.indexOf('.'));
+        if (this.#enabledDomains.has(domain)) {
           this.send({ method: key, params });
         }
       };
@@ -169,6 +180,8 @@ export abstract class Inspector {
   }
 
   #debuggerAttached = false;
+
+  #enabledDomains = new Set<string>();
 
   onDebuggerDisconnect() {
     this.#debuggerAttached = false;
@@ -205,6 +218,10 @@ export abstract class Inspector {
     },
     onDebuggerDisconnect: () => {
       this.#debuggerAttached = false;
+    },
+    setDomainEnabled: (domain, enabled) => {
+      if (enabled) this.#enabledDomains.add(domain);
+      else this.#enabledDomains.delete(domain);
     },
   };
 }

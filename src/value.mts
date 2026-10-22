@@ -1,4 +1,5 @@
 import type { GCMarkable, GCTrace } from './gc.mts';
+import { traceInternalSlot } from './gc-internal-slots.mts';
 import {
   Q, X, type ValueEvaluator, type PlainCompletion,
 } from './completion.mts';
@@ -808,6 +809,11 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
       trace.strong(`set ${name}`, descriptor.Set, numberLike);
     }
 
+    for (const slot of this.internalSlotsList) {
+      const descriptor = Object.getOwnPropertyDescriptor(this, slot);
+      const target = descriptor && 'value' in descriptor ? descriptor.value : undefined;
+      traceInternalSlot(this, slot, target, trace);
+    }
 
     this.PrivateElements.forEach((element) => {
       trace.strong(`#${element.Key.Description}`, element.Value, 'private-element');

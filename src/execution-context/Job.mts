@@ -21,11 +21,48 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#job */
-export interface Job {
+export class Job implements GCMarkable {
+  readonly name: string;
+
   readonly queueName: string;
-  readonly job: () => PlainEvaluator<unknown>;
+
+  readonly evaluate: () => PlainEvaluator<unknown>;
+
   readonly callerRealm: Realm | undefined;
-  readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
+  readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue | null;
+
+  constructor(options: CreateJobOptions) {
+    if (options.captures === undefined) {
+      throw new TypeError('Job requires a captures option');
+    }
+    this.name = options.name;
+    this.queueName = options.queueName;
+    this.evaluate = options.evaluate;
+    this.callerRealm = options.callerRealm;
+    this.callerScriptOrModule = options.callerScriptOrModule;
+    if (options.captures) {
+      withCapturedReferences(this, {
+        name: options.name,
+        kind: 'job',
+        captures: options.captures,
+      });
+    }
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('run', this.evaluate, 'job');
+    trace.strong('callerRealm', this.callerRealm, 'job');
+    trace.strong('callerScriptOrModule', this.callerScriptOrModule, 'job');
+  }
+}
+
+export interface CreateJobOptions {
+  readonly name: string;
+  readonly queueName: string;
+  readonly evaluate: () => PlainEvaluator<unknown>;
+  readonly callerRealm: Realm | undefined;
+  readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue | null;
+  readonly captures?: GCCaptureProvider | null;
 }
 
 export type JobCallbackRecordInit = Omit<JobCallbackRecord, keyof GCMarkable>;
@@ -64,19 +101,25 @@ export function* HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, a
 // Atomics: HostEnqueueGenericJob
 
 /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
-export function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: Realm | null) {
+export function HostEnqueuePromiseJob(
+  job: () => PlainEvaluator,
+  realm: Realm | null,
+  captures: GCCaptureProvider,
+) {
   if (surroundingAgent.debugger_isPreviewing) {
     return;
   }
 
   const callerRealm = realm || surroundingAgent.currentRealmRecord;
   const scriptOrModule = GetActiveScriptOrModule();
-  surroundingAgent.jobQueue.enqueuePromiseJob({
+  surroundingAgent.jobQueue.enqueuePromiseJob(new Job({
+    name: job.name || 'PromiseJob',
     queueName: 'PromiseJobs',
-    job,
+    evaluate: job,
     callerRealm,
     callerScriptOrModule: scriptOrModule,
-  });
+    captures,
+  }));
 }
 
 // Atomics: HostEnqueueTimeoutJob
