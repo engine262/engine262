@@ -566,7 +566,7 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
-function TypedArray_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function TypedArray_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
 
@@ -574,7 +574,7 @@ export function bootstrapTypedArray(realmRec: Realm) {
   const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [
     ['from', TypedArray_from, 1],
     ['of', TypedArray_of, 0],
-    [wellKnownSymbols.species, [TypedArray_speciesGetter]],
+    [wellKnownSymbols.species, [TypedArray_AtAt_species_getter]],
   ]);
 
   realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;

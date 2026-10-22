@@ -1,15 +1,12 @@
 import { SymbolValue } from '../value.mts';
-import { Assert, SameValue } from './all.mts';
+import { SameValue } from './all.mts';
 import { surroundingAgent } from '#self';
 
 /** https://tc39.es/ecma262/#sec-symboldescriptivestring */
 export function SymbolDescriptiveString(sym: SymbolValue): string {
-  Assert(sym instanceof SymbolValue);
-  let desc = sym.Description;
-  if (!desc) {
-    desc = '';
-  }
-  return `Symbol(${desc})`;
+  let description = sym.Description;
+  if (!description) description = '';
+  return `Symbol(${description})`;
 }
 
 /** https://tc39.es/ecma262/#sec-globalsymbolregistry-records */

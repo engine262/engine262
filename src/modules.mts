@@ -19,17 +19,19 @@ import {
   Q, X, ThrowCompletion,
   IfAbruptRejectPromise,
 } from './completion.mts';
-import { OutOfRange, type Mutable } from './utils/language.mts';
+import { callable, OutOfRange, record, type Mutable } from './utils/language.mts';
 import {
   Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
 } from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import type { GCTrace } from './gc.mts';
 import {
-  surroundingAgent, type GCMarker,
+  surroundingAgent,
   type ImportAttributeRecord,
   type ImportedNamesValue,
   type ModuleRequestRecord,
   type PlainCompletion, type PromiseObject, ModuleEnvironmentRecord,
+  type GCMarkable,
   DisposeResources,
 } from '#self';
 import {
@@ -60,20 +62,26 @@ export interface LoadedModuleRequestRecord {
 }
 
 // #resolvedbinding-record
-export class ResolvedBindingRecord {
+export type ResolvedBindingRecordInit = Omit<ResolvedBindingRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#resolvedbinding-record */ // @ts-expect-error
+export function ResolvedBindingRecord(init: ResolvedBindingRecordInit): ResolvedBindingRecord
+/** https://tc39.es/ecma262/#resolvedbinding-record */ // @ts-expect-error
+export @callable() @record class ResolvedBindingRecord implements GCMarkable {
   readonly Module: AbstractModuleRecord;
 
   readonly BindingName: 'namespace' | 'deferred-namespace' | 'source' | JSStringValue;
 
-  constructor({ Module, BindingName }: Pick<ResolvedBindingRecord, 'BindingName' | 'Module'>) {
-    Assert(Module instanceof AbstractModuleRecord);
-    Assert(BindingName === 'namespace' || BindingName === 'deferred-namespace' || BindingName === 'source' || BindingName instanceof JSStringValue);
-    this.Module = Module;
-    this.BindingName = BindingName;
+  constructor(init: ResolvedBindingRecordInit) {
+    if (new.target !== ResolvedBindingRecord) {
+      throw new TypeError('ResolvedBindingRecord is a final class and cannot be subclassed');
+    }
+    this.Module = init.Module;
+    this.BindingName = init.BindingName;
   }
 
-  mark(m: GCMarker) {
-    m(this.Module);
+  mark(trace: GCTrace) {
+    trace.strong('Module', this.Module, 'internal-slot');
+    trace.strong('BindingName', this.BindingName, 'binding');
   }
 }
 
@@ -168,12 +176,12 @@ export abstract class AbstractModuleRecord {
     this.HostDefined = init.HostDefined;
   }
 
-  mark(m: GCMarker) {
-    m(this.Realm);
-    m(this.Environment);
-    m(this.Namespace);
-    m(this.DeferredNamespace);
-    m(this.ModuleSource);
+  mark(trace: GCTrace) {
+    trace.strong('Realm', this.Realm, 'internal-slot');
+    trace.strong('Environment', this.Environment, 'internal-slot');
+    trace.strong('Namespace', this.Namespace, 'internal-slot');
+    trace.strong('DeferredNamespace', this.DeferredNamespace, 'internal-slot');
+    trace.strong('ModuleSource', this.ModuleSource, 'internal-slot');
   }
 }
 
@@ -411,11 +419,16 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     return topLevelPromise;
   }
 
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.EvaluationError);
-    for (const v of this.LoadedModules) {
-      m(v.Module);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('EvaluationError', this.EvaluationError, 'internal-slot');
+    trace.strong('CycleRoot', this.CycleRoot, 'internal-slot');
+    trace.strong('TopLevelCapability', this.TopLevelCapability, 'internal-slot');
+    for (let index = 0; index < this.LoadedModules.length; index += 1) {
+      trace.strong(`LoadedModules[${index}]`, this.LoadedModules[index]!.Module, 'element');
+    }
+    for (let index = 0; index < this.AsyncParentModules.length; index += 1) {
+      trace.strong(`AsyncParentModules[${index}]`, this.AsyncParentModules[index], 'element');
     }
   }
 }
@@ -536,7 +549,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       if (exportName === e.ExportName) {
         // i. Assert: module provides the direct binding for this export.
         // ii. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: e.[[LocalName]] }.
-        return new ResolvedBindingRecord({
+        return ResolvedBindingRecord({
           Module: module,
           BindingName: Value(e.LocalName!),
         });
@@ -570,14 +583,14 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           }
           if ((e.ModuleRequest as ModuleRequestRecord).Phase === 'defer') {
             // https://tc39.es/proposal-defer-import-eval/#sec-resolveexport
-            return new ResolvedBindingRecord({
+            return ResolvedBindingRecord({
               Module: importedModule,
               BindingName: 'deferred-namespace',
             });
           } else {
             Assert((e.ModuleRequest as ModuleRequestRecord).Phase === 'evaluation');
             // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
-            return new ResolvedBindingRecord({
+            return ResolvedBindingRecord({
               Module: importedModule,
               BindingName: 'namespace',
             });
@@ -596,13 +609,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             return null;
           }
           const localName = `*${exportName}*`;
-          return new ResolvedBindingRecord({
+          return ResolvedBindingRecord({
             Module: module,
             BindingName: Value(localName),
           });
         } else if (e.ImportName === 'source') {
           // Assert: _module_ does not provide the direct binding for this export.
-          return new ResolvedBindingRecord({
+          return ResolvedBindingRecord({
             Module: importedModule,
             BindingName: 'source',
           });
@@ -931,10 +944,10 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     }
   }
 
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.ImportMeta);
-    m(this.Context);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('ImportMeta', this.ImportMeta, 'internal-slot');
+    trace.strong('Context', this.Context, 'internal-slot');
   }
 }
 
@@ -1010,7 +1023,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
     for (const e of module.ExportNames) {
       if (e === exportName) {
-        return new ResolvedBindingRecord({ Module: module, BindingName: Value(exportName) });
+        return ResolvedBindingRecord({ Module: module, BindingName: Value(exportName) });
       }
     }
     return null;

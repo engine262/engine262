@@ -3,9 +3,9 @@ import {
 } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
-import { surroundingAgent } from '#self';
+import { surroundingAgent, ToClampedIndex } from '#self';
 import {
-  RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer, ToClampedIndex,
+  RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, SameValue, CopyDataBlockBytes,
   F,
   type ArrayBufferObject,
@@ -106,59 +106,32 @@ function* ArrayBufferProto_resize([newLength = Value.undefined]: Arguments, { th
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
 function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  // 1. Let O be the this value.
-  const O = thisValue as ArrayBufferObject;
-  // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-  Q(RequireInternalSlot(O, 'ArrayBufferData'));
-  // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer(O)) {
-    return Throw.TypeError('Attempt to access shared ArrayBuffer');
-  }
-  // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O)) {
-    return Throw.TypeError('Attempt to access detached ArrayBuffer');
-  }
-  // 5. Let len be O.[[ArrayBufferByteLength]].
-  const length = O.ArrayBufferByteLength;
-  // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
+  const obj = thisValue as ArrayBufferObject;
+  Q(RequireInternalSlot(obj, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(obj)) return Throw.TypeError('Attempt to access shared ArrayBuffer');
+  if (IsDetachedBuffer(obj)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const length = obj.ArrayBufferByteLength;
   const first = Q(yield* ToClampedIndex(start, length));
-  const final = end === Value.undefined ? length : Q(yield* ToClampedIndex(end, length));
-  // 10. Let newLen be max(final - first, 0).
-  const newLen = Math.max(final - first, 0);
-  // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-  const ctor = Q(yield* SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
-  // 12. Let new be ? Construct(ctor, « newLen »).
-  const newO = Q(yield* Construct(ctor, [F(newLen)])) as ArrayBufferObject;
-  // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
+  let final;
+  if (end === Value.undefined) final = length;
+  else final = Q(yield* ToClampedIndex(end, length));
+  const newLength = Math.max(final - first, 0);
+  const ctor = Q(yield* SpeciesConstructor(obj, surroundingAgent.intrinsic('%ArrayBuffer%')));
+  const newO = Q(yield* Construct(ctor, [F(newLength)])) as ArrayBufferObject;
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
-  // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer(newO)) {
-    return Throw.TypeError('Attempt to access shared ArrayBuffer');
-  }
-  // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(newO)) {
-    return Throw.TypeError('Attempt to access detached ArrayBuffer');
-  }
-  // 16. If SameValue(new, O) is true, throw a TypeError exception.
-  if (SameValue(newO, O)) {
-    return Throw.TypeError('Subclass constructor returned the same object $1', newO);
-  }
-  // 17. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
-  if (newO.ArrayBufferByteLength < newLen) {
-    return Throw.TypeError('Subclass constructor returned a smaller-than-requested object $1', newO);
-  }
-  // 18. NOTE: Side-effects of the above steps may have detached O.
-  // 19. If IsDetachedBuffer(O) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O)) {
-    return Throw.TypeError('Attempt to access detached ArrayBuffer');
-  }
-  const fromBuf = O.ArrayBufferData!;
-  const toBuf = newO.ArrayBufferData!;
-  const currentLen = O.ArrayBufferByteLength;
-  const maxCount = currentLen - first;
+  if (IsSharedArrayBuffer(newO)) return Throw.TypeError('Attempt to access shared ArrayBuffer');
+  if (IsDetachedBuffer(newO)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  if (SameValue(newO, obj)) return Throw.TypeError('Subclass constructor returned the same object $1', newO);
+  if (newO.ArrayBufferByteLength < newLength) return Throw.TypeError('Subclass constructor returned a smaller-than-requested object $1', newO);
+  // NOTE: Side-effects of the above steps may have detached O.
+  if (IsDetachedBuffer(obj)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const fromBlock = obj.ArrayBufferData!;
+  const toBlock = newO.ArrayBufferData!;
+  const currentLength = obj.ArrayBufferByteLength;
+  const maxCount = currentLength - first;
   if (maxCount > 0) {
-    const count = Math.min(newLen, maxCount);
-    CopyDataBlockBytes(toBuf, 0, fromBuf, first, count);
+    const count = Math.min(newLength, maxCount);
+    CopyDataBlockBytes(toBlock, 0, fromBlock, first, count);
   }
   return newO;
 }

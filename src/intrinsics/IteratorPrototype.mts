@@ -39,8 +39,8 @@ import {
   ToString,
   Throw,
   Yield,
+  IteratorRecord,
   type GeneratorObject,
-  type IteratorRecord,
   type Realm,
 } from '#self';
 
@@ -76,7 +76,7 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (!(chunkSize instanceof NumberValue) || !chunkSize.isIntegralNumber()) {
     const error = Throw.TypeError('$1 is not an integral Number', chunkSize);
     return Q(yield* IteratorClose(iterated, error));
@@ -109,7 +109,7 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -121,7 +121,7 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   const numberLimit: ValueCompletion<NumberValue> = EnsureCompletion(yield* ToNumber(limit));
   IfAbruptCloseIterator(numberLimit, iterated);
   __ts_cast__<NumberValue>(numberLimit);
@@ -161,7 +161,7 @@ function* IteratorProto_drop([limit = Value.undefined]: Arguments, { thisValue }
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -173,7 +173,7 @@ function* IteratorProto_every([predicate = Value.undefined]: Arguments, { thisVa
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
@@ -202,7 +202,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
@@ -230,7 +230,7 @@ function* IteratorProto_filter([predicate = Value.undefined]: Arguments, { thisV
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -242,7 +242,7 @@ function* IteratorProto_find([predicate = Value.undefined]: Arguments, { thisVal
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
@@ -271,7 +271,7 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(mapper) === false) {
     const error = Throw.TypeError('$1 is not a function', mapper);
     return Q(yield* IteratorClose(iterated, error));
@@ -315,7 +315,7 @@ function* IteratorProto_flatMap([mapper = Value.undefined]: Arguments, { thisVal
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -327,7 +327,7 @@ function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { this
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(procedure) === false) {
     const error = Throw.TypeError('$1 is not a function', procedure);
     return Q(yield* IteratorClose(iterated, error));
@@ -352,7 +352,7 @@ function* IteratorProto_includes([searchElement = Value.undefined, skippedElemen
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   let toSkip: NumberValue;
   if (skippedElements === Value.undefined) {
     toSkip = Value(0);
@@ -398,7 +398,7 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(mapper) === false) {
     const error = Throw.TypeError('$1 is not a function', mapper);
     return Q(yield* IteratorClose(iterated, error));
@@ -424,7 +424,7 @@ function* IteratorProto_map([mapper = Value.undefined]: Arguments, { thisValue }
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -436,7 +436,7 @@ function* IteratorProto_reduce(args: Arguments, { thisValue }: FunctionCallConte
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   const reducer = args[0] ?? Value.undefined;
   if (IsCallable(reducer) === false) {
     const error = Throw.TypeError('$1 is not a function', reducer);
@@ -475,7 +475,7 @@ function* IteratorProto_some([predicate = Value.undefined]: Arguments, { thisVal
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (IsCallable(predicate) === false) {
     const error = Throw.TypeError('$1 is not a function', predicate);
     return Q(yield* IteratorClose(iterated, error));
@@ -504,7 +504,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   const numberLimit: ValueCompletion<NumberValue> = yield* ToNumber(limit);
   IfAbruptCloseIterator(numberLimit, iterated);
   __ts_cast__<Value>(numberLimit);
@@ -541,7 +541,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -553,7 +553,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   if (!(windowSize instanceof NumberValue) || !windowSize.isIntegralNumber()) {
     const error = Throw.TypeError('$1 is not an integral Number', windowSize);
     return Q(yield* IteratorClose(iterated, error));
@@ -597,7 +597,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
     closure,
     'Iterator Helper',
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
-    ['UnderlyingIterators'],
+    { extraSlots: ['UnderlyingIterators'] },
   );
   result.UnderlyingIterators = [iterated];
   return result;
@@ -621,7 +621,7 @@ function* IteratorProto_toArray(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag% */
-function IteratorProto_toStringTagGetter() {
+function IteratorProto_toStringTag_getter() {
   return Value('Iterator');
 }
 
@@ -642,7 +642,7 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
   }
-  let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
+  let iterated = IteratorRecord({ Iterator: obj, NextMethod: Value.undefined, Done: false });
   let sep: string;
   if (separator === Value.undefined) {
     sep = ',';
@@ -655,7 +655,7 @@ function* IteratorProto_join([separator = Value.undefined]: Arguments, { thisVal
   let result = '';
   let first = true;
   while (true) {
-    const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
+    const value = Q(yield* IteratorStepValue(iterated));
     if (value === 'done') {
       return Value(result);
     }
@@ -692,7 +692,7 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['toArray', IteratorProto_toArray, 0],
     ['windows', IteratorProto_windows, 1],
     [wellKnownSymbols.iterator, IteratorProto_iterator, 0],
-    [wellKnownSymbols.toStringTag, [IteratorProto_toStringTagGetter, IteratorPrototype_toStringTag_setter]],
+    [wellKnownSymbols.toStringTag, [IteratorProto_toStringTag_getter, IteratorPrototype_toStringTag_setter]],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Iterator.prototype%'] = proto;

@@ -58,44 +58,44 @@ function thisTemporalInstantValue(value: Value): PlainCompletion<TemporalInstant
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds */
-function InstantProto_epochMillisecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_InstantProto_epochMilliseconds_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
   const epochMilliseconds = floorDiv(instant.EpochNanoseconds, NanosecondsPerMillisecond);
   return F(Number(epochMilliseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds */
-function InstantProto_epochNanosecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_InstantProto_epochNanoseconds_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Value(instant.EpochNanoseconds);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.add */
-function* InstantProto_add([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_add([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Q(yield* AddDurationToInstant('add', instant, temporalDurationLike));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract */
-function* InstantProto_subtract([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_subtract([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Q(yield* AddDurationToInstant('subtract', instant, temporalDurationLike));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until */
-function* InstantProto_until([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_until([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Q(yield* DifferenceTemporalInstant('until', instant, other, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since */
-function* InstantProto_since([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_since([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Q(yield* DifferenceTemporalInstant('since', instant, other, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round */
-function* InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   if (roundTo instanceof UndefinedValue) {
     return Throw.TypeError('roundTo is required');
@@ -132,14 +132,14 @@ function* InstantProto_round([roundTo = Value.undefined]: Arguments, { thisValue
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals */
-function* InstantProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   const other = Q(yield* ToTemporalInstant(_other));
   return instant.EpochNanoseconds === other.EpochNanoseconds ? Value.true : Value.false;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tostring */
-function* InstantProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_InstantProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const instant = Q(thisTemporalInstantValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
@@ -164,25 +164,25 @@ function* InstantProto_toString([options = Value.undefined]: Arguments, { thisVa
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring */
-function InstantProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_InstantProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Value(TemporalInstantToString(instant, undefined, 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson */
-function InstantProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_InstantProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
   return Value(TemporalInstantToString(instant, undefined, 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof */
-function InstantProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_InstantProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   Q(thisTemporalInstantValue(thisValue));
   return Throw.TypeError('Temporal.Instant cannot be converted to primitive value If you are comparing two Temporal.Duration objects with > or <, use Temporal.Instant.compare() instead.');
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso */
-function InstantProto_toZonedDateTimeISO([_timeZone = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_InstantProto_toZonedDateTimeISO([_timeZone = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const instant = Q(thisTemporalInstantValue(thisValue));
   const timeZone = Q(ToTemporalTimeZoneIdentifier(_timeZone));
   return X(CreateTemporalZonedDateTime(instant.EpochNanoseconds, timeZone, 'iso8601'));
@@ -190,19 +190,19 @@ function InstantProto_toZonedDateTimeISO([_timeZone = Value.undefined]: Argument
 
 export function bootstrapTemporalInstantPrototype(realmRec: Realm) {
   const prototype = bootstrapPrototype(realmRec, [
-    ['epochMilliseconds', [InstantProto_epochMillisecondsGetter]],
-    ['epochNanoseconds', [InstantProto_epochNanosecondsGetter]],
-    ['add', InstantProto_add, 1],
-    ['subtract', InstantProto_subtract, 1],
-    ['until', InstantProto_until, 1],
-    ['since', InstantProto_since, 1],
-    ['round', InstantProto_round, 1],
-    ['equals', InstantProto_equals, 1],
-    ['toString', InstantProto_toString, 0],
-    ['toLocaleString', InstantProto_toLocaleString, 0],
-    ['toJSON', InstantProto_toJSON, 0],
-    ['valueOf', InstantProto_valueOf, 0],
-    ['toZonedDateTimeISO', InstantProto_toZonedDateTimeISO, 1],
+    ['epochMilliseconds', [Temporal_InstantProto_epochMilliseconds_getter]],
+    ['epochNanoseconds', [Temporal_InstantProto_epochNanoseconds_getter]],
+    ['add', Temporal_InstantProto_add, 1],
+    ['subtract', Temporal_InstantProto_subtract, 1],
+    ['until', Temporal_InstantProto_until, 1],
+    ['since', Temporal_InstantProto_since, 1],
+    ['round', Temporal_InstantProto_round, 1],
+    ['equals', Temporal_InstantProto_equals, 1],
+    ['toString', Temporal_InstantProto_toString, 0],
+    ['toLocaleString', Temporal_InstantProto_toLocaleString, 0],
+    ['toJSON', Temporal_InstantProto_toJSON, 0],
+    ['valueOf', Temporal_InstantProto_valueOf, 0],
+    ['toZonedDateTimeISO', Temporal_InstantProto_toZonedDateTimeISO, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.Instant');
   realmRec.Intrinsics['%Temporal.Instant.prototype%'] = prototype;
   return prototype;

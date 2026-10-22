@@ -4,10 +4,11 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
+import { registerInternalSlotTracer } from '../gc-internal-slots.mts';
 import {
   Q,
 } from '../completion.mts';
-import type { Mutable } from '../utils/language.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { AddEntriesFromIterable } from './Map.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
@@ -26,6 +27,19 @@ export interface WeakMapObject extends OrdinaryObject {
 export function isWeakMapObject(object: object): object is WeakMapObject {
   return 'WeakMapData' in object;
 }
+
+/** @internal */
+export function registerWeakMapTracer() {
+  registerInternalSlotTracer('WeakMapData', ({ value, trace }) => {
+    __ts_cast__<WeakMapObject['WeakMapData']>(value);
+    value.forEach((entry, index) => {
+      const key = entry.Key;
+      trace.weak(`[[WeakMapData]][${index}].key`, key, 'element');
+      trace.ephemeron(`[[WeakMapData]][${index}].value`, key, entry.Value, 'element');
+    });
+  });
+}
+
 /** https://tc39.es/ecma262/#sec-weakmap-constructor */
 function* WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.

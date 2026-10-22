@@ -244,7 +244,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined]: Argument
 }
 
 /** https://tc39.es/ecma262/#sec-get-map.prototype.size */
-function MapProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function MapProto_size_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -284,7 +284,7 @@ export function bootstrapMapPrototype(realmRec: Realm) {
     ['has', MapProto_has, 1],
     ['keys', MapProto_keys, 0],
     ['set', MapProto_set, 2],
-    ['size', [MapProto_sizeGetter]],
+    ['size', [MapProto_size_getter]],
     ['values', MapProto_values, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 

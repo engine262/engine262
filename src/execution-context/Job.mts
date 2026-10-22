@@ -1,6 +1,13 @@
 import type { kAsyncContext } from '../utils/internal.mts';
 import {
-  type Realm, type AbstractModuleRecord, type ScriptRecord, type ExecutionContext, type FunctionObject,
+  withCapturedReferences,
+  type GCCaptureProvider,
+  type GCMarkable,
+  type GCTrace,
+} from '../gc.mts';
+import { callable, record } from '../utils/language.mts';
+import {
+  type Realm, type AbstractModuleRecord, type ScriptRecord, type NullValue, type ExecutionContext, type FunctionObject,
   Assert,
   Call,
   IsCallable,
@@ -21,25 +28,36 @@ export interface Job {
   readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | null;
 }
 
-/** https://tc39.es/ecma262/#sec-jobcallback-records */
-export interface JobCallbackRecord {
-  Callback: FunctionObject & { [kAsyncContext]?: ExecutionContext; };
-  HostDefined: undefined;
+export type JobCallbackRecordInit = Omit<JobCallbackRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-jobcallback-records */ // @ts-expect-error
+export function JobCallbackRecord(O: JobCallbackRecordInit): JobCallbackRecord
+/** https://tc39.es/ecma262/#sec-jobcallback-records */ // @ts-expect-error
+export @callable() @record class JobCallbackRecord implements GCMarkable {
+  readonly Callback: FunctionObject & { [kAsyncContext]?: ExecutionContext; };
+
+  readonly HostDefined: undefined;
+
+  constructor(init: JobCallbackRecordInit) {
+    if (new.target !== JobCallbackRecord) {
+      throw new TypeError('JobCallbackRecord is a final class and cannot be subclassed');
+    }
+    this.Callback = init.Callback;
+    this.HostDefined = init.HostDefined;
+  }
+
+  mark(trace: GCTrace): void {
+    trace.strong('Callback', this.Callback, 'capture');
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback: FunctionObject): JobCallbackRecord {
-  // 1. Assert: IsCallable(callback) is true.
-  Assert(IsCallable(callback));
-  // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
-  return { Callback: callback, HostDefined: undefined };
+  return JobCallbackRecord({ Callback: callback, HostDefined: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 export function* HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, argumentsList: Arguments): ValueEvaluator {
-  // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback));
-  // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Q(yield* Call(jobCallback.Callback, V, argumentsList));
 }
 

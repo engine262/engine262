@@ -65,14 +65,12 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       //   1. Return value.
       const returnValue = () => value;
       // iv. Let valueThunk be ! CreateBuiltinFunction(returnValue, 0, "", « »).
-      const valueThunk = X(CreateBuiltinFunction(returnValue, 0, Value(''), []));
+      const valueThunk = CreateBuiltinFunction(returnValue, 0, '', []);
       // v. Return ? Invoke(promise, "then", « valueThunk »).
       return Q(yield* Invoke(promiseInner, 'then', [valueThunk]));
     };
     // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
-    thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), ['HostCapturedValues']));
-    // NON-SPEC
-    thenFinally.HostCapturedValues = [onFinally];
+    thenFinally = CreateBuiltinFunction(thenFinallyClosure, 1, '', []);
     // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
     const catchFinallyClosure = function* catchFinallyClosure([reason = Value.undefined]: Arguments): ValueEvaluator {
       // i. Let result be ? Call(onFinally, undefined).
@@ -83,14 +81,12 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       //   1. Return Throw(reason).
       const throwReason = () => Throw(reason);
       // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
-      const thrower = X(CreateBuiltinFunction(throwReason, 0, Value(''), []));
+      const thrower = CreateBuiltinFunction(throwReason, 0, '', []);
       // v. Return ? Invoke(promise, "then", « thrower »).
       return Q(yield* Invoke(promiseInner, 'then', [thrower]));
     };
     // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
-    catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), ['HostCapturedValues']));
-    // NON-SPEC
-    catchFinally.HostCapturedValues = [onFinally];
+    catchFinally = CreateBuiltinFunction(catchFinallyClosure, 1, '', []);
   }
   // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
   return Q(yield* Invoke(promise, 'then', [thenFinally, catchFinally]));

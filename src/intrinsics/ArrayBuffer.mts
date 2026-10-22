@@ -35,14 +35,14 @@ function ArrayBuffer_isView([arg = Value.undefined]: Arguments) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer-@@species */
-function ArrayBuffer_species(_: Arguments, { thisValue }: FunctionCallContext) {
+function ArrayBuffer_AtAt_species(_: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
 
 export function bootstrapArrayBuffer(realmRec: Realm) {
   const c = bootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [
     ['isView', ArrayBuffer_isView, 1],
-    [wellKnownSymbols.species, [ArrayBuffer_species]],
+    [wellKnownSymbols.species, [ArrayBuffer_AtAt_species]],
   ]);
   realmRec.Intrinsics['%ArrayBuffer%'] = c;
 }

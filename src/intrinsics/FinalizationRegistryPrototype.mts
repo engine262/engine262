@@ -7,30 +7,11 @@ import type { FinalizationRegistryCell, FinalizationRegistryObject } from './Fin
 import { surroundingAgent } from '#self';
 import {
   CanBeHeldWeakly,
-  CleanupFinalizationRegistry,
-  IsCallable,
   RequireInternalSlot,
   SameValue,
-  type FunctionObject,
   Realm,
   Throw,
 } from '#self';
-
-/** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
-function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
-  // 1. Let finalizationRegistry be the this value.
-  const finalizationRegistry = thisValue;
-  // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
-  Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
-  // 3. If callback is present and IsCallable(callback) is false, throw a TypeError exception.
-  if (callback !== Value.undefined && !IsCallable(callback)) {
-    return Throw.TypeError('$1 is not a function', callback);
-  }
-  // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
-  Q(yield* CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, { Callback: callback as FunctionObject, HostDefined: undefined }));
-  // 5. Return *undefined*.
-  return Value.undefined;
-}
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
 function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
@@ -99,9 +80,6 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
 
 export function bootstrapFinalizationRegistryPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
-    surroundingAgent.feature('cleanup-some')
-      ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]
-      : undefined,
     ['register', FinalizationRegistryProto_register, 2],
     ['unregister', FinalizationRegistryProto_unregister, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');

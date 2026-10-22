@@ -73,6 +73,6 @@ function* ParseFloat([string = Value.undefined]: Arguments): ValueEvaluator {
   return F(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
-export function bootstrapParseFloat(realmRec: Realm) {
-  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, Value('parseFloat'), [], realmRec);
+export function bootstrapParseFloat(realm: Realm) {
+  realm.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, 'parseFloat', [], { realm });
 }

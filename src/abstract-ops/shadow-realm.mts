@@ -171,13 +171,13 @@ export function ShadowRealmImportValue(specifierString: string, exportNameString
     const value = Q(yield* Get(exports, string));
     const realm = f.Realm;
     return Q(yield* GetWrappedValue(realm, value));
-  }, 1, Value(''), [], callerRealm);
-  const onRejected = CreateBuiltinFunction((([error = Value.undefined]) => {
+  }, 1, '', [], { realm: callerRealm });
+  const onRejected = CreateBuiltinFunction(function onRejected([error = Value.undefined]) {
     // 1. Let realmRecord be the function's associated Realm Record.
     const realmRecord = callerRealm;
     const copiedError = CreateTypeErrorCopy(realmRecord, evalRealm, error);
     return ThrowCompletion(copiedError);
-  }), 1, Value(''), [], callerRealm);
+    }, 1, '', [], { realm: callerRealm });
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   return PerformPromiseThen(innerCapability.Promise, onFullfilled, onRejected, promiseCapability);
 }

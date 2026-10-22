@@ -6,6 +6,7 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
+import { registerInternalSlotTracer } from '../gc-internal-slots.mts';
 import {
   IfAbruptCloseIterator,
   Q,
@@ -34,6 +35,7 @@ import {
   type OrdinaryObject,
 } from '#self';
 
+/** https://tc39.es/ecma262/#sec-add-entries-from-iterable */
 export function* AddEntriesFromIterable(target: ObjectValue, iterable: Value, adder: FunctionObject): ValueEvaluator {
   Assert(iterable !== Value.undefined && iterable !== Value.null);
   const iteratorRecord = Q(yield* GetIterator(iterable, 'sync'));
@@ -69,6 +71,20 @@ export interface MapObject extends OrdinaryObject {
 export function isMapObject(value: Value): value is MapObject {
   return 'MapData' in value;
 }
+
+/** @internal */
+export function registerMapTracer() {
+  registerInternalSlotTracer('MapData', ({ value, trace }) => {
+    __ts_cast__<MapObject['MapData']>(value);
+    value.forEach((entry, index) => {
+      if (entry && typeof entry === 'object') {
+        trace.strong(`[[MapData]][${index}].key`, entry.Key, 'element');
+        trace.strong(`[[MapData]][${index}].value`, entry.Value, 'element');
+      }
+    });
+  });
+}
+
 /** https://tc39.es/ecma262/#sec-map-iterable */
 function* MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
@@ -114,7 +130,7 @@ function* Map_groupBy([items = Value.undefined, callback = Value.undefined]: Arg
 }
 
 /** https://tc39.es/ecma262/#sec-get-map-@@species */
-function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function Map_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return the this value.
   return thisValue;
 }
@@ -122,7 +138,7 @@ function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext)
 export function bootstrapMap(realmRec: Realm) {
   const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
     ['groupBy', Map_groupBy, 2],
-    [wellKnownSymbols.species, [Map_speciesGetter]],
+    [wellKnownSymbols.species, [Map_AtAt_species_getter]],
   ]);
 
   realmRec.Intrinsics['%Map%'] = mapConstructor;

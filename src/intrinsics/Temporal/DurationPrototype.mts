@@ -73,79 +73,79 @@ function thisTemporalDurationValue(value: Value): PlainCompletion<TemporalDurati
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years */
-function DurationProto_yearsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_years_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Years));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.months */
-function DurationProto_monthsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_months_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Months));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.weeks */
-function DurationProto_weeksGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_weeks_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Weeks));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.days */
-function DurationProto_daysGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_days_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Days));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.hours */
-function DurationProto_hoursGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_hours_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Hours));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.minutes */
-function DurationProto_minutesGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_minutes_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Minutes));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.seconds */
-function DurationProto_secondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_seconds_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Seconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.milliseconds */
-function DurationProto_millisecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_milliseconds_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Milliseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.microseconds */
-function DurationProto_microsecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_microseconds_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Microseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.nanoseconds */
-function DurationProto_nanosecondsGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_nanoseconds_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(Number(duration.Nanoseconds));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.sign */
-function DurationProto_signGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_sign_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return F(DurationSign(duration));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.blank */
-function DurationProto_blankGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_blank_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return DurationSign(duration) === 0 ? Value.true : Value.false;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.with */
-function* DurationProto_with([_temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_with([_temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   const partial = Q(yield* ToPartialDurationRecord(_temporalDurationLike));
   const years = BigInt(partial.Years ?? duration.Years);
@@ -162,13 +162,13 @@ function* DurationProto_with([_temporalDurationLike = Value.undefined]: Argument
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.negated */
-function DurationProto_negated(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_negated(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return CreateNegatedTemporalDuration(duration);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.abs */
-function* DurationProto_abs(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_abs(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return X(CreateTemporalDuration(
     abs(duration.Years),
@@ -185,19 +185,19 @@ function* DurationProto_abs(_args: Arguments, { thisValue }: FunctionCallContext
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.add */
-function* DurationProto_add([other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_add([other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return Q(yield* AddDurations('add', duration, other));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.subtract */
-function* DurationProto_subtract([other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_subtract([other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return Q(yield* AddDurations('subtract', duration, other));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round */
-function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   if (roundTo instanceof UndefinedValue) {
     return Throw.TypeError('roundTo is required');
@@ -299,7 +299,7 @@ function* DurationProto_round([roundTo = Value.undefined]: Arguments, { thisValu
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total */
-function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   if (totalOf instanceof UndefinedValue) {
     return Throw.TypeError('totalOf is required');
@@ -347,7 +347,7 @@ function* DurationProto_total([totalOf = Value.undefined]: Arguments, { thisValu
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring */
-function* DurationProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_DurationProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const duration = Q(thisTemporalDurationValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
@@ -376,48 +376,48 @@ function* DurationProto_toString([options = Value.undefined]: Arguments, { thisV
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson */
-function DurationProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return Value(TemporalDurationToString(duration, 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tolocalestring */
-function DurationProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const duration = Q(thisTemporalDurationValue(thisValue));
   return Value(TemporalDurationToString(duration, 'auto'));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof */
-function DurationProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_DurationProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   Q(thisTemporalDurationValue(thisValue));
   return Throw.TypeError('Temporal.Duration cannot be converted to primitive value. If you are comparing two Temporal.Duration objects with > or <, use Temporal.Duration.compare() instead.');
 }
 
 export function bootstrapTemporalDurationPrototype(realmRec: Realm) {
   const prototype = bootstrapPrototype(realmRec, [
-    ['years', [DurationProto_yearsGetter]],
-    ['months', [DurationProto_monthsGetter]],
-    ['weeks', [DurationProto_weeksGetter]],
-    ['days', [DurationProto_daysGetter]],
-    ['hours', [DurationProto_hoursGetter]],
-    ['minutes', [DurationProto_minutesGetter]],
-    ['seconds', [DurationProto_secondsGetter]],
-    ['milliseconds', [DurationProto_millisecondsGetter]],
-    ['microseconds', [DurationProto_microsecondsGetter]],
-    ['nanoseconds', [DurationProto_nanosecondsGetter]],
-    ['sign', [DurationProto_signGetter]],
-    ['blank', [DurationProto_blankGetter]],
-    ['with', DurationProto_with, 1],
-    ['negated', DurationProto_negated, 0],
-    ['abs', DurationProto_abs, 0],
-    ['add', DurationProto_add, 1],
-    ['subtract', DurationProto_subtract, 1],
-    ['round', DurationProto_round, 1],
-    ['total', DurationProto_total, 1],
-    ['toString', DurationProto_toString, 0],
-    ['toJSON', DurationProto_toJSON, 0],
-    ['toLocaleString', DurationProto_toLocaleString, 0],
-    ['valueOf', DurationProto_valueOf, 0],
+    ['years', [Temporal_DurationProto_years_getter]],
+    ['months', [Temporal_DurationProto_months_getter]],
+    ['weeks', [Temporal_DurationProto_weeks_getter]],
+    ['days', [Temporal_DurationProto_days_getter]],
+    ['hours', [Temporal_DurationProto_hours_getter]],
+    ['minutes', [Temporal_DurationProto_minutes_getter]],
+    ['seconds', [Temporal_DurationProto_seconds_getter]],
+    ['milliseconds', [Temporal_DurationProto_milliseconds_getter]],
+    ['microseconds', [Temporal_DurationProto_microseconds_getter]],
+    ['nanoseconds', [Temporal_DurationProto_nanoseconds_getter]],
+    ['sign', [Temporal_DurationProto_sign_getter]],
+    ['blank', [Temporal_DurationProto_blank_getter]],
+    ['with', Temporal_DurationProto_with, 1],
+    ['negated', Temporal_DurationProto_negated, 0],
+    ['abs', Temporal_DurationProto_abs, 0],
+    ['add', Temporal_DurationProto_add, 1],
+    ['subtract', Temporal_DurationProto_subtract, 1],
+    ['round', Temporal_DurationProto_round, 1],
+    ['total', Temporal_DurationProto_total, 1],
+    ['toString', Temporal_DurationProto_toString, 0],
+    ['toJSON', Temporal_DurationProto_toJSON, 0],
+    ['toLocaleString', Temporal_DurationProto_toLocaleString, 0],
+    ['valueOf', Temporal_DurationProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.Duration');
   realmRec.Intrinsics['%Temporal.Duration.prototype%'] = prototype;
   return prototype;

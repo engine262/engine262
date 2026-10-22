@@ -34,7 +34,7 @@ type Props = [
   async?: boolean
 ];
 /** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
-export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (Props | undefined)[]) {
+export function assignProps(realm: Realm, obj: ObjectValue, props: readonly (Props | undefined)[]) {
   for (const item of props) {
     if (item === undefined) {
       continue;
@@ -58,10 +58,12 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
           0,
           name,
           [],
-          realmRec,
-          undefined,
-          'get',
-          async,
+          {
+            captures: null,
+            realm,
+            prefix: 'get',
+            async,
+          },
         );
       }
       if (typeof setter === 'function') {
@@ -70,10 +72,12 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
           1,
           name,
           [],
-          realmRec,
-          undefined,
-          'set',
-          async,
+          {
+            captures: null,
+            realm,
+            prefix: 'set',
+            async,
+          },
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
@@ -90,7 +94,13 @@ export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (
       let value;
       if (typeof v === 'function') {
         Assert(typeof len === 'number');
-        value = CreateBuiltinFunction(v, len, name, [], realmRec, undefined, undefined, async);
+        value = CreateBuiltinFunction(v, len, name, [],
+          {
+            captures: null,
+            realm,
+            async,
+          }
+        );
       } else {
         value = v;
       }
@@ -123,13 +133,9 @@ export function bootstrapPrototype(realmRec: Realm, props: readonly (Props | und
   return proto;
 }
 
-export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, name: string, length: number, Prototype: ObjectValue, props: readonly (Props | undefined)[] = []) {
+export function bootstrapConstructor(realm: Realm, Constructor: NativeSteps, name: string, length: number, Prototype: ObjectValue, props: readonly (Props | undefined)[] = []) {
   const cons = CreateBuiltinFunction(
-    markBuiltinFunctionAsConstructor(Constructor),
-    length,
-    Value(name),
-    [],
-    realmRec,
+    markBuiltinFunctionAsConstructor(Constructor), length, name, [], { captures: null, realm },
   );
 
   X(cons.DefineOwnProperty('prototype', Descriptor({
@@ -148,7 +154,7 @@ export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, 
     })));
   }
 
-  assignProps(realmRec, cons, props);
+  assignProps(realm, cons, props);
 
   return cons;
 }

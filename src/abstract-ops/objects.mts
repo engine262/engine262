@@ -4,7 +4,6 @@ import {
   SymbolValue, JSStringValue, UndefinedValue, NullValue,
   Value,
   type PropertyKeyValue,
-  type CanBeNativeSteps,
 } from '../value.mts';
 import {
   Q, X,
@@ -29,7 +28,7 @@ import {
   type FunctionObject,
   type Intrinsics,
 } from './all.mts';
-import { CreateBuiltinFunction, surroundingAgent, type PlainEvaluator, type FullyPopulatedDescriptor, type DataDescriptorInit, type AccessorDescriptorInit } from '#self';
+import { surroundingAgent, type PlainEvaluator, type FullyPopulatedDescriptor, type DataDescriptorInit, type AccessorDescriptorInit, CreateDataPropertyOrThrow } from '#self';
 
 export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;
@@ -376,25 +375,26 @@ export function OrdinaryObjectCreate<const T extends string>(proto: ObjectValue 
 }
 
 /** This is a helper function to define non-spec host objects. */
-OrdinaryObjectCreate.from = (object: Record<string, Value | CanBeNativeSteps>, proto?: ObjectValue | NullValue) => {
+OrdinaryObjectCreate.from = (object: Record<string, Value>, proto?: ObjectValue | NullValue) => {
   const O = OrdinaryObjectCreate(proto || surroundingAgent.intrinsic('%Object.prototype%'));
   for (const key in object) {
     if (Object.hasOwn(object, key)) {
       const value = object[key];
-      X(CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from(value, key)));
+      Assert(value instanceof Value);
+      X(CreateDataPropertyOrThrow(O, Value(key), value));
     }
   }
   return O;
 };
 
-// 9.1.13 OrdinaryCreateFromConstructor
+/** https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor */
 export function* OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics, internalSlotsList?: readonly T[]): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(yield* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
-// 9.1.14 GetPrototypeFromConstructor
+/** https://tc39.es/ecma262/#sec-getprototypefromconstructor */
 export function* GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.

@@ -1,4 +1,3 @@
-import { Value } from '../value.mts';
 import { X } from '../completion.mts';
 import {
   Assert,
@@ -14,8 +13,8 @@ function ThrowTypeError() {
   return Throw.TypeError('The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them');
 }
 
-export function bootstrapThrowTypeError(realmRec: Realm) {
-  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec));
+export function bootstrapThrowTypeError(realm: Realm) {
+  const f = CreateBuiltinFunction(ThrowTypeError, 0, '', [], { realm });
   Assert(X(SetIntegrityLevel(f, 'frozen')));
-  realmRec.Intrinsics['%ThrowTypeError%'] = f;
+  realm.Intrinsics['%ThrowTypeError%'] = f;
 }

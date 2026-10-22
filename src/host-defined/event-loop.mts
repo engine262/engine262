@@ -1,7 +1,8 @@
 import { callCallback } from '../utils/callback.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import {
   Agent,
-  type GCMarker, type Job, type Markable,
+  type Job,
   runSingleJobInQueue,
 } from '#self';
 
@@ -9,7 +10,7 @@ import {
 export type NodeJSJobType = 'timers' | 'pending callbacks' | 'idle-prepare' | 'poll' | 'check' | 'close callbacks';
 export type EventLoopRunType = 'manual' | 'automatic';
 
-export interface EventLoop extends Markable {
+export interface EventLoop extends GCMarkable {
   /**
    * Enqueue a host job (macrotask) now.
    */
@@ -167,11 +168,10 @@ export abstract class AbstractEventLoop implements EventLoop {
     }
   }
 
-  mark(marker: GCMarker): void {
+  mark(trace: GCTrace): void {
+    trace.strong('surroundingAgent', this.surroundingAgent, 'internal-slot');
     for (const job of this.#pendingJobs) {
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
-      marker(job.job);
+      trace.strong(job.name, job, 'job');
     }
   }
 }
@@ -222,12 +222,10 @@ export class WebLikeEventLoop extends AbstractEventLoop {
     return this.queuedJobs.size > 0;
   }
 
-  override mark(marker: GCMarker): void {
-    super.mark(marker);
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
     for (const job of this.queuedJobs.keys()) {
-      marker(job.job);
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
+      trace.strong(job.name, job, 'job');
     }
   }
 }
@@ -300,12 +298,10 @@ export class NodeJSLikeEventLoop extends AbstractEventLoop {
     return this.queuedJobs.size > 0;
   }
 
-  override mark(marker: GCMarker): void {
-    super.mark(marker);
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
     for (const job of this.queuedJobs) {
-      marker(job.job);
-      marker(job.callerRealm);
-      marker(job.callerScriptOrModule);
+      trace.strong(job.name, job, 'job');
     }
   }
 }

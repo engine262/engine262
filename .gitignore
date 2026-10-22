@@ -10,5 +10,5 @@ coverage
 test/test262/last-failed.log
 test/test262/last-failed-list
 test/test262/last-run.json
-**/tsconfig.tsbuildinfo
+**/*.tsbuildinfo
 src/unicode/*.json

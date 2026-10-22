@@ -7,7 +7,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mts';
-import { type GCMarker } from '../host-defined/engine.mts';
+import type { GCMarkable, GCTrace } from '../gc.mts';
 import type { DisposableResourceRecord } from '../abstract-ops/disposable-operations.mts';
 import {
   NormalCompletion, Q, X,
@@ -31,7 +31,7 @@ import {
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-environment-records */
-export abstract class EnvironmentRecord {
+export abstract class EnvironmentRecord implements GCMarkable {
   readonly OuterEnv: EnvironmentRecord | null;
 
   constructor(outerEnv: EnvironmentRecord | null) {
@@ -59,12 +59,12 @@ export abstract class EnvironmentRecord {
   abstract WithBaseObject(): ObjectValue | UndefinedValue;
 
   // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.OuterEnv);
+  mark(trace: GCTrace) {
+    trace.strong('OuterEnv', this.OuterEnv, 'internal-slot');
   }
 }
 
-export interface DeclarativeEnvironmentBinding {
+export interface DeclarativeEnvironmentBinding extends GCMarkable {
   readonly indirect: boolean;
   initialized: boolean;
   readonly mutable?: boolean;
@@ -72,7 +72,7 @@ export interface DeclarativeEnvironmentBinding {
   readonly deletable?: boolean;
   value?: Value | undefined;
 
-  mark(m: GCMarker): void;
+  mark(trace: GCTrace): void;
 }
 
 export interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
@@ -126,8 +126,8 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: undefined,
       deletable: deletable,
       value: undefined,
-      mark(m: GCMarker) {
-        m(this.value);
+      mark(trace: GCTrace) {
+        trace.strong('value', this.value, 'binding');
       },
     });
     //  4. Return NormalCompletion(empty).
@@ -149,8 +149,8 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: strict,
       deletable: false,
       value: undefined,
-      mark(m) {
-        m(this.value);
+      mark(trace) {
+        trace.strong('value', this.value, 'binding');
       },
     });
     // 4. Return NormalCompletion(empty).
@@ -264,12 +264,12 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   // NON-SPEC
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.bindings);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('bindings', this.bindings, 'binding');
     for (const resource of this.DisposableResourceStack) {
-      m(resource.ResourceValue);
-      m(resource.DisposeMethod);
+      trace.strong('resource value', resource.ResourceValue, 'internal-slot');
+      trace.strong('dispose method', resource.DisposeMethod, 'internal-slot');
     }
   }
 }
@@ -381,11 +381,11 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     return X(home.GetPrototypeOf());
   }
 
-  override mark(m: GCMarker) {
-    super.mark(m);
-    m(this.ThisValue);
-    m(this.FunctionObject);
-    m(this.NewTarget);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('ThisValue', this.ThisValue, 'binding');
+    trace.strong('FunctionObject', this.FunctionObject, 'binding');
+    trace.strong('NewTarget', this.NewTarget, 'binding');
   }
 }
 
@@ -459,9 +459,9 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       indirect: true,
       target: [targetModule, targetName],
       initialized: true,
-      mark(m: GCMarker) {
-        m(this.target?.[0]);
-        m(this.target?.[1]);
+      mark(trace: GCTrace) {
+        trace.strong('target module', this.target?.[0], 'binding');
+        trace.strong('target name', this.target?.[1], 'binding');
       },
     });
     // 6. Return NormalCompletion(empty).
@@ -479,8 +479,8 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       strict: true,
       deletable: false,
       initializationSteps,
-      mark(m) {
-        m(this.value);
+      mark(trace) {
+        trace.strong('value', this.value, 'binding');
       },
     };
     this.bindings.set(name, binding);
@@ -634,9 +634,9 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   // NON-SPEC
-  override mark(m: GCMarker) {
-    // TODO(ts): this function does not call super.mark(). is it a mistake?
-    m(this.BindingObject);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('BindingObject', this.BindingObject, 'binding');
   }
 }
 
@@ -948,11 +948,11 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return NormalCompletion(undefined);
   }
 
-  override mark(m: GCMarker) {
-    // TODO(ts): this function does not call super.mark(). is it a mistake?
-    m(this.ObjectRecord);
-    m(this.GlobalThisValue);
-    m(this.DeclarativeRecord);
+  override mark(trace: GCTrace) {
+    super.mark(trace);
+    trace.strong('ObjectRecord', this.ObjectRecord, 'binding');
+    trace.strong('GlobalThisValue', this.GlobalThisValue, 'binding');
+    trace.strong('DeclarativeRecord', this.DeclarativeRecord, 'binding');
   }
 }
 

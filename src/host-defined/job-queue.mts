@@ -1,6 +1,7 @@
 import { callCallback } from '../utils/callback.mts';
+import { withCapturedReferences, type GCMarkable, type GCTrace } from '../gc.mts';
 import {
-  AbruptCompletion, Assert, ClearKeptObjects, ExecutionContext, type GCMarker, type Job, type Markable, ThrowCompletion, Value, type ValueEvaluator, skipDebugger, surroundingAgent,
+  AbruptCompletion, Assert, ClearKeptObjects, ExecutionContext, type Job, ThrowCompletion, Value, NullValue, type ValueEvaluator, skipDebugger, surroundingAgent,
 } from '#self';
 
 

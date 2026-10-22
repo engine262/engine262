@@ -122,13 +122,13 @@ See the [example](https://github.com/engine262/engine262/blob/main/lib-src/node/
 
 ## Developing engine262
 
-`npm run build` and `npm run watch` will build and watch the build.
+`pnpm run build` and `pnpm run watch` will build and watch the build.
 
-`npm run test:test262` will run the [test262][] test suite. Run `npm run test:test262 -- --help` to see the test runner options.
+`pnpm run test:test262` will run the [test262][] test suite. Run `pnpm run test:test262 -- --help` to see the test runner options.
 
-`npm start` start the engine262 CLI.
+`pnpm start` starts the engine262 CLI.
 
-`npm run inspector` start the website (debugging engine262 mainly happens here).
+`pnpm run inspector` starts the website (debugging engine262 mainly happens here).
 
 ## Related Projects
 

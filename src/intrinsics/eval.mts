@@ -11,6 +11,6 @@ function* Eval([x = Value.undefined]: Arguments): ValueEvaluator {
   return Q(yield* PerformEval(x, false, false));
 }
 
-export function bootstrapEval(realmRec: Realm) {
-  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, Value('eval'), [], realmRec);
+export function bootstrapEval(realm: Realm) {
+  realm.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, 'eval', [], { realm });
 }

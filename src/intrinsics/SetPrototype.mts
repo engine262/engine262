@@ -239,7 +239,7 @@ function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/ecma262/#sec-get-set.prototype.size */
-function SetProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+function SetProto_size_getter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -567,7 +567,7 @@ export function bootstrapSetPrototype(realmRec: Realm) {
     ['isDisjointFrom', SetProto_isDisjointFrom, 1],
     ['isSubsetOf', SetProto_isSubsetOf, 1],
     ['isSupersetOf', SetProto_isSupersetOf, 1],
-    ['size', [SetProto_sizeGetter]],
+    ['size', [SetProto_size_getter]],
     ['symmetricDifference', SetProto_symmetricDifference, 1],
     ['values', SetProto_values, 0],
     ['union', SetProto_union, 1],

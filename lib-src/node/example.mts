@@ -7,7 +7,7 @@ import {
   CreateNonEnumerableDataPropertyOrThrow,
   Throw,
   IsCallable,
-  type Job,
+  Job,
   GetActiveScriptOrModule,
   Call,
   NumberValue,
@@ -32,7 +32,7 @@ const agent = new Agent({
               // Create built-in function
               const foo = CreateBuiltinFunction.from(function* foo(value = Value.undefined) {
                 console.log('Native function foo called with argument:', yield* ToString(value));
-              }, 'foo');
+              });
               X(module.SetSyntheticExport('foo', foo));
               console.log('Builtin module evaluated');
             },
@@ -114,19 +114,20 @@ function printResult(value: ValueCompletion) {
   const sleep = CreateBuiltinFunction.from(function* sleep(ms = Value.undefined, callback = Value.undefined) {
     if (!(ms instanceof NumberValue)) return Throw.TypeError('First argument must be a number');
     if (!IsCallable(callback)) return Throw.TypeError('Second argument must be a function');
-    const job: Job = {
+    const job = new Job({
+      name: 'setTimeoutResolve',
       queueName: 'setTimeout',
       callerRealm: surroundingAgent.currentRealmRecord,
       callerScriptOrModule: GetActiveScriptOrModule(),
-      job: function* setTimeoutResolve() {
+      evaluate: function* setTimeoutResolve() {
         return yield* Call(callback, Value.undefined, []);
       },
-    };
+    });
     surroundingAgent.eventLoop.enqueueAsync('timers', job, (enqueue) => {
       setTimeout(enqueue, ms.value);
     });
     return Value.undefined;
-  }, 'sleep');
+  });
   X(CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, 'sleep', sleep));
   pop?.();
 

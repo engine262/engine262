@@ -1,9 +1,15 @@
+import type { GCTrace } from '../gc.mts';
 import { Lexer } from './Lexer.mts';
 import type { ParseNode, ParseNodesByType } from './ParseNode.mts';
 import type { Scope } from './Scope.mts';
 
 export abstract class BaseParser extends Lexer {
   protected abstract scope: Scope;
+
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
+    trace.strong('scope', this.scope, 'internal-slot');
+  }
 
   abstract startNode<T extends ParseNode>(inheritStart?: ParseNode): ParseNode.Unfinished<T>;
 

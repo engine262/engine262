@@ -4,7 +4,7 @@ import type {
   ParseNodesByType,
 } from './ParseNode.mts';
 import { Scope } from './Scope.mts';
-import { surroundingAgent, type Feature } from '#self';
+import { surroundingAgent, type Feature, type GCMarkable, type GCTrace } from '#self';
 
 export interface ParserOptions {
   readonly source: string;
@@ -14,7 +14,7 @@ export interface ParserOptions {
   readonly allowAllPrivateNames?: boolean;
 }
 
-export class Parser extends LanguageParser {
+export class Parser extends LanguageParser implements GCMarkable {
   protected readonly source: string;
 
   protected readonly specifier?: string;
@@ -26,7 +26,7 @@ export class Parser extends LanguageParser {
     allowAllPrivateNames: boolean;
   };
 
-  readonly scope = new Scope(this);
+  override readonly scope = new Scope(this);
 
   protected readonly decoratingSource?: string;
 
@@ -43,6 +43,11 @@ export class Parser extends LanguageParser {
       json,
       allowAllPrivateNames,
     };
+  }
+
+  override mark(trace: GCTrace): void {
+    super.mark(trace);
+    trace.strong('scope', this.scope, 'internal-slot');
   }
 
   isStrictMode() {

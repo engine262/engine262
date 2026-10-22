@@ -1,8 +1,9 @@
 import {
   UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { registerInternalSlotTracer } from '../gc-internal-slots.mts';
 import { IfAbruptCloseIterator, Q } from '../completion.mts';
-import type { Mutable } from '../utils/language.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   Call,
@@ -23,6 +24,15 @@ export interface SetObject extends OrdinaryObject {
 export function isSetObject(value: Value): value is SetObject {
   return 'SetData' in value;
 }
+
+/** @internal */
+export function registerSetTracer() {
+  registerInternalSlotTracer('SetData', ({ value, trace }) => {
+    __ts_cast__<SetObject['SetData']>(value);
+    value.forEach((entry, index) => trace.strong(`[[SetData]][${index}]`, entry, 'element'));
+  });
+}
+
 /** https://tc39.es/ecma262/#sec-set-iterable */
 function* SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
@@ -61,14 +71,14 @@ function* SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
 }
 
 /** https://tc39.es/ecma262/#sec-get-set-@@species */
-function Set_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function Set_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   // Return the this value.
   return thisValue;
 }
 
 export function bootstrapSet(realmRec: Realm) {
   const setConstructor = bootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
-    [wellKnownSymbols.species, [Set_speciesGetter]],
+    [wellKnownSymbols.species, [Set_AtAt_species_getter]],
   ]);
 
   realmRec.Intrinsics['%Set%'] = setConstructor;

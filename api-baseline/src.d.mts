@@ -1048,7 +1048,12 @@ export declare function CreateIntrinsics(realmRec: Realm): any;
 export declare function CreateISODateRecord(y: Integer, m: Integer, d: Integer): PlainCompletion<ISODateRecord>;
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject>;
+export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator, genBrand: string | undefined, genProto: ObjectValue, options?: CreateIteratorFromClosureOptions): Mutable<GeneratorObject>;
+
+export declare interface CreateIteratorFromClosureOptions {
+    readonly extraSlots?: readonly string[];
+    readonly captures?: GCCaptureProvider | null;
+}
 
 /** https://tc39.es/ecma262/#sec-createiterresultobject */
 export declare function CreateIteratorResultObject(value: Value, done: boolean): OrdinaryObject;
@@ -2216,6 +2221,10 @@ declare function gc_2(): void;
 export { gc_2 as gc }
 
 export declare type GCMarker = (value: unknown) => void;
+
+export declare type GCTraceTarget = unknown;
+
+export declare type GCCaptureProvider = () => Readonly<Record<string, GCTraceTarget>>;
 
 export declare function generatorBrandToErrorMessageType(generatorBrand: string | undefined): string | undefined;
 

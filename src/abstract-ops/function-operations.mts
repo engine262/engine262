@@ -28,6 +28,10 @@ import {
 import { type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+import {
+  withCapturedReferences,
+  type GCCaptureProvider,
+} from '../gc.mts';
 import { FunctionProto_toString, type BoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
 import {
   Assert,
@@ -107,8 +111,6 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
   readonly nativeFunction: NativeSteps;
-  // NON-SPEC
-  HostCapturedValues?: readonly Value[];
 }
 export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject | BoundFunctionObject;
 // This file covers abstract operations defined in
@@ -638,57 +640,73 @@ function* BuiltinCallOrConstruct(F: BuiltinFunctionObject, thisArgument: Value |
   }
 }
 
+export interface CreateBuiltinFunctionOptions {
+  readonly captures?: GCCaptureProvider | null;
+  readonly realm?: Realm;
+  readonly proto?: ObjectValue | NullValue;
+  readonly prefix?: string;
+  readonly async?: boolean;
+}
+
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, async = false): BuiltinFunctionObject {
-  if (typeof name === 'string') {
-    name = Value(name);
-  }
-  // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
-  Assert(typeof behaviour === 'function');
-  // 2. If realm is not present, set realm to the current Realm Record.
-  if (realm === undefined) {
-    realm = surroundingAgent.currentRealmRecord;
-  }
-  // 3. Assert: realm is a Realm Record.
-  Assert(realm instanceof Realm);
-  // 4. If prototype is not present, set prototype to realm.[[Intrinsics]].[[%Function.prototype%]].
-  if (prototype === undefined) {
-    prototype = realm.Intrinsics['%Function.prototype%'];
-  }
-  // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName', 'IsClassConstructor'].concat(additionalInternalSlotsList))) as Mutable<BuiltinFunctionObject>;
+export function CreateBuiltinFunction(behaviour: NativeSteps, length: number, name: string | PropertyKeyValue | PrivateName, additionalInternalSlotsList: readonly string[], options?: CreateBuiltinFunctionOptions): BuiltinFunctionObject {
+  const { prefix } = options || {};
+  if (options?.captures === undefined) throw new TypeError('CreateBuiltinFunction requires a captures option');
+  if (name instanceof JSStringValue) name = name.value;
+
+  const realm = options?.realm || surroundingAgent.currentRealmRecord;
+  const proto = options?.proto || realm.Intrinsics['%Function.prototype%'];
+  const async = options?.async || false;
+  // ScriptOrModule?
+  const internalSlotsList = ['Prototype', 'Extensible', 'Realm', 'InitialName', 'Async',
+    // PR3212
+    'IsClassConstructor',
+  ].concat(additionalInternalSlotsList);
+  // Let func be a new built-in function object that, when called, performs the action described by behaviour using the provided arguments as the values of the corresponding parameters specified by behaviour. The new function object has internal slots whose names are the elements of internalSlotsList, and an [[InitialName]] internal slot.
+  const func = MakeBasicObject(internalSlotsList) as Mutable<BuiltinFunctionObject>;
   func.Call = BuiltinFunctionCall;
   if (behaviour.isConstructor) {
     func.Construct = BuiltinFunctionConstruct;
   }
   func.nativeFunction = behaviour;
+
   func.Async = async;
-  // 6. Set func.[[Realm]] to realm.
-  func.Realm = realm;
-  // 7. Set func.[[Prototype]] to prototype.
-  func.Prototype = prototype;
-  // 8. Set func.[[Extensible]] to true.
+  func.Prototype = proto;
   func.Extensible = true;
-  // 10. Set func.[[InitialName]] to null.
+  func.Realm = realm;
   func.InitialName = null;
   // https://github.com/tc39/ecma262/pull/3212/
   func.IsClassConstructor = false;
-  // 11. Perform ! SetFunctionLength(func, length).
-  X(SetFunctionLength(func, length));
-  // 12. If prefix is not present, then
-  if (prefix === undefined) {
-    // a. Perform ! SetFunctionName(func, name).
-    X(SetFunctionName(func, name));
-  } else { // 13. Else
-    // a. Perform ! SetFunctionName(func, name, prefix).
-    X(SetFunctionName(func, name, prefix));
+  if (options.captures) {
+    withCapturedReferences(func, {
+      name: typeof name === 'string' ? name : 'BuiltinFunction',
+      kind: 'callback',
+      captures: options.captures,
+    });
   }
-  // 13. Return func.
+  SetFunctionLength(func, length);
+  if (prefix === undefined) {
+    SetFunctionName(func, name);
+  } else {
+    SetFunctionName(func, name, prefix);
+  }
   return func;
 }
 
 /** This is a helper function to define non-spec host functions. */
-CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name, async = false) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, name, [], surroundingAgent.currentRealmRecord, undefined, undefined, async);
+export interface CreateBuiltinFunctionFromOptions {
+  readonly name?: string;
+  readonly captures?: GCCaptureProvider | null;
+}
+
+CreateBuiltinFunction.from = (
+  steps: CanBeNativeSteps,
+  option?: CreateBuiltinFunctionFromOptions,
+) => {
+  const name = option?.name ?? steps.name;
+  const captures = option?.captures;
+  return CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, name, [], { captures });
+};
 
 export function markBuiltinFunctionAsConstructor(steps: NativeSteps) {
   steps.isConstructor = true;

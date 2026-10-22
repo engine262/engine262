@@ -283,7 +283,7 @@ function* Array_of(items: Arguments, { thisValue }: FunctionCallContext): ValueE
 }
 
 /** https://tc39.es/ecma262/#sec-get-array-@@species */
-function Array_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
+function Array_AtAt_species_getter(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
 
@@ -295,7 +295,7 @@ export function bootstrapArray(realmRec: Realm) {
     ['fromAsync', Array_fromAsync, 1, undefined, true],
     ['isArray', Array_isArray, 1],
     ['of', Array_of, 0],
-    [wellKnownSymbols.species, [Array_speciesGetter]],
+    [wellKnownSymbols.species, [Array_AtAt_species_getter]],
   ]);
 
   realmRec.Intrinsics['%Array%'] = cons;

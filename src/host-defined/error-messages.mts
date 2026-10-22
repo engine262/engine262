@@ -59,6 +59,17 @@ function ThrowFactory(intrinsicName: keyof Intrinsics & `%${string}Error%`): Thr
     return ThrowCompletion(E);
   };
 }
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace Throw {
+  let EvalError: Throw;
+  let RangeError: Throw;
+  let ReferenceError: Throw;
+  let SyntaxError: Throw;
+  let TypeError: Throw;
+  let URIError: Throw;
+  let Error: Throw;
+  let AggregateError: Throw;
+}
 Throw.EvalError = ThrowFactory('%EvalError%');
 Throw.RangeError = ThrowFactory('%RangeError%');
 Throw.ReferenceError = ThrowFactory('%ReferenceError%');

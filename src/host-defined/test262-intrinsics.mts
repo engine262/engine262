@@ -3,7 +3,7 @@
 import { isArray } from '../utils/language.mts';
 import harness from '../../lib/test262-harness.json' with { type: 'json' };
 import {
-  CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, surroundingAgent, ToString, Value, type Arguments, gc,
+  CreateBuiltinFunction, DetachArrayBuffer, EnsureCompletion, inspect, isArrayBufferObject, isBuiltinFunctionObject, JSStringValue, ManagedRealm, NormalCompletion, OrdinaryObjectCreate, Q, surroundingAgent, ToString, Value, type Arguments,
   ParseScript,
   ThrowCompletion,
   Throw,
@@ -53,20 +53,20 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
 
   const $262 = OrdinaryObjectCreate.from({
     AbstractModuleSource: realm.Intrinsics['%AbstractModuleSource%'],
-    createRealm: function* createRealm(): ValueEvaluator {
+    createRealm: CreateBuiltinFunction.from(function* createRealm(): ValueEvaluator {
       Q(surroundingAgent.debugger_cannotPreview);
       const realm = new ManagedRealm();
       const { $262 } = createTest262Intrinsics(realm, printCompatMode, log);
       return $262;
-    },
-    detachArrayBuffer: function* detachArrayBuffer(arrayBuffer = Value.undefined) {
+    }),
+    detachArrayBuffer: CreateBuiltinFunction.from(function* detachArrayBuffer(arrayBuffer = Value.undefined) {
       if (!isArrayBufferObject(arrayBuffer)) {
         return Throw.TypeError('argument[0] must be an ArrayBuffer');
       }
       Q(DetachArrayBuffer(arrayBuffer));
       return Value.undefined;
-    },
-    evalScript: function* evalScript(sourceText) {
+    }),
+    evalScript: CreateBuiltinFunction.from(function* evalScript(sourceText) {
       if (!(sourceText instanceof JSStringValue)) {
         return Throw.TypeError('argument[0] must be a string');
       }
@@ -76,19 +76,22 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
       }
       const status = yield* ScriptEvaluation(s);
       return status;
-    },
-    gc,
+    }),
+    gc: CreateBuiltinFunction.from(function* gc() {
+      surroundingAgent.gc.collect();
+      return Value.undefined;
+    }),
     global: realm.GlobalObject,
     // TODO: agent only if we have multi-threading.
 
     // engine262 only
-    spec: function* spec(value) {
+    spec: CreateBuiltinFunction.from(function* spec(value) {
       if (isBuiltinFunctionObject(value) && value.nativeFunction.section) {
         return Value(value.nativeFunction.section);
       }
       return Value.undefined;
-    },
-    debugger: function* hostDebugger(value = Value.undefined, callValue = Value.false): ValueEvaluator {
+    }),
+    debugger: CreateBuiltinFunction.from(function* hostDebugger(value = Value.undefined, callValue = Value.false): ValueEvaluator {
       if (surroundingAgent.debugger_isPreviewing) {
         return Value.undefined;
       }
@@ -98,7 +101,7 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
         Q(yield* Call(value, Value.undefined, []));
       }
       return Value.undefined;
-    },
+    }),
   });
   // engine262 only
   CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, '$262', $262);
@@ -128,7 +131,9 @@ export function boostTest262Harness(realm: ManagedRealm) {
   const key = Value('buildString');
   const pop = realm.pushTopContext();
   if (X(HasProperty(realm.GlobalObject, key))) {
-    X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, []), true));
+    X(Set(realm.GlobalObject, key, CreateBuiltinFunction(boostHarness.buildString, 1, key, [], {
+      captures: null,
+    }), true));
   }
   pop?.();
 }

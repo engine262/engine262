@@ -17,6 +17,10 @@ import {
 import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
+  withCapturedReferences,
+  type GCCaptureProvider,
+} from '../gc.mts';
+import {
   Assert,
   AsyncGeneratorYield,
   CreateIteratorResultObject,
@@ -35,8 +39,6 @@ export interface GeneratorObject extends OrdinaryObject {
   GeneratorContext: ExecutionContext | null;
   readonly GeneratorBrand: string | undefined;
   UnderlyingIterators?: IteratorRecord[];
-  // NON-SPEC
-  HostCapturedValues?: readonly Value[];
 }
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
@@ -248,46 +250,44 @@ export function* Yield(value: Value): YieldEvaluator {
   // 3. Otherwise, return ? GeneratorYield(CreateIteratorResultObject(value, false)).
   return Q(yield* GeneratorYield(CreateIteratorResultObject(value, false)));
 }
+export interface CreateIteratorFromClosureOptions {
+  readonly extraSlots?: readonly string[];
+  readonly captures?: GCCaptureProvider | null;
+}
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: string | undefined, generatorPrototype: ObjectValue, extraSlots?: string[], enclosedValues?: readonly Value[]): Mutable<GeneratorObject> {
-  Assert(typeof closure === 'function');
-  // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
-  // 2. If extraSlots is not present, set extraSlots to a new empty List.
-  extraSlots ??= [];
-  // 3. Let internalSlotsList be the list-concatenation of extraSlots and « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
+export function CreateIteratorFromClosure(
+  closure: () => YieldEvaluator,
+  genBrand: string | undefined,
+  genProto: ObjectValue,
+  options?: CreateIteratorFromClosureOptions,
+): Mutable<GeneratorObject> {
+  const extraSlots = options?.extraSlots ?? [];
   const internalSlotsList = extraSlots.concat(['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
-  // 4. Let generator be OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
-  const generator = OrdinaryObjectCreate(generatorPrototype, internalSlotsList) as Mutable<GeneratorObject>;
-  // 5. Set generator.[[GeneratorBrand]] to generatorBrand.
-  generator.GeneratorBrand = generatorBrand;
-  // 6. Set generator.[[GeneratorState]] to suspended-start.
-  generator.GeneratorState = 'suspendedStart';
+  const gen = OrdinaryObjectCreate(genProto, internalSlotsList) as Mutable<GeneratorObject>;
+  gen.GeneratorBrand = genBrand;
+  gen.GeneratorState = 'suspendedStart';
 
-  // NON-SPEC
-  if (enclosedValues && extraSlots.includes('HostCapturedValues')) {
-    generator.HostCapturedValues = enclosedValues.slice();
+  if (options?.captures === undefined) throw new Error('options.captures must be null or a GCCaptureProvider.');
+  if (options?.captures) {
+    withCapturedReferences(gen, {
+      name: closure.name || 'IteratorClosure',
+      kind: 'evaluator',
+      captures: options.captures,
+    });
   }
 
-  // 7. Let callerContext be the running execution context.
   const callerContext = surroundingAgent.runningExecutionContext;
-  // 8. Let calleeContext be a new execution context.
   const calleeContext = new ExecutionContext();
-  // 9. Set the Function of calleeContext to null.
   calleeContext.Function = Value.null;
-  // 10. Set the Realm of calleeContext to the current Realm Record.
   calleeContext.Realm = surroundingAgent.currentRealmRecord;
-  // 11. Set the ScriptOrModule of calleeContext to callerContext's ScriptOrModule.
   calleeContext.ScriptOrModule = callerContext.ScriptOrModule;
+
   calleeContext.HostDefined ??= {};
   calleeContext.HostDefined.scriptId = callerContext.HostDefined?.scriptId;
-  // 12. If callerContext is not already suspended, suspend callerContext.
-  // 13. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+
   surroundingAgent.executionContextStack.push(calleeContext);
-  // 14. Perform GeneratorStart(generator, closure).
-  GeneratorStart(generator, closure);
-  // 15. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+  GeneratorStart(gen, closure);
   surroundingAgent.executionContextStack.pop(calleeContext);
-  // 16. Return generator.
-  return generator;
+  return gen;
 }

@@ -1,8 +1,9 @@
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { registerInternalSlotTracer } from '../gc-internal-slots.mts';
 import { IfAbruptCloseIterator, Q } from '../completion.mts';
-import type { Mutable } from '../utils/language.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
   IsCallable,
@@ -23,6 +24,15 @@ export interface WeakSetObject extends OrdinaryObject {
 export function isWeakSetObject(object: object): object is WeakSetObject {
   return 'WeakSetData' in object;
 }
+
+/** @internal */
+export function registerWeakSetTracer() {
+  registerInternalSlotTracer('WeakSetData', ({ value, trace }) => {
+    __ts_cast__<WeakSetObject['WeakSetData']>(value);
+    value.forEach((entry, index) => trace.weak(`[[WeakSetData]][${index}]`, entry, 'element'));
+  });
+}
+
 /** https://tc39.es/ecma262/#sec-weakset-iterable */
 function* WeakSetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.

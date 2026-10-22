@@ -1,8 +1,8 @@
 import {
-  type FinalizationRegistryObject, Q, ObjectValue, SymbolValue, Assert, HostCallJobCallback, type JobCallbackRecord, Value, KeyForSymbol,
+  type FinalizationRegistryObject, Q, ObjectValue, SymbolValue, Assert, HostCallJobCallback, Value, KeyForSymbol,
   GetActiveScriptOrModule,
   surroundingAgent,
-  type Job,
+  Job,
   type PlainEvaluator,
 } from '#self';
 
@@ -16,16 +16,19 @@ export function HostEnqueueFinalizationRegistryCleanupJob(finalizationRegistry: 
   }
   if (surroundingAgent.finalizationRegistryScheduledForCleanup.has(finalizationRegistry)) return;
   surroundingAgent.finalizationRegistryScheduledForCleanup.add(finalizationRegistry);
-  const cleanJob: Job = {
+  const cleanupJob = new Job({
+    name: 'FinalizationRegistryCleanup',
     queueName: 'FinalizationRegistryCleanup',
-    job: function finalizationJob() {
+    evaluate: function* finalizationJob() {
       surroundingAgent.finalizationRegistryScheduledForCleanup.delete(finalizationRegistry);
-      return CleanupFinalizationRegistry(finalizationRegistry);
+      const cleanupResult = yield* CleanupFinalizationRegistry(finalizationRegistry);
+      // If cleanupResult is an abrupt completion, perform any host-defined steps for reporting the error.
+      return cleanupResult;
     },
-    callerRealm: surroundingAgent.currentRealmRecord,
+    callerRealm: finalizationRegistry.Realm,
     callerScriptOrModule: GetActiveScriptOrModule(),
-  };
-  surroundingAgent.jobQueue.enqueueFinalizationRegistryCleanupJob(cleanJob);
+  });
+  surroundingAgent.jobQueue.enqueueFinalizationRegistryCleanupJob(cleanupJob);
 }
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
@@ -45,25 +48,18 @@ export function AddToKeptObjects(object: ObjectValue | SymbolValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
-export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): PlainEvaluator<void> {
+export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject): PlainEvaluator<void> {
   Q(surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry));
-  // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
-  // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
-  if (callback === undefined) {
-    callback = finalizationRegistry.CleanupCallback;
-  }
-  // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
+  const callback = finalizationRegistry.CleanupCallback;
+  // While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
   for (let i = 0; i < finalizationRegistry.Cells.length; i += 1) {
-    // a. Choose any such _cell_.
+    // Choose any such _cell_.
     const cell = finalizationRegistry.Cells[i];
-    if (cell.WeakRefTarget !== undefined) {
-      continue;
-    }
-    // b. Remove cell from finalizationRegistry.[[Cells]].
+    if (cell.WeakRefTarget !== undefined) continue;
+    // Remove cell from finalizationRegistry.[[Cells]].
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1;
-    // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
     Q(yield* HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
   }
 }

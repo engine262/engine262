@@ -3,8 +3,9 @@ import { type JobCallbackRecord } from '../execution-context/Job.mts';
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { registerInternalSlotTracer, registerInternalSlotTracerInitializer } from '../gc-internal-slots.mts';
 import { Q } from '../completion.mts';
-import type { Mutable } from '../utils/language.mts';
+import { __ts_cast__, type Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { surroundingAgent } from '#self';
 import {
@@ -27,6 +28,17 @@ export interface FinalizationRegistryObject extends OrdinaryObject {
 export function isFinalizationRegistryObject(object: object): object is FinalizationRegistryObject {
   return 'Cells' in object;
 }
+export function registerFinalizationRegistryTracer() {
+  registerInternalSlotTracer('Cells', ({ value, trace }) => {
+    __ts_cast__<FinalizationRegistryObject['Cells']>(value);
+    value.forEach((cell, index) => {
+      trace.weak(`[[Cells]][${index}].target`, cell.WeakRefTarget, 'element');
+      trace.weak(`[[Cells]][${index}].token`, cell.UnregisterToken, 'element');
+      trace.strong(`[[Cells]][${index}].heldValue`, cell.HeldValue, 'element');
+    });
+  });
+}
+
 /** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
 function* FinalizationRegistryConstructor(this: BuiltinFunctionObject, [cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.

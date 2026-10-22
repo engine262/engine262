@@ -1,8 +1,8 @@
-import { type GCMarker } from './host-defined/engine.mts';
+import type { GCMarkable, GCTrace } from './gc.mts';
 import {
   Q, X, type ValueEvaluator, type PlainCompletion,
 } from './completion.mts';
-import { OutOfRange, callable } from './utils/language.mts';
+import { OutOfRange, callable, record } from './utils/language.mts';
 import { PropertyKeyMap } from './utils/container.mts';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
 import type { PlainEvaluator } from './evaluator.mts';
@@ -34,6 +34,8 @@ import {
   type GenericDescriptor,
   type DataDescriptor,
   type FullyPopulatedAccessorDescriptor,
+  SymbolDescriptiveString,
+  CanonicalNumericIndexString,
 } from '#self';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
@@ -705,7 +707,7 @@ export type ObjectSlotReturn = {
   [key in keyof ObjectInternalMethods<ObjectValue>]: ReturnType<NonNullable<ObjectInternalMethods<ObjectValue>[key]>>
 };
 /** https://tc39.es/ecma262/#sec-object-type */
-export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
+export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue>, GCMarkable {
   declare readonly type: 'Object'; // defined on prototype by static block
 
   readonly properties: PropertyKeyMap<FullyPopulatedDescriptor>;
@@ -791,19 +793,29 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
     return OrdinaryOwnPropertyKeys(this as unknown as OrdinaryObject);
   }
 
-  // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.properties);
-    this.internalSlotsList.forEach((s) => {
-      // @ts-ignore
-      m(this[s]);
-      if (s === 'HostCapturedValues' && s in this && Array.isArray(this[s])) {
-        this[s].forEach(m);
+  mark(trace: GCTrace) {
+    for (const [key, descriptor] of this.properties) {
+      let name: string;
+      if (key instanceof SymbolValue) {
+        name = SymbolDescriptiveString(key);
+        trace.strong(`${name}:key`, key, 'property');
+      } else {
+        name = key.value;
       }
-    });
+      const numberLike = key instanceof JSStringValue && CanonicalNumericIndexString(key.value) ? 'element' : 'property';
+      trace.strong(name, descriptor.Value, numberLike);
+      trace.strong(`get ${name}`, descriptor.Get, numberLike);
+      trace.strong(`set ${name}`, descriptor.Set, numberLike);
+    }
 
-    this.PrivateElements.forEach((pr) => {
-      m(pr);
+
+    this.PrivateElements.forEach((element) => {
+      trace.strong(`#${element.Key.Description}`, element.Value, 'private-element');
+      trace.strong(`#${element.Key.Description}`, element.Get, 'private-element');
+      trace.strong(`#${element.Key.Description}`, element.Set, 'private-element');
+    });
+    this.ConstructedBy.forEach((constructor, index) => {
+      trace.strong(`ConstructedBy[${index}]`, constructor, 'internal-slot');
     });
   }
 
@@ -827,7 +839,11 @@ export class PrivateName {
   }
 }
 
-export class ReferenceRecord {
+export type ReferenceRecordInit = Omit<ReferenceRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#sec-reference-record-specification-type */  // @ts-expect-error
+export function ReferenceRecord(init: ReferenceRecordInit): ReferenceRecord
+/** https://tc39.es/ecma262/#sec-reference-record-specification-type */  // @ts-expect-error
+export @callable() @record class ReferenceRecord implements GCMarkable {
   readonly Base: 'unresolvable' | Value | EnvironmentRecord;
 
   ReferencedName: Value | PrivateName;
@@ -836,23 +852,20 @@ export class ReferenceRecord {
 
   readonly ThisValue: Value | undefined;
 
-  constructor({
-    Base,
-    ReferencedName,
-    Strict,
-    ThisValue,
-  }: Pick<ReferenceRecord, 'Base' | 'ReferencedName' | 'Strict' | 'ThisValue'>) {
-    this.Base = Base;
-    this.ReferencedName = ReferencedName;
-    this.Strict = Strict;
-    this.ThisValue = ThisValue;
+  constructor(init: ReferenceRecordInit) {
+    if (new.target !== ReferenceRecord) {
+      throw new TypeError('ReferenceRecord is a final class and cannot be subclassed');
+    }
+    this.Base = init.Base;
+    this.ReferencedName = init.ReferencedName;
+    this.Strict = init.Strict;
+    this.ThisValue = init.ThisValue;
   }
 
-  // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.Base);
-    m(this.ReferencedName);
-    m(this.ThisValue);
+  mark(trace: GCTrace) {
+    trace.strong('Base', this.Base, 'internal-slot');
+    trace.strong('ReferencedName', this.ReferencedName, 'internal-slot');
+    trace.strong('ThisValue', this.ThisValue, 'internal-slot');
   }
 }
 
@@ -894,7 +907,7 @@ export function Descriptor(init: DataDescriptorInit): DataDescriptor // @ts-expe
 export function Descriptor(init: Partial<AccessorDescriptorInit>): GenericDescriptor // @ts-expect-error
 export function Descriptor(init: Partial<DataDescriptorInit>): GenericDescriptor // @ts-expect-error
 export function Descriptor(init: Partial<GenericDescriptorInit>): GenericDescriptor // @ts-expect-error
-export @callable() class Descriptor {
+export @callable() @record class Descriptor {
   readonly Value?: Value;
 
   readonly Get?: FunctionObject | UndefinedValue;
@@ -907,13 +920,16 @@ export @callable() class Descriptor {
 
   readonly Configurable?: boolean;
 
-  private constructor(O: AccessorDescriptorInit & DataDescriptorInit) {
-    this.Value = O.Value;
-    this.Get = O.Get;
-    this.Set = O.Set;
-    this.Writable = O.Writable;
-    this.Enumerable = O.Enumerable;
-    this.Configurable = O.Configurable;
+  constructor(init: AccessorDescriptorInit & DataDescriptorInit) {
+    if (new.target !== Descriptor) {
+      throw new TypeError('Descriptor is a final class and cannot be subclassed');
+    }
+    this.Value = init.Value;
+    this.Get = init.Get;
+    this.Set = init.Set;
+    this.Writable = init.Writable;
+    this.Enumerable = init.Enumerable;
+    this.Configurable = init.Configurable;
   }
 
   static everyFieldIsAbsent(descriptor: Descriptor) {
@@ -925,11 +941,10 @@ export @callable() class Descriptor {
       && descriptor.Configurable === undefined;
   }
 
-  // NON-SPEC
-  mark(m: GCMarker) {
-    m(this.Value);
-    m(this.Get);
-    m(this.Set);
+  mark(trace: GCTrace) {
+    trace.strong('Value', this.Value, 'internal-slot');
+    trace.strong('Get', this.Get, 'internal-slot');
+    trace.strong('Set', this.Set, 'internal-slot');
   }
 }
 

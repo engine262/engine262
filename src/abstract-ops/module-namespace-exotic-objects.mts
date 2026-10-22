@@ -45,15 +45,19 @@ export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
 }
 
 const InternalMethods = {
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-getprototypeof */
   * GetPrototypeOf() {
     return Value.null;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-setprototypeof-v */
   * SetPrototypeOf(V) {
     return Q(yield* SetImmutablePrototype(this, V));
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-isextensible */
   * IsExtensible() {
     return false;
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-preventextensions */
   * PreventExtensions() {
     return true;
   },
@@ -172,6 +176,7 @@ const InternalMethods = {
     // 14. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return Q(yield* targetEnv.GetBindingValue(binding.BindingName.stringValue(), true));
   },
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-set-p-v-receiver */
   * Set() {
     return false;
   },

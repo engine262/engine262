@@ -263,13 +263,9 @@ function* encodeURIComponent([uriComponent = Value.undefined]: Arguments): Value
   return Q(Encode(componentString, extraUnescaped));
 }
 
-export function bootstrapURIHandling(realmRec: Realm) {
-  ([
-    ['decodeURI', decodeURI, 1],
-    ['decodeURIComponent', decodeURIComponent, 1],
-    ['encodeURI', encodeURI, 1],
-    ['encodeURIComponent', encodeURIComponent, 1],
-  ] as const).forEach(([name, f, length]) => {
-    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, Value(name), [], realmRec);
-  });
+export function bootstrapURIHandling(realm: Realm) {
+  realm.Intrinsics[`%decodeURI%`] = CreateBuiltinFunction(decodeURI, 1, 'decodeURI', [], { realm });
+  realm.Intrinsics[`%decodeURIComponent%`] = CreateBuiltinFunction(decodeURIComponent, 1, 'decodeURIComponent', [], { realm });
+  realm.Intrinsics[`%encodeURI%`] = CreateBuiltinFunction(encodeURI, 1, 'encodeURI', [], { realm });
+  realm.Intrinsics[`%encodeURIComponent%`] = CreateBuiltinFunction(encodeURIComponent, 1, 'encodeURIComponent', [], { realm });
 }

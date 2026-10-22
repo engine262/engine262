@@ -14,12 +14,13 @@ import {
   type ExportEntry,
 } from './static-semantics/all.mts';
 import { kInternal } from './utils/internal.mts';
-import { type Mutable } from './utils/language.mts';
+import { callable, record, type Mutable } from './utils/language.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import type { GCMarkable, GCTrace } from './gc.mts';
 import { ParseJSON } from './intrinsics/JSON.mts';
 import { avoid_using_children } from './parser/utils.mts';
-import { surroundingAgent, type GCMarker, Realm } from '#self';
 import {
+  surroundingAgent, Realm,
   CreateDefaultExportSyntheticModule,
   Throw,
 } from '#self';
@@ -66,7 +67,11 @@ export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   }
 }
 
-export class ScriptRecord {
+export type ScriptRecordInit = Omit<ScriptRecord, keyof GCMarkable>;
+/** https://tc39.es/ecma262/#script-record */ // @ts-expect-error
+export function ScriptRecord(init: ScriptRecordInit): ScriptRecord
+/** https://tc39.es/ecma262/#script-record */ // @ts-expect-error
+export @callable() @record class ScriptRecord implements GCMarkable {
   readonly Realm: Realm;
 
   readonly ECMAScriptCode: ParseNode.Script;
@@ -75,15 +80,19 @@ export class ScriptRecord {
 
   readonly HostDefined: ParseScriptHostDefined;
 
-  mark(m: GCMarker) {
-    m(this.Realm);
+  mark(trace: GCTrace) {
+    trace.strong('Realm', this.Realm, 'internal-slot');
+    trace.strong('LoadedModules', this.LoadedModules, 'internal-slot');
   }
 
-  constructor(record: Omit<ScriptRecord, 'mark'>) {
-    this.ECMAScriptCode = record.ECMAScriptCode;
-    this.Realm = record.Realm;
-    this.LoadedModules = record.LoadedModules;
-    this.HostDefined = record.HostDefined;
+  constructor(init: ScriptRecordInit) {
+    if (new.target !== ScriptRecord) {
+      throw new TypeError('ScriptRecord is a final class and cannot be subclassed');
+    }
+    this.Realm = init.Realm;
+    this.ECMAScriptCode = init.ECMAScriptCode;
+    this.LoadedModules = init.LoadedModules;
+    this.HostDefined = init.HostDefined;
   }
 }
 export interface ParseScriptHostDefined {

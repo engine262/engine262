@@ -15,15 +15,30 @@ export class OutOfRange extends RangeError {
 /* node:coverage enable */
 
 export function callable<Class extends object>(
-  onCalled = (target: Class, _thisArg: unknown, args: unknown[]) => Reflect.construct(target as new (...args: unknown[]) => unknown, args),
+  onCalled?: (target: Class, thisArg: unknown, args: unknown[]) => unknown,
 ) {
-  const handler: ProxyHandler<Class> = Object.freeze({
-    __proto__: null,
-    apply: onCalled,
-  });
   return function decorator(classValue: Class, _classContext: ClassDecoratorContext<Class & (new (...args: readonly unknown[]) => unknown)>) {
-    return new Proxy(classValue, handler);
+    const handler: ProxyHandler<Class> = Object.freeze({
+      __proto__: null,
+      apply: onCalled ?? ((target, _thisArg, args) => Reflect.construct(
+        target as new (...args: unknown[]) => unknown,
+        args,
+        callableClass as new (...args: unknown[]) => unknown,
+      )),
+    });
+    const callableClass = new Proxy(classValue, handler);
+    return callableClass;
   };
+}
+
+/** Marks a class as a record type. */
+export function record<Class extends object>(classValue: Class) {
+  return classValue;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface record {
+  // a marker interface
 }
 
 export type Mutable<T> = {

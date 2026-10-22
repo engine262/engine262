@@ -1,6 +1,0 @@
-{
-  "name": "@engine262/eslint-plugin",
-  "version": "0.0.0",
-  "main": "./lib/index.mjs",
-  "private": true
-}

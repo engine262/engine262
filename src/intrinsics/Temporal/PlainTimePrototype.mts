@@ -53,55 +53,55 @@ function thisTemporalTimeValue(value: Value): PlainCompletion<TemporalPlainTimeO
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.hour */
-function PlainTimeProto_hourGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_hour_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return F(Number(plainTime.Time.Hour));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.minute */
-function PlainTimeProto_minuteGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_minute_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return F(Number(plainTime.Time.Minute));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.second */
-function PlainTimeProto_secondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_second_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return F(Number(plainTime.Time.Second));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.millisecond */
-function PlainTimeProto_millisecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_millisecond_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return F(Number(plainTime.Time.Millisecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.microsecond */
-function PlainTimeProto_microsecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_microsecond_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return F(Number(plainTime.Time.Microsecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.nanosecond */
-function PlainTimeProto_nanosecondGetter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_nanosecond_getter(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return F(Number(plainTime.Time.Nanosecond));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.add */
-function* PlainTimeProto_add([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_add([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return Q(yield* AddDurationToTime('add', plainTime, temporalDurationLike));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.subtract */
-function* PlainTimeProto_subtract([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_subtract([temporalDurationLike = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return Q(yield* AddDurationToTime('subtract', plainTime, temporalDurationLike));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.with */
-function* PlainTimeProto_with([temporalTimeLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_with([temporalTimeLike = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   if (!Q(yield* IsPartialTemporalObject(temporalTimeLike))) {
     return Throw.TypeError('$1 is not a partial Temporal object', temporalTimeLike);
@@ -120,19 +120,19 @@ function* PlainTimeProto_with([temporalTimeLike = Value.undefined, options = Val
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.until */
-function* PlainTimeProto_until([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_until([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return Q(yield* DifferenceTemporalPlainTime('until', plainTime, other, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.since */
-function* PlainTimeProto_since([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_since([other = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return Q(yield* DifferenceTemporalPlainTime('since', plainTime, other, options));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.round */
-function* PlainTimeProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_round([roundTo = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   if (roundTo instanceof UndefinedValue) {
     return Throw.TypeError('Options parameter is required');
@@ -156,14 +156,14 @@ function* PlainTimeProto_round([roundTo = Value.undefined]: Arguments, { thisVal
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals */
-function* PlainTimeProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_equals([_other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   const other = Q(yield* ToTemporalTime(_other));
   return CompareTimeRecord(plainTime.Time, other.Time) === 0n ? Value.true : Value.false;
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tostring */
-function* PlainTimeProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* Temporal_PlainTimeProto_toString([options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   const resolvedOptions = Q(GetOptionsObject(options));
   const digits = Q(yield* GetTemporalFractionalSecondDigitsOption(resolvedOptions));
@@ -182,42 +182,42 @@ function* PlainTimeProto_toString([options = Value.undefined]: Arguments, { this
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tolocalestring */
-function PlainTimeProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return Value(Q(TimeRecordToString(plainTime.Time, 'auto')));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tojson */
-function PlainTimeProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   const plainTime = Q(thisTemporalTimeValue(thisValue));
   return Value(Q(TimeRecordToString(plainTime.Time, 'auto')));
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof */
-function PlainTimeProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
+function Temporal_PlainTimeProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): PlainCompletion<Value> {
   Q(thisTemporalTimeValue(thisValue));
   return Throw.TypeError('Temporal.PlainTime cannot be converted to primitive value. If you are comparing two Temporal.PlainTime objects with > or <, use Temporal.PlainTime.compare() instead.');
 }
 
 export function bootstrapTemporalPlainTimePrototype(realmRec: Realm) {
   const prototype = bootstrapPrototype(realmRec, [
-    ['hour', [PlainTimeProto_hourGetter]],
-    ['minute', [PlainTimeProto_minuteGetter]],
-    ['second', [PlainTimeProto_secondGetter]],
-    ['millisecond', [PlainTimeProto_millisecondGetter]],
-    ['microsecond', [PlainTimeProto_microsecondGetter]],
-    ['nanosecond', [PlainTimeProto_nanosecondGetter]],
-    ['add', PlainTimeProto_add, 1],
-    ['subtract', PlainTimeProto_subtract, 1],
-    ['with', PlainTimeProto_with, 1],
-    ['until', PlainTimeProto_until, 1],
-    ['since', PlainTimeProto_since, 1],
-    ['round', PlainTimeProto_round, 1],
-    ['equals', PlainTimeProto_equals, 1],
-    ['toString', PlainTimeProto_toString, 0],
-    ['toLocaleString', PlainTimeProto_toLocaleString, 0],
-    ['toJSON', PlainTimeProto_toJSON, 0],
-    ['valueOf', PlainTimeProto_valueOf, 0],
+    ['hour', [Temporal_PlainTimeProto_hour_getter]],
+    ['minute', [Temporal_PlainTimeProto_minute_getter]],
+    ['second', [Temporal_PlainTimeProto_second_getter]],
+    ['millisecond', [Temporal_PlainTimeProto_millisecond_getter]],
+    ['microsecond', [Temporal_PlainTimeProto_microsecond_getter]],
+    ['nanosecond', [Temporal_PlainTimeProto_nanosecond_getter]],
+    ['add', Temporal_PlainTimeProto_add, 1],
+    ['subtract', Temporal_PlainTimeProto_subtract, 1],
+    ['with', Temporal_PlainTimeProto_with, 1],
+    ['until', Temporal_PlainTimeProto_until, 1],
+    ['since', Temporal_PlainTimeProto_since, 1],
+    ['round', Temporal_PlainTimeProto_round, 1],
+    ['equals', Temporal_PlainTimeProto_equals, 1],
+    ['toString', Temporal_PlainTimeProto_toString, 0],
+    ['toLocaleString', Temporal_PlainTimeProto_toLocaleString, 0],
+    ['toJSON', Temporal_PlainTimeProto_toJSON, 0],
+    ['valueOf', Temporal_PlainTimeProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Temporal.PlainTime');
   realmRec.Intrinsics['%Temporal.PlainTime.prototype%'] = prototype;
   return prototype;

@@ -3,6 +3,7 @@ import {
   SymbolValue,
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
+import { registerInternalSlotTracer } from '../gc-internal-slots.mts';
 import { Q } from '../completion.mts';
 import type { Mutable } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
@@ -16,6 +17,14 @@ export interface WeakRefObject extends OrdinaryObject {
 export function isWeakRef(object: object): object is WeakRefObject {
   return 'WeakRefTarget' in object && !('HeldValue' in object);
 }
+
+/** @internal */
+export function registerWeakRefTracer() {
+  registerInternalSlotTracer('WeakRefTarget', ({ value, trace }) => {
+    trace.weak('[[WeakRefTarget]]', value, 'internal-slot');
+  });
+}
+
 /** https://tc39.es/ecma262/#sec-weak-ref-target */
 function* WeakRefConstructor(this: FunctionObject, [target = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
