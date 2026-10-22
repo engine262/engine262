@@ -51,6 +51,12 @@ export interface Engine262Feature {
 export const FEATURES = ([
   // stage 2.7
   {
+    name: 'Immutable ArrayBuffers',
+    flag: 'immutable-arraybuffer',
+    url: 'https://github.com/tc39/proposal-immutable-arraybuffer',
+    enableInPlayground: true,
+  },
+  {
     name: 'Decorators',
     flag: 'decorators',
     url: 'https://github.com/tc39/proposal-decorators',

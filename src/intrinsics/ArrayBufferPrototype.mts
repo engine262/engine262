@@ -212,15 +212,21 @@ export function bootstrapArrayBufferPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
     ['detached', [ArrayBufferProto_detached]],
-    ['immutable', [ArrayBufferProto_immutable]],
+    surroundingAgent.feature('immutable-arraybuffer')
+      ? ['immutable', [ArrayBufferProto_immutable]]
+      : undefined,
     ['maxByteLength', [ArrayBufferProto_maxByteLength]],
     ['resizable', [ArrayBufferProto_resizable]],
     ['resize', ArrayBufferProto_resize, 1],
     ['slice', ArrayBufferProto_slice, 2],
-    ['sliceToImmutable', ArrayBufferProto_sliceToImmutable, 2],
+    surroundingAgent.feature('immutable-arraybuffer')
+      ? ['sliceToImmutable', ArrayBufferProto_sliceToImmutable, 2]
+      : undefined,
     ['transfer', ArrayBufferProto_transfer, 0],
     ['transferToFixedLength', ArrayBufferProto_transferToFixedLength, 0],
-    ['transferToImmutable', ArrayBufferProto_transferToImmutable, 0],
+    surroundingAgent.feature('immutable-arraybuffer')
+      ? ['transferToImmutable', ArrayBufferProto_transferToImmutable, 0]
+      : undefined,
   ], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
 
   realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;

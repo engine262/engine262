@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { Agent, ManagedRealm, NormalCompletion, setSurroundingAgent, Value } from '#self';
 
 function evaluate(source: string) {
-  setSurroundingAgent(new Agent());
+  setSurroundingAgent(new Agent({ features: ['immutable-arraybuffer'] }));
   const realm = new ManagedRealm();
   const result = realm.evaluateScriptSkipDebugger(source);
   expect(result).toBeInstanceOf(NormalCompletion);
