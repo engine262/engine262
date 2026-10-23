@@ -561,7 +561,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
   let undersizedString: string | undefined;
   if (undersized === Value.undefined) undersizedString = 'only-full';
   if (undersized instanceof JSStringValue) undersizedString = undersized.stringValue();
-  if (!(undersized instanceof JSStringValue) || (undersizedString !== 'only-full' && undersizedString !== 'allow-partial')) {
+  if (undersizedString !== 'only-full' && undersizedString !== 'allow-partial') {
     const error = Throw.TypeError('$1 is not a valid undersized mode', undersized);
     return Q(yield* IteratorClose(iterated, error));
   }
