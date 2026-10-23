@@ -634,19 +634,16 @@ export class BigIntValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
   static bitwiseAND(x: BigIntValue, y: BigIntValue) {
-    // 1. Return BigIntBitwiseOp(&, x, y).
     return BigIntBitwiseOp('&', x, y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
   static bitwiseXOR(x: BigIntValue, y: BigIntValue) {
-    // 1. Return BigIntBitwiseOp(^, x, y).
     return BigIntBitwiseOp('^', x, y);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
   static bitwiseOR(x: BigIntValue, y: BigIntValue) {
-    // 1. Return BigIntBitwiseOp(|, x, y);
     return BigIntBitwiseOp('|', x, y);
   }
 
@@ -672,14 +669,14 @@ export class BigIntValue extends PrimitiveValue {
 }
 
 /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
-function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
+function BigIntBitwiseOp(op: '&' | '|' | '^', xBit: BigIntValue, yBit: BigIntValue) {
   switch (op) {
     case '&':
-      return Z(R(x) & R(y));
+      return Z(R(xBit) & R(yBit));
     case '|':
-      return Z(R(x) | R(y));
+      return Z(R(xBit) | R(yBit));
     case '^':
-      return Z(R(x) ^ R(y));
+      return Z(R(xBit) ^ R(yBit));
     default:
       throw OutOfRange.exhaustive(op);
   }
