@@ -1062,7 +1062,7 @@ export declare function CreateIteratorFromClosure(closure: () => YieldEvaluator,
 export declare function CreateIteratorResultObject(value: Value, done: boolean): OrdinaryObject;
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
-export declare function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'all'): PlainEvaluator<Value[]>;
+export declare function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'any'): PlainEvaluator<Value[]>;
 
 export declare function CreateListFromArrayLike(obj: Value, validElementTypes: 'property-key'): PlainEvaluator<PropertyKeyValue[]>;
 

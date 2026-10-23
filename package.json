@@ -53,7 +53,7 @@
     "prebuild:err": "node scripts/generate_error_message_hint.mts",
     "prebuild:bundle_test262_harness": "node scripts/bundle_test262_harness.mts",
     "watch": "run-p \"watch:*\"",
-    "build": "run-s prebuild:bundle_test262_harness prebuild:err build:regex_data build:dts build:engine",
+    "build": "run-s prebuild:bundle_test262_harness prebuild:err build:regex_data build:dts build:engine api:bundle",
     "api:baseline": "run-s build:dts api:bundle",
     "api:bundle": "api-extractor run --local --config config/api-extractor/src.json && api-extractor run --local --config config/api-extractor/inspector.json && api-extractor run --local --config config/api-extractor/node.json",
     "api:check": "npm run api:baseline && git diff --exit-code -- api-baseline",

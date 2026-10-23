@@ -314,9 +314,9 @@ export function* LengthOfArrayLike(obj: ObjectValue): PlainEvaluator<number> {
 }
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
-export function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'all'): PlainEvaluator<Value[]>
+export function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'any'): PlainEvaluator<Value[]>
 export function CreateListFromArrayLike(obj: Value, validElementTypes: 'property-key'): PlainEvaluator<PropertyKeyValue[]>
-export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'all' | 'property-key' = 'all'): PlainEvaluator<Value[]> {
+export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'any' | 'property-key' = 'any'): PlainEvaluator<Value[]> {
   // 2. If Type(obj) is not Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
