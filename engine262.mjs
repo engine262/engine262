@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 2fe331f616564ffe038b5e7897085361b4cc131b
+ * engine262 0.0.1 d8d2f22f6c9a5a9057334ebf6f390f7bbe149db2
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -27761,6 +27761,11 @@ ClassStaticBlockDefinitionEvaluation.section = 'https://tc39.es/ecma262/#sec-run
 const FEATURES = [
 // stage 2.7
 {
+  name: 'Immutable ArrayBuffers',
+  flag: 'immutable-arraybuffer',
+  url: 'https://github.com/tc39/proposal-immutable-arraybuffer',
+  enableInPlayground: true
+}, {
   name: 'Decorators',
   flag: 'decorators',
   url: 'https://github.com/tc39/proposal-decorators',
@@ -29473,7 +29478,7 @@ function isTypedArrayObject(value) {
 }
 
 /** https://tc39.es/ecma262/#typedarray-species-create */
-function* TypedArraySpeciesCreate(exemplar, argumentList) {
+function* TypedArraySpeciesCreate(exemplar, argumentList, accessMode = 'read') {
   /* Assert */ /* node:coverage ignore next */ // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
   if (!(exemplar instanceof ObjectValue && 'TypedArrayName' in exemplar && 'ContentType' in exemplar)) throw new Assert.Error("exemplar instanceof ObjectValue\n    && 'TypedArrayName' in exemplar\n    && 'ContentType' in exemplar");
 
@@ -29487,7 +29492,7 @@ function* TypedArraySpeciesCreate(exemplar, argumentList) {
   }
   const constructor = _constructor;
   // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
-  /* ReturnIfAbrupt */let _result = yield* TypedArrayCreateFromConstructor(constructor, argumentList);
+  /* ReturnIfAbrupt */let _result = yield* TypedArrayCreateFromConstructor(constructor, argumentList, accessMode);
   /* ReturnIfAbrupt */if (_result instanceof Completion) {
     if (_result instanceof AbruptCompletion) return _result;
     _result = _result.Value;
@@ -29504,14 +29509,14 @@ function* TypedArraySpeciesCreate(exemplar, argumentList) {
 }
 
 /** https://tc39.es/ecma262/#sec-typedarraycreatefromconstructor */
-function* TypedArrayCreateFromConstructor(constructor, argumentList) {
+function* TypedArrayCreateFromConstructor(constructor, argumentList, accessMode = 'read') {
   /* ReturnIfAbrupt */let _newTypedArray = yield* Construct(constructor, argumentList);
   /* ReturnIfAbrupt */if (_newTypedArray instanceof Completion) {
     if (_newTypedArray instanceof AbruptCompletion) return _newTypedArray;
     _newTypedArray = _newTypedArray.Value;
   }
   const newTypedArray = _newTypedArray;
-  /* ReturnIfAbrupt */let _taRecord = ValidateTypedArray(newTypedArray);
+  /* ReturnIfAbrupt */let _taRecord = ValidateTypedArray(newTypedArray, 'seq-cst', accessMode);
   /* ReturnIfAbrupt */if (_taRecord instanceof Completion) {
     if (_taRecord instanceof AbruptCompletion) return _taRecord;
     _taRecord = _taRecord.Value;
@@ -29546,13 +29551,16 @@ function* TypedArrayCreateSameType(exemplar, length) {
 TypedArrayCreateSameType.section = 'https://tc39.es/ecma262/#sec-typedarray-create-same-type';
 
 /** https://tc39.es/ecma262/#sec-validatetypedarray */
-function ValidateTypedArray(O, order) {
+function ValidateTypedArray(O, order, accessMode = 'read') {
   /* ReturnIfAbrupt */let _temp = RequireInternalSlot(O, 'TypedArrayName');
   /* ReturnIfAbrupt */if (_temp instanceof Completion) {
     if (_temp instanceof AbruptCompletion) return _temp;
     _temp = _temp.Value;
   }
   /* Assert */ /* node:coverage ignore next */if (!('ViewedArrayBuffer' in O)) throw new Assert.Error("'ViewedArrayBuffer' in O");
+  if (accessMode === 'write' && IsImmutableBuffer(O.ViewedArrayBuffer)) {
+    return Throw.TypeError('Cannot modify immutable TypedArray');
+  }
   return ValidateTypedArrayBounds(O);
 }
 ValidateTypedArray.section = 'https://tc39.es/ecma262/#sec-validatetypedarray';
@@ -29925,7 +29933,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     }
     const values = _values;
     const len = values.length;
-    /* ReturnIfAbrupt */let _targetObj = yield* TypedArrayCreateFromConstructor(C, [F(len)]);
+    /* ReturnIfAbrupt */let _targetObj = yield* TypedArrayCreateFromConstructor(C, [F(len)], 'write');
     /* ReturnIfAbrupt */if (_targetObj instanceof Completion) {
       if (_targetObj instanceof AbruptCompletion) return _targetObj;
       _targetObj = _targetObj.Value;
@@ -29973,7 +29981,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   }
   const len = _len2;
   // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  /* ReturnIfAbrupt */let _targetObj2 = yield* TypedArrayCreateFromConstructor(C, [F(len)]);
+  /* ReturnIfAbrupt */let _targetObj2 = yield* TypedArrayCreateFromConstructor(C, [F(len)], 'write');
   /* ReturnIfAbrupt */if (_targetObj2 instanceof Completion) {
     if (_targetObj2 instanceof AbruptCompletion) return _targetObj2;
     _targetObj2 = _targetObj2.Value;
@@ -30029,7 +30037,7 @@ function* TypedArray_of(items, {
   if (!IsConstructor(C)) {
     return Throw.TypeError('$1 is not a constructor', C);
   }
-  /* ReturnIfAbrupt */let _newObj = yield* TypedArrayCreateFromConstructor(C, [F(len)]);
+  /* ReturnIfAbrupt */let _newObj = yield* TypedArrayCreateFromConstructor(C, [F(len)], 'write');
   /* ReturnIfAbrupt */if (_newObj instanceof Completion) {
     if (_newObj instanceof AbruptCompletion) return _newObj;
     _newObj = _newObj.Value;
@@ -30692,7 +30700,7 @@ function isArrayBufferObject(o) {
 function* AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
   const slots = ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey'];
   let allocatingResizableBuffer;
-  if (maxByteLength !== undefined) {
+  if (typeof maxByteLength === 'number') {
     allocatingResizableBuffer = true;
   } else {
     allocatingResizableBuffer = false;
@@ -30702,6 +30710,8 @@ function* AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
       return Throw.RangeError('Cannot resize ArrayBuffer to bigger than maxByteLength');
     }
     slots.push('ArrayBufferMaxByteLength');
+  } else if (maxByteLength === 'immutable') {
+    slots.push('ArrayBufferIsImmutable');
   }
   /* ReturnIfAbrupt */let _obj2 = yield* OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots);
   /* ReturnIfAbrupt */if (_obj2 instanceof Completion) {
@@ -30712,7 +30722,7 @@ function* AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
   // 2. Assert: byteLength is a non-negative integer.
   /* Assert */ /* node:coverage ignore next */if (!isNonNegativeInteger(byteLength)) throw new Assert.Error("isNonNegativeInteger(byteLength)");
   // 3. Let block be ? CreateByteDataBlock(byteLength).
-  /* ReturnIfAbrupt */let _block = CreateByteDataBlock(byteLength, maxByteLength);
+  /* ReturnIfAbrupt */let _block = CreateByteDataBlock(byteLength, allocatingResizableBuffer ? maxByteLength : undefined);
   /* ReturnIfAbrupt */if (_block instanceof Completion) {
     if (_block instanceof AbruptCompletion) return _block;
     _block = _block.Value;
@@ -30732,6 +30742,28 @@ function* AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
   return obj;
 }
 AllocateArrayBuffer.section = 'https://tc39.es/ecma262/#sec-allocatearraybuffer';
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-allocateimmutablearraybuffer */
+function* AllocateImmutableArrayBuffer(constructor, byteLength, fromBlock, fromIndex, count) {
+  /* Assert */ /* node:coverage ignore next */if (!(constructor === intrinsics()['%ArrayBuffer%'])) throw new Assert.Error("constructor === intrinsics()['%ArrayBuffer%']");
+  /* Assert */ /* node:coverage ignore next */if (!(count <= byteLength)) throw new Assert.Error("count <= byteLength");
+  /* ReturnIfAbrupt */let _newBuffer = yield* AllocateArrayBuffer(constructor, byteLength, 'immutable');
+  /* ReturnIfAbrupt */if (_newBuffer instanceof Completion) {
+    if (_newBuffer instanceof AbruptCompletion) return _newBuffer;
+    _newBuffer = _newBuffer.Value;
+  }
+  const newBuffer = _newBuffer;
+  const toBlock = newBuffer.ArrayBufferData;
+  CopyDataBlockBytes(toBlock, 0, fromBlock, fromIndex, count);
+  return newBuffer;
+}
+AllocateImmutableArrayBuffer.section = 'https://tc39.es/proposal-immutable-arraybuffer/#sec-allocateimmutablearraybuffer';
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-isimmutablebuffer */
+function IsImmutableBuffer(arrayBuffer) {
+  return 'ArrayBufferIsImmutable' in arrayBuffer;
+}
+IsImmutableBuffer.section = 'https://tc39.es/proposal-immutable-arraybuffer/#sec-isimmutablebuffer';
 
 /** https://tc39.es/ecma262/#sec-arraybufferbytelength */
 function ArrayBufferByteLength(arrayBuffer, _order) {
@@ -30762,30 +30794,43 @@ function* ArrayBufferCopyAndDetach(_arrayBuffer, newLength, preserveResizability
   if (IsDetachedBuffer(arrayBuffer)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
   }
-  let newMaxByteLength;
-  if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
-    newMaxByteLength = arrayBuffer.ArrayBufferMaxByteLength;
+  if (IsImmutableBuffer(arrayBuffer)) {
+    return Throw.TypeError('Cannot transfer immutable ArrayBuffer');
   }
   if (arrayBuffer.ArrayBufferDetachKey !== undefined) {
     return Throw.TypeError('Cannot transfer ArrayBuffer with custom detach key');
   }
-  /* ReturnIfAbrupt */let _newBuffer = yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), newByteLength, newMaxByteLength);
-  /* ReturnIfAbrupt */if (_newBuffer instanceof Completion) {
-    if (_newBuffer instanceof AbruptCompletion) return _newBuffer;
-    _newBuffer = _newBuffer.Value;
-  }
-  const newBuffer = _newBuffer;
   const copyLength = Math.min(newByteLength, arrayBuffer.ArrayBufferByteLength);
-  const fromBlock = arrayBuffer.ArrayBufferData;
-  const toBlock = newBuffer.ArrayBufferData;
-  CopyDataBlockBytes(toBlock, 0, fromBlock, 0, copyLength);
-  /* X */let _temp3 = DetachArrayBuffer(arrayBuffer);
-  /* node:coverage ignore next */if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-  /* node:coverage ignore next */if (_temp3 instanceof Completion) {
-    /* node:coverage ignore next */if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DetachArrayBuffer(arrayBuffer) returned an abrupt completion", {
-      cause: _temp3
+  let newBuffer;
+  if (preserveResizability === 'immutable') {
+    /* ReturnIfAbrupt */let _temp3 = yield* AllocateImmutableArrayBuffer(intrinsics()['%ArrayBuffer%'], newByteLength, arrayBuffer.ArrayBufferData, 0, copyLength);
+    /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      _temp3 = _temp3.Value;
+    }
+    newBuffer = _temp3;
+  } else {
+    let newMaxByteLength;
+    if (preserveResizability === 'preserve-resizability' && !IsFixedLengthArrayBuffer(arrayBuffer)) {
+      newMaxByteLength = arrayBuffer.ArrayBufferMaxByteLength;
+    }
+    /* ReturnIfAbrupt */let _temp4 = yield* AllocateArrayBuffer(intrinsics()['%ArrayBuffer%'], newByteLength, newMaxByteLength);
+    /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      _temp4 = _temp4.Value;
+    }
+    newBuffer = _temp4;
+    const toBlock = newBuffer.ArrayBufferData;
+    const fromBlock = arrayBuffer.ArrayBufferData;
+    CopyDataBlockBytes(toBlock, 0, fromBlock, 0, copyLength);
+  }
+  /* X */let _temp5 = DetachArrayBuffer(arrayBuffer);
+  /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+  /* node:coverage ignore next */if (_temp5 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! DetachArrayBuffer(arrayBuffer) returned an abrupt completion", {
+      cause: _temp5
     });
-    _temp3 = _temp3.Value;
+    _temp5 = _temp5.Value;
   }
   return newBuffer;
 }
@@ -30802,14 +30847,17 @@ IsDetachedBuffer.section = 'https://tc39.es/ecma262/#sec-isdetachedbuffer';
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
 function DetachArrayBuffer(arrayBuffer, key) {
+  if (IsImmutableBuffer(arrayBuffer)) {
+    return Throw.TypeError('Cannot detach immutable ArrayBuffer');
+  }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
   if (arrayBuffer.ArrayBufferDetachKey === undefined ? key !== undefined : key === undefined || !SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
     return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key ?? Value.undefined);
   }
-  /* ReturnIfAbrupt */let _temp4 = surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
-  /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-    if (_temp4 instanceof AbruptCompletion) return _temp4;
-    _temp4 = _temp4.Value;
+  /* ReturnIfAbrupt */let _temp6 = surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
+  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    _temp6 = _temp6.Value;
   }
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
   arrayBuffer.ArrayBufferData = null;
@@ -31005,6 +31053,7 @@ NumericToRawBytes.section = 'https://tc39.es/ecma262/#sec-numerictorawbytes';
 function* SetValueInBuffer(arrayBuffer, byteIndex, type, value, _isTypedArray, _order, isLittleEndian) {
   /* Assert */ /* node:coverage ignore next */ // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   if (!!IsDetachedBuffer(arrayBuffer)) throw new Assert.Error("!IsDetachedBuffer(arrayBuffer)");
+  /* Assert */ /* node:coverage ignore next */if (!!IsImmutableBuffer(arrayBuffer)) throw new Assert.Error("!IsImmutableBuffer(arrayBuffer)");
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   /* Assert */ /* node:coverage ignore next */if (!isNonNegativeInteger(byteIndex)) throw new Assert.Error("isNonNegativeInteger(byteIndex)");
@@ -31026,10 +31075,10 @@ function* SetValueInBuffer(arrayBuffer, byteIndex, type, value, _isTypedArray, _
   // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
   const rawBytes = NumericToRawBytes(type, value, isLittleEndian);
   // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
-  /* ReturnIfAbrupt */let _temp5 = surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
-  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-    if (_temp5 instanceof AbruptCompletion) return _temp5;
-    _temp5 = _temp5.Value;
+  /* ReturnIfAbrupt */let _temp7 = surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
+  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    _temp7 = _temp7.Value;
   }
   rawBytes.forEach((byte, i) => {
     block[byteIndex + i] = byte;
@@ -31619,6 +31668,9 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
 
   /* Assert */ /* node:coverage ignore next */ // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   if (!('ViewedArrayBuffer' in view)) throw new Assert.Error("'ViewedArrayBuffer' in view");
+  if (IsImmutableBuffer(view.ViewedArrayBuffer)) {
+    return Throw.TypeError('Cannot modify immutable ArrayBuffer');
+  }
   // 3. Let getIndex be ? ToIndex(requestIndex).
   /* ReturnIfAbrupt */let _getIndex2 = yield* ToIndex(requestIndex);
   /* ReturnIfAbrupt */if (_getIndex2 instanceof Completion) {
@@ -48726,6 +48778,36 @@ InitializePrivateMethods.section = 'https://arai-a.github.io/ecma262-compare/sna
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-operations-on-objects */
 
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-resolvebounds */
+function* ResolveBounds(len, start, end) {
+  /* ReturnIfAbrupt */let _relativeStart = yield* ToIntegerOrInfinity(start);
+  /* ReturnIfAbrupt */if (_relativeStart instanceof Completion) {
+    if (_relativeStart instanceof AbruptCompletion) return _relativeStart;
+    _relativeStart = _relativeStart.Value;
+  }
+  const relativeStart = _relativeStart;
+  let from;
+  if (relativeStart === -Infinity) from = 0;else if (relativeStart < 0) from = Math.max(len + relativeStart, 0);else from = Math.min(relativeStart, len);
+  let relativeEnd;
+  if (end === Value.undefined) {
+    relativeEnd = len;
+  } else {
+    /* ReturnIfAbrupt */let _temp = yield* ToIntegerOrInfinity(end);
+    /* ReturnIfAbrupt */if (_temp instanceof Completion) {
+      if (_temp instanceof AbruptCompletion) return _temp;
+      _temp = _temp.Value;
+    }
+    relativeEnd = _temp;
+  }
+  let to;
+  if (relativeEnd === -Infinity) to = 0;else if (relativeEnd < 0) to = Math.max(len + relativeEnd, 0);else to = Math.min(relativeEnd, len);
+  return {
+    From: from,
+    To: to
+  };
+}
+ResolveBounds.section = 'https://tc39.es/ecma262/#sec-operations-on-objects';
+
 /** https://tc39.es/ecma262/#sec-makebasicobject */
 function MakeBasicObject(internalSlotsList) {
   /* Assert */ /* node:coverage ignore next */ // 1.  Assert: internalSlotsList is a List of internal slot names.
@@ -48746,7 +48828,7 @@ function MakeBasicObject(internalSlotsList) {
   // 7.  Return obj.
   return obj;
 }
-MakeBasicObject.section = 'https://tc39.es/ecma262/#sec-operations-on-objects';
+MakeBasicObject.section = 'https://tc39.es/ecma262/#sec-makebasicobject';
 
 /** https://tc39.es/ecma262/#sec-get-o-p */
 function* Get(O, P) {
@@ -48840,13 +48922,13 @@ function CreateNonEnumerableDataPropertyOrThrow(O, P, V) {
     Enumerable: false,
     Configurable: true
   });
-  /* X */let _temp = DefinePropertyOrThrow(O, P, newDesc);
-  /* node:coverage ignore next */if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-  /* node:coverage ignore next */if (_temp instanceof Completion) {
-    /* node:coverage ignore next */if (_temp instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, P, newDesc) returned an abrupt completion", {
-      cause: _temp
+  /* X */let _temp2 = DefinePropertyOrThrow(O, P, newDesc);
+  /* node:coverage ignore next */if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+  /* node:coverage ignore next */if (_temp2 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, P, newDesc) returned an abrupt completion", {
+      cause: _temp2
     });
-    _temp = _temp.Value;
+    _temp2 = _temp2.Value;
   }
 }
 
@@ -48940,12 +49022,12 @@ function* Call(F, V, argumentsList = []) {
     };
     /* Assert */ /* node:coverage ignore next */if (!(resumption.resume === 'debugger')) throw new Assert.Error("resumption.resume === 'debugger'");
   }
-  /* ReturnIfAbrupt */let _temp2 = yield* F.Call(V, argumentsList);
-  /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
-    if (_temp2 instanceof AbruptCompletion) return _temp2;
-    _temp2 = _temp2.Value;
+  /* ReturnIfAbrupt */let _temp3 = yield* F.Call(V, argumentsList);
+  /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
+    if (_temp3 instanceof AbruptCompletion) return _temp3;
+    _temp3 = _temp3.Value;
   }
-  return EnsureCompletion(_temp2);
+  return EnsureCompletion(_temp3);
 }
 Call.section = 'https://tc39.es/ecma262/#sec-call';
 
@@ -48981,12 +49063,12 @@ function* SetIntegrityLevel(O, level) {
   const keys = _keys;
   if (level === 'sealed') {
     for (const k of keys) {
-      /* ReturnIfAbrupt */let _temp3 = yield* DefinePropertyOrThrow(O, k, _Descriptor({
+      /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(O, k, _Descriptor({
         Configurable: false
       }));
-      /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
-        if (_temp3 instanceof AbruptCompletion) return _temp3;
-        _temp3 = _temp3.Value;
+      /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
+        if (_temp4 instanceof AbruptCompletion) return _temp4;
+        _temp4 = _temp4.Value;
       }
     }
   } else if (level === 'frozen') {
@@ -49009,10 +49091,10 @@ function* SetIntegrityLevel(O, level) {
             Writable: false
           });
         }
-        /* ReturnIfAbrupt */let _temp4 = yield* DefinePropertyOrThrow(O, k, desc);
-        /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
-          if (_temp4 instanceof AbruptCompletion) return _temp4;
-          _temp4 = _temp4.Value;
+        /* ReturnIfAbrupt */let _temp5 = yield* DefinePropertyOrThrow(O, k, desc);
+        /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+          if (_temp5 instanceof AbruptCompletion) return _temp5;
+          _temp5 = _temp5.Value;
         }
       }
     }
@@ -49080,21 +49162,21 @@ function CreateArrayFromList(elements) {
   let n = 0;
   // 4. For each element e of elements, do
   for (const e of elements) {
-    /* X */let _temp6 = ToString(F(n));
+    /* X */let _temp7 = ToString(F(n));
+    /* node:coverage ignore next */if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+    /* node:coverage ignore next */if (_temp7 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! ToString(toNumberValue(n)) returned an abrupt completion", {
+        cause: _temp7
+      });
+      _temp7 = _temp7.Value;
+    }
+    /* X */let _temp6 = CreateDataPropertyOrThrow(array, _temp7, e);
     /* node:coverage ignore next */if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
     /* node:coverage ignore next */if (_temp6 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! ToString(toNumberValue(n)) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(n))), e) returned an abrupt completion", {
         cause: _temp6
       });
       _temp6 = _temp6.Value;
-    }
-    /* X */let _temp5 = CreateDataPropertyOrThrow(array, _temp6, e);
-    /* node:coverage ignore next */if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
-    /* node:coverage ignore next */if (_temp5 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(n))), e) returned an abrupt completion", {
-        cause: _temp5
-      });
-      _temp5 = _temp5.Value;
     } // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
 
     // b. Set n to n + 1.
@@ -49110,23 +49192,23 @@ function* LengthOfArrayLike(obj) {
   /* Assert */ /* node:coverage ignore next */ // 1. Assert: Type(obj) is Object.
   if (!(obj instanceof ObjectValue)) throw new Assert.Error("obj instanceof ObjectValue");
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  /* ReturnIfAbrupt */let _temp8 = yield* Get(obj, 'length');
+  /* ReturnIfAbrupt */let _temp9 = yield* Get(obj, 'length');
+  /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    _temp9 = _temp9.Value;
+  }
+  /* ReturnIfAbrupt */let _temp8 = yield* ToLength(_temp9);
   /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     _temp8 = _temp8.Value;
   }
-  /* ReturnIfAbrupt */let _temp7 = yield* ToLength(_temp8);
-  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
-    if (_temp7 instanceof AbruptCompletion) return _temp7;
-    _temp7 = _temp7.Value;
-  }
-  return R(_temp7);
+  return R(_temp8);
 }
 LengthOfArrayLike.section = 'https://tc39.es/ecma262/#sec-lengthofarraylike';
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
 
-function* CreateListFromArrayLike(obj, validElementTypes = 'all') {
+function* CreateListFromArrayLike(obj, validElementTypes = 'any') {
   // 2. If Type(obj) is not Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
     return Throw.TypeError('$1 is not an object', obj);
@@ -49209,12 +49291,12 @@ function* OrdinaryHasInstance(constructor, O) {
     return Throw.TypeError('$1 is not an object', P);
   }
   while (true) {
-    /* ReturnIfAbrupt */let _temp9 = yield* O.GetPrototypeOf();
-    /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
-      if (_temp9 instanceof AbruptCompletion) return _temp9;
-      _temp9 = _temp9.Value;
+    /* ReturnIfAbrupt */let _temp0 = yield* O.GetPrototypeOf();
+    /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+      if (_temp0 instanceof AbruptCompletion) return _temp0;
+      _temp0 = _temp0.Value;
     }
-    O = _temp9;
+    O = _temp0;
     if (O instanceof NullValue) {
       return false;
     }
@@ -49370,13 +49452,13 @@ function* CopyDataProperties(target, source, excludedItems) {
           _propValue = _propValue.Value;
         }
         const propValue = _propValue;
-        /* X */let _temp0 = CreateDataProperty(target, nextKey, propValue);
-        /* node:coverage ignore next */if (_temp0 && typeof _temp0 === 'object' && 'next' in _temp0) _temp0 = skipDebugger(_temp0);
-        /* node:coverage ignore next */if (_temp0 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp0 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(target, nextKey, propValue) returned an abrupt completion", {
-            cause: _temp0
+        /* X */let _temp1 = CreateDataProperty(target, nextKey, propValue);
+        /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
+        /* node:coverage ignore next */if (_temp1 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(target, nextKey, propValue) returned an abrupt completion", {
+            cause: _temp1
           });
-          _temp0 = _temp0.Value;
+          _temp1 = _temp1.Value;
         }
       }
     }
@@ -49419,10 +49501,10 @@ AddValueToKeyedGroup.section = 'https://tc39.es/ecma262/#sec-add-value-to-keyed-
 
 /** https://tc39.es/ecma262/#sec-groupby */
 function* GroupBy(items, callback, keyCoercion) {
-  /* ReturnIfAbrupt */let _temp1 = RequireObjectCoercible(items);
-  /* ReturnIfAbrupt */if (_temp1 instanceof Completion) {
-    if (_temp1 instanceof AbruptCompletion) return _temp1;
-    _temp1 = _temp1.Value;
+  /* ReturnIfAbrupt */let _temp10 = RequireObjectCoercible(items);
+  /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
+    if (_temp10 instanceof AbruptCompletion) return _temp10;
+    _temp10 = _temp10.Value;
   } /*
     1. Perform ? RequireObjectCoercible(items).
     2. If IsCallable(callback) is false, throw a TypeError exception.
@@ -49529,16 +49611,16 @@ function* SetterThatIgnoresPrototypeProperties(thisValue, home, propertyKey, val
   const desc = _desc4;
   // 4. If desc is undefined, then
   if (!desc) {
-    /* ReturnIfAbrupt */let _temp10 = yield* CreateDataPropertyOrThrow(thisValue, propertyKey, value);
-    /* ReturnIfAbrupt */if (_temp10 instanceof Completion) {
-      if (_temp10 instanceof AbruptCompletion) return _temp10;
-      _temp10 = _temp10.Value;
-    }
-  } else {
-    /* ReturnIfAbrupt */let _temp11 = yield* Set$1(thisValue, propertyKey, value, true);
+    /* ReturnIfAbrupt */let _temp11 = yield* CreateDataPropertyOrThrow(thisValue, propertyKey, value);
     /* ReturnIfAbrupt */if (_temp11 instanceof Completion) {
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       _temp11 = _temp11.Value;
+    }
+  } else {
+    /* ReturnIfAbrupt */let _temp12 = yield* Set$1(thisValue, propertyKey, value, true);
+    /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
+      if (_temp12 instanceof AbruptCompletion) return _temp12;
+      _temp12 = _temp12.Value;
     }
   }
   return undefined;
@@ -56617,11 +56699,12 @@ const InternalMethods$1 = {
           return undefined;
         }
         // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+        const mutable = !IsImmutableBuffer(O.ViewedArrayBuffer);
         return _Descriptor({
           Value: value,
-          Writable: true,
+          Writable: mutable,
           Enumerable: true,
-          Configurable: true
+          Configurable: mutable
         });
       }
     }
@@ -56655,6 +56738,16 @@ const InternalMethods$1 = {
         // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
         if (!IsValidIntegerIndex(O, numericIndex)) {
           return false;
+        }
+        if (IsImmutableBuffer(O.ViewedArrayBuffer)) {
+          /* ReturnIfAbrupt */let _current = yield* O.GetOwnProperty(P);
+          /* ReturnIfAbrupt */if (_current instanceof Completion) {
+            if (_current instanceof AbruptCompletion) return _current;
+            _current = _current.Value;
+          }
+          const current = _current;
+          /* Assert */ /* node:coverage ignore next */if (!(current !== undefined)) throw new Assert.Error("current !== undefined");
+          return ValidateAndApplyPropertyDescriptor(undefined, P, false, Desc, current);
         }
         // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
         if (Desc.Configurable === false) {
@@ -56716,6 +56809,7 @@ const InternalMethods$1 = {
       const numericIndex = CanonicalNumericIndexString(P);
       // b. If numericIndex is not undefined, then
       if (numericIndex !== undefined) {
+        if (IsImmutableBuffer(O.ViewedArrayBuffer)) return false;
         if (SameValue(O, Receiver)) {
           /* ReturnIfAbrupt */let _InternalMethods2 = yield* TypedArraySetElement(O, numericIndex, V);
           /* ReturnIfAbrupt */if (_InternalMethods2 instanceof Completion) {
@@ -56928,6 +57022,7 @@ TypedArrayGetElement.section = 'https://tc39.es/ecma262/#sec-typedarraygetelemen
 
 /** https://tc39.es/ecma262/#sec-integerindexedelementset */
 function* TypedArraySetElement(O, index, value) {
+  /* Assert */ /* node:coverage ignore next */if (!!IsImmutableBuffer(O.ViewedArrayBuffer)) throw new Assert.Error("!IsImmutableBuffer(O.ViewedArrayBuffer as ArrayBufferObject)");
   // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
   // 4. Otherwise, let numValue be ? ToNumber(value).
   let numValue;
@@ -57889,15 +57984,29 @@ function ArrayBufferProto_resizable(_args, {
 }
 ArrayBufferProto_resizable.section = 'https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.resizable';
 
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-get-arraybuffer.prototype.immutable */
+function ArrayBufferProto_immutable(_args, {
+  thisValue
+}) {
+  const O = thisValue;
+  /* ReturnIfAbrupt */let _temp5 = RequireInternalSlot(O, 'ArrayBufferData');
+  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
+    _temp5 = _temp5.Value;
+  }
+  return Value(IsImmutableBuffer(O));
+}
+ArrayBufferProto_immutable.section = 'https://tc39.es/proposal-immutable-arraybuffer/#sec-get-arraybuffer.prototype.immutable';
+
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.resize */
 function* ArrayBufferProto_resize([newLength = Value.undefined], {
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _temp5 = RequireInternalSlot(obj, 'ArrayBufferMaxByteLength');
-  /* ReturnIfAbrupt */if (_temp5 instanceof Completion) {
-    if (_temp5 instanceof AbruptCompletion) return _temp5;
-    _temp5 = _temp5.Value;
+  /* ReturnIfAbrupt */let _temp6 = RequireInternalSlot(obj, 'ArrayBufferMaxByteLength');
+  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
+    if (_temp6 instanceof AbruptCompletion) return _temp6;
+    _temp6 = _temp6.Value;
   }
   /* ReturnIfAbrupt */let _newByteLength = yield* ToIndex(newLength);
   /* ReturnIfAbrupt */if (_newByteLength instanceof Completion) {
@@ -57911,10 +58020,10 @@ function* ArrayBufferProto_resize([newLength = Value.undefined], {
   if (newByteLength > obj.ArrayBufferMaxByteLength) {
     return Throw.RangeError('Cannot resize ArrayBuffer to bigger than maxByteLength');
   }
-  /* ReturnIfAbrupt */let _temp6 = surroundingAgent.debugger_cannotPreview;
-  /* ReturnIfAbrupt */if (_temp6 instanceof Completion) {
-    if (_temp6 instanceof AbruptCompletion) return _temp6;
-    _temp6 = _temp6.Value;
+  /* ReturnIfAbrupt */let _temp7 = surroundingAgent.debugger_cannotPreview;
+  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    _temp7 = _temp7.Value;
   }
   const hostHandled = HostResizeArrayBuffer(obj, newByteLength);
   if (hostHandled === 'handled') {
@@ -57942,10 +58051,10 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-  /* ReturnIfAbrupt */let _temp7 = RequireInternalSlot(O, 'ArrayBufferData');
-  /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
-    if (_temp7 instanceof AbruptCompletion) return _temp7;
-    _temp7 = _temp7.Value;
+  /* ReturnIfAbrupt */let _temp8 = RequireInternalSlot(O, 'ArrayBufferData');
+  /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
+    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    _temp8 = _temp8.Value;
   }
   // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
   if (IsDetachedBuffer(O)) {
@@ -57953,24 +58062,16 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
   const length = O.ArrayBufferByteLength;
-  // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
-  /* ReturnIfAbrupt */let _first = yield* ToClampedIndex(start, length);
-  /* ReturnIfAbrupt */if (_first instanceof Completion) {
-    if (_first instanceof AbruptCompletion) return _first;
-    _first = _first.Value;
+  // 6. Let bounds be ? ResolveBounds(len, start, end).
+  /* ReturnIfAbrupt */let _bounds = yield* ResolveBounds(length, start, end);
+  /* ReturnIfAbrupt */if (_bounds instanceof Completion) {
+    if (_bounds instanceof AbruptCompletion) return _bounds;
+    _bounds = _bounds.Value;
   }
-  const first = _first;
-  let final;
-  if (end === Value.undefined) {
-    final = length;
-  } else {
-    /* ReturnIfAbrupt */let _temp9 = yield* ToClampedIndex(end, length);
-    /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
-      if (_temp9 instanceof AbruptCompletion) return _temp9;
-      _temp9 = _temp9.Value;
-    }
-    final = _temp9;
-  } // 10. Let newLen be max(final - first, 0).
+  const bounds = _bounds;
+  const first = bounds.From;
+  const final = bounds.To;
+  // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
   /* ReturnIfAbrupt */let _ctor = yield* SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%'));
@@ -57987,14 +58088,17 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   }
   const newO = _newO;
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
-  /* ReturnIfAbrupt */let _temp8 = RequireInternalSlot(newO, 'ArrayBufferData');
-  /* ReturnIfAbrupt */if (_temp8 instanceof Completion) {
-    if (_temp8 instanceof AbruptCompletion) return _temp8;
-    _temp8 = _temp8.Value;
+  /* ReturnIfAbrupt */let _temp9 = RequireInternalSlot(newO, 'ArrayBufferData');
+  /* ReturnIfAbrupt */if (_temp9 instanceof Completion) {
+    if (_temp9 instanceof AbruptCompletion) return _temp9;
+    _temp9 = _temp9.Value;
   }
   // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
   if (IsDetachedBuffer(newO)) {
     return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  }
+  if (IsImmutableBuffer(newO)) {
+    return Throw.TypeError('ArrayBuffer.prototype.slice species returned an immutable ArrayBuffer');
   }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
   if (SameValue(newO, O)) {
@@ -58036,8 +58140,46 @@ function* ArrayBufferProto_transferToFixedLength([newLength = Value.undefined], 
   return yield* ArrayBufferCopyAndDetach(thisValue, newLength, 'fixed-length');
 }
 ArrayBufferProto_transferToFixedLength.section = 'https://tc39.es/ecma262/#sec-arraybuffer.prototype.transfertofixedlength';
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.slicetoimmutable */
+function* ArrayBufferProto_sliceToImmutable([start = Value.undefined, end = Value.undefined], {
+  thisValue
+}) {
+  const O = thisValue;
+  /* ReturnIfAbrupt */let _temp0 = RequireInternalSlot(O, 'ArrayBufferData');
+  /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
+    if (_temp0 instanceof AbruptCompletion) return _temp0;
+    _temp0 = _temp0.Value;
+  }
+  if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const length = O.ArrayBufferByteLength;
+  /* ReturnIfAbrupt */let _bounds2 = yield* ResolveBounds(length, start, end);
+  /* ReturnIfAbrupt */if (_bounds2 instanceof Completion) {
+    if (_bounds2 instanceof AbruptCompletion) return _bounds2;
+    _bounds2 = _bounds2.Value;
+  }
+  const bounds = _bounds2;
+  const first = bounds.From;
+  const final = bounds.To;
+  const newLength = Math.max(final - first, 0);
+  if (IsDetachedBuffer(O)) return Throw.TypeError('Attempt to access detached ArrayBuffer');
+  const fromBuf = O.ArrayBufferData;
+  const currentLen = O.ArrayBufferByteLength;
+  if (currentLen < final) return Throw.RangeError('ArrayBuffer shrank during sliceToImmutable');
+  const newBuffer = yield* AllocateImmutableArrayBuffer(intrinsics()['%ArrayBuffer%'], newLength, fromBuf, first, newLength);
+  return newBuffer;
+}
+ArrayBufferProto_sliceToImmutable.section = 'https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.slicetoimmutable';
+
+/** https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.transfertoimmutable */
+function* ArrayBufferProto_transferToImmutable([newLength = Value.undefined], {
+  thisValue
+}) {
+  return yield* ArrayBufferCopyAndDetach(thisValue, newLength, 'immutable');
+}
+ArrayBufferProto_transferToImmutable.section = 'https://tc39.es/proposal-immutable-arraybuffer/#sec-arraybuffer.prototype.transfertoimmutable';
 function bootstrapArrayBufferPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLength]], ['detached', [ArrayBufferProto_detached]], ['maxByteLength', [ArrayBufferProto_maxByteLength]], ['resizable', [ArrayBufferProto_resizable]], ['resize', ArrayBufferProto_resize, 1], ['slice', ArrayBufferProto_slice, 2], ['transfer', ArrayBufferProto_transfer, 0], ['transferToFixedLength', ArrayBufferProto_transferToFixedLength, 0]], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
+  const proto = bootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLength]], ['detached', [ArrayBufferProto_detached]], surroundingAgent.feature('immutable-arraybuffer') ? ['immutable', [ArrayBufferProto_immutable]] : undefined, ['maxByteLength', [ArrayBufferProto_maxByteLength]], ['resizable', [ArrayBufferProto_resizable]], ['resize', ArrayBufferProto_resize, 1], ['slice', ArrayBufferProto_slice, 2], surroundingAgent.feature('immutable-arraybuffer') ? ['sliceToImmutable', ArrayBufferProto_sliceToImmutable, 2] : undefined, ['transfer', ArrayBufferProto_transfer, 0], ['transferToFixedLength', ArrayBufferProto_transferToFixedLength, 0], surroundingAgent.feature('immutable-arraybuffer') ? ['transferToImmutable', ArrayBufferProto_transferToImmutable, 0] : undefined], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
   realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
 }
 
@@ -65776,13 +65918,13 @@ function* IteratorProto_dispose(_args, {
 }
 IteratorProto_dispose.section = 'https://tc39.es/ecma262/#sec-iterator.prototype-%symbol.dispose%';
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
+/** https://tc39.es/ecma262#sec-get-iterator.prototype.constructor */
 function IteratorProto_constructor_getter() {
   return surroundingAgent.intrinsic('%Iterator%');
 }
-IteratorProto_constructor_getter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor';
+IteratorProto_constructor_getter.section = 'https://tc39.es/ecma262#sec-get-iterator.prototype.constructor';
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor */
+/** https://tc39.es/ecma262#sec-set-iterator.prototype.constructor */
 function* IteratorProto_constructor_setter([v = Value.undefined], {
   thisValue
 }) {
@@ -65793,16 +65935,14 @@ function* IteratorProto_constructor_setter([v = Value.undefined], {
   }
   return Value.undefined;
 }
-IteratorProto_constructor_setter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor';
+IteratorProto_constructor_setter.section = 'https://tc39.es/ecma262#sec-set-iterator.prototype.constructor';
 
-/** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks */
+/** https://tc39.es/ecma262/#sec-iterator.prototype.chunks */
 function* IteratorProto_chunks([chunkSize = Value.undefined], {
   thisValue
 }) {
   const obj = thisValue;
-  if (!(obj instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', obj);
-  }
+  if (!(obj instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', obj);
   let iterated = {
     Iterator: obj,
     NextMethod: Value.undefined,
@@ -65847,11 +65987,11 @@ function* IteratorProto_chunks([chunkSize = Value.undefined], {
       }
     }
   };
-  const result = CreateIteratorFromClosure(closure, 'Iterator Helper', surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+  const result = CreateIteratorFromClosure(closure, 'Iterator Helper', intrinsics()['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
   result.UnderlyingIterators = [iterated];
   return result;
 }
-IteratorProto_chunks.section = 'https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks';
+IteratorProto_chunks.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.chunks';
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.drop */
 function* IteratorProto_drop([limit = Value.undefined], {
@@ -66486,9 +66626,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
   thisValue
 }) {
   const obj = thisValue;
-  if (!(obj instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', obj);
-  }
+  if (!(obj instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', obj);
   let iterated = {
     Iterator: obj,
     NextMethod: Value.undefined,
@@ -66502,10 +66640,10 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
     const error = Throw.RangeError('$1 is out of range', windowSize);
     return yield* IteratorClose(iterated, error);
   }
-  if (undersized === Value.undefined) {
-    undersized = Value('only-full');
-  }
-  if (!(undersized instanceof JSStringValue) || undersized.stringValue() !== 'only-full' && undersized.stringValue() !== 'allow-partial') {
+  let undersizedString;
+  if (undersized === Value.undefined) undersizedString = 'only-full';
+  if (undersized instanceof JSStringValue) undersizedString = undersized.stringValue();
+  if (undersizedString !== 'only-full' && undersizedString !== 'allow-partial') {
     const error = Throw.TypeError('$1 is not a valid undersized mode', undersized);
     return yield* IteratorClose(iterated, error);
   }
@@ -66525,39 +66663,23 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
       }
       const value = _value11;
       if (value === 'done') {
-        if (undersized.stringValue() === 'allow-partial' && buffer.length !== 0 && buffer.length < windowSize.value) {
-          /* X */let _closure = CreateArrayFromList(buffer);
-          /* node:coverage ignore next */if (_closure && typeof _closure === 'object' && 'next' in _closure) _closure = skipDebugger(_closure);
-          /* node:coverage ignore next */if (_closure instanceof Completion) {
-            /* node:coverage ignore next */if (_closure instanceof AbruptCompletion) throw new Assert.Error("! CreateArrayFromList(buffer) returned an abrupt completion", {
-              cause: _closure
-            });
-            _closure = _closure.Value;
-          }
-          EnsureCompletion(yield* Yield(_closure));
+        if (undersizedString === 'allow-partial' && buffer.length !== 0 && buffer.length < R(windowSize)) {
+          EnsureCompletion(yield* Yield(CreateArrayFromList(buffer)));
         }
         return ReturnCompletion(Value.undefined);
       }
-      if (buffer.length === windowSize.value) {
+      if (buffer.length === R(windowSize)) {
         buffer.shift();
       }
       buffer.push(value);
-      if (buffer.length === windowSize.value) {
-        /* X */let _completion = CreateArrayFromList(buffer);
-        /* node:coverage ignore next */if (_completion && typeof _completion === 'object' && 'next' in _completion) _completion = skipDebugger(_completion);
-        /* node:coverage ignore next */if (_completion instanceof Completion) {
-          /* node:coverage ignore next */if (_completion instanceof AbruptCompletion) throw new Assert.Error("! CreateArrayFromList(buffer) returned an abrupt completion", {
-            cause: _completion
-          });
-          _completion = _completion.Value;
-        }
-        let completion = EnsureCompletion(yield* Yield(_completion));
+      if (buffer.length === R(windowSize)) {
+        let completion = EnsureCompletion(yield* Yield(CreateArrayFromList(buffer)));
         /* IfAbruptCloseIterator */ /* node:coverage ignore next */if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion)); /* node:coverage ignore next */
         if (completion instanceof Completion) completion = completion.Value;
       }
     }
   };
-  const result = CreateIteratorFromClosure(closure, 'Iterator Helper', surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
+  const result = CreateIteratorFromClosure(closure, 'Iterator Helper', intrinsics()['%IteratorHelperPrototype%'], ['UnderlyingIterators']);
   result.UnderlyingIterators = [iterated];
   return result;
 }
@@ -74915,7 +75037,7 @@ function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Val
   thisValue
 }) {
   const into = thisValue;
-  /* ReturnIfAbrupt */let _temp4 = ValidateUint8Array(into);
+  /* ReturnIfAbrupt */let _temp4 = ValidateUint8Array(into, 'write');
   /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     _temp4 = _temp4.Value;
@@ -75035,7 +75157,7 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined], {
   thisValue
 }) {
   const into = thisValue;
-  /* ReturnIfAbrupt */let _temp7 = ValidateUint8Array(into);
+  /* ReturnIfAbrupt */let _temp7 = ValidateUint8Array(into, 'write');
   /* ReturnIfAbrupt */if (_temp7 instanceof Completion) {
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     _temp7 = _temp7.Value;
@@ -75083,7 +75205,7 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined], {
 Uint8ArrayProto_setFromHex.section = 'https://tc39.es/ecma262/#sec-uint8array.prototype.setfromhex';
 
 /** https://tc39.es/ecma262/#sec-validateuint8array */
-function ValidateUint8Array(ta) {
+function ValidateUint8Array(ta, accessMode = 'read') {
   /* ReturnIfAbrupt */let _temp0 = RequireInternalSlot(ta, 'TypedArrayName');
   /* ReturnIfAbrupt */if (_temp0 instanceof Completion) {
     if (_temp0 instanceof AbruptCompletion) return _temp0;
@@ -75091,6 +75213,9 @@ function ValidateUint8Array(ta) {
   }
   if (ta.TypedArrayName !== 'Uint8Array') {
     return Throw.TypeError('Not a Uint8Array');
+  }
+  if (accessMode === 'write' && IsImmutableBuffer(ta.ViewedArrayBuffer)) {
+    return Throw.TypeError('Cannot modify immutable Uint8Array');
   }
   return undefined;
 }
@@ -75613,7 +75738,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _taRecord2 = ValidateTypedArray(obj);
+  /* ReturnIfAbrupt */let _taRecord2 = ValidateTypedArray(obj, 'seq-cst', 'write');
   /* ReturnIfAbrupt */if (_taRecord2 instanceof Completion) {
     if (_taRecord2 instanceof AbruptCompletion) return _taRecord2;
     _taRecord2 = _taRecord2.Value;
@@ -75734,7 +75859,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _taRecord4 = ValidateTypedArray(obj);
+  /* ReturnIfAbrupt */let _taRecord4 = ValidateTypedArray(obj, 'seq-cst', 'write');
   /* ReturnIfAbrupt */if (_taRecord4 instanceof Completion) {
     if (_taRecord4 instanceof AbruptCompletion) return _taRecord4;
     _taRecord4 = _taRecord4.Value;
@@ -75829,7 +75954,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
     }
     k += 1;
   }
-  /* ReturnIfAbrupt */let _result = yield* TypedArraySpeciesCreate(obj, [F(captured)]);
+  /* ReturnIfAbrupt */let _result = yield* TypedArraySpeciesCreate(obj, [F(captured)], 'write');
   /* ReturnIfAbrupt */if (_result instanceof Completion) {
     if (_result instanceof AbruptCompletion) return _result;
     _result = _result.Value;
@@ -76172,7 +76297,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   if (!IsCallable(callbackfn)) {
     return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
-  /* ReturnIfAbrupt */let _result2 = yield* TypedArraySpeciesCreate(obj, [F(length)]);
+  /* ReturnIfAbrupt */let _result2 = yield* TypedArraySpeciesCreate(obj, [F(length)], 'write');
   /* ReturnIfAbrupt */if (_result2 instanceof Completion) {
     if (_result2 instanceof AbruptCompletion) return _result2;
     _result2 = _result2.Value;
@@ -76410,7 +76535,7 @@ function* TypedArrayProto_reverse(_args, {
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _taRecord16 = ValidateTypedArray(obj);
+  /* ReturnIfAbrupt */let _taRecord16 = ValidateTypedArray(obj, 'seq-cst', 'write');
   /* ReturnIfAbrupt */if (_taRecord16 instanceof Completion) {
     if (_taRecord16 instanceof AbruptCompletion) return _taRecord16;
     _taRecord16 = _taRecord16.Value;
@@ -76459,6 +76584,9 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   }
   /* Assert */ /* node:coverage ignore next */ // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
   if (!('ViewedArrayBuffer' in target)) throw new Assert.Error("'ViewedArrayBuffer' in target");
+  if (IsImmutableBuffer(target.ViewedArrayBuffer)) {
+    return Throw.TypeError('Cannot modify immutable TypedArray');
+  }
   // 4. Let targetOffset be ? ToIntegerOrInfinity(offset).
   /* ReturnIfAbrupt */let _targetOffset = yield* ToIntegerOrInfinity(offset);
   /* ReturnIfAbrupt */if (_targetOffset instanceof Completion) {
@@ -76520,7 +76648,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
     endIndex = _temp33;
   }
   let countBytes = Math.max(endIndex - startIndex, 0);
-  /* ReturnIfAbrupt */let _resultArray = yield* TypedArraySpeciesCreate(obj, [F(countBytes)]);
+  /* ReturnIfAbrupt */let _resultArray = yield* TypedArraySpeciesCreate(obj, [F(countBytes)], 'write');
   /* ReturnIfAbrupt */if (_resultArray instanceof Completion) {
     if (_resultArray instanceof AbruptCompletion) return _resultArray;
     _resultArray = _resultArray.Value;
@@ -76622,7 +76750,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined], {
     return Throw.TypeError('comparator ($1) is not a function', comparator);
   }
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _taRecord19 = ValidateTypedArray(obj);
+  /* ReturnIfAbrupt */let _taRecord19 = ValidateTypedArray(obj, 'seq-cst', 'write');
   /* ReturnIfAbrupt */if (_taRecord19 instanceof Completion) {
     if (_taRecord19 instanceof AbruptCompletion) return _taRecord19;
     _taRecord19 = _taRecord19.Value;
@@ -79520,5 +79648,5 @@ function createBuiltinModuleLoader(options = {}) {
   };
 }
 
-export { AbruptCompletion, AbstractEventLoop, AbstractModuleRecord, Add24HourDaysToTimeDuration, AddDaysToISODate, AddDisposableResource, AddDurationToDate, AddDurationToDateTime, AddDurationToInstant, AddDurationToTime, AddDurationToYearMonth, AddDurationToZonedDateTime, AddDurations, AddEpochNanoseconds, AddRestrictedFunctionProperties, AddTime, AddTimeDuration, AddTimeDurationToEpochNanoseconds, AddToKeptObjects, AddValueToKeyedGroup, AddZonedDateTime, AdjustDateDurationRecord, Agent, AgentCanSuspend, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, ApplyDecoratorsAndDefineMethod, ApplyDecoratorsToClassDefinition, ApplyDecoratorsToElementDefinition, ApplyStringOrNumericBinaryOperator, ApplyUnsignedRoundingMode, ArgumentListEvaluation, ArrayBufferByteLength, ArrayBufferCopyAndDetach, ArrayCreate, InternalMethods$5 as ArrayExoticObjectInternalMethods, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorRequestRecord, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, AvailableCalendars, AvailableNamedTimeZoneIdentifiers, Await, BalanceISODateTime, BalanceISOYearMonth, BalanceTime, BaseValue, BasicJobQueue, BigIntValue, BindingClassDeclarationEvaluation, BindingEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, BubbleRelativeDuration, BuildEvaluationList, BuildLinkingList, CalendarDateAdd, CalendarDateFromFields, CalendarDateToISO, CalendarDateUntil, CalendarExtraFields, CalendarFieldKeysToIgnore, CalendarISOToDate, CalendarMergeFields, CalendarMonthDayFromFields, CalendarMonthDayToISOReferenceDate, CalendarResolveFields, CalendarYearMonthFromFields, Call, CallFrame, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeCalendar, CanonicalizeKeyedCollectionKey, CharacterValue, ClassDefinitionEvaluation, ClassElementDefinitionRecord, ClassFieldDefinitionEvaluation, ClassFieldDefinitionEvaluation_decorator, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CombineDateAndTimeDuration, CompareArrayElements, CompareEpochNanoseconds, CompareISODate, CompareISODateTime, CompareSurpasses, CompareTimeDuration, CompareTimeRecord, CompilePattern, CompletePropertyDescriptor, Completion, _CompletionImpl as CompletionImpl, ComputeNudgeWindow, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContainsUsing, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CopyNameAndLength, CountLeftCapturingParensWithin, CreateAddInitializerFunction, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateBytesModule, CreateDataProperty, CreateDataPropertyOrThrow, CreateDateDurationRecord, CreateDecoratorAccessObject, CreateDecoratorContextObject, CreateDefaultExportSyntheticModule, CreateDisposableResource, CreateDynamicFunction, CreateFieldInitializerFunction, CreateISODateRecord, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateMonthCode, CreateNegatedTemporalDuration, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateTemporalDate, CreateTemporalDateTime, CreateTemporalDuration, CreateTemporalInstant, CreateTemporalMonthDay, CreateTemporalTime, CreateTemporalYearMonth, CreateTemporalZonedDateTime, CreateTextModule, CreateTimeRecord, CreateTypeErrorCopy, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateDurationDays, DateDurationSign, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, _Decimal as Decimal, DeclarationPart, DeclarativeEnvironmentRecord, DecoratorEvaluation, DecoratorListEvaluation, DefaultTemporalLargestUnit, DefineField, DefineMethod, DefineMethodProperty, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, DifferenceEpochNanoseconds, DifferenceISODateTime, DifferencePlainDateTimeWithRounding, DifferencePlainDateTimeWithTotal, DifferenceTemporalInstant, DifferenceTemporalPlainDate, DifferenceTemporalPlainDateTime, DifferenceTemporalPlainTime, DifferenceTemporalPlainYearMonth, DifferenceTemporalZonedDateTime, DifferenceTime, DifferenceZonedDateTime, DifferenceZonedDateTimeWithRounding, DifferenceZonedDateTimeWithTotal, DisambiguatePossibleEpochNanoseconds, DisposeResources, DurationSign, DynamicParsedCodeRecord, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EpochDaysToEpochMilliseconds, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateAsyncFunctionBody, EvaluateAsyncGeneratorBody, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateCall, EvaluateClassStaticBlockBody, EvaluateConciseBody, EvaluateFunctionBody, EvaluateGeneratorBody, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExcludeImportedNames, ExecutionContext, ExecutionContextStack, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, ExportFromDeclarationModuleRequest, F, FEATURES, FinishLoadingImportedModule, Flag, FlagText, ForDeclarationBindingInitialization, FormatCalendarAnnotation, FormatDateTimeUTCOffsetRounded, FormatFractionalSeconds, FormatISODateTime, FormatOffsetTimeZoneIdentifier, FormatTimeString, FormatUTCOffsetNanoseconds, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, FunctionKind, GatherAsynchronousTransitiveDependencies, GatherAsynchronousTransitiveDependenciesForRequests, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetArrayBufferMaxByteLengthOption, GetAvailableNamedTimeZoneIdentifier, GetDifferenceSettings, GetDirectionOption, GetDisposeMethod, GetEpochNanosecondsFor, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetISODateTimeFor, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNamedTimeZoneEpochNanoseconds, GetNamedTimeZoneNextTransition, GetNamedTimeZoneOffsetNanoseconds, GetNamedTimeZonePreviousTransition, GetNewOptionalIndirectExportsModuleRequests, GetNewTarget, GetOffsetNanosecondsFor, GetOptionsObject$1 as GetOptionsObject, GetPossibleEpochNanoseconds, GetPrototypeFromConstructor, GetRoundingIncrementOption, GetRoundingModeOption, GetShadowRealmContext, GetStartOfDay, GetStringIndex, GetSubstitution, GetTemporalCalendarIdentifierWithISODefault, GetTemporalDisambiguationOption, GetTemporalFractionalSecondDigitsOption, GetTemporalOffsetOption, GetTemporalOverflowOption, GetTemporalRelativeToOption, GetTemporalShowCalendarNameOption, GetTemporalShowOffsetOption, GetTemporalShowTimeZoneNameOption, GetTemporalUnitValuedOption, GetThisEnvironment, GetThisValue, GetUTCEpochNanoseconds, GetUnsignedRoundingMode, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GetWrappedValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetModuleSourceModuleRecord, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HostResizeArrayBuffer, HostSystemUTCEpochNanoseconds, HourFromTime, HoursPerDay, ISODateSurpasses, ISODateTimeWithinLimits, ISODateToEpochDays, ISODateToFields, ISODateWithinLimits, ISODayOfWeek, ISODayOfYear, ISODaysInMonth, ISOWeekOfYear, ISOYearMonthWithinLimits, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptCloseIterators, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, ImportedNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeFieldOrAccessor, InitializeInstanceElements, InitializePrivateMethods, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, InternalDurationSign, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsAwaitUsingDeclaration, IsBigIntElementType, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLessThan, IsLooselyEqual, IsModuleSCCEvaluated, IsPartialTemporalObject, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsUnsignedElementType, IsUsingDeclaration, IsValidDuration, IsValidISODate, IsValidIntegerIndex, IsValidTime, IsViewOutOfBounds, IsWithinEpochNanosecondsInterval, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorCloseAll, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, IteratorZip, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LargerOfTwoTemporalUnits, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, ListAppendUnique, LocalTime, MV_StringNumericLiteral, MakeAutoAccessorGetter, MakeAutoAccessorSetter, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeFullYear, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeRealm, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MaxEpochNanoseconds, MaximumTemporalDurationRoundingIncrement, MergeImportedNames, MethodDefinitionEvaluation, MicroTaskEventLoop, MidnightTimeRecord, MillisecondFromTime, MillisecondsPerDay, MillisecondsPerHour, MillisecondsPerMinute, MillisecondsPerSecond, MinEpochNanoseconds, MinuteFromTime, MinutesPerHour, ModuleCache, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsKeyEqual, MonthFromTime, NamedEvaluation, NanosecondsPerDay, NanosecondsPerHour, NanosecondsPerMicrosecond, NanosecondsPerMillisecond, NanosecondsPerMinute, NanosecondsPerSecond, NegateRoundingMode, NewPromiseCapability, NoTimeZone, NodeJSLikeEventLoop, NonConstructorElements, NonISOCalendarDateToISO, NonISOCalendarISOToDate, NonISODateAdd, NonISODateUntil, NonISOFieldKeysToIgnore, NonISOMonthDayToISOReferenceDate, NonISOResolveFields, NoonTimeRecord, NormalCompletion, _NormalCompletionImpl as NormalCompletionImpl, NudgeToCalendarUnit, NudgeToDayOrTime, NudgeToZonedTime, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OptionalIndirectExportEntries, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, OrdinaryWrappedFunctionCall, OutOfRange, PadISOYear, ParseDateTimeUTCOffset, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PerformShadowRealmEval, PrepareCalendarFields, PrepareForOrdinaryCall, PrepareForTailCall, PrepareForWrappedFunctionCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, RawTokens, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RegulateISODate, RegulateTime, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, _ReturnCompletion_ as ReturnCompletion_, RoundEpochNanoseconds, RoundISODateTime, RoundNumberToIncrement, RoundNumberToIncrementAsIfPositive, RoundRelativeDuration, RoundTime, RoundTimeDuration, RoundTimeDurationToIncrement, RunCallerContext, RunSuspendedContext, SafePerformPromiseAll, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecondFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, ShadowRealmImportValue, SnapToInteger, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringToNumber, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, SystemDateTime, SystemTimeZoneIdentifier, SystemUTCEpochMilliseconds, SystemUTCEpochNanoseconds, TV, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TemporalDateToString, TemporalDurationFromInternal, TemporalDurationToString, TemporalInstantToString, TemporalMonthDayToString, TemporalUnitLength, TemporalYearMonthToString, TemporalZonedDateTimeToString, TestIntegrityLevel, ThisBigIntValue, ThisBooleanValue, ThisNumberValue, ThisStringValue, ThisSymbolValue, Throw, ThrowCompletion, _ThrowCompletion_ as ThrowCompletion_, TimeClip, TimeDurationFromComponents, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, TimeFromYear, TimeRecordToString, TimeValueToISODateTimeRecord, TimeWithinDay, TimeZoneEquals, ToAbsoluteIndex, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToClampedIndex, ToFixedSizeInteger, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToInternalDurationRecord, ToInternalDurationRecordWith24HourDays, ToLength, ToNumber, ToNumeric, ToObject, ToOffsetString, ToPartialDurationRecord, ToPartialTimeRecord, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToSecondsStringPrecisionRecord, ToString, ToTemporalCalendarIdentifier, ToTemporalDate, ToTemporalDateTime, ToTemporalDuration, ToTemporalInstant, ToTemporalMonthDay, ToTemporalTime, ToTemporalTimeZoneIdentifier, ToTemporalYearMonth, ToTemporalZonedDateTime, ToTimeRecordOrMidnight, ToUint16, ToUint32, ToUint8, ToUint8Clamp, ToZeroPaddedDecimalString, Token, TokenData, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TotalRelativeDuration, TotalTimeDuration, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateISODaysRange, ValidateShadowRealmObject, ValidateTemporalRoundingIncrement, ValidateTemporalUnitValue, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WebLikeEventLoop, WeekDay, WrappedFunctionCreate, X, YearFromTime, Yield, Z, ZeroDateDuration, activeFunctionObject, boostTest262Harness, captureStack, composeModuleLoaders, createBuiltinModuleLoader, createTest262Intrinsics, currentRealmRecord, evalQ, gc, generatorBrandToErrorMessageType, getActiveScriptId, getBreakpointCandidateNodes, getCurrentStack, getHostDefinedErrorDetails, hasSourceTextInternalSlot, hostSupportResizableArrayBuffer, importBundledTest262Harness, inspect, intrinsics, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBoundFunctionObject, isBuiltinFunctionObject, isCalendarUnit, isDataViewObject, isDateObject, isDateUnit, isECMAScriptFunctionObject, IsError as isErrorObject, isEvaluator, isFinalizationRegistryObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNamedTimeZoneIdentifier, isNonNegativeInteger, isOffsetTimeZoneIdentifier, isOrdinaryObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isShadowRealmObject, isStrictModeCode, isTemporalDurationObject, isTemporalInstantObject, isTemporalPlainDateObject, isTemporalPlainDateTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainTimeObject, isTemporalPlainYearMonthObject, isTemporalZonedDateTimeObject, isTimeUnit, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, isWrappedFunctionExoticObject, kInternal, markBuiltinFunctionAsConstructor, maxTimeDuration, parseNodeToBreakpointLocation, performDevtoolsEval, refineLeftHandSideExpression, runSingleJobInQueue, runningExecutionContext, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, X as unwrapCompletion, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEventLoop, AbstractModuleRecord, Add24HourDaysToTimeDuration, AddDaysToISODate, AddDisposableResource, AddDurationToDate, AddDurationToDateTime, AddDurationToInstant, AddDurationToTime, AddDurationToYearMonth, AddDurationToZonedDateTime, AddDurations, AddEpochNanoseconds, AddRestrictedFunctionProperties, AddTime, AddTimeDuration, AddTimeDurationToEpochNanoseconds, AddToKeptObjects, AddValueToKeyedGroup, AddZonedDateTime, AdjustDateDurationRecord, Agent, AgentCanSuspend, AgentSignifier, AllImportAttributesSupported, AllocateArrayBuffer, AllocateImmutableArrayBuffer, ApplyDecoratorsAndDefineMethod, ApplyDecoratorsToClassDefinition, ApplyDecoratorsToElementDefinition, ApplyStringOrNumericBinaryOperator, ApplyUnsignedRoundingMode, ArgumentListEvaluation, ArrayBufferByteLength, ArrayBufferCopyAndDetach, ArrayCreate, InternalMethods$5 as ArrayExoticObjectInternalMethods, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorRequestRecord, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, AvailableCalendars, AvailableNamedTimeZoneIdentifiers, Await, BalanceISODateTime, BalanceISOYearMonth, BalanceTime, BaseValue, BasicJobQueue, BigIntValue, BindingClassDeclarationEvaluation, BindingEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, BubbleRelativeDuration, BuildEvaluationList, BuildLinkingList, CalendarDateAdd, CalendarDateFromFields, CalendarDateToISO, CalendarDateUntil, CalendarExtraFields, CalendarFieldKeysToIgnore, CalendarISOToDate, CalendarMergeFields, CalendarMonthDayFromFields, CalendarMonthDayToISOReferenceDate, CalendarResolveFields, CalendarYearMonthFromFields, Call, CallFrame, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, Canonicalize, CanonicalizeCalendar, CanonicalizeKeyedCollectionKey, CharacterValue, ClassDefinitionEvaluation, ClassElementDefinitionRecord, ClassFieldDefinitionEvaluation, ClassFieldDefinitionEvaluation_decorator, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CombineDateAndTimeDuration, CompareArrayElements, CompareEpochNanoseconds, CompareISODate, CompareISODateTime, CompareSurpasses, CompareTimeDuration, CompareTimeRecord, CompilePattern, CompletePropertyDescriptor, Completion, _CompletionImpl as CompletionImpl, ComputeNudgeWindow, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContainsUsing, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CopyNameAndLength, CountLeftCapturingParensWithin, CreateAddInitializerFunction, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateBytesModule, CreateDataProperty, CreateDataPropertyOrThrow, CreateDateDurationRecord, CreateDecoratorAccessObject, CreateDecoratorContextObject, CreateDefaultExportSyntheticModule, CreateDisposableResource, CreateDynamicFunction, CreateFieldInitializerFunction, CreateISODateRecord, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateMonthCode, CreateNegatedTemporalDuration, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateTemporalDate, CreateTemporalDateTime, CreateTemporalDuration, CreateTemporalInstant, CreateTemporalMonthDay, CreateTemporalTime, CreateTemporalYearMonth, CreateTemporalZonedDateTime, CreateTextModule, CreateTimeRecord, CreateTypeErrorCopy, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateDurationDays, DateDurationSign, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, _Decimal as Decimal, DeclarationPart, DeclarativeEnvironmentRecord, DecoratorEvaluation, DecoratorListEvaluation, DefaultTemporalLargestUnit, DefineField, DefineMethod, DefineMethodProperty, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, DifferenceEpochNanoseconds, DifferenceISODateTime, DifferencePlainDateTimeWithRounding, DifferencePlainDateTimeWithTotal, DifferenceTemporalInstant, DifferenceTemporalPlainDate, DifferenceTemporalPlainDateTime, DifferenceTemporalPlainTime, DifferenceTemporalPlainYearMonth, DifferenceTemporalZonedDateTime, DifferenceTime, DifferenceZonedDateTime, DifferenceZonedDateTimeWithRounding, DifferenceZonedDateTimeWithTotal, DisambiguatePossibleEpochNanoseconds, DisposeResources, DurationSign, DynamicParsedCodeRecord, EnsureCompletion, EnumerableOwnProperties, EnvironmentRecord, EpochDaysToEpochMilliseconds, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateAsyncFunctionBody, EvaluateAsyncGeneratorBody, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateCall, EvaluateClassStaticBlockBody, EvaluateConciseBody, EvaluateFunctionBody, EvaluateGeneratorBody, EvaluateModuleSync, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExcludeImportedNames, ExecutionContext, ExecutionContextStack, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, ExportFromDeclarationModuleRequest, F, FEATURES, FinishLoadingImportedModule, Flag, FlagText, ForDeclarationBindingInitialization, FormatCalendarAnnotation, FormatDateTimeUTCOffsetRounded, FormatFractionalSeconds, FormatISODateTime, FormatOffsetTimeZoneIdentifier, FormatTimeString, FormatUTCOffsetNanoseconds, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, FunctionKind, GatherAsynchronousTransitiveDependencies, GatherAsynchronousTransitiveDependenciesForRequests, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetArrayBufferMaxByteLengthOption, GetAvailableNamedTimeZoneIdentifier, GetDifferenceSettings, GetDirectionOption, GetDisposeMethod, GetEpochNanosecondsFor, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetISODateTimeFor, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNamedTimeZoneEpochNanoseconds, GetNamedTimeZoneNextTransition, GetNamedTimeZoneOffsetNanoseconds, GetNamedTimeZonePreviousTransition, GetNewOptionalIndirectExportsModuleRequests, GetNewTarget, GetOffsetNanosecondsFor, GetOptionsObject$1 as GetOptionsObject, GetPossibleEpochNanoseconds, GetPrototypeFromConstructor, GetRoundingIncrementOption, GetRoundingModeOption, GetShadowRealmContext, GetStartOfDay, GetStringIndex, GetSubstitution, GetTemporalCalendarIdentifierWithISODefault, GetTemporalDisambiguationOption, GetTemporalFractionalSecondDigitsOption, GetTemporalOffsetOption, GetTemporalOverflowOption, GetTemporalRelativeToOption, GetTemporalShowCalendarNameOption, GetTemporalShowOffsetOption, GetTemporalShowTimeZoneNameOption, GetTemporalUnitValuedOption, GetThisEnvironment, GetThisValue, GetUTCEpochNanoseconds, GetUnsignedRoundingMode, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GetWrappedValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, GroupBy, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostGetModuleSourceModuleRecord, HostGetSupportedImportAttributes, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HostResizeArrayBuffer, HostSystemUTCEpochNanoseconds, HourFromTime, HoursPerDay, ISODateSurpasses, ISODateTimeWithinLimits, ISODateToEpochDays, ISODateToFields, ISODateWithinLimits, ISODayOfWeek, ISODayOfYear, ISODaysInMonth, ISOWeekOfYear, ISOYearMonthWithinLimits, IfAbruptCloseAsyncIterator, IfAbruptCloseIterator, IfAbruptCloseIterators, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, ImportedNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeFieldOrAccessor, InitializeInstanceElements, InitializePrivateMethods, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, InternalDurationSign, InterpretISODateTimeOffset, InterpretTemporalDateTimeFields, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsAwaitUsingDeclaration, IsBigIntElementType, IsCallable, IsCharacterClass, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsImmutableBuffer, IsInTailPosition, IsIntegralNumber, IsLessThan, IsLooselyEqual, IsModuleSCCEvaluated, IsPartialTemporalObject, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsUnsignedElementType, IsUsingDeclaration, IsValidDuration, IsValidISODate, IsValidIntegerIndex, IsValidTime, IsViewOutOfBounds, IsWithinEpochNanosecondsInterval, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorCloseAll, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, IteratorZip, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LargerOfTwoTemporalUnits, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, ListAppendUnique, LocalTime, MV_StringNumericLiteral, MakeAutoAccessorGetter, MakeAutoAccessorSetter, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeFullYear, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeRealm, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MaxEpochNanoseconds, MaximumTemporalDurationRoundingIncrement, MergeImportedNames, MethodDefinitionEvaluation, MicroTaskEventLoop, MidnightTimeRecord, MillisecondFromTime, MillisecondsPerDay, MillisecondsPerHour, MillisecondsPerMinute, MillisecondsPerSecond, MinEpochNanoseconds, MinuteFromTime, MinutesPerHour, ModuleCache, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, ModuleRequestsKeyEqual, MonthFromTime, NamedEvaluation, NanosecondsPerDay, NanosecondsPerHour, NanosecondsPerMicrosecond, NanosecondsPerMillisecond, NanosecondsPerMinute, NanosecondsPerSecond, NegateRoundingMode, NewPromiseCapability, NoTimeZone, NodeJSLikeEventLoop, NonConstructorElements, NonISOCalendarDateToISO, NonISOCalendarISOToDate, NonISODateAdd, NonISODateUntil, NonISOFieldKeysToIgnore, NonISOMonthDayToISOReferenceDate, NonISOResolveFields, NoonTimeRecord, NormalCompletion, _NormalCompletionImpl as NormalCompletionImpl, NudgeToCalendarUnit, NudgeToDayOrTime, NudgeToZonedTime, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OptionalIndirectExportEntries, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, OrdinaryWrappedFunctionCall, OutOfRange, PadISOYear, ParseDateTimeUTCOffset, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PerformShadowRealmEval, PrepareCalendarFields, PrepareForOrdinaryCall, PrepareForTailCall, PrepareForWrappedFunctionCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, Q, R, RawBytesToNumeric, RawTokens, ReadyForSyncExecution, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, MatchState as RegExpState, RegulateISODate, RegulateTime, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveBounds, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, _ReturnCompletion_ as ReturnCompletion_, RoundEpochNanoseconds, RoundISODateTime, RoundNumberToIncrement, RoundNumberToIncrementAsIfPositive, RoundRelativeDuration, RoundTime, RoundTimeDuration, RoundTimeDurationToIncrement, RunCallerContext, RunSuspendedContext, SafePerformPromiseAll, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecondFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, ShadowRealmImportValue, SnapToInteger, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringToNumber, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, SystemDateTime, SystemTimeZoneIdentifier, SystemUTCEpochMilliseconds, SystemUTCEpochNanoseconds, TV, Table69_NonbinaryUnicodeProperties, Table70_BinaryUnicodeProperties, Table71_BinaryPropertyOfStrings, TemplateStrings, TemporalDateToString, TemporalDurationFromInternal, TemporalDurationToString, TemporalInstantToString, TemporalMonthDayToString, TemporalUnitLength, TemporalYearMonthToString, TemporalZonedDateTimeToString, TestIntegrityLevel, ThisBigIntValue, ThisBooleanValue, ThisNumberValue, ThisStringValue, ThisSymbolValue, Throw, ThrowCompletion, _ThrowCompletion_ as ThrowCompletion_, TimeClip, TimeDurationFromComponents, TimeDurationFromEpochNanosecondsDifference, TimeDurationSign, TimeFromYear, TimeRecordToString, TimeValueToISODateTimeRecord, TimeWithinDay, TimeZoneEquals, ToAbsoluteIndex, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToClampedIndex, ToFixedSizeInteger, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToInternalDurationRecord, ToInternalDurationRecordWith24HourDays, ToLength, ToNumber, ToNumeric, ToObject, ToOffsetString, ToPartialDurationRecord, ToPartialTimeRecord, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToSecondsStringPrecisionRecord, ToString, ToTemporalCalendarIdentifier, ToTemporalDate, ToTemporalDateTime, ToTemporalDuration, ToTemporalInstant, ToTemporalMonthDay, ToTemporalTime, ToTemporalTimeZoneIdentifier, ToTemporalYearMonth, ToTemporalZonedDateTime, ToTimeRecordOrMidnight, ToUint16, ToUint32, ToUint8, ToUint8Clamp, ToZeroPaddedDecimalString, Token, TokenData, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TotalRelativeDuration, TotalTimeDuration, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, Unicode, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateISODaysRange, ValidateShadowRealmObject, ValidateTemporalRoundingIncrement, ValidateTemporalUnitValue, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WebLikeEventLoop, WeekDay, WrappedFunctionCreate, X, YearFromTime, Yield, Z, ZeroDateDuration, activeFunctionObject, boostTest262Harness, captureStack, composeModuleLoaders, createBuiltinModuleLoader, createTest262Intrinsics, currentRealmRecord, evalQ, gc, generatorBrandToErrorMessageType, getActiveScriptId, getBreakpointCandidateNodes, getCurrentStack, getHostDefinedErrorDetails, hasSourceTextInternalSlot, hostSupportResizableArrayBuffer, importBundledTest262Harness, inspect, intrinsics, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBoundFunctionObject, isBuiltinFunctionObject, isCalendarUnit, isDataViewObject, isDateObject, isDateUnit, isECMAScriptFunctionObject, IsError as isErrorObject, isEvaluator, isFinalizationRegistryObject, isFunctionObject, isIntegerIndex, isLeadingSurrogate, isMapObject, isModuleNamespaceObject, isNamedTimeZoneIdentifier, isNonNegativeInteger, isOffsetTimeZoneIdentifier, isOrdinaryObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isShadowRealmObject, isStrictModeCode, isTemporalDurationObject, isTemporalInstantObject, isTemporalPlainDateObject, isTemporalPlainDateTimeObject, isTemporalPlainMonthDayObject, isTemporalPlainTimeObject, isTemporalPlainYearMonthObject, isTemporalZonedDateTimeObject, isTimeUnit, isTrailingSurrogate, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, isWrappedFunctionExoticObject, kInternal, markBuiltinFunctionAsConstructor, maxTimeDuration, parseNodeToBreakpointLocation, performDevtoolsEval, refineLeftHandSideExpression, runSingleJobInQueue, runningExecutionContext, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, X as unwrapCompletion, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
