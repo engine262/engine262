@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 d8d2f22f6c9a5a9057334ebf6f390f7bbe149db2
+ * engine262 0.0.1 d553e7b52501fbc47eae981c8d0fa7a5c26d0171
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -28683,19 +28683,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
     static bitwiseAND(x, y) {
-      // 1. Return BigIntBitwiseOp(&, x, y).
       return BigIntBitwiseOp('&', x, y);
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
     static bitwiseXOR(x, y) {
-      // 1. Return BigIntBitwiseOp(^, x, y).
       return BigIntBitwiseOp('^', x, y);
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
     static bitwiseOR(x, y) {
-      // 1. Return BigIntBitwiseOp(|, x, y);
       return BigIntBitwiseOp('|', x, y);
     }
 
@@ -28727,14 +28724,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
-  function BigIntBitwiseOp(op, x, y) {
+  function BigIntBitwiseOp(op, xBit, yBit) {
     switch (op) {
       case '&':
-        return Z(R(x) & R(y));
+        return Z(R(xBit) & R(yBit));
       case '|':
-        return Z(R(x) | R(y));
+        return Z(R(xBit) | R(yBit));
       case '^':
-        return Z(R(x) ^ R(y));
+        return Z(R(xBit) ^ R(yBit));
       /* node:coverage ignore next */default:
         /* node:coverage ignore next */
         throw OutOfRange.exhaustive(op);
