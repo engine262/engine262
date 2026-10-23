@@ -14,7 +14,7 @@ import type { PlainEvaluator } from '../evaluator.mts';
 import { clamp } from '../abstract-ops/math.mts';
 import { sort } from '../host-defined/sort.mts';
 import { assignProps } from './bootstrap.mts';
-import { NormalCompletion, NumberValue, R, surroundingAgent, ThrowCompletion, type Integer } from '#self';
+import { NormalCompletion, NumberValue, R, surroundingAgent, ThrowCompletion, type Integer, type PropertyKeyValue } from '#self';
 import {
   ArrayCreate,
   ArraySpeciesCreate,
@@ -375,21 +375,32 @@ export function* FlattenIntoArray(target: ObjectValue, source: ObjectValue, sour
 function* ArrayProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = Q(ToObject(thisValue));
   const length = Q(yield* LengthOfArrayLike(obj));
-  let separatorString;
-  if (separator === Value.undefined) separatorString = ',';
-  else separatorString = Q(yield* ToString(separator));
+  const separatorString = separator === Value.undefined ? ',' : Q(yield* ToString(separator));
+  return Value(Q(yield* JoinIndexedProperties(obj, BigInt(length), separatorString)));
+}
+
+/** https://tc39.es/ecma262/#sec-joinindexedproperties */
+export function* JoinIndexedProperties(obj: ObjectValue, length: Integer, separator: string, methodName?: PropertyKeyValue | string, methodArgs?: readonly Value[]): PlainEvaluator<string> {
+  if (methodName !== undefined && methodArgs === undefined) methodArgs = [];
   let result = '';
   let k = 0;
   while (k < length) {
-    if (k > 0) result = `${result}${separatorString}`;
+    if (k > 0) result += separator;
+    // NOTE: If obj is a TypedArray, the following invocation of Get will return a normal completion.
     const element = Q(yield* Get(obj, X(ToString(F(k)))));
     if (element !== Value.undefined && element !== Value.null) {
-      const elementString = Q(yield* ToString(element));
+      let elementString;
+      if (methodName !== undefined) {
+        elementString = Q(yield* ToString(Q(yield* Invoke(element, methodName, methodArgs))));
+      } else {
+        // NOTE: If obj is a TypedArray, the following invocation of ToString will return a normal completion.
+        elementString = Q(yield* ToString(element));
+      }
       result += elementString;
     }
     k += 1;
   }
-  return Value(result);
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.keys */
@@ -797,19 +808,12 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
 function* ArrayProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const array = Q(ToObject(thisValue));
   const length = Q(yield* LengthOfArrayLike(array));
-  const separator = ',';
-  let result = '';
-  let k = 0;
-  while (k < length) {
-    if (k > 0) result = `${result}${separator}`;
-    const element = Q(yield* Get(array, X(ToString(F(k)))));
-    if (element !== Value.undefined && element !== Value.null) {
-      const elementString = Q(yield* ToString(Q(yield* Invoke(element, 'toLocaleString'))));
-      result += elementString;
-    }
-    k += 1;
-  }
-  return Value(result);
+  return Value(Q(yield* JoinIndexedProperties(array, BigInt(length), LocalizedListSeparator(), 'toLocaleString')));
+}
+
+/** https://tc39.es/ecma262/#sec-localizedlistseparator */
+export function LocalizedListSeparator() {
+  return ',';
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.toreversed */

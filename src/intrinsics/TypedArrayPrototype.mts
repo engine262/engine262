@@ -10,7 +10,7 @@ import {
 } from '../value.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
-import { FindViaPredicate, SortIndexedProperties } from './ArrayPrototype.mts';
+import { FindViaPredicate, JoinIndexedProperties, LocalizedListSeparator, SortIndexedProperties } from './ArrayPrototype.mts';
 import {
   CompareTypedArrayElements,
   TypedArrayCreateSameType,
@@ -26,7 +26,6 @@ import {
   Get,
   GetValueFromBuffer,
   HasProperty,
-  Invoke,
   TypedArraySetElement,
   IsCallable,
   IsSharedArrayBuffer,
@@ -311,21 +310,8 @@ function* TypedArrayProto_join([separator = Value.undefined]: Arguments, { thisV
   const obj = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
   const length = TypedArrayLength(taRecord);
-  let separatorString: string;
-  if (separator === Value.undefined) separatorString = ',';
-  else separatorString = Q(yield* ToString(separator));
-  let result = '';
-  let k = 0;
-  while (k < length) {
-    if (k > 0) result = `${result}${separatorString}`;
-    const element = TypedArrayGetElement(obj, F(k));
-    if (element !== Value.undefined) {
-      const elementString = X(ToString(element));
-      result += elementString;
-    }
-    k += 1;
-  }
-  return Value(result);
+  const separatorString = separator === Value.undefined ? ',' : Q(yield* ToString(separator));
+  return Value(Q(yield* JoinIndexedProperties(obj, BigInt(length), separatorString)));
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
@@ -672,19 +658,7 @@ function* TypedArrayProto_toLocaleString(_args: Arguments, { thisValue }: Functi
   const obj = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
   const length = TypedArrayLength(taRecord);
-  const separator = ',';
-  let result = '';
-  let k = 0;
-  while (k < length) {
-    if (k > 0) result = `${result}${separator}`;
-    const element = TypedArrayGetElement(obj, F(k));
-    if (element !== Value.undefined) {
-      const elementString = Q(yield* ToString(Q(yield* Invoke(element, 'toLocaleString'))));
-      result += elementString;
-    }
-    k += 1;
-  }
-  return Value(result);
+  return Value(Q(yield* JoinIndexedProperties(obj, BigInt(length), LocalizedListSeparator(), 'toLocaleString')));
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed */
