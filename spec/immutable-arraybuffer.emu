@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<link rel="stylesheet" href="./spec.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
+<script src="./spec.js"></script>
+<pre class="metadata">
+title: Immutable ArrayBuffers
+status: proposal
+stage: 2.7
+location: https://github.com/tc39/proposal-immutable-arraybuffer
+shortname: proposal-immutable-arraybuffer
+contributors: Mark S. Miller, Richard Gibson
+markEffects: true
+</pre>
+
+<emu-clause id="sec-ecmascript-data-types-and-values" number="6">
+  <h1>ECMAScript Data Types and Values</h1>
+
+  <emu-clause id="sec-data-blocks" number="2.9">
+    <h1>Data Blocks</h1>
+    <p>A data block that resides in memory that can be referenced from multiple agents concurrently is designated a <dfn variants="Shared Data Blocks">Shared Data Block</dfn>. A Shared Data Block has an identity (for the purposes of equality testing Shared Data Block values) that is <em>address-free</em>: it is tied not to the virtual addresses the block is mapped to in any process, but to the set of locations in memory that the block represents. Two <del>data blocks</del> <ins>Shared Data Blocks</ins> are equal only if the sets of the locations they contain are equal; otherwise, they are not equal and the intersection of the sets of locations they contain is empty. Finally, Shared Data Blocks can be distinguished from Data Blocks.</p>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-operations-on-objects" number="7">
+  <h1>Operations on Objects</h1>
+
+  <ins class="block">
+
+    <emu-clause id="sec-resolvebounds" type="abstract operation">
+      <h1>
+        ResolveBounds (
+          _len_: an integer,
+          _start_: an ECMAScript language value,
+          _end_: an ECMAScript language value,
+        ): either a normal completion containing a Record with fields [[From]] (a non-negative integer) and [[To]] (a non-negative integer) or a throw completion
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-alg>
+        1. Let _relativeStart_ be ? ToIntegerOrInfinity(_start_).
+        1. If _relativeStart_ = -∞, let _from_ be 0.
+        1. Else if _relativeStart_ &lt; 0, let _from_ be max(_len_ + _relativeStart_, 0).
+        1. Else, let _from_ be min(_relativeStart_, _len_).
+        1. If _end_ is *undefined*, let _relativeEnd_ be _len_; else let _relativeEnd_ be ? ToIntegerOrInfinity(_end_).
+        1. If _relativeEnd_ = -∞, let _to_ be 0.
+        1. Else if _relativeEnd_ &lt; 0, let _to_ be max(_len_ + _relativeEnd_, 0).
+        1. Else, let _to_ be min(_relativeEnd_, _len_).
+        1. Return the Record { [[From]]: _from_, [[To]]: _to_ }.
+      </emu-alg>
+    </emu-clause>
+  </ins>
+</emu-clause>
+
+<emu-clause id="sec-ordinary-and-exotic-objects-behaviours" number="10">
+  <h1>Ordinary and Exotic Objects Behaviours</h1>
+
+  <emu-clause id="sec-built-in-exotic-object-internal-methods-and-slots" number="4">
+    <h1>Built-in Exotic Object Internal Methods and Slots</h1>
+
+    <emu-clause id="sec-typedarray-exotic-objects" oldids="sec-integer-indexed-exotic-objects" number="5">
+      <h1>TypedArray Exotic Objects</h1>
+
+      <emu-clause id="sec-typedarray-getownproperty" oldids="sec-integer-indexed-exotic-objects-getownproperty-p" type="internal method" number="1">
+        <h1>
+          [[GetOwnProperty]] (
+            _P_: a property key,
+          ): a normal completion containing either a Property Descriptor or *undefined*
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a TypedArray _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If _P_ is a String, then
+            1. Let _numericIndex_ be CanonicalNumericIndexString(_P_).
+            1. If _numericIndex_ is not *undefined*, then
+              1. Let _value_ be TypedArrayGetElement(_O_, _numericIndex_).
+              1. If _value_ is *undefined*, return *undefined*.
+              1. <ins>Let _mutable_ be *true*.</ins>
+              1. <ins>If IsImmutableBuffer(_O_.[[ViewedArrayBuffer]]) is *true*, set _mutable_ to *false*.</ins>
+              1. Return the PropertyDescriptor { [[Value]]: _value_, [[Writable]]: <del>*true*</del> <ins>_mutable_</ins>, [[Enumerable]]: *true*, [[Configurable]]: <del>*true*</del> <ins>_mutable_</ins> }.
+          1. Return OrdinaryGetOwnProperty(_O_, _P_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-typedarray-defineownproperty" oldids="sec-integer-indexed-exotic-objects-defineownproperty-p-desc" type="internal method" number="3">
+        <h1>
+          [[DefineOwnProperty]] (
+            _P_: a property key,
+            _Desc_: a Property Descriptor,
+          ): either a normal completion containing a Boolean or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a TypedArray _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If _P_ is a String, then
+            1. Let _numericIndex_ be CanonicalNumericIndexString(_P_).
+            1. If _numericIndex_ is not *undefined*, then
+              1. If IsValidIntegerIndex(_O_, _numericIndex_) is *false*, return *false*.
+              1. <ins>If IsImmutableBuffer(_O_.[[ViewedArrayBuffer]]) is *true*, then</ins>
+                1. <ins>Let _current_ be ! <emu-meta suppress-effects="user-code">_O_.[[GetOwnProperty]](_P_)</emu-meta>.</ins>
+                1. <ins>Assert: _current_.[[Configurable]] and _current_.[[Writable]] are both *false*.</ins>
+                1. <ins>NOTE: Attempting to redefine an immutable value always fails, even if the new value would be cast to the current value.</ins>
+                1. <ins>Return ValidateAndApplyPropertyDescriptor(_O_, _P_, *false*, _Desc_, _current_).</ins>
+              1. If _Desc_ has a [[Configurable]] field and _Desc_.[[Configurable]] is *false*, return *false*.
+              1. If _Desc_ has an [[Enumerable]] field and _Desc_.[[Enumerable]] is *false*, return *false*.
+              1. If IsAccessorDescriptor(_Desc_) is *true*, return *false*.
+              1. If _Desc_ has a [[Writable]] field and _Desc_.[[Writable]] is *false*, return *false*.
+              1. If _Desc_ has a [[Value]] field, perform ? TypedArraySetElement(_O_, _numericIndex_, _Desc_.[[Value]]).
+              1. Return *true*.
+          1. Return ! OrdinaryDefineOwnProperty(_O_, _P_, _Desc_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-typedarray-set" oldids="sec-integer-indexed-exotic-objects-set-p-v-receiver" type="internal method" number="5">
+        <h1>
+          [[Set]] (
+            _P_: a property key,
+            _V_: an ECMAScript language value,
+            _Receiver_: an ECMAScript language value,
+          ): either a normal completion containing a Boolean or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>for</dt>
+          <dd>a TypedArray _O_</dd>
+        </dl>
+        <emu-alg>
+          1. If _P_ is a String, then
+            1. Let _numericIndex_ be CanonicalNumericIndexString(_P_).
+            1. If _numericIndex_ is not *undefined*, then
+              1. <ins>NOTE: TypedArray instances restrict own and inherited canonical numeric string properties to integer indices valid for their backing buffers, but assignment failures for canonical numeric string properties are only reported when the buffer is immutable.</ins>
+              1. <ins>If IsImmutableBuffer(_O_.[[ViewedArrayBuffer]]) is *true*, return *false*.</ins>
+              1. If SameValue(_O_, _Receiver_) is *true*, then
+                1. Perform ? TypedArraySetElement(_O_, _numericIndex_, _V_).
+                1. Return *true*.
+              1. If IsValidIntegerIndex(_O_, _numericIndex_) is *false*, return *true*.
+          1. Return ? OrdinarySet(_O_, _P_, _V_, _Receiver_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-typedarraysetelement" oldids="sec-integerindexedelementset" type="abstract operation" number="16">
+        <h1>
+          TypedArraySetElement (
+            _O_: a TypedArray,
+            _index_: a Number,
+            _value_: an ECMAScript language value,
+          ): either a normal completion containing ~unused~ or a throw completion
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-alg>
+          1. <ins>Assert: IsImmutableBuffer(_O_.[[ViewedArrayBuffer]]) is *false*.</ins>
+          1. If _O_.[[ContentType]] is ~bigint~, let _numValue_ be ? ToBigInt(_value_).
+          1. Otherwise, let _numValue_ be ? ToNumber(_value_).
+          1. If IsValidIntegerIndex(_O_, _index_) is *true*, then
+            1. Let _offset_ be _O_.[[ByteOffset]].
+            1. Let _elementSize_ be TypedArrayElementSize(_O_).
+            1. Let _byteIndexInBuffer_ be (ℝ(_index_) × _elementSize_) + _offset_.
+            1. Let _elementType_ be TypedArrayElementType(_O_).
+            1. Perform SetValueInBuffer(_O_.[[ViewedArrayBuffer]], _byteIndexInBuffer_, _elementType_, _numValue_, *true*, ~unordered~).
+          1. Return ~unused~.
+        </emu-alg>
+        <emu-note>
+          <p>This operation always appears to succeed, but it has no effect when attempting to write past the end of a TypedArray or to a TypedArray which is backed by a detached ArrayBuffer.</p>
+        </emu-note>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-indexed-collections" number="23">
+  <h1>Indexed Collections</h1>
+
+  <emu-clause id="sec-typedarray-objects" number="2">
+    <h1>TypedArray Objects</h1>
+
+    <emu-clause id="sec-properties-of-the-%typedarray%-intrinsic-object" number="2">
+      <h1>Properties of the %TypedArray% Intrinsic Object</h1>
+      <p>The %TypedArray% intrinsic object:</p>
+      <ul>
+        <li>has a [[Prototype]] internal slot whose value is %Function.prototype%.</li>
+        <li>has a *"name"* property whose value is *"TypedArray"*.</li>
+        <li>has the following properties:</li>
+      </ul>
+
+      <emu-clause id="sec-%typedarray%.from">
+        <h1>%TypedArray%.from ( _source_ [ , _mapper_ [ , _thisArg_ ] ] )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _C_ be the *this* value.
+          1. If IsConstructor(_C_) is *false*, throw a *TypeError* exception.
+          1. If _mapper_ is *undefined*, then
+            1. Let _mapping_ be *false*.
+          1. Else,
+            1. If IsCallable(_mapper_) is *false*, throw a *TypeError* exception.
+            1. Let _mapping_ be *true*.
+          1. Let _usingIterator_ be ? GetMethod(_source_, %Symbol.iterator%).
+          1. If _usingIterator_ is not *undefined*, then
+            1. Let _values_ be ? IteratorToList(? GetIteratorFromMethod(_source_, _usingIterator_)).
+            1. Let _len_ be the number of elements in _values_.
+            1. Let _targetObj_ be ? TypedArrayCreateFromConstructor(_C_, « 𝔽(_len_) »<ins>, ~write~</ins>).
+            1. Let _k_ be 0.
+            1. Repeat, while _k_ &lt; _len_,
+              1. Let _Pk_ be ! ToString(𝔽(_k_)).
+              1. Let _kValue_ be the first element of _values_.
+              1. Remove the first element from _values_.
+              1. If _mapping_ is *true*, then
+                1. Let _mappedValue_ be ? Call(_mapper_, _thisArg_, « _kValue_, 𝔽(_k_) »).
+              1. Else,
+                1. Let _mappedValue_ be _kValue_.
+              1. Perform ? Set(_targetObj_, _Pk_, _mappedValue_, *true*).
+              1. Set _k_ to _k_ + 1.
+            1. Assert: _values_ is now an empty List.
+            1. Return _targetObj_.
+          1. NOTE: _source_ is not an iterable object, so assume it is already an array-like object.
+          1. Let _arrayLike_ be ! ToObject(_source_).
+          1. Let _len_ be ? LengthOfArrayLike(_arrayLike_).
+          1. Let _targetObj_ be ? TypedArrayCreateFromConstructor(_C_, « 𝔽(_len_) »<ins>, ~write~</ins>).
+          1. Let _k_ be 0.
+          1. Repeat, while _k_ &lt; _len_,
+            1. Let _Pk_ be ! ToString(𝔽(_k_)).
+            1. Let _kValue_ be ? Get(_arrayLike_, _Pk_).
+            1. If _mapping_ is *true*, then
+              1. Let _mappedValue_ be ? Call(_mapper_, _thisArg_, « _kValue_, 𝔽(_k_) »).
+            1. Else,
+              1. Let _mappedValue_ be _kValue_.
+            1. Perform ? Set(_targetObj_, _Pk_, _mappedValue_, *true*).
+            1. Set _k_ to _k_ + 1.
+          1. Return _targetObj_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.of">
+        <h1>%TypedArray%.of ( ..._items_ )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _len_ be the number of elements in _items_.
+          1. Let _C_ be the *this* value.
+          1. If IsConstructor(_C_) is *false*, throw a *TypeError* exception.
+          1. Let _newObj_ be ? TypedArrayCreateFromConstructor(_C_, « 𝔽(_len_) »<ins>, ~write~</ins>).
+          1. Let _k_ be 0.
+          1. Repeat, while _k_ &lt; _len_,
+            1. Let _kValue_ be _items_[_k_].
+            1. Let _Pk_ be ! ToString(𝔽(_k_)).
+            1. Perform ? Set(_newObj_, _Pk_, _kValue_, *true*).
+            1. Set _k_ to _k_ + 1.
+          1. Return _newObj_.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-%typedarrayprototype%-object" number="3">
+      <h1>Properties of the %TypedArray% Prototype Object</h1>
+
+      <emu-clause id="sec-%typedarray%.prototype.copywithin" number="6">
+        <h1>%TypedArray%.prototype.copyWithin ( _target_, _start_ [ , _end_ ] )</h1>
+        <p>The interpretation and use of the arguments of this method are the same as for `Array.prototype.copyWithin` as defined in <emu-xref href="#sec-array.prototype.copywithin"></emu-xref>.</p>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_O_, ~seq-cst~<ins>, ~write~</ins>).
+          1. Let _len_ be TypedArrayLength(_taRecord_).
+          1. Let _relativeTarget_ be ? ToIntegerOrInfinity(_target_).
+          1. If _relativeTarget_ = -∞, let _targetIndex_ be 0.
+          1. Else if _relativeTarget_ &lt; 0, let _targetIndex_ be max(_len_ + _relativeTarget_, 0).
+          1. Else, let _targetIndex_ be min(_relativeTarget_, _len_).
+          1. Let _relativeStart_ be ? ToIntegerOrInfinity(_start_).
+          1. If _relativeStart_ = -∞, let _startIndex_ be 0.
+          1. Else if _relativeStart_ &lt; 0, let _startIndex_ be max(_len_ + _relativeStart_, 0).
+          1. Else, let _startIndex_ be min(_relativeStart_, _len_).
+          1. If _end_ is *undefined*, let _relativeEnd_ be _len_; else let _relativeEnd_ be ? ToIntegerOrInfinity(_end_).
+          1. If _relativeEnd_ = -∞, let _endIndex_ be 0.
+          1. Else if _relativeEnd_ &lt; 0, let _endIndex_ be max(_len_ + _relativeEnd_, 0).
+          1. Else, let _endIndex_ be min(_relativeEnd_, _len_).
+          1. Let _count_ be min(_endIndex_ - _startIndex_, _len_ - _targetIndex_).
+          1. If _count_ > 0, then
+            1. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
+            1. Let _buffer_ be _O_.[[ViewedArrayBuffer]].
+            1. Set _taRecord_ to MakeTypedArrayWithBufferWitnessRecord(_O_, ~seq-cst~).
+            1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+            1. Set _len_ to TypedArrayLength(_taRecord_).
+            1. Let _elementSize_ be TypedArrayElementSize(_O_).
+            1. Let _byteOffset_ be _O_.[[ByteOffset]].
+            1. Let _bufferByteLimit_ be (_len_ × _elementSize_) + _byteOffset_.
+            1. Let _toByteIndex_ be (_targetIndex_ × _elementSize_) + _byteOffset_.
+            1. Let _fromByteIndex_ be (_startIndex_ × _elementSize_) + _byteOffset_.
+            1. Let _countBytes_ be _count_ × _elementSize_.
+            1. If _fromByteIndex_ &lt; _toByteIndex_ and _toByteIndex_ &lt; _fromByteIndex_ + _countBytes_, then
+              1. Let _direction_ be -1.
+              1. Set _fromByteIndex_ to _fromByteIndex_ + _countBytes_ - 1.
+              1. Set _toByteIndex_ to _toByteIndex_ + _countBytes_ - 1.
+            1. Else,
+              1. Let _direction_ be 1.
+            1. Repeat, while _countBytes_ > 0,
+              1. If _fromByteIndex_ &lt; _bufferByteLimit_ and _toByteIndex_ &lt; _bufferByteLimit_, then
+                1. Let _value_ be GetValueFromBuffer(_buffer_, _fromByteIndex_, ~uint8~, *true*, ~unordered~).
+                1. Perform SetValueInBuffer(_buffer_, _toByteIndex_, ~uint8~, _value_, *true*, ~unordered~).
+                1. Set _fromByteIndex_ to _fromByteIndex_ + _direction_.
+                1. Set _toByteIndex_ to _toByteIndex_ + _direction_.
+                1. Set _countBytes_ to _countBytes_ - 1.
+              1. Else,
+                1. Set _countBytes_ to 0.
+          1. Return _O_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.fill" number="9">
+        <h1>%TypedArray%.prototype.fill ( _value_ [ , _start_ [ , _end_ ] ] )</h1>
+        <p>The interpretation and use of the arguments of this method are the same as for `Array.prototype.fill` as defined in <emu-xref href="#sec-array.prototype.fill"></emu-xref>.</p>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_O_, ~seq-cst~<ins>, ~write~</ins>).
+          1. Let _len_ be TypedArrayLength(_taRecord_).
+          1. If _O_.[[ContentType]] is ~bigint~, set _value_ to ? ToBigInt(_value_).
+          1. Otherwise, set _value_ to ? ToNumber(_value_).
+          1. Let _relativeStart_ be ? ToIntegerOrInfinity(_start_).
+          1. If _relativeStart_ = -∞, let _startIndex_ be 0.
+          1. Else if _relativeStart_ &lt; 0, let _startIndex_ be max(_len_ + _relativeStart_, 0).
+          1. Else, let _startIndex_ be min(_relativeStart_, _len_).
+          1. If _end_ is *undefined*, let _relativeEnd_ be _len_; else let _relativeEnd_ be ? ToIntegerOrInfinity(_end_).
+          1. If _relativeEnd_ = -∞, let _endIndex_ be 0.
+          1. Else if _relativeEnd_ &lt; 0, let _endIndex_ be max(_len_ + _relativeEnd_, 0).
+          1. Else, let _endIndex_ be min(_relativeEnd_, _len_).
+          1. Set _taRecord_ to MakeTypedArrayWithBufferWitnessRecord(_O_, ~seq-cst~).
+          1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+          1. Set _len_ to TypedArrayLength(_taRecord_).
+          1. Set _endIndex_ to min(_endIndex_, _len_).
+          1. Let _k_ be _startIndex_.
+          1. Repeat, while _k_ &lt; _endIndex_,
+            1. Let _Pk_ be ! ToString(𝔽(_k_)).
+            1. Perform ! Set(_O_, _Pk_, _value_, *true*).
+            1. Set _k_ to _k_ + 1.
+          1. Return _O_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.filter" number="10">
+        <h1>%TypedArray%.prototype.filter ( _callback_ [ , _thisArg_ ] )</h1>
+        <p>The interpretation and use of the arguments of this method are the same as for `Array.prototype.filter` as defined in <emu-xref href="#sec-array.prototype.filter"></emu-xref>.</p>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_O_, ~seq-cst~).
+          1. Let _len_ be TypedArrayLength(_taRecord_).
+          1. If IsCallable(_callback_) is *false*, throw a *TypeError* exception.
+          1. Let _kept_ be a new empty List.
+          1. Let _captured_ be 0.
+          1. Let _k_ be 0.
+          1. Repeat, while _k_ &lt; _len_,
+            1. Let _Pk_ be ! ToString(𝔽(_k_)).
+            1. Let _kValue_ be ! Get(_O_, _Pk_).
+            1. Let _selected_ be ToBoolean(? Call(_callback_, _thisArg_, « _kValue_, 𝔽(_k_), _O_ »)).
+            1. If _selected_ is *true*, then
+              1. Append _kValue_ to _kept_.
+              1. Set _captured_ to _captured_ + 1.
+            1. Set _k_ to _k_ + 1.
+          1. Let _A_ be ? TypedArraySpeciesCreate(_O_, « 𝔽(_captured_) »<ins>, ~write~</ins>).
+          1. <ins>Assert: IsImmutableBuffer(_A_.[[ViewedArrayBuffer]]) is *false*.</ins>
+          1. Let _n_ be 0.
+          1. For each element _e_ of _kept_, do
+            1. Perform ! Set(_A_, ! ToString(𝔽(_n_)), _e_, *true*).
+            1. Set _n_ to _n_ + 1.
+          1. Return _A_.
+        </emu-alg>
+        <p>This method is not generic. The *this* value must be an object with a [[TypedArrayName]] internal slot.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.map" number="22">
+        <h1>%TypedArray%.prototype.map ( _callback_ [ , _thisArg_ ] )</h1>
+        <p>The interpretation and use of the arguments of this method are the same as for `Array.prototype.map` as defined in <emu-xref href="#sec-array.prototype.map"></emu-xref>.</p>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_O_, ~seq-cst~).
+          1. Let _len_ be TypedArrayLength(_taRecord_).
+          1. If IsCallable(_callback_) is *false*, throw a *TypeError* exception.
+          1. Let _A_ be ? TypedArraySpeciesCreate(_O_, « 𝔽(_len_) »<ins>, ~write~</ins>).
+          1. <ins>Assert: IsImmutableBuffer(_A_.[[ViewedArrayBuffer]]) is *false*.</ins>
+          1. Let _k_ be 0.
+          1. Repeat, while _k_ &lt; _len_,
+            1. Let _Pk_ be ! ToString(𝔽(_k_)).
+            1. Let _kValue_ be ! Get(_O_, _Pk_).
+            1. Let _mappedValue_ be ? Call(_callback_, _thisArg_, « _kValue_, 𝔽(_k_), _O_ »).
+            1. Perform ? Set(_A_, _Pk_, _mappedValue_, *true*).
+            1. Set _k_ to _k_ + 1.
+          1. Return _A_.
+        </emu-alg>
+        <p>This method is not generic. The *this* value must be an object with a [[TypedArrayName]] internal slot.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.reverse" number="25">
+        <h1>%TypedArray%.prototype.reverse ( )</h1>
+        <p>The interpretation and use of the arguments of this method are the same as for `Array.prototype.reverse` as defined in <emu-xref href="#sec-array.prototype.reverse"></emu-xref>.</p>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_O_, ~seq-cst~<ins>, ~write~</ins>).
+          1. Let _len_ be TypedArrayLength(_taRecord_).
+          1. Let _middle_ be floor(_len_ / 2).
+          1. Let _lower_ be 0.
+          1. Repeat, while _lower_ ≠ _middle_,
+            1. Let _upper_ be _len_ - _lower_ - 1.
+            1. Let _upperP_ be ! ToString(𝔽(_upper_)).
+            1. Let _lowerP_ be ! ToString(𝔽(_lower_)).
+            1. Let _lowerValue_ be ! Get(_O_, _lowerP_).
+            1. Let _upperValue_ be ! Get(_O_, _upperP_).
+            1. Perform ! Set(_O_, _lowerP_, _upperValue_, *true*).
+            1. Perform ! Set(_O_, _upperP_, _lowerValue_, *true*).
+            1. Set _lower_ to _lower_ + 1.
+          1. Return _O_.
+        </emu-alg>
+        <p>This method is not generic. The *this* value must be an object with a [[TypedArrayName]] internal slot.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.set" oldids="sec-%typedarray%.prototype.set-overloaded-offset" number="26">
+        <h1>%TypedArray%.prototype.set ( _source_ [ , _offset_ ] )</h1>
+        <p>This method sets multiple values in this _TypedArray_, reading the values from _source_. The details differ based upon the type of _source_. The optional _offset_ value indicates the first element index in this _TypedArray_ where values are written. If omitted, it is assumed to be 0.</p>
+        <p>It performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _target_ be the *this* value.
+          1. <ins>NOTE: The following steps could be simplified by using ? ValidateTypedArray(_target_, ~seq-cst~, ~write~) and refactoring SetTypedArrayFromTypedArray and SetTypedArrayFromArrayLike to accept the result as input, but that would observably change the calls into user code and thrown error when IsTypedArrayOutOfBounds returns *true* and _offset_ is negative. Regardless, such a change is still worth pursuing if possible.</ins>
+          1. Perform ? RequireInternalSlot(_target_, [[TypedArrayName]]).
+          1. Assert: _target_ has a [[ViewedArrayBuffer]] internal slot.
+          1. <ins>If IsImmutableBuffer(_target_.[[ViewedArrayBuffer]]) is *true*, throw a *TypeError* exception.</ins>
+          1. Let _targetOffset_ be ? ToIntegerOrInfinity(_offset_).
+          1. If _targetOffset_ &lt; 0, throw a *RangeError* exception.
+          1. If _source_ is an Object that has a [[TypedArrayName]] internal slot, then
+            1. Perform ? SetTypedArrayFromTypedArray(_target_, _targetOffset_, _source_).
+          1. Else,
+            1. Perform ? SetTypedArrayFromArrayLike(_target_, _targetOffset_, _source_).
+          1. Return *undefined*.
+        </emu-alg>
+        <p>This method is not generic. The *this* value must be an object with a [[TypedArrayName]] internal slot.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.slice" number="27">
+        <h1>%TypedArray%.prototype.slice ( _start_, _end_ )</h1>
+        <p>The interpretation and use of the arguments of this method are the same as for `Array.prototype.slice` as defined in <emu-xref href="#sec-array.prototype.slice"></emu-xref>.</p>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_O_, ~seq-cst~).
+          1. Let _srcArrayLength_ be TypedArrayLength(_taRecord_).
+          1. Let _relativeStart_ be ? ToIntegerOrInfinity(_start_).
+          1. If _relativeStart_ = -∞, let _startIndex_ be 0.
+          1. Else if _relativeStart_ &lt; 0, let _startIndex_ be max(_srcArrayLength_ + _relativeStart_, 0).
+          1. Else, let _startIndex_ be min(_relativeStart_, _srcArrayLength_).
+          1. If _end_ is *undefined*, let _relativeEnd_ be _srcArrayLength_; else let _relativeEnd_ be ? ToIntegerOrInfinity(_end_).
+          1. If _relativeEnd_ = -∞, let _endIndex_ be 0.
+          1. Else if _relativeEnd_ &lt; 0, let _endIndex_ be max(_srcArrayLength_ + _relativeEnd_, 0).
+          1. Else, let _endIndex_ be min(_relativeEnd_, _srcArrayLength_).
+          1. Let _countBytes_ be max(_endIndex_ - _startIndex_, 0).
+          1. Let _A_ be ? TypedArraySpeciesCreate(_O_, « 𝔽(_countBytes_) »<ins>, ~write~</ins>).
+          1. <ins>Assert: IsImmutableBuffer(_A_.[[ViewedArrayBuffer]]) is *false*.</ins>
+          1. If _countBytes_ > 0, then
+            1. Set _taRecord_ to MakeTypedArrayWithBufferWitnessRecord(_O_, ~seq-cst~).
+            1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+            1. Set _endIndex_ to min(_endIndex_, TypedArrayLength(_taRecord_)).
+            1. Set _countBytes_ to max(_endIndex_ - _startIndex_, 0).
+            1. Let _srcType_ be TypedArrayElementType(_O_).
+            1. Let _targetType_ be TypedArrayElementType(_A_).
+            1. If _srcType_ is _targetType_, then
+              1. NOTE: The transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+              1. Let _srcBuffer_ be _O_.[[ViewedArrayBuffer]].
+              1. Let _targetBuffer_ be _A_.[[ViewedArrayBuffer]].
+              1. Let _elementSize_ be TypedArrayElementSize(_O_).
+              1. Let _srcByteOffset_ be _O_.[[ByteOffset]].
+              1. Let _srcByteIndex_ be (_startIndex_ × _elementSize_) + _srcByteOffset_.
+              1. Let _targetByteIndex_ be _A_.[[ByteOffset]].
+              1. Let _endByteIndex_ be _targetByteIndex_ + (_countBytes_ × _elementSize_).
+              1. Repeat, while _targetByteIndex_ &lt; _endByteIndex_,
+                1. Let _value_ be GetValueFromBuffer(_srcBuffer_, _srcByteIndex_, ~uint8~, *true*, ~unordered~).
+                1. Perform SetValueInBuffer(_targetBuffer_, _targetByteIndex_, ~uint8~, _value_, *true*, ~unordered~).
+                1. Set _srcByteIndex_ to _srcByteIndex_ + 1.
+                1. Set _targetByteIndex_ to _targetByteIndex_ + 1.
+            1. Else,
+              1. Let _n_ be 0.
+              1. Let _k_ be _startIndex_.
+              1. Repeat, while _k_ &lt; _endIndex_,
+                1. Let _Pk_ be ! ToString(𝔽(_k_)).
+                1. Let _kValue_ be ! Get(_O_, _Pk_).
+                1. Perform ! Set(_A_, ! ToString(𝔽(_n_)), _kValue_, *true*).
+                1. Set _k_ to _k_ + 1.
+                1. Set _n_ to _n_ + 1.
+          1. Return _A_.
+        </emu-alg>
+        <p>This method is not generic. The *this* value must be an object with a [[TypedArrayName]] internal slot.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-%typedarray%.prototype.sort" oldids="sec-typedarraysortcompare" number="29">
+        <h1>%TypedArray%.prototype.sort ( _comparator_ )</h1>
+        <p>This is a distinct method that, except as described below, implements the same requirements as those of `Array.prototype.sort` as defined in <emu-xref href="#sec-array.prototype.sort"></emu-xref>. The implementation of this method may be optimized with the knowledge that the *this* value is an object that has a fixed length and whose integer-indexed properties are not sparse.</p>
+        <p>This method is not generic. The *this* value must be an object with a [[TypedArrayName]] internal slot.</p>
+        <p>It performs the following steps when called:</p>
+        <emu-alg>
+          1. If _comparator_ is not *undefined* and IsCallable(_comparator_) is *false*, throw a *TypeError* exception.
+          1. Let _obj_ be the *this* value.
+          1. Let _taRecord_ be ? ValidateTypedArray(_obj_, ~seq-cst~<ins>, ~write~</ins>).
+          1. Let _len_ be TypedArrayLength(_taRecord_).
+          1. NOTE: The following closure performs a numeric comparison rather than the string comparison used in <emu-xref href="#sec-array.prototype.sort"></emu-xref>.
+          1. Let _SortCompare_ be a new Abstract Closure with parameters (_x_, _y_) that captures _comparator_ and performs the following steps when called:
+            1. Return ? CompareTypedArrayElements(_x_, _y_, _comparator_).
+          1. Let _sortedList_ be ? SortIndexedProperties(_obj_, _len_, _SortCompare_, ~read-through-holes~).
+          1. Let _j_ be 0.
+          1. Repeat, while _j_ &lt; _len_,
+            1. Perform ! Set(_obj_, ! ToString(𝔽(_j_)), _sortedList_[_j_], *true*).
+            1. Set _j_ to _j_ + 1.
+          1. Return _obj_.
+        </emu-alg>
+        <emu-note>
+          <p>Because *NaN* always compares greater than any other value (see CompareTypedArrayElements), *NaN* property values always sort to the end of the result when _comparator_ is not provided.</p>
+        </emu-note>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-abstract-operations-for-typedarray-objects" number="4">
+      <h1>Abstract Operations for TypedArray Objects</h1>
+
+      <emu-clause id="typedarray-species-create" type="abstract operation" number="1">
+        <h1>
+          TypedArraySpeciesCreate (
+            _exemplar_: a TypedArray,
+            _argumentList_: a List of ECMAScript language values,
+            <ins>optional _accessMode_: ~read~ or ~write~,</ins>
+          ): either a normal completion containing a TypedArray or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It is used to specify the creation of a new TypedArray using a constructor function that is derived from _exemplar_. Unlike ArraySpeciesCreate, which can create non-Array objects through the use of %Symbol.species%, this operation enforces that the constructor function creates an actual TypedArray.</dd>
+        </dl>
+        <emu-alg>
+          1. <ins>If _accessMode_ is not present, set _accessMode_ to ~read~.</ins>
+          1. Let _defaultConstructor_ be the intrinsic object associated with the constructor name _exemplar_.[[TypedArrayName]] in <emu-xref href="#table-the-typedarray-constructors"></emu-xref>.
+          1. Let _constructor_ be ? SpeciesConstructor(_exemplar_, _defaultConstructor_).
+          1. Let _result_ be ? TypedArrayCreateFromConstructor(_constructor_, _argumentList_<ins>, _accessMode_</ins>).
+          1. <del>Assert: _result_ has [[TypedArrayName]] and [[ContentType]] internal slots.</del>
+          1. <ins>Assert: _result_ has all of the internal slots of a <var>TypedArray</var> instance (<emu-xref href="#sec-properties-of-typedarray-instances"></emu-xref>).</ins>
+          1. If _result_.[[ContentType]] is not _exemplar_.[[ContentType]], throw a *TypeError* exception.
+          1. Return _result_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-typedarraycreatefromconstructor" oldids="typedarray-create" type="abstract operation">
+        <h1>
+          TypedArrayCreateFromConstructor (
+            _constructor_: a constructor,
+            _argumentList_: a List of ECMAScript language values,
+            <ins>optional _accessMode_: ~read~ or ~write~,</ins>
+          ): either a normal completion containing a TypedArray or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It is used to specify the creation of a new TypedArray using a constructor function.</dd>
+        </dl>
+        <emu-alg>
+          1. <ins>If _accessMode_ is not present, set _accessMode_ to ~read~.</ins>
+          1. Let _newTypedArray_ be ? Construct(_constructor_, _argumentList_).
+          1. Let _taRecord_ be ? ValidateTypedArray(_newTypedArray_, ~seq-cst~<ins>, _accessMode_</ins>).
+          1. If the number of elements in _argumentList_ is 1 and _argumentList_[0] is a Number, then
+            1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+            1. Let _length_ be TypedArrayLength(_taRecord_).
+            1. If _length_ &lt; ℝ(_argumentList_[0]), throw a *TypeError* exception.
+          1. Return _newTypedArray_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-validatetypedarray" type="abstract operation" number="4">
+        <h1>
+          ValidateTypedArray (
+            _O_: an ECMAScript language value,
+            _order_: ~seq-cst~ or ~unordered~,
+            <ins>optional _accessMode_: ~read~ or ~write~,</ins>
+          ): either a normal completion containing a TypedArray With Buffer Witness Record or a throw completion
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-alg>
+          1. <ins>If _accessMode_ is not present, set _accessMode_ to ~read~.</ins>
+          1. Perform ? RequireInternalSlot(_O_, [[TypedArrayName]]).
+          1. Assert: _O_ has a [[ViewedArrayBuffer]] internal slot.
+          1. <ins>If _accessMode_ is ~write~ and IsImmutableBuffer(_O_.[[ViewedArrayBuffer]]) is *true*, throw a *TypeError* exception.</ins>
+          1. Let _taRecord_ be MakeTypedArrayWithBufferWitnessRecord(_O_, _order_).
+          1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+          1. Return _taRecord_.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-uint8array">
+    <h1>Uint8Array Objects</h1>
+
+    <emu-clause id="sec-additional-properties-of-the-uint8array-prototype-object" number="2">
+      <h1>Additional Properties of the Uint8Array Prototype Object</h1>
+
+      <emu-clause id="sec-uint8array.prototype.setfrombase64">
+        <h1>Uint8Array.prototype.setFromBase64 ( _string_ [ , _options_ ] )</h1>
+        <emu-alg>
+          1. Let _into_ be the *this* value.
+          1. Perform ? ValidateUint8Array(_into_<ins>, ~write~</ins>).
+          1. If _string_ is not a String, throw a *TypeError* exception.
+          1. Let _opts_ be ? GetOptionsObject(_options_).
+          1. Let _alphabet_ be ? Get(_opts_, *"alphabet"*).
+          1. If _alphabet_ is *undefined*, set _alphabet_ to *"base64"*.
+          1. If _alphabet_ is neither *"base64"* nor *"base64url"*, throw a *TypeError* exception.
+          1. Let _lastChunkHandling_ be ? Get(_opts_, *"lastChunkHandling"*).
+          1. If _lastChunkHandling_ is *undefined*, set _lastChunkHandling_ to *"loose"*.
+          1. If _lastChunkHandling_ is not one of *"loose"*, *"strict"*, or *"stop-before-partial"*, throw a *TypeError* exception.
+          1. Let _taRecord_ be MakeTypedArrayWithBufferWitnessRecord(_into_, ~seq-cst~).
+          1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+          1. Let _byteLength_ be TypedArrayLength(_taRecord_).
+          1. Let _result_ be FromBase64(_string_, _alphabet_, _lastChunkHandling_, _byteLength_).
+          1. Let _bytes_ be _result_.[[Bytes]].
+          1. Let _written_ be the number of elements in _bytes_.
+          1. NOTE: FromBase64 does not invoke any user code, so the ArrayBuffer backing _into_ cannot have been detached or shrunk.
+          1. Assert: _written_ ≤ _byteLength_.
+          1. Perform SetUint8ArrayBytes(_into_, _bytes_).
+          1. If _result_.[[Error]] is not ~none~, then
+            1. Return ThrowCompletion(_result_.[[Error]]).
+          1. Let _resultObject_ be OrdinaryObjectCreate(%Object.prototype%).
+          1. Perform ! CreateDataPropertyOrThrow(_resultObject_, *"read"*, 𝔽(_result_.[[Read]])).
+          1. Perform ! CreateDataPropertyOrThrow(_resultObject_, *"written"*, 𝔽(_written_)).
+          1. Return _resultObject_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-uint8array.prototype.setfromhex">
+        <h1>Uint8Array.prototype.setFromHex ( _string_ )</h1>
+        <emu-alg>
+          1. Let _into_ be the *this* value.
+          1. Perform ? ValidateUint8Array(_into_<ins>, ~write~</ins>).
+          1. If _string_ is not a String, throw a *TypeError* exception.
+          1. Let _taRecord_ be MakeTypedArrayWithBufferWitnessRecord(_into_, ~seq-cst~).
+          1. If IsTypedArrayOutOfBounds(_taRecord_) is *true*, throw a *TypeError* exception.
+          1. Let _byteLength_ be TypedArrayLength(_taRecord_).
+          1. Let _result_ be FromHex(_string_, _byteLength_).
+          1. Let _bytes_ be _result_.[[Bytes]].
+          1. Let _written_ be the number of elements in _bytes_.
+          1. NOTE: FromHex does not invoke any user code, so the ArrayBuffer backing _into_ cannot have been detached or shrunk.
+          1. Assert: _written_ ≤ _byteLength_.
+          1. Perform SetUint8ArrayBytes(_into_, _bytes_).
+          1. If _result_.[[Error]] is not ~none~, then
+            1. Return ThrowCompletion(_result_.[[Error]]).
+          1. Let _resultObject_ be OrdinaryObjectCreate(%Object.prototype%).
+          1. Perform ! CreateDataPropertyOrThrow(_resultObject_, *"read"*, 𝔽(_result_.[[Read]])).
+          1. Perform ! CreateDataPropertyOrThrow(_resultObject_, *"written"*, 𝔽(_written_)).
+          1. Return _resultObject_.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-abstract-operations-for-uint8array-objects">
+      <h1>Abstract Operations for Uint8Array Objects</h1>
+
+      <emu-clause id="sec-validateuint8array" type="abstract operation">
+        <h1>
+          ValidateUint8Array (
+            _ta_: an ECMAScript language value,
+            <ins>optional _accessMode_: ~read~ or ~write~,</ins>
+          ): either a normal completion containing ~unused~ or a throw completion
+        </h1>
+        <dl class="header"></dl>
+        <emu-alg>
+          1. <ins>If _accessMode_ is not present, set _accessMode_ to ~read~.</ins>
+          1. Perform ? RequireInternalSlot(_ta_, [[TypedArrayName]]).
+          1. If _ta_.[[TypedArrayName]] is not *"Uint8Array"*, throw a *TypeError* exception.
+          1. <ins>Assert: _ta_ has a [[ViewedArrayBuffer]] internal slot.</ins>
+          1. <ins>If _accessMode_ is ~write~ and IsImmutableBuffer(_ta_.[[ViewedArrayBuffer]]) is *true*, throw a *TypeError* exception.</ins>
+          1. Return ~unused~.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-structured-data" number="25">
+  <h1>Structured Data</h1>
+
+  <emu-clause id="sec-arraybuffer-objects" number="1">
+    <h1>ArrayBuffer Objects</h1>
+
+    <emu-clause id="sec-abstract-operations-for-arraybuffer-objects" number="3">
+      <h1>Abstract Operations For ArrayBuffer Objects</h1>
+
+      <emu-clause id="sec-allocatearraybuffer" type="abstract operation" number="1">
+        <h1>
+          AllocateArrayBuffer (
+            _constructor_: a constructor,
+            _byteLength_: a non-negative integer,
+            optional _maxByteLength_: a non-negative integer, <del>or ~empty~</del> <ins>or either ~empty~ or ~immutable~</ins>,
+          ): either a normal completion containing an ArrayBuffer or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It is used to create an ArrayBuffer.</dd>
+        </dl>
+        <emu-note type="editor">The current name and domain of parameter _maxByteLength_ is preserved for the benefit of diff readability, but both may be subject to change before acceptance into ECMA-262.</emu-note>
+        <emu-alg>
+          1. Let _slots_ be « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] ».
+          1. If _maxByteLength_ is present and _maxByteLength_ is <del>not ~empty~</del> <ins>an integer</ins>, let _allocatingResizableBuffer_ be *true*; otherwise let _allocatingResizableBuffer_ be *false*.
+          1. If _allocatingResizableBuffer_ is *true*, then
+            1. If _byteLength_ > _maxByteLength_, throw a *RangeError* exception.
+            1. Append [[ArrayBufferMaxByteLength]] to _slots_.
+          1. <ins>Else if _maxByteLength_ is ~immutable~, then</ins>
+            1. <ins>Append [[ArrayBufferIsImmutable]] to _slots_.</ins>
+          1. Let _obj_ be ? OrdinaryCreateFromConstructor(_constructor_, *"%ArrayBuffer.prototype%"*, _slots_).
+          1. Let _block_ be ? CreateByteDataBlock(_byteLength_).
+          1. Set _obj_.[[ArrayBufferData]] to _block_.
+          1. Set _obj_.[[ArrayBufferByteLength]] to _byteLength_.
+          1. If _allocatingResizableBuffer_ is *true*, then
+            1. If it is not possible to create a Data Block _block_ consisting of _maxByteLength_ bytes, throw a *RangeError* exception.
+            1. NOTE: Resizable ArrayBuffers are designed to be implementable with in-place growth. Implementations may throw if, for example, virtual memory cannot be reserved up front.
+            1. Set _obj_.[[ArrayBufferMaxByteLength]] to _maxByteLength_.
+          1. Return _obj_.
+        </emu-alg>
+      </emu-clause>
+
+      <ins class="block">
+
+        <emu-clause id="sec-allocateimmutablearraybuffer" type="abstract operation">
+          <h1>
+            AllocateImmutableArrayBuffer (
+              _constructor_: a constructor,
+              _byteLength_: a non-negative integer,
+              _fromBlock_: a Data Block,
+              _fromIndex_: a non-negative integer,
+              _count_: a non-negative integer,
+            ): either a normal completion containing an ArrayBuffer or a throw completion
+          </h1>
+          <dl class="header">
+            <dt>description</dt>
+            <dd>It is used to create an immutable ArrayBuffer (i.e., an ArrayBuffer with a an [[ArrayBufferIsImmutable]] slot) with contents from _fromBlock_. The contents of an immutable ArrayBuffer's Data Block are constrained to be permanently stable, and may not be modified by either ECMAScript code or by other activities inside an implementation or observable by it.</dd>
+          </dl>
+          <emu-alg>
+            1. Assert: _constructor_ is %ArrayBuffer%.
+            1. Assert: _count_ ≤ _byteLength_.
+            1. Let _newBuffer_ be ? <emu-meta suppress-effects="user-code">AllocateArrayBuffer(_constructor_, _byteLength_, ~immutable~)</emu-meta>.
+            1. Let _toBlock_ be _newBuffer_.[[ArrayBufferData]].
+            1. NOTE: This is the only step that can write into the Data Block of an immutable ArrayBuffer.
+            1. Perform CopyDataBlockBytes(_toBlock_, 0, _fromBlock_, _fromIndex_, _count_).
+            1. Return _newBuffer_.
+          </emu-alg>
+          <emu-note>
+            <p>Because neither the identity of a Data Block nor the set of locations in memory represented by it are observable, implementations may implement this operation without allocating new memory locations when _fromBlock_ is the value of the [[ArrayBufferData]] slot for some other immutable ArrayBuffer (and therefore already immutable) and _count_ = _byteLength_.</p>
+          </emu-note>
+        </emu-clause>
+      </ins>
+
+      <emu-clause id="sec-arraybuffercopyanddetach" type="abstract operation" number="3">
+        <h1>
+          ArrayBufferCopyAndDetach (
+            _arrayBuffer_: an ECMAScript language value,
+            _newLength_: an ECMAScript language value,
+            _preserveResizability_: ~preserve-resizability~, ~fixed-length~, or <ins>~immutable~</ins>,
+          ): either a normal completion containing an ArrayBuffer or a throw completion
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-note type="editor">The current name of parameter _preserveResizability_ is preserved for the benefit of diff readability, but may be subject to change (to e.g. _mode_) before acceptance into ECMA-262.</emu-note>
+        <emu-alg>
+          1. Perform ? RequireInternalSlot(_arrayBuffer_, [[ArrayBufferData]]).
+          1. If IsSharedArrayBuffer(_arrayBuffer_) is *true*, throw a *TypeError* exception.
+          1. If _newLength_ is *undefined*, then
+            1. Let _newByteLength_ be _arrayBuffer_.[[ArrayBufferByteLength]].
+          1. Else,
+            1. Let _newByteLength_ be ? ToIndex(_newLength_).
+          1. If IsDetachedBuffer(_arrayBuffer_) is *true*, throw a *TypeError* exception.
+          1. <ins>If IsImmutableBuffer(_arrayBuffer_) is *true*, throw a *TypeError* exception.</ins>
+          1. <ins>If _arrayBuffer_.[[ArrayBufferDetachKey]] is not *undefined*, throw a *TypeError* exception.</ins>
+          1. <ins>Let _copyLength_ be min(_newByteLength_, _arrayBuffer_.[[ArrayBufferByteLength]]).</ins>
+          1. <ins>If _preserveResizability_ is ~immutable~, then</ins>
+            1. <ins>Let _newBuffer_ be ? <emu-meta suppress-effects="user-code">AllocateImmutableArrayBuffer(%ArrayBuffer%, _newByteLength_, _arrayBuffer_.[[ArrayBufferData]], 0, _copyLength_)</emu-meta>.</ins>
+          1. <ins>Else,</ins>
+            1. If _preserveResizability_ is ~preserve-resizability~ and IsFixedLengthArrayBuffer(_arrayBuffer_) is *false*, then
+              1. Let _newMaxByteLength_ be _arrayBuffer_.[[ArrayBufferMaxByteLength]].
+            1. Else,
+              1. Let _newMaxByteLength_ be ~empty~.
+            1. <del>If _arrayBuffer_.[[ArrayBufferDetachKey]] is not *undefined*, throw a *TypeError* exception.</del>
+            1. Let _newBuffer_ be ? <emu-meta suppress-effects="user-code">AllocateArrayBuffer(%ArrayBuffer%, _newByteLength_, _newMaxByteLength_)</emu-meta>.
+            1. <del>Let _copyLength_ be min(_newByteLength_, _arrayBuffer_.[[ArrayBufferByteLength]]).</del>
+            1. Let _fromBlock_ be _arrayBuffer_.[[ArrayBufferData]].
+            1. Let _toBlock_ be _newBuffer_.[[ArrayBufferData]].
+            1. Perform CopyDataBlockBytes(_toBlock_, 0, _fromBlock_, 0, _copyLength_).
+            1. NOTE: Neither creation of the new Data Block nor copying from the old Data Block are observable. Implementations may implement this method as a zero-copy move or a `realloc`.
+          1. Perform ! DetachArrayBuffer(_arrayBuffer_).
+          1. Return _newBuffer_.
+        </emu-alg>
+      </emu-clause>
+
+      <ins class="block">
+
+        <emu-clause id="sec-isimmutablebuffer" type="abstract operation">
+          <h1>
+            IsImmutableBuffer (
+              _arrayBuffer_: an ArrayBuffer or a SharedArrayBuffer,
+            ): a Boolean
+          </h1>
+          <dl class="header">
+          </dl>
+          <emu-alg>
+            1. If _arrayBuffer_ has an [[ArrayBufferIsImmutable]] internal slot, return *true*.
+            1. Return *false*.
+          </emu-alg>
+        </emu-clause>
+      </ins>
+
+      <emu-clause id="sec-detacharraybuffer" type="abstract operation" number="5">
+        <h1>
+          DetachArrayBuffer (
+            _arrayBuffer_: an ArrayBuffer,
+            optional _key_: anything,
+          ): either a normal completion containing ~unused~ or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>skip global checks</dt>
+          <dd>true</dd>
+        </dl>
+        <emu-alg>
+          1. Assert: IsSharedArrayBuffer(_arrayBuffer_) is *false*.
+          1. <ins>If IsImmutableBuffer(_arrayBuffer_) is *true*, throw a *TypeError* exception.</ins>
+          1. If _key_ is not present, set _key_ to *undefined*.
+          1. If _arrayBuffer_.[[ArrayBufferDetachKey]] is not _key_, throw a *TypeError* exception.
+          1. Set _arrayBuffer_.[[ArrayBufferData]] to *null*.
+          1. Set _arrayBuffer_.[[ArrayBufferByteLength]] to 0.
+          1. Return ~unused~.
+        </emu-alg>
+        <emu-note>
+          <p>Detaching an ArrayBuffer instance disassociates the Data Block used as its backing store from the instance and sets the byte length of the buffer to 0.</p>
+        </emu-note>
+      </emu-clause>
+
+      <emu-clause id="sec-setvalueinbuffer" type="abstract operation" number="18">
+        <h1>
+          SetValueInBuffer (
+            _arrayBuffer_: an ArrayBuffer or SharedArrayBuffer,
+            _byteIndex_: a non-negative integer,
+            _type_: a TypedArray element type,
+            _value_: a Number or a BigInt,
+            _isTypedArray_: a Boolean,
+            _order_: ~seq-cst~, ~unordered~, or ~init~,
+            optional _isLittleEndian_: a Boolean,
+          ): ~unused~
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-alg>
+          1. Assert: IsDetachedBuffer(_arrayBuffer_) is *false*.
+          1. <ins>Assert: IsImmutableBuffer(_arrayBuffer_) is *false*.</ins>
+          1. Assert: There are sufficient bytes in _arrayBuffer_ starting at _byteIndex_ to represent a value of _type_.
+          1. Assert: _value_ is a BigInt if IsBigIntElementType(_type_) is *true*; otherwise, _value_ is a Number.
+          1. Let _block_ be _arrayBuffer_.[[ArrayBufferData]].
+          1. Let _elementSize_ be the Element Size value specified in <emu-xref href="#table-the-typedarray-constructors"></emu-xref> for Element Type _type_.
+          1. If _isLittleEndian_ is not present, set _isLittleEndian_ to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+          1. Let _rawBytes_ be NumericToRawBytes(_type_, _value_, _isLittleEndian_).
+          1. If IsSharedArrayBuffer(_arrayBuffer_) is *true*, then
+            1. Let _execution_ be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+            1. Let _eventsRecord_ be the Agent Events Record of _execution_.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+            1. If _isTypedArray_ is *true* and IsNoTearConfiguration(_type_, _order_) is *true*, let _noTear_ be *true*; otherwise let _noTear_ be *false*.
+            1. Append WriteSharedMemory { [[Order]]: _order_, [[NoTear]]: _noTear_, [[Block]]: _block_, [[ByteIndex]]: _byteIndex_, [[ElementSize]]: _elementSize_, [[Payload]]: _rawBytes_ } to _eventsRecord_.[[EventList]].
+          1. Else,
+            1. Store the individual bytes of _rawBytes_ into _block_, starting at _block_[_byteIndex_].
+          1. Return ~unused~.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-getmodifysetvalueinbuffer" type="abstract operation" number="19">
+        <h1>
+          GetModifySetValueInBuffer (
+            _arrayBuffer_: an ArrayBuffer or a SharedArrayBuffer,
+            _byteIndex_: a non-negative integer,
+            _type_: a TypedArray element type,
+            _value_: a Number or a BigInt,
+            _op_: a read-modify-write modification function,
+          ): a Number or a BigInt
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-alg>
+          1. Assert: IsDetachedBuffer(_arrayBuffer_) is *false*.
+          1. <ins>Assert: IsImmutableBuffer(_arrayBuffer_) is *false*.</ins>
+          1. Assert: There are sufficient bytes in _arrayBuffer_ starting at _byteIndex_ to represent a value of _type_.
+          1. Assert: _value_ is a BigInt if IsBigIntElementType(_type_) is *true*; otherwise, _value_ is a Number.
+          1. Let _block_ be _arrayBuffer_.[[ArrayBufferData]].
+          1. Let _elementSize_ be the Element Size value specified in <emu-xref href="#table-the-typedarray-constructors"></emu-xref> for Element Type _type_.
+          1. Let _isLittleEndian_ be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+          1. Let _rawBytes_ be NumericToRawBytes(_type_, _value_, _isLittleEndian_).
+          1. If IsSharedArrayBuffer(_arrayBuffer_) is *true*, then
+            1. Let _execution_ be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+            1. Let _eventsRecord_ be the Agent Events Record of _execution_.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+            1. Let _rawBytesRead_ be a List of length _elementSize_ whose elements are nondeterministically chosen byte values.
+            1. NOTE: In implementations, _rawBytesRead_ is the result of a load-link, of a load-exclusive, or of an operand of a read-modify-write instruction on the underlying hardware. The nondeterminism is a semantic prescription of the memory model to describe observable behaviour of hardware with weak consistency.
+            1. Let _rmwEvent_ be ReadModifyWriteSharedMemory { [[Order]]: ~seq-cst~, [[NoTear]]: *true*, [[Block]]: _block_, [[ByteIndex]]: _byteIndex_, [[ElementSize]]: _elementSize_, [[Payload]]: _rawBytes_, [[ModifyOp]]: _op_ }.
+            1. Append _rmwEvent_ to _eventsRecord_.[[EventList]].
+            1. Append Chosen Value Record { [[Event]]: _rmwEvent_, [[ChosenValue]]: _rawBytesRead_ } to _execution_.[[ChosenValues]].
+          1. Else,
+            1. Let _rawBytesRead_ be a List of length _elementSize_ whose elements are the sequence of _elementSize_ bytes starting with _block_[_byteIndex_].
+            1. Let _rawBytesModified_ be _op_(_rawBytesRead_, _rawBytes_).
+            1. Store the individual bytes of _rawBytesModified_ into _block_, starting at _block_[_byteIndex_].
+          1. Return RawBytesToNumeric(_type_, _rawBytesRead_, _isLittleEndian_).
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-arraybuffer-prototype-object" number="6">
+      <h1>Properties of the ArrayBuffer Prototype Object</h1>
+
+      <ins class="block">
+
+        <emu-clause id="sec-get-arraybuffer.prototype.immutable">
+          <h1>get ArrayBuffer.prototype.immutable</h1>
+          <p>`ArrayBuffer.prototype.immutable` is an accessor property whose set accessor function is *undefined*. Its get accessor function performs the following steps when called:</p>
+          <emu-alg>
+            1. Let _O_ be the *this* value.
+            1. Perform ? RequireInternalSlot(_O_, [[ArrayBufferData]]).
+            1. If IsSharedArrayBuffer(_O_) is *true*, throw a *TypeError* exception.
+            1. Return IsImmutableBuffer(_O_).
+          </emu-alg>
+        </emu-clause>
+      </ins>
+
+      <emu-clause id="sec-arraybuffer.prototype.resize" number="6">
+        <h1>ArrayBuffer.prototype.resize ( _newLength_ )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_O_, [[ArrayBufferMaxByteLength]]).
+          1. If IsSharedArrayBuffer(_O_) is *true*, throw a *TypeError* exception.
+          1. Let _newByteLength_ be ? ToIndex(_newLength_).
+          1. If IsDetachedBuffer(_O_) is *true*, throw a *TypeError* exception.
+          1. <ins>Assert: IsImmutableBuffer(_O_) is *false*.</ins>
+          1. If _newByteLength_ > _O_.[[ArrayBufferMaxByteLength]], throw a *RangeError* exception.
+          1. Let _hostHandled_ be ? HostResizeArrayBuffer(_O_, _newByteLength_).
+          1. If _hostHandled_ is ~handled~, return *undefined*.
+          1. Let _oldBlock_ be _O_.[[ArrayBufferData]].
+          1. Let _newBlock_ be ? CreateByteDataBlock(_newByteLength_).
+          1. Let _copyLength_ be min(_newByteLength_, _O_.[[ArrayBufferByteLength]]).
+          1. Perform CopyDataBlockBytes(_newBlock_, 0, _oldBlock_, 0, _copyLength_).
+          1. NOTE: Neither creation of the new Data Block nor copying from the old Data Block are observable. Implementations may implement this method as in-place growth or shrinkage.
+          1. Set _O_.[[ArrayBufferData]] to _newBlock_.
+          1. Set _O_.[[ArrayBufferByteLength]] to _newByteLength_.
+          1. Return *undefined*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-arraybuffer.prototype.slice">
+        <h1>ArrayBuffer.prototype.slice ( _start_, _end_ )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _O_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_O_, [[ArrayBufferData]]).
+          1. If IsSharedArrayBuffer(_O_) is *true*, throw a *TypeError* exception.
+          1. If IsDetachedBuffer(_O_) is *true*, throw a *TypeError* exception.
+          1. Let _len_ be _O_.[[ArrayBufferByteLength]].
+          1. <del>Let _relativeStart_ be ? ToIntegerOrInfinity(_start_).</del>
+          1. <del>If _relativeStart_ = -∞, let _first_ be 0.</del>
+          1. <del>Else if _relativeStart_ &lt; 0, let _first_ be max(_len_ + _relativeStart_, 0).</del>
+          1. <del>Else, let _first_ be min(_relativeStart_, _len_).</del>
+          1. <del>If _end_ is *undefined*, let _relativeEnd_ be _len_; else let _relativeEnd_ be ? ToIntegerOrInfinity(_end_).</del>
+          1. <del>If _relativeEnd_ = -∞, let _final_ be 0.</del>
+          1. <del>Else if _relativeEnd_ &lt; 0, let _final_ be max(_len_ + _relativeEnd_, 0).</del>
+          1. <del>Else, let _final_ be min(_relativeEnd_, _len_).</del>
+          1. <ins>Let _bounds_ be ? ResolveBounds(_len_, _start_, _end_).</ins>
+          1. <ins>Let _first_ be _bounds_.[[From]].</ins>
+          1. <ins>Let _final_ be _bounds_.[[To]].</ins>
+          1. Let _newLen_ be max(_final_ - _first_, 0).
+          1. Let _ctor_ be ? SpeciesConstructor(_O_, %ArrayBuffer%).
+          1. Let _new_ be ? Construct(_ctor_, « 𝔽(_newLen_) »).
+          1. Perform ? RequireInternalSlot(_new_, [[ArrayBufferData]]).
+          1. If IsSharedArrayBuffer(_new_) is *true*, throw a *TypeError* exception.
+          1. If IsDetachedBuffer(_new_) is *true*, throw a *TypeError* exception.
+          1. <ins>If IsImmutableBuffer(_new_) is *true*, throw a *TypeError* exception.</ins>
+          1. If SameValue(_new_, _O_) is *true*, throw a *TypeError* exception.
+          1. If _new_.[[ArrayBufferByteLength]] &lt; _newLen_, throw a *TypeError* exception.
+          1. NOTE: Side-effects of the above steps may have detached or resized _O_.
+          1. If IsDetachedBuffer(_O_) is *true*, throw a *TypeError* exception.
+          1. Let _fromBuf_ be _O_.[[ArrayBufferData]].
+          1. Let _toBuf_ be _new_.[[ArrayBufferData]].
+          1. Let _currentLen_ be _O_.[[ArrayBufferByteLength]].
+          1. If _first_ &lt; _currentLen_, then
+            1. Let _count_ be min(_newLen_, _currentLen_ - _first_).
+            1. Perform CopyDataBlockBytes(_toBuf_, 0, _fromBuf_, _first_, _count_).
+          1. Return _new_.
+        </emu-alg>
+      </emu-clause>
+
+      <ins class="block">
+
+        <emu-clause id="sec-arraybuffer.prototype.slicetoimmutable">
+          <h1>ArrayBuffer.prototype.sliceToImmutable ( _start_, _end_ )</h1>
+          <p>This method performs the following steps when called:</p>
+          <emu-alg>
+            1. Let _O_ be the *this* value.
+            1. Perform ? RequireInternalSlot(_O_, [[ArrayBufferData]]).
+            1. If IsSharedArrayBuffer(_O_) is *true*, throw a *TypeError* exception.
+            1. If IsDetachedBuffer(_O_) is *true*, throw a *TypeError* exception.
+            1. Let _len_ be _O_.[[ArrayBufferByteLength]].
+            1. Let _bounds_ be ? ResolveBounds(_len_, _start_, _end_).
+            1. Let _first_ be _bounds_.[[From]].
+            1. Let _final_ be _bounds_.[[To]].
+            1. Let _newLen_ be max(_final_ - _first_, 0).
+            1. NOTE: Side-effects of the above steps may have detached or resized _O_.
+            1. If IsDetachedBuffer(_O_) is *true*, throw a *TypeError* exception.
+            1. Let _fromBuf_ be _O_.[[ArrayBufferData]].
+            1. Let _currentLen_ be _O_.[[ArrayBufferByteLength]].
+            1. If _currentLen_ &lt; _final_, throw a *RangeError* exception.
+            1. Let _newBuffer_ be ? AllocateImmutableArrayBuffer(%ArrayBuffer%, _newLen_, _fromBuf_, _first_, _newLen_).
+            1. Return _newBuffer_.
+          </emu-alg>
+        </emu-clause>
+      </ins>
+
+      <ins class="block">
+
+        <emu-clause id="sec-arraybuffer.prototype.transfertoimmutable">
+          <h1>ArrayBuffer.prototype.transferToImmutable ( [ _newLength_ ] )</h1>
+          <p>This method performs the following steps when called:</p>
+          <emu-alg>
+            1. Let _O_ be the *this* value.
+            1. Return ? ArrayBufferCopyAndDetach(_O_, _newLength_, ~immutable~).
+          </emu-alg>
+        </emu-clause>
+      </ins>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-arraybuffer-instances" number="7">
+      <h1>Properties of ArrayBuffer Instances</h1>
+      <p>ArrayBuffer instances inherit properties from the ArrayBuffer prototype object. ArrayBuffer instances each have an [[ArrayBufferData]] internal slot, an [[ArrayBufferByteLength]] internal slot, and an [[ArrayBufferDetachKey]] internal slot. ArrayBuffer instances which are resizable each have an [[ArrayBufferMaxByteLength]] internal slot<ins>, and ArrayBuffer instances which are immutable each have an [[ArrayBufferIsImmutable]] internal slot whose value is always *undefined*</ins>.</p>
+      <p>ArrayBuffer instances whose [[ArrayBufferData]] is *null* are considered to be detached and all operators to access or modify data contained in the ArrayBuffer instance will fail.</p>
+      <p>ArrayBuffer instances whose [[ArrayBufferDetachKey]] is set to a value other than *undefined* need to have all DetachArrayBuffer calls passing that same "detach key" as an argument, otherwise a TypeError will result. This internal slot is only ever set by certain embedding environments, not by algorithms in this specification.</p>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-dataview-objects" number="3">
+    <h1>DataView Objects</h1>
+
+    <emu-clause id="sec-abstract-operations-for-dataview-objects" number="1">
+      <h1>Abstract Operations For DataView Objects</h1>
+
+      <emu-clause id="sec-setviewvalue" type="abstract operation" number="6">
+        <h1>
+          SetViewValue (
+            _view_: an ECMAScript language value,
+            _requestIndex_: an ECMAScript language value,
+            _isLittleEndian_: an ECMAScript language value,
+            _type_: a TypedArray element type,
+            _value_: an ECMAScript language value,
+          ): either a normal completion containing *undefined* or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>It is used by functions on DataView instances to store values into the view's buffer.</dd>
+        </dl>
+        <emu-alg>
+          1. Perform ? RequireInternalSlot(_view_, [[DataView]]).
+          1. Assert: _view_ has a [[ViewedArrayBuffer]] internal slot.
+          1. <ins>If IsImmutableBuffer(_view_.[[ViewedArrayBuffer]]) is *true*, throw a *TypeError* exception.</ins>
+          1. Let _getIndex_ be ? ToIndex(_requestIndex_).
+          1. If IsBigIntElementType(_type_) is *true*, let _numberValue_ be ? ToBigInt(_value_).
+          1. Otherwise, let _numberValue_ be ? ToNumber(_value_).
+          1. Set _isLittleEndian_ to ToBoolean(_isLittleEndian_).
+          1. Let _viewOffset_ be _view_.[[ByteOffset]].
+          1. Let _viewRecord_ be MakeDataViewWithBufferWitnessRecord(_view_, ~unordered~).
+          1. NOTE: Bounds checking is not a synchronizing operation when _view_'s backing buffer is a growable SharedArrayBuffer.
+          1. If IsViewOutOfBounds(_viewRecord_) is *true*, throw a *TypeError* exception.
+          1. Let _viewSize_ be GetViewByteLength(_viewRecord_).
+          1. Let _elementSize_ be the Element Size value specified in <emu-xref href="#table-the-typedarray-constructors"></emu-xref> for Element Type _type_.
+          1. If _getIndex_ + _elementSize_ > _viewSize_, throw a *RangeError* exception.
+          1. Let _bufferIndex_ be _getIndex_ + _viewOffset_.
+          1. Perform SetValueInBuffer(_view_.[[ViewedArrayBuffer]], _bufferIndex_, _type_, _numberValue_, *false*, ~unordered~, _isLittleEndian_).
+          1. Return *undefined*.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-atomics-object" number="4">
+    <h1>The Atomics Object</h1>
+
+    <emu-clause id="sec-abstract-operations-for-atomics" number="3">
+      <h1>Abstract Operations for Atomics</h1>
+
+      <emu-clause id="sec-validateintegertypedarray" type="abstract operation" oldids="sec-validatesharedintegertypedarray" number="1">
+        <h1>
+          ValidateIntegerTypedArray (
+            _typedArray_: an ECMAScript language value,
+            _waitable_: a Boolean,
+            <ins>optional _accessMode_: ~read~ or ~write~,</ins>
+          ): either a normal completion containing a TypedArray With Buffer Witness Record, or a throw completion
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-alg>
+          1. <ins>If _accessMode_ is not present, set _accessMode_ to ~read~.</ins>
+          1. Let _taRecord_ be ? ValidateTypedArray(_typedArray_, ~unordered~<ins>, _accessMode_</ins>).
+          1. NOTE: Bounds checking is not a synchronizing operation when _typedArray_'s backing buffer is a growable SharedArrayBuffer.
+          1. If _waitable_ is *true*, then
+            1. If _typedArray_.[[TypedArrayName]] is neither *"Int32Array"* nor *"BigInt64Array"*, throw a *TypeError* exception.
+          1. Else,
+            1. Let _type_ be TypedArrayElementType(_typedArray_).
+            1. If IsUnclampedIntegerElementType(_type_) is *false* and IsBigIntElementType(_type_) is *false*, throw a *TypeError* exception.
+          1. Return _taRecord_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-validateatomicaccessonintegertypedarray" type="abstract operation" number="3">
+        <h1>
+          ValidateAtomicAccessOnIntegerTypedArray (
+            _typedArray_: an ECMAScript language value,
+            _requestIndex_: an ECMAScript language value,
+            optional _waitable_: a Boolean,
+            <ins>optional _accessMode_: ~read~ or ~write~,</ins>
+          ): either a normal completion containing an integer or a throw completion
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-alg>
+          1. If _waitable_ is not present, set _waitable_ to *false*.
+          1. <ins>If _accessMode_ is not present, set _accessMode_ to ~read~.</ins>
+          1. Let _taRecord_ be ? ValidateIntegerTypedArray(_typedArray_, _waitable_<ins>, _accessMode_</ins>).
+          1. Return ? ValidateAtomicAccess(_taRecord_, _requestIndex_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-atomicreadmodifywrite" type="abstract operation" number="17">
+        <h1>
+          AtomicReadModifyWrite (
+            _typedArray_: an ECMAScript language value,
+            _index_: an ECMAScript language value,
+            _value_: an ECMAScript language value,
+            _op_: a read-modify-write modification function,
+          ): either a normal completion containing either a Number or a BigInt, or a throw completion
+        </h1>
+        <dl class="header">
+          <dt>description</dt>
+          <dd>_op_ takes two List of byte values arguments and returns a List of byte values. This operation atomically loads a value, combines it with another value, and stores the combination. It returns the loaded value.</dd>
+        </dl>
+        <emu-alg>
+          1. Let _byteIndexInBuffer_ be ? ValidateAtomicAccessOnIntegerTypedArray(_typedArray_, _index_<ins>, *false*, ~write~</ins>).
+          1. If _typedArray_.[[ContentType]] is ~bigint~, let _v_ be ? ToBigInt(_value_).
+          1. Otherwise, let _v_ be 𝔽(? ToIntegerOrInfinity(_value_)).
+          1. Perform ? RevalidateAtomicAccess(_typedArray_, _byteIndexInBuffer_).
+          1. Let _buffer_ be _typedArray_.[[ViewedArrayBuffer]].
+          1. Let _elementType_ be TypedArrayElementType(_typedArray_).
+          1. Return GetModifySetValueInBuffer(_buffer_, _byteIndexInBuffer_, _elementType_, _v_, _op_).
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-atomics.compareexchange" number="6">
+      <h1>Atomics.compareExchange ( _typedArray_, _index_, _expectedValue_, _replacementValue_ )</h1>
+      <p>This function performs the following steps when called:</p>
+      <emu-alg>
+        1. Let _byteIndexInBuffer_ be ? ValidateAtomicAccessOnIntegerTypedArray(_typedArray_, _index_<ins>, *false*, ~write~</ins>).
+        1. Let _buffer_ be _typedArray_.[[ViewedArrayBuffer]].
+        1. Let _block_ be _buffer_.[[ArrayBufferData]].
+        1. If _typedArray_.[[ContentType]] is ~bigint~, then
+          1. Let _expected_ be ? ToBigInt(_expectedValue_).
+          1. Let _replacement_ be ? ToBigInt(_replacementValue_).
+        1. Else,
+          1. Let _expected_ be 𝔽(? ToIntegerOrInfinity(_expectedValue_)).
+          1. Let _replacement_ be 𝔽(? ToIntegerOrInfinity(_replacementValue_)).
+        1. Perform ? RevalidateAtomicAccess(_typedArray_, _byteIndexInBuffer_).
+        1. Let _elementType_ be TypedArrayElementType(_typedArray_).
+        1. Let _elementSize_ be TypedArrayElementSize(_typedArray_).
+        1. Let _isLittleEndian_ be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+        1. Let _expectedBytes_ be NumericToRawBytes(_elementType_, _expected_, _isLittleEndian_).
+        1. Let _replacementBytes_ be NumericToRawBytes(_elementType_, _replacement_, _isLittleEndian_).
+        1. If IsSharedArrayBuffer(_buffer_) is *true*, then
+          1. Let _rawBytesRead_ be AtomicCompareExchangeInSharedBlock(_block_, _byteIndexInBuffer_, _elementSize_, _expectedBytes_, _replacementBytes_).
+        1. Else,
+          1. Let _rawBytesRead_ be a List of length _elementSize_ whose elements are the sequence of _elementSize_ bytes starting with _block_[_byteIndexInBuffer_].
+          1. If ByteListEqual(_rawBytesRead_, _expectedBytes_) is *true*, then
+            1. Store the individual bytes of _replacementBytes_ into _block_, starting at _block_[_byteIndexInBuffer_].
+        1. Return RawBytesToNumeric(_elementType_, _rawBytesRead_, _isLittleEndian_).
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-atomics.store" number="11">
+      <h1>Atomics.store ( _typedArray_, _index_, _value_ )</h1>
+      <p>This function performs the following steps when called:</p>
+      <emu-alg>
+        1. Let _byteIndexInBuffer_ be ? ValidateAtomicAccessOnIntegerTypedArray(_typedArray_, _index_<ins>, *false*, ~write~</ins>).
+        1. If _typedArray_.[[ContentType]] is ~bigint~, let _v_ be ? ToBigInt(_value_).
+        1. Otherwise, let _v_ be 𝔽(? ToIntegerOrInfinity(_value_)).
+        1. Perform ? RevalidateAtomicAccess(_typedArray_, _byteIndexInBuffer_).
+        1. Let _buffer_ be _typedArray_.[[ViewedArrayBuffer]].
+        1. Let _elementType_ be TypedArrayElementType(_typedArray_).
+        1. Perform SetValueInBuffer(_buffer_, _byteIndexInBuffer_, _elementType_, _v_, *true*, ~seq-cst~).
+        1. Return _v_.
+      </emu-alg>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>

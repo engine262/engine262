@@ -29,6 +29,7 @@ import {
   TypedArraySetElement,
   IsCallable,
   IsSharedArrayBuffer,
+  IsImmutableBuffer,
   IsStrictlyEqual,
   SameValue,
   SameValueZero,
@@ -105,7 +106,7 @@ function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCal
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
 function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue as TypedArrayObject;
-  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst', 'write'));
   let length = TypedArrayLength(taRecord);
   const targetIndex = Q(yield* ToClampedIndex(target, length));
   const startIndex = Q(yield* ToClampedIndex(start, length));
@@ -169,7 +170,7 @@ function* TypedArrayProto_every([callbackFn = Value.undefined, thisArg = Value.u
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
 function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue as TypedArrayObject;
-  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  let taRecord = Q(ValidateTypedArray(obj, 'seq-cst', 'write'));
   let length = TypedArrayLength(taRecord);
   if (obj.ContentType === 'BigInt') {
     value = Q(yield* ToBigInt(value));
@@ -209,7 +210,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
     }
     k += 1;
   }
-  const result = Q(yield* TypedArraySpeciesCreate(obj, [F(captured)]));
+  const result = Q(yield* TypedArraySpeciesCreate(obj, [F(captured)], 'write'));
   let n = 0;
   for (const element of kept) {
     Q(yield* TypedArraySetElement(result, F(n), element));
@@ -366,7 +367,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   if (!IsCallable(callbackfn)) {
     return Throw.TypeError('callbackfn ($1) is not a function', callbackfn);
   }
-  const result = Q(yield* TypedArraySpeciesCreate(obj, [F(length)]));
+  const result = Q(yield* TypedArraySpeciesCreate(obj, [F(length)], 'write'));
   let k = 0;
   while (k < length) {
     const kValue = TypedArrayGetElement(obj, F(k));
@@ -506,7 +507,7 @@ function* SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: num
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
 function* TypedArrayProto_reverse(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst', 'write'));
   const length = TypedArrayLength(taRecord);
   const middle = Math.floor(length / 2);
   let lower = 0;
@@ -529,6 +530,9 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   Q(RequireInternalSlot(target, 'TypedArrayName'));
   // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in target);
+  if (IsImmutableBuffer(target.ViewedArrayBuffer as ArrayBufferObject)) {
+    return Throw.TypeError('Cannot modify immutable TypedArray');
+  }
   // 4. Let targetOffset be ? ToIntegerOrInfinity(offset).
   const targetOffset = Q(yield* ToIntegerOrInfinity(offset));
   // 5. If targetOffset < 0, throw a RangeError exception.
@@ -555,7 +559,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   const startIndex = Q(yield* ToClampedIndex(start, sourceArrayLength));
   let endIndex = end === Value.undefined ? sourceArrayLength : Q(yield* ToClampedIndex(end, sourceArrayLength));
   let countBytes = Math.max(endIndex - startIndex, 0);
-  const resultArray = Q(yield* TypedArraySpeciesCreate(obj, [F(countBytes)]));
+  const resultArray = Q(yield* TypedArraySpeciesCreate(obj, [F(countBytes)], 'write'));
   if (countBytes > 0) {
     taRecord = Q(ValidateTypedArrayBounds(obj, 'seq-cst'));
     endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
@@ -612,7 +616,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { this
     return Throw.TypeError('comparator ($1) is not a function', comparator);
   }
   const obj = thisValue as TypedArrayObject;
-  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
+  const taRecord = Q(ValidateTypedArray(obj, 'seq-cst', 'write'));
   const len = TypedArrayLength(taRecord);
   const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
     Assert(x instanceof NumberValue || x instanceof BigIntValue);

@@ -7,6 +7,7 @@ import {
   Assert,
   GetValueFromBuffer,
   IsDetachedBuffer,
+  IsImmutableBuffer,
   IsBigIntElementType,
   SetValueInBuffer,
   ToBoolean,
@@ -114,6 +115,9 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
   __ts_cast__<DataViewObject>(view);
+  if (IsImmutableBuffer(view.ViewedArrayBuffer as ArrayBufferObject)) {
+    return Throw.TypeError('Cannot modify immutable ArrayBuffer');
+  }
   // 3. Let getIndex be ? ToIndex(requestIndex).
   const getIndex = Q(yield* ToIndex(requestIndex));
   // 4. If IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).

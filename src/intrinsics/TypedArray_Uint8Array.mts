@@ -9,6 +9,7 @@ import { F } from '#self';
 import {
   Assert, CodePointsToString, CreateDataPropertyOrThrow, EnsureCompletion, Get, GetValueFromBuffer, JSStringValue, NumberValue, ObjectValue, OrdinaryObjectCreate, Q, R, Realm, RequireInternalSlot, SetValueInBuffer, StringPad, surroundingAgent, ThrowCompletion, ToBoolean, TypedArrayLength, UndefinedValue, X, type ArrayBufferObject, type PlainCompletion, type ValueCompletion,
   Throw,
+  IsImmutableBuffer,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.tobase64 */
@@ -107,7 +108,7 @@ function* Uint8Array_fromBase64([string = Value.undefined, options = Value.undef
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.setfrombase64 */
 function* Uint8ArrayProto_setFromBase64([string = Value.undefined, options = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
-  Q(ValidateUint8Array(into));
+  Q(ValidateUint8Array(into, 'write'));
   __ts_cast__<TypedArrayObject>(into);
   if (!(string instanceof JSStringValue)) {
     return Throw.TypeError('$1 is not a string', string);
@@ -175,7 +176,7 @@ function* Uint8Array_fromHex([string = Value.undefined]: Arguments) {
 /** https://tc39.es/ecma262/#sec-uint8array.prototype.setfromhex */
 function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const into = thisValue;
-  Q(ValidateUint8Array(into));
+  Q(ValidateUint8Array(into, 'write'));
   __ts_cast__<TypedArrayObject>(into);
   if (!(string instanceof JSStringValue)) {
     return Throw.TypeError('$1 is not a string', string);
@@ -197,11 +198,14 @@ function* Uint8ArrayProto_setFromHex([string = Value.undefined]: Arguments, { th
 }
 
 /** https://tc39.es/ecma262/#sec-validateuint8array */
-function ValidateUint8Array(ta: Value) {
+function ValidateUint8Array(ta: Value, accessMode: 'read' | 'write' = 'read') {
   Q(RequireInternalSlot(ta, 'TypedArrayName'));
   __ts_cast__<TypedArrayObject>(ta);
   if (ta.TypedArrayName !== 'Uint8Array') {
     return Throw.TypeError('Not a Uint8Array');
+  }
+  if (accessMode === 'write' && IsImmutableBuffer(ta.ViewedArrayBuffer as ArrayBufferObject)) {
+    return Throw.TypeError('Cannot modify immutable Uint8Array');
   }
   return undefined;
 }
