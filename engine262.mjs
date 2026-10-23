@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 a6f3f79ca217d522866e883ab819a048f678afaa
+ * engine262 0.0.1 2fe331f616564ffe038b5e7897085361b4cc131b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -59866,18 +59866,33 @@ function* ArrayProto_join([separator = Value.undefined], {
   }
   const length = _length12;
   let separatorString;
-  if (separator === Value.undefined) separatorString = ',';else {
-    /* ReturnIfAbrupt */let _temp19 = yield* ToString(separator);
-    /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
-      if (_temp19 instanceof AbruptCompletion) return _temp19;
-      _temp19 = _temp19.Value;
+  if (separator === Value.undefined) {
+    separatorString = ',';
+  } else {
+    /* ReturnIfAbrupt */let _temp20 = yield* ToString(separator);
+    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
+      if (_temp20 instanceof AbruptCompletion) return _temp20;
+      _temp20 = _temp20.Value;
     }
-    separatorString = _temp19;
+    separatorString = _temp20;
   }
+  /* ReturnIfAbrupt */let _temp19 = yield* JoinIndexedProperties(obj, BigInt(length), separatorString);
+  /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
+    if (_temp19 instanceof AbruptCompletion) return _temp19;
+    _temp19 = _temp19.Value;
+  }
+  return Value(_temp19);
+}
+ArrayProto_join.section = 'https://tc39.es/ecma262/#sec-array.prototype.join';
+
+/** https://tc39.es/ecma262/#sec-joinindexedproperties */
+function* JoinIndexedProperties(obj, length, separator, methodName, methodArgs) {
+  if (methodName !== undefined && methodArgs === undefined) methodArgs = [];
   let result = '';
   let k = 0;
   while (k < length) {
-    if (k > 0) result = `${result}${separatorString}`;
+    if (k > 0) result += separator;
+    // NOTE: If obj is a TypedArray, the following invocation of Get will return a normal completion.
     /* X */let _element3 = ToString(F(k));
     /* node:coverage ignore next */if (_element3 && typeof _element3 === 'object' && 'next' in _element3) _element3 = skipDebugger(_element3);
     /* node:coverage ignore next */if (_element3 instanceof Completion) {
@@ -59893,19 +59908,35 @@ function* ArrayProto_join([separator = Value.undefined], {
     }
     const element = _element2;
     if (element !== Value.undefined && element !== Value.null) {
-      /* ReturnIfAbrupt */let _elementString = yield* ToString(element);
-      /* ReturnIfAbrupt */if (_elementString instanceof Completion) {
-        if (_elementString instanceof AbruptCompletion) return _elementString;
-        _elementString = _elementString.Value;
+      let elementString;
+      if (methodName !== undefined) {
+        /* ReturnIfAbrupt */let _temp22 = yield* Invoke(element, methodName, methodArgs);
+        /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
+          if (_temp22 instanceof AbruptCompletion) return _temp22;
+          _temp22 = _temp22.Value;
+        }
+        /* ReturnIfAbrupt */let _temp21 = yield* ToString(_temp22);
+        /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
+          if (_temp21 instanceof AbruptCompletion) return _temp21;
+          _temp21 = _temp21.Value;
+        }
+        elementString = _temp21;
+      } else {
+        /* ReturnIfAbrupt */let _temp23 = yield* ToString(element);
+        /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
+          if (_temp23 instanceof AbruptCompletion) return _temp23;
+          _temp23 = _temp23.Value;
+        }
+        // NOTE: If obj is a TypedArray, the following invocation of ToString will return a normal completion.
+        elementString = _temp23;
       }
-      const elementString = _elementString;
       result += elementString;
     }
     k += 1;
   }
-  return Value(result);
+  return result;
 }
-ArrayProto_join.section = 'https://tc39.es/ecma262/#sec-array.prototype.join';
+JoinIndexedProperties.section = 'https://tc39.es/ecma262/#sec-joinindexedproperties';
 
 /** https://tc39.es/ecma262/#sec-array.prototype.keys */
 function ArrayProto_keys(_args, {
@@ -59940,12 +59971,12 @@ function* ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], {
   if (length === 0) return F(-1);
   let k;
   if (fromIndex === undefined) k = length - 1;else {
-    /* ReturnIfAbrupt */let _temp20 = yield* ToAbsoluteIndex(fromIndex, length);
-    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
-      if (_temp20 instanceof AbruptCompletion) return _temp20;
-      _temp20 = _temp20.Value;
+    /* ReturnIfAbrupt */let _temp24 = yield* ToAbsoluteIndex(fromIndex, length);
+    /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
+      if (_temp24 instanceof AbruptCompletion) return _temp24;
+      _temp24 = _temp24.Value;
     }
-    k = Math.min(_temp20, length - 1);
+    k = Math.min(_temp24, length - 1);
   }
   while (k >= 0) {
     /* X */let _propertyKey5 = ToString(F(k));
@@ -60033,10 +60064,10 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
         _mappedValue = _mappedValue.Value;
       }
       const mappedValue = _mappedValue;
-      /* ReturnIfAbrupt */let _temp21 = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
-      /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
-        if (_temp21 instanceof AbruptCompletion) return _temp21;
-        _temp21 = _temp21.Value;
+      /* ReturnIfAbrupt */let _temp25 = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
+      /* ReturnIfAbrupt */if (_temp25 instanceof Completion) {
+        if (_temp25 instanceof AbruptCompletion) return _temp25;
+        _temp25 = _temp25.Value;
       }
     }
     k += 1;
@@ -60062,10 +60093,10 @@ function* ArrayProto_pop(_args, {
   }
   const length = _length15;
   if (length === 0) {
-    /* ReturnIfAbrupt */let _temp22 = yield* Set$1(obj, 'length', F(0), true);
-    /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
-      if (_temp22 instanceof AbruptCompletion) return _temp22;
-      _temp22 = _temp22.Value;
+    /* ReturnIfAbrupt */let _temp26 = yield* Set$1(obj, 'length', F(0), true);
+    /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
+      if (_temp26 instanceof AbruptCompletion) return _temp26;
+      _temp26 = _temp26.Value;
     }
     return Value.undefined;
   } else {
@@ -60082,15 +60113,15 @@ function* ArrayProto_pop(_args, {
       _element4 = _element4.Value;
     }
     const element = _element4;
-    /* ReturnIfAbrupt */let _temp23 = yield* DeletePropertyOrThrow(obj, index);
-    /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
-      if (_temp23 instanceof AbruptCompletion) return _temp23;
-      _temp23 = _temp23.Value;
+    /* ReturnIfAbrupt */let _temp27 = yield* DeletePropertyOrThrow(obj, index);
+    /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
+      if (_temp27 instanceof AbruptCompletion) return _temp27;
+      _temp27 = _temp27.Value;
     }
-    /* ReturnIfAbrupt */let _temp24 = yield* Set$1(obj, 'length', F(newLen), true);
-    /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
-      if (_temp24 instanceof AbruptCompletion) return _temp24;
-      _temp24 = _temp24.Value;
+    /* ReturnIfAbrupt */let _temp28 = yield* Set$1(obj, 'length', F(newLen), true);
+    /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
+      if (_temp28 instanceof AbruptCompletion) return _temp28;
+      _temp28 = _temp28.Value;
     }
     return element;
   }
@@ -60120,25 +60151,25 @@ function* ArrayProto_push(_items, {
   }
   while (items.length > 0) {
     const E = items.shift();
-    /* X */let _temp26 = ToString(F(len));
-    /* node:coverage ignore next */if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
-    /* node:coverage ignore next */if (_temp26 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(len)) returned an abrupt completion", {
-        cause: _temp26
+    /* X */let _temp30 = ToString(F(len));
+    /* node:coverage ignore next */if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) _temp30 = skipDebugger(_temp30);
+    /* node:coverage ignore next */if (_temp30 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp30 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(len)) returned an abrupt completion", {
+        cause: _temp30
       });
-      _temp26 = _temp26.Value;
+      _temp30 = _temp30.Value;
     }
-    /* ReturnIfAbrupt */let _temp25 = yield* Set$1(obj, _temp26, E, true);
-    /* ReturnIfAbrupt */if (_temp25 instanceof Completion) {
-      if (_temp25 instanceof AbruptCompletion) return _temp25;
-      _temp25 = _temp25.Value;
+    /* ReturnIfAbrupt */let _temp29 = yield* Set$1(obj, _temp30, E, true);
+    /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
+      if (_temp29 instanceof AbruptCompletion) return _temp29;
+      _temp29 = _temp29.Value;
     }
     len += 1;
   }
-  /* ReturnIfAbrupt */let _temp27 = yield* Set$1(obj, 'length', F(len), true);
-  /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
-    if (_temp27 instanceof AbruptCompletion) return _temp27;
-    _temp27 = _temp27.Value;
+  /* ReturnIfAbrupt */let _temp31 = yield* Set$1(obj, 'length', F(len), true);
+  /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
+    if (_temp31 instanceof AbruptCompletion) return _temp31;
+    _temp31 = _temp31.Value;
   }
   return F(len);
 }
@@ -60178,19 +60209,19 @@ function* ArrayProto_reduce([callbackfn = Value.undefined, initialValue], {
         _propertyKey6 = _propertyKey6.Value;
       }
       const propertyKey = _propertyKey6;
-      /* ReturnIfAbrupt */let _temp28 = yield* HasProperty(obj, propertyKey);
-      /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
-        if (_temp28 instanceof AbruptCompletion) return _temp28;
-        _temp28 = _temp28.Value;
+      /* ReturnIfAbrupt */let _temp32 = yield* HasProperty(obj, propertyKey);
+      /* ReturnIfAbrupt */if (_temp32 instanceof Completion) {
+        if (_temp32 instanceof AbruptCompletion) return _temp32;
+        _temp32 = _temp32.Value;
       }
-      kPresent = _temp28;
+      kPresent = _temp32;
       if (kPresent) {
-        /* ReturnIfAbrupt */let _temp29 = yield* Get(obj, propertyKey);
-        /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
-          if (_temp29 instanceof AbruptCompletion) return _temp29;
-          _temp29 = _temp29.Value;
+        /* ReturnIfAbrupt */let _temp33 = yield* Get(obj, propertyKey);
+        /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
+          if (_temp33 instanceof AbruptCompletion) return _temp33;
+          _temp33 = _temp33.Value;
         }
-        accumulator = _temp29;
+        accumulator = _temp33;
       }
       k += 1;
     }
@@ -60219,12 +60250,12 @@ function* ArrayProto_reduce([callbackfn = Value.undefined, initialValue], {
         _kValue6 = _kValue6.Value;
       }
       const kValue = _kValue6;
-      /* ReturnIfAbrupt */let _temp30 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
-      /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
-        if (_temp30 instanceof AbruptCompletion) return _temp30;
-        _temp30 = _temp30.Value;
+      /* ReturnIfAbrupt */let _temp34 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
+      /* ReturnIfAbrupt */if (_temp34 instanceof Completion) {
+        if (_temp34 instanceof AbruptCompletion) return _temp34;
+        _temp34 = _temp34.Value;
       }
-      accumulator = _temp30;
+      accumulator = _temp34;
     }
     k += 1;
   }
@@ -60266,19 +60297,19 @@ function* ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], {
         _propertyKey8 = _propertyKey8.Value;
       }
       const propertyKey = _propertyKey8;
-      /* ReturnIfAbrupt */let _temp31 = yield* HasProperty(obj, propertyKey);
-      /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
-        if (_temp31 instanceof AbruptCompletion) return _temp31;
-        _temp31 = _temp31.Value;
+      /* ReturnIfAbrupt */let _temp35 = yield* HasProperty(obj, propertyKey);
+      /* ReturnIfAbrupt */if (_temp35 instanceof Completion) {
+        if (_temp35 instanceof AbruptCompletion) return _temp35;
+        _temp35 = _temp35.Value;
       }
-      kPresent = _temp31;
+      kPresent = _temp35;
       if (kPresent) {
-        /* ReturnIfAbrupt */let _temp32 = yield* Get(obj, propertyKey);
-        /* ReturnIfAbrupt */if (_temp32 instanceof Completion) {
-          if (_temp32 instanceof AbruptCompletion) return _temp32;
-          _temp32 = _temp32.Value;
+        /* ReturnIfAbrupt */let _temp36 = yield* Get(obj, propertyKey);
+        /* ReturnIfAbrupt */if (_temp36 instanceof Completion) {
+          if (_temp36 instanceof AbruptCompletion) return _temp36;
+          _temp36 = _temp36.Value;
         }
-        accumulator = _temp32;
+        accumulator = _temp36;
       }
       k -= 1;
     }
@@ -60307,12 +60338,12 @@ function* ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], {
         _kValue7 = _kValue7.Value;
       }
       const kValue = _kValue7;
-      /* ReturnIfAbrupt */let _temp33 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
-      /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
-        if (_temp33 instanceof AbruptCompletion) return _temp33;
-        _temp33 = _temp33.Value;
+      /* ReturnIfAbrupt */let _temp37 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
+      /* ReturnIfAbrupt */if (_temp37 instanceof Completion) {
+        if (_temp37 instanceof AbruptCompletion) return _temp37;
+        _temp37 = _temp37.Value;
       }
-      accumulator = _temp33;
+      accumulator = _temp37;
     }
     k -= 1;
   }
@@ -60367,12 +60398,12 @@ function* ArrayProto_reverse(_args, {
     let lowerValue;
     let upperValue;
     if (lowerExists) {
-      /* ReturnIfAbrupt */let _temp34 = yield* Get(obj, lowerP);
-      /* ReturnIfAbrupt */if (_temp34 instanceof Completion) {
-        if (_temp34 instanceof AbruptCompletion) return _temp34;
-        _temp34 = _temp34.Value;
+      /* ReturnIfAbrupt */let _temp38 = yield* Get(obj, lowerP);
+      /* ReturnIfAbrupt */if (_temp38 instanceof Completion) {
+        if (_temp38 instanceof AbruptCompletion) return _temp38;
+        _temp38 = _temp38.Value;
       }
-      lowerValue = _temp34;
+      lowerValue = _temp38;
     }
     /* ReturnIfAbrupt */let _upperExists = yield* HasProperty(obj, upperP);
     /* ReturnIfAbrupt */if (_upperExists instanceof Completion) {
@@ -60381,37 +60412,15 @@ function* ArrayProto_reverse(_args, {
     }
     const upperExists = _upperExists;
     if (upperExists) {
-      /* ReturnIfAbrupt */let _temp35 = yield* Get(obj, upperP);
-      /* ReturnIfAbrupt */if (_temp35 instanceof Completion) {
-        if (_temp35 instanceof AbruptCompletion) return _temp35;
-        _temp35 = _temp35.Value;
-      }
-      upperValue = _temp35;
-    }
-    if (lowerExists && upperExists) {
-      /* ReturnIfAbrupt */let _temp36 = yield* Set$1(obj, lowerP, upperValue, true);
-      /* ReturnIfAbrupt */if (_temp36 instanceof Completion) {
-        if (_temp36 instanceof AbruptCompletion) return _temp36;
-        _temp36 = _temp36.Value;
-      }
-      /* ReturnIfAbrupt */let _temp37 = yield* Set$1(obj, upperP, lowerValue, true);
-      /* ReturnIfAbrupt */if (_temp37 instanceof Completion) {
-        if (_temp37 instanceof AbruptCompletion) return _temp37;
-        _temp37 = _temp37.Value;
-      }
-    } else if (!lowerExists && upperExists) {
-      /* ReturnIfAbrupt */let _temp38 = yield* Set$1(obj, lowerP, upperValue, true);
-      /* ReturnIfAbrupt */if (_temp38 instanceof Completion) {
-        if (_temp38 instanceof AbruptCompletion) return _temp38;
-        _temp38 = _temp38.Value;
-      }
-      /* ReturnIfAbrupt */let _temp39 = yield* DeletePropertyOrThrow(obj, upperP);
+      /* ReturnIfAbrupt */let _temp39 = yield* Get(obj, upperP);
       /* ReturnIfAbrupt */if (_temp39 instanceof Completion) {
         if (_temp39 instanceof AbruptCompletion) return _temp39;
         _temp39 = _temp39.Value;
       }
-    } else if (lowerExists && !upperExists) {
-      /* ReturnIfAbrupt */let _temp40 = yield* DeletePropertyOrThrow(obj, lowerP);
+      upperValue = _temp39;
+    }
+    if (lowerExists && upperExists) {
+      /* ReturnIfAbrupt */let _temp40 = yield* Set$1(obj, lowerP, upperValue, true);
       /* ReturnIfAbrupt */if (_temp40 instanceof Completion) {
         if (_temp40 instanceof AbruptCompletion) return _temp40;
         _temp40 = _temp40.Value;
@@ -60420,6 +60429,28 @@ function* ArrayProto_reverse(_args, {
       /* ReturnIfAbrupt */if (_temp41 instanceof Completion) {
         if (_temp41 instanceof AbruptCompletion) return _temp41;
         _temp41 = _temp41.Value;
+      }
+    } else if (!lowerExists && upperExists) {
+      /* ReturnIfAbrupt */let _temp42 = yield* Set$1(obj, lowerP, upperValue, true);
+      /* ReturnIfAbrupt */if (_temp42 instanceof Completion) {
+        if (_temp42 instanceof AbruptCompletion) return _temp42;
+        _temp42 = _temp42.Value;
+      }
+      /* ReturnIfAbrupt */let _temp43 = yield* DeletePropertyOrThrow(obj, upperP);
+      /* ReturnIfAbrupt */if (_temp43 instanceof Completion) {
+        if (_temp43 instanceof AbruptCompletion) return _temp43;
+        _temp43 = _temp43.Value;
+      }
+    } else if (lowerExists && !upperExists) {
+      /* ReturnIfAbrupt */let _temp44 = yield* DeletePropertyOrThrow(obj, lowerP);
+      /* ReturnIfAbrupt */if (_temp44 instanceof Completion) {
+        if (_temp44 instanceof AbruptCompletion) return _temp44;
+        _temp44 = _temp44.Value;
+      }
+      /* ReturnIfAbrupt */let _temp45 = yield* Set$1(obj, upperP, lowerValue, true);
+      /* ReturnIfAbrupt */if (_temp45 instanceof Completion) {
+        if (_temp45 instanceof AbruptCompletion) return _temp45;
+        _temp45 = _temp45.Value;
       }
     } else ;
     lower += 1;
@@ -60445,10 +60476,10 @@ function* ArrayProto_shift(_args, {
   }
   const length = _length19;
   if (length === 0) {
-    /* ReturnIfAbrupt */let _temp42 = yield* Set$1(obj, 'length', F(0), true);
-    /* ReturnIfAbrupt */if (_temp42 instanceof Completion) {
-      if (_temp42 instanceof AbruptCompletion) return _temp42;
-      _temp42 = _temp42.Value;
+    /* ReturnIfAbrupt */let _temp46 = yield* Set$1(obj, 'length', F(0), true);
+    /* ReturnIfAbrupt */if (_temp46 instanceof Completion) {
+      if (_temp46 instanceof AbruptCompletion) return _temp46;
+      _temp46 = _temp46.Value;
     }
     return Value.undefined;
   }
@@ -60491,37 +60522,37 @@ function* ArrayProto_shift(_args, {
         _fromVal2 = _fromVal2.Value;
       }
       const fromVal = _fromVal2;
-      /* ReturnIfAbrupt */let _temp43 = yield* Set$1(obj, to, fromVal, true);
-      /* ReturnIfAbrupt */if (_temp43 instanceof Completion) {
-        if (_temp43 instanceof AbruptCompletion) return _temp43;
-        _temp43 = _temp43.Value;
+      /* ReturnIfAbrupt */let _temp47 = yield* Set$1(obj, to, fromVal, true);
+      /* ReturnIfAbrupt */if (_temp47 instanceof Completion) {
+        if (_temp47 instanceof AbruptCompletion) return _temp47;
+        _temp47 = _temp47.Value;
       }
     } else {
-      /* ReturnIfAbrupt */let _temp44 = yield* DeletePropertyOrThrow(obj, to);
-      /* ReturnIfAbrupt */if (_temp44 instanceof Completion) {
-        if (_temp44 instanceof AbruptCompletion) return _temp44;
-        _temp44 = _temp44.Value;
+      /* ReturnIfAbrupt */let _temp48 = yield* DeletePropertyOrThrow(obj, to);
+      /* ReturnIfAbrupt */if (_temp48 instanceof Completion) {
+        if (_temp48 instanceof AbruptCompletion) return _temp48;
+        _temp48 = _temp48.Value;
       }
     }
     k += 1;
   }
-  /* X */let _temp47 = ToString(F(length - 1));
-  /* node:coverage ignore next */if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) _temp47 = skipDebugger(_temp47);
-  /* node:coverage ignore next */if (_temp47 instanceof Completion) {
-    /* node:coverage ignore next */if (_temp47 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(length - 1)) returned an abrupt completion", {
-      cause: _temp47
+  /* X */let _temp51 = ToString(F(length - 1));
+  /* node:coverage ignore next */if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) _temp51 = skipDebugger(_temp51);
+  /* node:coverage ignore next */if (_temp51 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp51 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(length - 1)) returned an abrupt completion", {
+      cause: _temp51
     });
-    _temp47 = _temp47.Value;
+    _temp51 = _temp51.Value;
   }
-  /* ReturnIfAbrupt */let _temp45 = yield* DeletePropertyOrThrow(obj, _temp47);
-  /* ReturnIfAbrupt */if (_temp45 instanceof Completion) {
-    if (_temp45 instanceof AbruptCompletion) return _temp45;
-    _temp45 = _temp45.Value;
+  /* ReturnIfAbrupt */let _temp49 = yield* DeletePropertyOrThrow(obj, _temp51);
+  /* ReturnIfAbrupt */if (_temp49 instanceof Completion) {
+    if (_temp49 instanceof AbruptCompletion) return _temp49;
+    _temp49 = _temp49.Value;
   }
-  /* ReturnIfAbrupt */let _temp46 = yield* Set$1(obj, 'length', F(length - 1), true);
-  /* ReturnIfAbrupt */if (_temp46 instanceof Completion) {
-    if (_temp46 instanceof AbruptCompletion) return _temp46;
-    _temp46 = _temp46.Value;
+  /* ReturnIfAbrupt */let _temp50 = yield* Set$1(obj, 'length', F(length - 1), true);
+  /* ReturnIfAbrupt */if (_temp50 instanceof Completion) {
+    if (_temp50 instanceof AbruptCompletion) return _temp50;
+    _temp50 = _temp50.Value;
   }
   return first;
 }
@@ -60553,12 +60584,12 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   if (end === Value.undefined) {
     final = length;
   } else {
-    /* ReturnIfAbrupt */let _temp50 = yield* ToClampedIndex(end, length);
-    /* ReturnIfAbrupt */if (_temp50 instanceof Completion) {
-      if (_temp50 instanceof AbruptCompletion) return _temp50;
-      _temp50 = _temp50.Value;
+    /* ReturnIfAbrupt */let _temp54 = yield* ToClampedIndex(end, length);
+    /* ReturnIfAbrupt */if (_temp54 instanceof Completion) {
+      if (_temp54 instanceof AbruptCompletion) return _temp54;
+      _temp54 = _temp54.Value;
     }
-    final = _temp50;
+    final = _temp54;
   }
   const count = Math.max(final - k, 0);
   /* ReturnIfAbrupt */let _A6 = yield* ArraySpeciesCreate(obj, count);
@@ -60600,19 +60631,19 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
         _nStr3 = _nStr3.Value;
       }
       const nStr = _nStr3;
-      /* ReturnIfAbrupt */let _temp48 = yield* CreateDataPropertyOrThrow(A, nStr, kValue);
-      /* ReturnIfAbrupt */if (_temp48 instanceof Completion) {
-        if (_temp48 instanceof AbruptCompletion) return _temp48;
-        _temp48 = _temp48.Value;
+      /* ReturnIfAbrupt */let _temp52 = yield* CreateDataPropertyOrThrow(A, nStr, kValue);
+      /* ReturnIfAbrupt */if (_temp52 instanceof Completion) {
+        if (_temp52 instanceof AbruptCompletion) return _temp52;
+        _temp52 = _temp52.Value;
       }
     }
     k += 1;
     n += 1;
   }
-  /* ReturnIfAbrupt */let _temp49 = yield* Set$1(A, 'length', F(n), true);
-  /* ReturnIfAbrupt */if (_temp49 instanceof Completion) {
-    if (_temp49 instanceof AbruptCompletion) return _temp49;
-    _temp49 = _temp49.Value;
+  /* ReturnIfAbrupt */let _temp53 = yield* Set$1(A, 'length', F(n), true);
+  /* ReturnIfAbrupt */if (_temp53 instanceof Completion) {
+    if (_temp53 instanceof AbruptCompletion) return _temp53;
+    _temp53 = _temp53.Value;
   }
   return A;
 }
@@ -60704,34 +60735,34 @@ function* ArrayProto_sort([comparator = Value.undefined], {
   const itemCount = sortedList.length;
   let j = 0;
   while (j < itemCount) {
-    /* X */let _temp52 = ToString(F(j));
-    /* node:coverage ignore next */if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) _temp52 = skipDebugger(_temp52);
-    /* node:coverage ignore next */if (_temp52 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp52 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(j)) returned an abrupt completion", {
-        cause: _temp52
+    /* X */let _temp56 = ToString(F(j));
+    /* node:coverage ignore next */if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) _temp56 = skipDebugger(_temp56);
+    /* node:coverage ignore next */if (_temp56 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp56 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(j)) returned an abrupt completion", {
+        cause: _temp56
       });
-      _temp52 = _temp52.Value;
+      _temp56 = _temp56.Value;
     }
-    /* ReturnIfAbrupt */let _temp51 = yield* Set$1(obj, _temp52, sortedList[j], true);
-    /* ReturnIfAbrupt */if (_temp51 instanceof Completion) {
-      if (_temp51 instanceof AbruptCompletion) return _temp51;
-      _temp51 = _temp51.Value;
+    /* ReturnIfAbrupt */let _temp55 = yield* Set$1(obj, _temp56, sortedList[j], true);
+    /* ReturnIfAbrupt */if (_temp55 instanceof Completion) {
+      if (_temp55 instanceof AbruptCompletion) return _temp55;
+      _temp55 = _temp55.Value;
     }
     j += 1;
   }
   while (j < length) {
-    /* X */let _temp54 = ToString(F(j));
-    /* node:coverage ignore next */if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) _temp54 = skipDebugger(_temp54);
-    /* node:coverage ignore next */if (_temp54 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp54 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(j)) returned an abrupt completion", {
-        cause: _temp54
+    /* X */let _temp58 = ToString(F(j));
+    /* node:coverage ignore next */if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) _temp58 = skipDebugger(_temp58);
+    /* node:coverage ignore next */if (_temp58 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp58 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(j)) returned an abrupt completion", {
+        cause: _temp58
       });
-      _temp54 = _temp54.Value;
+      _temp58 = _temp58.Value;
     }
-    /* ReturnIfAbrupt */let _temp53 = yield* DeletePropertyOrThrow(obj, _temp54);
-    /* ReturnIfAbrupt */if (_temp53 instanceof Completion) {
-      if (_temp53 instanceof AbruptCompletion) return _temp53;
-      _temp53 = _temp53.Value;
+    /* ReturnIfAbrupt */let _temp57 = yield* DeletePropertyOrThrow(obj, _temp58);
+    /* ReturnIfAbrupt */if (_temp57 instanceof Completion) {
+      if (_temp57 instanceof AbruptCompletion) return _temp57;
+      _temp57 = _temp57.Value;
     }
     j += 1;
   }
@@ -60755,12 +60786,12 @@ function* SortIndexedProperties(obj, len, SortCompare, holes) {
     const propertyKey = _propertyKey1;
     let kRead;
     if (holes === 'skip-holes') {
-      /* ReturnIfAbrupt */let _temp55 = yield* HasProperty(obj, propertyKey);
-      /* ReturnIfAbrupt */if (_temp55 instanceof Completion) {
-        if (_temp55 instanceof AbruptCompletion) return _temp55;
-        _temp55 = _temp55.Value;
+      /* ReturnIfAbrupt */let _temp59 = yield* HasProperty(obj, propertyKey);
+      /* ReturnIfAbrupt */if (_temp59 instanceof Completion) {
+        if (_temp59 instanceof AbruptCompletion) return _temp59;
+        _temp59 = _temp59.Value;
       }
-      kRead = _temp55;
+      kRead = _temp59;
     } else {
       /* Assert */ /* node:coverage ignore next */if (!(holes === 'read-through-holes')) throw new Assert.Error("holes === 'read-through-holes'");
       kRead = true;
@@ -60877,26 +60908,26 @@ function* ArrayProto_splice(args, {
         _fromValue = _fromValue.Value;
       }
       const fromValue = _fromValue;
-      /* X */let _temp57 = ToString(F(k));
-      /* node:coverage ignore next */if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) _temp57 = skipDebugger(_temp57);
-      /* node:coverage ignore next */if (_temp57 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp57 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
-          cause: _temp57
+      /* X */let _temp61 = ToString(F(k));
+      /* node:coverage ignore next */if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) _temp61 = skipDebugger(_temp61);
+      /* node:coverage ignore next */if (_temp61 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp61 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
+          cause: _temp61
         });
-        _temp57 = _temp57.Value;
+        _temp61 = _temp61.Value;
       }
-      /* ReturnIfAbrupt */let _temp56 = yield* CreateDataPropertyOrThrow(A, _temp57, fromValue);
-      /* ReturnIfAbrupt */if (_temp56 instanceof Completion) {
-        if (_temp56 instanceof AbruptCompletion) return _temp56;
-        _temp56 = _temp56.Value;
+      /* ReturnIfAbrupt */let _temp60 = yield* CreateDataPropertyOrThrow(A, _temp61, fromValue);
+      /* ReturnIfAbrupt */if (_temp60 instanceof Completion) {
+        if (_temp60 instanceof AbruptCompletion) return _temp60;
+        _temp60 = _temp60.Value;
       }
     }
     k += 1;
   }
-  /* ReturnIfAbrupt */let _temp58 = yield* Set$1(A, 'length', F(actualDeleteCount), true);
-  /* ReturnIfAbrupt */if (_temp58 instanceof Completion) {
-    if (_temp58 instanceof AbruptCompletion) return _temp58;
-    _temp58 = _temp58.Value;
+  /* ReturnIfAbrupt */let _temp62 = yield* Set$1(A, 'length', F(actualDeleteCount), true);
+  /* ReturnIfAbrupt */if (_temp62 instanceof Completion) {
+    if (_temp62 instanceof AbruptCompletion) return _temp62;
+    _temp62 = _temp62.Value;
   }
   const itemCount = items.length;
   if (itemCount < actualDeleteCount) {
@@ -60933,34 +60964,34 @@ function* ArrayProto_splice(args, {
           _fromValue2 = _fromValue2.Value;
         }
         const fromValue = _fromValue2;
-        /* ReturnIfAbrupt */let _temp59 = yield* Set$1(obj, to, fromValue, true);
-        /* ReturnIfAbrupt */if (_temp59 instanceof Completion) {
-          if (_temp59 instanceof AbruptCompletion) return _temp59;
-          _temp59 = _temp59.Value;
+        /* ReturnIfAbrupt */let _temp63 = yield* Set$1(obj, to, fromValue, true);
+        /* ReturnIfAbrupt */if (_temp63 instanceof Completion) {
+          if (_temp63 instanceof AbruptCompletion) return _temp63;
+          _temp63 = _temp63.Value;
         }
       } else {
-        /* ReturnIfAbrupt */let _temp60 = yield* DeletePropertyOrThrow(obj, to);
-        /* ReturnIfAbrupt */if (_temp60 instanceof Completion) {
-          if (_temp60 instanceof AbruptCompletion) return _temp60;
-          _temp60 = _temp60.Value;
+        /* ReturnIfAbrupt */let _temp64 = yield* DeletePropertyOrThrow(obj, to);
+        /* ReturnIfAbrupt */if (_temp64 instanceof Completion) {
+          if (_temp64 instanceof AbruptCompletion) return _temp64;
+          _temp64 = _temp64.Value;
         }
       }
       k += 1;
     }
     k = length;
     while (k > length - actualDeleteCount + itemCount) {
-      /* X */let _temp62 = ToString(F(k - 1));
-      /* node:coverage ignore next */if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) _temp62 = skipDebugger(_temp62);
-      /* node:coverage ignore next */if (_temp62 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp62 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k - 1)) returned an abrupt completion", {
-          cause: _temp62
+      /* X */let _temp66 = ToString(F(k - 1));
+      /* node:coverage ignore next */if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) _temp66 = skipDebugger(_temp66);
+      /* node:coverage ignore next */if (_temp66 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k - 1)) returned an abrupt completion", {
+          cause: _temp66
         });
-        _temp62 = _temp62.Value;
+        _temp66 = _temp66.Value;
       }
-      /* ReturnIfAbrupt */let _temp61 = yield* DeletePropertyOrThrow(obj, _temp62);
-      /* ReturnIfAbrupt */if (_temp61 instanceof Completion) {
-        if (_temp61 instanceof AbruptCompletion) return _temp61;
-        _temp61 = _temp61.Value;
+      /* ReturnIfAbrupt */let _temp65 = yield* DeletePropertyOrThrow(obj, _temp66);
+      /* ReturnIfAbrupt */if (_temp65 instanceof Completion) {
+        if (_temp65 instanceof AbruptCompletion) return _temp65;
+        _temp65 = _temp65.Value;
       }
       k -= 1;
     }
@@ -60998,16 +61029,16 @@ function* ArrayProto_splice(args, {
           _fromValue3 = _fromValue3.Value;
         }
         const fromValue = _fromValue3;
-        /* ReturnIfAbrupt */let _temp63 = yield* Set$1(obj, to, fromValue, true);
-        /* ReturnIfAbrupt */if (_temp63 instanceof Completion) {
-          if (_temp63 instanceof AbruptCompletion) return _temp63;
-          _temp63 = _temp63.Value;
+        /* ReturnIfAbrupt */let _temp67 = yield* Set$1(obj, to, fromValue, true);
+        /* ReturnIfAbrupt */if (_temp67 instanceof Completion) {
+          if (_temp67 instanceof AbruptCompletion) return _temp67;
+          _temp67 = _temp67.Value;
         }
       } else {
-        /* ReturnIfAbrupt */let _temp64 = yield* DeletePropertyOrThrow(obj, to);
-        /* ReturnIfAbrupt */if (_temp64 instanceof Completion) {
-          if (_temp64 instanceof AbruptCompletion) return _temp64;
-          _temp64 = _temp64.Value;
+        /* ReturnIfAbrupt */let _temp68 = yield* DeletePropertyOrThrow(obj, to);
+        /* ReturnIfAbrupt */if (_temp68 instanceof Completion) {
+          if (_temp68 instanceof AbruptCompletion) return _temp68;
+          _temp68 = _temp68.Value;
         }
       }
       k -= 1;
@@ -61016,25 +61047,25 @@ function* ArrayProto_splice(args, {
   k = actualStart;
   while (items.length > 0) {
     const E = items.shift();
-    /* X */let _temp66 = ToString(F(k));
-    /* node:coverage ignore next */if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) _temp66 = skipDebugger(_temp66);
-    /* node:coverage ignore next */if (_temp66 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp66 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
-        cause: _temp66
+    /* X */let _temp70 = ToString(F(k));
+    /* node:coverage ignore next */if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) _temp70 = skipDebugger(_temp70);
+    /* node:coverage ignore next */if (_temp70 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp70 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
+        cause: _temp70
       });
-      _temp66 = _temp66.Value;
+      _temp70 = _temp70.Value;
     }
-    /* ReturnIfAbrupt */let _temp65 = yield* Set$1(obj, _temp66, E, true);
-    /* ReturnIfAbrupt */if (_temp65 instanceof Completion) {
-      if (_temp65 instanceof AbruptCompletion) return _temp65;
-      _temp65 = _temp65.Value;
+    /* ReturnIfAbrupt */let _temp69 = yield* Set$1(obj, _temp70, E, true);
+    /* ReturnIfAbrupt */if (_temp69 instanceof Completion) {
+      if (_temp69 instanceof AbruptCompletion) return _temp69;
+      _temp69 = _temp69.Value;
     }
     k += 1;
   }
-  /* ReturnIfAbrupt */let _temp67 = yield* Set$1(obj, 'length', F(length - actualDeleteCount + itemCount), true);
-  /* ReturnIfAbrupt */if (_temp67 instanceof Completion) {
-    if (_temp67 instanceof AbruptCompletion) return _temp67;
-    _temp67 = _temp67.Value;
+  /* ReturnIfAbrupt */let _temp71 = yield* Set$1(obj, 'length', F(length - actualDeleteCount + itemCount), true);
+  /* ReturnIfAbrupt */if (_temp71 instanceof Completion) {
+    if (_temp71 instanceof AbruptCompletion) return _temp71;
+    _temp71 = _temp71.Value;
   }
   return A;
 }
@@ -61056,44 +61087,20 @@ function* ArrayProto_toLocaleString(_args, {
     _length24 = _length24.Value;
   }
   const length = _length24;
-  const separator = ',';
-  let result = '';
-  let k = 0;
-  while (k < length) {
-    if (k > 0) result = `${result}${separator}`;
-    /* X */let _element6 = ToString(F(k));
-    /* node:coverage ignore next */if (_element6 && typeof _element6 === 'object' && 'next' in _element6) _element6 = skipDebugger(_element6);
-    /* node:coverage ignore next */if (_element6 instanceof Completion) {
-      /* node:coverage ignore next */if (_element6 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(k)) returned an abrupt completion", {
-        cause: _element6
-      });
-      _element6 = _element6.Value;
-    }
-    /* ReturnIfAbrupt */let _element5 = yield* Get(array, _element6);
-    /* ReturnIfAbrupt */if (_element5 instanceof Completion) {
-      if (_element5 instanceof AbruptCompletion) return _element5;
-      _element5 = _element5.Value;
-    }
-    const element = _element5;
-    if (element !== Value.undefined && element !== Value.null) {
-      /* ReturnIfAbrupt */let _elementString3 = yield* Invoke(element, 'toLocaleString');
-      /* ReturnIfAbrupt */if (_elementString3 instanceof Completion) {
-        if (_elementString3 instanceof AbruptCompletion) return _elementString3;
-        _elementString3 = _elementString3.Value;
-      }
-      /* ReturnIfAbrupt */let _elementString2 = yield* ToString(_elementString3);
-      /* ReturnIfAbrupt */if (_elementString2 instanceof Completion) {
-        if (_elementString2 instanceof AbruptCompletion) return _elementString2;
-        _elementString2 = _elementString2.Value;
-      }
-      const elementString = _elementString2;
-      result += elementString;
-    }
-    k += 1;
+  /* ReturnIfAbrupt */let _temp72 = yield* JoinIndexedProperties(array, BigInt(length), LocalizedListSeparator(), 'toLocaleString');
+  /* ReturnIfAbrupt */if (_temp72 instanceof Completion) {
+    if (_temp72 instanceof AbruptCompletion) return _temp72;
+    _temp72 = _temp72.Value;
   }
-  return Value(result);
+  return Value(_temp72);
 }
 ArrayProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-array.prototype.tolocalestring';
+
+/** https://tc39.es/ecma262/#sec-localizedlistseparator */
+function LocalizedListSeparator() {
+  return ',';
+}
+LocalizedListSeparator.section = 'https://tc39.es/ecma262/#sec-localizedlistseparator';
 
 /** https://tc39.es/ecma262/#sec-array.prototype.toreversed */
 function* ArrayProto_toReversed(_args, {
@@ -61143,13 +61150,13 @@ function* ArrayProto_toReversed(_args, {
       _fromValue4 = _fromValue4.Value;
     }
     const fromValue = _fromValue4;
-    /* X */let _temp68 = CreateDataPropertyOrThrow(A, Pk, fromValue);
-    /* node:coverage ignore next */if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) _temp68 = skipDebugger(_temp68);
-    /* node:coverage ignore next */if (_temp68 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp68 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pk, fromValue) returned an abrupt completion", {
-        cause: _temp68
+    /* X */let _temp73 = CreateDataPropertyOrThrow(A, Pk, fromValue);
+    /* node:coverage ignore next */if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) _temp73 = skipDebugger(_temp73);
+    /* node:coverage ignore next */if (_temp73 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp73 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pk, fromValue) returned an abrupt completion", {
+        cause: _temp73
       });
-      _temp68 = _temp68.Value;
+      _temp73 = _temp73.Value;
     }
     k += 1;
   }
@@ -61193,21 +61200,21 @@ function* ArrayProto_toSorted([comparator = Value.undefined], {
   const sortedList = _sortedList2;
   let j = 0;
   while (j < length) {
-    /* X */let _temp70 = ToString(F(j));
-    /* node:coverage ignore next */if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) _temp70 = skipDebugger(_temp70);
-    /* node:coverage ignore next */if (_temp70 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp70 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(j)) returned an abrupt completion", {
-        cause: _temp70
+    /* X */let _temp75 = ToString(F(j));
+    /* node:coverage ignore next */if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) _temp75 = skipDebugger(_temp75);
+    /* node:coverage ignore next */if (_temp75 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp75 instanceof AbruptCompletion) throw new Assert.Error("! ToString(F(j)) returned an abrupt completion", {
+        cause: _temp75
       });
-      _temp70 = _temp70.Value;
+      _temp75 = _temp75.Value;
     }
-    /* X */let _temp69 = CreateDataPropertyOrThrow(A, _temp70, sortedList[j]);
-    /* node:coverage ignore next */if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) _temp69 = skipDebugger(_temp69);
-    /* node:coverage ignore next */if (_temp69 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp69 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(j))), sortedList[j]) returned an abrupt completion", {
-        cause: _temp69
+    /* X */let _temp74 = CreateDataPropertyOrThrow(A, _temp75, sortedList[j]);
+    /* node:coverage ignore next */if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) _temp74 = skipDebugger(_temp74);
+    /* node:coverage ignore next */if (_temp74 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp74 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, X(ToString(F(j))), sortedList[j]) returned an abrupt completion", {
+        cause: _temp74
       });
-      _temp69 = _temp69.Value;
+      _temp74 = _temp74.Value;
     }
     j += 1;
   }
@@ -61246,12 +61253,12 @@ function* ArrayProto_toSpliced(args, {
   } else if (args[1] === undefined) {
     actualSkipCount = maxSkipCount;
   } else {
-    /* ReturnIfAbrupt */let _temp71 = yield* ToIntegerOrInfinity(skipCount);
-    /* ReturnIfAbrupt */if (_temp71 instanceof Completion) {
-      if (_temp71 instanceof AbruptCompletion) return _temp71;
-      _temp71 = _temp71.Value;
+    /* ReturnIfAbrupt */let _temp76 = yield* ToIntegerOrInfinity(skipCount);
+    /* ReturnIfAbrupt */if (_temp76 instanceof Completion) {
+      if (_temp76 instanceof AbruptCompletion) return _temp76;
+      _temp76 = _temp76.Value;
     }
-    actualSkipCount = clamp(0, _temp71, maxSkipCount);
+    actualSkipCount = clamp(0, _temp76, maxSkipCount);
   }
   const newLen = length - actualSkipCount + insertCount;
   if (newLen > 2 ** 53 - 1) {
@@ -61282,13 +61289,13 @@ function* ArrayProto_toSpliced(args, {
       _iValue = _iValue.Value;
     }
     const iValue = _iValue;
-    /* X */let _temp72 = CreateDataPropertyOrThrow(A, Pi, iValue);
-    /* node:coverage ignore next */if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) _temp72 = skipDebugger(_temp72);
-    /* node:coverage ignore next */if (_temp72 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp72 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pi, iValue) returned an abrupt completion", {
-        cause: _temp72
+    /* X */let _temp77 = CreateDataPropertyOrThrow(A, Pi, iValue);
+    /* node:coverage ignore next */if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) _temp77 = skipDebugger(_temp77);
+    /* node:coverage ignore next */if (_temp77 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp77 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pi, iValue) returned an abrupt completion", {
+        cause: _temp77
       });
-      _temp72 = _temp72.Value;
+      _temp77 = _temp77.Value;
     }
     i += 1;
   }
@@ -61302,13 +61309,13 @@ function* ArrayProto_toSpliced(args, {
       _Pi2 = _Pi2.Value;
     }
     const Pi = _Pi2;
-    /* X */let _temp73 = CreateDataPropertyOrThrow(A, Pi, E);
-    /* node:coverage ignore next */if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) _temp73 = skipDebugger(_temp73);
-    /* node:coverage ignore next */if (_temp73 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp73 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pi, E) returned an abrupt completion", {
-        cause: _temp73
+    /* X */let _temp78 = CreateDataPropertyOrThrow(A, Pi, E);
+    /* node:coverage ignore next */if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) _temp78 = skipDebugger(_temp78);
+    /* node:coverage ignore next */if (_temp78 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp78 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pi, E) returned an abrupt completion", {
+        cause: _temp78
       });
-      _temp73 = _temp73.Value;
+      _temp78 = _temp78.Value;
     }
     i += 1;
   }
@@ -61337,13 +61344,13 @@ function* ArrayProto_toSpliced(args, {
       _fromValue5 = _fromValue5.Value;
     }
     const fromValue = _fromValue5;
-    /* X */let _temp74 = CreateDataPropertyOrThrow(A, Pi, fromValue);
-    /* node:coverage ignore next */if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) _temp74 = skipDebugger(_temp74);
-    /* node:coverage ignore next */if (_temp74 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp74 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pi, fromValue) returned an abrupt completion", {
-        cause: _temp74
+    /* X */let _temp79 = CreateDataPropertyOrThrow(A, Pi, fromValue);
+    /* node:coverage ignore next */if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) _temp79 = skipDebugger(_temp79);
+    /* node:coverage ignore next */if (_temp79 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp79 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pi, fromValue) returned an abrupt completion", {
+        cause: _temp79
       });
-      _temp74 = _temp74.Value;
+      _temp79 = _temp79.Value;
     }
     i += 1;
     r += 1;
@@ -61429,16 +61436,16 @@ function* ArrayProto_unshift(args, {
           _fromValue6 = _fromValue6.Value;
         }
         const fromValue = _fromValue6;
-        /* ReturnIfAbrupt */let _temp75 = yield* Set$1(obj, to, fromValue, true);
-        /* ReturnIfAbrupt */if (_temp75 instanceof Completion) {
-          if (_temp75 instanceof AbruptCompletion) return _temp75;
-          _temp75 = _temp75.Value;
+        /* ReturnIfAbrupt */let _temp80 = yield* Set$1(obj, to, fromValue, true);
+        /* ReturnIfAbrupt */if (_temp80 instanceof Completion) {
+          if (_temp80 instanceof AbruptCompletion) return _temp80;
+          _temp80 = _temp80.Value;
         }
       } else {
-        /* ReturnIfAbrupt */let _temp76 = yield* DeletePropertyOrThrow(obj, to);
-        /* ReturnIfAbrupt */if (_temp76 instanceof Completion) {
-          if (_temp76 instanceof AbruptCompletion) return _temp76;
-          _temp76 = _temp76.Value;
+        /* ReturnIfAbrupt */let _temp81 = yield* DeletePropertyOrThrow(obj, to);
+        /* ReturnIfAbrupt */if (_temp81 instanceof Completion) {
+          if (_temp81 instanceof AbruptCompletion) return _temp81;
+          _temp81 = _temp81.Value;
         }
       }
       k -= 1;
@@ -61456,18 +61463,18 @@ function* ArrayProto_unshift(args, {
         _jStr = _jStr.Value;
       }
       const jStr = _jStr;
-      /* ReturnIfAbrupt */let _temp77 = yield* Set$1(obj, jStr, E, true);
-      /* ReturnIfAbrupt */if (_temp77 instanceof Completion) {
-        if (_temp77 instanceof AbruptCompletion) return _temp77;
-        _temp77 = _temp77.Value;
+      /* ReturnIfAbrupt */let _temp82 = yield* Set$1(obj, jStr, E, true);
+      /* ReturnIfAbrupt */if (_temp82 instanceof Completion) {
+        if (_temp82 instanceof AbruptCompletion) return _temp82;
+        _temp82 = _temp82.Value;
       }
       j += 1;
     }
   }
-  /* ReturnIfAbrupt */let _temp78 = yield* Set$1(obj, 'length', F(length + argCount), true);
-  /* ReturnIfAbrupt */if (_temp78 instanceof Completion) {
-    if (_temp78 instanceof AbruptCompletion) return _temp78;
-    _temp78 = _temp78.Value;
+  /* ReturnIfAbrupt */let _temp83 = yield* Set$1(obj, 'length', F(length + argCount), true);
+  /* ReturnIfAbrupt */if (_temp83 instanceof Completion) {
+    if (_temp83 instanceof AbruptCompletion) return _temp83;
+    _temp83 = _temp83.Value;
   }
   return F(length + argCount);
 }
@@ -61533,20 +61540,20 @@ function* ArrayProto_with([index = Value.undefined, value = Value.undefined], {
     if (k === actualIndex) {
       fromValue = value;
     } else {
-      /* ReturnIfAbrupt */let _temp79 = yield* Get(obj, Pk);
-      /* ReturnIfAbrupt */if (_temp79 instanceof Completion) {
-        if (_temp79 instanceof AbruptCompletion) return _temp79;
-        _temp79 = _temp79.Value;
+      /* ReturnIfAbrupt */let _temp84 = yield* Get(obj, Pk);
+      /* ReturnIfAbrupt */if (_temp84 instanceof Completion) {
+        if (_temp84 instanceof AbruptCompletion) return _temp84;
+        _temp84 = _temp84.Value;
       }
-      fromValue = _temp79;
+      fromValue = _temp84;
     }
-    /* X */let _temp80 = CreateDataPropertyOrThrow(A, Pk, fromValue);
-    /* node:coverage ignore next */if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) _temp80 = skipDebugger(_temp80);
-    /* node:coverage ignore next */if (_temp80 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp80 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pk, fromValue) returned an abrupt completion", {
-        cause: _temp80
+    /* X */let _temp85 = CreateDataPropertyOrThrow(A, Pk, fromValue);
+    /* node:coverage ignore next */if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) _temp85 = skipDebugger(_temp85);
+    /* node:coverage ignore next */if (_temp85 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp85 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(A, Pk, fromValue) returned an abrupt completion", {
+        cause: _temp85
       });
-      _temp80 = _temp80.Value;
+      _temp85 = _temp85.Value;
     }
     k += 1;
   }
@@ -61564,321 +61571,321 @@ function bootstrapArrayPrototype(realmRec) {
   }
   const proto = _proto;
   assignProps(realmRec, proto, [['at', ArrayProto_at, 1], ['concat', ArrayProto_concat, 1], ['copyWithin', ArrayProto_copyWithin, 2], ['entries', ArrayProto_entries, 0], ['every', ArrayProto_every, 1], ['fill', ArrayProto_fill, 1], ['filter', ArrayProto_filter, 1], ['find', ArrayProto_find, 1], ['findIndex', ArrayProto_findIndex, 1], ['findLast', ArrayProto_findLast, 1], ['findLastIndex', ArrayProto_findLastIndex, 1], ['flat', ArrayProto_flat, 0], ['flatMap', ArrayProto_flatMap, 1], ['forEach', ArrayProto_forEach, 1], ['includes', ArrayProto_includes, 1], ['indexOf', ArrayProto_indexOf, 1], ['join', ArrayProto_join, 1], ['keys', ArrayProto_keys, 0], ['lastIndexOf', ArrayProto_lastIndexOf, 1], ['map', ArrayProto_map, 1], ['pop', ArrayProto_pop, 0], ['push', ArrayProto_push, 1], ['reduce', ArrayProto_reduce, 1], ['reduceRight', ArrayProto_reduceRight, 1], ['reverse', ArrayProto_reverse, 0], ['shift', ArrayProto_shift, 0], ['slice', ArrayProto_slice, 2], ['some', ArrayProto_some, 1], ['sort', ArrayProto_sort, 1], ['splice', ArrayProto_splice, 2], ['toLocaleString', ArrayProto_toLocaleString, 0], ['toReversed', ArrayProto_toReversed, 0], ['toSorted', ArrayProto_toSorted, 1], ['toSpliced', ArrayProto_toSpliced, 2], ['toString', ArrayProto_toString, 0], ['unshift', ArrayProto_unshift, 1], ['values', ArrayProto_values, 0], ['with', ArrayProto_with, 2]]);
-  /* X */let _temp116 = proto.GetOwnProperty(Value('values'));
-  /* node:coverage ignore next */if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) _temp116 = skipDebugger(_temp116);
-  /* node:coverage ignore next */if (_temp116 instanceof Completion) {
-    /* node:coverage ignore next */if (_temp116 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
-      cause: _temp116
+  /* X */let _temp121 = proto.GetOwnProperty(Value('values'));
+  /* node:coverage ignore next */if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) _temp121 = skipDebugger(_temp121);
+  /* node:coverage ignore next */if (_temp121 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp121 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
+      cause: _temp121
     });
-    _temp116 = _temp116.Value;
+    _temp121 = _temp121.Value;
   }
-  /* X */let _temp81 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _temp116);
-  /* node:coverage ignore next */if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) _temp81 = skipDebugger(_temp81);
-  /* node:coverage ignore next */if (_temp81 instanceof Completion) {
-    /* node:coverage ignore next */if (_temp81 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, X(proto.GetOwnProperty(Value('values'))) as Descriptor) returned an abrupt completion", {
-      cause: _temp81
+  /* X */let _temp86 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _temp121);
+  /* node:coverage ignore next */if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) _temp86 = skipDebugger(_temp86);
+  /* node:coverage ignore next */if (_temp86 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp86 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, X(proto.GetOwnProperty(Value('values'))) as Descriptor) returned an abrupt completion", {
+      cause: _temp86
     });
-    _temp81 = _temp81.Value;
+    _temp86 = _temp86.Value;
   }
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
-    /* X */let _temp82 = CreateDataProperty(unscopableList, 'at', Value.true);
-    /* node:coverage ignore next */if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) _temp82 = skipDebugger(_temp82);
-    /* node:coverage ignore next */if (_temp82 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp82 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'at', Value.true) returned an abrupt completion", {
-        cause: _temp82
-      });
-      _temp82 = _temp82.Value;
-    }
-    /* X */let _temp83 = CreateDataProperty(unscopableList, 'at', Value.true);
-    /* node:coverage ignore next */if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) _temp83 = skipDebugger(_temp83);
-    /* node:coverage ignore next */if (_temp83 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp83 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'at', Value.true) returned an abrupt completion", {
-        cause: _temp83
-      });
-      _temp83 = _temp83.Value;
-    }
-    /* Assert */ /* node:coverage ignore next */if (!_temp83) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'at', Value.true))");
-    /* X */let _temp84 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
-    /* node:coverage ignore next */if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) _temp84 = skipDebugger(_temp84);
-    /* node:coverage ignore next */if (_temp84 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp84 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
-        cause: _temp84
-      });
-      _temp84 = _temp84.Value;
-    }
-    /* X */let _temp85 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
-    /* node:coverage ignore next */if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) _temp85 = skipDebugger(_temp85);
-    /* node:coverage ignore next */if (_temp85 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp85 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
-        cause: _temp85
-      });
-      _temp85 = _temp85.Value;
-    }
-    /* Assert */ /* node:coverage ignore next */if (!_temp85) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'copyWithin', Value.true))");
-    /* X */let _temp86 = CreateDataProperty(unscopableList, 'entries', Value.true);
-    /* node:coverage ignore next */if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) _temp86 = skipDebugger(_temp86);
-    /* node:coverage ignore next */if (_temp86 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp86 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
-        cause: _temp86
-      });
-      _temp86 = _temp86.Value;
-    }
-    /* X */let _temp87 = CreateDataProperty(unscopableList, 'entries', Value.true);
+    /* X */let _temp87 = CreateDataProperty(unscopableList, 'at', Value.true);
     /* node:coverage ignore next */if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) _temp87 = skipDebugger(_temp87);
     /* node:coverage ignore next */if (_temp87 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp87 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp87 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'at', Value.true) returned an abrupt completion", {
         cause: _temp87
       });
       _temp87 = _temp87.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp87) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'entries', Value.true))");
-    /* X */let _temp88 = CreateDataProperty(unscopableList, 'fill', Value.true);
+    /* X */let _temp88 = CreateDataProperty(unscopableList, 'at', Value.true);
     /* node:coverage ignore next */if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) _temp88 = skipDebugger(_temp88);
     /* node:coverage ignore next */if (_temp88 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp88 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp88 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'at', Value.true) returned an abrupt completion", {
         cause: _temp88
       });
       _temp88 = _temp88.Value;
     }
-    /* X */let _temp89 = CreateDataProperty(unscopableList, 'fill', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp88) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'at', Value.true))");
+    /* X */let _temp89 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
     /* node:coverage ignore next */if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) _temp89 = skipDebugger(_temp89);
     /* node:coverage ignore next */if (_temp89 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp89 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp89 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
         cause: _temp89
       });
       _temp89 = _temp89.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp89) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'fill', Value.true))");
-    /* X */let _temp90 = CreateDataProperty(unscopableList, 'find', Value.true);
+    /* X */let _temp90 = CreateDataProperty(unscopableList, 'copyWithin', Value.true);
     /* node:coverage ignore next */if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) _temp90 = skipDebugger(_temp90);
     /* node:coverage ignore next */if (_temp90 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp90 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp90 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'copyWithin', Value.true) returned an abrupt completion", {
         cause: _temp90
       });
       _temp90 = _temp90.Value;
     }
-    /* X */let _temp91 = CreateDataProperty(unscopableList, 'find', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp90) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'copyWithin', Value.true))");
+    /* X */let _temp91 = CreateDataProperty(unscopableList, 'entries', Value.true);
     /* node:coverage ignore next */if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) _temp91 = skipDebugger(_temp91);
     /* node:coverage ignore next */if (_temp91 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp91 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp91 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
         cause: _temp91
       });
       _temp91 = _temp91.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp91) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'find', Value.true))");
-    /* X */let _temp92 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
+    /* X */let _temp92 = CreateDataProperty(unscopableList, 'entries', Value.true);
     /* node:coverage ignore next */if (_temp92 && typeof _temp92 === 'object' && 'next' in _temp92) _temp92 = skipDebugger(_temp92);
     /* node:coverage ignore next */if (_temp92 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp92 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp92 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'entries', Value.true) returned an abrupt completion", {
         cause: _temp92
       });
       _temp92 = _temp92.Value;
     }
-    /* X */let _temp93 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp92) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'entries', Value.true))");
+    /* X */let _temp93 = CreateDataProperty(unscopableList, 'fill', Value.true);
     /* node:coverage ignore next */if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) _temp93 = skipDebugger(_temp93);
     /* node:coverage ignore next */if (_temp93 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp93 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp93 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
         cause: _temp93
       });
       _temp93 = _temp93.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp93) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findIndex', Value.true))");
-    /* X */let _temp94 = CreateDataProperty(unscopableList, 'findLast', Value.true);
+    /* X */let _temp94 = CreateDataProperty(unscopableList, 'fill', Value.true);
     /* node:coverage ignore next */if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) _temp94 = skipDebugger(_temp94);
     /* node:coverage ignore next */if (_temp94 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp94 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp94 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'fill', Value.true) returned an abrupt completion", {
         cause: _temp94
       });
       _temp94 = _temp94.Value;
     }
-    /* X */let _temp95 = CreateDataProperty(unscopableList, 'findLast', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp94) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'fill', Value.true))");
+    /* X */let _temp95 = CreateDataProperty(unscopableList, 'find', Value.true);
     /* node:coverage ignore next */if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) _temp95 = skipDebugger(_temp95);
     /* node:coverage ignore next */if (_temp95 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp95 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp95 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
         cause: _temp95
       });
       _temp95 = _temp95.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp95) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLast', Value.true))");
-    /* X */let _temp96 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
+    /* X */let _temp96 = CreateDataProperty(unscopableList, 'find', Value.true);
     /* node:coverage ignore next */if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) _temp96 = skipDebugger(_temp96);
     /* node:coverage ignore next */if (_temp96 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp96 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp96 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'find', Value.true) returned an abrupt completion", {
         cause: _temp96
       });
       _temp96 = _temp96.Value;
     }
-    /* X */let _temp97 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp96) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'find', Value.true))");
+    /* X */let _temp97 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
     /* node:coverage ignore next */if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) _temp97 = skipDebugger(_temp97);
     /* node:coverage ignore next */if (_temp97 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp97 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp97 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
         cause: _temp97
       });
       _temp97 = _temp97.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp97) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLastIndex', Value.true))");
-    /* X */let _temp98 = CreateDataProperty(unscopableList, 'flat', Value.true);
+    /* X */let _temp98 = CreateDataProperty(unscopableList, 'findIndex', Value.true);
     /* node:coverage ignore next */if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) _temp98 = skipDebugger(_temp98);
     /* node:coverage ignore next */if (_temp98 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp98 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp98 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findIndex', Value.true) returned an abrupt completion", {
         cause: _temp98
       });
       _temp98 = _temp98.Value;
     }
-    /* X */let _temp99 = CreateDataProperty(unscopableList, 'flat', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp98) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findIndex', Value.true))");
+    /* X */let _temp99 = CreateDataProperty(unscopableList, 'findLast', Value.true);
     /* node:coverage ignore next */if (_temp99 && typeof _temp99 === 'object' && 'next' in _temp99) _temp99 = skipDebugger(_temp99);
     /* node:coverage ignore next */if (_temp99 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp99 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp99 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
         cause: _temp99
       });
       _temp99 = _temp99.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp99) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flat', Value.true))");
-    /* X */let _temp100 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
+    /* X */let _temp100 = CreateDataProperty(unscopableList, 'findLast', Value.true);
     /* node:coverage ignore next */if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) _temp100 = skipDebugger(_temp100);
     /* node:coverage ignore next */if (_temp100 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp100 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp100 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLast', Value.true) returned an abrupt completion", {
         cause: _temp100
       });
       _temp100 = _temp100.Value;
     }
-    /* X */let _temp101 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp100) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLast', Value.true))");
+    /* X */let _temp101 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
     /* node:coverage ignore next */if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) _temp101 = skipDebugger(_temp101);
     /* node:coverage ignore next */if (_temp101 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp101 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp101 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
         cause: _temp101
       });
       _temp101 = _temp101.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp101) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flatMap', Value.true))");
-    /* X */let _temp102 = CreateDataProperty(unscopableList, 'includes', Value.true);
+    /* X */let _temp102 = CreateDataProperty(unscopableList, 'findLastIndex', Value.true);
     /* node:coverage ignore next */if (_temp102 && typeof _temp102 === 'object' && 'next' in _temp102) _temp102 = skipDebugger(_temp102);
     /* node:coverage ignore next */if (_temp102 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp102 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp102 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'findLastIndex', Value.true) returned an abrupt completion", {
         cause: _temp102
       });
       _temp102 = _temp102.Value;
     }
-    /* X */let _temp103 = CreateDataProperty(unscopableList, 'includes', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp102) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'findLastIndex', Value.true))");
+    /* X */let _temp103 = CreateDataProperty(unscopableList, 'flat', Value.true);
     /* node:coverage ignore next */if (_temp103 && typeof _temp103 === 'object' && 'next' in _temp103) _temp103 = skipDebugger(_temp103);
     /* node:coverage ignore next */if (_temp103 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp103 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp103 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
         cause: _temp103
       });
       _temp103 = _temp103.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp103) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'includes', Value.true))");
-    /* X */let _temp104 = CreateDataProperty(unscopableList, 'keys', Value.true);
+    /* X */let _temp104 = CreateDataProperty(unscopableList, 'flat', Value.true);
     /* node:coverage ignore next */if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) _temp104 = skipDebugger(_temp104);
     /* node:coverage ignore next */if (_temp104 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp104 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp104 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flat', Value.true) returned an abrupt completion", {
         cause: _temp104
       });
       _temp104 = _temp104.Value;
     }
-    /* X */let _temp105 = CreateDataProperty(unscopableList, 'keys', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp104) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flat', Value.true))");
+    /* X */let _temp105 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
     /* node:coverage ignore next */if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) _temp105 = skipDebugger(_temp105);
     /* node:coverage ignore next */if (_temp105 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp105 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp105 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
         cause: _temp105
       });
       _temp105 = _temp105.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp105) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'keys', Value.true))");
-    /* X */let _temp106 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
+    /* X */let _temp106 = CreateDataProperty(unscopableList, 'flatMap', Value.true);
     /* node:coverage ignore next */if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) _temp106 = skipDebugger(_temp106);
     /* node:coverage ignore next */if (_temp106 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp106 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp106 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'flatMap', Value.true) returned an abrupt completion", {
         cause: _temp106
       });
       _temp106 = _temp106.Value;
     }
-    /* X */let _temp107 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp106) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'flatMap', Value.true))");
+    /* X */let _temp107 = CreateDataProperty(unscopableList, 'includes', Value.true);
     /* node:coverage ignore next */if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) _temp107 = skipDebugger(_temp107);
     /* node:coverage ignore next */if (_temp107 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp107 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp107 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
         cause: _temp107
       });
       _temp107 = _temp107.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp107) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toReversed', Value.true))");
-    /* X */let _temp108 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
+    /* X */let _temp108 = CreateDataProperty(unscopableList, 'includes', Value.true);
     /* node:coverage ignore next */if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) _temp108 = skipDebugger(_temp108);
     /* node:coverage ignore next */if (_temp108 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp108 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp108 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'includes', Value.true) returned an abrupt completion", {
         cause: _temp108
       });
       _temp108 = _temp108.Value;
     }
-    /* X */let _temp109 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp108) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'includes', Value.true))");
+    /* X */let _temp109 = CreateDataProperty(unscopableList, 'keys', Value.true);
     /* node:coverage ignore next */if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) _temp109 = skipDebugger(_temp109);
     /* node:coverage ignore next */if (_temp109 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp109 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp109 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
         cause: _temp109
       });
       _temp109 = _temp109.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp109) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSorted', Value.true))");
-    /* X */let _temp110 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+    /* X */let _temp110 = CreateDataProperty(unscopableList, 'keys', Value.true);
     /* node:coverage ignore next */if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) _temp110 = skipDebugger(_temp110);
     /* node:coverage ignore next */if (_temp110 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp110 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp110 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'keys', Value.true) returned an abrupt completion", {
         cause: _temp110
       });
       _temp110 = _temp110.Value;
     }
-    /* X */let _temp111 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp110) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'keys', Value.true))");
+    /* X */let _temp111 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
     /* node:coverage ignore next */if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) _temp111 = skipDebugger(_temp111);
     /* node:coverage ignore next */if (_temp111 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp111 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp111 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
         cause: _temp111
       });
       _temp111 = _temp111.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp111) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSpliced', Value.true))");
-    /* X */let _temp112 = CreateDataProperty(unscopableList, 'values', Value.true);
+    /* X */let _temp112 = CreateDataProperty(unscopableList, 'toReversed', Value.true);
     /* node:coverage ignore next */if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) _temp112 = skipDebugger(_temp112);
     /* node:coverage ignore next */if (_temp112 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp112 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp112 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toReversed', Value.true) returned an abrupt completion", {
         cause: _temp112
       });
       _temp112 = _temp112.Value;
     }
-    /* X */let _temp113 = CreateDataProperty(unscopableList, 'values', Value.true);
+    /* Assert */ /* node:coverage ignore next */if (!_temp112) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toReversed', Value.true))");
+    /* X */let _temp113 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
     /* node:coverage ignore next */if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) _temp113 = skipDebugger(_temp113);
     /* node:coverage ignore next */if (_temp113 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp113 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp113 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
         cause: _temp113
       });
       _temp113 = _temp113.Value;
     }
-    /* Assert */ /* node:coverage ignore next */if (!_temp113) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'values', Value.true))");
-    /* X */let _temp114 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, _Descriptor({
+    /* X */let _temp114 = CreateDataProperty(unscopableList, 'toSorted', Value.true);
+    /* node:coverage ignore next */if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) _temp114 = skipDebugger(_temp114);
+    /* node:coverage ignore next */if (_temp114 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp114 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSorted', Value.true) returned an abrupt completion", {
+        cause: _temp114
+      });
+      _temp114 = _temp114.Value;
+    }
+    /* Assert */ /* node:coverage ignore next */if (!_temp114) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSorted', Value.true))");
+    /* X */let _temp115 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+    /* node:coverage ignore next */if (_temp115 && typeof _temp115 === 'object' && 'next' in _temp115) _temp115 = skipDebugger(_temp115);
+    /* node:coverage ignore next */if (_temp115 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp115 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+        cause: _temp115
+      });
+      _temp115 = _temp115.Value;
+    }
+    /* X */let _temp116 = CreateDataProperty(unscopableList, 'toSpliced', Value.true);
+    /* node:coverage ignore next */if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) _temp116 = skipDebugger(_temp116);
+    /* node:coverage ignore next */if (_temp116 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp116 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'toSpliced', Value.true) returned an abrupt completion", {
+        cause: _temp116
+      });
+      _temp116 = _temp116.Value;
+    }
+    /* Assert */ /* node:coverage ignore next */if (!_temp116) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'toSpliced', Value.true))");
+    /* X */let _temp117 = CreateDataProperty(unscopableList, 'values', Value.true);
+    /* node:coverage ignore next */if (_temp117 && typeof _temp117 === 'object' && 'next' in _temp117) _temp117 = skipDebugger(_temp117);
+    /* node:coverage ignore next */if (_temp117 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp117 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+        cause: _temp117
+      });
+      _temp117 = _temp117.Value;
+    }
+    /* X */let _temp118 = CreateDataProperty(unscopableList, 'values', Value.true);
+    /* node:coverage ignore next */if (_temp118 && typeof _temp118 === 'object' && 'next' in _temp118) _temp118 = skipDebugger(_temp118);
+    /* node:coverage ignore next */if (_temp118 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp118 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, 'values', Value.true) returned an abrupt completion", {
+        cause: _temp118
+      });
+      _temp118 = _temp118.Value;
+    }
+    /* Assert */ /* node:coverage ignore next */if (!_temp118) throw new Assert.Error("X(CreateDataProperty(unscopableList, 'values', Value.true))");
+    /* X */let _temp119 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, _Descriptor({
       Value: unscopableList,
       Writable: false,
       Enumerable: false,
       Configurable: true
     }));
-    /* node:coverage ignore next */if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) _temp114 = skipDebugger(_temp114);
-    /* node:coverage ignore next */if (_temp114 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp114 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: false,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
-        cause: _temp114
+    /* node:coverage ignore next */if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) _temp119 = skipDebugger(_temp119);
+    /* node:coverage ignore next */if (_temp119 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp119 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: false,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
+        cause: _temp119
       });
-      _temp114 = _temp114.Value;
+      _temp119 = _temp119.Value;
     }
   }
 
   // Used in `arguments` objects.
-  /* X */let _temp115 = Get(proto, 'values');
-  /* node:coverage ignore next */if (_temp115 && typeof _temp115 === 'object' && 'next' in _temp115) _temp115 = skipDebugger(_temp115);
-  /* node:coverage ignore next */if (_temp115 instanceof Completion) {
-    /* node:coverage ignore next */if (_temp115 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'values') returned an abrupt completion", {
-      cause: _temp115
+  /* X */let _temp120 = Get(proto, 'values');
+  /* node:coverage ignore next */if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) _temp120 = skipDebugger(_temp120);
+  /* node:coverage ignore next */if (_temp120 instanceof Completion) {
+    /* node:coverage ignore next */if (_temp120 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, 'values') returned an abrupt completion", {
+      cause: _temp120
     });
-    _temp115 = _temp115.Value;
+    _temp120 = _temp120.Value;
   }
-  realmRec.Intrinsics['%Array.prototype.values%'] = _temp115;
+  realmRec.Intrinsics['%Array.prototype.values%'] = _temp120;
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }
 
@@ -76047,34 +76054,22 @@ function* TypedArrayProto_join([separator = Value.undefined], {
   const taRecord = _taRecord11;
   const length = TypedArrayLength(taRecord);
   let separatorString;
-  if (separator === Value.undefined) separatorString = ',';else {
-    /* ReturnIfAbrupt */let _temp13 = yield* ToString(separator);
-    /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
-      if (_temp13 instanceof AbruptCompletion) return _temp13;
-      _temp13 = _temp13.Value;
+  if (separator === Value.undefined) {
+    separatorString = ',';
+  } else {
+    /* ReturnIfAbrupt */let _temp14 = yield* ToString(separator);
+    /* ReturnIfAbrupt */if (_temp14 instanceof Completion) {
+      if (_temp14 instanceof AbruptCompletion) return _temp14;
+      _temp14 = _temp14.Value;
     }
-    separatorString = _temp13;
+    separatorString = _temp14;
   }
-  let result = '';
-  let k = 0;
-  while (k < length) {
-    if (k > 0) result = `${result}${separatorString}`;
-    const element = TypedArrayGetElement(obj, F(k));
-    if (element !== Value.undefined) {
-      /* X */let _elementString = ToString(element);
-      /* node:coverage ignore next */if (_elementString && typeof _elementString === 'object' && 'next' in _elementString) _elementString = skipDebugger(_elementString);
-      /* node:coverage ignore next */if (_elementString instanceof Completion) {
-        /* node:coverage ignore next */if (_elementString instanceof AbruptCompletion) throw new Assert.Error("! ToString(element) returned an abrupt completion", {
-          cause: _elementString
-        });
-        _elementString = _elementString.Value;
-      }
-      const elementString = _elementString;
-      result += elementString;
-    }
-    k += 1;
+  /* ReturnIfAbrupt */let _temp13 = yield* JoinIndexedProperties(obj, BigInt(length), separatorString);
+  /* ReturnIfAbrupt */if (_temp13 instanceof Completion) {
+    if (_temp13 instanceof AbruptCompletion) return _temp13;
+    _temp13 = _temp13.Value;
   }
-  return Value(result);
+  return Value(_temp13);
 }
 TypedArrayProto_join.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.join';
 
@@ -76083,10 +76078,10 @@ function TypedArrayProto_keys(_args, {
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _temp14 = ValidateTypedArray(obj);
-  /* ReturnIfAbrupt */if (_temp14 instanceof Completion) {
-    if (_temp14 instanceof AbruptCompletion) return _temp14;
-    _temp14 = _temp14.Value;
+  /* ReturnIfAbrupt */let _temp15 = ValidateTypedArray(obj);
+  /* ReturnIfAbrupt */if (_temp15 instanceof Completion) {
+    if (_temp15 instanceof AbruptCompletion) return _temp15;
+    _temp15 = _temp15.Value;
   }
   return CreateArrayIterator(obj, 'key');
 }
@@ -76109,12 +76104,12 @@ function* TypedArrayProto_lastIndexOf([searchElement = Value.undefined, fromInde
   if (fromIndex === undefined) {
     k = length - 1;
   } else {
-    /* ReturnIfAbrupt */let _temp15 = yield* ToAbsoluteIndex(fromIndex, length);
-    /* ReturnIfAbrupt */if (_temp15 instanceof Completion) {
-      if (_temp15 instanceof AbruptCompletion) return _temp15;
-      _temp15 = _temp15.Value;
+    /* ReturnIfAbrupt */let _temp16 = yield* ToAbsoluteIndex(fromIndex, length);
+    /* ReturnIfAbrupt */if (_temp16 instanceof Completion) {
+      if (_temp16 instanceof AbruptCompletion) return _temp16;
+      _temp16 = _temp16.Value;
     }
-    k = Math.min(_temp15, length - 1);
+    k = Math.min(_temp16, length - 1);
   }
   while (k >= 0) {
     /* X */let _propertyKey2 = ToString(F(k));
@@ -76147,10 +76142,10 @@ function TypedArrayProto_length(_args, {
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _temp16 = RequireInternalSlot(obj, 'TypedArrayName');
-  /* ReturnIfAbrupt */if (_temp16 instanceof Completion) {
-    if (_temp16 instanceof AbruptCompletion) return _temp16;
-    _temp16 = _temp16.Value;
+  /* ReturnIfAbrupt */let _temp17 = RequireInternalSlot(obj, 'TypedArrayName');
+  /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
+    if (_temp17 instanceof AbruptCompletion) return _temp17;
+    _temp17 = _temp17.Value;
   }
   /* Assert */ /* node:coverage ignore next */if (!('ViewedArrayBuffer' in obj)) throw new Assert.Error("'ViewedArrayBuffer' in obj");
   const taRecord = MakeTypedArrayWithBufferWitnessRecord(obj);
@@ -76192,10 +76187,10 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
       _mappedValue = _mappedValue.Value;
     }
     const mappedValue = _mappedValue;
-    /* ReturnIfAbrupt */let _temp17 = yield* TypedArraySetElement(result, F(k), mappedValue);
-    /* ReturnIfAbrupt */if (_temp17 instanceof Completion) {
-      if (_temp17 instanceof AbruptCompletion) return _temp17;
-      _temp17 = _temp17.Value;
+    /* ReturnIfAbrupt */let _temp18 = yield* TypedArraySetElement(result, F(k), mappedValue);
+    /* ReturnIfAbrupt */if (_temp18 instanceof Completion) {
+      if (_temp18 instanceof AbruptCompletion) return _temp18;
+      _temp18 = _temp18.Value;
     }
     k += 1;
   }
@@ -76227,12 +76222,12 @@ function* TypedArrayProto_reduce([callbackfn = Value.undefined, initialValue], {
   }
   while (k < length) {
     const kValue = TypedArrayGetElement(obj, F(k));
-    /* ReturnIfAbrupt */let _temp18 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
-    /* ReturnIfAbrupt */if (_temp18 instanceof Completion) {
-      if (_temp18 instanceof AbruptCompletion) return _temp18;
-      _temp18 = _temp18.Value;
+    /* ReturnIfAbrupt */let _temp19 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
+    /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
+      if (_temp19 instanceof AbruptCompletion) return _temp19;
+      _temp19 = _temp19.Value;
     }
-    accumulator = _temp18;
+    accumulator = _temp19;
     k += 1;
   }
   return accumulator;
@@ -76263,12 +76258,12 @@ function* TypedArrayProto_reduceRight([callbackfn = Value.undefined, initialValu
   }
   while (k >= 0) {
     const kValue = TypedArrayGetElement(obj, F(k));
-    /* ReturnIfAbrupt */let _temp19 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
-    /* ReturnIfAbrupt */if (_temp19 instanceof Completion) {
-      if (_temp19 instanceof AbruptCompletion) return _temp19;
-      _temp19 = _temp19.Value;
+    /* ReturnIfAbrupt */let _temp20 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), obj]);
+    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
+      if (_temp20 instanceof AbruptCompletion) return _temp20;
+      _temp20 = _temp20.Value;
     }
-    accumulator = _temp19;
+    accumulator = _temp20;
     k -= 1;
   }
   return accumulator;
@@ -76315,12 +76310,12 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
   let srcByteIndex;
   if (SameValue(srcBuffer, targetBuffer) || sameSharedArrayBuffer) {
     const srcByteLength = TypedArrayByteLength(srcRecord);
-    /* ReturnIfAbrupt */let _temp20 = yield* CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength);
-    /* ReturnIfAbrupt */if (_temp20 instanceof Completion) {
-      if (_temp20 instanceof AbruptCompletion) return _temp20;
-      _temp20 = _temp20.Value;
+    /* ReturnIfAbrupt */let _temp21 = yield* CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength);
+    /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
+      if (_temp21 instanceof AbruptCompletion) return _temp21;
+      _temp21 = _temp21.Value;
     }
-    srcBuffer = _temp20;
+    srcBuffer = _temp21;
     srcByteIndex = 0;
   } else {
     srcByteIndex = srcByteOffset;
@@ -76330,10 +76325,10 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
   if (srcType === targetType) {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8');
-      /* ReturnIfAbrupt */let _temp21 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
-      /* ReturnIfAbrupt */if (_temp21 instanceof Completion) {
-        if (_temp21 instanceof AbruptCompletion) return _temp21;
-        _temp21 = _temp21.Value;
+      /* ReturnIfAbrupt */let _temp22 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
+      /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
+        if (_temp22 instanceof AbruptCompletion) return _temp22;
+        _temp22 = _temp22.Value;
       }
       srcByteIndex += 1;
       targetByteIndex += 1;
@@ -76341,10 +76336,10 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
   } else {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType);
-      /* ReturnIfAbrupt */let _temp22 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value);
-      /* ReturnIfAbrupt */if (_temp22 instanceof Completion) {
-        if (_temp22 instanceof AbruptCompletion) return _temp22;
-        _temp22 = _temp22.Value;
+      /* ReturnIfAbrupt */let _temp23 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value);
+      /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
+        if (_temp23 instanceof AbruptCompletion) return _temp23;
+        _temp23 = _temp23.Value;
       }
       srcByteIndex += srcElementSize;
       targetByteIndex += targetElementSize;
@@ -76399,10 +76394,10 @@ function* SetTypedArrayFromArrayLike(target, targetOffset, source) {
     }
     const value = _value;
     const targetIndex = F(targetOffset + k);
-    /* ReturnIfAbrupt */let _temp23 = yield* TypedArraySetElement(target, targetIndex, value);
-    /* ReturnIfAbrupt */if (_temp23 instanceof Completion) {
-      if (_temp23 instanceof AbruptCompletion) return _temp23;
-      _temp23 = _temp23.Value;
+    /* ReturnIfAbrupt */let _temp24 = yield* TypedArraySetElement(target, targetIndex, value);
+    /* ReturnIfAbrupt */if (_temp24 instanceof Completion) {
+      if (_temp24 instanceof AbruptCompletion) return _temp24;
+      _temp24 = _temp24.Value;
     }
     k += 1;
   }
@@ -76428,21 +76423,21 @@ function* TypedArrayProto_reverse(_args, {
     const upper = length - lower - 1;
     const lowerValue = TypedArrayGetElement(obj, F(lower));
     const upperValue = TypedArrayGetElement(obj, F(upper));
-    /* X */let _temp24 = TypedArraySetElement(obj, F(lower), upperValue);
-    /* node:coverage ignore next */if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
-    /* node:coverage ignore next */if (_temp24 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(obj, F(lower), upperValue) returned an abrupt completion", {
-        cause: _temp24
-      });
-      _temp24 = _temp24.Value;
-    }
-    /* X */let _temp25 = TypedArraySetElement(obj, F(upper), lowerValue);
+    /* X */let _temp25 = TypedArraySetElement(obj, F(lower), upperValue);
     /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
     /* node:coverage ignore next */if (_temp25 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(obj, F(upper), lowerValue) returned an abrupt completion", {
+      /* node:coverage ignore next */if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(obj, F(lower), upperValue) returned an abrupt completion", {
         cause: _temp25
       });
       _temp25 = _temp25.Value;
+    }
+    /* X */let _temp26 = TypedArraySetElement(obj, F(upper), lowerValue);
+    /* node:coverage ignore next */if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
+    /* node:coverage ignore next */if (_temp26 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(obj, F(upper), lowerValue) returned an abrupt completion", {
+        cause: _temp26
+      });
+      _temp26 = _temp26.Value;
     }
     lower += 1;
   }
@@ -76457,10 +76452,10 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   // 1. Let target be the this value.
   const target = thisValue;
   // 2. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
-  /* ReturnIfAbrupt */let _temp26 = RequireInternalSlot(target, 'TypedArrayName');
-  /* ReturnIfAbrupt */if (_temp26 instanceof Completion) {
-    if (_temp26 instanceof AbruptCompletion) return _temp26;
-    _temp26 = _temp26.Value;
+  /* ReturnIfAbrupt */let _temp27 = RequireInternalSlot(target, 'TypedArrayName');
+  /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
+    if (_temp27 instanceof AbruptCompletion) return _temp27;
+    _temp27 = _temp27.Value;
   }
   /* Assert */ /* node:coverage ignore next */ // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
   if (!('ViewedArrayBuffer' in target)) throw new Assert.Error("'ViewedArrayBuffer' in target");
@@ -76477,16 +76472,16 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   }
   // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
   if (source instanceof ObjectValue && 'TypedArrayName' in source) {
-    /* ReturnIfAbrupt */let _temp27 = yield* SetTypedArrayFromTypedArray(target, targetOffset, source);
-    /* ReturnIfAbrupt */if (_temp27 instanceof Completion) {
-      if (_temp27 instanceof AbruptCompletion) return _temp27;
-      _temp27 = _temp27.Value;
-    } // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
-  } else {
-    /* ReturnIfAbrupt */let _temp28 = yield* SetTypedArrayFromArrayLike(target, targetOffset, source);
+    /* ReturnIfAbrupt */let _temp28 = yield* SetTypedArrayFromTypedArray(target, targetOffset, source);
     /* ReturnIfAbrupt */if (_temp28 instanceof Completion) {
       if (_temp28 instanceof AbruptCompletion) return _temp28;
       _temp28 = _temp28.Value;
+    } // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
+  } else {
+    /* ReturnIfAbrupt */let _temp29 = yield* SetTypedArrayFromArrayLike(target, targetOffset, source);
+    /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
+      if (_temp29 instanceof AbruptCompletion) return _temp29;
+      _temp29 = _temp29.Value;
     } // 7. Else,
     // a. Perform ? SetTypedArrayFromArrayLike(target, targetOffset, source).
   }
@@ -76517,12 +76512,12 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   if (end === Value.undefined) {
     endIndex = sourceArrayLength;
   } else {
-    /* ReturnIfAbrupt */let _temp32 = yield* ToClampedIndex(end, sourceArrayLength);
-    /* ReturnIfAbrupt */if (_temp32 instanceof Completion) {
-      if (_temp32 instanceof AbruptCompletion) return _temp32;
-      _temp32 = _temp32.Value;
+    /* ReturnIfAbrupt */let _temp33 = yield* ToClampedIndex(end, sourceArrayLength);
+    /* ReturnIfAbrupt */if (_temp33 instanceof Completion) {
+      if (_temp33 instanceof AbruptCompletion) return _temp33;
+      _temp33 = _temp33.Value;
     }
-    endIndex = _temp32;
+    endIndex = _temp33;
   }
   let countBytes = Math.max(endIndex - startIndex, 0);
   /* ReturnIfAbrupt */let _resultArray = yield* TypedArraySpeciesCreate(obj, [F(countBytes)]);
@@ -76532,12 +76527,12 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   }
   const resultArray = _resultArray;
   if (countBytes > 0) {
-    /* ReturnIfAbrupt */let _temp29 = ValidateTypedArrayBounds(obj);
-    /* ReturnIfAbrupt */if (_temp29 instanceof Completion) {
-      if (_temp29 instanceof AbruptCompletion) return _temp29;
-      _temp29 = _temp29.Value;
+    /* ReturnIfAbrupt */let _temp30 = ValidateTypedArrayBounds(obj);
+    /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
+      if (_temp30 instanceof AbruptCompletion) return _temp30;
+      _temp30 = _temp30.Value;
     }
-    taRecord = _temp29;
+    taRecord = _temp30;
     endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
     countBytes = Math.max(endIndex - startIndex, 0);
     const srcType = TypedArrayElementType(obj);
@@ -76552,10 +76547,10 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
       const endByteIndex = targetByteIndex + countBytes * elementSize;
       while (targetByteIndex < endByteIndex) {
         const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8');
-        /* ReturnIfAbrupt */let _temp30 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
-        /* ReturnIfAbrupt */if (_temp30 instanceof Completion) {
-          if (_temp30 instanceof AbruptCompletion) return _temp30;
-          _temp30 = _temp30.Value;
+        /* ReturnIfAbrupt */let _temp31 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
+        /* ReturnIfAbrupt */if (_temp31 instanceof Completion) {
+          if (_temp31 instanceof AbruptCompletion) return _temp31;
+          _temp31 = _temp31.Value;
         }
         srcByteIndex += 1;
         targetByteIndex += 1;
@@ -76573,13 +76568,13 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
           _kValue = _kValue.Value;
         }
         const kValue = _kValue;
-        /* X */let _temp31 = TypedArraySetElement(resultArray, F(n), kValue);
-        /* node:coverage ignore next */if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) _temp31 = skipDebugger(_temp31);
-        /* node:coverage ignore next */if (_temp31 instanceof Completion) {
-          /* node:coverage ignore next */if (_temp31 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(n), kValue) returned an abrupt completion", {
-            cause: _temp31
+        /* X */let _temp32 = TypedArraySetElement(resultArray, F(n), kValue);
+        /* node:coverage ignore next */if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) _temp32 = skipDebugger(_temp32);
+        /* node:coverage ignore next */if (_temp32 instanceof Completion) {
+          /* node:coverage ignore next */if (_temp32 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(n), kValue) returned an abrupt completion", {
+            cause: _temp32
           });
-          _temp31 = _temp31.Value;
+          _temp32 = _temp32.Value;
         }
         k += 1;
         n += 1;
@@ -76647,13 +76642,13 @@ function* TypedArrayProto_sort([comparator = Value.undefined], {
   const sortedList = _sortedList;
   let j = 0;
   while (j < len) {
-    /* X */let _temp33 = TypedArraySetElement(obj, F(j), sortedList[j]);
-    /* node:coverage ignore next */if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) _temp33 = skipDebugger(_temp33);
-    /* node:coverage ignore next */if (_temp33 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp33 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(obj, F(j), sortedList[j]) returned an abrupt completion", {
-        cause: _temp33
+    /* X */let _temp34 = TypedArraySetElement(obj, F(j), sortedList[j]);
+    /* node:coverage ignore next */if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) _temp34 = skipDebugger(_temp34);
+    /* node:coverage ignore next */if (_temp34 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp34 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(obj, F(j), sortedList[j]) returned an abrupt completion", {
+        cause: _temp34
       });
-      _temp33 = _temp33.Value;
+      _temp34 = _temp34.Value;
     }
     j += 1;
   }
@@ -76666,10 +76661,10 @@ function* TypedArrayProto_subarray([start = Value.undefined, end = Value.undefin
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _temp34 = RequireInternalSlot(obj, 'TypedArrayName');
-  /* ReturnIfAbrupt */if (_temp34 instanceof Completion) {
-    if (_temp34 instanceof AbruptCompletion) return _temp34;
-    _temp34 = _temp34.Value;
+  /* ReturnIfAbrupt */let _temp35 = RequireInternalSlot(obj, 'TypedArrayName');
+  /* ReturnIfAbrupt */if (_temp35 instanceof Completion) {
+    if (_temp35 instanceof AbruptCompletion) return _temp35;
+    _temp35 = _temp35.Value;
   }
   /* Assert */ /* node:coverage ignore next */if (!('ViewedArrayBuffer' in obj)) throw new Assert.Error("'ViewedArrayBuffer' in obj");
   const buffer = obj.ViewedArrayBuffer;
@@ -76696,12 +76691,12 @@ function* TypedArrayProto_subarray([start = Value.undefined, end = Value.undefin
   if (end === Value.undefined) {
     endIndex = sourceLength;
   } else {
-    /* ReturnIfAbrupt */let _temp35 = yield* ToClampedIndex(end, sourceLength);
-    /* ReturnIfAbrupt */if (_temp35 instanceof Completion) {
-      if (_temp35 instanceof AbruptCompletion) return _temp35;
-      _temp35 = _temp35.Value;
+    /* ReturnIfAbrupt */let _temp36 = yield* ToClampedIndex(end, sourceLength);
+    /* ReturnIfAbrupt */if (_temp36 instanceof Completion) {
+      if (_temp36 instanceof AbruptCompletion) return _temp36;
+      _temp36 = _temp36.Value;
     }
-    endIndex = _temp35;
+    endIndex = _temp36;
   }
   const newLength = Math.max(endIndex - startIndex, 0);
   return yield* TypedArraySpeciesCreate(obj, [buffer, F(beginByteOffset), F(newLength)]);
@@ -76720,29 +76715,12 @@ function* TypedArrayProto_toLocaleString(_args, {
   }
   const taRecord = _taRecord20;
   const length = TypedArrayLength(taRecord);
-  const separator = ',';
-  let result = '';
-  let k = 0;
-  while (k < length) {
-    if (k > 0) result = `${result}${separator}`;
-    const element = TypedArrayGetElement(obj, F(k));
-    if (element !== Value.undefined) {
-      /* ReturnIfAbrupt */let _elementString3 = yield* Invoke(element, 'toLocaleString');
-      /* ReturnIfAbrupt */if (_elementString3 instanceof Completion) {
-        if (_elementString3 instanceof AbruptCompletion) return _elementString3;
-        _elementString3 = _elementString3.Value;
-      }
-      /* ReturnIfAbrupt */let _elementString2 = yield* ToString(_elementString3);
-      /* ReturnIfAbrupt */if (_elementString2 instanceof Completion) {
-        if (_elementString2 instanceof AbruptCompletion) return _elementString2;
-        _elementString2 = _elementString2.Value;
-      }
-      const elementString = _elementString2;
-      result += elementString;
-    }
-    k += 1;
+  /* ReturnIfAbrupt */let _temp37 = yield* JoinIndexedProperties(obj, BigInt(length), LocalizedListSeparator(), 'toLocaleString');
+  /* ReturnIfAbrupt */if (_temp37 instanceof Completion) {
+    if (_temp37 instanceof AbruptCompletion) return _temp37;
+    _temp37 = _temp37.Value;
   }
-  return Value(result);
+  return Value(_temp37);
 }
 TypedArrayProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring';
 
@@ -76768,13 +76746,13 @@ function* TypedArrayProto_toReversed(_args, {
   while (k < length) {
     const from = length - k - 1;
     const fromValue = TypedArrayGetElement(obj, F(from));
-    /* X */let _temp36 = TypedArraySetElement(resultArray, F(k), fromValue);
-    /* node:coverage ignore next */if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) _temp36 = skipDebugger(_temp36);
-    /* node:coverage ignore next */if (_temp36 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp36 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(k), fromValue) returned an abrupt completion", {
-        cause: _temp36
+    /* X */let _temp38 = TypedArraySetElement(resultArray, F(k), fromValue);
+    /* node:coverage ignore next */if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) _temp38 = skipDebugger(_temp38);
+    /* node:coverage ignore next */if (_temp38 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp38 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(k), fromValue) returned an abrupt completion", {
+        cause: _temp38
       });
-      _temp36 = _temp36.Value;
+      _temp38 = _temp38.Value;
     }
     k += 1;
   }
@@ -76816,13 +76794,13 @@ function* TypedArrayProto_toSorted([comparator = Value.undefined], {
   const sortedList = _sortedList2;
   let j = 0;
   while (j < len) {
-    /* X */let _temp37 = TypedArraySetElement(resultArray, F(j), sortedList[j]);
-    /* node:coverage ignore next */if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) _temp37 = skipDebugger(_temp37);
-    /* node:coverage ignore next */if (_temp37 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp37 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(j), sortedList[j]) returned an abrupt completion", {
-        cause: _temp37
+    /* X */let _temp39 = TypedArraySetElement(resultArray, F(j), sortedList[j]);
+    /* node:coverage ignore next */if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) _temp39 = skipDebugger(_temp39);
+    /* node:coverage ignore next */if (_temp39 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp39 instanceof AbruptCompletion) throw new Assert.Error("! TypedArraySetElement(resultArray, F(j), sortedList[j]) returned an abrupt completion", {
+        cause: _temp39
       });
-      _temp37 = _temp37.Value;
+      _temp39 = _temp39.Value;
     }
     j += 1;
   }
@@ -76835,10 +76813,10 @@ function TypedArrayProto_values(_args, {
   thisValue
 }) {
   const obj = thisValue;
-  /* ReturnIfAbrupt */let _temp38 = ValidateTypedArray(obj);
-  /* ReturnIfAbrupt */if (_temp38 instanceof Completion) {
-    if (_temp38 instanceof AbruptCompletion) return _temp38;
-    _temp38 = _temp38.Value;
+  /* ReturnIfAbrupt */let _temp40 = ValidateTypedArray(obj);
+  /* ReturnIfAbrupt */if (_temp40 instanceof Completion) {
+    if (_temp40 instanceof AbruptCompletion) return _temp40;
+    _temp40 = _temp40.Value;
   }
   return CreateArrayIterator(obj, 'value');
 }
@@ -76864,19 +76842,19 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
   const actualIndex = _actualIndex;
   let numericValue;
   if (obj.ContentType === 'BigInt') {
-    /* ReturnIfAbrupt */let _temp39 = yield* ToBigInt(value);
-    /* ReturnIfAbrupt */if (_temp39 instanceof Completion) {
-      if (_temp39 instanceof AbruptCompletion) return _temp39;
-      _temp39 = _temp39.Value;
+    /* ReturnIfAbrupt */let _temp41 = yield* ToBigInt(value);
+    /* ReturnIfAbrupt */if (_temp41 instanceof Completion) {
+      if (_temp41 instanceof AbruptCompletion) return _temp41;
+      _temp41 = _temp41.Value;
     }
-    numericValue = _temp39;
+    numericValue = _temp41;
   } else {
-    /* ReturnIfAbrupt */let _temp40 = yield* ToNumber(value);
-    /* ReturnIfAbrupt */if (_temp40 instanceof Completion) {
-      if (_temp40 instanceof AbruptCompletion) return _temp40;
-      _temp40 = _temp40.Value;
+    /* ReturnIfAbrupt */let _temp42 = yield* ToNumber(value);
+    /* ReturnIfAbrupt */if (_temp42 instanceof Completion) {
+      if (_temp42 instanceof AbruptCompletion) return _temp42;
+      _temp42 = _temp42.Value;
     }
-    numericValue = _temp40;
+    numericValue = _temp42;
   }
   if (!IsValidIntegerIndex(obj, F(actualIndex))) {
     return Throw.RangeError('TypedArray index out of bounds');
@@ -76895,10 +76873,10 @@ function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined
     } else {
       fromValue = TypedArrayGetElement(obj, F(k));
     }
-    /* ReturnIfAbrupt */let _temp41 = yield* TypedArraySetElement(resultArray, F(k), fromValue);
-    /* ReturnIfAbrupt */if (_temp41 instanceof Completion) {
-      if (_temp41 instanceof AbruptCompletion) return _temp41;
-      _temp41 = _temp41.Value;
+    /* ReturnIfAbrupt */let _temp43 = yield* TypedArraySetElement(resultArray, F(k), fromValue);
+    /* ReturnIfAbrupt */if (_temp43 instanceof Completion) {
+      if (_temp43 instanceof AbruptCompletion) return _temp43;
+      _temp43 = _temp43.Value;
     }
     k += 1;
   }
@@ -76946,18 +76924,18 @@ function bootstrapTypedArrayPrototype(realmRec) {
       _fn = _fn.Value;
     }
     const fn = _fn;
-    /* X */let _temp42 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _Descriptor({
+    /* X */let _temp44 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _Descriptor({
       Value: fn,
       Writable: true,
       Enumerable: false,
       Configurable: true
     }));
-    /* node:coverage ignore next */if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) _temp42 = skipDebugger(_temp42);
-    /* node:coverage ignore next */if (_temp42 instanceof Completion) {
-      /* node:coverage ignore next */if (_temp42 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: true,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
-        cause: _temp42
+    /* node:coverage ignore next */if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) _temp44 = skipDebugger(_temp44);
+    /* node:coverage ignore next */if (_temp44 instanceof Completion) {
+      /* node:coverage ignore next */if (_temp44 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: true,\n      Enumerable: false,\n      Configurable: true,\n    })) returned an abrupt completion", {
+        cause: _temp44
       });
-      _temp42 = _temp42.Value;
+      _temp44 = _temp44.Value;
     }
   }
   realmRec.Intrinsics['%TypedArray.prototype%'] = proto;
