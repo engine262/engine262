@@ -19,7 +19,7 @@ import {
   Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
-import { surroundingAgent } from '#self';
+import { intrinsics, R, surroundingAgent } from '#self';
 import {
   Call,
   CreateArrayFromList,
@@ -54,12 +54,12 @@ function* IteratorProto_dispose(_args: Arguments, { thisValue }: FunctionCallCon
   return Value.undefined;
 }
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
+/** https://tc39.es/ecma262#sec-get-iterator.prototype.constructor */
 function IteratorProto_constructor_getter() {
   return surroundingAgent.intrinsic('%Iterator%');
 }
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor */
+/** https://tc39.es/ecma262#sec-set-iterator.prototype.constructor */
 function* IteratorProto_constructor_setter([v = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<UndefinedValue> {
   Q(yield* SetterThatIgnoresPrototypeProperties(
     thisValue,
@@ -70,12 +70,10 @@ function* IteratorProto_constructor_setter([v = Value.undefined]: Arguments, { t
   return Value.undefined;
 }
 
-/** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks */
+/** https://tc39.es/ecma262/#sec-iterator.prototype.chunks */
 function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue;
-  if (!(obj instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', obj);
-  }
+  if (!(obj instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', obj);
   let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
   if (!(chunkSize instanceof NumberValue) || !chunkSize.isIntegralNumber()) {
     const error = Throw.TypeError('$1 is not an integral Number', chunkSize);
@@ -108,7 +106,7 @@ function* IteratorProto_chunks([chunkSize = Value.undefined]: Arguments, { thisV
   const result = CreateIteratorFromClosure(
     closure,
     'Iterator Helper',
-    surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
+    intrinsics()['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
   result.UnderlyingIterators = [iterated];
@@ -550,9 +548,7 @@ function* IteratorProto_take([limit = Value.undefined]: Arguments, { thisValue }
 /** https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.windows */
 function* IteratorProto_windows([windowSize = Value.undefined, undersized = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue;
-  if (!(obj instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', obj);
-  }
+  if (!(obj instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', obj);
   let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
   if (!(windowSize instanceof NumberValue) || !windowSize.isIntegralNumber()) {
     const error = Throw.TypeError('$1 is not an integral Number', windowSize);
@@ -562,11 +558,10 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
     const error = Throw.RangeError('$1 is out of range', windowSize);
     return Q(yield* IteratorClose(iterated, error));
   }
-  if (undersized === Value.undefined) {
-    undersized = Value('only-full');
-  }
-  if (!(undersized instanceof JSStringValue)
-      || (undersized.stringValue() !== 'only-full' && undersized.stringValue() !== 'allow-partial')) {
+  let undersizedString: string | undefined;
+  if (undersized === Value.undefined) undersizedString = 'only-full';
+  if (undersized instanceof JSStringValue) undersizedString = undersized.stringValue();
+  if (!(undersized instanceof JSStringValue) || (undersizedString !== 'only-full' && undersizedString !== 'allow-partial')) {
     const error = Throw.TypeError('$1 is not a valid undersized mode', undersized);
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -576,19 +571,19 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
     while (true) {
       const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
       if (value === 'done') {
-        if (undersized.stringValue() === 'allow-partial'
+        if (undersizedString === 'allow-partial'
             && buffer.length !== 0
-            && buffer.length < windowSize.value) {
-          EnsureCompletion(yield* Yield(X(CreateArrayFromList(buffer))));
+            && buffer.length < R(windowSize)) {
+          EnsureCompletion(yield* Yield(CreateArrayFromList(buffer)));
         }
         return ReturnCompletion(Value.undefined);
       }
-      if (buffer.length === windowSize.value) {
+      if (buffer.length === R(windowSize)) {
         buffer.shift();
       }
       buffer.push(value);
-      if (buffer.length === windowSize.value) {
-        const completion = EnsureCompletion(yield* Yield(X(CreateArrayFromList(buffer))));
+      if (buffer.length === R(windowSize)) {
+        const completion = EnsureCompletion(yield* Yield(CreateArrayFromList(buffer)));
         IfAbruptCloseIterator(completion, iterated);
       }
     }
@@ -596,7 +591,7 @@ function* IteratorProto_windows([windowSize = Value.undefined, undersized = Valu
   const result = CreateIteratorFromClosure(
     closure,
     'Iterator Helper',
-    surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
+    intrinsics()['%IteratorHelperPrototype%'],
     ['UnderlyingIterators'],
   );
   result.UnderlyingIterators = [iterated];
