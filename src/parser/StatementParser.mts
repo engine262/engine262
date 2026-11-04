@@ -295,7 +295,7 @@ export abstract class StatementParser extends ExpressionParser {
       if (name.type !== 'IdentifierName') {
         this.unexpected(name);
       }
-      this.validateIdentifierReference(name.name, node);
+      this.validateIdentifier(name.name, node);
     }
     node.BindingIdentifier = this.repurpose(name, 'BindingIdentifier');
     node.Initializer = this.parseInitializerOpt();

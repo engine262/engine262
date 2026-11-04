@@ -2624,7 +2624,7 @@ export declare abstract class IdentifierParser extends BaseParser {
     parseIdentifierName(): ParseNode.IdentifierName;
     parseBindingIdentifier(): ParseNode.BindingIdentifier;
     parseIdentifierReference(): ParseNode.IdentifierReference;
-    validateIdentifierReference(name: string, token: Locatable): void;
+    protected validateIdentifier(name: string, token: Locatable, isLabel?: boolean): void;
     parseLabelIdentifier(): ParseNode.LabelIdentifier;
     parsePrivateIdentifier(): ParseNode.PrivateIdentifier;
 }

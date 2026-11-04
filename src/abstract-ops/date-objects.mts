@@ -70,11 +70,11 @@ export function TimeFromYear(y: Integer): TimeValue {
 }
 
 export function YearFromTime(t: FiniteTimeValue): Integer {
-  const msPerAverageYear = 12 * 30.436875 * Number(MillisecondsPerDay);
-  let year = BigInt(Math.floor(((t + msPerAverageYear / 2) / msPerAverageYear) + 1970));
-  if (TimeFromYear(year) > t) {
-    year -= 1n;
-  }
+  // Return the largest integer y (closest to +∞) such that TimeFromYear(y) ≤ tv.
+  const day = Day(t);
+  let year = 1970n + floorDiv(day * 400n, 146097n);
+  while (TimeFromYear(year) > t) year -= 1n;
+  while (TimeFromYear(year + 1n) <= t) year += 1n;
   return year;
 }
 

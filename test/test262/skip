@@ -14,6 +14,17 @@ Intl402
 staging/sm/Date/non-iso.js
 staging/sm/Date/two-digit-years.js
 
+# Test262 #5162: floating-point MakeDate assertion issue discussed in
+# https://github.com/tc39/ecma262/issues/3992.
+# https://github.com/tc39/test262/pull/5162/changes
+built-ins/Date/makedate-float-arithmetic.js
+built-ins/Temporal/PlainDate/prototype/add/makedate-float-arithmetic.js
+built-ins/Temporal/PlainDate/prototype/subtract/makedate-float-arithmetic.js
+built-ins/Temporal/PlainDateTime/prototype/add/makedate-float-arithmetic.js
+built-ins/Temporal/PlainDateTime/prototype/subtract/makedate-float-arithmetic.js
+built-ins/Temporal/PlainYearMonth/prototype/add/makedate-float-arithmetic.js
+built-ins/Temporal/PlainYearMonth/prototype/subtract/makedate-float-arithmetic.js
+
 # Decorators (not merged yet) https://github.com/tc39/test262/pull/4103/
 ## wrong test, we are correct
 language/expressions/class/decorator/class/error/class-deco-invalid-return-arrow.js

@@ -62,7 +62,7 @@ export abstract class IdentifierParser extends BaseParser {
     if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
       this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', node.name), token);
     }
-    this.validateIdentifierReference(node.name, token);
+    this.validateIdentifier(node.name, token);
     return this.finishNode(node, 'BindingIdentifier');
   }
 
@@ -108,11 +108,11 @@ export abstract class IdentifierParser extends BaseParser {
         }
       }
     }
-    this.validateIdentifierReference(node.name, token);
+    this.validateIdentifier(node.name, token);
     return this.finishNode(node, 'IdentifierReference');
   }
 
-  validateIdentifierReference(name: string, token: Locatable) {
+  protected validateIdentifier(name: string, token: Locatable, isLabel = false) {
     if (name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.addEarlyError(Throw.SyntaxError('yield cannot be used as an identifier inside generator functions or modules'), token);
     }
@@ -122,7 +122,7 @@ export abstract class IdentifierParser extends BaseParser {
     if (this.isStrictMode() && isReservedWordStrict(name)) {
       this.addEarlyError(Throw.SyntaxError('$1 cannot be used as an identifier in strict mode', name), token);
     }
-    if (this.scope.inClassStaticBlock() && name === 'arguments') {
+    if (!isLabel && this.scope.inClassStaticBlock() && name === 'arguments' && !this.test(Token.COLON)) {
       this.addEarlyError(Throw.SyntaxError('"arguments" cannot be used as an identifier in class static block'), token);
     }
     if (name !== 'yield' && name !== 'await' && isKeywordRaw(name)) {
@@ -135,8 +135,30 @@ export abstract class IdentifierParser extends BaseParser {
   //   [~Yield] `yield`
   //   [~Await] `await`
   parseLabelIdentifier() {
-    const node = this.parseIdentifierReference();
-    return this.repurpose(node, 'LabelIdentifier');
+    const node = this.startNode<ParseNode.LabelIdentifier>();
+    const token = this.next();
+    switch (token.type) {
+      case Token.IDENTIFIER:
+      case Token.ESCAPED_KEYWORD:
+        node.name = token.valueAsString();
+        break;
+      case Token.YIELD:
+        if (this.scope.hasYield()) {
+          this.unexpected(token);
+        }
+        node.name = 'yield';
+        break;
+      case Token.AWAIT:
+        if (this.scope.hasAwait()) {
+          this.unexpected(token);
+        }
+        node.name = 'await';
+        break;
+      default:
+        this.unexpected(token);
+    }
+    this.validateIdentifier(node.name, token, true);
+    return this.finishNode(node, 'LabelIdentifier');
   }
 
   // PrivateIdentifier ::

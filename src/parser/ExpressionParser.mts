@@ -1551,7 +1551,7 @@ export abstract class ExpressionParser extends FunctionParser {
             || (firstName.name === 'yield' && !this.scope.hasYield())
             || (firstName.name === 'await' && !this.scope.hasAwait()))) {
         const IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
-        this.validateIdentifierReference(firstName.name, firstName);
+        this.validateIdentifier(firstName.name, firstName);
         return IdentifierReference;
       }
     }
