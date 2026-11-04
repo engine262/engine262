@@ -74,7 +74,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
   }
   const bodyString = Q(yield* ToString(bodyArg));
   const currentRealm = surroundingAgent.currentRealmRecord;
-  Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, false));
+  Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, 'function'));
   let P = '';
   if (argCount > 0) {
     P = parameterStrings[0];

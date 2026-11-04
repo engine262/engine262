@@ -45,7 +45,7 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
       // iv. If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
       const strictCaller = CallExpression.strict;
       // vi. Return ? PerformEval(evalText, strictCaller, true).
-      return Q(yield* PerformEval(evalText, strictCaller, true));
+      return Q(yield* PerformEval(evalText, strictCaller, 'direct-eval'));
     }
   }
   // 7. Let thisCall be this CallExpression.

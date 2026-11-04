@@ -8,7 +8,7 @@ import type { Realm } from '#self';
 
 /** https://tc39.es/ecma262/#sec-eval-x */
 function* Eval([x = Value.undefined]: Arguments): ValueEvaluator {
-  return Q(yield* PerformEval(x, false, false));
+  return Q(yield* PerformEval(x, false, 'indirect-eval'));
 }
 
 export function bootstrapEval(realmRec: Realm) {
