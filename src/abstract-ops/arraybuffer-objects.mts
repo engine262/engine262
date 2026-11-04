@@ -65,16 +65,12 @@ export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: nu
     slots.push('ArrayBufferIsImmutable');
   }
   const obj = Q(yield* OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots)) as Mutable<ArrayBufferObject & ResizableArrayBufferObject>;
-  // 2. Assert: byteLength is a non-negative integer.
   Assert(isNonNegativeInteger(byteLength));
-  // 3. Let block be ? CreateByteDataBlock(byteLength).
   const block = Q(CreateByteDataBlock(byteLength, allocatingResizableBuffer ? maxByteLength as number : undefined));
-  // 4. Set obj.[[ArrayBufferData]] to block.
   obj.ArrayBufferData = block;
-  // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
   obj.ArrayBufferByteLength = byteLength;
+  obj.ArrayBufferDetachKey = undefined;
   if (allocatingResizableBuffer) {
-    // a. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
     if ((maxByteLength as number) > (surroundingAgent.hostDefinedOptions?.resizableArrayBufferMaxByteLength ?? 0xFFFF_FFFF)) {
       return Throw.RangeError('Cannot allocate memory');
     }
@@ -169,16 +165,14 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
   if (IsImmutableBuffer(arrayBuffer)) {
     return Throw.TypeError('Cannot detach immutable ArrayBuffer');
   }
-  // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (arrayBuffer.ArrayBufferDetachKey === undefined
-      ? key !== undefined
-      : key === undefined || !SameValue(arrayBuffer.ArrayBufferDetachKey, key)) {
-    return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key ?? Value.undefined);
+  const expectedKey = arrayBuffer.ArrayBufferDetachKey;
+  if (key !== undefined) {
+    if (expectedKey === undefined || !SameValue(key, expectedKey)) return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', key);
+  } else {
+    if (expectedKey !== undefined) return Throw.TypeError('$1 is not the [[ArrayBufferDetachKey]] of the given ArrayBuffer', Value.undefined);
   }
   Q(surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer));
-  // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
   arrayBuffer.ArrayBufferData = null;
-  // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
   arrayBuffer.ArrayBufferByteLength = 0;
   return undefined;
 }
