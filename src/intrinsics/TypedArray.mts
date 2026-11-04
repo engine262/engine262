@@ -408,26 +408,27 @@ export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject
   O.ByteOffset = offset;
 }
 
-/** https://tc39.es/ecma262/#sec-initializetypedarrayfromlist */
-export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, value: Value[]): PlainEvaluator {
-  const len = value.length;
-  Q(yield* AllocateTypedArrayBuffer(O, len));
-  let k = 0;
-  while (k < len) {
-    const kValue = value[k];
-    Q(yield* TypedArraySetElement(O, F(k), kValue));
-    k += 1;
+/** https://tc39.es/ecma262/#sec-initializetypedarrayfromelements */
+export function* InitializeTypedArrayFromElements(O: Mutable<TypedArrayObject>, source: ObjectValue): PlainEvaluator {
+  const usingIterator = Q(yield* GetMethod(source, wellKnownSymbols.iterator));
+  let values: Value[] | undefined;
+  let length: number;
+  if (!(usingIterator instanceof UndefinedValue)) {
+    values = Q(yield* IteratorToList(Q(yield* GetIteratorFromMethod(source, usingIterator))));
+    length = values.length;
+  } else {
+    length = Q(yield* LengthOfArrayLike(source));
   }
-}
-
-/** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike */
-export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>, arrayLike: ObjectValue): PlainEvaluator {
-  const len = Q(yield* LengthOfArrayLike(arrayLike));
-  Q(yield* AllocateTypedArrayBuffer(O, len));
+  Q(yield* AllocateTypedArrayBuffer(O, length));
   let k = 0;
-  while (k < len) {
-    const propertyKey = X(ToString(F(k)));
-    const kValue = Q(yield* Get(arrayLike, propertyKey));
+  while (k < length) {
+    let kValue: Value;
+    if (usingIterator !== Value.undefined) {
+      kValue = values![k]!;
+    } else {
+      const propertyKey = X(ToString(F(k)));
+      kValue = Q(yield* Get(source, propertyKey));
+    }
     Q(yield* TypedArraySetElement(O, F(k), kValue));
     k += 1;
   }

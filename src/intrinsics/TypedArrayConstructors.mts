@@ -1,5 +1,5 @@
 import {
-  ObjectValue, UndefinedValue, Value, wellKnownSymbols,
+  ObjectValue, UndefinedValue, Value,
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
@@ -7,16 +7,13 @@ import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { __ts_cast__ } from '../utils/language.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
-  AllocateTypedArray, InitializeTypedArrayFromArrayBuffer, InitializeTypedArrayFromArrayLike, InitializeTypedArrayFromList, InitializeTypedArrayFromTypedArray, isTypedArrayObject, typedArrayInfoByName, type TypedArrayConstructorNames,
+  AllocateTypedArray, InitializeTypedArrayFromArrayBuffer, InitializeTypedArrayFromElements, InitializeTypedArrayFromTypedArray, isTypedArrayObject, typedArrayInfoByName, type TypedArrayConstructorNames,
 } from './TypedArray.mts';
 import {
   Assert,
-  GetMethod,
-  IteratorToList,
   ToIndex,
   F,
   Realm,
-  GetIteratorFromMethod,
   isArrayBufferObject,
   Throw,
 } from '#self';
@@ -56,13 +53,7 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
             Q(yield* InitializeTypedArrayFromArrayBuffer(O, firstArgument, byteOffset, length));
           } else {
             Assert(firstArgument instanceof ObjectValue && !isTypedArrayObject(firstArgument) && !isArrayBufferObject(firstArgument));
-            const usingIterator = Q(yield* GetMethod(firstArgument, wellKnownSymbols.iterator));
-            if (!(usingIterator instanceof UndefinedValue)) {
-              const values = Q(yield* IteratorToList(Q(yield* GetIteratorFromMethod(firstArgument, usingIterator))));
-              Q(yield* InitializeTypedArrayFromList(O, values));
-            } else {
-              Q(yield* InitializeTypedArrayFromArrayLike(O, firstArgument));
-            }
+            Q(yield* InitializeTypedArrayFromElements(O, firstArgument));
           }
           return O;
         } else {
