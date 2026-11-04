@@ -29,7 +29,7 @@ function* DisposableStackProto_adopt(
     return Q(yield* Call(onDispose, Value.undefined, [value]));
   };
   const func = CreateBuiltinFunction(closure, 0, Value(''), []);
-  Q(yield* AddDisposableResource(disposableStack.DisposableResourceStack, Value.undefined, 'sync-dispose', func));
+  X(yield* AddDisposableResource(disposableStack.DisposableResourceStack, Value.undefined, 'sync-dispose', func));
   return value;
 }
 
@@ -42,7 +42,7 @@ function* DisposableStackProto_defer(
   const disposableStack = thisValue as DisposableStackObject;
   if (disposableStack.DisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
   if (!IsCallable(onDispose)) return Throw.TypeError('$1 is not a function', onDispose);
-  Q(yield* AddDisposableResource(disposableStack.DisposableResourceStack, Value.undefined, 'sync-dispose', onDispose));
+  X(yield* AddDisposableResource(disposableStack.DisposableResourceStack, Value.undefined, 'sync-dispose', onDispose));
   return Value.undefined;
 }
 

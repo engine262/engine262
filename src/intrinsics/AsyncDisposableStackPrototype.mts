@@ -29,7 +29,7 @@ function* AsyncDisposableStackProto_adopt(
     return Q(yield* Call(onDisposeAsync, Value.undefined, [value]));
   };
   const func = CreateBuiltinFunction(closure, 0, Value(''), []);
-  Q(yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', func));
+  X(yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', func));
   return value;
 }
 
@@ -42,7 +42,7 @@ function* AsyncDisposableStackProto_defer(
   const asyncDisposableStack = thisValue as AsyncDisposableStackObject;
   if (asyncDisposableStack.AsyncDisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
   if (!IsCallable(onDisposeAsync)) return Throw.TypeError('$1 is not a function', onDisposeAsync);
-  Q(yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', onDisposeAsync));
+  X(yield* AddDisposableResource(asyncDisposableStack.DisposableResourceStack, Value.undefined, 'async-dispose', onDisposeAsync));
   return Value.undefined;
 }
 

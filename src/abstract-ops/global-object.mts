@@ -199,7 +199,7 @@ export function* PerformEval(x: Value, strictCaller: boolean, direct: boolean): 
 }
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
-export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null, strict: boolean): PlainEvaluator {
+export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexicalEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null, strict: boolean): PlainEvaluator {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
   // 2. Let varDeclarations be the VarScopedDeclarations of body.
@@ -218,7 +218,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
       }
     }
     // b. Let thisLex be lexEnv.
-    let thisEnv: EnvironmentRecord = lexEnv;
+    let thisEnv: EnvironmentRecord = lexicalEnv;
     // c. Assert: The following loop will terminate.
     // d. Repeat, while thisEnv is not the same as varEnv,
     while (thisEnv !== varEnv) {
@@ -335,11 +335,9 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).
-        Q(lexEnv.CreateImmutableBinding(dn, true));
-      } else { // ii. Else,
-        // 1. Perform ? lexEnv.CreateMutableBinding(dn, false).
-        Q(yield* lexEnv.CreateMutableBinding(dn, false));
+        X(lexicalEnv.CreateImmutableBinding(dn, true));
+      } else {
+        X(yield* lexicalEnv.CreateMutableBinding(dn, false));
       }
     }
   }
@@ -348,7 +346,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
     // b. Let fn be the sole element of the BoundNames of f.
-    const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
+    const fo = InstantiateFunctionObject(f, lexicalEnv, privateEnv);
     // c. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. Perform ? varEnv.CreateGlobalFunctionBinding(fn, fo, true).

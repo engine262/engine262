@@ -177,7 +177,7 @@ function NewPromiseResolveThenableJob(promiseToResolve: PromiseObject, thenable:
     const thenCallResult = yield* HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
     // c. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
-      Q(yield* Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]));
+      X(yield* Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]));
       return;
     }
     // d. Return ! thenCallResult.

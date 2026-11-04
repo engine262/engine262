@@ -50,42 +50,19 @@ export function* AddDisposableResource(
   let resource: DisposableResourceRecord;
   if (method !== undefined) {
     Assert(value === Value.undefined);
-    resource = Q(yield* CreateDisposableResource(Value.undefined, kind, method));
+    resource = { ResourceValue: Value.undefined, Kind: kind, DisposeMethod: method };
+  } else if (value === Value.null || value === Value.undefined) {
+    if (kind === 'sync-dispose') return;
+    resource = { ResourceValue: Value.undefined, Kind: 'async-dispose', DisposeMethod: Value.undefined };
   } else {
-    if ((value === Value.null || value === Value.undefined) && kind === 'sync-dispose') {
-      return;
+    const disposeMethod = Q(yield* GetDisposeMethod(value, kind));
+    if (disposeMethod === Value.undefined) {
+      return Throw.TypeError('$1 is not a function', disposeMethod);
     }
-    resource = Q(yield* CreateDisposableResource(value, kind));
+    resource = { ResourceValue: value as ObjectValue, Kind: kind, DisposeMethod: disposeMethod };
   }
   disposableResourceStack.push(resource);
   return undefined;
-}
-
-/** https://tc39.es/ecma262/#sec-createdisposableresource */
-export function* CreateDisposableResource(
-  _value: Value,
-  kind: DisposableResourceKind,
-  _method?: FunctionObject,
-): PlainEvaluator<DisposableResourceRecord> {
-  let value: ObjectValue | UndefinedValue;
-  let method: FunctionObject | UndefinedValue;
-  if (_method === undefined) {
-    if (_value === Value.null || _value === Value.undefined) {
-      value = Value.undefined;
-      method = Value.undefined;
-    } else {
-      method = Q(yield* GetDisposeMethod(_value, kind));
-      if (method === Value.undefined) {
-        return Throw.TypeError('$1 is not a function', method);
-      }
-      value = _value as ObjectValue;
-    }
-  } else {
-    Assert(_value === Value.undefined);
-    value = Value.undefined;
-    method = _method;
-  }
-  return { ResourceValue: value!, Kind: kind, DisposeMethod: method! };
 }
 
 /** https://tc39.es/ecma262/#sec-getdisposemethod */

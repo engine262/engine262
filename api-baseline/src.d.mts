@@ -1045,9 +1045,6 @@ export declare function CreateDecoratorContextObject(kind: 'class' | ClassElemen
 /** https://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
 export declare function CreateDefaultExportSyntheticModule(defaultExport: Value): SyntheticModuleRecord;
 
-/** https://tc39.es/ecma262/#sec-createdisposableresource */
-export declare function CreateDisposableResource(_value: Value, kind: DisposableResourceKind, _method?: FunctionObject): PlainEvaluator<DisposableResourceRecord>;
-
 export declare function CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value): ValueEvaluator;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createfieldinitializerfunction */
@@ -1560,7 +1557,7 @@ export declare interface ErrorObject extends ObjectValue {
 export declare function EscapeRegExpPattern(P: string, _F: string | Value): string;
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
-export declare function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null, strict: boolean): PlainEvaluator;
+export declare function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexicalEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null, strict: boolean): PlainEvaluator;
 
 /**
  * This is a util for code that cannot use Q() macro to emulate this behaviour.

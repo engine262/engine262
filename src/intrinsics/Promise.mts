@@ -101,8 +101,8 @@ function* PromiseConstructor(this: FunctionObject, [executor = Value.undefined]:
   ]);
   // 10. If completion is an abrupt completion, then
   if (completion instanceof AbruptCompletion) {
-    // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
-    Q(yield* Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]));
+    // a. Perform ! Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
+    X(yield* Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]));
   }
   // 11. Return promise.
   return promise;
