@@ -19,14 +19,12 @@ import {
 } from '../static-semantics/all.mts';
 import { Q, X } from '../completion.mts';
 import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
-import { clamp } from '../abstract-ops/math.mts';
+import { clamp, max } from '../abstract-ops/math.mts';
 import { assignProps } from './bootstrap.mts';
 import {
   surroundingAgent,
-  ArrayCreate,
   Assert,
   Call,
-  CreateDataPropertyOrThrow,
   CreateIteratorFromClosure,
   Get,
   GetMethod,
@@ -43,10 +41,12 @@ import {
   StringCreate,
   Throw,
   Yield,
-  F, R, R as MathematicalValue,
+  F, R,
   Realm,
   Unicode,
   ToClampedIndex,
+  CreateArrayFromList,
+  type Integer,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-thisstringvalue */
@@ -174,21 +174,16 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.indexof */
-function* StringProto_indexOf([searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  Q(RequireObjectCoercible(O));
-  // 2. Let S be ? ToString(O).
-  const string = Q(yield* ToString(O));
-  // 3. Let searchStr be ? ToString(searchString).
-  const searchStr = Q(yield* ToString(searchString));
-  // 4. Let pos be ? ToIntegerOrInfinity(position).
-  // 6. Let len be the length of S.
+function* StringProto_indexOf([_searchString = Value.undefined, position = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  Q(RequireObjectCoercible(thisValue));
+  const string = Q(yield* ToString(thisValue));
+  const searchString = Q(yield* ToString(_searchString));
   const length = string.length;
-  // 7. Let start be min(max(pos, 0), len).
   const start = clamp(0, Q(yield* ToIntegerOrInfinity(position)), length);
-  Assert(!(position === Value.undefined) || start === 0);
-  // 8. Return ! StringIndexOf(S, searchStr, start).
-  return X(StringIndexOf(string, searchStr, start));
+  if (position === Value.undefined) Assert(start === 0);
+  const result = StringIndexOf(string, searchString, BigInt(start));
+  if (result === 'not-found') return F(-1);
+  return F(Number(result));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
@@ -357,123 +352,85 @@ function* StringProto_repeat([count = Value.undefined]: Arguments, { thisValue }
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replace */
-function* StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  Q(RequireObjectCoercible(O));
+function* StringProto_replace([searchValue = Value.undefined, _replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  Q(RequireObjectCoercible(thisValue));
   if (searchValue instanceof ObjectValue) {
     const replacer = Q(yield* GetMethod(searchValue, wellKnownSymbols.replace));
     if (replacer !== Value.undefined) {
-      return Q(yield* Call(replacer, searchValue, [O, replaceValue]));
+      return Q(yield* Call(replacer, searchValue, [thisValue, _replaceValue]));
     }
   }
-  const string = Q(yield* ToString(O));
+  const string = Q(yield* ToString(thisValue));
   const searchString = Q(yield* ToString(searchValue));
-  const functionalReplace = IsCallable(replaceValue);
-  let replacementValue: string | undefined;
+  const functionalReplace = IsCallable(_replaceValue);
+  let replaceValue: string | undefined;
   if (!functionalReplace) {
-    replacementValue = Q(yield* ToString(replaceValue));
+    replaceValue = Q(yield* ToString(_replaceValue));
   }
-  const searchLength = searchString.length;
-  const position = string.indexOf(searchString, 0);
-  if (position === -1) {
-    return Value(string);
-  }
-  const preceding = string.slice(0, position);
-  const following = string.slice(position + searchLength);
+  const searchLength = BigInt(searchString.length);
+  const position = StringIndexOf(string, searchString, 0n);
+  if (position === 'not-found') return Value(string);
+  const preceding = string.substring(0, Number(position));
+  const following = string.substring(Number(position + searchLength));
   let replacement: string;
   if (functionalReplace) {
-    replacement = Q(yield* ToString(Q(yield* Call(replaceValue, Value.undefined, [Value(searchString), F(position), Value(string)]))));
+    replacement = Q(yield* ToString(Q(yield* Call(_replaceValue, Value.undefined, [Value(searchString), F(Number(position)), Value(string)]))));
   } else {
-    Assert(typeof replacementValue === 'string');
+    Assert(typeof replaceValue === 'string');
     const captures: readonly (string | undefined)[] = [];
-    replacement = X(GetSubstitution(searchString, string, position, captures, undefined, replacementValue));
+    replacement = X(GetSubstitution(searchString, string, position, captures, undefined, replaceValue));
   }
   return Value(preceding + replacement + following);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replaceall */
 function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  Q(RequireObjectCoercible(O));
-  // 2.If searchValue is an Object, then
+  Q(RequireObjectCoercible(thisValue));
   if (searchValue instanceof ObjectValue) {
-    // a. Let isRegExp be ? IsRegExp(searchValue).
     const isRegExp = Q(yield* IsRegExp(searchValue));
-    // b. If isRegExp is true, then
     if (isRegExp) {
-      // i. Let flags be ? Get(searchValue, "flags").
-      const flags = Q(yield* Get(searchValue as ObjectValue, 'flags'));
-      // ii. Perform ? RequireObjectCoercible(flags).
+      const flags = Q(yield* Get(searchValue, 'flags'));
       Q(RequireObjectCoercible(flags));
-      // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
       if (!Q(yield* ToString(flags)).includes('g')) {
         return Throw.TypeError('The RegExp passed to String.prototype.$1 must have the global flag', 'replaceAll');
       }
     }
-    // c. Let replacer be ? GetMethod(searchValue, @@replace).
     const replacer = Q(yield* GetMethod(searchValue, wellKnownSymbols.replace));
-    // d. If replacer is not undefined, then
     if (replacer !== Value.undefined) {
-      // i. Return ? Call(replacer, searchValue, « O, replaceValue »).
-      return Q(yield* Call(replacer, searchValue, [O, replaceValue]));
+      return Q(yield* Call(replacer, searchValue, [thisValue, replaceValue]));
     }
   }
-  // 3. Let string be ? ToString(O).
-  const string = Q(yield* ToString(O));
-  // 4. Let searchString be ? ToString(searchValue).
+  const string = Q(yield* ToString(thisValue));
   const searchString = Q(yield* ToString(searchValue));
-  // 5. Let functionalReplace be IsCallable(replaceValue).
   const functionalReplace = IsCallable(replaceValue);
-  // 6. If functionalReplace is false, then
   if (!functionalReplace) {
-    // a. Let replaceValue be ? ToString(replaceValue).
     replaceValue = Value(Q(yield* ToString(replaceValue)));
   }
-  // 7. Let searchLength be the length of searchString.
-  const searchLength = searchString.length;
-  // 8. Let advanceBy be max(1, searchLength).
-  const advanceBy = Math.max(1, searchLength);
-  // 9. Let matchPositions be a new empty List.
-  const matchPositions = [];
-  // 10. Let position be ! StringIndexOf(string, searchString, 0).
-  let position = R(X(StringIndexOf(string, searchString, 0)));
-  // 11. Repeat, while position is not -1
-  while (position !== -1) {
-    // a. Append position to the end of matchPositions.
+  const searchLength = BigInt(searchString.length);
+  const advanceBy = max(1n, searchLength);
+  const matchPositions: Integer[] = [];
+  let position = StringIndexOf(string, searchString, 0n);
+  while (position !== 'not-found') {
     matchPositions.push(position);
-    // b. Let position be ! StringIndexOf(string, searchString, position + advanceBy).
-    position = R(X(StringIndexOf(string, searchString, position + advanceBy)));
+    position = StringIndexOf(string, searchString, position + advanceBy);
   }
-  // 12. Let endOfLastMatch be 0.
-  let endOfLastMatch = 0;
-  // 13. Let result be the empty string value.
+  let endOfLastMatch = 0n;
   let result = '';
-  // 14. For each position in matchPositions, do
-  for (position of matchPositions) {
+  for (const matchPosition of matchPositions) {
+    const preserved = string.substring(Number(endOfLastMatch), Number(matchPosition));
     let replacement;
-    // a. If functionalReplace is true, then
     if (functionalReplace) {
-      // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, 𝔽(position), string »).
-      replacement = Q(yield* ToString(Q(yield* Call(replaceValue, Value.undefined, [Value(searchString), F(position), Value(string)]))));
-    } else { // b. Else,
-      // i. Assert: Type(replaceValue) is String.
+      replacement = Q(yield* ToString(Q(yield* Call(replaceValue, Value.undefined, [Value(searchString), F(Number(matchPosition)), Value(string)]))));
+    } else {
       Assert(replaceValue instanceof JSStringValue);
-      // ii. Let captures be a new empty List.
       const captures: readonly (string | undefined)[] = [];
-      // iii. Let replacement be GetSubstitution(searchString, string, position, captures, undefined, replaceValue).
-      replacement = X(GetSubstitution(searchString, string, position, captures, undefined, replaceValue.stringValue()));
+      replacement = X(GetSubstitution(searchString, string, matchPosition, captures, undefined, replaceValue.stringValue()));
     }
-    // c. Let stringSlice be the substring of string consisting of the code units from endOfLastMatch (inclusive) up through position (exclusive).
-    const stringSlice = string.slice(endOfLastMatch, position);
-    // d. Let result be the string-concatenation of result, stringSlice, and replacement.
-    result = result + stringSlice + replacement;
-    // e. Let endOfLastMatch be position + searchLength.
-    endOfLastMatch = position + searchLength;
+    result += preserved + replacement;
+    endOfLastMatch = matchPosition + searchLength;
   }
-  // 15. If endOfLastMatch < the length of string, then
   if (endOfLastMatch < string.length) {
-    // a. Let result be the string-concatenation of result and the substring of string consisting of the code units from endOfLastMatch (inclusive) up through the final code unit of string (inclusive).
-    result += string.slice(endOfLastMatch);
+    result += string.substring(Number(endOfLastMatch));
   }
   // 16. Return result.
   return Value(result);
@@ -509,78 +466,51 @@ function* StringProto_slice([start = Value.undefined, end = Value.undefined]: Ar
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.split */
-function* StringProto_split([separator = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  const O = thisValue;
-  Q(RequireObjectCoercible(O));
+function* StringProto_split([separator = Value.undefined, substringLimit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  Q(RequireObjectCoercible(thisValue));
   if (separator instanceof ObjectValue) {
     const splitter = Q(yield* GetMethod(separator, wellKnownSymbols.split));
     if (splitter !== Value.undefined) {
-      return Q(yield* Call(splitter, separator, [O, limit]));
+      return Q(yield* Call(splitter, separator, [thisValue, substringLimit]));
     }
   }
-  const S = Q(yield* ToString(O));
-  const A = X(ArrayCreate(0));
-  let lengthA = 0;
-  let lim;
-  if (limit === Value.undefined) {
-    lim = F((2 ** 32) - 1);
+  const string = Q(yield* ToString(thisValue));
+  let substringLimitInt: number;
+  if (substringLimit === Value.undefined) {
+    substringLimitInt = (2 ** 32) - 1;
   } else {
-    lim = Q(yield* ToUint32(limit));
+    substringLimitInt = R(Q(yield* ToUint32(substringLimit)));
   }
-  const s = S.length;
-  let p = 0;
-  const R = Q(yield* ToString(separator));
-  if (MathematicalValue(lim) === 0) {
-    return A;
+  const separatorString = Q(yield* ToString(separator));
+  if (substringLimitInt === 0) {
+    return CreateArrayFromList([]);
   }
   if (separator === Value.undefined) {
-    X(CreateDataPropertyOrThrow(A, '0', Value(S)));
-    return A;
+    return CreateArrayFromList([Value(string)]);
   }
-  if (s === 0) {
-    if (R !== '') {
-    X(CreateDataPropertyOrThrow(A, '0', Value(S)));
-    }
-    return A;
+  const separatorLength = separatorString.length;
+  if (separatorLength === 0) {
+    const stringLength = string.length;
+    const outLength = clamp(0, substringLimitInt, stringLength);
+    const head = string.substring(0, outLength);
+    // Let codeUnits be a List consisting of the sequence of code units that are the elements of head.
+    const codeUnits = head.split('').map(Value);
+    return CreateArrayFromList(codeUnits);
   }
-  let q = p;
-  while (q !== s) {
-    const e = yield* SplitMatch(S, q, R);
-    if (e === false) {
-      q += 1;
-    } else {
-      if (e === p) {
-        q += 1;
-      } else {
-        const T = Value(S.substring(p, q));
-        X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
-        lengthA += 1;
-        if (lengthA === MathematicalValue(lim)) {
-          return A;
-        }
-        p = e;
-        q = p;
-      }
-    }
+  if (string === '') return CreateArrayFromList([Value(string)]);
+  const substrings = [];
+  let searchStart = 0n;
+  let matchIndex = StringIndexOf(string, separatorString, 0n);
+  while (matchIndex !== 'not-found') {
+    const substring = string.substring(Number(searchStart), Number(matchIndex));
+    substrings.push(substring);
+    if (substrings.length === substringLimitInt) return CreateArrayFromList(substrings.map(Value));
+    searchStart = matchIndex + BigInt(separatorLength);
+    matchIndex = StringIndexOf(string, separatorString, searchStart);
   }
-  const T = Value(S.substring(p, s));
-  X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
-  return A;
-}
-
-function* SplitMatch(S: string, q: number, R: string) {
-  Assert(typeof R === 'string');
-  const r = R.length;
-  const s = S.length;
-  if (q + r > s) {
-    return false;
-  }
-  for (let i = 0; i < r; i += 1) {
-    if (S.charCodeAt(q + i) !== R.charCodeAt(i)) {
-      return false;
-    }
-  }
-  return q + r;
+  const substring = string.substring(Number(searchStart));
+  substrings.push(substring);
+  return CreateArrayFromList(substrings.map(Value));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.startswith */

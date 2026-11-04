@@ -14,6 +14,7 @@ import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
 import { __ts_cast__ } from '../utils/language.mts';
+import { clamp } from '../abstract-ops/math.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
 import { isRegExpObject, type RegExpObject } from './RegExp.mts';
@@ -402,150 +403,83 @@ function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCa
   return Value(Q(RegExpHasFlag(R, cu)));
 }
 
-/** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
-function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  // 1. Let rx be the this value.
-  const rx = thisValue;
-  // 2. If rx is not an Object, throw a TypeError exception.
-  if (!(rx instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not a $2 object', rx, 'RegExp');
-  }
-  // 3. Let S be ? ToString(string).
-  const S = Q(yield* ToString(string));
-  // 4. Let lengthS be the length of S.
-  const lengthS = S.length;
-  // 5. Let functionalReplace be IsCallable(replaceValue).
+/** https://tc39.es/ecma262/#sec-regexp.prototype-%symbol.replace% */
+function* RegExpProto_replace([_string = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const regexp = thisValue;
+  if (!(regexp instanceof ObjectValue)) return Throw.TypeError('$1 is not a $2 object', regexp, 'RegExp');
+  const string = Q(yield* ToString(_string));
+  const stringLength = string.length;
   const functionalReplace = IsCallable(replaceValue);
-  // 6. If functionalReplace is false, then
   if (!functionalReplace) {
-    // a. Set replaceValue to ? ToString(replaceValue).
     replaceValue = Value(Q(yield* ToString(replaceValue)));
   }
-  // 7. Let flags be ? ToString(? Get(rx, "flags")).
-  const flags = Q(yield* ToString(Q(yield* Get(rx, 'flags'))));
-  // 8. If flags contains "g", let global be true. Otherwise, let global be false.
-  const global = flags.includes('g') ? Value.true : Value.false;
-  let fullUnicode;
-  // 9. If global is true, then
-  if (global === Value.true) {
-    // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-    fullUnicode = flags.includes('u');
-    // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-    Q(yield* Set(rx, 'lastIndex', F(+0), true));
+  const flags = Q(yield* ToString(Q(yield* Get(regexp, 'flags'))));
+  const global = flags.includes('g');
+  if (global) {
+    Q(yield* Set(regexp, 'lastIndex', F(+0), true));
   }
-  // 10. Let results be a new empty List.
-  const results = [];
-  // 11. Let done be false.
+  const results: ObjectValue[] = [];
   let done = false;
-  // 12. Repeat, while done is false,
   while (!done) {
-    // a. Let result be ? RegExpExec(rx, S).
-    const result = Q(yield* RegExpExec(rx, S));
-    // b. If result is null, set done to true.
+    const result = Q(yield* RegExpExec(regexp, string));
     if (result instanceof NullValue) {
       done = true;
-    } else { // c. Else,
-      // i. Append result to results.
+    } else {
       results.push(result);
-      // ii. If global is false, set done to true.
-      if (global === Value.false) {
+      if (!global) {
         done = true;
-      } else { // iii. Else,
-        // 1. Let matchStr be ? ToString(? Get(result, "0")).
-        const matchStr = Q(yield* ToString(Q(yield* Get(result, '0'))));
-        // 2. If matchStr is the empty String, then
-        if (matchStr === '') {
-          // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-          const thisIndex = R(Q(yield* ToLength(Q(yield* Get(rx, 'lastIndex')))));
-          // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
-          const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode!);
-          // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-          Q(yield* Set(rx, 'lastIndex', F(nextIndex), true));
+      } else {
+        const matchString = Q(yield* ToString(Q(yield* Get(result, '0'))));
+        if (matchString === '') {
+          const thisIndex = R(Q(yield* ToLength(Q(yield* Get(regexp, 'lastIndex')))));
+          const fullUnicode = flags.includes('u') || flags.includes('v');
+          const nextIndex = AdvanceStringIndex(string, thisIndex, fullUnicode);
+          Q(yield* Set(regexp, 'lastIndex', F(nextIndex), true));
         }
       }
     }
   }
-  // 13. Let accumulatedResult be the empty String.
   let accumulatedResult = '';
-  // 14. Let nextSourcePosition be 0.
   let nextSourcePosition = 0;
-  // 15. For each element result of results, do
   for (const result of results) {
-    // a. Let resultLength be ? LengthOfArrayLike(result).
-    let nCaptures = Q(yield* LengthOfArrayLike(result));
-    // b. Let nCaptures be max(resultLength - 1, 0).
-    nCaptures = Math.max(nCaptures - 1, 0);
-    // c. Let matched be ? ToString(? Get(result, "0")).
+    const resultLength = Q(yield* LengthOfArrayLike(result));
+    const capturesCount = Math.max(resultLength - 1, 0);
     const matched = Q(yield* ToString(Q(yield* Get(result, '0'))));
-    // d. Let matchLength be the length of matched.
     const matchLength = matched.length;
-    // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
     let position = Q(yield* ToIntegerOrInfinity(Q(yield* Get(result, 'index'))));
-    // f. Set position to the result of clamping position between 0 and lengthS.
-    position = Math.max(Math.min(position, lengthS), 0);
-    // g. Let captures be a new empty List.
+    position = clamp(0, position, stringLength);
     const captures: (string | undefined)[] = [];
-    // h. Let n be 1.
-    let n = 1;
-    // i. Repeat, while n ≤ nCaptures,
-    while (n <= nCaptures) {
-      // i. Let capN be ? Get(result, ! ToString(𝔽(n))).
-      let capN: Value | string = Q(yield* Get(result, X(ToString(F(n)))));
-      // ii. If capN is not undefined, then
-      if (capN !== Value.undefined) {
-        // 1. Set capN to ? ToString(capN).
-        capN = Q(yield* ToString(capN));
+    let captureNumber = 1;
+    while (captureNumber <= capturesCount) {
+      let capture: Value | string = Q(yield* Get(result, X(ToString(F(captureNumber)))));
+      if (capture !== Value.undefined) {
+        capture = Q(yield* ToString(capture));
       }
-      // iii. Append capN to captures.
-      captures.push(capN instanceof UndefinedValue ? undefined : capN);
-      // iv. NOTE: When n = 1, the preceding step puts the first element into captures
-      //     (at index 0). More generally, the nth capture (the characters captured by
-      //     the nth set of capturing parentheses) is at captures[n - 1].
-      // v. Set n to n + 1.
-      n += 1;
+      captures.push(capture instanceof UndefinedValue ? undefined : capture);
+      captureNumber += 1;
     }
-    // j. Let namedCaptures be ? Get(result, "groups").
     let namedCaptures = Q(yield* Get(result, 'groups'));
-    let replacement;
-    // k. If functionalReplace is true, then
+    let replacementString;
     if (functionalReplace) {
-      // i. Let replacerArgs be the list-concatenation of « matched », captures, and « 𝔽(position), S ».
-      const replacerArgs: Value[] = [Value(matched), ...captures.map(Value), F(position), Value(S)];
-      // ii. If namedCaptures is not undefined, then
+      const replacerArgs: Value[] = [Value(matched), ...captures.map(Value), F(position), Value(string)];
       if (namedCaptures !== Value.undefined) {
-        // 1. Append namedCaptures to replacerArgs.
         replacerArgs.push(namedCaptures);
       }
-      // iii. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
-      const replValue = Q(yield* Call(replaceValue, Value.undefined, replacerArgs));
-      // iv. Let replacement be ? ToString(replValue).
-      replacement = Q(yield* ToString(replValue));
-    } else { // l. Else,
-      // i. If namedCaptures is not undefined, then
+      const replacementValue = Q(yield* Call(replaceValue, Value.undefined, replacerArgs));
+      replacementString = Q(yield* ToString(replacementValue));
+    } else {
       if (namedCaptures !== Value.undefined) {
-        // 1. Set namedCaptures to ? ToObject(namedCaptures).
         namedCaptures = Q(ToObject(namedCaptures));
       }
-      // ii. Let replacement be ? GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue).
-      replacement = Q(yield* GetSubstitution(matched, S, position, captures, namedCaptures, (replaceValue as JSStringValue).stringValue()));
+      replacementString = Q(yield* GetSubstitution(matched, string, BigInt(position), captures, namedCaptures, (replaceValue as JSStringValue).stringValue()));
     }
-    // m. If position ≥ nextSourcePosition, then
     if (position >= nextSourcePosition) {
-      // i. NOTE: position should not normally move backwards. If it does, it is an indication of an
-      //          ill-behaving RegExp subclass or use of an access triggered side-effect to change the
-      //          global flag or other characteristics of rx. In such cases, the corresponding substitution is ignored.
-      // ii. Set accumulatedResult to the string-concatenation of accumulatedResult, the substring of S from nextSourcePosition to position, and replacement.
-      accumulatedResult = accumulatedResult + S.substring(nextSourcePosition, position) + replacement;
-      // iii. Set nextSourcePosition to position + matchLength.
+      accumulatedResult += string.substring(nextSourcePosition, position) + replacementString;
       nextSourcePosition = position + matchLength;
     }
   }
-  // 16. If nextSourcePosition ≥ lengthS, return accumulatedResult.
-  if (nextSourcePosition >= lengthS) {
-    return Value(accumulatedResult);
-  }
-  // 17. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
-  return Value(accumulatedResult + S.substring(nextSourcePosition));
+  if (nextSourcePosition >= stringLength) return Value(accumulatedResult);
+  return Value(accumulatedResult + string.substring(nextSourcePosition));
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@search */

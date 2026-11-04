@@ -2,17 +2,19 @@ import {
   ObjectValue, UndefinedValue, Value,
 } from '../value.mts';
 import { Q } from '../completion.mts';
+import { min } from '../abstract-ops/math.mts';
 import {
   Assert,
   Get,
   ToString,
   Throw,
   type PlainEvaluator,
+  type Integer,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export function* GetSubstitution(matched: string, str: string, position: number, captures: readonly (string | undefined)[], namedCaptures: undefined | UndefinedValue | ObjectValue, replacementTemplate: string): PlainEvaluator<string> {
-  const stringLength = str.length;
+export function* GetSubstitution(matched: string, str: string, position: Integer, captures: readonly (string | undefined)[], namedCaptures: undefined | UndefinedValue | ObjectValue, replacementTemplate: string): PlainEvaluator<string> {
+  const stringLength = BigInt(str.length);
   Assert(position <= stringLength);
   const result: string[] = [];
   let templateRemainder = replacementTemplate;
@@ -24,15 +26,15 @@ export function* GetSubstitution(matched: string, str: string, position: number,
       refReplacement = '$';
     } else if (templateRemainder.startsWith('$`')) {
       ref = '$`';
-      refReplacement = str.slice(0, position);
+      refReplacement = str.slice(0, Number(position));
     } else if (templateRemainder.startsWith('$&')) {
       ref = '$&';
       refReplacement = matched;
     } else if (templateRemainder.startsWith("$'")) {
       ref = "$'";
-      const matchLength = matched.length;
+      const matchLength = BigInt(matched.length);
       const tailPos = position + matchLength;
-      refReplacement = str.slice(Math.min(tailPos, stringLength));
+      refReplacement = str.slice(Number(min(tailPos, stringLength)));
     } else if (templateRemainder.match(/^\$\d+/)) {
       let digitCount = templateRemainder.match(/^\$\d\d/) ? 2 : 1;
       let digits = templateRemainder.slice(1, 1 + digitCount);

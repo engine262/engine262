@@ -2395,7 +2395,7 @@ export declare function GetStartOfDay(timeZone: AvailableTimeZoneIdentifier, iso
 export declare function GetStringIndex(S: string, Input: readonly string[], e: number): number;
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export declare function GetSubstitution(matched: string, str: string, position: number, captures: readonly (string | undefined)[], namedCaptures: undefined | UndefinedValue | ObjectValue, replacementTemplate: string): PlainEvaluator<string>;
+export declare function GetSubstitution(matched: string, str: string, position: Integer, captures: readonly (string | undefined)[], namedCaptures: undefined | UndefinedValue | ObjectValue, replacementTemplate: string): PlainEvaluator<string>;
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendaridentifierwithisodefault */
 export declare function GetTemporalCalendarIdentifierWithISODefault(temporalObjectLike: ObjectValue): PlainEvaluator<KnownCalendarType>;
@@ -6221,7 +6221,7 @@ export declare function StringCreate(value: string, prototype: ObjectValue): Mut
 /** https://tc39.es/ecma262/#sec-stringgetownproperty */
 export declare function StringGetOwnProperty(string: StringObject, propertyKey: string | PropertyKeyValue): FullyPopulatedDataDescriptor | undefined;
 
-export declare function StringIndexOf(string: string, searchValue: string, fromIndex: number): NumberValue;
+export declare function StringIndexOf(string: string, searchValue: string, fromIndex: Integer): Integer | 'not-found';
 
 export declare interface StringObject extends ExoticObject {
     readonly StringData: string;
