@@ -344,29 +344,27 @@ function* IteratorProto_forEach([procedure = Value.undefined]: Arguments, { this
   }
 }
 
-/** https://tc39.es/proposal-iterator-includes/#sec-iterator.prototype.includes */
+/** https://tc39.es/ecma262/#sec-iterator.prototype.includes */
 function* IteratorProto_includes([searchElement = Value.undefined, skippedElements = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const obj = thisValue;
-  if (!(obj instanceof ObjectValue)) {
-    return Throw.TypeError('$1 is not an object', obj);
-  }
+  if (!(obj instanceof ObjectValue)) return Throw.TypeError('$1 is not an object', obj);
   let iterated: IteratorRecord = { Iterator: obj, NextMethod: Value.undefined, Done: false };
-  let toSkip: NumberValue;
+  let toSkip: number;
   if (skippedElements === Value.undefined) {
-    toSkip = Value(0);
+    toSkip = 0;
   } else {
     if (!(skippedElements instanceof NumberValue)
         || (!skippedElements.isInfinity() && !skippedElements.isIntegralNumber())) {
       const error = Throw.TypeError('$1 is not an integral Number or infinity', skippedElements);
       return Q(yield* IteratorClose(iterated, error));
     }
-    toSkip = skippedElements;
+    toSkip = skippedElements.value;
   }
-  if (toSkip.value < -0) {
+  if (toSkip < -0) {
     const error = Throw.RangeError('$1 is out of range', toSkip);
     return Q(yield* IteratorClose(iterated, error));
   }
-  if (toSkip.isFinite() && toSkip.value > (2 ** 53) - 1) {
+  if (Number.isFinite(toSkip) && toSkip > (2 ** 53) - 1) {
     const error = Throw.RangeError('$1 is out of range', toSkip);
     return Q(yield* IteratorClose(iterated, error));
   }
@@ -374,10 +372,8 @@ function* IteratorProto_includes([searchElement = Value.undefined, skippedElemen
   iterated = Q(yield* GetIteratorDirect(obj));
   while (true) {
     const value: Value | 'done' = Q(yield* IteratorStepValue(iterated));
-    if (value === 'done') {
-      return Value.false;
-    }
-    if (skipped < toSkip.value) {
+    if (value === 'done') return Value.false;
+    if (skipped < toSkip) {
       skipped += 1;
     } else if (SameValueZero(value, searchElement)) {
       return Q(yield* IteratorClose(iterated, NormalCompletion(Value.true)));
@@ -385,7 +381,7 @@ function* IteratorProto_includes([searchElement = Value.undefined, skippedElemen
   }
 }
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator% */
+/** https://tc39.es/ecma262/#sec-iterator.prototype-%symbol.iterator% */
 function IteratorProto_iterator(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
