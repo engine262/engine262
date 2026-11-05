@@ -8,7 +8,7 @@ import {
   Call,
   CreateBuiltinFunction,
   IsCallable,
-  OrdinaryCreateFromConstructor,
+  OrdinaryObjectCreate,
   Realm,
   RequireInternalSlot,
   surroundingAgent,
@@ -68,11 +68,10 @@ function* DisposableStackProto_move(_args: Arguments, { thisValue }: FunctionCal
   Q(RequireInternalSlot(thisValue, 'DisposableState'));
   const disposableStack = thisValue as DisposableStackObject;
   if (disposableStack.DisposableState === 'disposed') return Throw.ReferenceError('Object is disposed');
-  const newDisposableStack = Q(yield* OrdinaryCreateFromConstructor(
-    surroundingAgent.intrinsic('%DisposableStack%'),
-    '%DisposableStack.prototype%',
+  const newDisposableStack = OrdinaryObjectCreate(
+    surroundingAgent.intrinsic('%DisposableStack.prototype%'),
     ['DisposableState', 'DisposableResourceStack'],
-  )) as Mutable<DisposableStackObject>;
+  ) as Mutable<DisposableStackObject>;
   newDisposableStack.DisposableState = 'pending';
   newDisposableStack.DisposableResourceStack = disposableStack.DisposableResourceStack;
   disposableStack.DisposableResourceStack = [];
