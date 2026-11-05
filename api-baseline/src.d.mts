@@ -1045,7 +1045,7 @@ export declare function CreateDecoratorContextObject(kind: 'class' | ClassElemen
 /** https://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
 export declare function CreateDefaultExportSyntheticModule(defaultExport: Value): SyntheticModuleRecord;
 
-export declare function CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value): ValueEvaluator;
+export declare function CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', _parameterArgs: Arguments, bodyArg: Value): ValueEvaluator;
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-createfieldinitializerfunction */
 export declare function CreateFieldInitializerFunction(homeObject: ObjectValue, propName: PropertyKeyValue | PrivateName, Initializer: ParseNode.AssignmentExpressionOrHigher): Mutable<ECMAScriptFunctionObject>;
@@ -5494,7 +5494,7 @@ export declare function performDevtoolsEval(source: string, evalRealm: ManagedRe
 
 /** https://tc39.es/ecma262/#sec-global-object */
 /** https://tc39.es/ecma262/#sec-performeval */
-export declare function PerformEval(x: Value, strictCaller: boolean, direct: 'direct-eval' | 'indirect-eval'): ValueEvaluator;
+export declare function PerformEval(source: Value, strictCaller: boolean, direct: 'direct-eval' | 'indirect-eval'): ValueEvaluator;
 
 /** https://tc39.es/ecma262/#sec-performpromisethen */
 export declare function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability: PromiseCapabilityRecord): PromiseObject;
