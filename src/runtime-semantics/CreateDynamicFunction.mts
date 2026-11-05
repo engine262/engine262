@@ -2,13 +2,14 @@ import { Q, ThrowCompletion, X } from '../completion.mts';
 import { Parser, wrappedParse } from '../parse.mts';
 import { Token } from '../parser/tokens.mts';
 import {
-  Descriptor, UndefinedValue, Value,
+  Descriptor, ObjectValue, UndefinedValue, Value,
   type Arguments,
 } from '../value.mts';
 import { __ts_cast__, isArray } from '../utils/language.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { FunctionKind } from '../parser/FunctionParser.mts';
 import {
+  HostGetCodeForEval,
   HostEnsureCanCompileStrings,
   surroundingAgent,
 } from '#self';
@@ -26,7 +27,7 @@ import {
   type ValueEvaluator,
 } from '#self';
 
-export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', parameterArgs: Arguments, bodyArg: Value): ValueEvaluator {
+export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', _parameterArgs: Arguments, bodyArg: Value): ValueEvaluator {
   if (newTarget instanceof UndefinedValue) {
     newTarget = constructor;
   }
@@ -67,29 +68,33 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
     parameterSym = (parser: Parser) => parameterSymParser(parser, true, true);
     fallbackProto = '%AsyncGeneratorFunction.prototype%';
   }
-  const argCount = parameterArgs.length;
+  const argCount = _parameterArgs.length;
+  const parameterArgs = _parameterArgs as Value[];
   const parameterStrings: string[] = [];
   for (const arg of parameterArgs) {
-    parameterStrings.push(Q(yield* ToString(arg!)));
+    let parameterString = arg instanceof ObjectValue ? HostGetCodeForEval(arg) : undefined;
+    if (parameterString === undefined) parameterString = Q(yield* ToString(arg));
+    parameterStrings.push(parameterString);
   }
-  const bodyString = Q(yield* ToString(bodyArg));
+  let bodyString = bodyArg instanceof ObjectValue ? HostGetCodeForEval(bodyArg) : undefined;
+  if (bodyString === undefined) bodyString = Q(yield* ToString(bodyArg));
   const currentRealm = surroundingAgent.currentRealmRecord;
-  Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, 'function'));
-  let P = '';
+  let joinedParamsString = '';
   if (argCount > 0) {
-    P = parameterStrings[0];
+    joinedParamsString = parameterStrings[0];
     let k = 1;
     while (k < argCount) {
       const nextArgString = parameterStrings[k];
-      P = `${P},${nextArgString}`;
+      joinedParamsString = `${joinedParamsString},${nextArgString}`;
       k += 1;
     }
   }
   const bodyParseString = `\u{000A}${bodyString}\u{000A}`;
-  const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyParseString}}`;
+  const sourceString = `${prefix} anonymous(${joinedParamsString}\u{000A}) {${bodyParseString}}`;
+  Q(yield* HostEnsureCanCompileStrings(currentRealm, parameterStrings, bodyString, sourceString, 'function', parameterArgs, bodyArg));
   const sourceText = sourceString;
   const parameters = wrappedParse({
-    source: `${' '.repeat(prefix.length + 10)}(${P}\n)`,
+    source: `${' '.repeat(prefix.length + 10)}(${joinedParamsString}\n)`,
     decoratingSource: sourceText,
   }, (parser) => {
     const result = parameterSym(parser);
@@ -97,7 +102,7 @@ export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: F
     return result;
   });
   const body = wrappedParse({
-    source: `${' '.repeat(prefix.length + P.length + 12)}\u{000A} {${bodyParseString}}`,
+    source: `${' '.repeat(prefix.length + joinedParamsString.length + 12)}\u{000A} {${bodyParseString}}`,
     decoratingSource: sourceText,
   }, (parser) => {
     const result = bodySym(parser);

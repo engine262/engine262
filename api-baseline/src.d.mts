@@ -2555,10 +2555,12 @@ export declare function HostEnqueueFinalizationRegistryCleanupJob(finalizationRe
 /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
 export declare function HostEnqueuePromiseJob(job: () => PlainEvaluator, realm: Realm | null): void;
 
-export declare function HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: 'direct-eval' | 'indirect-eval' | 'function'): PlainEvaluator;
+export declare function HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, codeString: string, compilationType: 'direct-eval' | 'indirect-eval' | 'function', parameterArgs: readonly Value[], bodyArg: Value): PlainEvaluator;
 
 /** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
 export declare function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord): void;
+
+export declare function HostGetCodeForEval(arg: ObjectValue): string | undefined;
 
 /** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
 export declare function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord): readonly {
@@ -2576,8 +2578,10 @@ export declare function HostHasSourceTextAvailable(func: FunctionObject): boolea
 export declare interface HostHooks {
     /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
     HostEnqueueFinalizationRegistryCleanupJob?(finalizationRegistry: FinalizationRegistryObject): void;
+    /** https://tc39.es/ecma262/#sec-hostgetcodeforeval */
+    HostGetCodeForEval?(arg: ObjectValue): string | undefined;
     /** https://tc39.es/ecma262/#sec-hostensurecancompilestrings */
-    HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: 'direct-eval' | 'indirect-eval' | 'function'): PlainEvaluator | PlainCompletion<void>;
+    HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, codeString: string, compilationType: 'direct-eval' | 'indirect-eval' | 'function', parameterArgs: readonly Value[], bodyArg: Value): PlainEvaluator | PlainCompletion<void>;
     /** https://tc39.es/ecma262/#sec-hosthassourcetextavailable */
     HostHasSourceTextAvailable?(func: FunctionObject): boolean;
     /** https://tc39.es/proposal-shadowrealm/#sec-hostinitializeshadowrealm */

@@ -105,7 +105,7 @@ export function* WrappedFunctionCreate(callerRealm: Realm, Target: FunctionObjec
 
 /** https://tc39.es/proposal-shadowrealm/#sec-performshadowrealmeval */
 export function* PerformShadowRealmEval(sourceText: string, callerRealm: Realm, evalRealm: Realm): ValueEvaluator {
-  Q(yield* HostEnsureCanCompileStrings(evalRealm, [], sourceText, 'indirect-eval'));
+  Q(yield* HostEnsureCanCompileStrings(evalRealm, [], sourceText, sourceText, 'indirect-eval', [], Value(sourceText)));
   const script = wrappedParse({ source: sourceText }, (p) => p.scope.with({
     newTarget: false,
     superProperty: false,

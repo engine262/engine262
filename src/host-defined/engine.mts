@@ -96,8 +96,10 @@ export type HostPromiseRejectionTracker = (promise: PromiseObject, operation: 'r
 export interface HostHooks {
   /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
   HostEnqueueFinalizationRegistryCleanupJob?(finalizationRegistry: FinalizationRegistryObject): void;
+  /** https://tc39.es/ecma262/#sec-hostgetcodeforeval */
+  HostGetCodeForEval?(arg: ObjectValue): string | undefined;
   /** https://tc39.es/ecma262/#sec-hostensurecancompilestrings */
-  HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: 'direct-eval' | 'indirect-eval' | 'function'): PlainEvaluator | PlainCompletion<void>;
+  HostEnsureCanCompileStrings?(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, codeString: string, compilationType: 'direct-eval' | 'indirect-eval' | 'function', parameterArgs: readonly Value[], bodyArg: Value): PlainEvaluator | PlainCompletion<void>;
   /** https://tc39.es/ecma262/#sec-hosthassourcetextavailable */
   HostHasSourceTextAvailable?(func: FunctionObject): boolean;
   /** https://tc39.es/proposal-shadowrealm/#sec-hostinitializeshadowrealm */
@@ -203,8 +205,12 @@ export function* ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator {
   return result as ValueCompletion;
 }
 
-export function* HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, direct: 'direct-eval' | 'indirect-eval' | 'function'): PlainEvaluator {
-  const completion = surroundingAgent.hostDefinedOptions.hostHooks?.HostEnsureCanCompileStrings?.(calleeRealm, parameterStrings, bodyString, direct);
+export function HostGetCodeForEval(arg: ObjectValue): string | undefined {
+  return surroundingAgent.hostDefinedOptions.hostHooks?.HostGetCodeForEval?.(arg);
+}
+
+export function* HostEnsureCanCompileStrings(calleeRealm: Realm, parameterStrings: readonly string[], bodyString: string, codeString: string, compilationType: 'direct-eval' | 'indirect-eval' | 'function', parameterArgs: readonly Value[], bodyArg: Value): PlainEvaluator {
+  const completion = surroundingAgent.hostDefinedOptions.hostHooks?.HostEnsureCanCompileStrings?.(calleeRealm, parameterStrings, bodyString, codeString, compilationType, parameterArgs, bodyArg);
   if (!completion) {
     return NormalCompletion(undefined);
   }
