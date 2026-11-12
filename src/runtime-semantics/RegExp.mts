@@ -1185,7 +1185,7 @@ function WordCharacters(rer: RegExpRecord): CharSet {
 function AllCharacters(rer: RegExpRecord): VirtualCharSet {
   if (rer.UnicodeSets && rer.IgnoreCase) {
     // Return the CharSet containing all Unicode code points c that do not have a Simple Case Folding mapping (that is, scf(c)=c).
-    return new VirtualCharSet((char) => Unicode.isCharacter(char) && Unicode.SimpleOrCommonCaseFoldingMapping(char) !== char);
+    return new VirtualCharSet((char) => Unicode.isCharacter(char) && Unicode.SimpleOrCommonCaseFoldingMapping(char) === char);
   } else if (HasEitherUnicodeFlag(rer)) {
     // Return the CharSet containing all code point values.
     return new VirtualCharSet((char) => Unicode.isCharacter(char));
@@ -1220,7 +1220,12 @@ function MaybeSimpleCaseFolding(rer: RegExpRecord, A: CharSet): CharSet {
     if (scf !== ch) {
       return false;
     }
-    return A.has(ch, rer);
+    if (rer) {
+      // A.has canonicalizes the members of A, which is scf here.
+      return A.has(ch, rer);
+    }
+    // ch is in scf(A) if some member of A folds to ch, not only if ch itself is in A.
+    return Unicode.CaseFoldingCandidates(ch).some((candidate) => A.has(candidate, undefined));
   };
   return CharSet.union(ConcreteStringSet.of(scfString), new VirtualCharSet(scfChar));
 }
