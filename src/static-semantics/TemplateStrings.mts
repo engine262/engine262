@@ -57,10 +57,10 @@ export function TV(s: string) {
           if (s[i] === '{') {
             i += 1;
             const start = i;
-            do {
+            while (isHexDigit(s[i])) {
               i += 1;
-            } while (isHexDigit(s[i]));
-            if (s[i] !== '}') {
+            }
+            if (i === start || s[i] !== '}') {
               return undefined;
             }
             const n = Number.parseInt(s.slice(start, i), 16);
@@ -81,12 +81,21 @@ export function TV(s: string) {
           if (isDecimalDigit(s[i + 1])) {
             return undefined;
           }
-          return '\u{0000}';
+          buffer += '\u{0000}';
+          break;
         default:
-          if (isLineTerminator(s)) {
-            return '';
+          // NotEscapeSequence: DecimalDigit (other than a lone `0`, handled above)
+          if (isDecimalDigit(s[i])) {
+            return undefined;
           }
-          return undefined;
+          // LineContinuation: the TV is the empty String.
+          // The parser has already normalized <CR><LF> and <CR> to <LF>.
+          if (isLineTerminator(s[i])) {
+            break;
+          }
+          // NonEscapeCharacter: the TV is the character itself.
+          buffer += s[i];
+          break;
       }
     } else {
       buffer += s[i];
