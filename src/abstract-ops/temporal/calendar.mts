@@ -23,7 +23,7 @@ import {
   CreateDateDurationRecord,
   CreateISODateRecord,
   Get,
-  InLeapYear,
+  IsLeapYear,
   DayWithinYear,
   ISODateSurpasses,
   ISODateWithinLimits,
@@ -33,7 +33,6 @@ import {
   Q,
   RegulateISODate,
   Throw,
-  TimeFromYear,
   WeekDay,
   ToPrimitive,
   ToString,
@@ -43,7 +42,6 @@ import {
   type DateDurationRecord,
   type FiniteTimeValue,
   type Integer,
-  type IntegralNumber,
   type PlainCompletion, type PlainEvaluator,
   type TemporalPlainDateObject,
   type TemporalPlainDateTimeObject,
@@ -459,7 +457,7 @@ export function ISODaysInMonth(year: Integer, month: Integer): Integer {
     return 30n;
   }
   Assert(month === 2n);
-  return (28n + InLeapYear(TimeFromYear(year) as FiniteTimeValue));
+  return 28n + (IsLeapYear(year) ? 1n : 0n);
 }
 
 /** https://tc39.es/proposal-temporal/#sec-temporal-isoweekofyear */
@@ -481,14 +479,14 @@ export function ISOWeekOfYear(isoDate: ISODateRecord): YearWeekRecord {
     if (dayOfJan1st === friday) {
       return { Week: maxWeekNumber, Year: year - 1n };
     }
-    if (dayOfJan1st === saturday && InLeapYear(TimeFromYear(year - 1n) as FiniteTimeValue) === 1n) {
+    if (dayOfJan1st === saturday && IsLeapYear(year - 1n)) {
       return { Week: maxWeekNumber, Year: year - 1n };
     }
     return { Week: maxWeekNumber - 1n, Year: year - 1n };
   }
   if (week === maxWeekNumber) {
     let daysInYear;
-    if (InLeapYear(TimeFromYear(year) as FiniteTimeValue) === 0n) {
+    if (!IsLeapYear(year)) {
       daysInYear = 365n;
     } else {
       daysInYear = 366n;
@@ -584,15 +582,8 @@ export function CalendarISOToDate(
   isoDate: ISODateRecord,
 ): CalendarDateRecord {
   if (calendar === 'iso8601') {
-    let daysInYear;
-    let inLeapYear;
-    if (InLeapYear(TimeFromYear(isoDate.Year) as IntegralNumber) === 1n) {
-      daysInYear = 366n;
-      inLeapYear = true;
-    } else {
-      daysInYear = 365n;
-      inLeapYear = false;
-    }
+    const inLeapYear = IsLeapYear(isoDate.Year);
+    const daysInYear = inLeapYear ? 366n : 365n;
     return {
       Era: undefined,
       EraYear: undefined,

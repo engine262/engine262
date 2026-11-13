@@ -9,10 +9,9 @@ import {
   CreateTemporalDuration,
   CreateTimeRecord,
   EnsureCompletion,
-  InLeapYear,
+  IsLeapYear,
   IsValidISODate,
   JSStringValue,
-  TimeFromYear,
   NormalCompletion,
   ObjectValue,
   Q,
@@ -23,7 +22,6 @@ import {
   X,
   type Formattable,
   type Integer,
-  type FiniteTimeValue,
   type MathematicalValue,
   type Mutable,
   type PlainCompletion, type PlainEvaluator, type TimeRecord,
@@ -1257,7 +1255,7 @@ export class DateParser {
   IsValidDate(node: RFC9557ParseNode.DateSpec) {
     this.IsValidMonthDay(node);
     const year = node.Year;
-    if (node.Month === 2n && node.Day === 29n && InLeapYear(TimeFromYear(year) as FiniteTimeValue) === 0n) {
+    if (node.Month === 2n && node.Day === 29n && !IsLeapYear(year)) {
       this.raise('Invalid date: $1 is not a leap year, so February does not have 29 days', year);
     }
   }

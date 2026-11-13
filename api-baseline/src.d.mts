@@ -2681,8 +2681,6 @@ export declare function InitializePrivateMethods(O: ObjectValue, elementDefiniti
 /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
 export declare function InitializeReferencedBinding(V: PlainCompletion<ReferenceRecord>, W: Value): PlainEvaluator;
 
-export declare function InLeapYear(t: FiniteTimeValue): 0n | 1n;
-
 /** https://tc39.es/ecma262/#sec-innermoduleevaluation */
 export declare function InnerModuleEvaluation(module: AbstractModuleRecord, stack: CyclicModuleRecord[], index: number): PlainEvaluator<number>;
 
@@ -3047,6 +3045,8 @@ export declare function isIntegerIndex(V: string | Value): boolean;
 export declare function IsIntegralNumber(argument: Value): boolean;
 
 export declare const isLeadingSurrogate: (cp: number) => boolean;
+
+export declare function IsLeapYear(y: Integer): boolean;
 
 /** https://tc39.es/ecma262/#sec-islessthan */
 export declare function IsLessThan(x: Value, y: Value, LeftFirst?: boolean): PlainEvaluator<boolean | undefined>;

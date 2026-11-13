@@ -82,54 +82,55 @@ export function DayWithinYear(t: FiniteTimeValue): Integer {
   return Day(t) - DayFromYear(YearFromTime(t));
 }
 
-export function InLeapYear(t: FiniteTimeValue): 0n | 1n {
-  const y = YearFromTime(t);
-  if (modulo(y, 400n) === 0n) return 1n;
-  if (modulo(y, 100n) === 0n) return 0n;
-  if (modulo(y, 4n) === 0n) return 1n;
-  return 0n;
+export function IsLeapYear(y: Integer): boolean {
+  if (modulo(y, 400n) === 0n) return true;
+  if (modulo(y, 100n) === 0n) return false;
+  if (modulo(y, 4n) === 0n) return true;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-month-number */
 export function MonthFromTime(t: FiniteTimeValue): Integer {
-  const inLeapYear = InLeapYear(t);
+  const y = YearFromTime(t);
+  const leapYearOffset = IsLeapYear(y) ? 1n : 0n;
   const dayWithinYear = DayWithinYear(t);
   if (dayWithinYear < 31n) return 0n;
-  if (dayWithinYear < 59n + inLeapYear) return 1n;
-  if (dayWithinYear < 90n + inLeapYear) return 2n;
-  if (dayWithinYear < 120n + inLeapYear) return 3n;
-  if (dayWithinYear < 151n + inLeapYear) return 4n;
-  if (dayWithinYear < 181n + inLeapYear) return 5n;
-  if (dayWithinYear < 212n + inLeapYear) return 6n;
-  if (dayWithinYear < 243n + inLeapYear) return 7n;
-  if (dayWithinYear < 273n + inLeapYear) return 8n;
-  if (dayWithinYear < 304n + inLeapYear) return 9n;
-  if (dayWithinYear < 334n + inLeapYear) return 10n;
-  Assert(dayWithinYear < 365n + inLeapYear);
+  if (dayWithinYear < 59n + leapYearOffset) return 1n;
+  if (dayWithinYear < 90n + leapYearOffset) return 2n;
+  if (dayWithinYear < 120n + leapYearOffset) return 3n;
+  if (dayWithinYear < 151n + leapYearOffset) return 4n;
+  if (dayWithinYear < 181n + leapYearOffset) return 5n;
+  if (dayWithinYear < 212n + leapYearOffset) return 6n;
+  if (dayWithinYear < 243n + leapYearOffset) return 7n;
+  if (dayWithinYear < 273n + leapYearOffset) return 8n;
+  if (dayWithinYear < 304n + leapYearOffset) return 9n;
+  if (dayWithinYear < 334n + leapYearOffset) return 10n;
+  Assert(dayWithinYear < 365n + leapYearOffset);
   return 11n;
 }
 
 /** https://tc39.es/ecma262/#sec-date-number */
 export function DateFromTime(t: FiniteTimeValue): Integer {
-  const inLeapYear = InLeapYear(t);
+  const y = YearFromTime(t);
+  const leapYearOffset = IsLeapYear(y) ? 1n : 0n;
   const dayWithinYear = DayWithinYear(t);
   const month = MonthFromTime(t);
   switch (month) {
     case 0n: return dayWithinYear + 1n;
     case 1n: return dayWithinYear - 30n;
-    case 2n: return dayWithinYear - 58n - inLeapYear;
-    case 3n: return dayWithinYear - 89n - inLeapYear;
-    case 4n: return dayWithinYear - 119n - inLeapYear;
-    case 5n: return dayWithinYear - 150n - inLeapYear;
-    case 6n: return dayWithinYear - 180n - inLeapYear;
-    case 7n: return dayWithinYear - 211n - inLeapYear;
-    case 8n: return dayWithinYear - 242n - inLeapYear;
-    case 9n: return dayWithinYear - 272n - inLeapYear;
-    case 10n: return dayWithinYear - 303n - inLeapYear;
+    case 2n: return dayWithinYear - 58n - leapYearOffset;
+    case 3n: return dayWithinYear - 89n - leapYearOffset;
+    case 4n: return dayWithinYear - 119n - leapYearOffset;
+    case 5n: return dayWithinYear - 150n - leapYearOffset;
+    case 6n: return dayWithinYear - 180n - leapYearOffset;
+    case 7n: return dayWithinYear - 211n - leapYearOffset;
+    case 8n: return dayWithinYear - 242n - leapYearOffset;
+    case 9n: return dayWithinYear - 272n - leapYearOffset;
+    case 10n: return dayWithinYear - 303n - leapYearOffset;
     default:
   }
   Assert(month === 11n);
-  return dayWithinYear - 333n - inLeapYear;
+  return dayWithinYear - 333n - leapYearOffset;
 }
 
 /** https://tc39.es/ecma262/#sec-week-day */
