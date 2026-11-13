@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 48467be077f4dcbf8745469f4898c14b75588154
+ * engine262 0.0.1 2278ba8f84ab6fdfeb487eb4dbc93b34a6526c4b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -16870,6 +16870,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             this.leftCapturingParenthesesBefore += 1;
             const groupNamePos = this.position + 1;
             const name = this.parseGroupName();
+            // Push before parsing the Disjunction: groups are numbered by their left parentheses.
+            this.capturingGroups.push({
+              GroupName: name,
+              position: groupNamePos
+            });
             node = {
               type: 'Atom',
               production: 'Group',
@@ -16878,10 +16883,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               Disjunction: this.parseDisjunction()
             };
             this.getAllGroupsWithName(name).push(node);
-            this.capturingGroups.push({
-              GroupName: name,
-              position: groupNamePos
-            });
           } else {
             const {
               PlusModifiers,
@@ -16898,6 +16899,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         } else {
           this.leftCapturingParenthesesBefore += 1;
+          this.capturingGroups.push({
+            GroupName: undefined,
+            position: this.position
+          });
           node = {
             type: 'Atom',
             production: 'Group',
@@ -16905,10 +16910,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             GroupSpecifier: undefined,
             Disjunction: this.parseDisjunction()
           };
-          this.capturingGroups.push({
-            GroupName: undefined,
-            position: this.position
-          });
         }
         this.expect(')');
         return node;
@@ -24564,7 +24565,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function AllCharacters(rer) {
     if (rer.UnicodeSets && rer.IgnoreCase) {
       // Return the CharSet containing all Unicode code points c that do not have a Simple Case Folding mapping (that is, scf(c)=c).
-      return new VirtualCharSet(char => Unicode.isCharacter(char) && Unicode.SimpleOrCommonCaseFoldingMapping(char) !== char);
+      return new VirtualCharSet(char => Unicode.isCharacter(char) && Unicode.SimpleOrCommonCaseFoldingMapping(char) === char);
     } else if (HasEitherUnicodeFlag(rer)) {
       // Return the CharSet containing all code point values.
       return new VirtualCharSet(char => Unicode.isCharacter(char));
@@ -24599,7 +24600,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (scf !== ch) {
         return false;
       }
-      return A.has(ch, rer);
+      if (rer) {
+        // A.has canonicalizes the members of A, which is scf here.
+        return A.has(ch, rer);
+      }
+      // ch is in scf(A) if some member of A folds to ch, not only if ch itself is in A.
+      return Unicode.CaseFoldingCandidates(ch).some(candidate => A.has(candidate, undefined));
     };
     return CharSet.union(ConcreteStringSet.of(scfString), new VirtualCharSet(scfChar));
   }
