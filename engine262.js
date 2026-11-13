@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 2278ba8f84ab6fdfeb487eb4dbc93b34a6526c4b
+ * engine262 0.0.1 46acc94625794d30f81b7a83dd608887530163a6
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -6630,8 +6630,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const f of functionsToInitialize) {
       // a. Let fn be the sole element of the BoundNames of f.
       const fn = BoundNames(f)[0];
-      // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
-      const fo = InstantiateFunctionObject(f, env, privateEnv);
+      // b. Let fo be InstantiateFunctionDeclaration of f with argument env and privateEnv.
+      const fo = InstantiateFunctionDeclaration(f, env, privateEnv);
       // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
       /* ReturnIfAbrupt */let _temp3 = yield* env.CreateGlobalFunctionBinding(fn, fo, false);
       /* ReturnIfAbrupt */if (_temp3 instanceof Completion) {
@@ -6654,11 +6654,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctiondeclaration */
   //   FunctionDeclaration :
   //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-  function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, env, privateEnv) {
+  function InstantiateOrdinaryFunctionDeclaration(FunctionDeclaration, env, privateEnv) {
     const {
       BindingIdentifier,
       FormalParameters,
@@ -6685,13 +6685,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return F.
     return F;
   }
-  InstantiateFunctionObject_FunctionDeclaration.section = 'https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject';
+  InstantiateOrdinaryFunctionDeclaration.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctiondeclaration';
 
-  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratordeclaration */
   //   GeneratorDeclaration :
   //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
   //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-  function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, env, privateEnv) {
+  function InstantiateGeneratorDeclaration(GeneratorDeclaration, env, privateEnv) {
     const {
       BindingIdentifier,
       FormalParameters,
@@ -6740,13 +6740,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Return F.
     return F;
   }
-  InstantiateFunctionObject_GeneratorDeclaration.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject';
+  InstantiateGeneratorDeclaration.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratordeclaration';
 
-  /** https://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctiondeclaration */
   //  AsyncFunctionDeclaration :
   //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncBody `}`
   //    `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
-  function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, env, privateEnv) {
+  function InstantiateAsyncFunctionDeclaration(AsyncFunctionDeclaration, env, privateEnv) {
     const {
       BindingIdentifier,
       FormalParameters,
@@ -6771,13 +6771,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Return F.
     return F;
   }
-  InstantiateFunctionObject_AsyncFunctionDeclaration.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject';
+  InstantiateAsyncFunctionDeclaration.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctiondeclaration';
 
-  /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratordeclaration */
   //  AsyncGeneratorDeclaration :
   //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
   //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-  function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, env, privateEnv) {
+  function InstantiateAsyncGeneratorDeclaration(AsyncGeneratorDeclaration, env, privateEnv) {
     const {
       BindingIdentifier,
       FormalParameters,
@@ -6826,22 +6826,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Return F.
     return F;
   }
-  InstantiateFunctionObject_AsyncGeneratorDeclaration.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody';
-  function InstantiateFunctionObject(AnyFunctionDeclaration, env, privateEnv) {
+  InstantiateAsyncGeneratorDeclaration.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratordeclaration';
+
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatefunctiondeclaration */
+  function InstantiateFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv) {
     switch (AnyFunctionDeclaration.type) {
       case 'FunctionDeclaration':
-        return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
+        return InstantiateOrdinaryFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
       case 'GeneratorDeclaration':
-        return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
+        return InstantiateGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
       case 'AsyncFunctionDeclaration':
-        return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
+        return InstantiateAsyncFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
       case 'AsyncGeneratorDeclaration':
-        return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
+        return InstantiateAsyncGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
       /* node:coverage ignore next */default:
         /* node:coverage ignore next */
         throw OutOfRange.exhaustive(AnyFunctionDeclaration);
     }
   }
+  InstantiateFunctionDeclaration.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-instantiatefunctiondeclaration';
 
   /** https://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
   // Script :
@@ -8036,8 +8039,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const f of functionsToInitialize) {
       // a. Let fn be the sole element of the BoundNames of f.
       const fn = BoundNames(f)[0];
-      // b. Let fo be InstantiateFunctionObject of f with argument lexEnv and privateEnv.
-      const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
+      // b. Let fo be InstantiateFunctionDeclaration of f with argument lexEnv and privateEnv.
+      const fo = InstantiateFunctionDeclaration(f, lexEnv, privateEnv);
       // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
       /* X */let _temp1 = varEnv.SetMutableBinding(fn, fo, false);
       /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
@@ -9918,8 +9921,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
           if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
-            // 1. Let fo be InstantiateFunctionObject of d with argument env.
-            const fo = InstantiateFunctionObject(d, env, null);
+            // 1. Let fo be InstantiateFunctionDeclaration of d with argument env.
+            const fo = InstantiateFunctionDeclaration(d, env, null);
             // 2. Call env.InitializeBinding(dn, fo).
             /* X */let _temp25 = env.InitializeBinding(dn, fo);
             /* node:coverage ignore next */if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
@@ -11924,8 +11927,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
           // i. Let fn be the sole element of the BoundNames of d.
           const fn = BoundNames(d)[0];
-          // ii. Let fo be InstantiateFunctionObject of d with argument env.
-          const fo = InstantiateFunctionObject(d, env, privateEnv);
+          // ii. Let fo be InstantiateFunctionDeclaration of d with argument env.
+          const fo = InstantiateFunctionDeclaration(d, env, privateEnv);
           // iii. Perform env.InitializeBinding(fn, fo).
           yield* env.InitializeBinding(fn, fo);
         }
@@ -34222,7 +34225,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     IsValidDate(node) {
       this.IsValidMonthDay(node);
       const year = node.Year;
-      if (node.Month === 2n && node.Day === 29n && InLeapYear(TimeFromYear(year)) === 0n) {
+      if (node.Month === 2n && node.Day === 29n && !IsLeapYear(year)) {
         this.raise('Invalid date: $1 is not a leap year, so February does not have 29 days', year);
       }
     }
@@ -40609,7 +40612,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return 30n;
     }
     /* Assert */ /* node:coverage ignore next */if (!(month === 2n)) throw new Assert.Error("month === 2n");
-    return 28n + InLeapYear(TimeFromYear(year));
+    return 28n + (IsLeapYear(year) ? 1n : 0n);
   }
   ISODaysInMonth.section = 'https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth';
 
@@ -40643,7 +40646,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           Year: year - 1n
         };
       }
-      if (dayOfJan1st === saturday && InLeapYear(TimeFromYear(year - 1n)) === 1n) {
+      if (dayOfJan1st === saturday && IsLeapYear(year - 1n)) {
         return {
           Week: maxWeekNumber,
           Year: year - 1n
@@ -40656,7 +40659,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     if (week === maxWeekNumber) {
       let daysInYear;
-      if (InLeapYear(TimeFromYear(year)) === 0n) {
+      if (!IsLeapYear(year)) {
         daysInYear = 365n;
       } else {
         daysInYear = 366n;
@@ -40753,15 +40756,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/proposal-temporal/#sec-temporal-calendarisotodate */
   function CalendarISOToDate(calendar, isoDate) {
     if (calendar === 'iso8601') {
-      let daysInYear;
-      let inLeapYear;
-      if (InLeapYear(TimeFromYear(isoDate.Year)) === 1n) {
-        daysInYear = 366n;
-        inLeapYear = true;
-      } else {
-        daysInYear = 365n;
-        inLeapYear = false;
-      }
+      const inLeapYear = IsLeapYear(isoDate.Year);
+      const daysInYear = inLeapYear ? 366n : 365n;
       return {
         Era: undefined,
         EraYear: undefined,
@@ -42902,37 +42898,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function DayWithinYear(t) {
     return Day(t) - DayFromYear(YearFromTime(t));
   }
-  function InLeapYear(t) {
-    const y = YearFromTime(t);
-    if (modulo(y, 400n) === 0n) return 1n;
-    if (modulo(y, 100n) === 0n) return 0n;
-    if (modulo(y, 4n) === 0n) return 1n;
-    return 0n;
+  function IsLeapYear(y) {
+    if (modulo(y, 400n) === 0n) return true;
+    if (modulo(y, 100n) === 0n) return false;
+    if (modulo(y, 4n) === 0n) return true;
+    return false;
   }
 
   /** https://tc39.es/ecma262/#sec-month-number */
   function MonthFromTime(t) {
-    const inLeapYear = InLeapYear(t);
+    const y = YearFromTime(t);
+    const leapYearOffset = IsLeapYear(y) ? 1n : 0n;
     const dayWithinYear = DayWithinYear(t);
     if (dayWithinYear < 31n) return 0n;
-    if (dayWithinYear < 59n + inLeapYear) return 1n;
-    if (dayWithinYear < 90n + inLeapYear) return 2n;
-    if (dayWithinYear < 120n + inLeapYear) return 3n;
-    if (dayWithinYear < 151n + inLeapYear) return 4n;
-    if (dayWithinYear < 181n + inLeapYear) return 5n;
-    if (dayWithinYear < 212n + inLeapYear) return 6n;
-    if (dayWithinYear < 243n + inLeapYear) return 7n;
-    if (dayWithinYear < 273n + inLeapYear) return 8n;
-    if (dayWithinYear < 304n + inLeapYear) return 9n;
-    if (dayWithinYear < 334n + inLeapYear) return 10n;
-    /* Assert */ /* node:coverage ignore next */if (!(dayWithinYear < 365n + inLeapYear)) throw new Assert.Error("dayWithinYear < 365n + inLeapYear");
+    if (dayWithinYear < 59n + leapYearOffset) return 1n;
+    if (dayWithinYear < 90n + leapYearOffset) return 2n;
+    if (dayWithinYear < 120n + leapYearOffset) return 3n;
+    if (dayWithinYear < 151n + leapYearOffset) return 4n;
+    if (dayWithinYear < 181n + leapYearOffset) return 5n;
+    if (dayWithinYear < 212n + leapYearOffset) return 6n;
+    if (dayWithinYear < 243n + leapYearOffset) return 7n;
+    if (dayWithinYear < 273n + leapYearOffset) return 8n;
+    if (dayWithinYear < 304n + leapYearOffset) return 9n;
+    if (dayWithinYear < 334n + leapYearOffset) return 10n;
+    /* Assert */ /* node:coverage ignore next */if (!(dayWithinYear < 365n + leapYearOffset)) throw new Assert.Error("dayWithinYear < 365n + leapYearOffset");
     return 11n;
   }
   MonthFromTime.section = 'https://tc39.es/ecma262/#sec-month-number';
 
   /** https://tc39.es/ecma262/#sec-date-number */
   function DateFromTime(t) {
-    const inLeapYear = InLeapYear(t);
+    const y = YearFromTime(t);
+    const leapYearOffset = IsLeapYear(y) ? 1n : 0n;
     const dayWithinYear = DayWithinYear(t);
     const month = MonthFromTime(t);
     switch (month) {
@@ -42941,26 +42938,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 1n:
         return dayWithinYear - 30n;
       case 2n:
-        return dayWithinYear - 58n - inLeapYear;
+        return dayWithinYear - 58n - leapYearOffset;
       case 3n:
-        return dayWithinYear - 89n - inLeapYear;
+        return dayWithinYear - 89n - leapYearOffset;
       case 4n:
-        return dayWithinYear - 119n - inLeapYear;
+        return dayWithinYear - 119n - leapYearOffset;
       case 5n:
-        return dayWithinYear - 150n - inLeapYear;
+        return dayWithinYear - 150n - leapYearOffset;
       case 6n:
-        return dayWithinYear - 180n - inLeapYear;
+        return dayWithinYear - 180n - leapYearOffset;
       case 7n:
-        return dayWithinYear - 211n - inLeapYear;
+        return dayWithinYear - 211n - leapYearOffset;
       case 8n:
-        return dayWithinYear - 242n - inLeapYear;
+        return dayWithinYear - 242n - leapYearOffset;
       case 9n:
-        return dayWithinYear - 272n - inLeapYear;
+        return dayWithinYear - 272n - leapYearOffset;
       case 10n:
-        return dayWithinYear - 303n - inLeapYear;
+        return dayWithinYear - 303n - leapYearOffset;
     }
     /* Assert */ /* node:coverage ignore next */if (!(month === 11n)) throw new Assert.Error("month === 11n");
-    return dayWithinYear - 333n - inLeapYear;
+    return dayWithinYear - 333n - leapYearOffset;
   }
   DateFromTime.section = 'https://tc39.es/ecma262/#sec-date-number';
 
@@ -45022,7 +45019,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     for (const f of functionsToInitialize) {
       const fn = BoundNames(f)[0];
-      const fo = InstantiateFunctionObject(f, lexicalEnv, privateEnv);
+      const fo = InstantiateFunctionDeclaration(f, lexicalEnv, privateEnv);
       if (varEnv instanceof GlobalEnvironmentRecord) {
         /* ReturnIfAbrupt */let _temp4 = yield* varEnv.CreateGlobalFunctionBinding(fn, fo, true);
         /* ReturnIfAbrupt */if (_temp4 instanceof Completion) {
@@ -56402,73 +56399,59 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 8. If Type(x) is Boolean, return the result of the comparison ! ToNumber(x) == y.
     if (x instanceof BooleanValue) {
-      /* X */let _temp10 = ToNumber(x);
-      /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
-      /* node:coverage ignore next */if (_temp10 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! ToNumber(x) returned an abrupt completion", {
-          cause: _temp10
-        });
-        _temp10 = _temp10.Value;
-      }
-      /* X */let _temp1 = yield* IsLooselyEqual(_temp10, y);
+      /* X */let _temp1 = ToNumber(x);
+      /* node:coverage ignore next */if (_temp1 && typeof _temp1 === 'object' && 'next' in _temp1) _temp1 = skipDebugger(_temp1);
       /* node:coverage ignore next */if (_temp1 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! yield* IsLooselyEqual(X(ToNumber(x)), y) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp1 instanceof AbruptCompletion) throw new Assert.Error("! ToNumber(x) returned an abrupt completion", {
           cause: _temp1
         });
         _temp1 = _temp1.Value;
       }
-      return _temp1;
+      return yield* IsLooselyEqual(_temp1, y);
     }
     // 9. If Type(y) is Boolean, return the result of the comparison x == ! ToNumber(y).
     if (y instanceof BooleanValue) {
-      /* X */let _temp12 = ToNumber(y);
-      /* node:coverage ignore next */if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
-      /* node:coverage ignore next */if (_temp12 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! ToNumber(y) returned an abrupt completion", {
-          cause: _temp12
+      /* X */let _temp10 = ToNumber(y);
+      /* node:coverage ignore next */if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
+      /* node:coverage ignore next */if (_temp10 instanceof Completion) {
+        /* node:coverage ignore next */if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! ToNumber(y) returned an abrupt completion", {
+          cause: _temp10
         });
+        _temp10 = _temp10.Value;
+      }
+      return yield* IsLooselyEqual(x, _temp10);
+    }
+    // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
+    if ((x instanceof JSStringValue || x instanceof NumberValue || x instanceof BigIntValue || x instanceof SymbolValue) && y instanceof ObjectValue) {
+      /* ReturnIfAbrupt */let _temp12 = yield* ToPrimitive(y);
+      /* ReturnIfAbrupt */if (_temp12 instanceof Completion) {
+        if (_temp12 instanceof AbruptCompletion) return _temp12;
         _temp12 = _temp12.Value;
       }
       /* X */let _temp11 = yield* IsLooselyEqual(x, _temp12);
       /* node:coverage ignore next */if (_temp11 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! yield* IsLooselyEqual(x, X(ToNumber(y))) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! yield* IsLooselyEqual(x, Q(yield* ToPrimitive(y))) returned an abrupt completion", {
           cause: _temp11
         });
         _temp11 = _temp11.Value;
       }
       return _temp11;
     }
-    // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
-    if ((x instanceof JSStringValue || x instanceof NumberValue || x instanceof BigIntValue || x instanceof SymbolValue) && y instanceof ObjectValue) {
-      /* ReturnIfAbrupt */let _temp14 = yield* ToPrimitive(y);
+    // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return the result of the comparison ToPrimitive(x) == y.
+    if (x instanceof ObjectValue && (y instanceof JSStringValue || y instanceof NumberValue || y instanceof BigIntValue || y instanceof SymbolValue)) {
+      /* ReturnIfAbrupt */let _temp14 = yield* ToPrimitive(x);
       /* ReturnIfAbrupt */if (_temp14 instanceof Completion) {
         if (_temp14 instanceof AbruptCompletion) return _temp14;
         _temp14 = _temp14.Value;
       }
-      /* X */let _temp13 = yield* IsLooselyEqual(x, _temp14);
+      /* X */let _temp13 = yield* IsLooselyEqual(_temp14, y);
       /* node:coverage ignore next */if (_temp13 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! yield* IsLooselyEqual(x, Q(yield* ToPrimitive(y))) returned an abrupt completion", {
+        /* node:coverage ignore next */if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! yield* IsLooselyEqual(Q(yield* ToPrimitive(x)), y) returned an abrupt completion", {
           cause: _temp13
         });
         _temp13 = _temp13.Value;
       }
       return _temp13;
-    }
-    // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return the result of the comparison ToPrimitive(x) == y.
-    if (x instanceof ObjectValue && (y instanceof JSStringValue || y instanceof NumberValue || y instanceof BigIntValue || y instanceof SymbolValue)) {
-      /* ReturnIfAbrupt */let _temp16 = yield* ToPrimitive(x);
-      /* ReturnIfAbrupt */if (_temp16 instanceof Completion) {
-        if (_temp16 instanceof AbruptCompletion) return _temp16;
-        _temp16 = _temp16.Value;
-      }
-      /* X */let _temp15 = yield* IsLooselyEqual(_temp16, y);
-      /* node:coverage ignore next */if (_temp15 instanceof Completion) {
-        /* node:coverage ignore next */if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! yield* IsLooselyEqual(Q(yield* ToPrimitive(x)), y) returned an abrupt completion", {
-          cause: _temp15
-        });
-        _temp15 = _temp15.Value;
-      }
-      return _temp15;
     }
     // 12. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
     if (x instanceof BigIntValue && y instanceof NumberValue || x instanceof NumberValue && y instanceof BigIntValue) {
@@ -79739,7 +79722,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ImportEntriesForModule = ImportEntriesForModule;
   exports.ImportedLocalNames = ImportedLocalNames;
   exports.ImportedNames = ImportedNames;
-  exports.InLeapYear = InLeapYear;
   exports.IncrementModuleAsyncEvaluationCount = IncrementModuleAsyncEvaluationCount;
   exports.InitializeBoundName = InitializeBoundName;
   exports.InitializeFieldOrAccessor = InitializeFieldOrAccessor;
@@ -79753,14 +79735,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.InstanceofOperator = InstanceofOperator;
   exports.InstantiateArrowFunctionExpression = InstantiateArrowFunctionExpression;
   exports.InstantiateAsyncArrowFunctionExpression = InstantiateAsyncArrowFunctionExpression;
+  exports.InstantiateAsyncFunctionDeclaration = InstantiateAsyncFunctionDeclaration;
   exports.InstantiateAsyncFunctionExpression = InstantiateAsyncFunctionExpression;
+  exports.InstantiateAsyncGeneratorDeclaration = InstantiateAsyncGeneratorDeclaration;
   exports.InstantiateAsyncGeneratorFunctionExpression = InstantiateAsyncGeneratorFunctionExpression;
-  exports.InstantiateFunctionObject = InstantiateFunctionObject;
-  exports.InstantiateFunctionObject_AsyncFunctionDeclaration = InstantiateFunctionObject_AsyncFunctionDeclaration;
-  exports.InstantiateFunctionObject_AsyncGeneratorDeclaration = InstantiateFunctionObject_AsyncGeneratorDeclaration;
-  exports.InstantiateFunctionObject_FunctionDeclaration = InstantiateFunctionObject_FunctionDeclaration;
-  exports.InstantiateFunctionObject_GeneratorDeclaration = InstantiateFunctionObject_GeneratorDeclaration;
+  exports.InstantiateFunctionDeclaration = InstantiateFunctionDeclaration;
+  exports.InstantiateGeneratorDeclaration = InstantiateGeneratorDeclaration;
   exports.InstantiateGeneratorFunctionExpression = InstantiateGeneratorFunctionExpression;
+  exports.InstantiateOrdinaryFunctionDeclaration = InstantiateOrdinaryFunctionDeclaration;
   exports.InstantiateOrdinaryFunctionExpression = InstantiateOrdinaryFunctionExpression;
   exports.InternalDurationSign = InternalDurationSign;
   exports.InterpretISODateTimeOffset = InterpretISODateTimeOffset;
@@ -79792,6 +79774,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IsImmutableBuffer = IsImmutableBuffer;
   exports.IsInTailPosition = IsInTailPosition;
   exports.IsIntegralNumber = IsIntegralNumber;
+  exports.IsLeapYear = IsLeapYear;
   exports.IsLessThan = IsLessThan;
   exports.IsLooselyEqual = IsLooselyEqual;
   exports.IsModuleSCCEvaluated = IsModuleSCCEvaluated;
