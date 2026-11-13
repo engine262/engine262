@@ -330,11 +330,11 @@ export function* IsLooselyEqual(x: Value, y: Value): PlainEvaluator<boolean> {
   }
   // 8. If Type(x) is Boolean, return the result of the comparison ! ToNumber(x) == y.
   if (x instanceof BooleanValue) {
-    return X(yield* IsLooselyEqual(X(ToNumber(x)), y));
+    return Q(yield* IsLooselyEqual(X(ToNumber(x)), y));
   }
   // 9. If Type(y) is Boolean, return the result of the comparison x == ! ToNumber(y).
   if (y instanceof BooleanValue) {
-    return X(yield* IsLooselyEqual(x, X(ToNumber(y))));
+    return Q(yield* IsLooselyEqual(x, X(ToNumber(y))));
   }
   // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
   if ((x instanceof JSStringValue || x instanceof NumberValue || x instanceof BigIntValue || x instanceof SymbolValue) && y instanceof ObjectValue) {
