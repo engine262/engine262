@@ -432,6 +432,8 @@ export class RegExpParser {
           this.leftCapturingParenthesesBefore += 1;
           const groupNamePos = this.position + 1;
           const name = this.parseGroupName();
+          // Push before parsing the Disjunction: groups are numbered by their left parentheses.
+          this.capturingGroups.push({ GroupName: name, position: groupNamePos });
           node = {
             type: 'Atom',
             production: 'Group',
@@ -440,7 +442,6 @@ export class RegExpParser {
             Disjunction: this.parseDisjunction(),
           };
           this.getAllGroupsWithName(name).push(node);
-          this.capturingGroups.push({ GroupName: name, position: groupNamePos });
         } else {
           const { PlusModifiers, MinusModifiers } = this.parseAtomModifiers();
           node = {
@@ -454,6 +455,7 @@ export class RegExpParser {
         }
       } else {
         this.leftCapturingParenthesesBefore += 1;
+        this.capturingGroups.push({ GroupName: undefined, position: this.position });
         node = {
           type: 'Atom',
           production: 'Group',
@@ -461,7 +463,6 @@ export class RegExpParser {
           GroupSpecifier: undefined,
           Disjunction: this.parseDisjunction(),
         };
-        this.capturingGroups.push({ GroupName: undefined, position: this.position });
       }
       this.expect(')');
       return node;
