@@ -17,7 +17,7 @@ export * from './MultiplicativeExpression.mts';
 export * from './ThrowStatement.mts';
 export * from './UpdateExpression.mts';
 export * from './GlobalDeclarationInstantiation.mts';
-export * from './InstantiateFunctionObject.mts';
+export * from './InstantiateFunctionDeclaration.mts';
 export * from './Script.mts';
 export * from './ScriptBody.mts';
 export * from './StatementList.mts';

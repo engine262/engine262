@@ -10,7 +10,7 @@ import {
   type ImportEntry,
   type ExportEntry,
 } from './static-semantics/all.mts';
-import { InstantiateFunctionObject } from './runtime-semantics/all.mts';
+import { InstantiateFunctionDeclaration } from './runtime-semantics/all.mts';
 import {
   Completion,
   NormalCompletion,
@@ -884,8 +884,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           || d.type === 'GeneratorDeclaration'
           || d.type === 'AsyncFunctionDeclaration'
           || d.type === 'AsyncGeneratorDeclaration') {
-          // 1. Let fo be InstantiateFunctionObject of d with argument env.
-          const fo = InstantiateFunctionObject(d, env, null);
+          // 1. Let fo be InstantiateFunctionDeclaration of d with argument env.
+          const fo = InstantiateFunctionDeclaration(d, env, null);
           // 2. Call env.InitializeBinding(dn, fo).
           X(env.InitializeBinding(dn, fo));
         }

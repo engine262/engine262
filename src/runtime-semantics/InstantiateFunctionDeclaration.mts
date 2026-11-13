@@ -14,11 +14,11 @@ import {
 } from '#self';
 import type { EnvironmentRecord, PrivateEnvironmentRecord } from '#self';
 
-/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctiondeclaration */
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
+export function InstantiateOrdinaryFunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -34,11 +34,11 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
   return F;
 }
 
-/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratordeclaration */
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
+export function InstantiateGeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -61,11 +61,11 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   return F;
 }
 
-/** https://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctiondeclaration */
 //  AsyncFunctionDeclaration :
 //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncBody `}`
 //    `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
-export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
+export function InstantiateAsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -79,11 +79,11 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
   return F;
 }
 
-/** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratordeclaration */
 //  AsyncGeneratorDeclaration :
 //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
 //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
+export function InstantiateAsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -106,16 +106,17 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   return F;
 }
 
-export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatefunctiondeclaration */
+export function InstantiateFunctionDeclaration(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null) {
   switch (AnyFunctionDeclaration.type) {
     case 'FunctionDeclaration':
-      return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
+      return InstantiateOrdinaryFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
     case 'GeneratorDeclaration':
-      return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
+      return InstantiateGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
     case 'AsyncFunctionDeclaration':
-      return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
+      return InstantiateAsyncFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
     case 'AsyncGeneratorDeclaration':
-      return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
+      return InstantiateAsyncGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
 
     default:
       throw OutOfRange.exhaustive(AnyFunctionDeclaration);

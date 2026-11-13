@@ -2706,28 +2706,29 @@ export declare function InstantiateArrowFunctionExpression(ArrowFunction: ParseN
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
 export declare function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctiondeclaration */
+export declare function InstantiateAsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
+
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
 export declare function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratordeclaration */
+export declare function InstantiateAsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
 export declare function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
 
-export declare function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatefunctiondeclaration */
+export declare function InstantiateFunctionDeclaration(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
-/** https://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
-export declare function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
-
-/** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
-export declare function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
-
-/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
-export declare function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
-
-/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject */
-export declare function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratordeclaration */
+export declare function InstantiateGeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
 export declare function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;
+
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctiondeclaration */
+export declare function InstantiateOrdinaryFunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | null): Mutable<ECMAScriptFunctionObject>;
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 export declare function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?: string | PropertyKeyValue | PrivateName): Mutable<ECMAScriptFunctionObject>;

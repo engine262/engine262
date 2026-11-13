@@ -6,7 +6,7 @@ import {
 import { EnsureCompletion, X, NormalCompletion } from '../completion.mts';
 import { DisposeResources } from '../abstract-ops/disposable-operations.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mts';
+import { Evaluate_StatementList, InstantiateFunctionDeclaration } from './all.mts';
 import { surroundingAgent, Assert, DeclarativeEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
@@ -36,8 +36,8 @@ export function* BlockDeclarationInstantiation(code: ParseNode.StatementList | P
           || d.type === 'AsyncGeneratorDeclaration') {
         // i. Let fn be the sole element of the BoundNames of d.
         const fn = BoundNames(d)[0];
-        // ii. Let fo be InstantiateFunctionObject of d with argument env.
-        const fo = InstantiateFunctionObject(d, env, privateEnv);
+        // ii. Let fo be InstantiateFunctionDeclaration of d with argument env.
+        const fo = InstantiateFunctionDeclaration(d, env, privateEnv);
         // iii. Perform env.InitializeBinding(fn, fo).
         yield* env.InitializeBinding(fn, fo);
       }

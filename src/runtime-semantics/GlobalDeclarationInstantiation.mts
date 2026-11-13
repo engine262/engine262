@@ -8,7 +8,7 @@ import {
 } from '../static-semantics/all.mts';
 import { Q, NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import { InstantiateFunctionObject } from './all.mts';
+import { InstantiateFunctionDeclaration } from './all.mts';
 import { Assert, GlobalEnvironmentRecord, Throw } from '#self';
 
 export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
@@ -123,8 +123,8 @@ export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: G
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
-    // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
-    const fo = InstantiateFunctionObject(f, env, privateEnv);
+    // b. Let fo be InstantiateFunctionDeclaration of f with argument env and privateEnv.
+    const fo = InstantiateFunctionDeclaration(f, env, privateEnv);
     // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
     Q(yield* env.CreateGlobalFunctionBinding(fn, fo, false));
   }

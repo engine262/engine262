@@ -1,6 +1,6 @@
 import { ExecutionContext } from '../execution-context/ExecutionContext.mts';
 import { JSStringValue, ObjectValue, Value } from '../value.mts';
-import { InstantiateFunctionObject } from '../runtime-semantics/all.mts';
+import { InstantiateFunctionDeclaration } from '../runtime-semantics/all.mts';
 import {
   IsStrict,
   VarDeclaredNames,
@@ -253,7 +253,7 @@ export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv
   }
   for (const f of functionsToInitialize) {
     const fn = BoundNames(f)[0];
-    const fo = InstantiateFunctionObject(f, lexicalEnv, privateEnv);
+    const fo = InstantiateFunctionDeclaration(f, lexicalEnv, privateEnv);
     if (varEnv instanceof GlobalEnvironmentRecord) {
       Q(yield* varEnv.CreateGlobalFunctionBinding(fn, fo, true));
     } else {

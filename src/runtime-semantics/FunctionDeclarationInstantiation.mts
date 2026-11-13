@@ -12,7 +12,7 @@ import {
 import { Q, X, NormalCompletion } from '../completion.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import {
-  InstantiateFunctionObject,
+  InstantiateFunctionDeclaration,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mts';
 import { surroundingAgent, DeclarativeEnvironmentRecord, EnvironmentRecord } from '#self';
@@ -262,8 +262,8 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
-    // b. Let fo be InstantiateFunctionObject of f with argument lexEnv and privateEnv.
-    const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
+    // b. Let fo be InstantiateFunctionDeclaration of f with argument lexEnv and privateEnv.
+    const fo = InstantiateFunctionDeclaration(f, lexEnv, privateEnv);
     // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
     X(varEnv.SetMutableBinding(fn, fo, false));
   }
