@@ -7,7 +7,9 @@ import {
   type ValueEvaluator,
 } from '../completion.mts';
 import type { Mutable } from '../utils/language.mts';
-import { GetUTCEpochNanoseconds, ParseDateTimeUTCOffset, UTC } from '../abstract-ops/date-objects.mts';
+import {
+  DateFromTime, GetUTCEpochNanoseconds, ParseDateTimeUTCOffset, UTC, type FiniteTimeValue,
+} from '../abstract-ops/date-objects.mts';
 import { ParseISODateTime } from '../parser/TemporalParser.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { ToDateString, thisTimeValue } from './DatePrototype.mts';
@@ -200,36 +202,69 @@ function parseDate(dateTimeString: string): NumberValue {
     return F(Number(epochNanoseconds / 1000000n));
   }
 
-  // Match the following format:
+  // The date-only forms YYYY and YYYY-MM of the Date Time String Format, with an optional time.
+  const partial = /^(?<year>[+-]\d{6}|\d{4})(?:-(?<month>\d{2}))?(?:T(?<hour>\d{2}):(?<minute>\d{2})(?::(?<second>\d{2})(?:\.(?<millisecond>\d{3}))?)?(?<offset>Z|(?<offsetSign>[+-])(?<offsetHour>\d{2}):(?<offsetMinute>\d{2}))?)?$/.exec(str);
+  if (partial) {
+    const groups = partial.groups!;
+    if (groups.year === '-000000') {
+      return F(NaN);
+    }
+    const month = Number(groups.month ?? 1);
+    const hour = Number(groups.hour ?? 0);
+    const minute = Number(groups.minute ?? 0);
+    const offsetHour = Number(groups.offsetHour ?? 0);
+    const offsetMinute = Number(groups.offsetMinute ?? 0);
+    if (month < 1 || month > 12 || hour > 23 || minute > 59 || Number(groups.second ?? 0) > 59 || offsetHour > 23 || offsetMinute > 59) {
+      return F(NaN);
+    }
+    const t = MakeDate(MakeDay(Number(groups.year), month - 1, 1), MakeTime(hour, minute, Number(groups.second ?? 0), Number(groups.millisecond ?? 0)));
+    if (groups.offset === undefined) {
+      // Date-only forms are UTC time, date-time forms are local time.
+      return F(TimeClip(groups.hour === undefined ? t : UTC(t)));
+    }
+    const offsetMilliseconds = (offsetHour * 60 + offsetMinute) * 60000;
+    return F(TimeClip(groups.offsetSign === '-' ? t + offsetMilliseconds : t - offsetMilliseconds));
+  }
+
+  // Match the formats of Date.prototype.toString, toDateString and toUTCString:
   // Thu Jan 01 1970 00:00:00 GMT+0000
   // Thu, 01 Jan 1970 00:00:00 GMT
-  const parse = /(?:(?<weekDay>Sun|Mon|Tue|Wed|Thu|Fri|Sat),? )?(?:(?<monthDay>(?<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?<day>\d{1,2}))|(?<dayMonth>(?<day2>\d{1,2}) (?<month2>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)))? ?(?<year>[+-]?\d+)(?: (?<time>(?<hour>\d{1,2}):(?<minute>\d{1,2})(?::(?<second>\d{1,2}))))?(?: (?<timeZone>\w{3}(?:\+\d+)?))?/g;
-  const match = parse.exec(str);
+  // Thu Jan 01 1970
+  // The whole string has to match, and a field out of range gives NaN.
+  const match = /^(?:(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat),? )?(?:(?<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?<day>\d{1,2})|(?<day2>\d{1,2}) (?<month2>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)) (?<year>[+-]?\d+)(?: (?<hour>\d{1,2}):(?<minute>\d{1,2})(?::(?<second>\d{1,2}))?(?: (?<zone>GMT|UTC|UT)(?:(?<offsetSign>[+-])(?<offsetHour>\d{2}):?(?<offsetMinute>\d{2}))?(?: \([^()]*\))?)?)?$/.exec(str);
   if (!match) {
     return F(NaN);
   }
   const groups = match.groups!;
-  const monthStr = groups.month ?? groups.month2 ?? 'Jan';
-  const dayStr = groups.day ?? groups.day2 ?? 1;
-  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthStr);
-  const day = Number(dayStr);
+  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf((groups.month ?? groups.month2)!);
+  const day = Number(groups.day ?? groups.day2);
   const year = Number(groups.year);
   if (Object.is(year, -0)) {
     return F(NaN);
   }
-  let hour = 0;
-  let minute = 0;
-  let second = 0;
-  if (groups.time) {
-    hour = Number(groups.hour);
-    minute = Number(groups.minute);
-    if (groups.second) {
-      second = Number(groups.second);
-    }
+  const hour = Number(groups.hour ?? 0);
+  const minute = Number(groups.minute ?? 0);
+  const second = Number(groups.second ?? 0);
+  const offsetHour = Number(groups.offsetHour ?? 0);
+  const offsetMinute = Number(groups.offsetMinute ?? 0);
+  if (hour > 23 || minute > 59 || second > 59 || offsetHour > 23 || offsetMinute > 59) {
+    return F(NaN);
   }
-  // const timeZoneStr = groups.timeZone;
-  // TODO: offset currently dropped
-  return F(TimeClip(MakeDate(MakeDay(year, month, day), MakeTime(hour, minute, second, 0))));
+  const dayValue = MakeDay(year, month, day);
+  if (!Number.isFinite(dayValue)) {
+    return F(NaN);
+  }
+  // Reject a day that does not exist in the month, such as Feb 30.
+  if (day < 1 || Number(DateFromTime(MakeDate(dayValue, 0) as FiniteTimeValue)) !== day) {
+    return F(NaN);
+  }
+  const t = MakeDate(dayValue, MakeTime(hour, minute, second, 0));
+  if (groups.zone === undefined) {
+    // No time zone: the time is local time.
+    return F(TimeClip(UTC(t)));
+  }
+  const offsetMilliseconds = (offsetHour * 60 + offsetMinute) * 60000;
+  return F(TimeClip(groups.offsetSign === '-' ? t + offsetMilliseconds : t - offsetMilliseconds));
 }
 
 export function bootstrapDate(realmRec: Realm) {
