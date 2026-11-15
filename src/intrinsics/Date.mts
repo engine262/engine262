@@ -251,11 +251,12 @@ function parseDate(dateTimeString: string): NumberValue {
     return F(NaN);
   }
   const dayValue = MakeDay(year, month, day);
-  if (!Number.isFinite(dayValue)) {
+  const dayStart = TimeClip(MakeDate(dayValue, 0));
+  if (Number.isNaN(dayStart)) {
     return F(NaN);
   }
   // Reject a day that does not exist in the month, such as Feb 30.
-  if (day < 1 || Number(DateFromTime(MakeDate(dayValue, 0) as FiniteTimeValue)) !== day) {
+  if (day < 1 || Number(DateFromTime(dayStart as FiniteTimeValue)) !== day) {
     return F(NaN);
   }
   const t = MakeDate(dayValue, MakeTime(hour, minute, second, 0));
