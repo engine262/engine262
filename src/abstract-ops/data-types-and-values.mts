@@ -15,7 +15,7 @@ export function isIntegerIndex(V: string | Value) {
   if (numeric === undefined) {
     return false;
   }
-  if (Object.is(R(numeric), +0)) {
+  if (Object.is(numeric.value, +0)) {
     return true;
   }
   return R(numeric) > 0 && Number.isSafeInteger(R(numeric));
@@ -34,7 +34,7 @@ export function isArrayIndex(V: string | Value) {
   if (!Number.isInteger(R(numeric))) {
     return false;
   }
-  if (Object.is(R(numeric), +0)) {
+  if (Object.is(numeric.value, +0)) {
     return true;
   }
   return R(numeric) > 0 && R(numeric) < (2 ** 32) - 1;

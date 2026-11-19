@@ -1,6 +1,5 @@
 import {
   Descriptor,
-  NumberValue,
   Value,
   wellKnownSymbols,
   ObjectValue,
@@ -57,9 +56,7 @@ function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: Funct
     }
   }
   // 5. If value is -0𝔽, set value to +0𝔽.
-  if (value instanceof NumberValue && Object.is(R(value), -0)) {
-    value = F(+0);
-  }
+  value = CanonicalizeKeyedCollectionKey(value);
   // 6. Append value as the last element of entries.
   Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
   entries.push(value);
