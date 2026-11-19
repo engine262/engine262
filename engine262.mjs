@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 46acc94625794d30f81b7a83dd608887530163a6
+ * engine262 0.0.1 512e741979059641310962ac32be6578c03b2d53
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -31525,7 +31525,7 @@ function isIntegerIndex(V) {
   if (numeric === undefined) {
     return false;
   }
-  if (Object.is(R(numeric), 0)) {
+  if (Object.is(numeric.value, 0)) {
     return true;
   }
   return R(numeric) > 0 && Number.isSafeInteger(R(numeric));
@@ -31553,7 +31553,7 @@ function isArrayIndex(V) {
   if (!Number.isInteger(R(numeric))) {
     return false;
   }
-  if (Object.is(R(numeric), 0)) {
+  if (Object.is(numeric.value, 0)) {
     return true;
   }
   return R(numeric) > 0 && R(numeric) < 2 ** 32 - 1;
@@ -71918,9 +71918,7 @@ function SetProto_add([value = Value.undefined], {
     }
   }
   // 5. If value is -0𝔽, set value to +0𝔽.
-  if (value instanceof NumberValue && Object.is(R(value), -0)) {
-    value = F(0);
-  }
+  value = CanonicalizeKeyedCollectionKey(value);
   // 6. Append value as the last element of entries.
   /* ReturnIfAbrupt */let _temp2 = surroundingAgent.debugger_tryTouchDuringPreview(S);
   /* ReturnIfAbrupt */if (_temp2 instanceof Completion) {
