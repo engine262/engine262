@@ -5,6 +5,7 @@ import {
   UndefinedValue,
   type PropertyKeyValue,
   ReferenceRecord,
+  SymbolValue,
 } from '../value.mts';
 import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
@@ -32,7 +33,10 @@ import {
 import {
   surroundingAgent,
   DeclarativeEnvironmentRecord,
+  EnvironmentRecord,
   PrivateEnvironmentRecord,
+  GetThisValue,
+  IsPropertyReference,
 
   CreateDataPropertyOrThrow, HasProperty, InitializeFieldOrAccessor, InitializePrivateMethods, IsPropertyKey, markBuiltinFunctionAsConstructor, PrivateElementFind, PrivateGet, PrivateSet, Set, Throw,
   type PlainCompletion,
@@ -540,7 +544,20 @@ export function* DecoratorEvaluation(decorator: ParseNode.Decorator): PlainEvalu
   const expr = decorator.MemberExpression || decorator.CallExpression || decorator.ParenthesizedExpression;
   const ref = Q(yield* Evaluate(expr));
   const value = Q(yield* GetValue(ref));
-  return { Decorator: value, Receiver: ref };
+  return { Decorator: value, Receiver: GetDecoratorReceiver(ref) };
+}
+
+/** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-getdecoratorreceiver */
+function GetDecoratorReceiver(ref: ReferenceRecord | Value): Value {
+  if (ref instanceof ReferenceRecord) {
+    if (IsPropertyReference(ref)) {
+      return GetThisValue(ref);
+    }
+    const refEnv = ref.Base;
+    Assert(refEnv instanceof EnvironmentRecord);
+    return refEnv.WithBaseObject();
+  }
+  return Value.undefined;
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratorelistvaluation */
@@ -635,8 +652,15 @@ export function CreateDecoratorContextObject(kind: 'class' | ClassElementDefinit
       X(CreateDataPropertyOrThrow(contextObj, 'name', typeof name === 'string' ? Value(name) : name));
     }
   } else {
-    // TODO(decorator): spec bug, no assert to the name
-    X(CreateDataPropertyOrThrow(contextObj, 'name', name as PropertyKeyValue));
+    let className: Value;
+    if (name instanceof PrivateName) {
+      className = Value(name.Description);
+    } else if (name instanceof SymbolValue) {
+      className = Value(name.Description === undefined ? '' : `[${name.Description}]`);
+    } else {
+      className = typeof name === 'string' ? Value(name) : name;
+    }
+    X(CreateDataPropertyOrThrow(contextObj, 'name', className));
   }
   const addInitializer = CreateAddInitializerFunction(initializers, decorationState);
   X(CreateDataPropertyOrThrow(contextObj, 'addInitializer', addInitializer));
@@ -669,10 +693,9 @@ export function* ApplyDecoratorsToElementDefinition(_homeObject: ObjectValue, el
       X(CreateDataPropertyOrThrow(value, 'get', elementRecord.Get));
       X(CreateDataPropertyOrThrow(value, 'set', elementRecord.Set));
     }
-    // TODO(decorator): spec bug, missing GetValue call
-    // const newValue = Q(yield* Call(decorator, decoratorReceiver), [value, context]));
-    const newValue = Q(yield* Call(decorator, Q(yield* GetValue(decoratorReceiver)), [value, context]));
+    const newValueCompletion = yield* Call(decorator, decoratorReceiver, [value, context]);
     decorationState.Finished = true;
+    const newValue = Q(newValueCompletion);
     if (kind === 'field') {
       if (IsCallable(newValue)) {
         // TODO(decorator): spec bug. ApplyDecoratorsToElementDefinition unshift decorator initializers into this array, but read it in order, so the spec order is wrong (be like [decorator2, decorator1, syntaxInit], but the correct order should be [syntaxInit, decorator2, decorator1])
@@ -729,10 +752,9 @@ export function* ApplyDecoratorsToClassDefinition(classDef: FunctionObject, deco
     const decoratorReceiver = decoratorRecord.Receiver;
     const decorationState = { Finished: false };
     const context = CreateDecoratorContextObject('class', className, extraInitializers, decorationState);
-    // TODO(decorator): spec bug, missing GetValue call
-    // const newDef = Q(yield* Call(decorator, decoratorReceiver, [classDef, context]));
-    const newDef = Q(yield* Call(decorator, Q(yield* GetValue(decoratorReceiver)), [classDef, context]));
+    const newDefCompletion = yield* Call(decorator, decoratorReceiver, [classDef, context]);
     decorationState.Finished = true;
+    const newDef = Q(newDefCompletion);
     if (IsCallable(newDef)) {
       classDef = newDef;
     } else if (newDef !== Value.undefined) {
@@ -753,7 +775,7 @@ export function* ApplyDecoratorsAndDefineMethod(homeObject: ObjectValue, methodD
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-decoratordefinition-record-specification-type */
 export interface DecoratorDefinitionRecord {
   readonly Decorator: Value;
-  readonly Receiver: ReferenceRecord | Value;
+  readonly Receiver: Value;
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-classfielddefinition-record-specification-type */

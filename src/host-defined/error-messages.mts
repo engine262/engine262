@@ -237,6 +237,7 @@ export interface Throw {
   | 'DataView cannot be invoked without new'
   | 'Date value is not an integral number'
   | 'DateTime outside of range'
+  | 'Decorators are not valid on a class constructor'
   | 'Decorators can only be used to decorate classes'
   | 'Decorators cannot appear on both sides of the export keyword'
   | 'Default export already declared'

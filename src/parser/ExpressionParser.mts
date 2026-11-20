@@ -1100,6 +1100,9 @@ export abstract class ExpressionParser extends FunctionParser {
             && !!m.UniqueFormalParameters
             && name === 'constructor';
           if (isActualConstructor) {
+            if (m.Decorators) {
+              this.addEarlyError(Throw.SyntaxError('Decorators are not valid on a class constructor'), m);
+            }
             if (hasConstructor) {
               this.addEarlyError(Throw.SyntaxError('Duplicate constructor'), m);
             } else {

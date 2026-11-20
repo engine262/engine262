@@ -104,8 +104,8 @@ export function* ClassFieldDefinitionEvaluation_decorator(FieldDefinition: Parse
     }
     const privateStateDesc = `${readableName} accessor storage`;
     const privateStateName = new PrivateName(privateStateDesc);
-    const getter = MakeAutoAccessorGetter(homeObject, name, privateStateName);
-    const setter = MakeAutoAccessorSetter(homeObject, name, privateStateName);
+    const getter = MakeAutoAccessorGetter(name, privateStateName);
+    const setter = MakeAutoAccessorSetter(name, privateStateName);
     const initializers = [];
     const extraInitializers: FunctionObject[] = [];
     if (Initializer) {
@@ -121,7 +121,7 @@ export function* ClassFieldDefinitionEvaluation_decorator(FieldDefinition: Parse
       const desc = Descriptor({
         Get: getter,
         Set: setter,
-        Enumerable: true,
+        Enumerable: false,
         Configurable: true,
       });
       Q(yield* DefinePropertyOrThrow(homeObject, name, desc));
@@ -160,29 +160,19 @@ export function CreateFieldInitializerFunction(homeObject: ObjectValue, propName
 }
 
 /** https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2417#sec-makeautoaccessorgetter */
-export function MakeAutoAccessorGetter(_homeObject: ObjectValue, _name: PropertyKeyValue | PrivateName, privateStateName: PrivateName) {
+export function MakeAutoAccessorGetter(name: PropertyKeyValue | PrivateName, privateStateName: PrivateName) {
   const getterClosure = function* getterClosure(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
     const o = thisValue as ObjectValue;
     return Q(yield* PrivateGet(o, privateStateName));
   };
-  const getter = CreateBuiltinFunction(getterClosure, 0, Value('get'), []);
-  // TODO(decorator): spec bug, SetFunctionName only accepts ECMAScriptFunctionObject, but the name is already set when calling CreateBuiltinFunction
-  // SetFunctionName(getter, name, Value('get'));
-  // TODO(decorator): https://github.com/tc39/proposal-decorators/issues/568
-  // MakeMethod(getter, homeObject);
-  return getter;
+  return CreateBuiltinFunction(getterClosure, 0, name, [], undefined, undefined, 'get');
 }
 
-export function MakeAutoAccessorSetter(_homeObject: ObjectValue, _name: PropertyKeyValue | PrivateName, privateStateName: PrivateName) {
+export function MakeAutoAccessorSetter(name: PropertyKeyValue | PrivateName, privateStateName: PrivateName) {
   const setterClosure = function* setterClosure([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
     const o = thisValue as ObjectValue;
     Q(yield* PrivateSet(o, privateStateName, value));
     return Value.undefined;
   };
-  const setter = CreateBuiltinFunction(setterClosure, 1, Value('set'), []);
-  // TODO(decorator): spec bug
-  // SetFunctionName(setter, name, Value('set'));
-  // TODO(decorator): https://github.com/tc39/proposal-decorators/issues/568
-  // MakeMethod(setter, homeObject);
-  return setter;
+  return CreateBuiltinFunction(setterClosure, 1, name, [], undefined, undefined, 'set');
 }

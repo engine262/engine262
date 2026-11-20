@@ -25,9 +25,3 @@ built-ins/Temporal/PlainDateTime/prototype/subtract/makedate-float-arithmetic.js
 built-ins/Temporal/PlainYearMonth/prototype/add/makedate-float-arithmetic.js
 built-ins/Temporal/PlainYearMonth/prototype/subtract/makedate-float-arithmetic.js
 
-# Decorators (not merged yet) https://github.com/tc39/test262/pull/4103/
-## wrong test, we are correct
-language/expressions/class/decorator/class/error/class-deco-invalid-return-arrow.js
-language/statements/class/decorator/class/error/class-deco-invalid-return-arrow.js
-language/expressions/class/decorator/class/class-deco-returns-proxy.js
-language/statements/class/decorator/class/class-deco-returns-proxy.js

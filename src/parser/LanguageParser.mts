@@ -113,14 +113,15 @@ export abstract class LanguageParser extends ModuleParser {
             // TODO(decorator):
             // ExportDeclaration : DecoratorList? `export` Declaration
             //   It is a Syntax Error if DecoratorList is present and Declaration is not ClassDeclaration.
-            if (!exports.ClassDeclaration) {
+            const exportedClass = exports.ClassDeclaration || (exports.Declaration?.type === 'ClassDeclaration' ? exports.Declaration : undefined);
+            if (!exportedClass) {
               this.addEarlyError(Throw.SyntaxError('Decorators can only be used to decorate classes'), exports.AssignmentExpression || exports.Declaration || exports.ExportFromClause || exports.FromClause || exports.HoistableDeclaration || exports.VariableStatement || exports.WithClause || exports);
             }
             //   It is a Syntax Error if DecoratorList is present, Declaration is a ClassDeclaration, and the DecoratorList of that ClassDeclaration is present.
             // ExportDeclaration : DecoratorList? export default ClassDeclaration
             //   It is a Syntax Error if DecoratorList is present and the DecoratorList of ClassDeclaration is present.
-            if (exports.ClassDeclaration && exports.ClassDeclaration.Decorators?.length) {
-              this.addEarlyError(Throw.SyntaxError('Decorators cannot appear on both sides of the export keyword'), exports.ClassDeclaration.Decorators[0]);
+            if (exportedClass?.Decorators?.length) {
+              this.addEarlyError(Throw.SyntaxError('Decorators cannot appear on both sides of the export keyword'), exportedClass.Decorators[0]);
             }
             moduleItemList.push(exports);
           } else {
