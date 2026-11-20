@@ -276,7 +276,7 @@ class ConcreteStringSet extends CharSet {
     const chars = new Set<Character>();
     const strings = new Set<ListOfCharacter>();
     for (const charOrString of charOrStrings) {
-      if (charOrString.length <= 1 || (charOrString.length === 2 && Array.from(charOrString).length === 1)) {
+      if (charOrString.length === 1 || (charOrString.length === 2 && Array.from(charOrString).length === 1)) {
         chars.add(charOrString as unknown as Character);
       } else {
         strings.add(charOrString);
@@ -671,13 +671,14 @@ function CompileAtom(node: ParseNode.RegExp.Atom | ParseNode.RegExp.AtomEscape, 
         Assert(!cc.Invert);
         const lm: Matcher[] = [];
         // For each CharSetElement s in cs containing more than 1 character, iterating in descending order of length, do
-        for (const s of cs.getStrings().sort((a, b) => b.length - a.length)) {
+        for (const s of cs.getStrings().filter((s) => s.length > 0).sort((a, b) => b.length - a.length)) {
+          const codePointOfS = Unicode.iterateByCodePoint(s);
           // Let cs2 be a one-element CharSet containing the last code point of s.
-          const cs2 = new ConcreteCharSet([s.at(-1)! as Character]);
+          const cs2 = new ConcreteCharSet([codePointOfS.at(-1)!]);
           let m2 = CharacterSetMatcher(rer, cs2, false, direction);
           // For each code point c1 in s, iterating backwards from its second-to-last code point, do
-          for (const c1 of Unicode.iterateByCodePoint(s).reverse().slice(1)) {
-            const cs1 = new ConcreteCharSet([c1 as unknown as Character]);
+          for (const c1 of codePointOfS.reverse().slice(1)) {
+            const cs1 = new ConcreteCharSet([c1]);
             const m1 = CharacterSetMatcher(rer, cs1, false, direction);
             m2 = MatchSequence(m1, m2, direction);
           }
@@ -755,7 +756,7 @@ function CompileAtom(node: ParseNode.RegExp.Atom | ParseNode.RegExp.AtomEscape, 
         }
         const lm: Matcher[] = [];
         // For each CharSetElement s in cs containing more than 1 character, iterating in descending order of length, do
-        for (const s of cs.getStrings().sort((a, b) => b.length - a.length)) {
+        for (const s of cs.getStrings().filter((s) => s.length > 0).sort((a, b) => b.length - a.length)) {
           const codePointOfS = Unicode.iterateByCodePoint(s);
           // Let cs2 be a one-element CharSet containing the last code point of s.
           const cs2 = new ConcreteCharSet([codePointOfS.at(-1)!]);
