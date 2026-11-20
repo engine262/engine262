@@ -9,6 +9,7 @@ import {
   InitializeBoundName,
   BindingClassDeclarationEvaluation,
   DecoratorListEvaluation,
+  type DecoratorDefinitionRecord,
 } from './all.mts';
 import { surroundingAgent } from '#self';
 import {
@@ -63,7 +64,12 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     return yield* Evaluate(HoistableDeclaration);
   }
   if (ClassDeclaration) {
-    const decorators = Decorators ? Q(yield* DecoratorListEvaluation(Decorators)) : [];
+    let decorators: readonly DecoratorDefinitionRecord[] = [];
+    if (Decorators) {
+      decorators = Q(yield* DecoratorListEvaluation(Decorators));
+    } else if (ClassDeclaration.Decorators) {
+      decorators = Q(yield* DecoratorListEvaluation(ClassDeclaration.Decorators));
+    }
     const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration, decorators)) as ECMAScriptFunctionObject;
     // 2. Let className be the sole element of BoundNames of ClassDeclaration.
     const className = BoundNames(ClassDeclaration)[0];
