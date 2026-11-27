@@ -472,51 +472,37 @@ function* Math_sumPrecise([items = Value.undefined]: Arguments): ValueEvaluator 
   }
   return F(sum(sums));
 
+  // Every finite Number is an integer multiple of 2**-1074, so the sum is done
+  // exactly on BigInts in units of 2**-1074 and rounded once at the end.
   function sum(items: number[]) {
-    if ('sumPrecise' in Math) {
-      // @ts-expect-error
-      return Math.sumPrecise(items);
+    let total = 0n;
+    const view = new DataView(new ArrayBuffer(8));
+    for (const n of items) {
+      view.setFloat64(0, n);
+      const bits = view.getBigUint64(0);
+      const exponent = Number((bits >> 52n) & 0x7FFn);
+      const mantissa = bits & 0xFFFFFFFFFFFFFn;
+      const units = exponent === 0 ? mantissa : (mantissa | (1n << 52n)) << BigInt(exponent - 1);
+      total += bits >> 63n ? -units : units;
     }
-    const fractional_parts: number[] = [];
-    let whole_part_sum = 0n;
-    items.forEach((n) => {
-      const whole_num = Math.trunc(n);
-      fractional_parts.push(n - whole_num);
-      whole_part_sum += BigInt(whole_num);
-    });
-    const fractional_parts_as_hex = fractional_parts.map((n) => n.toString(32));
-
-    const fractional: number[] = [];
-    for (const fractional_str of fractional_parts_as_hex) {
-      const neg = fractional_str[0] === '-';
-      const prefix = neg ? 3 : 2; // -0.xxx or 0.xxx
-      for (let index = prefix; index < fractional_str.length; index += 1) {
-        fractional[index - prefix] ??= 0;
-        if (neg) {
-          fractional[index - prefix] -= parseInt(fractional_str[index], 32);
-        } else {
-          fractional[index - prefix] += parseInt(fractional_str[index], 32);
-        }
+    if (total === 0n) {
+      return 0;
+    }
+    const negative = total < 0n;
+    let magnitude = negative ? -total : total;
+    // Round to 53 significant bits, ties to even.
+    const shift = Math.max(magnitude.toString(2).length - 53, 0);
+    if (shift > 0) {
+      const remainder = magnitude & ((1n << BigInt(shift)) - 1n);
+      const half = 1n << BigInt(shift - 1);
+      magnitude >>= BigInt(shift);
+      if (remainder > half || (remainder === half && (magnitude & 1n) === 1n)) {
+        magnitude += 1n;
       }
     }
-    for (let index = fractional.length - 1; index >= 0; index -= 1) {
-      const element = fractional[index];
-      if (element >= 32) {
-        fractional[index] = element % 32;
-        fractional[index - 1] ??= 0;
-        fractional[index - 1] += Math.floor(element / 32);
-      }
-      if (element < 0) {
-        fractional[index] = 32 + element;
-        fractional[index - 1] ??= 0;
-        fractional[index - 1] -= 1;
-      }
-    }
-    const fractional_part = fractional.reduceRight((acc, digit, index) => acc + digit * 32 ** -(index + 1), 0);
-    if (fractional[-1]) {
-      whole_part_sum += BigInt(fractional[-1]);
-    }
-    return Number(whole_part_sum) + fractional_part;
+    // Both factors are exact, so the product is exact unless it overflows to Infinity.
+    const result = Number(magnitude) * 2 ** (shift - 1074);
+    return negative ? -result : result;
   }
 }
 
